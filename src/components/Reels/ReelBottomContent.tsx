@@ -24,12 +24,14 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 interface ReelBottomContentProps {
     post: FoodPost;
     isAuthenticated: boolean;
+    onAuthRequired: () => void;
     setShowOrderModal: (show: boolean) => void;
 }
 
 const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
     post,
     isAuthenticated,
+    onAuthRequired,
     setShowOrderModal,
 }) => {
     const router = useRouter();
@@ -106,16 +108,16 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                 borderColor: "#166534",
                                 color: "white",
                                 border: "none",
-                                cursor: isAuthenticated ? "pointer" : "not-allowed",
+                                cursor: "pointer",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                opacity: isAuthenticated ? 1 : 0.5,
+                                opacity: 1,
                             }}
                             onClick={
-                                isAuthenticated ? () => setShowOrderModal(true) : undefined
+                                isAuthenticated ? () => setShowOrderModal(true) : onAuthRequired
                             }
-                            disabled={!isAuthenticated}
+                            disabled={false}
                         >
                             <UtensilsIcon />
                             <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
@@ -200,19 +202,19 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                     borderColor: "#2563eb",
                                     color: "white",
                                     border: "none",
-                                    cursor:
-                                        isAuthenticated && post.shop_id ? "pointer" : "not-allowed",
+                                    cursor: post.shop_id ? "pointer" : "not-allowed",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    opacity: isAuthenticated && post.shop_id ? 1 : 0.5,
+                                    opacity: post.shop_id ? 1 : 0.5,
                                 }}
                                 onClick={() => {
-                                    if (isAuthenticated && post.shop_id) {
+                                    if (!isAuthenticated) return onAuthRequired();
+                                    if (post.shop_id) {
                                         router.push(`/shops/${post.shop_id}`);
                                     }
                                 }}
-                                disabled={!isAuthenticated || !post.shop_id}
+                                disabled={!post.shop_id}
                             >
                                 <StoreIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
@@ -229,22 +231,16 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                     borderColor: "#166534",
                                     color: "white",
                                     border: "none",
-                                    cursor:
-                                        isAuthenticated && supermarketPost.product.inStock
-                                            ? "pointer"
-                                            : "not-allowed",
+                                    cursor: supermarketPost.product.inStock ? "pointer" : "not-allowed",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    opacity:
-                                        isAuthenticated && supermarketPost.product.inStock
-                                            ? 1
-                                            : 0.5,
+                                    opacity: supermarketPost.product.inStock ? 1 : 0.5,
                                 }}
                                 onClick={
-                                    isAuthenticated ? () => setShowOrderModal(true) : undefined
+                                    isAuthenticated ? () => setShowOrderModal(true) : onAuthRequired
                                 }
-                                disabled={!isAuthenticated || !supermarketPost.product.inStock}
+                                disabled={!supermarketPost.product.inStock}
                             >
                                 <ShoppingCartIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
@@ -311,14 +307,14 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                     borderColor: "#dc2626",
                                     color: "white",
                                     border: "none",
-                                    cursor: isAuthenticated ? "pointer" : "not-allowed",
+                                    cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    opacity: isAuthenticated ? 1 : 0.5,
+                                    opacity: 1,
                                 }}
-                                onClick={isAuthenticated ? undefined : undefined}
-                                disabled={!isAuthenticated}
+                                onClick={isAuthenticated ? undefined : onAuthRequired}
+                                disabled={false}
                             >
                                 <YoutubeIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
@@ -335,14 +331,14 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                     borderColor: "#7c3aed",
                                     color: "white",
                                     border: "none",
-                                    cursor: isAuthenticated ? "pointer" : "not-allowed",
+                                    cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    opacity: isAuthenticated ? 1 : 0.5,
+                                    opacity: 1,
                                 }}
-                                onClick={isAuthenticated ? undefined : undefined}
-                                disabled={!isAuthenticated}
+                                onClick={isAuthenticated ? undefined : onAuthRequired}
+                                disabled={false}
                             >
                                 <BookOpenIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
@@ -384,18 +380,19 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                     borderColor: "#2563eb",
                                     color: "white",
                                     border: "none",
-                                    cursor: isAuthenticated ? "pointer" : "not-allowed",
+                                    cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    opacity: isAuthenticated ? 1 : 0.5,
+                                    opacity: 1,
                                 }}
                                 onClick={() => {
-                                    if (isAuthenticated && businessPost.business?.phone) {
+                                    if (!isAuthenticated) return onAuthRequired();
+                                    if (businessPost.business?.phone) {
                                         window.location.href = `tel:${businessPost.business.phone}`;
                                     }
                                 }}
-                                disabled={!isAuthenticated}
+                                disabled={false}
                             >
                                 <span style={{ whiteSpace: "nowrap" }}>
                                     {isAuthenticated ? "Contact Business" : "Login to Contact"}

@@ -7,6 +7,8 @@ import { useSession } from "next-auth/react";
 import ReelPlaceholder from "@components/Reels/ReelPlaceholder";
 import MobileReelsView from "../../src/components/Reels/MobileReelsView";
 import DesktopReelsView from "../../src/components/Reels/DesktopReelsView";
+import GuestAuthModal from "../../src/components/ui/GuestAuthModal";
+import GuestUpgradeModal from "../../src/components/ui/GuestUpgradeModal";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -535,6 +537,8 @@ export default function FoodReelsApp() {
     startY: 0,
     currentY: 0,
   });
+  const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+  const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
   const mountedRef = useRef(true); // To track if component is mounted
 
   useEffect(() => {
@@ -1489,12 +1493,28 @@ export default function FoodReelsApp() {
     };
   }, [posts.length, isMobile]); // Re-run when posts change or mobile state changes
 
-  const toggleLike = async (postId: string) => {
+  const handleAuthRequired = () => {
     // Check if user is logged in
     if (!session?.user) {
-      alert("Please log in to like videos");
-      return;
+      setShowGuestAuthModal(true);
+      return true; // Auth required
     }
+
+    // Check if user is a guest (this is an assumption based on common patterns in this app)
+    // If the user wants to upgrade their guest account
+    const isGuest = session?.user?.email?.toLowerCase().includes("@guest.local");
+    if (isGuest) {
+      // Optional: you might want to show upgrade modal for guests on some actions
+      // For now, let's just allow guests to perform actions unless explicitly asked otherwise
+      // showGuestUpgradeModal(true);
+    }
+
+    return false; // Already authenticated
+  };
+
+  const toggleLike = async (postId: string) => {
+    // Check if user is logged in
+    if (handleAuthRequired()) return;
 
     try {
       const currentPost = posts.find((post: FoodPost) => post.id === postId);
@@ -1635,10 +1655,7 @@ export default function FoodReelsApp() {
 
   const toggleCommentLike = async (postId: string, commentId: string) => {
     // Check if user is logged in
-    if (!session?.user) {
-      alert("Please log in to like comments");
-      return;
-    }
+    if (handleAuthRequired()) return;
 
     try {
       const response = await fetch("/api/queries/reel-comments", {
@@ -1682,10 +1699,7 @@ export default function FoodReelsApp() {
 
   const addComment = async (postId: string, commentText: string) => {
     // Check if user is logged in
-    if (!session?.user) {
-      alert("Please log in to add comments");
-      return;
-    }
+    if (handleAuthRequired()) return;
 
     try {
       // Create optimistic comment for immediate UI update
@@ -1859,10 +1873,7 @@ export default function FoodReelsApp() {
   // Enhanced openComments function with comment refetching
   const openComments = async (postId: string) => {
     // Check if user is logged in
-    if (!session?.user) {
-      alert("Please log in to view comments");
-      return;
-    }
+    if (handleAuthRequired()) return;
 
     // console.log("Opening comments for post:", postId);
     if (mountedRef.current) {
@@ -1924,10 +1935,7 @@ export default function FoodReelsApp() {
 
   const handleShare = async (post: FoodPost) => {
     // Check if user is logged in
-    if (!session?.user) {
-      alert("Please log in to share videos");
-      return;
-    }
+    if (handleAuthRequired()) return;
 
     try {
       // Create share link - link to the reel page with the post ID
@@ -2055,44 +2063,64 @@ export default function FoodReelsApp() {
   }
 
   // Render mobile or desktop view
-  if (isMobile) {
-    return (
-      <MobileReelsView
-        posts={posts}
-        visiblePostIndex={visiblePostIndex}
-        setVisiblePostIndex={setVisiblePostIndex}
-        containerRef={containerRef}
-        isAuthenticated={!!session?.user}
-        activePost={activePost}
-        showComments={showComments}
-        openComments={openComments}
-        closeComments={closeComments}
-        mergedActiveComments={mergedActiveComments}
-        toggleCommentLike={(commentId) => activePost && toggleCommentLike(activePost.id, commentId)}
-        addComment={(text) => activePost && addComment(activePost.id, text)}
-        isRefreshingComments={isRefreshingComments}
-        toggleLike={toggleLike}
-        handleShare={(post) => handleShare(post)}
-        isRefreshing={isRefreshing}
-      />
-    );
-  }
-
   return (
-    <DesktopReelsView
-      posts={posts}
-      visiblePostIndex={visiblePostIndex}
-      setVisiblePostIndex={setVisiblePostIndex}
-      containerRef={containerRef}
-      isAuthenticated={!!session?.user}
-      mergedActiveComments={mergedActiveComments}
-      toggleCommentLike={(commentId) => activePost && toggleCommentLike(activePost.id, commentId)}
-      addComment={(text) => activePost && addComment(activePost.id, text)}
-      isRefreshingComments={isRefreshingComments}
-      toggleLike={toggleLike}
-      handleShare={(post) => handleShare(post)}
-      isRefreshing={isRefreshing}
-      theme={theme}
-    />
+    <>
+      {isMobile ? (
+        <MobileReelsView
+          posts={posts}
+          visiblePostIndex={visiblePostIndex}
+          setVisiblePostIndex={setVisiblePostIndex}
+          containerRef={containerRef}
+          isAuthenticated={!!session?.user}
+          onAuthRequired={handleAuthRequired}
+          activePost={activePost}
+          showComments={showComments}
+          openComments={openComments}
+          closeComments={closeComments}
+          mergedActiveComments={mergedActiveComments}
+          toggleCommentLike={(commentId) =>
+            activePost && toggleCommentLike(activePost.id, commentId)
+          }
+          addComment={(text) => activePost && addComment(activePost.id, text)}
+          isRefreshingComments={isRefreshingComments}
+          toggleLike={toggleLike}
+          handleShare={(post) => handleShare(post)}
+          isRefreshing={isRefreshing}
+        />
+      ) : (
+        <DesktopReelsView
+          posts={posts}
+          visiblePostIndex={visiblePostIndex}
+          setVisiblePostIndex={setVisiblePostIndex}
+          containerRef={containerRef}
+          isAuthenticated={!!session?.user}
+          onAuthRequired={handleAuthRequired}
+          mergedActiveComments={mergedActiveComments}
+          toggleCommentLike={(commentId) =>
+            activePost && toggleCommentLike(activePost.id, commentId)
+          }
+          addComment={(text) => activePost && addComment(activePost.id, text)}
+          isRefreshingComments={isRefreshingComments}
+          toggleLike={toggleLike}
+          handleShare={(post) => handleShare(post)}
+          isRefreshing={isRefreshing}
+          theme={theme}
+        />
+      )}
+
+      <GuestAuthModal
+        isOpen={showGuestAuthModal}
+        onClose={() => setShowGuestAuthModal(false)}
+        onGuestContinue={() => {
+          setShowGuestAuthModal(false);
+          // router.reload() is handled inside GuestAuthModal
+        }}
+      />
+
+      <GuestUpgradeModal
+        open={showGuestUpgradeModal}
+        onClose={() => setShowGuestUpgradeModal(false)}
+      />
+    </>
   );
 }

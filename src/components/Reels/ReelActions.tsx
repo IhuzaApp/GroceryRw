@@ -8,6 +8,7 @@ interface ReelActionsProps {
     onLike: (postId: string) => void;
     onComment: (postId: string) => void;
     onShare: (post: FoodPost) => void;
+    onAuthRequired: () => void;
 }
 
 const ReelActions: React.FC<ReelActionsProps> = ({
@@ -16,6 +17,7 @@ const ReelActions: React.FC<ReelActionsProps> = ({
     onLike,
     onComment,
     onShare,
+    onAuthRequired,
 }) => {
     return (
         <div
@@ -37,15 +39,15 @@ const ReelActions: React.FC<ReelActionsProps> = ({
                 }}
             >
                 <div
-                    onClick={isAuthenticated ? () => onLike(post.id) : undefined}
+                    onClick={isAuthenticated ? () => onLike(post.id) : onAuthRequired}
                     style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         width: 56,
                         height: 56,
-                        cursor: isAuthenticated ? "pointer" : "not-allowed",
-                        opacity: isAuthenticated ? 1 : 0.5,
+                        cursor: "pointer",
+                        opacity: 1,
                         transition: "opacity 0.2s ease",
                         color: post.isLiked ? "#ef4444" : "#fff",
                     }}
@@ -75,15 +77,15 @@ const ReelActions: React.FC<ReelActionsProps> = ({
                 }}
             >
                 <div
-                    onClick={isAuthenticated ? () => onComment(post.id) : undefined}
+                    onClick={isAuthenticated ? () => onComment(post.id) : onAuthRequired}
                     style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         width: 56,
                         height: 56,
-                        cursor: isAuthenticated ? "pointer" : "not-allowed",
-                        opacity: isAuthenticated ? 1 : 0.5,
+                        cursor: "pointer",
+                        opacity: 1,
                         transition: "opacity 0.2s ease",
                     }}
                 >
@@ -110,15 +112,15 @@ const ReelActions: React.FC<ReelActionsProps> = ({
                 }}
             >
                 <div
-                    onClick={isAuthenticated ? () => onShare(post) : undefined}
+                    onClick={isAuthenticated ? () => onShare(post) : onAuthRequired}
                     style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         width: 56,
                         height: 56,
-                        cursor: isAuthenticated ? "pointer" : "not-allowed",
-                        opacity: isAuthenticated ? 1 : 0.5,
+                        cursor: "pointer",
+                        opacity: 1,
                         transition: "opacity 0.2s ease",
                     }}
                 >

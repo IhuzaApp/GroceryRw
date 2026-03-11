@@ -16,6 +16,7 @@ interface VideoReelProps {
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
   onShare: (post: FoodPost) => void;
+  onAuthRequired: () => void;
 }
 
 export default function VideoReel({
@@ -25,6 +26,7 @@ export default function VideoReel({
   onLike,
   onComment,
   onShare,
+  onAuthRequired,
 }: VideoReelProps) {
   // Debug individual reel data
   useEffect(() => {
@@ -201,6 +203,10 @@ export default function VideoReel({
   };
 
   const handleDoubleTap = () => {
+    if (!isAuthenticated) {
+      onAuthRequired();
+      return;
+    }
     if (!post.isLiked) {
       onLike(post.id);
     }
@@ -313,6 +319,7 @@ export default function VideoReel({
         <ReelActions
           post={post}
           isAuthenticated={isAuthenticated}
+          onAuthRequired={onAuthRequired}
           onLike={onLike}
           onComment={onComment}
           onShare={onShare}
@@ -321,6 +328,7 @@ export default function VideoReel({
         <ReelBottomContent
           post={post}
           isAuthenticated={isAuthenticated}
+          onAuthRequired={onAuthRequired}
           setShowOrderModal={setShowOrderModal}
         />
 
