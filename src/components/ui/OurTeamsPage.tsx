@@ -4,10 +4,18 @@ import AboutTopBar from "./landing/AboutTopBar";
 import AboutHeader from "./landing/AboutHeader";
 import TeamSection from "./landing/TeamSection";
 import AboutFooter from "./landing/AboutFooter";
+import Head from "next/head";
 
 export default function OurTeamsPage() {
     return (
         <>
+            <Head>
+                <title>Our Team - Plas Technologies</title>
+                <meta
+                    name="description"
+                    content="Meet the people building the future of African commerce. Our diverse team of visionaries and experts is dedicated to making Plas the most trusted marketplace."
+                />
+            </Head>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link
                 rel="preconnect"

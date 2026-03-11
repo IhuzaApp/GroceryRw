@@ -14,6 +14,7 @@ import CategoriesSection from "./landing/CategoriesSection";
 import CategoriesSectionSkeleton from "./landing/CategoriesSectionSkeleton";
 import AboutFooter from "./landing/AboutFooter";
 import { Handshake } from "lucide-react";
+import Head from "next/head";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -500,6 +501,16 @@ export default function LandingPage() {
 
   return (
     <>
+      <Head>
+        <title>Plas - Africa&apos;s Most Trusted Digital Marketplace</title>
+        <meta
+          name="description"
+          content="Order from top restaurants, supermarkets, and stores in Rwanda. Fast grocery delivery, medicine, and more delivered in minutes. Let's do it together."
+        />
+        <meta property="og:title" content="Plas - Africa's Most Trusted Digital Marketplace" />
+        <meta property="og:description" content="Shop from your favorite local stores and get everything delivered fast in Rwanda. Reliable, quick, and convenient." />
+        <meta name="twitter:title" content="Plas - Africa's Most Trusted Digital Marketplace" />
+      </Head>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
         rel="preconnect"

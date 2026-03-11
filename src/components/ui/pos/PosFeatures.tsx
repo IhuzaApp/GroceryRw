@@ -13,7 +13,7 @@ import {
   HeadphonesIcon,
 } from "lucide-react";
 
-export default function PosFeaturesSection() {
+export default function PosFeatures() {
   const featureCategories = [
     {
       title: "Point of Sale & Operations",

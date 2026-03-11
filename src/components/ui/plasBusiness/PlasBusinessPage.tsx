@@ -8,10 +8,20 @@ import PlasBusinessFeatures from "@components/ui/plasBusiness/PlasBusinessFeatur
 import IndividualSellersSection from "@components/ui/plasBusiness/IndividualSellersSection";
 import FreeNoticeSection from "@components/ui/plasBusiness/FreeNoticeSection";
 import RegistrationSection from "@components/ui/plasBusiness/RegistrationSection";
+import Head from "next/head";
 
 export default function PlasBusinessPage() {
     return (
         <>
+            <Head>
+                <title>Plas for Business - Sell to Thousands of Customers</title>
+                <meta
+                    name="description"
+                    content="Grow your business with Plas. Register as a restaurant, store, or individual seller and reach thousands of customers in your city."
+                />
+                <meta property="og:title" content="Plas for Business - Grow with Africa's Trusted Marketplace" />
+                <meta property="og:description" content="Become a partner today. We provide the platform, you bring the items. Let's scale together." />
+            </Head>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link
                 rel="preconnect"
