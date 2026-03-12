@@ -1,12 +1,18 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Info, Loader2 } from "lucide-react";
 import { usePlans, Plan, Module } from "../../../hooks/usePlans";
 
 export default function PosPricingSection() {
+  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
     "monthly"
   );
   const { plans, isLoading, isError } = usePlans();
+
+  const handleChoosePlan = (plan: Plan) => {
+    router.push(`/pos/register?planId=${plan.id}&billingCycle=${billingCycle}`);
+  };
 
   if (isLoading) {
     return (
@@ -198,13 +204,7 @@ export default function PosPricingSection() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    const registerSection =
-                      document.getElementById("pos-register");
-                    if (registerSection) {
-                      registerSection.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
+                  onClick={() => handleChoosePlan(plan)}
                   className={`mt-4 block w-full rounded-2xl ${
                     isPremium
                       ? "bg-[#1A1A1A] text-white hover:bg-black"
@@ -218,6 +218,7 @@ export default function PosPricingSection() {
           })}
         </div>
       </div>
+
     </section>
   );
 }
