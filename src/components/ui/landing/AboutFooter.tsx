@@ -31,9 +31,10 @@ export default function AboutFooter() {
                 alt="Plas Logo"
                 width={32}
                 height={32}
-                className="h-8 w-8"
+                className="h-8 w-8 transition-all"
+                style={{ filter: "brightness(0) invert(1)" }}
               />
-              <span className="text-2xl font-bold text-[#022C22]">Plas</span>
+              <span className="text-2xl font-bold text-white">Plas</span>
             </div>
             {/* Slogan */}
             <p className="font-bold text-white">Let&apos;s do it together</p>
@@ -305,8 +306,7 @@ export default function AboutFooter() {
 
           <div className="order-3 text-sm text-gray-500 md:order-3">
             <p>
-              &copy; {new Date().getFullYear()} Plas Technologies Ltd. All
-              rights reserved.
+              &copy; 2020 Plas under Plasera Ltd. All rights reserved. 2022
             </p>
           </div>
         </div>

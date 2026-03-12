@@ -1225,23 +1225,23 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h2 className="mb-8 text-3xl font-bold text-white md:mb-10 md:text-4xl lg:text-5xl">
-                Provinces we deliver in
+                Our Global Presence
               </h2>
 
-              {/* Provinces List */}
+              {/* Locations List */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {[
-                  "Kigali City",
-                  "Northern Province",
-                  "Southern Province",
-                  "Eastern Province",
-                  "Western Province",
-                ].map((province) => (
+                  "Rwanda Office",
+                  "UK Office",
+                  "Australia Office",
+                  "Ethiopia Office",
+                  "South Africa Office",
+                ].map((location) => (
                   <div
-                    key={province}
+                    key={location}
                     className="rounded-xl bg-white px-4 py-1.5 text-xs font-medium text-black shadow-sm transition-transform hover:scale-105 md:px-5 md:py-2 md:text-sm"
                   >
-                    {province}
+                    {location}
                   </div>
                 ))}
               </div>
