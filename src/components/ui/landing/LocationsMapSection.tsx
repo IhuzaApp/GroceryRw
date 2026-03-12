@@ -1,7 +1,5 @@
-import { MapPin, Info } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
-import L from "leaflet";
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -81,10 +79,18 @@ const locations: Location[] = [
 
 export default function LocationsMapSection() {
   const [activeLocation, setActiveLocation] = useState<Location | null>(null);
+  const [L, setL] = useState<any>(null);
+
+  useEffect(() => {
+    // Load Leaflet only on the client side
+    import("leaflet").then((mod) => {
+      setL(mod.default);
+    });
+  }, []);
 
   // Custom Icon for Leaflet
   const customIcon = useMemo(() => {
-    if (typeof window === "undefined") return null;
+    if (!L) return null;
     return L.divIcon({
       html: `
         <div style="
@@ -112,10 +118,10 @@ export default function LocationsMapSection() {
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
-  }, []);
+  }, [L]);
 
   const activeIcon = useMemo(() => {
-    if (typeof window === "undefined") return null;
+    if (!L) return null;
     return L.divIcon({
       html: `
         <div style="
@@ -144,7 +150,7 @@ export default function LocationsMapSection() {
       iconSize: [40, 40],
       iconAnchor: [20, 20],
     });
-  }, []);
+  }, [L]);
 
   return (
     <section className="bg-white py-24">
@@ -177,7 +183,9 @@ export default function LocationsMapSection() {
                   key={loc.id}
                   position={[loc.lat, loc.lng]}
                   icon={
-                    activeLocation?.id === loc.id ? activeIcon! : customIcon!
+                    activeLocation?.id === loc.id
+                      ? activeIcon || undefined
+                      : customIcon || undefined
                   }
                   eventHandlers={{
                     click: () => setActiveLocation(loc),
@@ -191,12 +199,12 @@ export default function LocationsMapSection() {
                         {loc.id === "za"
                           ? "South Africa"
                           : loc.id === "et"
-                          ? "Ethiopia"
-                          : loc.id === "ke"
-                          ? "Kenya"
-                          : loc.id === "ug"
-                          ? "Uganda"
-                          : "Rwanda"}
+                            ? "Ethiopia"
+                            : loc.id === "ke"
+                              ? "Kenya"
+                              : loc.id === "ug"
+                                ? "Uganda"
+                                : "Rwanda"}
                       </p>
                     </div>
                   </Popup>
@@ -256,12 +264,12 @@ export default function LocationsMapSection() {
                       {activeLocation.id === "za"
                         ? "South Africa"
                         : activeLocation.id === "et"
-                        ? "Ethiopia"
-                        : activeLocation.id === "ke"
-                        ? "Kenya"
-                        : activeLocation.id === "ug"
-                        ? "Uganda"
-                        : "Rwanda"}
+                          ? "Ethiopia"
+                          : activeLocation.id === "ke"
+                            ? "Kenya"
+                            : activeLocation.id === "ug"
+                              ? "Uganda"
+                              : "Rwanda"}
                     </p>
                     <div className="mb-6 h-px w-full bg-emerald-200" />
                     <p className="border-l-4 border-[#00D9A5] pl-4 text-lg font-medium italic leading-relaxed text-[#1A1A1A]">
@@ -317,11 +325,10 @@ export default function LocationsMapSection() {
                   <button
                     key={loc.id}
                     onClick={() => setActiveLocation(loc)}
-                    className={`rounded-full border px-5 py-2.5 text-sm font-bold shadow-sm transition-all ${
-                      activeLocation?.id === loc.id
+                    className={`rounded-full border px-5 py-2.5 text-sm font-bold shadow-sm transition-all ${activeLocation?.id === loc.id
                         ? "scale-105 border-[#1A1A1A] bg-[#1A1A1A] text-white"
                         : "border-gray-200 bg-white text-gray-600 hover:scale-105 hover:border-[#00D9A5] hover:text-[#00A67E]"
-                    }`}
+                      }`}
                   >
                     {loc.name.split(" ")[0]}
                   </button>
