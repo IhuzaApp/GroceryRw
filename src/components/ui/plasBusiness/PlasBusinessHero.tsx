@@ -64,7 +64,7 @@ export default function PlasBusinessHero() {
           <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
             <button
               onClick={handleGetStarted}
-              className="group relative rounded-2xl bg-[#022C22] px-10 py-5 text-lg font-bold text-black shadow-lg shadow-[#022C22]/20 transition-all hover:scale-105 active:scale-95"
+              className="group relative rounded-2xl bg-[#022C22] px-10 py-5 text-lg font-bold text-white shadow-lg shadow-[#022C22]/20 transition-all hover:scale-105 active:scale-95"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Get Started for Free

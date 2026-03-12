@@ -1,54 +1,54 @@
 import {
   Store,
   BarChart3,
-  Package,
-  Globe2,
-  Zap,
+  Video,
+  FileText,
+  Briefcase,
   ShieldCheck,
 } from "lucide-react";
 
 const features = [
   {
-    icon: <Globe2 className="h-8 w-8" />,
-    title: "Large Audience Reach",
+    icon: <FileText className="h-8 w-8" />,
+    title: "Smart RFQ System",
     description:
-      "Instantly connect with thousands of active customers in your region looking for products like yours.",
+      "Create detailed Requests for Quotations, specify requirements, and receive competitive bids from verified suppliers instantly.",
     color: "bg-blue-50 text-blue-600 border-blue-100",
   },
   {
-    icon: <Package className="h-8 w-8" />,
-    title: "Inventory Management",
+    icon: <Store className="h-8 w-8" />,
+    title: "Digital Store Management",
     description:
-      "Powerful tools to track your stock, manage variations, and receive low-inventory alerts automatically.",
+      "Launch and manage multiple storefronts with custom branding, categories, and real-time inventory synchronization.",
     color: "bg-emerald-50 text-[#00A67E] border-emerald-100",
   },
   {
     icon: <BarChart3 className="h-8 w-8" />,
-    title: "Real-time Analytics",
+    title: "Quote Analysis",
     description:
-      "Understand your sales trends, customer behavior, and popular items with our detailed dashboard.",
+      "Receive and compare structured quotes from businesses. Track payment terms, delivery times, and validity in one dashboard.",
     color: "bg-purple-50 text-purple-600 border-purple-100",
   },
   {
-    icon: <Store className="h-8 w-8" />,
-    title: "Custom Digital Store",
+    icon: <Video className="h-8 w-8" />,
+    title: "Business Reels",
     description:
-      "Create a beautiful, mobile-optimized online presence for your business in just a few clicks.",
-    color: "bg-orange-50 text-orange-600 border-orange-100",
-  },
-  {
-    icon: <Zap className="h-8 w-8" />,
-    title: "Instant Setup",
-    description:
-      "Start selling today. Our streamlined onboarding process gets you up and running without technical hassle.",
+      "Drive sales with short-form video content. Show off your products and services to thousands of shoppers through Plas Reels.",
     color: "bg-pink-50 text-pink-600 border-pink-100",
   },
   {
     icon: <ShieldCheck className="h-8 w-8" />,
-    title: "Secure Payments",
+    title: "Secure Contracts",
     description:
-      "Robust and secure payment processing options that build trust with your customers and ensure payout safety.",
+      "Secure your business deals with formal contracts. Track progress, manage milestones, and ensure zero-risk transactions.",
     color: "bg-indigo-50 text-indigo-600 border-indigo-100",
+  },
+  {
+    icon: <Briefcase className="h-8 w-8" />,
+    title: "Service Marketplace",
+    description:
+      "List your professional services, reach corporate clients, and respond to service requests with structured proposals.",
+    color: "bg-orange-50 text-orange-600 border-orange-100",
   },
 ];
 

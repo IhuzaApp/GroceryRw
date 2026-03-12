@@ -87,7 +87,7 @@ export default function IndividualSellersSection() {
             <div className="grid gap-8 sm:grid-cols-2">
               {benefits.map((benefit, i) => (
                 <div key={i} className="flex flex-col gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-[#022C22]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white">
                     {benefit.icon}
                   </div>
                   <h3 className="text-xl font-bold uppercase tracking-wide text-white">

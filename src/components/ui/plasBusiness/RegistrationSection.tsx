@@ -68,7 +68,7 @@ export default function RegistrationSection() {
               <>
                 <h2 className="mb-8 text-4xl font-black tracking-tight text-white md:text-5xl">
                   Ready to grow? <br />
-                  <span className="text-[#022C22]">Register Now</span>
+                  <span className="text-emerald-400">Register Now</span>
                 </h2>
 
                 <form className="space-y-6" onSubmit={handleSubmit}>
@@ -136,7 +136,7 @@ export default function RegistrationSection() {
 
                   <button
                     disabled={status === "loading"}
-                    className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-10 py-5 text-lg font-black text-[#1A1A1A] transition-all hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50"
+                    className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-10 py-5 text-lg font-black text-white transition-all hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50"
                   >
                     {status === "loading" ? (
                       <Loader2 className="h-6 w-6 animate-spin" />
