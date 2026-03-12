@@ -145,9 +145,60 @@ export default function RegisterPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (error) setError(null);
+  };
+
+  const validateStep = (currentStep: number) => {
+    switch (currentStep) {
+      case 1:
+        if (!businessType) return "Please select a business category.";
+        if (!selectedPlan) return "Please select a pricing plan.";
+        return null;
+      case 2:
+        if (!formData.name) return "Legal Business Name is required.";
+        if (!formData.tin) return "TIN Number is required.";
+        if (!formData.phone) return "Business Phone is required.";
+        if (!formData.email) return "Business Email is required.";
+        if (!formData.rdb_cert_url && !formData.rdb_cert) return "Please upload or provide your RDB Certificate.";
+        return null;
+      case 3:
+        if (!formData.logo) return "Business Logo is required.";
+        if (!formData.profile) return "Profile / Cover Image is required.";
+        return null;
+      case 4:
+        if (!formData.address) return "Physical Address is required.";
+        if (!formData.lat || !formData.long) return "Location coordinates are required. Please select an address from the suggestions.";
+        return null;
+      case 5:
+        if (!formData.fullnames) return "Admin Full Name is required.";
+        if (!formData.ownerEmail) return "Personal Email is required.";
+        if (!formData.ownerPhone) return "Personal Phone is required.";
+        if (!formData.password) return "Security Password is required.";
+        if (formData.password.length < 6) return "Password must be at least 6 characters.";
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const handleNextStep = () => {
+    const validationError = validateStep(step);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError(null);
+    setStep(s => s + 1);
   };
 
   const handleCompleteSetup = async () => {
+    const validationError = validateStep(step); // Should be step 6, but validates all if needed
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    // Explicit final check for step 6 state
     if (!selectedPlan) {
       setError("Please select a valid pricing plan.");
       return;
@@ -479,7 +530,7 @@ export default function RegisterPage() {
                   )}
                   <div className="flex-1" />
                   <button
-                    onClick={step === 6 ? handleCompleteSetup : () => setStep(s => s + 1)}
+                    onClick={step === 6 ? handleCompleteSetup : handleNextStep}
                     disabled={isSubmitting || (step === 3 && (uploading.logo || uploading.profile))}
                     className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-12 font-bold text-white shadow-lg transition-all hover:bg-[#00c596] active:scale-95 disabled:opacity-50"
                   >
