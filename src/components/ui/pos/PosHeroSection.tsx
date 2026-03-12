@@ -28,12 +28,12 @@ export default function PosHeroSection() {
               <button
                 onClick={() => {
                   document
-                    .getElementById("pos-register")
+                    .getElementById("pos-pricing")
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="rounded-lg bg-[#022C22] px-8 py-4 font-bold text-[#1A1A1A] transition-colors hover:bg-[#00c596]"
+                className="rounded-lg bg-[#022C22] px-8 py-4 font-bold text-white transition-colors hover:bg-[#00c596]"
               >
-                Register Now
+                Choose a plan that fits your needs
               </button>
             </div>
           </div>

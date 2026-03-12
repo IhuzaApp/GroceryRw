@@ -117,7 +117,7 @@ export default function PosPricingSection() {
                 } bg-white p-10 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl`}
               >
                 {isPremium && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-[#022C22] px-4 py-1 text-xs font-bold text-[#1A1A1A]">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-[#022C22] px-4 py-1 text-xs font-bold text-white">
                     MOST POPULAR
                   </div>
                 )}
@@ -208,7 +208,7 @@ export default function PosPricingSection() {
                   className={`mt-4 block w-full rounded-2xl ${
                     isPremium
                       ? "bg-[#1A1A1A] text-white hover:bg-black"
-                      : "bg-[#022C22] text-[#1A1A1A] hover:bg-[#00c596]"
+                      : "bg-[#022C22] text-white hover:bg-[#00c596]"
                   } transform py-5 text-center font-bold shadow-lg transition-all duration-300 active:scale-95`}
                 >
                   Choose {plan.name}

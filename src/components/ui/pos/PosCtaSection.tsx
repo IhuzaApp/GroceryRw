@@ -156,7 +156,7 @@ export default function PosCtaSection() {
             <button
               type="submit"
               disabled={isLoading}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#022C22] px-8 py-5 text-lg font-bold text-[#1A1A1A] shadow-lg shadow-[#022C22]/20 transition-all hover:bg-[#00c596] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#022C22] px-8 py-5 text-lg font-bold text-white shadow-lg shadow-[#022C22]/20 transition-all hover:bg-[#00c596] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isLoading ? (
                 <>
