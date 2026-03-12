@@ -8,12 +8,13 @@ interface AboutHeaderProps {
   activePage?:
     | "about"
     | "life-at-plas"
-    | "diversity"
     | "teams"
     | "careers"
-    | "stories"
     | "locations"
-    | "contact";
+    | "locations"
+    | "contact"
+    | "pos"
+    | "plasBusiness";
 }
 
 export default function AboutHeader({
@@ -50,7 +51,7 @@ export default function AboutHeader({
             />
             <span
               className={`text-2xl font-bold transition-colors ${
-                isScrolled ? "text-[#00D9A5]" : "text-white"
+                isScrolled ? "text-[#022C22]" : "text-white"
               }`}
             >
               Plas
@@ -66,10 +67,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "about"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -82,65 +83,63 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "life-at-plas"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
               Life at Plas
             </Link>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${
-                isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
-                  : "text-white/90 hover:text-white"
-              }`}
-            >
-              Diversity & Inclusion
-            </a>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${
-                isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+            <Link
+              href="/ourTeams"
+              className={`${
+                activePage === "teams" ? "border-b-2 pb-1" : ""
+              } font-medium transition-colors ${
+                activePage === "teams"
+                  ? isScrolled
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
+                  : isScrolled
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
               Our teams
-            </a>
+            </Link>
             <Link
               href="/careers"
-              className={`font-medium transition-colors ${
-                isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+              className={`${
+                activePage === "careers" ? "border-b-2 pb-1" : ""
+              } font-medium transition-colors ${
+                activePage === "careers"
+                  ? isScrolled
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
+                  : isScrolled
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
               Careers at Plas
             </Link>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${
-                isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
-                  : "text-white/90 hover:text-white"
-              }`}
-            >
-              Stories
-            </a>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${
-                isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+            <Link
+              href="/locations"
+              className={`${
+                activePage === "locations" ? "border-b-2 pb-1" : ""
+              } font-medium transition-colors ${
+                activePage === "locations"
+                  ? isScrolled
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
+                  : isScrolled
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
               Our locations
-            </a>
+            </Link>
             <Link
               href="/contact"
               className={`${
@@ -148,10 +147,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "contact"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -164,7 +163,7 @@ export default function AboutHeader({
             <button
               className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${
                 isScrolled
-                  ? "border-gray-300 bg-white text-gray-900 hover:border-[#00D9A5]"
+                  ? "border-gray-300 bg-white text-gray-900 hover:border-[#022C22]"
                   : "border-white bg-transparent text-white hover:bg-white/10"
               }`}
               onClick={() => router.push("/Auth/Login")}

@@ -47,7 +47,7 @@ export default function HeroSection({
             <button
               type="button"
               onClick={address ? onAddressSubmit : onUseCurrentLocation}
-              className="absolute right-2 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-[#A8E6CF] px-4 py-2.5 text-sm font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8]"
+              className="absolute right-2 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-[#022c22] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#011a14]"
             >
               {address ? "Continue" : "Use current location"}
             </button>

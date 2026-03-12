@@ -6,6 +6,7 @@ import { User, Calendar, Plus, Minus } from "lucide-react";
 import AboutTopBar from "../src/components/ui/landing/AboutTopBar";
 import AboutHeader from "../src/components/ui/landing/AboutHeader";
 import AboutFooter from "../src/components/ui/landing/AboutFooter";
+import Head from "next/head";
 
 export default function ContactPage() {
   const router = useRouter();
@@ -168,6 +169,14 @@ export default function ContactPage() {
 
   return (
     <>
+      <Head>
+        <title>Contact Us - Ask Plas</title>
+        <meta
+          name="description"
+          content="Have questions? Ask Plas. Get support for careers, partnerships, or technical issues. We're here to help."
+        />
+        <meta property="og:title" content="Contact Us - Ask Plas Support" />
+      </Head>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
         rel="preconnect"

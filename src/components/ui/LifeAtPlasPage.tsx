@@ -244,7 +244,7 @@ export default function LifeAtPlasPage() {
                 </div>
                 <button
                   onClick={() => router.push("/careers")}
-                  className="mt-6 w-fit rounded-lg bg-[#00D9A5] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
+                  className="mt-6 w-fit rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
                 >
                   Join our ride
                 </button>
@@ -262,15 +262,15 @@ export default function LifeAtPlasPage() {
                 {/* Decorative Green Circles */}
                 <div className="absolute -left-8 top-0 hidden lg:block">
                   <div className="relative">
-                    <div className="absolute h-16 w-16 rounded-full border-2 border-[#00D9A5]"></div>
-                    <div className="absolute left-4 top-4 h-16 w-16 rounded-full border-2 border-[#00D9A5]"></div>
+                    <div className="absolute h-16 w-16 rounded-full border-2 border-[#022C22]"></div>
+                    <div className="absolute left-4 top-4 h-16 w-16 rounded-full border-2 border-[#022C22]"></div>
                   </div>
                 </div>
 
                 <div className="relative z-10">
                   <h2 className="mb-4 text-4xl font-bold text-gray-800 md:text-5xl lg:text-6xl">
                     Perks & benefits
-                    <span className="mt-2 block h-1 w-24 bg-[#00D9A5]"></span>
+                    <span className="mt-2 block h-1 w-24 bg-[#022C22]"></span>
                   </h2>
                   <div className="space-y-4 text-lg leading-relaxed text-gray-800">
                     <p>
@@ -434,7 +434,7 @@ export default function LifeAtPlasPage() {
                         key={index}
                         className="min-w-full px-4 md:min-w-[33.333%]"
                       >
-                        <div className="mx-auto rounded-lg bg-[#00D9A5] px-6 py-10 text-center shadow-lg md:px-8 md:py-12">
+                        <div className="mx-auto rounded-lg bg-[#022C22] px-6 py-10 text-center shadow-lg md:px-8 md:py-12">
                           <p className="text-lg font-semibold text-white md:text-xl">
                             {benefit}
                           </p>
@@ -486,14 +486,14 @@ export default function LifeAtPlasPage() {
           {/* Decorative circular line graphics */}
           <div className="absolute right-8 top-8 opacity-20">
             <svg width="150" height="150" viewBox="0 0 150 150" fill="none">
-              <circle cx="75" cy="75" r="70" stroke="#00D9A5" strokeWidth="1" />
-              <circle cx="75" cy="75" r="50" stroke="#00D9A5" strokeWidth="1" />
+              <circle cx="75" cy="75" r="70" stroke="#022C22" strokeWidth="1" />
+              <circle cx="75" cy="75" r="50" stroke="#022C22" strokeWidth="1" />
             </svg>
           </div>
           <div className="absolute bottom-8 left-8 opacity-20">
             <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
-              <circle cx="50" cy="50" r="45" stroke="#00D9A5" strokeWidth="1" />
-              <circle cx="50" cy="50" r="30" stroke="#00D9A5" strokeWidth="1" />
+              <circle cx="50" cy="50" r="45" stroke="#022C22" strokeWidth="1" />
+              <circle cx="50" cy="50" r="30" stroke="#022C22" strokeWidth="1" />
             </svg>
           </div>
 
@@ -515,7 +515,7 @@ export default function LifeAtPlasPage() {
                       className="object-cover"
                     />
                     {/* Green accent strip */}
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-[#00D9A5]"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-[#022C22]"></div>
                   </div>
                 ) : (
                   <div
@@ -531,7 +531,7 @@ export default function LifeAtPlasPage() {
                       className="object-cover"
                     />
                     {/* Green accent strip */}
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-[#00D9A5]"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-[#022C22]"></div>
                   </div>
                 )}
               </div>
@@ -574,7 +574,7 @@ export default function LifeAtPlasPage() {
                     onClick={() => setActiveSection("talent-house")}
                     className={`transition-colors ${
                       activeSection === "talent-house"
-                        ? "font-bold text-[#00D9A5]"
+                        ? "font-bold text-[#022C22]"
                         : "text-gray-400 hover:text-gray-300"
                     }`}
                   >
@@ -584,7 +584,7 @@ export default function LifeAtPlasPage() {
                     onClick={() => setActiveSection("office-life")}
                     className={`transition-colors ${
                       activeSection === "office-life"
-                        ? "font-bold text-[#00D9A5]"
+                        ? "font-bold text-[#022C22]"
                         : "text-gray-400 hover:text-gray-300"
                     }`}
                   >
@@ -602,7 +602,7 @@ export default function LifeAtPlasPage() {
             {/* Section Header */}
             <div className="mb-12 text-center">
               <div className="mb-4 flex items-center justify-center gap-3">
-                <div className="text-[#00D9A5]">
+                <div className="text-[#022C22]">
                   <svg
                     width="24"
                     height="24"
@@ -761,7 +761,7 @@ export default function LifeAtPlasPage() {
                           {/* Overlay logo */}
                           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
                             <div className="text-center">
-                              <div className="text-6xl font-bold text-[#00D9A5] drop-shadow-lg">
+                              <div className="text-6xl font-bold text-[#022C22] drop-shadow-lg">
                                 Plas
                               </div>
                             </div>
@@ -793,7 +793,7 @@ export default function LifeAtPlasPage() {
                     key={index}
                     onClick={() => setCurrentSlide(index)}
                     className={`h-3 w-3 rounded-full transition-colors ${
-                      index === currentSlide ? "bg-[#00D9A5]" : "bg-gray-300"
+                      index === currentSlide ? "bg-[#022C22]" : "bg-gray-300"
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
@@ -810,19 +810,19 @@ export default function LifeAtPlasPage() {
             <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
               <path
                 d="M60 10 Q100 30 110 60"
-                stroke="#00D9A5"
+                stroke="#022C22"
                 strokeWidth="2"
                 fill="none"
               />
               <path
                 d="M60 20 Q90 35 100 60"
-                stroke="#00D9A5"
+                stroke="#022C22"
                 strokeWidth="2"
                 fill="none"
               />
               <path
                 d="M60 30 Q80 40 90 60"
-                stroke="#00D9A5"
+                stroke="#022C22"
                 strokeWidth="2"
                 fill="none"
               />
@@ -906,7 +906,7 @@ export default function LifeAtPlasPage() {
                 cx="60"
                 cy="60"
                 r="50"
-                stroke="#00D9A5"
+                stroke="#022C22"
                 strokeWidth="2"
                 fill="none"
               />
@@ -914,7 +914,7 @@ export default function LifeAtPlasPage() {
                 cx="60"
                 cy="60"
                 r="35"
-                stroke="#00D9A5"
+                stroke="#022C22"
                 strokeWidth="2"
                 fill="none"
               />
@@ -922,7 +922,7 @@ export default function LifeAtPlasPage() {
                 cx="60"
                 cy="60"
                 r="20"
-                stroke="#00D9A5"
+                stroke="#022C22"
                 strokeWidth="2"
                 fill="none"
               />
@@ -1198,7 +1198,7 @@ export default function LifeAtPlasPage() {
                 </p>
                 <button
                   onClick={() => router.push("/careers")}
-                  className="mt-8 rounded-lg bg-[#00D9A5] px-10 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
+                  className="mt-8 rounded-lg bg-[#022C22] px-10 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
                 >
                   Join our ride
                 </button>

@@ -22,6 +22,7 @@ interface MobileReelsViewProps {
   isRefreshingComments: boolean;
   toggleLike: (postId: string) => void;
   handleShare: (post: FoodPost) => void;
+  onAuthRequired: () => void;
   isRefreshing: boolean;
 }
 
@@ -41,6 +42,7 @@ export default function MobileReelsView({
   isRefreshingComments,
   toggleLike,
   handleShare,
+  onAuthRequired,
   isRefreshing,
 }: MobileReelsViewProps) {
   // Scroll handling for mobile
@@ -127,6 +129,7 @@ export default function MobileReelsView({
               post={post}
               isVisible={visiblePostIndex === index}
               isAuthenticated={isAuthenticated}
+              onAuthRequired={onAuthRequired}
               onLike={toggleLike}
               onComment={(postId) => openComments(postId)}
               onShare={handleShare}

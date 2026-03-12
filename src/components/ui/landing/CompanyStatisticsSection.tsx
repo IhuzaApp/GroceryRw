@@ -11,7 +11,7 @@ export default function CompanyStatisticsSection() {
               <div className="relative">
                 <Globe className="h-10 w-10 text-gray-800" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-6 w-6 rounded-full bg-[#00D9A5] opacity-30"></div>
+                  <div className="h-6 w-6 rounded-full bg-[#022C22] opacity-30"></div>
                 </div>
               </div>
             </div>
@@ -24,7 +24,7 @@ export default function CompanyStatisticsSection() {
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
               <div className="relative">
                 <Package className="h-10 w-10 text-gray-800" />
-                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#00D9A5]"></div>
+                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#022C22]"></div>
               </div>
             </div>
             <div className="mb-2 text-5xl font-bold text-gray-800">125</div>
@@ -36,7 +36,7 @@ export default function CompanyStatisticsSection() {
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
               <div className="relative">
                 <Store className="h-10 w-10 text-gray-800" />
-                <div className="absolute -top-1 left-1/2 h-4 w-8 -translate-x-1/2 rounded-t-full bg-[#00D9A5]"></div>
+                <div className="absolute -top-1 left-1/2 h-4 w-8 -translate-x-1/2 rounded-t-full bg-[#022C22]"></div>
               </div>
             </div>
             <div className="mb-2 text-5xl font-bold text-gray-800">98</div>
@@ -48,7 +48,7 @@ export default function CompanyStatisticsSection() {
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
               <div className="relative">
                 <Briefcase className="h-10 w-10 text-gray-800" />
-                <div className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-[#00D9A5]"></div>
+                <div className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-[#022C22]"></div>
               </div>
             </div>
             <div className="mb-2 text-5xl font-bold text-gray-800">37</div>

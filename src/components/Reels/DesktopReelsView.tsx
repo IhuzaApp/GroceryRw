@@ -20,6 +20,7 @@ interface DesktopReelsViewProps {
   isRefreshingComments: boolean;
   toggleLike: (postId: string) => void;
   handleShare: (post: FoodPost) => void;
+  onAuthRequired: () => void;
   isRefreshing: boolean;
   theme: "light" | "dark";
 }
@@ -36,6 +37,7 @@ export default function DesktopReelsView({
   isRefreshingComments,
   toggleLike,
   handleShare,
+  onAuthRequired,
   isRefreshing,
   theme,
 }: DesktopReelsViewProps) {
@@ -256,6 +258,7 @@ export default function DesktopReelsView({
                 post={post}
                 isVisible={visiblePostIndex === index}
                 isAuthenticated={isAuthenticated}
+                onAuthRequired={onAuthRequired}
                 onLike={toggleLike}
                 onComment={() => {}}
                 onShare={handleShare}

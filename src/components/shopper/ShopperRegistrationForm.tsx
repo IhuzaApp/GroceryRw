@@ -1838,7 +1838,7 @@ export default function ShopperRegistrationForm() {
               value={formValue.phone_number}
               onChange={(value) => handleInputChange("phone_number", value)}
               error={errors.phone_number}
-              placeholder="+250 123 456 789"
+              placeholder="0788829084"
               required
             />
           </div>
@@ -1955,7 +1955,7 @@ export default function ShopperRegistrationForm() {
               value={formValue.guarantorPhone}
               onChange={(value) => handleInputChange("guarantorPhone", value)}
               error={errors.guarantorPhone}
-              placeholder="+250 123 456 789"
+              placeholder="0788829084"
             />
 
             <CustomInput

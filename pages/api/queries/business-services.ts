@@ -61,68 +61,86 @@ export default async function handler(
       authOptions as any
     )) as Session | null;
 
-    if (!session || !session.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    const user_id = session.user.id;
-
-    // Get business_id from business account
     let business_id: string | null = null;
-    try {
-      const CHECK_BUSINESS_ACCOUNT = gql`
-        query CheckBusinessAccount($user_id: uuid!) {
-          business_accounts(where: { user_id: { _eq: $user_id } }, limit: 1) {
+    if (session && session.user) {
+      const user_id = session.user.id;
+      // Get business_id from business account
+      try {
+        const CHECK_BUSINESS_ACCOUNT = gql`
+          query CheckBusinessAccount($user_id: uuid!) {
+            business_accounts(where: { user_id: { _eq: $user_id } }, limit: 1) {
+              id
+              account_type
+            }
+          }
+        `;
+        const accountResult = await hasuraClient.request<{
+          business_accounts: Array<{ id: string; account_type: string }>;
+        }>(CHECK_BUSINESS_ACCOUNT, {
+          user_id: user_id,
+        });
+        if (
+          accountResult.business_accounts &&
+          accountResult.business_accounts.length > 0
+        ) {
+          business_id = accountResult.business_accounts[0].id;
+        }
+      } catch (error) {
+        console.error("Error fetching business account:", error);
+      }
+    }
+
+    let result;
+    if (business_id) {
+      // Fetch specifically for this business
+      result = await hasuraClient.request<{
+        PlasBusinessProductsOrSerive: Array<any>;
+      }>(GET_BUSINESS_SERVICES, {
+        business_id: business_id,
+      });
+    } else {
+      // Fetch all public services for explorer/unauthenticated users
+      const GET_ALL_SERVICES = gql`
+        query GetAllBusinessServices {
+          PlasBusinessProductsOrSerive(
+            where: { store_id: { _is_null: true } }
+            order_by: { created_at: desc }
+          ) {
             id
-            account_type
+            name
+            Description
+            Image
+            price
+            unit
+            status
+            query_id
+            minimumOrders
+            maxOrders
+            delveryArea
+            speciality
+            created_at
+            Plasbusiness_id
+            store_id
+            user_id
           }
         }
       `;
-      const accountResult = await hasuraClient.request<{
-        business_accounts: Array<{ id: string; account_type: string }>;
-      }>(CHECK_BUSINESS_ACCOUNT, {
-        user_id: user_id,
-      });
-      if (
-        accountResult.business_accounts &&
-        accountResult.business_accounts.length > 0
-      ) {
-        business_id = accountResult.business_accounts[0].id;
-      }
-    } catch (error) {
-      console.error("Error fetching business account:", error);
+      result = await hasuraClient.request<{
+        PlasBusinessProductsOrSerive: Array<any>;
+      }>(GET_ALL_SERVICES);
     }
 
-    if (!business_id) {
-      return res.status(200).json({ services: [] });
-    }
-
-    const result = await hasuraClient.request<{
-      PlasBusinessProductsOrSerive: Array<{
-        id: string;
-        name: string;
-        Description: string | null;
-        Image: string | null;
-        price: string;
-        unit: string;
-        status: string;
-        query_id: string | null;
-        minimumOrders: string | null;
-        maxOrders: string | null;
-        delveryArea: string | null;
-        speciality: string | null;
-        created_at: string;
-        Plasbusiness_id: string | null;
-        store_id: string | null;
-        user_id: string | null;
-      }>;
-    }>(GET_BUSINESS_SERVICES, {
-      business_id: business_id,
-    });
+    console.log(
+      `API: Fetching services for business_id: ${business_id || "ALL"}`
+    );
+    console.log(
+      "API: Total services fetched:",
+      result.PlasBusinessProductsOrSerive?.length || 0
+    );
 
     return res.status(200).json({
       success: true,

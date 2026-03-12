@@ -688,3 +688,137 @@ export async function sendRejectedAccountSupportRequestToSlack(
     throw error;
   }
 }
+// --- POS contact / Demo request ---
+
+export interface POSContactRequestPayload {
+  shopName: string;
+  ownerName: string;
+  phone: string;
+}
+
+/**
+ * Notify Slack when a user requests a POS demo/contact.
+ */
+export async function sendPOSContactRequestToSlack(
+  payload: POSContactRequestPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🚀 New POS Demo Request",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Shop Name*\n${payload.shopName}` },
+        { type: "mrkdwn", text: `*Owner Name*\n${payload.ownerName}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [{ type: "mrkdwn", text: `*Phone Number*\n${payload.phone}` }],
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New POS Demo Request: ${payload.shopName} (${payload.ownerName})`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send POS contact request to Slack", error);
+    throw error;
+  }
+} // --- Landing page business registration notice ---
+
+export interface BusinessRegistrationNoticePayload {
+  fullName: string;
+  businessName: string;
+  email: string;
+  phone: string;
+  description: string;
+}
+
+/**
+ * Notify Slack when a user registers interest in Plas Business via the landing page form.
+ */
+export async function sendBusinessRegistrationNoticeToSlack(
+  payload: BusinessRegistrationNoticePayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "📈 New Plas Business Registration",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Full Name*\n${payload.fullName}` },
+        { type: "mrkdwn", text: `*Business Name*\n${payload.businessName}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Email*\n${payload.email}` },
+        { type: "mrkdwn", text: `*Phone*\n${payload.phone}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Description*\n${
+          payload.description || "_No description provided._"
+        }`,
+      },
+    },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New Plas Business registration: ${payload.businessName} (${payload.fullName})`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error(
+      "Failed to send business registration notice to Slack",
+      error
+    );
+    throw error;
+  }
+}

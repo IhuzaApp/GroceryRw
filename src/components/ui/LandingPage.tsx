@@ -12,6 +12,10 @@ import HeroSection from "./landing/HeroSection";
 import HeroSectionSkeleton from "./landing/HeroSectionSkeleton";
 import CategoriesSection from "./landing/CategoriesSection";
 import CategoriesSectionSkeleton from "./landing/CategoriesSectionSkeleton";
+import AboutFooter from "./landing/AboutFooter";
+import { Handshake } from "lucide-react";
+import Head from "next/head";
+import PartnershipFormDrawer from "./partnership/PartnershipFormDrawer";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -30,6 +34,7 @@ export default function LandingPage() {
   >([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [displayAddress, setDisplayAddress] = useState("");
+  const [isPartnershipDrawerOpen, setIsPartnershipDrawerOpen] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -499,6 +504,25 @@ export default function LandingPage() {
 
   return (
     <>
+      <Head>
+        <title>Plas - Africa&apos;s Most Trusted Digital Marketplace</title>
+        <meta
+          name="description"
+          content="Order from top restaurants, supermarkets, and stores in Rwanda. Fast grocery delivery, medicine, and more delivered in minutes. Let's do it together."
+        />
+        <meta
+          property="og:title"
+          content="Plas - Africa's Most Trusted Digital Marketplace"
+        />
+        <meta
+          property="og:description"
+          content="Shop from your favorite local stores and get everything delivered fast in Rwanda. Reliable, quick, and convenient."
+        />
+        <meta
+          name="twitter:title"
+          content="Plas - Africa's Most Trusted Digital Marketplace"
+        />
+      </Head>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
         rel="preconnect"
@@ -554,7 +578,7 @@ export default function LandingPage() {
           background-color: white !important;
           border-radius: 16px !important;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
-          border: 2px solid #00D9A5 !important;
+          border: 2px solid #022C22 !important;
           margin-top: 8px !important;
           padding: 8px 0 !important;
           font-family: 'Nunito', sans-serif !important;
@@ -577,12 +601,12 @@ export default function LandingPage() {
           padding-left: 20px !important;
         }
         .pac-item-selected {
-          background-color: #A8E6CF !important;
-          color: #00A67E !important;
+          background-color: #022C22 !important;
+          color: white !important;
           font-weight: 600 !important;
         }
         .pac-item-selected:hover {
-          background-color: #90D9B8 !important;
+          background-color: #011a14 !important;
         }
         .pac-icon {
           margin-right: 12px !important;
@@ -591,14 +615,14 @@ export default function LandingPage() {
         }
         .pac-matched {
           font-weight: 600 !important;
-          color: #00D9A5 !important;
+          color: #022C22 !important;
         }
         .pac-item-query {
           color: #333 !important;
           font-size: 14px !important;
         }
         .pac-item-query .pac-matched {
-          color: #00D9A5 !important;
+          color: #022C22 !important;
           font-weight: 700 !important;
         }
       `,
@@ -619,7 +643,7 @@ export default function LandingPage() {
         />
 
         {/* Top Green Section */}
-        <div className="relative bg-[#00D9A5] pb-20 pt-20 md:pb-32 md:pt-24">
+        <div className="relative bg-[#022C22] pb-20 pt-20 md:pb-32 md:pt-24">
           {/* Wave separator */}
           <div
             className="absolute bottom-0 left-0 right-0"
@@ -681,8 +705,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="McDonald's"
+                    src="https://pbs.twimg.com/media/HBhjaEwXwAAOj4y.jpg"
+                    alt="Simba Supermarket"
                     fill
                     className="object-cover"
                     style={{
@@ -694,12 +718,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      McDonald&apos;s
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      Simba Supermarket
                     </span>
                   </div>
                 </div>
@@ -712,8 +736,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="KFC"
+                    src="https://www.newtimes.co.rw/uploads/imported_images/files/main/articles/2021/02/11/sawa-city-rusororo.jpg"
+                    alt="Sawa Citi"
                     fill
                     className="object-cover"
                     style={{
@@ -725,12 +749,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      KFC
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      Sawa Citi
                     </span>
                   </div>
                 </div>
@@ -743,8 +767,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="Burger King"
+                    src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80"
+                    alt="Woodlands Supermarket"
                     fill
                     className="object-cover"
                     style={{
@@ -756,12 +780,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      BurgerKing
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      Woodlands
                     </span>
                   </div>
                 </div>
@@ -774,8 +798,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="Carrefour"
+                    src="https://images.unsplash.com/photo-1604719312566-8912e9227c6a?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80"
+                    alt="Frulep"
                     fill
                     className="object-cover"
                     style={{
@@ -787,12 +811,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      Carrefour
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      Frulep
                     </span>
                   </div>
                 </div>
@@ -805,8 +829,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="PizzaHut"
+                    src="https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80"
+                    alt="Ndoli's Joint"
                     fill
                     className="object-cover"
                     style={{
@@ -818,12 +842,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      PizzaHut
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      Ndoli&apos;s Joint
                     </span>
                   </div>
                 </div>
@@ -836,8 +860,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="Papa John's"
+                    src="https://www.rwandayp.com/img/rw/c/1628006177-35-alimentation-la-gardienne.jpg"
+                    alt="La Gardien"
                     fill
                     className="object-cover"
                     style={{
@@ -849,12 +873,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      Papa John&apos;s
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      La Gardien
                     </span>
                   </div>
                 </div>
@@ -867,8 +891,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="Subway"
+                    src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80"
+                    alt="German Butchery"
                     fill
                     className="object-cover"
                     style={{
@@ -880,12 +904,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      Subway
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      German Butchery
                     </span>
                   </div>
                 </div>
@@ -898,8 +922,8 @@ export default function LandingPage() {
                   style={{ borderRadius: "45% 45% 60% 45% / 40% 40% 70% 50%" }}
                 >
                   <Image
-                    src="https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=700,636"
-                    alt="TacoBell"
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTphmIK4JFMjNunPmc1pxbx2UHgdKdyWYySyA&s"
+                    alt="Her Majesty"
                     fill
                     className="object-cover"
                     style={{
@@ -911,12 +935,12 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
-                    <span className="text-[10px] font-bold text-white md:text-xs">
-                      TacoBell
+                    <span className="whitespace-nowrap text-[10px] font-bold text-white md:text-xs">
+                      Her Majesty
                     </span>
                   </div>
                 </div>
@@ -991,14 +1015,14 @@ export default function LandingPage() {
                   more you can order your favourite food or{" "}
                   <span className="relative inline-block font-bold">
                     <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#00D9A5] opacity-60"
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
                       style={{
                         transform: "skew(-2deg, 1deg)",
                         filter: "blur(2px)",
                       }}
                     ></span>
                     <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#A8E6CF] opacity-40"
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
                       style={{
                         transform: "skew(1deg, -1deg)",
                         filter: "blur(1px)",
@@ -1061,14 +1085,14 @@ export default function LandingPage() {
                   Like a flash! Order or send anything in your city and{" "}
                   <span className="relative inline-block font-bold">
                     <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#00D9A5] opacity-60"
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
                       style={{
                         transform: "skew(-2deg, 1deg)",
                         filter: "blur(2px)",
                       }}
                     ></span>
                     <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#A8E6CF] opacity-40"
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
                       style={{
                         transform: "skew(1deg, -1deg)",
                         filter: "blur(1px)",
@@ -1131,14 +1155,14 @@ export default function LandingPage() {
                   Find anything you need! From{" "}
                   <span className="relative inline-block font-bold">
                     <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#00D9A5] opacity-60"
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
                       style={{
                         transform: "skew(-2deg, 1deg)",
                         filter: "blur(2px)",
                       }}
                     ></span>
                     <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#A8E6CF] opacity-40"
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
                       style={{
                         transform: "skew(1deg, -1deg)",
                         filter: "blur(1px)",
@@ -1156,8 +1180,8 @@ export default function LandingPage() {
             {/* Call to Action Button */}
             <div className="mt-12 flex justify-center">
               <button
-                onClick={() => router.push("/")}
-                className="rounded-lg bg-[#00D9A5] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
+                onClick={handleUseCurrentLocation}
+                className="rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#011a14]"
               >
                 Explore stores around you
               </button>
@@ -1166,7 +1190,7 @@ export default function LandingPage() {
         </div>
 
         {/* Cities we deliver in Section */}
-        <div className="relative bg-[#00D9A5] py-20 md:py-24">
+        <div className="relative bg-[#022C22] py-28 md:py-32">
           {/* Wave separator at top */}
           <div className="absolute left-0 right-0 top-0 -translate-y-px">
             <svg
@@ -1202,50 +1226,23 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h2 className="mb-8 text-3xl font-bold text-white md:mb-10 md:text-4xl lg:text-5xl">
-                Cities we deliver in
+                Our Global Presence
               </h2>
 
-              {/* Cities List */}
+              {/* Locations List */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {[
-                  "Kigali",
-                  "Butare",
-                  "Gitarama",
-                  "Ruhengeri",
-                  "Gisenyi",
-                  "Byumba",
-                  "Cyangugu",
-                  "Kibungo",
-                  "Kibuye",
-                  "Rwamagana",
-                  "Nyagatare",
-                  "Musanze",
-                  "Huye",
-                  "Muhanga",
-                  "Rubavu",
-                  "Karongi",
-                  "Nyamagabe",
-                  "Nyanza",
-                  "Ngoma",
-                  "Kayonza",
-                  "Rulindo",
-                  "Gatsibo",
-                  "Nyabihu",
-                  "Ngororero",
-                  "Nyamasheke",
-                  "Rusizi",
-                  "Burera",
-                  "Gicumbi",
-                  "Kamonyi",
-                  "Nyarugenge",
-                  "Gasabo",
-                  "Kicukiro",
-                ].map((city) => (
+                  "Rwanda Office",
+                  "UK Office",
+                  "Australia Office",
+                  "Ethiopia Office",
+                  "South Africa Office",
+                ].map((location) => (
                   <div
-                    key={city}
+                    key={location}
                     className="rounded-xl bg-white px-4 py-1.5 text-xs font-medium text-black shadow-sm transition-transform hover:scale-105 md:px-5 md:py-2 md:text-sm"
                   >
-                    {city}
+                    {location}
                   </div>
                 ))}
               </div>
@@ -1270,19 +1267,13 @@ export default function LandingPage() {
         </div>
 
         {/* Let's do it together Section */}
-        <div className="bg-[#E8F5E9] py-16">
+        <div className="bg-[#ffff] py-16">
           <div className="container mx-auto px-4">
             {/* Header with Icon */}
             <div className="mb-12 text-center">
               <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A67E]">
-                  <svg
-                    className="h-8 w-8 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M20.5 2.5c-1.5 0-2.8.6-3.8 1.6l-1.2 1.2c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0l1.2-1.2c.6-.6 1.4-.9 2.2-.9.8 0 1.6.3 2.2.9.6.6.9 1.4.9 2.2 0 .8-.3 1.6-.9 2.2l-1.2 1.2c-.4.4-.4 1 0 1.4.2.2.5.3.7.3s.5-.1.7-.3l1.2-1.2c1-1 1.6-2.3 1.6-3.8 0-1.5-.6-2.8-1.6-3.8-1-1-2.3-1.6-3.8-1.6zm-17 0c-1.5 0-2.8.6-3.8 1.6-1 1-1.6 2.3-1.6 3.8 0 1.5.6 2.8 1.6 3.8l1.2 1.2c.2.2.5.3.7.3s.5-.1.7-.3c.4-.4.4-1 0-1.4l-1.2-1.2c-.6-.6-1.4-.9-2.2-.9-.8 0-1.6.3-2.2.9-.6.6-.9 1.4-.9 2.2 0 .8.3 1.6.9 2.2l1.2 1.2c.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4l-1.2-1.2c-1-1-1.6-2.3-1.6-3.8 0-1.5.6-2.8 1.6-3.8 1-1 2.3-1.6 3.8-1.6zm16.5 5.5c-.6 0-1 .4-1 1v2h-2v-2c0-.6-.4-1-1-1s-1 .4-1 1v2h-2v-2c0-.6-.4-1-1-1s-1 .4-1 1v6c0 .6.4 1 1 1h8c.6 0 1-.4 1-1v-6c0-.6-.4-1-1-1z" />
-                  </svg>
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#022C22]">
+                  <Handshake className="h-8 w-8 text-white" />
                 </div>
               </div>
               <h2 className="text-3xl font-bold text-[#1A1A1A] md:text-4xl">
@@ -1319,8 +1310,8 @@ export default function LandingPage() {
                   boost sales and unlock new opportunities!
                 </p>
                 <button
-                  onClick={() => router.push("/plasBusiness")}
-                  className="rounded-lg bg-[#00A67E] px-6 py-3 font-medium text-white transition-colors hover:bg-[#008B6B]"
+                  onClick={() => setIsPartnershipDrawerOpen(true)}
+                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
                 </button>
@@ -1355,7 +1346,7 @@ export default function LandingPage() {
                 </p>
                 <button
                   onClick={() => router.push("/careers")}
-                  className="rounded-lg bg-[#00A67E] px-6 py-3 font-medium text-white transition-colors hover:bg-[#008B6B]"
+                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
                 </button>
@@ -1363,22 +1354,13 @@ export default function LandingPage() {
 
               {/* Get POS System */}
               <div className="flex flex-col items-center text-center">
-                <div className="mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50">
-                    <svg
-                      className="h-24 w-24 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                  </div>
+                <div className="relative mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
+                  <Image
+                    src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                    alt="POS System"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">
                   Get POS System
@@ -1390,7 +1372,7 @@ export default function LandingPage() {
                 </p>
                 <button
                   onClick={() => router.push("/pos")}
-                  className="rounded-lg bg-[#00A67E] px-6 py-3 font-medium text-white transition-colors hover:bg-[#008B6B]"
+                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
                 </button>
@@ -1400,257 +1382,12 @@ export default function LandingPage() {
         </div>
 
         {/* Footer */}
-        <footer className="relative bg-[#1A1A1A] text-white">
-          {/* Curved white line at top */}
-          <div className="absolute left-0 right-0 top-0 -translate-y-px">
-            <svg
-              viewBox="0 0 1440 120"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0 0L60 10C120 20 240 40 360 50C480 60 600 60 720 55C840 50 960 40 1080 35C1200 30 1320 30 1380 30L1440 30V0H1380C1320 0 1200 0 1080 0C960 0 840 0 720 0C600 0 480 0 360 0C240 0 120 0 60 0H0Z"
-                fill="white"
-              />
-            </svg>
-          </div>
+        <AboutFooter />
 
-          <div className="container mx-auto px-4 py-12 pt-20">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-4">
-              {/* Left Section - Plas Branding and Partner Links */}
-              <div className="space-y-4">
-                {/* Logo */}
-                <div className="flex items-center gap-2">
-                  <Image
-                    src="/assets/logos/PlasIcon.png"
-                    alt="Plas Logo"
-                    width={32}
-                    height={32}
-                    className="h-8 w-8"
-                  />
-                  <span className="text-2xl font-bold text-[#00D9A5]">
-                    Plas
-                  </span>
-                </div>
-                {/* Slogan */}
-                <p className="font-bold text-white">
-                  Let&apos;s do it together
-                </p>
-                {/* Links */}
-                <ul className="space-y-2">
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Careers
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Plas for Partners
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Couriers
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Plas Business
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Middle Section - Links of Interest */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-white">Links of interest</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <Link
-                      href="/about"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      About us
-                    </Link>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      FAQ
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Blog
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Contact us
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Security
-                    </a>
-                  </li>
-                  <li>
-                    <Link
-                      href="/Auth/Login"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Log in
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Right Section - App Downloads and Legal Links */}
-              <div className="space-y-4 md:col-span-2 lg:col-span-1">
-                {/* App Download Buttons */}
-                <div className="space-y-3">
-                  <button className="flex w-full items-center gap-2 rounded-lg bg-black px-4 py-3 text-white transition-opacity hover:opacity-90 md:w-auto">
-                    <svg
-                      className="h-6 w-6"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-                    </svg>
-                    <span className="text-sm font-medium">
-                      Download on the App Store
-                    </span>
-                  </button>
-                  <button className="flex w-full items-center gap-2 rounded-lg bg-black px-4 py-3 text-white transition-opacity hover:opacity-90 md:w-auto">
-                    <svg
-                      className="h-6 w-6"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L6.05,21.34L14.54,12.85L20.16,10.81M6.05,2.66L14.54,11.15L16.81,8.88L6.05,2.66Z" />
-                    </svg>
-                    <span className="text-sm font-medium">
-                      GET IT ON Google Play
-                    </span>
-                  </button>
-                </div>
-
-                {/* Legal and Policy Links */}
-                <ul className="mt-6 space-y-2">
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      Terms & Conditions
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      Privacy Policy
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      Cookies Policy
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      Compliance
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      Configure the cookies
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      Digital Services Act
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-gray-300 transition-colors hover:text-white"
-                    >
-                      European Accessibility Act
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Bottom Section - Language Selector */}
-            <div className="mt-8 border-t border-gray-700 pt-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="relative">
-                  <select className="cursor-pointer appearance-none rounded-lg bg-gray-800 px-4 py-2 pr-8 text-white transition-colors hover:bg-gray-700">
-                    <option value="en">English</option>
-                    <option value="rw">Kinyarwanda</option>
-                    <option value="fr">Français</option>
-                  </select>
-                  <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                    <svg
-                      className="h-4 w-4 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <PartnershipFormDrawer
+          isOpen={isPartnershipDrawerOpen}
+          onClose={() => setIsPartnershipDrawerOpen(false)}
+        />
       </div>
     </>
   );

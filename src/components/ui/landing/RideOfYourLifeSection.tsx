@@ -8,7 +8,7 @@ export default function RideOfYourLifeSection() {
           {/* Left Side - Circular Video */}
           <div className="flex items-center justify-center">
             <div className="relative h-96 w-96 overflow-hidden rounded-full shadow-2xl">
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#00D9A5] to-[#00A67E]">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#022C22] to-[#011a14]">
                 {/* Video Placeholder - You can replace this with an actual video */}
                 <div className="relative h-full w-full">
                   <Image
