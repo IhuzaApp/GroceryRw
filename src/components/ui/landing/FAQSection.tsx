@@ -63,7 +63,7 @@ export default function FAQSection() {
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="rounded-lg border-2 border-gray-200 bg-white transition-all hover:border-[#00D9A5]"
+              className="rounded-lg border-2 border-gray-200 bg-white transition-all hover:border-[#022C22]"
             >
               <button
                 onClick={() => setOpenFaq(openFaq === index ? null : index)}
@@ -77,7 +77,7 @@ export default function FAQSection() {
                     openFaq === index ? "rotate-45" : ""
                   }`}
                 >
-                  <Plus className="h-6 w-6 text-[#00D9A5]" />
+                  <Plus className="h-6 w-6 text-[#022C22]" />
                 </div>
               </button>
               {openFaq === index && (
@@ -96,7 +96,7 @@ export default function FAQSection() {
               // Add link to contact or support page
               router.push("#contact");
             }}
-            className="rounded-lg bg-[#00D9A5] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
+            className="rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
           >
             Ask Plas
           </button>

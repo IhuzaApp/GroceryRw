@@ -47,11 +47,11 @@ export default function PosCtaSection() {
       className="relative overflow-hidden bg-white py-24 text-[#1A1A1A]"
     >
       {/* Background Decor */}
-      <div className="absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/2 translate-x-1/2 rounded-full bg-[#00D9A5]/5 blur-3xl"></div>
+      <div className="absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/2 translate-x-1/2 rounded-full bg-[#022C22]/5 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#2D5016]/5 blur-3xl"></div>
 
       <div className="container relative z-10 mx-auto px-4 text-center">
-        <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-[#00D9A5]/10">
+        <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-[#022C22]/10">
           <HeadphonesIcon className="h-10 w-10 text-[#00A67E]" />
         </div>
 
@@ -106,7 +106,7 @@ export default function PosCtaSection() {
                   required
                   value={shopName}
                   onChange={(e) => setShopName(e.target.value)}
-                  className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
+                  className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#022C22]"
                   placeholder="e.g. Ndoli's Joint"
                 />
               </div>
@@ -123,7 +123,7 @@ export default function PosCtaSection() {
                   required
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
-                  className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
+                  className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#022C22]"
                   placeholder="John Doe"
                 />
               </div>
@@ -142,7 +142,7 @@ export default function PosCtaSection() {
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
+                className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#022C22]"
                 placeholder="+250 788 123 456"
               />
             </div>
@@ -156,7 +156,7 @@ export default function PosCtaSection() {
             <button
               type="submit"
               disabled={isLoading}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00D9A5] px-8 py-5 text-lg font-bold text-[#1A1A1A] shadow-lg shadow-[#00D9A5]/20 transition-all hover:bg-[#00c596] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#022C22] px-8 py-5 text-lg font-bold text-[#1A1A1A] shadow-lg shadow-[#022C22]/20 transition-all hover:bg-[#00c596] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isLoading ? (
                 <>

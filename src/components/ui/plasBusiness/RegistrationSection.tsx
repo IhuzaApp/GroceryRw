@@ -48,7 +48,7 @@ export default function RegistrationSection() {
             {status === "success" ? (
               <div className="flex h-full flex-col items-center justify-center py-12 text-center duration-500 animate-in fade-in zoom-in">
                 <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10">
-                  <CheckCircle className="h-12 w-12 text-[#00D9A5]" />
+                  <CheckCircle className="h-12 w-12 text-[#022C22]" />
                 </div>
                 <h2 className="mb-4 text-4xl font-black text-white">
                   Registration Sent!
@@ -59,7 +59,7 @@ export default function RegistrationSection() {
                 </p>
                 <button
                   onClick={() => setStatus("idle")}
-                  className="mt-8 font-bold text-[#00D9A5] hover:underline"
+                  className="mt-8 font-bold text-[#022C22] hover:underline"
                 >
                   Send another request
                 </button>
@@ -68,7 +68,7 @@ export default function RegistrationSection() {
               <>
                 <h2 className="mb-8 text-4xl font-black tracking-tight text-white md:text-5xl">
                   Ready to grow? <br />
-                  <span className="text-[#00D9A5]">Register Now</span>
+                  <span className="text-[#022C22]">Register Now</span>
                 </h2>
 
                 <form className="space-y-6" onSubmit={handleSubmit}>
@@ -81,7 +81,7 @@ export default function RegistrationSection() {
                       onChange={(e) =>
                         setFormData({ ...formData, fullName: e.target.value })
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#00D9A5] focus:outline-none"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#022C22] focus:outline-none"
                     />
                     <input
                       required
@@ -94,7 +94,7 @@ export default function RegistrationSection() {
                           businessName: e.target.value,
                         })
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#00D9A5] focus:outline-none"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#022C22] focus:outline-none"
                     />
                   </div>
                   <input
@@ -105,7 +105,7 @@ export default function RegistrationSection() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#00D9A5] focus:outline-none"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#022C22] focus:outline-none"
                   />
                   <input
                     required
@@ -115,7 +115,7 @@ export default function RegistrationSection() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#00D9A5] focus:outline-none"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#022C22] focus:outline-none"
                   />
                   <textarea
                     placeholder="Briefly describe what you want to sell"
@@ -124,7 +124,7 @@ export default function RegistrationSection() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#00D9A5] focus:outline-none"
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white placeholder-gray-500 transition-colors focus:border-[#022C22] focus:outline-none"
                   ></textarea>
 
                   {status === "error" && (
@@ -136,7 +136,7 @@ export default function RegistrationSection() {
 
                   <button
                     disabled={status === "loading"}
-                    className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#00D9A5] px-10 py-5 text-lg font-black text-[#1A1A1A] transition-all hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50"
+                    className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-10 py-5 text-lg font-black text-[#1A1A1A] transition-all hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50"
                   >
                     {status === "loading" ? (
                       <Loader2 className="h-6 w-6 animate-spin" />
@@ -186,21 +186,21 @@ export default function RegistrationSection() {
 
               <div className="space-y-8">
                 <div className="flex items-start gap-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#00D9A5]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#022C22]">
                     <Mail className="h-6 w-6" />
                   </div>
                   <div>
                     <h4 className="mb-1 text-lg font-bold text-white">
                       Email us
                     </h4>
-                    <p className="cursor-pointer text-emerald-100/60 transition-colors hover:text-[#00D9A5]">
+                    <p className="cursor-pointer text-emerald-100/60 transition-colors hover:text-[#022C22]">
                       business@plas-era.com
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#00D9A5]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#022C22]">
                     <Phone className="h-6 w-6" />
                   </div>
                   <div>
@@ -215,7 +215,7 @@ export default function RegistrationSection() {
                 </div>
 
                 <div className="flex items-start gap-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#00D9A5]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#022C22]">
                     <MapPin className="h-6 w-6" />
                   </div>
                   <div>

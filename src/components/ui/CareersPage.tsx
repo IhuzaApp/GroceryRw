@@ -80,22 +80,117 @@ export default function CareersPage() {
       <AboutHeader activePage="careers" />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-[#1A1A1A] pb-20 pt-32">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute left-0 top-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00D9A5] blur-[120px]"></div>
-          <div className="absolute bottom-0 right-0 h-96 w-96 translate-x-1/2 translate-y-1/2 rounded-full bg-[#00D9A5] blur-[120px]"></div>
+      <section className="relative overflow-hidden bg-[#2D5016] pb-24 pt-32">
+        {/* Background Pattern - Subtle line-art style icons */}
+        <div className="absolute inset-0 overflow-hidden opacity-5">
+          <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-24 p-12">
+            {/* SVG Icons Pattern - Food and delivery related */}
+            {Array.from({ length: 30 }).map((_, index) => {
+              const iconIndex = index % 5;
+              const iconComponents = [
+                // Burger
+                <svg
+                  key={`burger-${index}`}
+                  className="h-16 w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>,
+                // Shopping bag
+                <svg
+                  key={`bag-${index}`}
+                  className="h-16 w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>,
+                // Scooter
+                <svg
+                  key={`scooter-${index}`}
+                  className="h-16 w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>,
+                // Phone
+                <svg
+                  key={`phone-${index}`}
+                  className="h-16 w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>,
+                // Package
+                <svg
+                  key={`package-${index}`}
+                  className="h-16 w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>,
+              ];
+              return (
+                <div
+                  key={`pattern-${index}`}
+                  className="text-white"
+                  style={{
+                    transform: `rotate(${(index * 12) % 360}deg) translate(${
+                      Math.sin(index) * 20
+                    }px, ${Math.cos(index) * 20}px)`,
+                  }}
+                >
+                  {iconComponents[iconIndex]}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="mb-6 inline-block rounded-full bg-[#00D9A5]/10 px-4 py-2 text-sm font-black uppercase tracking-widest text-[#00D9A5]">
+            <span className="mb-6 inline-block rounded-full bg-white/10 px-4 py-2 text-sm font-black uppercase tracking-widest text-white shadow-sm backdrop-blur-sm">
               Join the Revolution
             </span>
-            <h1 className="mb-8 text-5xl font-black leading-tight tracking-tighter text-white md:text-7xl">
+            <h1 className="mb-8 text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl">
               Build the future of{" "}
-              <span className="text-[#00D9A5]">African Commerce</span>
+              <span className="text-[#022C22]">African Commerce</span>
             </h1>
-            <p className="mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-gray-400">
+            <p className="mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-white/90">
               We're on a mission to empower millions of businesses and
               individuals across Africa. Join our world-class team and solve
               meaningful problems at scale.
@@ -103,7 +198,7 @@ export default function CareersPage() {
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="#positions"
-                className="transform rounded-xl bg-[#00D9A5] px-8 py-4 font-black uppercase tracking-widest text-black shadow-lg shadow-[#00D9A5]/20 transition-all hover:-translate-y-1 hover:bg-white"
+                className="transform rounded-xl bg-[#022C22] px-8 py-4 font-black uppercase tracking-widest text-[#1A1A1A] shadow-lg shadow-[#022C22]/20 transition-all hover:-translate-y-1 hover:bg-white"
               >
                 View Openings
               </a>
@@ -115,6 +210,22 @@ export default function CareersPage() {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* Curved Transition to Gray Section */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-px">
+          <svg
+            viewBox="0 0 1440 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+              fill="#f9fafb"
+            />
+          </svg>
         </div>
       </section>
 
@@ -135,17 +246,17 @@ export default function CareersPage() {
           <div className="grid gap-8 md:grid-cols-3">
             {[
               {
-                icon: <Rocket className="h-10 w-10 text-[#00D9A5]" />,
+                icon: <Rocket className="h-10 w-10 text-[#022C22]" />,
                 title: "Extreme Ownership",
                 desc: "Every team member is empowered to take full responsibility and drive impact from day one.",
               },
               {
-                icon: <Users className="h-10 w-10 text-[#00D9A5]" />,
+                icon: <Users className="h-10 w-10 text-[#022C22]" />,
                 title: "Radical Diversity",
                 desc: "We believe our strength lies in our differences. Our team spans the globe with a focus on local expertise.",
               },
               {
-                icon: <Heart className="h-10 w-10 text-[#00D9A5]" />,
+                icon: <Heart className="h-10 w-10 text-[#022C22]" />,
                 title: "User Obsessed",
                 desc: "We don't just build products; we solve real problems for real people across the continent.",
               },
@@ -181,7 +292,7 @@ export default function CareersPage() {
               </p>
             </div>
             <div className="hidden md:block">
-              <span className="text-sm font-black uppercase tracking-widest text-[#00D9A5]">
+              <span className="text-sm font-black uppercase tracking-widest text-[#022C22]">
                 {jobs.length} Opportunities Available
               </span>
             </div>
@@ -191,12 +302,12 @@ export default function CareersPage() {
             {jobs.map((job, i) => (
               <div
                 key={i}
-                className="group flex cursor-pointer flex-col items-center justify-between gap-6 rounded-[30px] border-2 border-gray-50 bg-white p-8 transition-all duration-500 hover:border-[#00D9A5] md:flex-row"
+                className="group flex cursor-pointer flex-col items-center justify-between gap-6 rounded-[30px] border-2 border-gray-50 bg-white p-8 transition-all duration-500 hover:border-[#022C22] md:flex-row"
                 onClick={() => openDrawer(job)}
               >
                 <div>
                   <div className="mb-2 flex items-center gap-4">
-                    <h3 className="text-2xl font-black text-[#1A1A1A] transition-colors group-hover:text-[#00D9A5]">
+                    <h3 className="text-2xl font-black text-[#1A1A1A] transition-colors group-hover:text-[#022C22]">
                       {job.title}
                     </h3>
                     <span className="rounded-full bg-gray-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-gray-600">
@@ -213,7 +324,7 @@ export default function CareersPage() {
                   </div>
                 </div>
                 <div className="w-full md:w-auto">
-                  <button className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#1A1A1A] px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-all group-hover:bg-[#00D9A5] group-hover:text-black md:w-auto">
+                  <button className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#1A1A1A] px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-all group-hover:bg-[#022C22] group-hover:text-black md:w-auto">
                     Apply Now <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -239,7 +350,7 @@ export default function CareersPage() {
               {/* Drawer Header */}
               <div className="flex items-center justify-between border-b bg-gray-50 p-8">
                 <div>
-                  <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-[#00D9A5]">
+                  <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-[#022C22]">
                     Job Opportunity
                   </span>
                   <h2 className="text-3xl font-black leading-tight text-[#1A1A1A]">
@@ -304,7 +415,7 @@ export default function CareersPage() {
                 {/* Description */}
                 <div>
                   <h4 className="mb-4 flex items-center gap-3 text-xl font-black uppercase tracking-tight text-black">
-                    <FileText className="h-5 w-5 text-[#00D9A5]" /> About the
+                    <FileText className="h-5 w-5 text-[#022C22]" /> About the
                     role
                   </h4>
                   <p className="text-lg leading-relaxed text-gray-500">
@@ -344,7 +455,7 @@ export default function CareersPage() {
                       <label className="text-xs font-black uppercase text-gray-400">
                         Resume/CV
                       </label>
-                      <div className="rounded-3xl border-2 border-dashed border-gray-200 p-10 text-center transition-colors hover:border-[#00D9A5]">
+                      <div className="rounded-3xl border-2 border-dashed border-gray-200 p-10 text-center transition-colors hover:border-[#022C22]">
                         <Upload className="mx-auto mb-4 h-8 w-8 text-gray-300" />
                         <p className="text-sm text-gray-400">
                           Drag and drop your file here, or click to browse
@@ -363,7 +474,7 @@ export default function CareersPage() {
       )}
 
       {/* Speculative Application */}
-      <section className="bg-[#00D9A5]/5 py-24">
+      <section className="bg-[#022C22]/5 py-24">
         <div className="container mx-auto px-4">
           <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[60px] bg-[#1A1A1A] p-12 text-center md:p-20">
             <div className="absolute right-0 top-0 p-10 opacity-10">
@@ -378,7 +489,7 @@ export default function CareersPage() {
             </p>
             <a
               href="mailto:business@plas-era.com"
-              className="inline-flex transform items-center justify-center rounded-2xl bg-[#00D9A5] px-10 py-5 font-black uppercase tracking-widest text-black transition-all hover:-translate-y-1 hover:bg-white"
+              className="inline-flex transform items-center justify-center rounded-2xl bg-[#022C22] px-10 py-5 font-black uppercase tracking-widest text-black transition-all hover:-translate-y-1 hover:bg-white"
             >
               Get in Touch
             </a>

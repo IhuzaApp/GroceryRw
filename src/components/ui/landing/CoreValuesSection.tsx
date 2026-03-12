@@ -17,14 +17,14 @@ export default function CoreValuesSection() {
           <div className="flex items-center justify-center">
             <div className="relative flex h-96 w-96 items-center justify-center">
               {/* Circular White Background with Green Border */}
-              <div className="absolute inset-0 rounded-full border-8 border-[#00D9A5] bg-white shadow-2xl"></div>
+              <div className="absolute inset-0 rounded-full border-8 border-[#022C22] bg-white shadow-2xl"></div>
 
               {/* Rocket Illustration */}
               <div className="relative z-10 flex flex-col items-center">
                 {/* Green Starbursts around rocket */}
                 <div className="absolute -top-6 left-8">
                   <svg
-                    className="h-6 w-6 text-[#00D9A5]"
+                    className="h-6 w-6 text-[#022C22]"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -33,7 +33,7 @@ export default function CoreValuesSection() {
                 </div>
                 <div className="absolute -right-4 top-12">
                   <svg
-                    className="h-4 w-4 text-[#00D9A5]"
+                    className="h-4 w-4 text-[#022C22]"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -42,7 +42,7 @@ export default function CoreValuesSection() {
                 </div>
                 <div className="absolute -left-2 bottom-20">
                   <svg
-                    className="h-5 w-5 text-[#00D9A5]"
+                    className="h-5 w-5 text-[#022C22]"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -72,7 +72,7 @@ export default function CoreValuesSection() {
 
                     {/* Blue Window with Green Border */}
                     <div className="absolute left-1/2 top-20 -translate-x-1/2">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-[#00D9A5] bg-blue-500">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-[#022C22] bg-blue-500">
                         <div className="h-7 w-7 rounded-full bg-blue-600"></div>
                       </div>
                     </div>
@@ -82,8 +82,8 @@ export default function CoreValuesSection() {
                   <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
                     {/* Green Cloud */}
                     <div className="relative">
-                      <div className="absolute left-1/2 h-20 w-24 -translate-x-1/2 rounded-full bg-[#00D9A5] opacity-50 blur-lg"></div>
-                      <div className="absolute left-1/2 top-3 h-16 w-20 -translate-x-1/2 rounded-full bg-[#00D9A5] opacity-40 blur-lg"></div>
+                      <div className="absolute left-1/2 h-20 w-24 -translate-x-1/2 rounded-full bg-[#022C22] opacity-50 blur-lg"></div>
+                      <div className="absolute left-1/2 top-3 h-16 w-20 -translate-x-1/2 rounded-full bg-[#022C22] opacity-40 blur-lg"></div>
                     </div>
                     {/* Light Blue Cloud */}
                     <div className="relative mt-3">

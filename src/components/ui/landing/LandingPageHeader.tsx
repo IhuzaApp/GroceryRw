@@ -30,9 +30,8 @@ export default function LandingPageHeader({
 
   return (
     <header
-      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-lg" : "bg-transparent"
-      }`}
+      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white shadow-lg" : "bg-transparent"
+        }`}
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
@@ -47,9 +46,8 @@ export default function LandingPageHeader({
                 className="h-10 w-10"
               />
               <span
-                className={`text-2xl font-bold transition-colors ${
-                  isScrolled ? "text-[#022c22]" : "text-white"
-                }`}
+                className={`text-2xl font-bold transition-colors ${isScrolled ? "text-[#022c22]" : "text-white"
+                  }`}
               >
                 Plas
               </span>
@@ -63,24 +61,21 @@ export default function LandingPageHeader({
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }
                 }}
-                className={`hidden items-center gap-2 rounded-full border-2 px-4 py-2 transition-all md:flex ${
-                  isScrolled
-                    ? "border-gray-300 bg-white text-gray-900 hover:border-[#00D9A5]"
+                className={`hidden items-center gap-2 rounded-full border-2 px-4 py-2 transition-all md:flex ${isScrolled
+                    ? "border-gray-300 bg-white text-gray-900 hover:border-[#022C22]"
                     : "border-white/30 bg-white/10 text-white hover:bg-white/20"
-                }`}
+                  }`}
               >
                 <MapPin
-                  className={`h-4 w-4 ${
-                    isScrolled ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`h-4 w-4 ${isScrolled ? "text-gray-600" : "text-white"
+                    }`}
                 />
                 <span className="max-w-[200px] truncate text-sm font-medium">
                   {displayAddress}
                 </span>
                 <svg
-                  className={`h-4 w-4 ${
-                    isScrolled ? "text-gray-600" : "text-white"
-                  }`}
+                  className={`h-4 w-4 ${isScrolled ? "text-gray-600" : "text-white"
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

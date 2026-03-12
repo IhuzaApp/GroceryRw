@@ -225,10 +225,9 @@ export default function LandingPage() {
     // Load Google Maps API if not already loaded
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${
-        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
         process.env.NEXT_PUBLIC_GOOGLE_MAP_API
-      }&libraries=places`;
+        }&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initializeAutocomplete;
@@ -840,7 +839,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -871,7 +870,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -902,7 +901,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -933,7 +932,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >

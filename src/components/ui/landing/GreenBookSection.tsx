@@ -10,7 +10,7 @@ export default function GreenBookSection() {
                 Our Green Book
               </h2>
               <svg
-                className="h-8 w-8 text-[#00D9A5]"
+                className="h-8 w-8 text-[#022C22]"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -29,7 +29,7 @@ export default function GreenBookSection() {
                 // Add link to Green Book PDF or page
                 window.open("#", "_blank");
               }}
-              className="self-start rounded-lg bg-[#00D9A5] px-6 py-3 font-medium text-white transition-colors hover:bg-[#00C896]"
+              className="self-start rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#00C896]"
             >
               Read our Green Book here
             </button>
@@ -40,7 +40,7 @@ export default function GreenBookSection() {
             <div className="relative">
               {/* Main Book */}
               <div className="relative h-96 w-72 rotate-[-8deg] transform shadow-2xl">
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#00D9A5] to-[#00A67E]"></div>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#022C22] to-[#00A67E]"></div>
                 <div className="absolute inset-0 flex flex-col p-8">
                   {/* Title */}
                   <div className="mb-6">
@@ -76,7 +76,7 @@ export default function GreenBookSection() {
                   <div className="mt-auto space-y-3">
                     <div className="h-10 rounded border-2 border-gray-800 bg-transparent"></div>
                     <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-[#00D9A5]"></div>
+                      <div className="h-8 w-8 rounded-full bg-[#022C22]"></div>
                       <div className="h-8 flex-1 rounded border-2 border-gray-800 bg-transparent"></div>
                     </div>
                   </div>
@@ -84,7 +84,7 @@ export default function GreenBookSection() {
               </div>
               {/* Second Book (Behind) */}
               <div className="absolute -right-6 top-6 h-96 w-72 rotate-[8deg] transform opacity-50 shadow-xl">
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#00D9A5] to-[#00A67E]"></div>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[#022C22] to-[#00A67E]"></div>
               </div>
             </div>
           </div>

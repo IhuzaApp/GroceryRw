@@ -1,11 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import AboutTopBar from "@components/ui/landing/AboutTopBar";
 import AboutHeader from "@components/ui/landing/AboutHeader";
 import LocationsHeroSection from "@components/ui/landing/LocationsHeroSection";
-import LocationsMapSection from "@components/ui/landing/LocationsMapSection";
 import AboutFooter from "@components/ui/landing/AboutFooter";
 import "leaflet/dist/leaflet.css";
+
+const LocationsMapSection = dynamic(
+  () => import("@components/ui/landing/LocationsMapSection"),
+  { ssr: false }
+);
 
 export default function LocationsPage() {
   return (

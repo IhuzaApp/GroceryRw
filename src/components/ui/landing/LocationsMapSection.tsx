@@ -1,22 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import dynamic from "next/dynamic";
-
-// Dynamically import Leaflet components to avoid SSR issues
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
-  ssr: false,
-});
+import { Info, MapPin } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 interface Location {
   id: string;
@@ -33,28 +17,28 @@ const locations: Location[] = [
     id: "rw",
     name: "Rwanda Office",
     city: "Kigali",
-    type: "Headquarters",
+    type: "New Site Office",
     lat: -1.9441,
     lng: 30.0619,
-    details: "The heart of Plas operations and our primary innovation center.",
+    details: "A strategic new site office that we anticipate will grow significantly as we scale our operations.",
   },
   {
-    id: "ug",
-    name: "Uganda Office",
-    city: "Kampala",
-    type: "Regional Office",
-    lat: 0.3476,
-    lng: 32.5825,
-    details: "Focusing on expansion and local market integration in Uganda.",
+    id: "uk",
+    name: "UK Office",
+    city: "London",
+    type: "European Hub",
+    lat: 51.5074,
+    lng: -0.1278,
+    details: "Our strategic gateway to European partnerships and technology exchange.",
   },
   {
-    id: "ke",
-    name: "Kenya Office",
-    city: "Nairobi",
-    type: "Logistics Office",
-    lat: -1.2921,
-    lng: 36.8219,
-    details: "Strategic center for East African logistics and trade.",
+    id: "au",
+    name: "Australia Office",
+    city: "Sydney",
+    type: "Pacific Hub",
+    lat: -33.8688,
+    lng: 151.2093,
+    details: "Expanding our digital footprint and connectivity in the Pacific region.",
   },
   {
     id: "et",
@@ -94,7 +78,7 @@ export default function LocationsMapSection() {
     return L.divIcon({
       html: `
         <div style="
-          background: #00D9A5;
+          background: #022C22;
           border: 3px solid white;
           border-radius: 50%;
           width: 32px;
@@ -126,7 +110,7 @@ export default function LocationsMapSection() {
       html: `
         <div style="
           background: #1A1A1A;
-          border: 3px solid #00D9A5;
+          border: 3px solid #022C22;
           border-radius: 50%;
           width: 40px;
           height: 40px;
@@ -140,7 +124,7 @@ export default function LocationsMapSection() {
           <div style="
             width: 12px;
             height: 12px;
-            background: #00D9A5;
+            background: #022C22;
             border-radius: 50%;
             animation: pulse 1.5s infinite;
           "></div>
@@ -160,57 +144,66 @@ export default function LocationsMapSection() {
           <div className="relative h-[600px] w-full overflow-hidden rounded-3xl border border-gray-100 bg-gray-50 shadow-xl">
             <div className="absolute right-4 top-4 z-[1000]">
               <span className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-lg">
-                <Info className="h-4 w-4 text-[#00D9A5]" />
-                Explore our African regional offices
+                <Info className="h-4 w-4 text-[#022C22]" />
+                Explore our global regional offices
               </span>
             </div>
 
             {/* Map Component */}
+            {!L || !customIcon ? (
+              <div className="flex h-full w-full items-center justify-center bg-gray-50">
+                <div className="text-center">
+                  <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#022C22] border-t-transparent mx-auto"></div>
+                  <p className="font-bold text-gray-500 italic">Positioning offices...</p>
+                </div>
+              </div>
+            ) : (
             <MapContainer
-              center={[-2, 33]} // Centered around Central/East Africa
-              zoom={4}
-              scrollWheelZoom={true}
-              className="h-full w-full"
-              style={{ background: "#f8fafc" }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-              />
+                center={[20, 20]} // Adjusted center for a more global view
+                zoom={2}
+                scrollWheelZoom={true}
+                className="h-full w-full"
+                style={{ background: "#f8fafc" }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                />
 
-              {locations.map((loc) => (
-                <Marker
-                  key={loc.id}
-                  position={[loc.lat, loc.lng]}
-                  icon={
-                    activeLocation?.id === loc.id
-                      ? activeIcon || undefined
-                      : customIcon || undefined
-                  }
-                  eventHandlers={{
-                    click: () => setActiveLocation(loc),
-                  }}
-                >
-                  <Popup className="custom-popup">
-                    <div className="p-1">
-                      <p className="font-bold text-[#1A1A1A]">{loc.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {loc.city},{" "}
-                        {loc.id === "za"
-                          ? "South Africa"
-                          : loc.id === "et"
-                            ? "Ethiopia"
-                            : loc.id === "ke"
-                              ? "Kenya"
-                              : loc.id === "ug"
-                                ? "Uganda"
-                                : "Rwanda"}
-                      </p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+                {locations.map((loc) => (
+                  <Marker
+                    key={loc.id}
+                    position={[loc.lat, loc.lng]}
+                    icon={
+                      activeLocation?.id === loc.id
+                        ? activeIcon
+                        : customIcon
+                    }
+                    eventHandlers={{
+                      click: () => setActiveLocation(loc),
+                    }}
+                  >
+                    <Popup className="custom-popup">
+                      <div className="p-1">
+                        <p className="font-bold text-[#1A1A1A]">{loc.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {loc.city},{" "}
+                          {loc.id === "za"
+                            ? "South Africa"
+                            : loc.id === "et"
+                              ? "Ethiopia"
+                              : loc.id === "au"
+                                ? "Australia"
+                                : loc.id === "uk"
+                                  ? "United Kingdom"
+                                  : "Rwanda"}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            )}
 
             {/* Injected CSS for Animations */}
             <style
@@ -232,7 +225,7 @@ export default function LocationsMapSection() {
           {/* Details Column */}
           <div className="flex flex-col justify-center">
             <h2 className="mb-8 text-center text-3xl font-bold text-[#1A1A1A] md:text-4xl lg:text-left">
-              Our African <span className="text-[#00A67E]">Network</span>
+              Our Global <span className="text-[#011a14]">Network</span>
             </h2>
 
             <div className="space-y-6">
@@ -246,36 +239,36 @@ export default function LocationsMapSection() {
                   </h3>
                   <p className="mx-auto max-w-sm text-gray-400">
                     Interact with the map to explore our presence across the
-                    continent. Select an office to see more details.
+                    globe. Select an office to see more details.
                   </p>
                 </div>
               ) : (
                 <div className="duration-300 animate-in fade-in slide-in-from-right-4">
                   <div className="mb-6 rounded-3xl border border-emerald-100 bg-emerald-50 p-8 shadow-sm">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#00A67E] px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#011a14] px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
                       {activeLocation.type}
                     </div>
                     <h3 className="mb-2 text-4xl font-bold text-[#1A1A1A]">
                       {activeLocation.name}
                     </h3>
-                    <p className="mb-6 flex items-center gap-2 text-xl font-bold text-[#00A67E]">
+                    <p className="mb-6 flex items-center gap-2 text-xl font-bold text-[#011a14]">
                       <MapPin className="h-5 w-5" />
                       {activeLocation.city},{" "}
                       {activeLocation.id === "za"
                         ? "South Africa"
                         : activeLocation.id === "et"
                           ? "Ethiopia"
-                          : activeLocation.id === "ke"
-                            ? "Kenya"
-                            : activeLocation.id === "ug"
-                              ? "Uganda"
+                          : activeLocation.id === "au"
+                            ? "Australia"
+                            : activeLocation.id === "uk"
+                              ? "United Kingdom"
                               : "Rwanda"}
                     </p>
                     <div className="mb-6 h-px w-full bg-emerald-200" />
-                    <p className="border-l-4 border-[#00D9A5] pl-4 text-lg font-medium italic leading-relaxed text-[#1A1A1A]">
+                    <p className="border-l-4 border-[#022C22] pl-4 text-lg font-medium italic leading-relaxed text-[#1A1A1A]">
                       "{activeLocation.details}"
                     </p>
-                    <button className="group mt-8 flex items-center gap-2 font-bold text-[#1A1A1A] transition-colors hover:text-[#00A67E]">
+                    <button className="group mt-8 flex items-center gap-2 font-bold text-[#1A1A1A] transition-colors hover:text-[#011a14]">
                       Open in Maps
                       <svg
                         className="h-4 w-4 transform transition-transform group-hover:translate-x-1"
@@ -327,7 +320,7 @@ export default function LocationsMapSection() {
                     onClick={() => setActiveLocation(loc)}
                     className={`rounded-full border px-5 py-2.5 text-sm font-bold shadow-sm transition-all ${activeLocation?.id === loc.id
                         ? "scale-105 border-[#1A1A1A] bg-[#1A1A1A] text-white"
-                        : "border-gray-200 bg-white text-gray-600 hover:scale-105 hover:border-[#00D9A5] hover:text-[#00A67E]"
+                        : "border-gray-200 bg-white text-gray-600 hover:scale-105 hover:border-[#022C22] hover:text-[#00A67E]"
                       }`}
                   >
                     {loc.name.split(" ")[0]}

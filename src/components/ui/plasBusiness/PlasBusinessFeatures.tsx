@@ -70,7 +70,7 @@ export default function PlasBusinessFeatures() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group rounded-[40px] border border-gray-100 bg-white p-10 transition-all duration-500 hover:border-[#00D9A5] hover:shadow-[0_20px_60px_-15px_rgba(0,217,165,0.15)]"
+              className="group rounded-[40px] border border-gray-100 bg-white p-10 transition-all duration-500 hover:border-[#022C22] hover:shadow-[0_20px_60px_-15px_rgba(0,217,165,0.15)]"
             >
               <div
                 className={`mb-6 flex h-16 w-16 items-center justify-center rounded-3xl border transition-transform duration-500 group-hover:scale-110 ${feature.color}`}

@@ -51,7 +51,7 @@ export default function AboutHeader({
             />
             <span
               className={`text-2xl font-bold transition-colors ${
-                isScrolled ? "text-[#00D9A5]" : "text-white"
+                isScrolled ? "text-[#022C22]" : "text-white"
               }`}
             >
               Plas
@@ -67,10 +67,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "about"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -83,10 +83,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "life-at-plas"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -99,10 +99,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "teams"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -115,10 +115,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "careers"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -131,10 +131,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "locations"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -147,10 +147,10 @@ export default function AboutHeader({
               } font-medium transition-colors ${
                 activePage === "contact"
                   ? isScrolled
-                    ? "border-[#00D9A5] text-[#00D9A5]"
-                    : "border-[#00D9A5] text-white"
+                    ? "border-[#022C22] text-[#022C22]"
+                    : "border-[#022C22] text-white"
                   : isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  ? "text-gray-700 hover:text-[#022C22]"
                   : "text-white/90 hover:text-white"
               }`}
             >
@@ -163,7 +163,7 @@ export default function AboutHeader({
             <button
               className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${
                 isScrolled
-                  ? "border-gray-300 bg-white text-gray-900 hover:border-[#00D9A5]"
+                  ? "border-gray-300 bg-white text-gray-900 hover:border-[#022C22]"
                   : "border-white bg-transparent text-white hover:bg-white/10"
               }`}
               onClick={() => router.push("/Auth/Login")}

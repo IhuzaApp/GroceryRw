@@ -81,7 +81,7 @@ export default function TeamSection() {
       <div className="container mx-auto px-4">
         <div className="mb-16 max-w-3xl">
           <h2 className="mb-6 text-4xl font-black tracking-tight text-[#1A1A1A] md:text-5xl">
-            The minds behind <span className="text-[#00D9A5]">Plas</span>
+            The minds behind <span className="text-[#022C22]">Plas</span>
           </h2>
           <p className="text-xl leading-relaxed text-gray-600">
             Our leadership team combines global expertise with deep local roots
@@ -109,7 +109,7 @@ export default function TeamSection() {
                 <h3 className="text-2xl font-black uppercase tracking-wide text-[#1A1A1A]">
                   {member.name}
                 </h3>
-                <p className="text-sm font-bold uppercase tracking-widest text-[#00D9A5]">
+                <p className="text-sm font-bold uppercase tracking-widest text-[#022C22]">
                   {member.role}
                 </p>
                 <p className="mx-auto mt-4 max-w-xs leading-relaxed text-gray-500">

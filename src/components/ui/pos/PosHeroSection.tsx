@@ -12,11 +12,11 @@ export default function PosHeroSection() {
           {/* Text Content */}
           <div>
             <div className="mb-4 inline-flex items-center rounded-full bg-white/10 px-4 py-2 font-medium text-white shadow-sm backdrop-blur-sm">
-              <span className="mr-2 flex h-2 w-2 rounded-full bg-[#00D9A5]"></span>
+              <span className="mr-2 flex h-2 w-2 rounded-full bg-[#022C22]"></span>
               For Shops, Restaurants & Enterprises
             </div>
             <h1 className="mb-6 text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-              The smartest <span className="text-[#00D9A5]">POS System</span>{" "}
+              The smartest <span className="text-[#022C22]">POS System</span>{" "}
               for your business
             </h1>
             <p className="mb-8 text-lg font-medium text-white/90 md:text-xl">
@@ -31,7 +31,7 @@ export default function PosHeroSection() {
                     .getElementById("pos-register")
                     ?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="rounded-lg bg-[#00D9A5] px-8 py-4 font-bold text-[#1A1A1A] transition-colors hover:bg-[#00c596]"
+                className="rounded-lg bg-[#022C22] px-8 py-4 font-bold text-[#1A1A1A] transition-colors hover:bg-[#00c596]"
               >
                 Register Now
               </button>
@@ -55,7 +55,7 @@ export default function PosHeroSection() {
               style={{ animationDuration: "3s" }}
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#00D9A5]/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#022C22]/20">
                   <svg
                     className="h-6 w-6 text-[#00A67E]"
                     fill="none"
