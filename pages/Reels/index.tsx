@@ -9,6 +9,16 @@ import MobileReelsView from "../../src/components/Reels/MobileReelsView";
 import DesktopReelsView from "../../src/components/Reels/DesktopReelsView";
 import GuestAuthModal from "../../src/components/ui/GuestAuthModal";
 import GuestUpgradeModal from "../../src/components/ui/GuestUpgradeModal";
+import {
+  PostType,
+  Comment,
+  BasePost,
+  RestaurantPost,
+  SupermarketPost,
+  ChefPost,
+  BusinessPost,
+  FoodPost,
+} from "../../src/components/Reels/ReelTypes";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -237,95 +247,6 @@ const SendIcon = () => (
   </svg>
 );
 
-type PostType = "restaurant" | "supermarket" | "chef" | "business";
-
-interface Comment {
-  id: string;
-  user: {
-    name: string;
-    avatar: string;
-    verified?: boolean;
-  };
-  text: string;
-  timestamp: string;
-  likes: number;
-  isLiked: boolean;
-  replies?: Comment[];
-}
-
-interface BasePost {
-  id: string;
-  type: PostType;
-  creator: {
-    name: string;
-    avatar: string;
-    verified: boolean;
-  };
-  content: {
-    title: string;
-    description: string;
-    video: string;
-    category: string;
-  };
-  stats: {
-    likes: number;
-    comments: number;
-    views?: number;
-  };
-  isLiked: boolean;
-  isProcessingLike?: boolean; // Prevent double-clicks
-  commentsList: Comment[];
-  shop_id?: string | null;
-  restaurant_id?: string | null;
-  shopLat?: number;
-  shopLng?: number;
-  shopAlt?: number;
-  created_on?: string; // Timestamp for sorting/randomization
-}
-
-interface RestaurantPost extends BasePost {
-  type: "restaurant";
-  restaurant: {
-    rating: number;
-    reviews: number;
-    location: string;
-    deliveryTime: string;
-    price: number;
-  };
-}
-
-interface SupermarketPost extends BasePost {
-  type: "supermarket";
-  product: {
-    price: number;
-    originalPrice?: number;
-    store: string;
-    inStock: boolean;
-    discount?: number;
-  };
-}
-
-interface ChefPost extends BasePost {
-  type: "chef";
-  recipe: {
-    difficulty: "Easy" | "Medium" | "Hard";
-    cookTime: string;
-    servings: number;
-    youtubeChannel: string;
-    subscribers: string;
-  };
-}
-interface BusinessPost extends BasePost {
-  type: "business";
-  business: {
-    name: string;
-    location: string;
-    email: string;
-    phone: string;
-  };
-}
-
-type FoodPost = RestaurantPost | SupermarketPost | ChefPost | BusinessPost;
 
 // Database interface for API response
 interface DatabaseReel {
