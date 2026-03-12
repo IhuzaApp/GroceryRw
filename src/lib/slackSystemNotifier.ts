@@ -369,3 +369,86 @@ export async function notifyNewStoreCreatedToSlack(
     );
   }
 }
+
+// --- Partnership inquiry notification ---
+
+export interface PartnershipInquiryPayload {
+  businessName: string;
+  businessType: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  location: string;
+  message?: string;
+}
+
+/**
+ * Send a partnership inquiry notification to Slack.
+ */
+export async function notifyPartnershipInquiryToSlack(
+  payload: PartnershipInquiryPayload
+) {
+  if (!SLACK_GENERAL_WEBHOOK) {
+    console.error("SLACK_GENERAL_WEBHOOK is not configured");
+    return;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🤝 New Partnership Inquiry",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Business Name*\n${payload.businessName}` },
+        { type: "mrkdwn", text: `*Business Type*\n${payload.businessType}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Contact Person*\n${payload.contactPerson}` },
+        { type: "mrkdwn", text: `*Phone*\n${payload.phone}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Email*\n${payload.email}` },
+        { type: "mrkdwn", text: `*Location*\n${payload.location}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Message*\n${payload.message || "_No message_"}`.slice(0, 1000),
+      },
+    },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_GENERAL_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New partnership inquiry from ${payload.businessName}`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error(
+      "Failed to send partnership inquiry notification to Slack",
+      error
+    );
+  }
+}

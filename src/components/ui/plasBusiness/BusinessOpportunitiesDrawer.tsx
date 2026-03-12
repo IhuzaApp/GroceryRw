@@ -329,7 +329,7 @@ export default function BusinessOpportunitiesDrawer({ isOpen, onClose }: Busines
                     placeholder={`Search ${activeTab === "rfqs" ? "RFQ opportunities" : "business services"}...`}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full rounded-2xl border border-gray-100 bg-gray-50/50 py-5 pl-14 pr-6 text-base font-medium focus:border-[#00A67E] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#00A67E]/5 transition-all"
+                    className="w-full rounded-2xl border border-gray-100 bg-gray-50/50 py-5 pl-14 pr-6 text-base font-medium text-black focus:border-[#00A67E] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#00A67E]/5 transition-all"
                   />
                 </div>
               </div>

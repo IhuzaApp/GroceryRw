@@ -15,6 +15,7 @@ import CategoriesSectionSkeleton from "./landing/CategoriesSectionSkeleton";
 import AboutFooter from "./landing/AboutFooter";
 import { Handshake } from "lucide-react";
 import Head from "next/head";
+import PartnershipFormDrawer from "./partnership/PartnershipFormDrawer";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function LandingPage() {
   >([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [displayAddress, setDisplayAddress] = useState("");
+  const [isPartnershipDrawerOpen, setIsPartnershipDrawerOpen] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -1307,7 +1309,7 @@ export default function LandingPage() {
                   boost sales and unlock new opportunities!
                 </p>
                 <button
-                  onClick={() => router.push("/plasBusiness")}
+                  onClick={() => setIsPartnershipDrawerOpen(true)}
                   className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
@@ -1343,7 +1345,7 @@ export default function LandingPage() {
                 </p>
                 <button
                   onClick={() => router.push("/careers")}
-                  className="rounded-lg bg-[#00A67E] px-6 py-3 font-medium text-white transition-colors hover:bg-[#008B6B]"
+                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
                 </button>
@@ -1369,7 +1371,7 @@ export default function LandingPage() {
                 </p>
                 <button
                   onClick={() => router.push("/pos")}
-                  className="rounded-lg bg-[#00A67E] px-6 py-3 font-medium text-white transition-colors hover:bg-[#008B6B]"
+                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
                 </button>
@@ -1380,6 +1382,11 @@ export default function LandingPage() {
 
         {/* Footer */}
         <AboutFooter />
+
+        <PartnershipFormDrawer
+          isOpen={isPartnershipDrawerOpen}
+          onClose={() => setIsPartnershipDrawerOpen(false)}
+        />
       </div>
     </>
   );
