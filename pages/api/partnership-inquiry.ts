@@ -1,5 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { notifyPartnershipInquiryToSlack, PartnershipInquiryPayload } from "../../src/lib/slackSystemNotifier";
+import {
+  notifyPartnershipInquiryToSlack,
+  PartnershipInquiryPayload,
+} from "../../src/lib/slackSystemNotifier";
 
 export default async function handler(
   req: NextApiRequest,

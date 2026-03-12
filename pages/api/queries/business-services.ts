@@ -134,8 +134,13 @@ export default async function handler(
       }>(GET_ALL_SERVICES);
     }
 
-    console.log(`API: Fetching services for business_id: ${business_id || 'ALL'}`);
-    console.log("API: Total services fetched:", result.PlasBusinessProductsOrSerive?.length || 0);
+    console.log(
+      `API: Fetching services for business_id: ${business_id || "ALL"}`
+    );
+    console.log(
+      "API: Total services fetched:",
+      result.PlasBusinessProductsOrSerive?.length || 0
+    );
 
     return res.status(200).json({
       success: true,

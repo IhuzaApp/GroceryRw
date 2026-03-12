@@ -2,21 +2,31 @@ import { User, Mail, Phone, Lock, Briefcase } from "lucide-react";
 
 interface Step5AdminProps {
   formData: any;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
 }
 
 export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-10">
+    <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-right-4">
       <div>
-        <h2 className="text-3xl font-bold text-[#1A1A1A]">Administrator Details</h2>
-        <p className="mt-2 text-gray-500">Create the primary administrator account for this business.</p>
+        <h2 className="text-3xl font-bold text-[#1A1A1A]">
+          Administrator Details
+        </h2>
+        <p className="mt-2 text-gray-500">
+          Create the primary administrator account for this business.
+        </p>
       </div>
 
       <div className="space-y-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-600">Admin Full Name</label>
+            <label className="text-sm font-bold text-gray-600">
+              Admin Full Name
+            </label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
@@ -31,7 +41,9 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-600">Position / Role</label>
+            <label className="text-sm font-bold text-gray-600">
+              Position / Role
+            </label>
             <div className="relative">
               <Briefcase className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
@@ -46,7 +58,9 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-600">Personal Email</label>
+            <label className="text-sm font-bold text-gray-600">
+              Personal Email
+            </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
@@ -62,7 +76,9 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-600">Personal Phone</label>
+            <label className="text-sm font-bold text-gray-600">
+              Personal Phone
+            </label>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
@@ -77,7 +93,9 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-bold text-gray-600">Secure Password</label>
+            <label className="text-sm font-bold text-gray-600">
+              Secure Password
+            </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
@@ -107,7 +125,9 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-600">Date of Birth</label>
+            <label className="text-sm font-bold text-gray-600">
+              Date of Birth
+            </label>
             <input
               type="date"
               name="dob"

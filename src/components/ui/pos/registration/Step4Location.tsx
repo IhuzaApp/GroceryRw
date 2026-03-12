@@ -3,23 +3,37 @@ import { Autocomplete } from "@react-google-maps/api";
 
 interface Step4LocationProps {
   formData: any;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
   isLoaded: boolean;
   autocompleteRef: React.MutableRefObject<google.maps.places.Autocomplete | null>;
   onPlaceChanged: () => void;
 }
 
-export default function Step4Location({ formData, onChange, isLoaded, autocompleteRef, onPlaceChanged }: Step4LocationProps) {
+export default function Step4Location({
+  formData,
+  onChange,
+  isLoaded,
+  autocompleteRef,
+  onPlaceChanged,
+}: Step4LocationProps) {
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-10">
+    <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-right-4">
       <div>
         <h2 className="text-3xl font-bold text-[#1A1A1A]">Physical Location</h2>
-        <p className="mt-2 text-gray-500">Tell us where your business is situated.</p>
+        <p className="mt-2 text-gray-500">
+          Tell us where your business is situated.
+        </p>
       </div>
 
       <div className="space-y-8">
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-600">Physical Address</label>
+          <label className="text-sm font-bold text-gray-600">
+            Physical Address
+          </label>
           <div className="relative">
             <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             {isLoaded ? (
@@ -75,7 +89,9 @@ export default function Step4Location({ formData, onChange, isLoaded, autocomple
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-600">Business Description</label>
+          <label className="text-sm font-bold text-gray-600">
+            Business Description
+          </label>
           <textarea
             name="description"
             value={formData.description}

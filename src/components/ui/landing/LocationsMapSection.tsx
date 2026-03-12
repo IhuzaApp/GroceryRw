@@ -20,7 +20,8 @@ const locations: Location[] = [
     type: "New Site Office",
     lat: -1.9441,
     lng: 30.0619,
-    details: "A strategic new site office that we anticipate will grow significantly as we scale our operations.",
+    details:
+      "A strategic new site office that we anticipate will grow significantly as we scale our operations.",
   },
   {
     id: "uk",
@@ -29,7 +30,8 @@ const locations: Location[] = [
     type: "European Hub",
     lat: 51.5074,
     lng: -0.1278,
-    details: "Our strategic gateway to European partnerships and technology exchange.",
+    details:
+      "Our strategic gateway to European partnerships and technology exchange.",
   },
   {
     id: "au",
@@ -38,7 +40,8 @@ const locations: Location[] = [
     type: "Pacific Hub",
     lat: -33.8688,
     lng: 151.2093,
-    details: "Expanding our digital footprint and connectivity in the Pacific region.",
+    details:
+      "Expanding our digital footprint and connectivity in the Pacific region.",
   },
   {
     id: "et",
@@ -153,12 +156,14 @@ export default function LocationsMapSection() {
             {!L || !customIcon ? (
               <div className="flex h-full w-full items-center justify-center bg-gray-50">
                 <div className="text-center">
-                  <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#022C22] border-t-transparent mx-auto"></div>
-                  <p className="font-bold text-gray-500 italic">Positioning offices...</p>
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#022C22] border-t-transparent"></div>
+                  <p className="font-bold italic text-gray-500">
+                    Positioning offices...
+                  </p>
                 </div>
               </div>
             ) : (
-            <MapContainer
+              <MapContainer
                 center={[20, 20]} // Adjusted center for a more global view
                 zoom={2}
                 scrollWheelZoom={true}
@@ -175,9 +180,7 @@ export default function LocationsMapSection() {
                     key={loc.id}
                     position={[loc.lat, loc.lng]}
                     icon={
-                      activeLocation?.id === loc.id
-                        ? activeIcon
-                        : customIcon
+                      activeLocation?.id === loc.id ? activeIcon : customIcon
                     }
                     eventHandlers={{
                       click: () => setActiveLocation(loc),
@@ -191,12 +194,12 @@ export default function LocationsMapSection() {
                           {loc.id === "za"
                             ? "South Africa"
                             : loc.id === "et"
-                              ? "Ethiopia"
-                              : loc.id === "au"
-                                ? "Australia"
-                                : loc.id === "uk"
-                                  ? "United Kingdom"
-                                  : "Rwanda"}
+                            ? "Ethiopia"
+                            : loc.id === "au"
+                            ? "Australia"
+                            : loc.id === "uk"
+                            ? "United Kingdom"
+                            : "Rwanda"}
                         </p>
                       </div>
                     </Popup>
@@ -257,12 +260,12 @@ export default function LocationsMapSection() {
                       {activeLocation.id === "za"
                         ? "South Africa"
                         : activeLocation.id === "et"
-                          ? "Ethiopia"
-                          : activeLocation.id === "au"
-                            ? "Australia"
-                            : activeLocation.id === "uk"
-                              ? "United Kingdom"
-                              : "Rwanda"}
+                        ? "Ethiopia"
+                        : activeLocation.id === "au"
+                        ? "Australia"
+                        : activeLocation.id === "uk"
+                        ? "United Kingdom"
+                        : "Rwanda"}
                     </p>
                     <div className="mb-6 h-px w-full bg-emerald-200" />
                     <p className="border-l-4 border-[#022C22] pl-4 text-lg font-medium italic leading-relaxed text-[#1A1A1A]">
@@ -318,10 +321,11 @@ export default function LocationsMapSection() {
                   <button
                     key={loc.id}
                     onClick={() => setActiveLocation(loc)}
-                    className={`rounded-full border px-5 py-2.5 text-sm font-bold shadow-sm transition-all ${activeLocation?.id === loc.id
+                    className={`rounded-full border px-5 py-2.5 text-sm font-bold shadow-sm transition-all ${
+                      activeLocation?.id === loc.id
                         ? "scale-105 border-[#1A1A1A] bg-[#1A1A1A] text-white"
                         : "border-gray-200 bg-white text-gray-600 hover:scale-105 hover:border-[#022C22] hover:text-[#00A67E]"
-                      }`}
+                    }`}
                   >
                     {loc.name.split(" ")[0]}
                   </button>

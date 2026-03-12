@@ -1,7 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, CheckCircle, Handshake, Building2, User, Phone, Mail, MapPin, MessageSquare, Briefcase } from "lucide-react";
+import {
+  X,
+  Loader2,
+  CheckCircle,
+  Handshake,
+  Building2,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Briefcase,
+} from "lucide-react";
 // Import type only
 import type { PartnershipInquiryPayload } from "../../../lib/slackSystemNotifier";
 
@@ -10,7 +22,10 @@ interface PartnershipFormDrawerProps {
   onClose: () => void;
 }
 
-export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFormDrawerProps) {
+export default function PartnershipFormDrawer({
+  isOpen,
+  onClose,
+}: PartnershipFormDrawerProps) {
   const [formData, setFormData] = useState({
     businessName: "",
     businessType: "",
@@ -24,7 +39,11 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -91,8 +110,12 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
           <div className="border-b border-gray-100 p-8">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-black text-[#1A1A1A] tracking-tight">Partner with Us</h2>
-                <p className="text-gray-500 mt-1">Unlock new opportunities for your business</p>
+                <h2 className="text-3xl font-black tracking-tight text-[#1A1A1A]">
+                  Partner with Us
+                </h2>
+                <p className="mt-1 text-gray-500">
+                  Unlock new opportunities for your business
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -109,9 +132,12 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                 <div className="mb-6 rounded-full bg-emerald-50 p-6 text-emerald-500">
                   <CheckCircle className="h-16 w-16" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#1A1A1A]">Inquiry Sent!</h3>
+                <h3 className="text-2xl font-bold text-[#1A1A1A]">
+                  Inquiry Sent!
+                </h3>
                 <p className="mt-2 text-gray-600">
-                  Thank you for your interest. Our team will contact you shortly.
+                  Thank you for your interest. Our team will contact you
+                  shortly.
                 </p>
               </div>
             ) : (
@@ -119,7 +145,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                 <div className="space-y-4">
                   {/* Business Name */}
                   <div>
-                    <label className="mb-1.5 block text-sm font-bold text-gray-700">Business Name</label>
+                    <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                      Business Name
+                    </label>
                     <div className="relative">
                       <Building2 className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                       <input
@@ -128,7 +156,7 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                         name="businessName"
                         value={formData.businessName}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                         placeholder="Enter your business name"
                       />
                     </div>
@@ -136,7 +164,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
 
                   {/* Business Type */}
                   <div>
-                    <label className="mb-1.5 block text-sm font-bold text-gray-700">Business Type</label>
+                    <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                      Business Type
+                    </label>
                     <div className="relative">
                       <Briefcase className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                       <select
@@ -144,7 +174,7 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                         name="businessType"
                         value={formData.businessType}
                         onChange={handleChange}
-                        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                       >
                         <option value="">Select business type</option>
                         <option value="Restaurant">Restaurant</option>
@@ -152,7 +182,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                         <option value="Pharmacy">Pharmacy</option>
                         <option value="Store">Store / Boutique</option>
                         <option value="Wholesale">Wholesale</option>
-                        <option value="Delivery/Logistic">Delivery or Logistic Company</option>
+                        <option value="Delivery/Logistic">
+                          Delivery or Logistic Company
+                        </option>
                         <option value="Other">Other</option>
                       </select>
                     </div>
@@ -160,7 +192,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
 
                   {/* Contact Person */}
                   <div>
-                    <label className="mb-1.5 block text-sm font-bold text-gray-700">Contact Person</label>
+                    <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                      Contact Person
+                    </label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                       <input
@@ -169,7 +203,7 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                         name="contactPerson"
                         value={formData.contactPerson}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                         placeholder="Your full name"
                       />
                     </div>
@@ -178,7 +212,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {/* Phone */}
                     <div>
-                      <label className="mb-1.5 block text-sm font-bold text-gray-700">Phone Number</label>
+                      <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                        Phone Number
+                      </label>
                       <div className="relative">
                         <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                         <input
@@ -187,14 +223,16 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                           placeholder="e.g. 078XXXXXXX"
                         />
                       </div>
                     </div>
                     {/* Email */}
                     <div>
-                      <label className="mb-1.5 block text-sm font-bold text-gray-700">Email Address</label>
+                      <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                        Email Address
+                      </label>
                       <div className="relative">
                         <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                         <input
@@ -203,7 +241,7 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                           placeholder="your@email.com"
                         />
                       </div>
@@ -212,7 +250,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
 
                   {/* Location */}
                   <div>
-                    <label className="mb-1.5 block text-sm font-bold text-gray-700">Business Location</label>
+                    <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                      Business Location
+                    </label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                       <input
@@ -221,7 +261,7 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                         name="location"
                         value={formData.location}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                         placeholder="e.g. Kigali, Nyarugenge"
                       />
                     </div>
@@ -229,7 +269,9 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
 
                   {/* Message */}
                   <div>
-                    <label className="mb-1.5 block text-sm font-bold text-gray-700">Message (Optional)</label>
+                    <label className="mb-1.5 block text-sm font-bold text-gray-700">
+                      Message (Optional)
+                    </label>
                     <div className="relative">
                       <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
                       <textarea
@@ -237,14 +279,18 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
                         value={formData.message}
                         onChange={handleChange}
                         rows={3}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black focus:border-[#022C22] focus:bg-white focus:outline-none transition-all"
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-sm font-medium text-black transition-all focus:border-[#022C22] focus:bg-white focus:outline-none"
                         placeholder="Tell us more about your business..."
                       />
                     </div>
                   </div>
                 </div>
 
-                {error && <p className="text-center text-sm font-bold text-red-500">{error}</p>}
+                {error && (
+                  <p className="text-center text-sm font-bold text-red-500">
+                    {error}
+                  </p>
+                )}
 
                 <button
                   disabled={isSubmitting}
@@ -265,9 +311,10 @@ export default function PartnershipFormDrawer({ isOpen, onClose }: PartnershipFo
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-100 p-8 bg-gray-50/30">
+          <div className="border-t border-gray-100 bg-gray-50/30 p-8">
             <p className="text-center text-xs text-gray-500">
-              By submitting this form, you agree to Plas Terms of Service and Privacy Policy.
+              By submitting this form, you agree to Plas Terms of Service and
+              Privacy Policy.
             </p>
           </div>
         </div>

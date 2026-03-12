@@ -15,7 +15,9 @@ export default function FreeNoticeSection() {
 
               <h2 className="mb-8 text-5xl font-black leading-[0.85] tracking-tighter text-white md:text-8xl">
                 EVERYTHING IS <br className="hidden md:block" />
-                <span className="text-white underline decoration-white/20 underline-offset-8">100% FREE</span>
+                <span className="text-white underline decoration-white/20 underline-offset-8">
+                  100% FREE
+                </span>
               </h2>
 
               <p className="mx-auto mb-12 max-w-3xl text-xl font-bold leading-tight text-white/70 md:text-3xl">

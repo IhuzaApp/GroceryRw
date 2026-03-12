@@ -247,7 +247,6 @@ const SendIcon = () => (
   </svg>
 );
 
-
 // Database interface for API response
 interface DatabaseReel {
   id: string;
@@ -777,7 +776,7 @@ export default function FoodReelsApp() {
             const trimmed = str.trim();
             return trimmed.length > 0 ? trimmed : null;
           }
-        } catch (e) { }
+        } catch (e) {}
         const keys = Object.keys(value);
         for (const key of keys) {
           if (typeof value[key] === "string") {
@@ -1482,16 +1481,16 @@ export default function FoodReelsApp() {
           posts.map((post: FoodPost) =>
             post.id === postId
               ? {
-                ...post,
-                isLiked: !isCurrentlyLiked,
-                isProcessingLike: true, // Mark as processing
-                stats: {
-                  ...post.stats,
-                  likes: isCurrentlyLiked
-                    ? Math.max(0, post.stats.likes - 1)
-                    : post.stats.likes + 1,
-                },
-              }
+                  ...post,
+                  isLiked: !isCurrentlyLiked,
+                  isProcessingLike: true, // Mark as processing
+                  stats: {
+                    ...post.stats,
+                    likes: isCurrentlyLiked
+                      ? Math.max(0, post.stats.likes - 1)
+                      : post.stats.likes + 1,
+                  },
+                }
               : post
           )
         );
@@ -1524,16 +1523,16 @@ export default function FoodReelsApp() {
                   posts.map((post: FoodPost) =>
                     post.id === postId
                       ? {
-                        ...post,
-                        isLiked: isCurrentlyLiked, // Revert to original state
-                        isProcessingLike: false,
-                        stats: {
-                          ...post.stats,
-                          likes: isCurrentlyLiked
-                            ? post.stats.likes + 1
-                            : Math.max(0, post.stats.likes - 1),
-                        },
-                      }
+                          ...post,
+                          isLiked: isCurrentlyLiked, // Revert to original state
+                          isProcessingLike: false,
+                          stats: {
+                            ...post.stats,
+                            likes: isCurrentlyLiked
+                              ? post.stats.likes + 1
+                              : Math.max(0, post.stats.likes - 1),
+                          },
+                        }
                       : post
                   )
                 );
@@ -1545,16 +1544,16 @@ export default function FoodReelsApp() {
                   posts.map((post: FoodPost) =>
                     post.id === postId
                       ? {
-                        ...post,
-                        isLiked: isCurrentlyLiked, // Revert to original state
-                        isProcessingLike: false,
-                        stats: {
-                          ...post.stats,
-                          likes: isCurrentlyLiked
-                            ? post.stats.likes + 1
-                            : Math.max(0, post.stats.likes - 1),
-                        },
-                      }
+                          ...post,
+                          isLiked: isCurrentlyLiked, // Revert to original state
+                          isProcessingLike: false,
+                          stats: {
+                            ...post.stats,
+                            likes: isCurrentlyLiked
+                              ? post.stats.likes + 1
+                              : Math.max(0, post.stats.likes - 1),
+                          },
+                        }
                       : post
                   )
                 );
@@ -1567,9 +1566,9 @@ export default function FoodReelsApp() {
                 posts.map((post: FoodPost) =>
                   post.id === postId
                     ? {
-                      ...post,
-                      isProcessingLike: false,
-                    }
+                        ...post,
+                        isProcessingLike: false,
+                      }
                     : post
                 )
               );
@@ -1584,16 +1583,16 @@ export default function FoodReelsApp() {
               posts.map((post: FoodPost) =>
                 post.id === postId
                   ? {
-                    ...post,
-                    isLiked: isCurrentlyLiked, // Revert to original state
-                    isProcessingLike: false,
-                    stats: {
-                      ...post.stats,
-                      likes: isCurrentlyLiked
-                        ? post.stats.likes + 1
-                        : Math.max(0, post.stats.likes - 1),
-                    },
-                  }
+                      ...post,
+                      isLiked: isCurrentlyLiked, // Revert to original state
+                      isProcessingLike: false,
+                      stats: {
+                        ...post.stats,
+                        likes: isCurrentlyLiked
+                          ? post.stats.likes + 1
+                          : Math.max(0, post.stats.likes - 1),
+                      },
+                    }
                   : post
               )
             );
@@ -1627,17 +1626,17 @@ export default function FoodReelsApp() {
             posts.map((post: FoodPost) =>
               post.id === postId
                 ? {
-                  ...post,
-                  commentsList: post.commentsList.map((comment: Comment) =>
-                    comment.id === commentId
-                      ? {
-                        ...comment,
-                        isLiked: result.isLiked,
-                        likes: parseInt(result.likes),
-                      }
-                      : comment
-                  ),
-                }
+                    ...post,
+                    commentsList: post.commentsList.map((comment: Comment) =>
+                      comment.id === commentId
+                        ? {
+                            ...comment,
+                            isLiked: result.isLiked,
+                            likes: parseInt(result.likes),
+                          }
+                        : comment
+                    ),
+                  }
                 : post
             )
           );
@@ -1681,12 +1680,12 @@ export default function FoodReelsApp() {
           posts.map((post: FoodPost) =>
             post.id === postId
               ? {
-                ...post,
-                stats: {
-                  ...post.stats,
-                  comments: post.stats.comments + 1,
-                },
-              }
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    comments: post.stats.comments + 1,
+                  },
+                }
               : post
           )
         );
@@ -1739,12 +1738,12 @@ export default function FoodReelsApp() {
           posts.map((post: FoodPost) =>
             post.id === postId
               ? {
-                ...post,
-                stats: {
-                  ...post.stats,
-                  comments: Math.max(0, post.stats.comments - 1),
-                },
-              }
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    comments: Math.max(0, post.stats.comments - 1),
+                  },
+                }
               : post
           )
         );
@@ -1803,13 +1802,13 @@ export default function FoodReelsApp() {
           posts.map((post: FoodPost) =>
             post.id === postId
               ? {
-                ...post,
-                commentsList: mergedComments,
-                stats: {
-                  ...post.stats,
-                  comments: mergedComments.length,
-                },
-              }
+                  ...post,
+                  commentsList: mergedComments,
+                  stats: {
+                    ...post.stats,
+                    comments: mergedComments.length,
+                  },
+                }
               : post
           )
         );
@@ -1948,20 +1947,20 @@ export default function FoodReelsApp() {
     : posts.length > 0 &&
       visiblePostIndex >= 0 &&
       visiblePostIndex < posts.length
-      ? posts[visiblePostIndex]
-      : null;
+    ? posts[visiblePostIndex]
+    : null;
 
   const activePost = activePostForComments;
   const mergedActiveComments = activePost
     ? [
-      ...(optimisticComments[activePost.id] || []),
-      ...(activePost.commentsList || []).filter(
-        (c) =>
-          !(optimisticComments[activePost.id] || []).some(
-            (o) => o.text === c.text && o.user.name === c.user.name
-          )
-      ),
-    ]
+        ...(optimisticComments[activePost.id] || []),
+        ...(activePost.commentsList || []).filter(
+          (c) =>
+            !(optimisticComments[activePost.id] || []).some(
+              (o) => o.text === c.text && o.user.name === c.user.name
+            )
+        ),
+      ]
     : [];
 
   if (loading) {
@@ -1982,8 +1981,9 @@ export default function FoodReelsApp() {
   if (error) {
     return (
       <div
-        className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-          }`}
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
       >
         <div className="text-center">
           <p className="mb-4 text-red-500">Error: {error}</p>
@@ -2002,8 +2002,9 @@ export default function FoodReelsApp() {
   if (posts.length === 0) {
     return (
       <div
-        className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-          }`}
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
       >
         <div className="text-center">
           <p className="mb-4 text-gray-500">No reels available</p>

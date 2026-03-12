@@ -218,7 +218,6 @@ export default function PosPricingSection() {
           })}
         </div>
       </div>
-
     </section>
   );
 }

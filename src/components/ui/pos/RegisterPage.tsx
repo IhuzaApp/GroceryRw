@@ -2,11 +2,30 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { 
-  X, Loader2, CheckCircle, Store, Utensils, Building2, 
-  User, Phone, Mail, MapPin, CreditCard, ShieldCheck,
-  ChevronRight, ChevronLeft, Camera, Layout, FileText,
-  Globe, Clock, Lock, Briefcase, Trash2, UploadCloud
+import {
+  X,
+  Loader2,
+  CheckCircle,
+  Store,
+  Utensils,
+  Building2,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  CreditCard,
+  ShieldCheck,
+  ChevronRight,
+  ChevronLeft,
+  Camera,
+  Layout,
+  FileText,
+  Globe,
+  Clock,
+  Lock,
+  Briefcase,
+  Trash2,
+  UploadCloud,
 } from "lucide-react";
 import Image from "next/image";
 import { useMutation, useQuery } from "@apollo/client";
@@ -14,7 +33,10 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Autocomplete } from "@react-google-maps/api";
 import { storage } from "../../../lib/firebase";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
-import { CREATE_RESTAURANT_ACCOUNT, CREATE_SHOP_ACCOUNT } from "../../../graphql/mutations/posRegistration";
+import {
+  CREATE_RESTAURANT_ACCOUNT,
+  CREATE_SHOP_ACCOUNT,
+} from "../../../graphql/mutations/posRegistration";
 import { usePlans, Plan } from "../../../hooks/usePlans";
 import AboutTopBar from "../landing/AboutTopBar";
 import AboutHeader from "../landing/AboutHeader";
@@ -27,7 +49,7 @@ import {
   Step5Admin,
   Step6Review,
   PaymentModal,
-  SuccessState
+  SuccessState,
 } from "./registration";
 
 export default function RegisterPage() {
@@ -36,16 +58,18 @@ export default function RegisterPage() {
   const planId = searchParams.get("planId");
   const cycle = searchParams.get("billingCycle") || "monthly";
   const { isLoaded } = useGoogleMap();
-  
+
   const [step, setStep] = useState(1);
-  const [businessType, setBusinessType] = useState<"RESTAURANT" | "SHOP">("RESTAURANT");
+  const [businessType, setBusinessType] = useState<"RESTAURANT" | "SHOP">(
+    "RESTAURANT"
+  );
   const { plans, isLoading: plansLoading } = usePlans();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
     if (plans.length > 0 && planId) {
-      const plan = plans.find(p => p.id === planId);
+      const plan = plans.find((p) => p.id === planId);
       if (plan) setSelectedPlan(plan);
     }
   }, [plans, planId]);
@@ -86,16 +110,22 @@ export default function RegisterPage() {
     position: "Manager",
   });
 
-  const [uploading, setUploading] = useState({ logo: false, profile: false, rdb_cert: false });
+  const [uploading, setUploading] = useState({
+    logo: false,
+    profile: false,
+    rdb_cert: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Payment State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"momo" | "card">("momo");
   const [momoNumber, setMomoNumber] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "failed">("idle");
+  const [paymentStatus, setPaymentStatus] = useState<
+    "idle" | "pending" | "success" | "failed"
+  >("idle");
   const [paymentReference, setPaymentReference] = useState("");
 
   const [createRestaurant] = useMutation(CREATE_RESTAURANT_ACCOUNT);
@@ -108,7 +138,7 @@ export default function RegisterPage() {
       const lng = place.geometry?.location?.lng();
       const address = place.formatted_address || "";
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         address,
         lat: lat?.toString() || prev.lat,
@@ -118,19 +148,34 @@ export default function RegisterPage() {
   };
 
   const sanitizeName = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "unnamed-business";
+    return (
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "") || "unnamed-business"
+    );
   };
 
-  const handleFileUpload = async (file: File | null, type: "logo" | "profile" | "rdb_cert") => {
+  const handleFileUpload = async (
+    file: File | null,
+    type: "logo" | "profile" | "rdb_cert"
+  ) => {
     if (!file) {
-      setFormData(prev => ({ ...prev, [type === "rdb_cert" ? "rdb_cert_url" : type]: "" }));
+      setFormData((prev) => ({
+        ...prev,
+        [type === "rdb_cert" ? "rdb_cert_url" : type]: "",
+      }));
       return;
     }
     if (!storage) return;
-    setUploading(prev => ({ ...prev, [type]: true }));
-    
+    setUploading((prev) => ({ ...prev, [type]: true }));
+
     const businessSlug = sanitizeName(formData.name);
-    const storageRef = ref(storage, `business/${businessSlug}/${type}_${Date.now()}_${file.name}`);
+    const storageRef = ref(
+      storage,
+      `business/${businessSlug}/${type}_${Date.now()}_${file.name}`
+    );
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     try {
@@ -143,18 +188,25 @@ export default function RegisterPage() {
         );
       });
       const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-      setFormData(prev => ({ ...prev, [type === "rdb_cert" ? "rdb_cert_url" : type]: downloadURL }));
+      setFormData((prev) => ({
+        ...prev,
+        [type === "rdb_cert" ? "rdb_cert_url" : type]: downloadURL,
+      }));
     } catch (err) {
       console.error("Upload error:", err);
       setError("Failed to upload file. Please try again.");
     } finally {
-      setUploading(prev => ({ ...prev, [type]: false }));
+      setUploading((prev) => ({ ...prev, [type]: false }));
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError(null);
   };
 
@@ -169,7 +221,8 @@ export default function RegisterPage() {
         if (!formData.tin) return "TIN Number is required.";
         if (!formData.phone) return "Business Phone is required.";
         if (!formData.email) return "Business Email is required.";
-        if (!formData.rdb_cert_url && !formData.rdb_cert) return "Please upload or provide your RDB Certificate.";
+        if (!formData.rdb_cert_url && !formData.rdb_cert)
+          return "Please upload or provide your RDB Certificate.";
         return null;
       case 3:
         if (!formData.logo) return "Business Logo is required.";
@@ -177,14 +230,16 @@ export default function RegisterPage() {
         return null;
       case 4:
         if (!formData.address) return "Physical Address is required.";
-        if (!formData.lat || !formData.long) return "Location coordinates are required. Please select an address from the suggestions.";
+        if (!formData.lat || !formData.long)
+          return "Location coordinates are required. Please select an address from the suggestions.";
         return null;
       case 5:
         if (!formData.fullnames) return "Admin Full Name is required.";
         if (!formData.ownerEmail) return "Personal Email is required.";
         if (!formData.ownerPhone) return "Personal Phone is required.";
         if (!formData.password) return "Security Password is required.";
-        if (formData.password.length < 6) return "Password must be at least 6 characters.";
+        if (formData.password.length < 6)
+          return "Password must be at least 6 characters.";
         return null;
       default:
         return null;
@@ -198,7 +253,7 @@ export default function RegisterPage() {
       return;
     }
     setError(null);
-    setStep(s => s + 1);
+    setStep((s) => s + 1);
   };
 
   const handleCompleteSetup = async () => {
@@ -207,7 +262,7 @@ export default function RegisterPage() {
       setError(validationError);
       return;
     }
-    
+
     // Explicit final check for step 6 state
     if (!selectedPlan) {
       setError("Please select a valid pricing plan.");
@@ -216,7 +271,7 @@ export default function RegisterPage() {
     setError(null);
     setShowPaymentModal(true);
     setMomoNumber(formData.phone);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const performMutation = async () => {
@@ -226,7 +281,7 @@ export default function RegisterPage() {
     const now = new Date().toISOString();
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
-    
+
     const endDate = new Date();
     if (cycle === "yearly") {
       endDate.setFullYear(endDate.getFullYear() + 1);
@@ -261,7 +316,7 @@ export default function RegisterPage() {
             rdb_cert: formData.rdb_cert_url || formData.rdb_cert, // Use URL if uploaded, else text
             restaurant_id: businessId,
             request_count: selectedPlan.ai_request_limit,
-            month: new Date().toLocaleString('default', { month: 'long' }),
+            month: new Date().toLocaleString("default", { month: "long" }),
             year: new Date().getFullYear().toString(),
             shop_id: "00000000-0000-0000-0000-000000000000",
             balance: "0",
@@ -284,11 +339,17 @@ export default function RegisterPage() {
             paid_at: null,
             payment_method: "UNPAID",
             plan_name: selectedPlan.name,
-            plan_price: (cycle === "monthly" ? selectedPlan.price_monthly : selectedPlan.price_yearly).toString(),
+            plan_price: (cycle === "monthly"
+              ? selectedPlan.price_monthly
+              : selectedPlan.price_yearly
+            ).toString(),
             reelUsage_id: commonIds.reelUsage_id,
             shopSubscription_id: commonIds.shopSubscription_id,
             status1: "pending",
-            subtotal_amount: (cycle === "monthly" ? selectedPlan.price_monthly : selectedPlan.price_yearly).toString(),
+            subtotal_amount: (cycle === "monthly"
+              ? selectedPlan.price_monthly
+              : selectedPlan.price_yearly
+            ).toString(),
             tax_amount: "0",
             Address: formData.address,
             Position: formData.position,
@@ -307,10 +368,10 @@ export default function RegisterPage() {
             business_id1: businessId,
             shop_id4: "00000000-0000-0000-0000-000000000000",
             restaurant_id4: businessId,
-            month1: new Date().toLocaleString('default', { month: 'long' }),
+            month1: new Date().toLocaleString("default", { month: "long" }),
             upload_count: selectedPlan.reel_limit,
             year1: new Date().getFullYear().toString(),
-          }
+          },
         });
       } else {
         await createShop({
@@ -348,11 +409,17 @@ export default function RegisterPage() {
             paid_at: null,
             payment_method: "UNPAID",
             plan_name: selectedPlan.name,
-            plan_price: (cycle === "monthly" ? selectedPlan.price_monthly : selectedPlan.price_yearly).toString(),
+            plan_price: (cycle === "monthly"
+              ? selectedPlan.price_monthly
+              : selectedPlan.price_yearly
+            ).toString(),
             reelUsage_id: commonIds.reelUsage_id,
             shopSubscription_id: commonIds.shopSubscription_id,
             status1: "pending",
-            subtotal_amount: (cycle === "monthly" ? selectedPlan.price_monthly : selectedPlan.price_yearly).toString(),
+            subtotal_amount: (cycle === "monthly"
+              ? selectedPlan.price_monthly
+              : selectedPlan.price_yearly
+            ).toString(),
             tax_amount: "0",
             balance: "0",
             shop_id2: businessId,
@@ -373,12 +440,12 @@ export default function RegisterPage() {
             orgEmployeeID: commonIds.orgEmployeeID,
             privillages: { all: true },
             update_on: now,
-          }
+          },
         });
       }
 
       setIsSuccess(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       console.error("Mutation error:", err);
       setError(err.message || "Something went wrong. Please check your data.");
@@ -400,7 +467,10 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: (cycle === "monthly" ? selectedPlan?.price_monthly : selectedPlan?.price_yearly),
+          amount:
+            cycle === "monthly"
+              ? selectedPlan?.price_monthly
+              : selectedPlan?.price_yearly,
           payerNumber: momoNumber,
           externalId: `POS-REG-${Date.now()}`,
           payerMessage: `POS Registration - ${selectedPlan?.name}`,
@@ -450,19 +520,29 @@ export default function RegisterPage() {
               {steps.map((s, idx) => (
                 <div key={s.id} className="flex flex-1 items-center">
                   <div className="flex flex-col items-center gap-2">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
-                      step >= s.id ? "border-[#022C22] bg-[#022C22] text-white" : "border-gray-200 bg-white text-gray-400"
-                    }`}>
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
+                        step >= s.id
+                          ? "border-[#022C22] bg-[#022C22] text-white"
+                          : "border-gray-200 bg-white text-gray-400"
+                      }`}
+                    >
                       <s.icon className="h-5 w-5" />
                     </div>
-                    <span className={`text-xs font-bold ${step >= s.id ? "text-[#022C22]" : "text-gray-400"}`}>
+                    <span
+                      className={`text-xs font-bold ${
+                        step >= s.id ? "text-[#022C22]" : "text-gray-400"
+                      }`}
+                    >
                       {s.title}
                     </span>
                   </div>
                   {idx < steps.length - 1 && (
-                    <div className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${
-                      step > s.id ? "bg-[#022C22]" : "bg-gray-200"
-                    }`} />
+                    <div
+                      className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${
+                        step > s.id ? "bg-[#022C22]" : "bg-gray-200"
+                      }`}
+                    />
                   )}
                 </div>
               ))}
@@ -476,35 +556,35 @@ export default function RegisterPage() {
               <div className="space-y-10">
                 {/* Step Content */}
                 {step === 1 && (
-                  <Step1Selection 
-                    type={businessType} 
-                    setType={setBusinessType} 
-                    plan={selectedPlan} 
+                  <Step1Selection
+                    type={businessType}
+                    setType={setBusinessType}
+                    plan={selectedPlan}
                     cycle={cycle}
                   />
                 )}
-                
+
                 {step === 2 && (
-                  <Step2Identity 
-                    formData={formData} 
-                    onChange={handleInputChange} 
+                  <Step2Identity
+                    formData={formData}
+                    onChange={handleInputChange}
                     handleUpload={handleFileUpload}
                     uploading={uploading}
                   />
                 )}
 
                 {step === 3 && (
-                  <Step3Branding 
-                    formData={formData} 
+                  <Step3Branding
+                    formData={formData}
                     handleUpload={handleFileUpload}
                     uploading={uploading}
                   />
                 )}
 
                 {step === 4 && (
-                  <Step4Location 
-                    formData={formData} 
-                    onChange={handleInputChange} 
+                  <Step4Location
+                    formData={formData}
+                    onChange={handleInputChange}
                     isLoaded={isLoaded}
                     autocompleteRef={autocompleteRef}
                     onPlaceChanged={onPlaceChanged}
@@ -512,16 +592,16 @@ export default function RegisterPage() {
                 )}
 
                 {step === 5 && (
-                  <Step5Admin 
-                    formData={formData} 
-                    onChange={handleInputChange} 
+                  <Step5Admin
+                    formData={formData}
+                    onChange={handleInputChange}
                   />
                 )}
 
                 {step === 6 && (
-                  <Step6Review 
-                    formData={formData} 
-                    type={businessType} 
+                  <Step6Review
+                    formData={formData}
+                    type={businessType}
                     plan={selectedPlan}
                     cycle={cycle}
                   />
@@ -531,7 +611,7 @@ export default function RegisterPage() {
                 <div className="mt-12 flex flex-col-reverse gap-4 border-t pt-10 md:flex-row md:justify-between">
                   {step > 1 && (
                     <button
-                      onClick={() => setStep(s => s - 1)}
+                      onClick={() => setStep((s) => s - 1)}
                       className="flex h-16 items-center justify-center gap-2 rounded-2xl border-2 border-gray-100 bg-white px-8 font-bold text-gray-600 transition-all hover:bg-gray-50"
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -541,7 +621,10 @@ export default function RegisterPage() {
                   <div className="flex-1" />
                   <button
                     onClick={step === 6 ? handleCompleteSetup : handleNextStep}
-                    disabled={isSubmitting || (step === 3 && (uploading.logo || uploading.profile))}
+                    disabled={
+                      isSubmitting ||
+                      (step === 3 && (uploading.logo || uploading.profile))
+                    }
                     className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-12 font-bold text-white shadow-lg transition-all hover:bg-[#00c596] active:scale-95 disabled:opacity-50"
                   >
                     {isSubmitting ? (
@@ -557,9 +640,9 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
-                
+
                 {error && (
-                  <div className="mt-4 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-600 border border-red-100">
+                  <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-600">
                     {error}
                   </div>
                 )}
@@ -573,9 +656,11 @@ export default function RegisterPage() {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <PaymentModal 
+        <PaymentModal
           isOpen={showPaymentModal}
-          onClose={() => !paymentStatus.includes('pending') && setShowPaymentModal(false)}
+          onClose={() =>
+            !paymentStatus.includes("pending") && setShowPaymentModal(false)
+          }
           method={paymentMethod}
           setMethod={setPaymentMethod}
           momoNumber={momoNumber}
@@ -583,7 +668,11 @@ export default function RegisterPage() {
           onPay={handleMomoPayment}
           status={paymentStatus}
           plan={selectedPlan}
-          price={cycle === "monthly" ? selectedPlan?.price_monthly : selectedPlan?.price_yearly}
+          price={
+            cycle === "monthly"
+              ? selectedPlan?.price_monthly
+              : selectedPlan?.price_yearly
+          }
         />
       )}
     </div>

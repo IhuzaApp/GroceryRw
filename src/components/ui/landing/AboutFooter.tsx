@@ -305,9 +305,7 @@ export default function AboutFooter() {
           </div>
 
           <div className="order-3 text-sm text-gray-500 md:order-3">
-            <p>
-              &copy; 2020 Plas under Plasera Ltd. All rights reserved. 2022
-            </p>
+            <p>&copy; 2020 Plas under Plasera Ltd. All rights reserved. 2022</p>
           </div>
         </div>
       </div>

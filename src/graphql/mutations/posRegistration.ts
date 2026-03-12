@@ -246,11 +246,7 @@ export const CREATE_SHOP_ACCOUNT = gql`
         ssd: $ssd
         tin: $tin
         reel_usages: {
-          data: {
-            shop_id: $shop_id
-            upload_count: $upload_count
-            year: $year
-          }
+          data: { shop_id: $shop_id, upload_count: $upload_count, year: $year }
         }
         shop_subscription: {
           data: {
