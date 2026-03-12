@@ -10,7 +10,7 @@ import FreeNoticeSection from "@components/ui/plasBusiness/FreeNoticeSection";
 import RegistrationSection from "@components/ui/plasBusiness/RegistrationSection";
 import Head from "next/head";
 import { useState } from "react";
-import SampleStoreDrawer from "./SampleStoreDrawer";
+import BusinessOpportunitiesDrawer from "./BusinessOpportunitiesDrawer";
 
 export default function PlasBusinessPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -67,7 +67,7 @@ export default function PlasBusinessPage() {
         </main>
 
         <AboutFooter />
-        <SampleStoreDrawer
+        <BusinessOpportunitiesDrawer
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
         />

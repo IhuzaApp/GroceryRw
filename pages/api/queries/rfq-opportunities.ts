@@ -137,6 +137,7 @@ export default async function handler(
       }>;
     }>(GET_RFQ_OPPORTUNITIES);
 
+    console.log("API: Fetching RFQ opportunities (Public/Explorer Access)");
     console.log("API: Total RFQs fetched:", result.bussines_RFQ?.length || 0);
     console.log(
       "API: RFQ IDs:",

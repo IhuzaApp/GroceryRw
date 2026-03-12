@@ -75,7 +75,7 @@ export default function PlasBusinessHero({ onOpenDrawer }: { onOpenDrawer: () =>
               onClick={onOpenDrawer}
               className="rounded-2xl border border-white/10 bg-white/5 px-10 py-5 text-lg font-bold text-white backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10"
             >
-              View Sample Store
+              Explore Opportunities
             </button>
           </div>
 
