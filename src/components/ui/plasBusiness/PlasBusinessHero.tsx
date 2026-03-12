@@ -2,7 +2,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useAuth } from "../../../context/AuthContext";
 
-export default function PlasBusinessHero() {
+export default function PlasBusinessHero({ onOpenDrawer }: { onOpenDrawer: () => void }) {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
 
@@ -71,7 +71,10 @@ export default function PlasBusinessHero() {
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </span>
             </button>
-            <button className="rounded-2xl border border-white/10 bg-white/5 px-10 py-5 text-lg font-bold text-white backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10">
+            <button
+              onClick={onOpenDrawer}
+              className="rounded-2xl border border-white/10 bg-white/5 px-10 py-5 text-lg font-bold text-white backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10"
+            >
               View Sample Store
             </button>
           </div>

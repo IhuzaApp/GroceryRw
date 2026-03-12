@@ -9,8 +9,11 @@ import IndividualSellersSection from "@components/ui/plasBusiness/IndividualSell
 import FreeNoticeSection from "@components/ui/plasBusiness/FreeNoticeSection";
 import RegistrationSection from "@components/ui/plasBusiness/RegistrationSection";
 import Head from "next/head";
+import { useState } from "react";
+import SampleStoreDrawer from "./SampleStoreDrawer";
 
 export default function PlasBusinessPage() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   return (
     <>
       <Head>
@@ -56,7 +59,7 @@ export default function PlasBusinessPage() {
         <AboutHeader activePage="plasBusiness" />
 
         <main>
-          <PlasBusinessHero />
+          <PlasBusinessHero onOpenDrawer={() => setIsDrawerOpen(true)} />
           <PlasBusinessFeatures />
           <IndividualSellersSection />
           <FreeNoticeSection />
@@ -64,6 +67,10 @@ export default function PlasBusinessPage() {
         </main>
 
         <AboutFooter />
+        <SampleStoreDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+        />
       </div>
     </>
   );
