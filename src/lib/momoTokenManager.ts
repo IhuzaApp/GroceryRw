@@ -98,7 +98,7 @@ class MomoTokenManager {
       // Add generation timestamp
       tokenData.generated_at = Date.now();
 
-      console.log("✅ [MoMo Token Manager] Token generated successfully:", {
+      console.log("✅ [MoMo Token Manager] Token obtained successfully:", {
         access_token: tokenData.access_token
           ? "***TOKEN_RECEIVED***"
           : "NO_TOKEN",
@@ -111,49 +111,17 @@ class MomoTokenManager {
     } catch (error) {
       console.error("💥 [MoMo Token Manager] Error generating MoMo token:", {
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString(),
       });
-
-      // If it's a network error or credentials issue, use test token
-      if (error instanceof Error && error.message.includes("401")) {
-        console.log(
-          "🧪 [MoMo Token Manager] Using test token due to credentials issue"
-        );
-        return this.generateTestToken();
-      }
-
       throw error;
     }
-  }
-
-  /**
-   * Generate a test token for development/testing
-   */
-  private generateTestToken(): TokenData {
-    const testToken = {
-      access_token: `test_token_${Date.now()}`,
-      token_type: "Bearer",
-      expires_in: 3600, // 1 hour
-      generated_at: Date.now(),
-    };
-
-    console.log(
-      "🧪 [MoMo Token Manager] Generated test MoMo token for development:",
-      {
-        access_token: testToken.access_token,
-        token_type: testToken.token_type,
-        expires_in: testToken.expires_in,
-        generated_at: new Date(testToken.generated_at).toISOString(),
-      }
-    );
-    return testToken;
   }
 
   /**
    * Get cached token from localStorage
    */
   private getCachedToken(): CachedToken | null {
+
     if (typeof window === "undefined") return null;
 
     try {

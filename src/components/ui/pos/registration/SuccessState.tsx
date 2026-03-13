@@ -1,6 +1,14 @@
+import { useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 
 export default function SuccessState() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.open("https://dash.plas.rw", "_blank");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center duration-500 animate-in zoom-in">
       <div className="relative mb-10 h-32 w-32">
@@ -14,7 +22,7 @@ export default function SuccessState() {
       </h2>
       <p className="mx-auto mt-6 max-w-sm text-lg text-gray-500">
         Congratulations! Your account is ready. Redirecting you to your POS
-        dashboard...
+        dashboard in a new tab...
       </p>
     </div>
   );

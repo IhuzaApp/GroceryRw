@@ -1,10 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { v4 as uuidv4 } from "uuid";
+import { momoService } from "../../../src/lib/momoService";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+
+const CREATE_PENDING_TRANSACTION = gql`
+  mutation CreatePendingMoMoTransaction($transaction: Wallet_Transactions_insert_input!) {
+    insert_Wallet_Transactions_one(object: $transaction) {
+      id
+    }
+  }
+`;
 
 /**
  * MoMo Collection API - RequestToPay
  * Collects payment FROM the customer (payer) to the merchant.
- * Use this for checkout when charging the customer's MoMo.
  */
 export default async function handler(
   req: NextApiRequest,
@@ -21,6 +30,8 @@ export default async function handler(
     externalId,
     payerMessage = "Payment for your order",
     payeeNote = "Thank you for your order",
+    walletId, // Optional: if provided, we'll link the transaction to a wallet
+    orderId,  // Optional: link to order
   } = req.body;
 
   if (!amount || !payerNumber) {
@@ -29,104 +40,48 @@ export default async function handler(
     });
   }
 
-  const amt = Math.round(parseFloat(amount) * 100) / 100;
-  if (amt <= 0) {
-    return res.status(400).json({ error: "Amount must be greater than 0" });
-  }
-
-  // Normalize phone to MSISDN (250... for Rwanda)
-  let partyId = String(payerNumber).replace(/\D/g, "");
-  if (partyId.startsWith("0")) {
-    partyId = "250" + partyId.slice(1);
-  } else if (!partyId.startsWith("250")) {
-    partyId = "250" + partyId;
-  }
-
-  const referenceId = uuidv4();
-  const extId = externalId || `ORDER-${Date.now()}`;
-
   try {
-    const hasCredentials =
-      process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX &&
-      process.env.MOMO_API_USER_SANDBOX &&
-      process.env.MOMO_API_KEY_SANDBOX;
-
-    if (!hasCredentials) {
-      return res.status(200).json({
-        referenceId,
-        message: "Payment simulated (sandbox)",
-        status: "PENDING",
-      });
-    }
-
-    const tokenUrl = `${process.env.MOMO_SANDBOX_URL}/collection/token/`;
-    const tokenRes = await fetch(tokenUrl, {
-      method: "POST",
-      headers: {
-        "Ocp-Apim-Subscription-Key": process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
-        Authorization: `Basic ${Buffer.from(
-          `${process.env.MOMO_API_USER_SANDBOX}:${process.env.MOMO_API_KEY_SANDBOX}`
-        ).toString("base64")}`,
-      },
-    });
-
-    if (!tokenRes.ok) {
-      const errText = await tokenRes.text();
-      console.error("[MoMo RequestToPay] Token error:", errText);
-      return res.status(200).json({
-        referenceId,
-        message: "Payment simulated (token error)",
-        status: "PENDING",
-      });
-    }
-
-    const { access_token } = await tokenRes.json();
-
-    const requestToPayUrl = `${process.env.MOMO_SANDBOX_URL}/collection/v1_0/requesttopay`;
-    const payload = {
-      amount: amt.toFixed(2),
+    const { referenceId } = await momoService.requestToPay({
+      amount,
       currency,
-      externalId: extId,
-      payer: {
-        partyIdType: "MSISDN",
-        partyId,
-      },
+      externalId: externalId || `ORDER-${Date.now()}`,
+      payerNumber,
       payerMessage,
       payeeNote,
-    };
-
-    const payRes = await fetch(requestToPayUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
-        Authorization: `Bearer ${access_token}`,
-        "X-Reference-Id": referenceId,
-        "X-Target-Environment": "sandbox",
-      },
-      body: JSON.stringify(payload),
     });
 
-    if (payRes.status === 202) {
-      return res.status(200).json({
-        referenceId,
-        message: "Payment request sent – approve on your phone",
-        status: "PENDING",
-      });
+    // Record the pending transaction in the database if walletId or orderId is provided
+    if (hasuraClient && (walletId || orderId)) {
+      try {
+        await hasuraClient.request(CREATE_PENDING_TRANSACTION, {
+          transaction: {
+            wallet_id: walletId || null,
+            related_order_id: orderId || null,
+            amount: String(amount),
+            type: "payment",
+            status: "pending",
+            description: `MoMo Payment Pending | Ref: ${referenceId} | Phone: ${payerNumber}`,
+          },
+        });
+        console.log("📝 [MoMo RequestToPay] Pending transaction recorded");
+      } catch (dbError) {
+        console.error("❌ [MoMo RequestToPay] Failed to record pending transaction:", dbError);
+        // We still return the referenceId because the MoMo request was successful
+      }
     }
 
-    const errBody = await payRes.text();
-    console.error("[MoMo RequestToPay] Error:", payRes.status, errBody);
-    return res.status(payRes.status || 500).json({
-      error: "MoMo request failed",
-      details: errBody,
+    return res.status(200).json({
       referenceId,
+      message: "Payment request sent – approve on your phone",
+      status: "PENDING",
     });
-  } catch (error) {
-    console.error("[MoMo RequestToPay] Exception:", error);
+  } catch (error: any) {
+    console.error("💥 [MoMo RequestToPay] Exception:", error);
     return res.status(500).json({
-      error: "Payment request failed",
-      referenceId,
+      error: "MoMo request failed",
+      details: error.message,
     });
   }
 }
+
+

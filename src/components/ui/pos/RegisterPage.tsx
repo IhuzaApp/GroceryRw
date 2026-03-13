@@ -39,7 +39,7 @@ import {
 } from "../../../graphql/mutations/posRegistration";
 import { usePlans, Plan } from "../../../hooks/usePlans";
 import { MODULE_DESCRIPTIONS } from "../../../types/moduleDescriptions";
-import { UserPrivileges } from "../../../types/privileges";
+import { UserPrivileges, DEFAULT_PRIVILEGES } from "../../../types/privileges";
 import AboutTopBar from "../landing/AboutTopBar";
 import AboutHeader from "../landing/AboutHeader";
 import AboutFooter from "../landing/AboutFooter";
@@ -54,13 +54,16 @@ import {
   SuccessState,
 } from "./registration";
 
+
 const generatePrivileges = (plan: Plan): UserPrivileges => {
-  const privileges: UserPrivileges = {
-    pages: {
-      access: true,
-      view_pages: false,
-    } as any,
-  };
+  // Use DEFAULT_PRIVILEGES as base so all modules are present with default false
+  const privileges: UserPrivileges = JSON.parse(JSON.stringify(DEFAULT_PRIVILEGES));
+  
+  // Explicitly ensure pages access is true as it's the core navigation
+  if (privileges.pages) {
+    privileges.pages.access = true;
+    privileges.pages.view_pages = false;
+  }
 
   plan.modules.forEach((module) => {
     const slug = module.slug;
@@ -84,6 +87,7 @@ const generatePrivileges = (plan: Plan): UserPrivileges => {
 
   return privileges;
 };
+
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -138,6 +142,7 @@ export default function RegisterPage() {
     ownerEmail: "",
     ownerPhone: "",
     password: "",
+    confirmPassword: "",
     gender: "Male",
     dob: "1990-01-01",
     position: "Manager",
@@ -273,6 +278,8 @@ export default function RegisterPage() {
         if (!formData.password) return "Security Password is required.";
         if (formData.password.length < 6)
           return "Password must be at least 6 characters.";
+        if (formData.password !== formData.confirmPassword)
+          return "Passwords do not match.";
         return null;
       default:
         return null;
@@ -401,7 +408,7 @@ export default function RegisterPage() {
             password: formData.password,
             phone1: formData.ownerPhone,
             restaurant_id3: businessId,
-            roleType: "admin",
+            roleType: "system Administrator",
             shop_id3: "00000000-0000-0000-0000-000000000000",
             twoFactorSecrets: "",
             business_id1: businessId,
@@ -476,7 +483,7 @@ export default function RegisterPage() {
             password: formData.password,
             phone1: formData.ownerPhone,
             restaurant_id2: "00000000-0000-0000-0000-000000000000",
-            roleType: "admin",
+            roleType: "system Administrator",
             shop_id3: businessId,
             twoFactorSecrets: "",
             orgEmployeeID: commonIds.orgEmployeeID,
