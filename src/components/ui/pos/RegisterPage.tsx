@@ -38,6 +38,8 @@ import {
   CREATE_SHOP_ACCOUNT,
 } from "../../../graphql/mutations/posRegistration";
 import { usePlans, Plan } from "../../../hooks/usePlans";
+import { MODULE_DESCRIPTIONS } from "../../../types/moduleDescriptions";
+import { UserPrivileges } from "../../../types/privileges";
 import AboutTopBar from "../landing/AboutTopBar";
 import AboutHeader from "../landing/AboutHeader";
 import AboutFooter from "../landing/AboutFooter";
@@ -52,11 +54,42 @@ import {
   SuccessState,
 } from "./registration";
 
+const generatePrivileges = (plan: Plan): UserPrivileges => {
+  const privileges: UserPrivileges = {
+    pages: {
+      access: true,
+      view_pages: false,
+    } as any,
+  };
+
+  plan.modules.forEach((module) => {
+    const slug = module.slug;
+    const description = (MODULE_DESCRIPTIONS as any)[slug];
+
+    if (description) {
+      // Grant full access to all actions in this module
+      const modulePrivs: Record<string, boolean> = { access: true };
+      description.actions.forEach((action: any) => {
+        modulePrivs[action.key] = true;
+      });
+      (privileges as any)[slug] = modulePrivs;
+
+      // Update pages module access flags
+      if (privileges.pages) {
+        const pageAccessKey = `access_${slug}`;
+        (privileges.pages as any)[pageAccessKey] = true;
+      }
+    }
+  });
+
+  return privileges;
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planId = searchParams.get("planId");
-  const cycle = searchParams.get("billingCycle") || "monthly";
+  const planId = searchParams?.get("planId");
+  const cycle = searchParams?.get("billingCycle") || "monthly";
   const { isLoaded } = useGoogleMap();
 
   const [step, setStep] = useState(1);
@@ -275,6 +308,12 @@ export default function RegisterPage() {
   };
 
   const performMutation = async () => {
+    if (!selectedPlan) {
+      setError("No plan selected. Please go back and select a plan.");
+      return;
+    }
+
+    const plan = selectedPlan;
     setIsSubmitting(true);
     setError(null);
 
@@ -315,7 +354,7 @@ export default function RegisterPage() {
             ussd: formData.ussd,
             rdb_cert: formData.rdb_cert_url || formData.rdb_cert, // Use URL if uploaded, else text
             restaurant_id: businessId,
-            request_count: selectedPlan.ai_request_limit,
+            request_count: plan.ai_request_limit,
             month: new Date().toLocaleString("default", { month: "long" }),
             year: new Date().getFullYear().toString(),
             shop_id: "00000000-0000-0000-0000-000000000000",
@@ -329,7 +368,7 @@ export default function RegisterPage() {
             status: "active",
             updated_at: now,
             end_date: endDate.toISOString(),
-            plan_id: selectedPlan.id,
+            plan_id: plan.id,
             aiUsage_id: commonIds.aiUsage_id,
             currency: "RWF",
             discount_amount: "0",
@@ -338,17 +377,17 @@ export default function RegisterPage() {
             issued_at: now,
             paid_at: null,
             payment_method: "UNPAID",
-            plan_name: selectedPlan.name,
+            plan_name: plan.name,
             plan_price: (cycle === "monthly"
-              ? selectedPlan.price_monthly
-              : selectedPlan.price_yearly
+              ? plan.price_monthly
+              : plan.price_yearly
             ).toString(),
             reelUsage_id: commonIds.reelUsage_id,
             shopSubscription_id: commonIds.shopSubscription_id,
             status1: "pending",
             subtotal_amount: (cycle === "monthly"
-              ? selectedPlan.price_monthly
-              : selectedPlan.price_yearly
+              ? plan.price_monthly
+              : plan.price_yearly
             ).toString(),
             tax_amount: "0",
             Address: formData.address,
@@ -369,8 +408,11 @@ export default function RegisterPage() {
             shop_id4: "00000000-0000-0000-0000-000000000000",
             restaurant_id4: businessId,
             month1: new Date().toLocaleString("default", { month: "long" }),
-            upload_count: selectedPlan.reel_limit,
+            upload_count: plan.reel_limit,
             year1: new Date().getFullYear().toString(),
+            orgEmployeeID: commonIds.orgEmployeeID,
+            privillages: generatePrivileges(plan),
+            update_on: now,
           },
         });
       } else {
@@ -390,12 +432,12 @@ export default function RegisterPage() {
             ssd: formData.ussd,
             tin: formData.tin,
             shop_id: businessId,
-            upload_count: selectedPlan.reel_limit,
+            upload_count: plan.reel_limit,
             year: new Date().getFullYear().toString(),
             billing_cycle: billingCycle,
             business_id: businessId,
             end_date: endDate.toISOString(),
-            plan_id: selectedPlan.id,
+            plan_id: plan.id,
             shop_id1: businessId,
             restaurant_id: "00000000-0000-0000-0000-000000000000",
             start_date: now,
@@ -408,17 +450,17 @@ export default function RegisterPage() {
             issued_at: now,
             paid_at: null,
             payment_method: "UNPAID",
-            plan_name: selectedPlan.name,
+            plan_name: plan.name,
             plan_price: (cycle === "monthly"
-              ? selectedPlan.price_monthly
-              : selectedPlan.price_yearly
+              ? plan.price_monthly
+              : plan.price_yearly
             ).toString(),
             reelUsage_id: commonIds.reelUsage_id,
             shopSubscription_id: commonIds.shopSubscription_id,
             status1: "pending",
             subtotal_amount: (cycle === "monthly"
-              ? selectedPlan.price_monthly
-              : selectedPlan.price_yearly
+              ? plan.price_monthly
+              : plan.price_yearly
             ).toString(),
             tax_amount: "0",
             balance: "0",
@@ -438,7 +480,7 @@ export default function RegisterPage() {
             shop_id3: businessId,
             twoFactorSecrets: "",
             orgEmployeeID: commonIds.orgEmployeeID,
-            privillages: { all: true },
+            privillages: generatePrivileges(plan),
             update_on: now,
           },
         });
@@ -457,6 +499,11 @@ export default function RegisterPage() {
   };
 
   const handleMomoPayment = async () => {
+    if (!selectedPlan) {
+      setError("No plan selected. Please go back and select a plan.");
+      return;
+    }
+    const plan = selectedPlan;
     if (!momoNumber) {
       setError("Please enter a valid MoMo number.");
       return;
@@ -469,11 +516,11 @@ export default function RegisterPage() {
         body: JSON.stringify({
           amount:
             cycle === "monthly"
-              ? selectedPlan?.price_monthly
-              : selectedPlan?.price_yearly,
+              ? plan.price_monthly
+              : plan.price_yearly,
           payerNumber: momoNumber,
           externalId: `POS-REG-${Date.now()}`,
-          payerMessage: `POS Registration - ${selectedPlan?.name}`,
+          payerMessage: `POS Registration - ${plan.name}`,
         }),
       });
       const data = await response.json();
