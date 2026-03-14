@@ -34,6 +34,10 @@ const GET_SUBSCRIPTION_BY_REF = gql`
       id
       subscription_id
       amount
+      shop_subscription {
+        restaurant_id
+        shop_id
+      }
     }
   }
 `;
@@ -56,6 +60,33 @@ const ACTIVATE_SUBSCRIPTION = gql`
       _set: { status: $status }
     ) {
       id
+    }
+  }
+`;
+
+const ACTIVATE_RESTAURANT = gql`
+  mutation ActivateRestaurant($id: uuid!) {
+    update_Restaurants_by_pk(pk_columns: { id: $id }, _set: { is_active: true, verified: true }) {
+      id
+    }
+  }
+`;
+
+const ACTIVATE_SHOP = gql`
+  mutation ActivateShop($id: uuid!) {
+    update_Shops_by_pk(pk_columns: { shop_id: $id }, _set: { is_active: true }) {
+      shop_id
+    }
+  }
+`;
+
+const ACTIVATE_INVOICE = gql`
+  mutation ActivateInvoice($subscription_id: uuid!) {
+    update_subscription_invoices(
+      where: { shopSubscription_id: { _eq: $subscription_id } },
+      _set: { status: "paid", paid_at: "now()" }
+    ) {
+      affected_rows
     }
   }
 `;
@@ -131,6 +162,22 @@ export default async function handler(
                   id: subscription.subscription_id,
                   status: "active"
                 });
+
+                // Also activate the business shell
+                const restaurantId = subscription.shop_subscription?.restaurant_id;
+                const shopId = subscription.shop_subscription?.shop_id;
+
+                if (restaurantId && restaurantId !== "00000000-0000-0000-0000-000000000000") {
+                  console.log(`🚀 [MoMo Status] Activating Restaurant shell: ${restaurantId}`);
+                  await hasuraClient.request(ACTIVATE_RESTAURANT, { id: restaurantId });
+                } else if (shopId && shopId !== "00000000-0000-0000-0000-000000000000") {
+                  console.log(`🚀 [MoMo Status] Activating Shop shell: ${shopId}`);
+                  await hasuraClient.request(ACTIVATE_SHOP, { id: shopId });
+                }
+
+                // Also activate invoice
+                console.log(`🚀 [MoMo Status] Marking invoice as paid for sub: ${subscription.subscription_id}`);
+                await hasuraClient.request(ACTIVATE_INVOICE, { subscription_id: subscription.subscription_id });
               }
             }
           } else {

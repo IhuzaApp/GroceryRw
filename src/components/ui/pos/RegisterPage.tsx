@@ -59,7 +59,7 @@ import {
 const generatePrivileges = (plan: Plan): UserPrivileges => {
   // Use DEFAULT_PRIVILEGES as base so all modules are present with default false
   const privileges: UserPrivileges = JSON.parse(JSON.stringify(DEFAULT_PRIVILEGES));
-  
+
   // Explicitly ensure pages access is true as it's the core navigation
   if (privileges.pages) {
     privileges.pages.access = true;
@@ -147,6 +147,18 @@ export default function RegisterPage() {
     dob: "1990-01-01",
     position: "Manager",
   });
+
+  const [processingStep, setProcessingStep] = useState<
+    | "idle"
+    | "initiating_payment"
+    | "awaiting_approval"
+    | "creating_profile"
+    | "setting_privileges"
+    | "finalizing"
+    | "success"
+  >("idle");
+  const [registeredBusinessId, setRegisteredBusinessId] = useState<string | null>(null);
+  const [registeredSubscriptionId, setRegisteredSubscriptionId] = useState<string | null>(null);
 
   const [uploading, setUploading] = useState({
     logo: false,
@@ -296,30 +308,34 @@ export default function RegisterPage() {
     setStep((s) => s + 1);
   };
 
+  const formatPhoneForMoMo = (phone: string) => {
+    let partyId = String(phone).replace(/\D/g, "");
+    if (partyId.startsWith("0")) {
+      partyId = "250" + partyId.slice(1);
+    } else if (!partyId.startsWith("250")) {
+      partyId = "250" + partyId;
+    }
+    return partyId;
+  };
+
   const handleCompleteSetup = async () => {
-    const validationError = validateStep(step); // Should be step 6, but validates all if needed
+    const validationError = validateStep(step);
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    // Explicit final check for step 6 state
     if (!selectedPlan) {
       setError("Please select a valid pricing plan.");
       return;
     }
-    // Pre-generate subscription ID to link with MoMo payment
-    const shopSubscription_id = crypto.randomUUID();
-    
+
     setError(null);
-    setShowPaymentModal(true);
-    setMomoNumber(formData.phone);
-    // Store the ID in state or pass it to handleMomoPayment
-    (window as any)._pendingSubscriptionId = shopSubscription_id;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // CRITICAL CHANGE: Create account shell FIRST
+    await performMutation(true);
   };
 
-  const performMutation = async () => {
+  const performMutation = async (isShell: boolean = false) => {
     if (!selectedPlan) {
       setError("No plan selected. Please go back and select a plan.");
       return;
@@ -340,17 +356,21 @@ export default function RegisterPage() {
       endDate.setMonth(endDate.getMonth() + 1);
     }
 
-    const businessId = crypto.randomUUID();
+    const businessId = registeredBusinessId || crypto.randomUUID();
     const billingCycle = cycle;
-    const pendingSubscriptionId = (window as any)._pendingSubscriptionId;
     const commonIds = {
       aiUsage_id: crypto.randomUUID(),
       reelUsage_id: crypto.randomUUID(),
-      shopSubscription_id: pendingSubscriptionId || crypto.randomUUID(),
+      shopSubscription_id: registeredSubscriptionId || crypto.randomUUID(),
       employee_id: Math.floor(Math.random() * 1000000),
       orgEmployeeID: crypto.randomUUID(),
     };
 
+    if (isShell) {
+      setProcessingStep("creating_profile");
+    } else {
+      setProcessingStep("setting_privileges");
+    }
     try {
       console.log("🚀 [POS Registration] Starting mutation for:", businessType);
       const variables = {
@@ -369,15 +389,10 @@ export default function RegisterPage() {
         request_count: plan.ai_request_limit,
         month: new Date().toLocaleString("default", { month: "long" }),
         year: new Date().getFullYear().toString(),
-        shop_id: "00000000-0000-0000-0000-000000000000",
         balance: "0",
-        restaurant_id1: businessId,
-        shop_id1: "00000000-0000-0000-0000-000000000000",
         billing_cycle: billingCycle,
-        restaurant_id2: businessId,
-        shop_id2: "00000000-0000-0000-0000-000000000000",
         start_date: now,
-        status: "active",
+        status: isShell ? "pending_payment" : "active",
         updated_at: now,
         end_date: endDate.toISOString(),
         plan_id: plan.id,
@@ -387,8 +402,8 @@ export default function RegisterPage() {
         due_date: dueDate.toISOString(),
         invoice_number: `INV-${Date.now()}`,
         issued_at: now,
-        paid_at: null,
-        payment_method: "UNPAID",
+        paid_at: isShell ? null : now,
+        payment_method: isShell ? "UNPAID" : "MoMo",
         plan_name: plan.name,
         plan_price: (cycle === "monthly"
           ? plan.price_monthly
@@ -412,13 +427,9 @@ export default function RegisterPage() {
         last_login: now,
         password: formData.password,
         phone1: formData.ownerPhone,
-        restaurant_id3: businessId,
         roleType: "system Administrator",
-        shop_id3: "00000000-0000-0000-0000-000000000000",
         twoFactorSecrets: "",
         business_id1: businessId,
-        shop_id4: "00000000-0000-0000-0000-000000000000",
-        restaurant_id4: businessId,
         month1: new Date().toLocaleString("default", { month: "long" }),
         upload_count: plan.reel_limit,
         year1: new Date().getFullYear().toString(),
@@ -456,18 +467,16 @@ export default function RegisterPage() {
           business_id: businessId,
           end_date: endDate.toISOString(),
           plan_id: plan.id,
-          shop_id1: businessId,
-          restaurant_id: "00000000-0000-0000-0000-000000000000",
           start_date: now,
-          status: "active",
+          status: isShell ? "pending_payment" : "active",
           aiUsage_id: commonIds.aiUsage_id,
           currency: "RWF",
           discount_amount: "0",
           invoice_number: `INV-${Date.now()}`,
           due_date: dueDate.toISOString(),
           issued_at: now,
-          paid_at: null,
-          payment_method: "UNPAID",
+          paid_at: isShell ? null : now,
+          payment_method: isShell ? "UNPAID" : "MoMo",
           plan_name: plan.name,
           plan_price: (cycle === "monthly"
             ? plan.price_monthly
@@ -482,8 +491,6 @@ export default function RegisterPage() {
           ).toString(),
           tax_amount: "0",
           balance: "0",
-          shop_id2: businessId,
-          restaurant_id1: "00000000-0000-0000-0000-000000000000",
           Address: formData.address,
           Position: formData.position,
           dob: formData.dob,
@@ -493,9 +500,7 @@ export default function RegisterPage() {
           gender: formData.gender,
           password: formData.password,
           phone1: formData.ownerPhone,
-          restaurant_id2: "00000000-0000-0000-0000-000000000000",
           roleType: "system Administrator",
-          shop_id3: businessId,
           twoFactorSecrets: "",
           orgEmployeeID: commonIds.orgEmployeeID,
           privillages: generatePrivileges(plan),
@@ -506,25 +511,35 @@ export default function RegisterPage() {
       }
 
       console.log("✅ [POS Registration] Mutation Result:", result);
-      
+
       if (result?.errors) {
         console.error("❌ [POS Registration] GraphQL Errors:", result.errors);
         throw new Error(result.errors[0].message);
       }
 
-      setIsSuccess(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (isShell) {
+        setRegisteredBusinessId(businessId);
+        setRegisteredSubscriptionId(commonIds.shopSubscription_id);
+        setProcessingStep("idle");
+        setMomoNumber(formData.phone);
+        setShowPaymentModal(true);
+      } else {
+        setIsSuccess(true);
+        setProcessingStep("success");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } catch (err: any) {
       console.error("❌ [POS Registration] Mutation Failure:", err);
       // Log deep error object
       if (err.graphQLErrors) console.error("🔍 Deep GraphQL Errors:", err.graphQLErrors);
       if (err.networkError) console.error("🔍 Network Error:", err.networkError);
-      
+
       const errMsg = err.message || "Something went wrong. Please check your data.";
       setError(errMsg);
       toast.error(errMsg);
       setIsSuccess(false);
-      setShowPaymentModal(false); 
+      setProcessingStep("idle");
+      setShowPaymentModal(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -545,8 +560,8 @@ export default function RegisterPage() {
       return;
     }
     setPaymentStatus("pending");
+    setProcessingStep("initiating_payment");
     try {
-      const pendingSubscriptionId = (window as any)._pendingSubscriptionId;
       const response = await fetch("/api/momo/request-to-pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -555,15 +570,19 @@ export default function RegisterPage() {
             cycle === "monthly"
               ? plan.price_monthly
               : plan.price_yearly,
-          payerNumber: momoNumber,
-          subscriptionId: pendingSubscriptionId,
+          payerNumber: formatPhoneForMoMo(momoNumber),
+          subscriptionId: registeredSubscriptionId,
+          businessId: registeredBusinessId,
+          businessType: businessType,
           externalId: `POS-REG-${Date.now()}`,
           payerMessage: `POS Registration - ${plan.name}`,
           planId: selectedPlan.id,
+          billingCycle: cycle,
         }),
       });
       const data = await response.json();
       if (response.ok) {
+        setProcessingStep("awaiting_approval");
         const referenceId = data.referenceId;
         setPaymentReference(referenceId);
 
@@ -579,8 +598,9 @@ export default function RegisterPage() {
               clearInterval(pollInterval);
               setPaymentStatus("success");
               toast.success("Payment successful!");
-              // TRIGGER DATABASE CREATION NOW
-              await performMutation();
+              setProcessingStep("success");
+              setIsSuccess(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
               setTimeout(() => {
                 setShowPaymentModal(false);
               }, 2000);
@@ -591,6 +611,7 @@ export default function RegisterPage() {
             ) {
               clearInterval(pollInterval);
               setPaymentStatus("failed");
+              setProcessingStep("idle");
               const errMsg = statusData.reason || statusData.message || "Payment request was not successful.";
               setError(errMsg);
               toast.error(errMsg);
@@ -606,12 +627,14 @@ export default function RegisterPage() {
         }, 180000);
       } else {
         setPaymentStatus("failed");
+        setProcessingStep("idle");
         const errMsg = data.error || "MoMo payment request failed.";
         setError(errMsg);
         toast.error(errMsg);
       }
     } catch (err) {
       setPaymentStatus("failed");
+      setProcessingStep("idle");
       const errMsg = "An error occurred during payment.";
       setError(errMsg);
       toast.error(errMsg);
@@ -641,27 +664,24 @@ export default function RegisterPage() {
                 <div key={s.id} className="flex flex-1 items-center">
                   <div className="flex flex-col items-center gap-2">
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
-                        step >= s.id
-                          ? "border-[#022C22] bg-[#022C22] text-white"
-                          : "border-gray-200 bg-white text-gray-400"
-                      }`}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${step >= s.id
+                        ? "border-[#022C22] bg-[#022C22] text-white"
+                        : "border-gray-200 bg-white text-gray-400"
+                        }`}
                     >
                       <s.icon className="h-5 w-5" />
                     </div>
                     <span
-                      className={`text-xs font-bold ${
-                        step >= s.id ? "text-[#022C22]" : "text-gray-400"
-                      }`}
+                      className={`text-xs font-bold ${step >= s.id ? "text-[#022C22]" : "text-gray-400"
+                        }`}
                     >
                       {s.title}
                     </span>
                   </div>
                   {idx < steps.length - 1 && (
                     <div
-                      className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${
-                        step > s.id ? "bg-[#022C22]" : "bg-gray-200"
-                      }`}
+                      className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${step > s.id ? "bg-[#022C22]" : "bg-gray-200"
+                        }`}
                     />
                   )}
                 </div>
@@ -794,6 +814,54 @@ export default function RegisterPage() {
               : selectedPlan?.price_yearly
           }
         />
+      )}
+      {/* Processing Overlay */}
+      {processingStep !== "idle" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className={`h-2 w-full ${processingStep === "success" ? "bg-green-500" : "bg-blue-600 animate-pulse"
+              }`} />
+
+            <div className="p-8 text-center">
+              <div className="mb-6 flex justify-center">
+                {processingStep === "success" ? (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <CheckCircle className="h-12 w-12" />
+                  </div>
+                ) : (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <Loader2 className="h-12 w-12 animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                {processingStep === "initiating_payment" && "Initiating Payment"}
+                {processingStep === "awaiting_approval" && "Waiting for Approval"}
+                {processingStep === "creating_profile" && "Creating Your Business Profile"}
+                {processingStep === "setting_privileges" && "Configuring Privileges"}
+                {processingStep === "finalizing" && "Finalizing Setup"}
+                {processingStep === "success" && "Welcome Aboard!"}
+              </h3>
+
+              <p className="text-gray-600">
+                {processingStep === "initiating_payment" && "Connecting to MoMo secure gateway..."}
+                {processingStep === "awaiting_approval" && "Please check your phone and approve the payment request."}
+                {processingStep === "creating_profile" && "We're setting up your professional digital workspace."}
+                {processingStep === "setting_privileges" && "Tailoring your access based on your selected plan."}
+                {processingStep === "finalizing" && "Just a second, we're putting everything in place."}
+                {processingStep === "success" && "Your registration is complete. Redirecting you to your dashboard..."}
+              </p>
+
+              {processingStep === "awaiting_approval" && (
+                <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 py-3 rounded-lg px-4 border border-blue-100">
+                  <Phone className="h-4 w-4" />
+                  <span>Check your phone now</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -39,6 +39,8 @@ const ENSURE_SUBSCRIPTION_SHELL = gql`
     $id: uuid!,
     $status: String!,
     $start_date: timestamptz!,
+    $end_date: timestamptz!,
+    $billing_cycle: String!,
     $restaurant_id: uuid,
     $shop_id: uuid,
     $plan_id: uuid
@@ -48,14 +50,15 @@ const ENSURE_SUBSCRIPTION_SHELL = gql`
         id: $id,
         status: $status,
         start_date: $start_date,
-        billing_cycle: "monthly",
+        end_date: $end_date,
+        billing_cycle: $billing_cycle,
         plan_id: $plan_id,
         restaurant_id: $restaurant_id,
         shop_id: $shop_id
       }
       on_conflict: {
         constraint: shop_subscriptions_pkey
-        update_columns: [status, updated_at, start_date, end_date]
+        update_columns: [status, updated_at, start_date, end_date, billing_cycle]
       }
     ) {
       id
@@ -117,7 +120,10 @@ export default async function handler(
     restaurantOrderId,
     reelOrderId,
     subscriptionId,
-    planId, // Add planId to destructured body
+    planId,
+    billingCycle = "monthly",
+    businessId, // For POS Registration
+    businessType, // For POS Registration
   } = req.body;
 
   if (!amount || !payerNumber) {
@@ -132,24 +138,8 @@ export default async function handler(
 
   try {
     if (hasuraClient) {
-      // 1. Ensure parent record exists (Subscription Shell) to avoid FK violation
-      if (isSubscription) {
-        console.log("🛠️ [MoMo RequestToPay] Ensuring subscription shell exists for:", subscriptionId);
-        try {
-          await hasuraClient.request(ENSURE_SUBSCRIPTION_SHELL, {
-            id: subscriptionId,
-            status: "pending_payment",
-            start_date: new Date().toISOString(),
-            restaurant_id: restaurantOrderId || businessOrderId || null,
-            shop_id: restaurantOrderId ? "00000000-0000-0000-0000-000000000000" : (businessOrderId || null),
-            plan_id: planId || "00000000-0000-0000-0000-000000000000",
-          });
-        } catch (shellError: any) {
-          console.error("⚠️ [MoMo RequestToPay] Note: Subscription shell check result (may already exist):", shellError.message || shellError);
-        }
-      }
-
-      // 2. Create a PENDING transaction record BEFORE calling MoMo
+      // 1. Create a PENDING transaction record BEFORE calling MoMo
+      // No need for ENSURE_SUBSCRIPTION_SHELL here as it's created by the UI before calling this.
       try {
         if (isSubscription) {
           const dbRes = await hasuraClient.request<any>(
@@ -162,7 +152,7 @@ export default async function handler(
               status: "PENDING",
               subscription_id: subscriptionId,
               type: "payment",
-              mtn_response: "{}",
+              mtn_response: JSON.stringify({ status: "INITIATED", referenceId }),
             }
           );
           dbTransactionId = dbRes.insert_subscription_transactions.returning[0].id;
@@ -174,8 +164,8 @@ export default async function handler(
               transaction: {
                 wallet_id: walletId || null,
                 related_order_id: orderId || null,
-                relate_business_order_id: businessOrderId || null,
-                related_restaurant_order_id: restaurantOrderId || null,
+                relate_business_order_id: businessOrderId || businessId || null,
+                related_restaurant_order_id: restaurantOrderId || (businessType === "RESTAURANT" ? businessId : null),
                 related_reel_orderId: reelOrderId || null,
                 amount: String(amount).toString(),
                 currency,
@@ -192,9 +182,6 @@ export default async function handler(
         }
       } catch (dbError) {
         console.error("❌ [MoMo RequestToPay] Failed to create pending transaction:", dbError);
-        // Important: If we fail to create the transaction record, we STILL proceed with MoMo? 
-        // User says "You must create the transaction BEFORE calling MoMo". 
-        // If it fails, maybe we should stop and let the user know.
         return res.status(500).json({ error: "Failed to initialize transaction in database" });
       }
     }

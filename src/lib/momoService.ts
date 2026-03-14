@@ -66,9 +66,9 @@ class MomoService {
       hasApiKey: !!apiKey,
       subKeyPreview: subscriptionKey ? `${subscriptionKey.substring(0, 4)}...` : "none"
     });
-    
+
     const auth = Buffer.from(`${userId}:${apiKey}`).toString("base64");
-    
+
     const response = await fetch(`${baseUrl}/collection/token/`, {
       method: "POST",
       headers: {
@@ -108,7 +108,7 @@ class MomoService {
   }): Promise<{ referenceId: string }> {
     const referenceId = params.referenceId || randomUUID();
     const { subscriptionKey, baseUrl, environment } = this.getEnv();
-    
+
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
     const body = {
       amount: String(params.amount),

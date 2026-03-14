@@ -130,11 +130,10 @@ export default function Step2Identity({
           </label>
           <div className="relative flex flex-col gap-4">
             <div
-              className={`relative flex min-h-[120px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${
-                formData.rdb_cert_url
+              className={`relative flex min-h-[120px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all ${formData.rdb_cert_url
                   ? "border-emerald-200 bg-emerald-50/30"
                   : "border-gray-200 bg-gray-50 hover:bg-gray-100"
-              }`}
+                }`}
             >
               {uploading.rdb_cert ? (
                 <div className="flex flex-col items-center gap-2">
@@ -191,7 +190,7 @@ export default function Step2Identity({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
