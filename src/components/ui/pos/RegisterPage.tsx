@@ -485,7 +485,7 @@ export default function RegisterPage() {
           month: new Date().toLocaleString("default", { month: "long" }),
           year: new Date().getFullYear().toString(),
           business_id: businessId,
-          user_id: commonIds.orgEmployeeID,
+          user_id: null,
         },
       });
       if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);

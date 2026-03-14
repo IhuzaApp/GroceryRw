@@ -80,7 +80,7 @@ export const CREATE_AI_USAGE = gql`
     $month: String
     $year: String
     $business_id: uuid
-    $user_id: uuid
+    $user_id: uuid = null
   ) {
     insert_ai_usage(
       objects: {
