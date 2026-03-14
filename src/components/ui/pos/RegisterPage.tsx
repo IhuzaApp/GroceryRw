@@ -34,8 +34,14 @@ import { Autocomplete } from "@react-google-maps/api";
 import { storage } from "../../../lib/firebase";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
 import {
-  CREATE_RESTAURANT_ACCOUNT,
-  CREATE_SHOP_ACCOUNT,
+  CREATE_RESTAURANT,
+  CREATE_SHOP,
+  CREATE_WALLET,
+  CREATE_AI_USAGE,
+  CREATE_REEL_USAGE,
+  CREATE_SUBSCRIPTION,
+  CREATE_INVOICE,
+  CREATE_EMPLOYEE,
 } from "../../../graphql/mutations/posRegistration";
 import { usePlans, Plan } from "../../../hooks/usePlans";
 import { MODULE_DESCRIPTIONS } from "../../../types/moduleDescriptions";
@@ -178,8 +184,14 @@ export default function RegisterPage() {
   >("idle");
   const [paymentReference, setPaymentReference] = useState("");
 
-  const [createRestaurant] = useMutation(CREATE_RESTAURANT_ACCOUNT);
-  const [createShop] = useMutation(CREATE_SHOP_ACCOUNT);
+  const [createRestaurant] = useMutation(CREATE_RESTAURANT);
+  const [createShop] = useMutation(CREATE_SHOP);
+  const [createWallet] = useMutation(CREATE_WALLET);
+  const [createAiUsage] = useMutation(CREATE_AI_USAGE);
+  const [createReelUsage] = useMutation(CREATE_REEL_USAGE);
+  const [createSubscription] = useMutation(CREATE_SUBSCRIPTION);
+  const [createInvoice] = useMutation(CREATE_INVOICE);
+  const [createEmployee] = useMutation(CREATE_EMPLOYEE);
 
   const onPlaceChanged = () => {
     if (autocompleteRef.current !== null) {
@@ -371,151 +383,156 @@ export default function RegisterPage() {
     } else {
       setProcessingStep("setting_privileges");
     }
+
     try {
-      console.log("🚀 [POS Registration] Starting mutation for:", businessType);
-      const variables = {
-        email: formData.email,
-        lat: formData.lat,
-        location: formData.address,
-        logo: formData.logo,
-        long: formData.long,
-        name: formData.name,
-        phone: formData.phone,
-        profile: formData.profile,
-        tin: formData.tin,
-        ussd: formData.ussd,
-        rdb_cert: formData.rdb_cert_url || formData.rdb_cert,
-        restaurant_id: businessId,
-        request_count: plan.ai_request_limit,
-        month: new Date().toLocaleString("default", { month: "long" }),
-        year: new Date().getFullYear().toString(),
-        balance: "0",
-        billing_cycle: billingCycle,
-        start_date: now,
-        status: isShell ? "pending_payment" : "active",
-        updated_at: now,
-        end_date: endDate.toISOString(),
-        plan_id: plan.id,
-        aiUsage_id: commonIds.aiUsage_id,
-        currency: "RWF",
-        discount_amount: "0",
-        due_date: dueDate.toISOString(),
-        invoice_number: `INV-${Date.now()}`,
-        issued_at: now,
-        paid_at: isShell ? null : now,
-        payment_method: isShell ? "UNPAID" : "MoMo",
-        plan_name: plan.name,
-        plan_price: (cycle === "monthly"
-          ? plan.price_monthly
-          : plan.price_yearly
-        ).toString(),
-        reelUsage_id: commonIds.reelUsage_id,
-        shopSubscription_id: commonIds.shopSubscription_id,
-        status1: "pending",
-        subtotal_amount: (cycle === "monthly"
-          ? plan.price_monthly
-          : plan.price_yearly
-        ).toString(),
-        tax_amount: "0",
-        Address: formData.address,
-        Position: formData.position,
-        dob: formData.dob,
-        email1: formData.ownerEmail,
-        employeeID: commonIds.employee_id,
-        fullnames: formData.fullnames,
-        gender: formData.gender,
-        last_login: now,
-        password: formData.password,
-        phone1: formData.ownerPhone,
-        roleType: "system Administrator",
-        twoFactorSecrets: "",
-        business_id1: businessId,
-        month1: new Date().toLocaleString("default", { month: "long" }),
-        upload_count: plan.reel_limit,
-        year1: new Date().getFullYear().toString(),
-        orgEmployeeID: commonIds.orgEmployeeID,
-        privillages: generatePrivileges(plan),
-        update_on: now,
-      };
+      console.log("🚀 [POS Registration] Starting sequential registration for:", businessType);
 
-      console.log("📦 [POS Registration] Variables:", JSON.stringify(variables, null, 2));
-
-      let result;
+      // STEP 1: Create Business
       if (businessType === "RESTAURANT") {
-        result = await createRestaurant({ variables });
+        await createRestaurant({
+          variables: {
+            email: formData.email,
+            lat: formData.lat,
+            location: formData.address,
+            logo: formData.logo,
+            long: formData.long,
+            name: formData.name,
+            phone: formData.phone,
+            profile: formData.profile,
+            tin: formData.tin,
+            ussd: formData.ussd,
+            rdb_cert: formData.rdb_cert_url || formData.rdb_cert,
+            restaurant_id: businessId,
+          },
+        });
       } else {
-        // Shop mutation has slightly different variable mapping in the original code, 
-        // need to be careful. Let's stick to what was there but with extra logging.
-        const shopVariables = {
-          address: formData.address,
-          category_id: "00000000-0000-0000-0000-000000000000",
-          description: formData.description,
-          image: formData.profile,
-          latitude: formData.lat,
-          logo: formData.logo,
-          longitude: formData.long,
-          name: formData.name,
-          operating_hours: formData.operating_hours,
-          phone: formData.phone,
-          relatedTo: "NONE",
-          ssd: formData.ussd,
-          tin: formData.tin,
-          shop_id: businessId,
+        await createShop({
+          variables: {
+            address: formData.address,
+            category_id: "00000000-0000-0000-0000-000000000000",
+            description: formData.description,
+            image: formData.profile,
+            latitude: formData.lat,
+            logo: formData.logo,
+            longitude: formData.long,
+            name: formData.name,
+            operating_hours: formData.operating_hours,
+            phone: formData.phone,
+            relatedTo: "NONE",
+            ssd: formData.ussd,
+            tin: formData.tin,
+            shop_id: businessId,
+            is_active: false,
+          },
+        });
+      }
+      console.log("✅ Step 1: Business created");
+
+      // STEP 2: Create Wallet
+      await createWallet({
+        variables: {
+          active: false,
+          balance: "0",
+          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+          shop_id: businessType === "SHOP" ? businessId : null,
+        },
+      });
+      console.log("✅ Step 2: Wallet created");
+
+      // STEP 3: Create AI Usage
+      await createAiUsage({
+        variables: {
+          id: commonIds.aiUsage_id,
+          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+          shop_id: businessType === "SHOP" ? businessId : null,
+          request_count: plan.ai_request_limit,
+          month: new Date().toLocaleString("default", { month: "long" }),
+          year: new Date().getFullYear().toString(),
+          business_id: businessId,
+        },
+      });
+      console.log("✅ Step 3: AI Usage created");
+
+      // STEP 4: Create Reel Usage
+      await createReelUsage({
+        variables: {
+          id: commonIds.reelUsage_id,
+          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+          shop_id: businessType === "SHOP" ? businessId : null,
+          month: new Date().toLocaleString("default", { month: "long" }),
           upload_count: plan.reel_limit,
           year: new Date().getFullYear().toString(),
+        },
+      });
+      console.log("✅ Step 4: Reel Usage created");
+
+      // STEP 5: Create Subscription
+      await createSubscription({
+        variables: {
+          id: commonIds.shopSubscription_id,
           billing_cycle: billingCycle,
+          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+          shop_id: businessType === "SHOP" ? businessId : null,
           business_id: businessId,
-          end_date: endDate.toISOString(),
-          plan_id: plan.id,
           start_date: now,
           status: isShell ? "pending_payment" : "active",
+          updated_at: now,
+          end_date: endDate.toISOString(),
+          plan_id: plan.id,
+        },
+      });
+      console.log("✅ Step 5: Subscription created");
+
+      // STEP 6: Create Invoice
+      await createInvoice({
+        variables: {
           aiUsage_id: commonIds.aiUsage_id,
           currency: "RWF",
           discount_amount: "0",
-          invoice_number: `INV-${Date.now()}`,
           due_date: dueDate.toISOString(),
+          invoice_number: `INV-${Date.now()}`,
           issued_at: now,
           paid_at: isShell ? null : now,
           payment_method: isShell ? "UNPAID" : "MoMo",
           plan_name: plan.name,
-          plan_price: (cycle === "monthly"
-            ? plan.price_monthly
-            : plan.price_yearly
-          ).toString(),
+          plan_price: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
           reelUsage_id: commonIds.reelUsage_id,
           shopSubscription_id: commonIds.shopSubscription_id,
-          status1: "pending",
-          subtotal_amount: (cycle === "monthly"
-            ? plan.price_monthly
-            : plan.price_yearly
-          ).toString(),
+          status: "pending",
+          subtotal_amount: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
           tax_amount: "0",
-          balance: "0",
+          updated_at: now,
+        },
+      });
+      console.log("✅ Step 6: Invoice created");
+
+      // STEP 7: Create Employee
+      await createEmployee({
+        variables: {
           Address: formData.address,
           Position: formData.position,
+          active: true,
           dob: formData.dob,
           email: formData.ownerEmail,
           employeeID: commonIds.employee_id,
           fullnames: formData.fullnames,
           gender: formData.gender,
+          last_login: now,
           password: formData.password,
-          phone1: formData.ownerPhone,
+          phone: formData.ownerPhone,
+          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+          shop_id: businessType === "SHOP" ? businessId : null,
           roleType: "system Administrator",
-          twoFactorSecrets: "",
           orgEmployeeID: commonIds.orgEmployeeID,
           privillages: generatePrivileges(plan),
           update_on: now,
-        };
-        console.log("📦 [POS Registration] Shop Variables:", JSON.stringify(shopVariables, null, 2));
-        result = await createShop({ variables: shopVariables });
-      }
-
-      console.log("✅ [POS Registration] Mutation Result:", result);
-
-      if (result?.errors) {
-        console.error("❌ [POS Registration] GraphQL Errors:", result.errors);
-        throw new Error(result.errors[0].message);
-      }
+          generatePassword: false,
+          multAuthEnabled: false,
+          online: false,
+          twoFactorSecrets: "",
+        },
+      });
+      console.log("✅ Step 7: Employee created");
 
       if (isShell) {
         setRegisteredBusinessId(businessId);
@@ -530,9 +547,7 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       console.error("❌ [POS Registration] Mutation Failure:", err);
-      // Log deep error object
       if (err.graphQLErrors) console.error("🔍 Deep GraphQL Errors:", err.graphQLErrors);
-      if (err.networkError) console.error("🔍 Network Error:", err.networkError);
 
       const errMsg = err.message || "Something went wrong. Please check your data.";
       setError(errMsg);
