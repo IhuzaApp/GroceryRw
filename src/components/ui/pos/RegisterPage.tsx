@@ -287,6 +287,16 @@ export default function RegisterPage() {
     if (error) setError(null);
   };
 
+  const handleOperatingHoursChange = (day: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      operating_hours: {
+        ...prev.operating_hours,
+        [day]: value,
+      },
+    }));
+  };
+
   const validateStep = (currentStep: number) => {
     switch (currentStep) {
       case 1:
@@ -778,6 +788,7 @@ export default function RegisterPage() {
                   <Step4Location
                     formData={formData}
                     onChange={handleInputChange}
+                    onOperatingHoursChange={handleOperatingHoursChange}
                     isLoaded={isLoaded}
                     autocompleteRef={autocompleteRef}
                     onPlaceChanged={onPlaceChanged}
@@ -899,10 +910,10 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-4">
-                {REGISTRATION_STEPS.map((s, idx) => {
-                  const subIdx = idx + 1;
-                  const isDone = registrationSubStep > subIdx || registrationSubStep >= 8;
-                  const isActive = registrationSubStep === subIdx;
+                {REGISTRATION_STEPS.filter((_, idx) => (registrationSubStep < 8 ? idx + 1 === registrationSubStep : true)).map((s, idx) => {
+                  const subIdx = registrationSubStep < 8 ? registrationSubStep : idx + 1;
+                  const isDone = registrationSubStep >= 8;
+                  const isActive = registrationSubStep < 8;
 
                   return (
                     <div
