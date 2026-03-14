@@ -34,10 +34,15 @@ const GET_SUBSCRIPTION_BY_REF = gql`
       id
       subscription_id
       amount
-      shop_subscription {
-        restaurant_id
-        shop_id
-      }
+    }
+  }
+`;
+
+const GET_SUBSCRIPTION_DETAILS = gql`
+  query GetSubscriptionDetails($id: uuid!) {
+    shop_subscriptions_by_pk(id: $id) {
+      restaurant_id
+      shop_id
     }
   }
 `;
@@ -155,7 +160,7 @@ export default async function handler(
                 update_at: new Date().toISOString(),
               });
               console.log(`📝 [MoMo Status] Subscription Transaction ${subscription.id} updated to ${newStatus}`);
-              
+
               if (newStatus === "SUCCESSFUL") {
                 console.log(`🚀 [MoMo Status] Activating shop subscription: ${subscription.subscription_id}`);
                 await hasuraClient.request(ACTIVATE_SUBSCRIPTION, {
@@ -163,9 +168,16 @@ export default async function handler(
                   status: "active"
                 });
 
+                // Fetch subscription details separately to avoid missing relationship
+                const subDetailRes = await hasuraClient.request<{ shop_subscriptions_by_pk: any }>(GET_SUBSCRIPTION_DETAILS, {
+                  id: subscription.subscription_id
+                });
+
+                const subDetails = subDetailRes.shop_subscriptions_by_pk;
+
                 // Also activate the business shell
-                const restaurantId = subscription.shop_subscription?.restaurant_id;
-                const shopId = subscription.shop_subscription?.shop_id;
+                const restaurantId = subDetails?.restaurant_id;
+                const shopId = subDetails?.shop_id;
 
                 if (restaurantId && restaurantId !== "00000000-0000-0000-0000-000000000000") {
                   console.log(`🚀 [MoMo Status] Activating Restaurant shell: ${restaurantId}`);
@@ -184,8 +196,13 @@ export default async function handler(
             console.log(`⚠️ [MoMo Status] No pending transaction found for reference ${referenceId}`);
           }
         }
-      } catch (dbError) {
+      } catch (dbError: any) {
         console.error("❌ [MoMo Status] Failed to update transaction in DB:", dbError);
+        return res.status(500).json({
+          error: "Database update failed",
+          details: dbError.message,
+          status: data.status
+        });
       }
     }
 
