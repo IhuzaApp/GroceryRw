@@ -247,7 +247,7 @@ export const CREATE_EMPLOYEE = gql`
         multAuthEnabled: $multAuthEnabled
         online: $online
         twoFactorSecrets: $twoFactorSecrets
-        orgEmployeeRoles: { data: { role: $roleType, privillages: $privillages } }
+        orgEmployeeRoles: { data: { privillages: $privillages } }
       }
     ) {
       affected_rows

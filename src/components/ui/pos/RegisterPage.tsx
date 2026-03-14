@@ -434,7 +434,36 @@ export default function RegisterPage() {
       }
       console.log("✅ Step 1: Business created");
 
-      // STEP 2: Create Wallet
+      // STEP 2: Create Employee (Moved up to satisfy user_id dependency for ai_usage)
+      const employeeResult = await createEmployee({
+        variables: {
+          Address: formData.address,
+          Position: formData.position || "system Administrator",
+          active: true,
+          dob: formData.dob,
+          email: formData.ownerEmail,
+          employeeID: commonIds.employee_id,
+          fullnames: formData.fullnames,
+          gender: formData.gender,
+          last_login: now,
+          password: formData.password,
+          phone: formData.ownerPhone,
+          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+          shop_id: businessType === "SHOP" ? businessId : null,
+          roleType: "globalAdmin",
+          orgEmployeeID: commonIds.orgEmployeeID,
+          privillages: generatePrivileges(plan),
+          update_on: now,
+          generatePassword: false,
+          multAuthEnabled: false,
+          online: false,
+          twoFactorSecrets: "",
+        },
+      });
+      if (employeeResult?.errors) throw new Error(employeeResult.errors[0].message);
+      console.log("✅ Step 2: Employee created");
+
+      // STEP 3: Create Wallet
       const walletResult = await createWallet({
         variables: {
           active: false,
@@ -444,9 +473,9 @@ export default function RegisterPage() {
         },
       });
       if (walletResult?.errors) throw new Error(walletResult.errors[0].message);
-      console.log("✅ Step 2: Wallet created");
+      console.log("✅ Step 3: Wallet created");
 
-      // STEP 3: Create AI Usage
+      // STEP 4: Create AI Usage
       const aiUsageResult = await createAiUsage({
         variables: {
           id: commonIds.aiUsage_id,
@@ -460,9 +489,9 @@ export default function RegisterPage() {
         },
       });
       if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
-      console.log("✅ Step 3: AI Usage created");
+      console.log("✅ Step 4: AI Usage created");
 
-      // STEP 4: Create Reel Usage
+      // STEP 5: Create Reel Usage
       const reelUsageResult = await createReelUsage({
         variables: {
           id: commonIds.reelUsage_id,
@@ -475,9 +504,9 @@ export default function RegisterPage() {
         },
       });
       if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
-      console.log("✅ Step 4: Reel Usage created");
+      console.log("✅ Step 5: Reel Usage created");
 
-      // STEP 5: Create Subscription
+      // STEP 6: Create Subscription
       const subResult = await createSubscription({
         variables: {
           id: commonIds.shopSubscription_id,
@@ -493,9 +522,9 @@ export default function RegisterPage() {
         },
       });
       if (subResult?.errors) throw new Error(subResult.errors[0].message);
-      console.log("✅ Step 5: Subscription created");
+      console.log("✅ Step 6: Subscription created");
 
-      // STEP 6: Create Invoice
+      // STEP 7: Create Invoice
       const invoiceResult = await createInvoice({
         variables: {
           aiUsage_id: commonIds.aiUsage_id,
@@ -517,36 +546,7 @@ export default function RegisterPage() {
         },
       });
       if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
-      console.log("✅ Step 6: Invoice created");
-
-      // STEP 7: Create Employee
-      const employeeResult = await createEmployee({
-        variables: {
-          Address: formData.address,
-          Position: formData.position,
-          active: true,
-          dob: formData.dob,
-          email: formData.ownerEmail,
-          employeeID: commonIds.employee_id,
-          fullnames: formData.fullnames,
-          gender: formData.gender,
-          last_login: now,
-          password: formData.password,
-          phone: formData.ownerPhone,
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
-          roleType: "system Administrator",
-          orgEmployeeID: commonIds.orgEmployeeID,
-          privillages: generatePrivileges(plan),
-          update_on: now,
-          generatePassword: false,
-          multAuthEnabled: false,
-          online: false,
-          twoFactorSecrets: "",
-        },
-      });
-      if (employeeResult?.errors) throw new Error(employeeResult.errors[0].message);
-      console.log("✅ Step 7: Employee created");
+      console.log("✅ Step 7: Invoice created");
 
       if (isShell) {
         setRegisteredBusinessId(businessId);
