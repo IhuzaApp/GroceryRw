@@ -505,16 +505,6 @@ export default function RegisterPage() {
         console.log("✅ Step 2: Employee created");
       }
 
-      // BREAK POINT: Trigger Payment if this is the initial shell setup
-      if (isShell && startAt <= 7) {
-        setRegisteredBusinessId(businessId);
-        setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-        setMomoNumber(formData.phone);
-        setProcessingStep("idle");
-        setShowPaymentModal(true);
-        return; // Pause here for user payment
-      }
-
       // STEP 3: Create Subscription (MOVED UP)
       if (startAt <= 3) {
         setRegistrationSubStep(3);
@@ -764,6 +754,12 @@ export default function RegisterPage() {
 
       <main className="container mx-auto px-4 py-12 md:py-20">
         <div className="mx-auto max-w-4xl">
+
+          {error && (
+            <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-600">
+              {error}
+            </div>
+          )}
           {registrationSubStep > 0 ? (
             <div className="mx-auto w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl md:p-12">
               <div className="mb-10 text-center">
@@ -980,11 +976,6 @@ export default function RegisterPage() {
                       </button>
                     </div>
 
-                    {error && (
-                      <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-600">
-                        {error}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
