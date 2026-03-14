@@ -186,11 +186,11 @@ export default function RegisterPage() {
   const REGISTRATION_STEPS = [
     { id: 1, title: "Setting up Business Profile", icon: Layout },
     { id: 2, title: "Setting up Admin Account", icon: ShieldCheck },
-    { id: 3, title: "Setting up Subscription Plan", icon: CreditCard },
-    { id: 4, title: "Generating Financial Invoice", icon: FileText },
-    { id: 5, title: "Setting up Business Wallet", icon: Wallet },
-    { id: 6, title: "Setting up AI Tracking", icon: Brain },
-    { id: 7, title: "Setting up Reels", icon: Video },
+    { id: 3, title: "Setting up AI Tracking", icon: Brain },
+    { id: 4, title: "Setting up Reels Tracking", icon: Video },
+    { id: 5, title: "Setting up Subscription Plan", icon: CreditCard },
+    { id: 6, title: "Generating Financial Invoice", icon: FileText },
+    { id: 7, title: "Setting up Business Wallet", icon: Wallet },
   ];
 
   const [uploading, setUploading] = useState({
@@ -505,9 +505,46 @@ export default function RegisterPage() {
         console.log("✅ Step 2: Employee created");
       }
 
-      // STEP 3: Create Subscription (MOVED UP)
+      // STEP 3: AI Usage (MOVED UP - Dependency for Invoice)
       if (startAt <= 3) {
         setRegistrationSubStep(3);
+        const aiUsageResult = await createAiUsage({
+          variables: {
+            id: activeIds.aiUsage_id,
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+            request_count: plan.ai_request_limit,
+            month: new Date().toLocaleString("default", { month: "long" }),
+            year: new Date().getFullYear().toString(),
+            business_id: null,
+            user_id: null,
+          },
+        });
+        if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
+        console.log("✅ Step 3: AI Usage created");
+      }
+
+      // STEP 4: Reel Usage (MOVED UP - Dependency for Invoice)
+      if (startAt <= 4) {
+        setRegistrationSubStep(4);
+        const reelUsageResult = await createReelUsage({
+          variables: {
+            id: activeIds.reelUsage_id,
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+            month: new Date().toLocaleString("default", { month: "long" }),
+            upload_count: plan.reel_limit,
+            year: new Date().getFullYear().toString(),
+            business_id: null,
+          },
+        });
+        if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
+        console.log("✅ Step 4: Reel Usage created");
+      }
+
+      // STEP 5: Create Subscription
+      if (startAt <= 5) {
+        setRegistrationSubStep(5);
         const subResult = await createSubscription({
           variables: {
             id: activeIds.shopSubscription_id,
@@ -524,12 +561,12 @@ export default function RegisterPage() {
         });
         if (subResult?.errors) throw new Error(subResult.errors[0].message);
         setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-        console.log("✅ Step 3: Subscription created");
+        console.log("✅ Step 5: Subscription created");
       }
 
-      // STEP 4: Create Invoice (MOVED UP)
-      if (startAt <= 4) {
-        setRegistrationSubStep(4);
+      // STEP 6: Create Invoice
+      if (startAt <= 6) {
+        setRegistrationSubStep(6);
         const invoiceResult = await createInvoice({
           variables: {
             aiUsage_id: activeIds.aiUsage_id,
@@ -551,11 +588,11 @@ export default function RegisterPage() {
           },
         });
         if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
-        console.log("✅ Step 4: Invoice created");
+        console.log("✅ Step 6: Invoice created");
       }
 
       // BREAK POINT: Trigger Payment if this is the initial shell setup
-      if (isShell && startAt <= 4) {
+      if (isShell && startAt <= 6) {
         setRegisteredBusinessId(businessId);
         setRegisteredSubscriptionId(activeIds.shopSubscription_id);
         setMomoNumber(formData.phone);
@@ -564,9 +601,9 @@ export default function RegisterPage() {
         return; // Pause here for user payment
       }
 
-      // STEP 5: Create Wallet
-      if (startAt <= 5) {
-        setRegistrationSubStep(5);
+      // STEP 7: Create Wallet
+      if (startAt <= 7) {
+        setRegistrationSubStep(7);
         const walletResult = await createWallet({
           variables: {
             active: false,
@@ -576,44 +613,7 @@ export default function RegisterPage() {
           },
         });
         if (walletResult?.errors) throw new Error(walletResult.errors[0].message);
-        console.log("✅ Step 5: Wallet created");
-      }
-
-      // STEP 6: AI Usage
-      if (startAt <= 6) {
-        setRegistrationSubStep(6);
-        const aiUsageResult = await createAiUsage({
-          variables: {
-            id: activeIds.aiUsage_id,
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-            request_count: plan.ai_request_limit,
-            month: new Date().toLocaleString("default", { month: "long" }),
-            year: new Date().getFullYear().toString(),
-            business_id: null,
-            user_id: null,
-          },
-        });
-        if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
-        console.log("✅ Step 6: AI Usage created");
-      }
-
-      // STEP 7: Reel Usage
-      if (startAt <= 7) {
-        setRegistrationSubStep(7);
-        const reelUsageResult = await createReelUsage({
-          variables: {
-            id: activeIds.reelUsage_id,
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-            month: new Date().toLocaleString("default", { month: "long" }),
-            upload_count: plan.reel_limit,
-            year: new Date().getFullYear().toString(),
-            business_id: null,
-          },
-        });
-        if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
-        console.log("✅ Step 7: Reel Usage created");
+        console.log("✅ Step 7: Wallet created");
       }
 
       setRegistrationSubStep(8); // Completed all steps
@@ -699,8 +699,8 @@ export default function RegisterPage() {
               setPaymentStatus("success");
               toast.success("Payment successful! Finalizing setup...");
 
-              // RESUME PHASE 2: Final Completion (Step 5+)
-              performMutation(false, 5);
+              // RESUME PHASE 2: Final Completion (Step 7+)
+              performMutation(false, 7);
             } else if (
               statusData.status === "FAILED" ||
               statusData.status === "REJECTED" ||
