@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 import {
   X,
   Loader2,
@@ -43,6 +43,7 @@ import { UserPrivileges, DEFAULT_PRIVILEGES } from "../../../types/privileges";
 import AboutTopBar from "../landing/AboutTopBar";
 import AboutHeader from "../landing/AboutHeader";
 import AboutFooter from "../landing/AboutFooter";
+import { toast } from "react-hot-toast";
 import {
   Step1Selection,
   Step2Identity,
@@ -91,9 +92,8 @@ const generatePrivileges = (plan: Plan): UserPrivileges => {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const planId = searchParams?.get("planId");
-  const cycle = searchParams?.get("billingCycle") || "monthly";
+  const { planId, billingCycle } = router.query;
+  const cycle = (billingCycle as string) || "monthly";
   const { isLoaded } = useGoogleMap();
 
   const [step, setStep] = useState(1);
@@ -308,9 +308,14 @@ export default function RegisterPage() {
       setError("Please select a valid pricing plan.");
       return;
     }
+    // Pre-generate subscription ID to link with MoMo payment
+    const shopSubscription_id = crypto.randomUUID();
+    
     setError(null);
     setShowPaymentModal(true);
     setMomoNumber(formData.phone);
+    // Store the ID in state or pass it to handleMomoPayment
+    (window as any)._pendingSubscriptionId = shopSubscription_id;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -337,169 +342,189 @@ export default function RegisterPage() {
 
     const businessId = crypto.randomUUID();
     const billingCycle = cycle;
+    const pendingSubscriptionId = (window as any)._pendingSubscriptionId;
     const commonIds = {
       aiUsage_id: crypto.randomUUID(),
       reelUsage_id: crypto.randomUUID(),
-      shopSubscription_id: crypto.randomUUID(),
+      shopSubscription_id: pendingSubscriptionId || crypto.randomUUID(),
       employee_id: Math.floor(Math.random() * 1000000),
       orgEmployeeID: crypto.randomUUID(),
     };
 
     try {
+      console.log("🚀 [POS Registration] Starting mutation for:", businessType);
+      const variables = {
+        email: formData.email,
+        lat: formData.lat,
+        location: formData.address,
+        logo: formData.logo,
+        long: formData.long,
+        name: formData.name,
+        phone: formData.phone,
+        profile: formData.profile,
+        tin: formData.tin,
+        ussd: formData.ussd,
+        rdb_cert: formData.rdb_cert_url || formData.rdb_cert,
+        restaurant_id: businessId,
+        request_count: plan.ai_request_limit,
+        month: new Date().toLocaleString("default", { month: "long" }),
+        year: new Date().getFullYear().toString(),
+        shop_id: "00000000-0000-0000-0000-000000000000",
+        balance: "0",
+        restaurant_id1: businessId,
+        shop_id1: "00000000-0000-0000-0000-000000000000",
+        billing_cycle: billingCycle,
+        restaurant_id2: businessId,
+        shop_id2: "00000000-0000-0000-0000-000000000000",
+        start_date: now,
+        status: "active",
+        updated_at: now,
+        end_date: endDate.toISOString(),
+        plan_id: plan.id,
+        aiUsage_id: commonIds.aiUsage_id,
+        currency: "RWF",
+        discount_amount: "0",
+        due_date: dueDate.toISOString(),
+        invoice_number: `INV-${Date.now()}`,
+        issued_at: now,
+        paid_at: null,
+        payment_method: "UNPAID",
+        plan_name: plan.name,
+        plan_price: (cycle === "monthly"
+          ? plan.price_monthly
+          : plan.price_yearly
+        ).toString(),
+        reelUsage_id: commonIds.reelUsage_id,
+        shopSubscription_id: commonIds.shopSubscription_id,
+        status1: "pending",
+        subtotal_amount: (cycle === "monthly"
+          ? plan.price_monthly
+          : plan.price_yearly
+        ).toString(),
+        tax_amount: "0",
+        Address: formData.address,
+        Position: formData.position,
+        dob: formData.dob,
+        email1: formData.ownerEmail,
+        employeeID: commonIds.employee_id,
+        fullnames: formData.fullnames,
+        gender: formData.gender,
+        last_login: now,
+        password: formData.password,
+        phone1: formData.ownerPhone,
+        restaurant_id3: businessId,
+        roleType: "system Administrator",
+        shop_id3: "00000000-0000-0000-0000-000000000000",
+        twoFactorSecrets: "",
+        business_id1: businessId,
+        shop_id4: "00000000-0000-0000-0000-000000000000",
+        restaurant_id4: businessId,
+        month1: new Date().toLocaleString("default", { month: "long" }),
+        upload_count: plan.reel_limit,
+        year1: new Date().getFullYear().toString(),
+        orgEmployeeID: commonIds.orgEmployeeID,
+        privillages: generatePrivileges(plan),
+        update_on: now,
+      };
+
+      console.log("📦 [POS Registration] Variables:", JSON.stringify(variables, null, 2));
+
+      let result;
       if (businessType === "RESTAURANT") {
-        await createRestaurant({
-          variables: {
-            email: formData.email,
-            lat: formData.lat,
-            location: formData.address,
-            logo: formData.logo,
-            long: formData.long,
-            name: formData.name,
-            phone: formData.phone,
-            profile: formData.profile,
-            tin: formData.tin,
-            ussd: formData.ussd,
-            rdb_cert: formData.rdb_cert_url || formData.rdb_cert, // Use URL if uploaded, else text
-            restaurant_id: businessId,
-            request_count: plan.ai_request_limit,
-            month: new Date().toLocaleString("default", { month: "long" }),
-            year: new Date().getFullYear().toString(),
-            shop_id: "00000000-0000-0000-0000-000000000000",
-            balance: "0",
-            restaurant_id1: businessId,
-            shop_id1: "00000000-0000-0000-0000-000000000000",
-            billing_cycle: billingCycle,
-            restaurant_id2: businessId,
-            shop_id2: "00000000-0000-0000-0000-000000000000",
-            start_date: now,
-            status: "active",
-            updated_at: now,
-            end_date: endDate.toISOString(),
-            plan_id: plan.id,
-            aiUsage_id: commonIds.aiUsage_id,
-            currency: "RWF",
-            discount_amount: "0",
-            due_date: dueDate.toISOString(),
-            invoice_number: `INV-${Date.now()}`,
-            issued_at: now,
-            paid_at: null,
-            payment_method: "UNPAID",
-            plan_name: plan.name,
-            plan_price: (cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly
-            ).toString(),
-            reelUsage_id: commonIds.reelUsage_id,
-            shopSubscription_id: commonIds.shopSubscription_id,
-            status1: "pending",
-            subtotal_amount: (cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly
-            ).toString(),
-            tax_amount: "0",
-            Address: formData.address,
-            Position: formData.position,
-            dob: formData.dob,
-            email1: formData.ownerEmail,
-            employeeID: commonIds.employee_id,
-            fullnames: formData.fullnames,
-            gender: formData.gender,
-            last_login: now,
-            password: formData.password,
-            phone1: formData.ownerPhone,
-            restaurant_id3: businessId,
-            roleType: "system Administrator",
-            shop_id3: "00000000-0000-0000-0000-000000000000",
-            twoFactorSecrets: "",
-            business_id1: businessId,
-            shop_id4: "00000000-0000-0000-0000-000000000000",
-            restaurant_id4: businessId,
-            month1: new Date().toLocaleString("default", { month: "long" }),
-            upload_count: plan.reel_limit,
-            year1: new Date().getFullYear().toString(),
-            orgEmployeeID: commonIds.orgEmployeeID,
-            privillages: generatePrivileges(plan),
-            update_on: now,
-          },
-        });
+        result = await createRestaurant({ variables });
       } else {
-        await createShop({
-          variables: {
-            address: formData.address,
-            category_id: "00000000-0000-0000-0000-000000000000",
-            description: formData.description,
-            image: formData.profile,
-            latitude: formData.lat,
-            logo: formData.logo,
-            longitude: formData.long,
-            name: formData.name,
-            operating_hours: formData.operating_hours,
-            phone: formData.phone,
-            relatedTo: "NONE",
-            ssd: formData.ussd,
-            tin: formData.tin,
-            shop_id: businessId,
-            upload_count: plan.reel_limit,
-            year: new Date().getFullYear().toString(),
-            billing_cycle: billingCycle,
-            business_id: businessId,
-            end_date: endDate.toISOString(),
-            plan_id: plan.id,
-            shop_id1: businessId,
-            restaurant_id: "00000000-0000-0000-0000-000000000000",
-            start_date: now,
-            status: "active",
-            aiUsage_id: commonIds.aiUsage_id,
-            currency: "RWF",
-            discount_amount: "0",
-            invoice_number: `INV-${Date.now()}`,
-            due_date: dueDate.toISOString(),
-            issued_at: now,
-            paid_at: null,
-            payment_method: "UNPAID",
-            plan_name: plan.name,
-            plan_price: (cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly
-            ).toString(),
-            reelUsage_id: commonIds.reelUsage_id,
-            shopSubscription_id: commonIds.shopSubscription_id,
-            status1: "pending",
-            subtotal_amount: (cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly
-            ).toString(),
-            tax_amount: "0",
-            balance: "0",
-            shop_id2: businessId,
-            restaurant_id1: "00000000-0000-0000-0000-000000000000",
-            Address: formData.address,
-            Position: formData.position,
-            dob: formData.dob,
-            email: formData.ownerEmail,
-            employeeID: commonIds.employee_id,
-            fullnames: formData.fullnames,
-            gender: formData.gender,
-            password: formData.password,
-            phone1: formData.ownerPhone,
-            restaurant_id2: "00000000-0000-0000-0000-000000000000",
-            roleType: "system Administrator",
-            shop_id3: businessId,
-            twoFactorSecrets: "",
-            orgEmployeeID: commonIds.orgEmployeeID,
-            privillages: generatePrivileges(plan),
-            update_on: now,
-          },
-        });
+        // Shop mutation has slightly different variable mapping in the original code, 
+        // need to be careful. Let's stick to what was there but with extra logging.
+        const shopVariables = {
+          address: formData.address,
+          category_id: "00000000-0000-0000-0000-000000000000",
+          description: formData.description,
+          image: formData.profile,
+          latitude: formData.lat,
+          logo: formData.logo,
+          longitude: formData.long,
+          name: formData.name,
+          operating_hours: formData.operating_hours,
+          phone: formData.phone,
+          relatedTo: "NONE",
+          ssd: formData.ussd,
+          tin: formData.tin,
+          shop_id: businessId,
+          upload_count: plan.reel_limit,
+          year: new Date().getFullYear().toString(),
+          billing_cycle: billingCycle,
+          business_id: businessId,
+          end_date: endDate.toISOString(),
+          plan_id: plan.id,
+          shop_id1: businessId,
+          restaurant_id: "00000000-0000-0000-0000-000000000000",
+          start_date: now,
+          status: "active",
+          aiUsage_id: commonIds.aiUsage_id,
+          currency: "RWF",
+          discount_amount: "0",
+          invoice_number: `INV-${Date.now()}`,
+          due_date: dueDate.toISOString(),
+          issued_at: now,
+          paid_at: null,
+          payment_method: "UNPAID",
+          plan_name: plan.name,
+          plan_price: (cycle === "monthly"
+            ? plan.price_monthly
+            : plan.price_yearly
+          ).toString(),
+          reelUsage_id: commonIds.reelUsage_id,
+          shopSubscription_id: commonIds.shopSubscription_id,
+          status1: "pending",
+          subtotal_amount: (cycle === "monthly"
+            ? plan.price_monthly
+            : plan.price_yearly
+          ).toString(),
+          tax_amount: "0",
+          balance: "0",
+          shop_id2: businessId,
+          restaurant_id1: "00000000-0000-0000-0000-000000000000",
+          Address: formData.address,
+          Position: formData.position,
+          dob: formData.dob,
+          email: formData.ownerEmail,
+          employeeID: commonIds.employee_id,
+          fullnames: formData.fullnames,
+          gender: formData.gender,
+          password: formData.password,
+          phone1: formData.ownerPhone,
+          restaurant_id2: "00000000-0000-0000-0000-000000000000",
+          roleType: "system Administrator",
+          shop_id3: businessId,
+          twoFactorSecrets: "",
+          orgEmployeeID: commonIds.orgEmployeeID,
+          privillages: generatePrivileges(plan),
+          update_on: now,
+        };
+        console.log("📦 [POS Registration] Shop Variables:", JSON.stringify(shopVariables, null, 2));
+        result = await createShop({ variables: shopVariables });
+      }
+
+      console.log("✅ [POS Registration] Mutation Result:", result);
+      
+      if (result?.errors) {
+        console.error("❌ [POS Registration] GraphQL Errors:", result.errors);
+        throw new Error(result.errors[0].message);
       }
 
       setIsSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
-      console.error("Mutation error:", err);
-      setError(err.message || "Something went wrong. Please check your data.");
+      console.error("❌ [POS Registration] Mutation Failure:", err);
+      // Log deep error object
+      if (err.graphQLErrors) console.error("🔍 Deep GraphQL Errors:", err.graphQLErrors);
+      if (err.networkError) console.error("🔍 Network Error:", err.networkError);
+      
+      const errMsg = err.message || "Something went wrong. Please check your data.";
+      setError(errMsg);
+      toast.error(errMsg);
       setIsSuccess(false);
-      setShowPaymentModal(false); // Close if mutation fails so user can try again or see error
+      setShowPaymentModal(false); 
     } finally {
       setIsSubmitting(false);
     }
@@ -507,16 +532,21 @@ export default function RegisterPage() {
 
   const handleMomoPayment = async () => {
     if (!selectedPlan) {
-      setError("No plan selected. Please go back and select a plan.");
+      const msg = "No plan selected. Please go back and select a plan.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     const plan = selectedPlan;
     if (!momoNumber) {
-      setError("Please enter a valid MoMo number.");
+      const msg = "Please enter a valid MoMo number.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     setPaymentStatus("pending");
     try {
+      const pendingSubscriptionId = (window as any)._pendingSubscriptionId;
       const response = await fetch("/api/momo/request-to-pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -526,29 +556,65 @@ export default function RegisterPage() {
               ? plan.price_monthly
               : plan.price_yearly,
           payerNumber: momoNumber,
+          subscriptionId: pendingSubscriptionId,
           externalId: `POS-REG-${Date.now()}`,
           payerMessage: `POS Registration - ${plan.name}`,
+          planId: selectedPlan.id,
         }),
       });
       const data = await response.json();
       if (response.ok) {
-        setPaymentReference(data.referenceId);
-        // In a real app we'd poll here. For sandbox, we'll simulate success after a delay.
-        setTimeout(async () => {
-          setPaymentStatus("success");
-          // TRIGGER DATABASE CREATION NOW
-          await performMutation();
-          setTimeout(() => {
-            setShowPaymentModal(false);
-          }, 2000);
+        const referenceId = data.referenceId;
+        setPaymentReference(referenceId);
+
+        // Polling for payment status
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await fetch(
+              `/api/momo/request-to-pay-status?referenceId=${referenceId}`
+            );
+            const statusData = await statusRes.json();
+
+            if (statusData.status === "SUCCESSFUL") {
+              clearInterval(pollInterval);
+              setPaymentStatus("success");
+              toast.success("Payment successful!");
+              // TRIGGER DATABASE CREATION NOW
+              await performMutation();
+              setTimeout(() => {
+                setShowPaymentModal(false);
+              }, 2000);
+            } else if (
+              statusData.status === "FAILED" ||
+              statusData.status === "REJECTED" ||
+              statusData.status === "EXPIRED"
+            ) {
+              clearInterval(pollInterval);
+              setPaymentStatus("failed");
+              const errMsg = statusData.reason || statusData.message || "Payment request was not successful.";
+              setError(errMsg);
+              toast.error(errMsg);
+            }
+          } catch (pollErr) {
+            console.error("Polling error:", pollErr);
+          }
         }, 3000);
+
+        // Timeout after 3 minutes
+        setTimeout(() => {
+          clearInterval(pollInterval);
+        }, 180000);
       } else {
         setPaymentStatus("failed");
-        setError(data.error || "MoMo payment request failed.");
+        const errMsg = data.error || "MoMo payment request failed.";
+        setError(errMsg);
+        toast.error(errMsg);
       }
     } catch (err) {
       setPaymentStatus("failed");
-      setError("An error occurred during payment.");
+      const errMsg = "An error occurred during payment.";
+      setError(errMsg);
+      toast.error(errMsg);
     }
   };
 

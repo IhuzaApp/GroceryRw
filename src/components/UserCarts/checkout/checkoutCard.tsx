@@ -1411,7 +1411,7 @@ export default function CheckoutItems({
             setIsCheckoutLoading(false);
           } else {
             if (isFoodCart && restaurant) {
-              // Handle food cart success
+              // Handle food cart success (Same as before)
               clearRestaurant(restaurant.id);
               toaster.push(
                 <Notification
@@ -1426,6 +1426,16 @@ export default function CheckoutItems({
               clearTimeout(loadingTimeout);
               setIsCheckoutLoading(false);
 
+              // Redirect if MoMo
+              if (
+                selectedPaymentMethod?.type === "momo" &&
+                data.order_id
+              ) {
+                // For food cart, we'd need a separate payment pending page or handle here
+                // For now, let's keep it simple and follow the regular store pattern if possible
+                // But food cart usually implies instantaneous success in this codebase
+              }
+
               // Trigger cart refetch to show cart is cleared
               setTimeout(() => {
                 const cartChangedEvent = new CustomEvent("cartChanged", {
@@ -1435,12 +1445,52 @@ export default function CheckoutItems({
               }, 500);
             } else {
               // Handle regular shop cart success or combined orders success
+              const isCombinedOrder = data.combined_order_id && data.orders;
+              const orderId = isCombinedOrder ? data.combined_order_id : data.order_id;
+
+              // Check if MoMo payment is required
+              if (selectedPaymentMethod?.type === "momo" && orderId) {
+                const phone =
+                  selectedPaymentMethod.number || oneTimePhoneNumber;
+                
+                // Initiate MoMo Payment
+                fetch("/api/momo/request-to-pay", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    amount: totalAmount,
+                    currency: "RWF",
+                    payerNumber: phone,
+                    externalId: orderId,
+                    orderId: orderId, // Explicitly pass orderId for DB linking
+                    payerMessage: `Order ${orderId.slice(-8)}`,
+                  }),
+                })
+                  .then(async (momoRes) => {
+                    const momoData = await momoRes.json();
+                    if (momoRes.ok && momoData.referenceId) {
+                      // Redirect to status check page
+                      router.push(
+                        `/stores/${shopId}/payment-pending?orderId=${orderId}&referenceId=${momoData.referenceId}`
+                      );
+                    } else {
+                      // Fallback to regular success but warn about payment
+                      toaster.push(
+                        <Notification type="warning" header="Payment Pending">
+                          {momoData.error || "Failed to initiate MoMo prompt. Please check your phone."}
+                        </Notification>,
+                        { placement: "topEnd", duration: 7000 }
+                      );
+                    }
+                  })
+                  .catch((momoErr) => {
+                    console.error("MoMo initiation error:", momoErr);
+                  });
+              }
+
               // Clear loading state immediately
               clearTimeout(loadingTimeout);
               setIsCheckoutLoading(false);
-
-              // Check if this was a combined order
-              const isCombinedOrder = data.combined_order_id && data.orders;
 
               // Show success notification
               toaster.push(

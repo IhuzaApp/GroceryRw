@@ -964,13 +964,7 @@ export default function BatchDetails({
       let momoPaymentSuccess = false;
       let momoReferenceId = "";
       try {
-        // First, ensure we have a valid token
-        const { momoTokenManager } = await import(
-          "../../../lib/momoTokenManager"
-        );
-        await momoTokenManager.getValidToken();
-
-        const momoResponse = await fetch("/api/momo/transfer", {
+        const momoResponse = await fetch("/api/momo/request-to-pay", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -979,6 +973,7 @@ export default function BatchDetails({
             amount: orderAmount,
             currency: systemConfig?.currency || "RWF",
             payerNumber: momoCode,
+            orderId: targetOrderForPayment.id,
             externalId:
               targetOrderForPayment.id || `SHOPPER-PAYMENT-${Date.now()}`,
             payerMessage: "Payment for Shopper Items",
@@ -996,10 +991,8 @@ export default function BatchDetails({
           // Poll for MoMo payment status
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
-              await momoTokenManager.getValidToken();
-
               const statusResponse = await fetch(
-                `/api/momo/status?referenceId=${momoData.referenceId}`
+                `/api/momo/request-to-pay-status?referenceId=${momoReferenceId}`
               );
               const statusData = await statusResponse.json();
 
@@ -1017,12 +1010,20 @@ export default function BatchDetails({
                     { placement: "topEnd" }
                   );
                   break; // Exit the polling loop
-                } else if (statusData.status === "FAILED") {
-                  throw new Error("MoMo payment failed. Please try again.");
-                } else if (statusData.status === "PENDING") {
-                  // Continue polling
+                } else if (
+                  statusData.status === "FAILED" ||
+                  statusData.status === "REJECTED" ||
+                  statusData.status === "EXPIRED"
+                ) {
+                  throw new Error(
+                    statusData.reason || "MoMo payment failed. Please try again."
+                  );
+                } else {
+                  // PENDING or other status
                   if (attempt < maxAttempts - 1) {
-                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds
+                    await new Promise((resolve) =>
+                      setTimeout(resolve, 10000)
+                    ); // Wait 10 seconds
                   } else {
                     throw new Error(
                       "MoMo payment timeout. Please check your phone or try again."

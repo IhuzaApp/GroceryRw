@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { usePathname } from "next/navigation";
 import { formatCompactCurrency } from "../../lib/formatCurrency";
 import { toast } from "react-hot-toast";
 import { signOut } from "next-auth/react";
@@ -40,9 +39,8 @@ export default function ShopperSidebar() {
   const [loadingEarnings, setLoadingEarnings] = useState(true);
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-  const pathname = usePathname();
-  const { toggleRole, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const pathname = router.pathname;
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const isActive = (path: string) =>

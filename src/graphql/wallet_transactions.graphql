@@ -25,7 +25,6 @@ query getAllWallettTtransactions {
       shop_id
       service_fee
       id
-      found
       discount
       delivery_time
       delivery_photo_url
@@ -39,25 +38,15 @@ query getAllWallettTtransactions {
     description
     related_reel_orderId
     related_restaurant_order_id
+    mtn_response
+    phone
+    reference_id
+    relate_business_order_id
   }
 }
 
-mutation createWalletTransaction(
-  $amount: String!
-  $type: String!
-  $status: String!
-  $wallet_id: uuid!
-  $related_order_id: uuid
-) {
-  insert_Wallet_Transactions_one(
-    object: {
-      amount: $amount
-      type: $type
-      status: $status
-      wallet_id: $wallet_id
-      related_order_id: $related_order_id
-    }
-  ) {
+mutation createWalletTransaction($amount: String!, $type: String!, $status: String!, $wallet_id: uuid!, $related_order_id: uuid, $currency: String = "", $description: String = "", $phone: String = "", $mtn_response: String = "", $reference_id: String = "", $relate_business_order_id: uuid = "", $related_restaurant_order_id: uuid = "", $related_reel_orderId: uuid = "") {
+  insert_Wallet_Transactions_one(object: {amount: $amount, type: $type, status: $status, wallet_id: $wallet_id, related_order_id: $related_order_id, currency: $currency, description: $description, phone: $phone, mtn_response: $mtn_response, reference_id: $reference_id, relate_business_order_id: $relate_business_order_id, related_restaurant_order_id: $related_restaurant_order_id, related_reel_orderId: $related_reel_orderId}) {
     id
     amount
     type
@@ -68,12 +57,15 @@ mutation createWalletTransaction(
     related_reel_orderId
     related_restaurant_order_id
     description
+    mtn_response
+    phone
+    reference_id
+    relate_business_order_id
+    currency
   }
 }
 
-mutation createMultipleWalletTransactions(
-  $transactions: [Wallet_Transactions_insert_input!]!
-) {
+mutation createMultipleWalletTransactions($transactions: [Wallet_Transactions_insert_input!]!) {
   insert_Wallet_Transactions(objects: $transactions) {
     returning {
       id
@@ -86,6 +78,11 @@ mutation createMultipleWalletTransactions(
       description
       related_reel_orderId
       related_restaurant_order_id
+      currency
+      mtn_response
+      phone
+      reference_id
+      relate_business_order_id
     }
     affected_rows
   }

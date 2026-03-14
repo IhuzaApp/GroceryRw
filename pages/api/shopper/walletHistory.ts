@@ -28,6 +28,10 @@ const GET_WALLET_AND_TRANSACTIONS = gql`
       description
       created_at
       related_order_id
+      relate_business_order_id
+      reference_id
+      phone
+      currency
       wallet_id
       Order {
         OrderID
@@ -51,6 +55,10 @@ interface WalletTransaction {
   description: string | null;
   created_at: string;
   related_order_id: string | null;
+  relate_business_order_id: string | null;
+  reference_id: string | null;
+  phone: string | null;
+  currency: string | null;
   wallet_id: string;
   Order: {
     OrderID: number | null;
@@ -116,8 +124,11 @@ export default async function handler(
       description: tx.description || "",
       date: new Date(tx.created_at).toLocaleDateString(),
       time: new Date(tx.created_at).toLocaleTimeString(),
-      orderId: tx.related_order_id,
+      orderId: tx.related_order_id || tx.relate_business_order_id,
       orderNumber: tx.Order?.OrderID || null,
+      referenceId: tx.reference_id,
+      phone: tx.phone,
+      currency: tx.currency,
     }));
 
     return res.status(200).json({

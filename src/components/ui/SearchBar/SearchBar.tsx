@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface SearchResult {

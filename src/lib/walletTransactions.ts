@@ -7,22 +7,29 @@ const isClient = typeof window !== "undefined";
 
 // GraphQL mutation to create wallet transactions
 const CREATE_WALLET_TRANSACTIONS = gql`
-  mutation createMultipleWalletTransactions(
-    $transactions: [Wallet_Transactions_insert_input!]!
-  ) {
-    insert_Wallet_Transactions(objects: $transactions) {
-      returning {
-        id
-        amount
-        type
-        status
-        created_at
-        wallet_id
-        related_order_id
-      }
-      affected_rows
+mutation createMultipleWalletTransactions($transactions: [Wallet_Transactions_insert_input!]!) {
+  insert_Wallet_Transactions(objects: $transactions) {
+    returning {
+      id
+      amount
+      type
+      status
+      created_at
+      wallet_id
+      related_order_id
+      related_restaurant_order_id
+      related_reel_orderId
+      relate_business_order_id
+      reference_id
+      phone
+      mtn_response
+      description
+      currency
     }
+    affected_rows
   }
+}
+
 `;
 
 // GraphQL mutation to update wallet balances
@@ -196,11 +203,13 @@ export const recordPaymentTransactions = async (
       {
         wallet_id: walletId,
         amount: formattedOrderAmount.toFixed(2),
+        currency: "RWF", // Default to RWF if not specified
         type: "payment",
-        status: "completed",
+        status: momoSuccess ? "SUCCESSFUL" : "PENDING",
         related_order_id: orderId,
         related_reel_orderId: null,
         related_restaurant_order_id: null,
+        reference_id: momoReferenceId || null,
         description: description,
       },
     ];

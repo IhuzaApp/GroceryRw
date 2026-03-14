@@ -129,6 +129,10 @@ export const CREATE_RESTAURANT_ACCOUNT = gql`
             end_date: $end_date
             plan_id: $plan_id
           }
+          on_conflict: {
+            constraint: shop_subscriptions_pkey
+            update_columns: [status, updated_at, start_date, end_date]
+          }
         }
         orgEmployees: {
           data: {
@@ -170,7 +174,7 @@ export const CREATE_RESTAURANT_ACCOUNT = gql`
 `;
 
 export const CREATE_SHOP_ACCOUNT = gql`
-  mutation CreareSHopAccount(
+  mutation CreateShopAccount(
     $address: String = ""
     $category_id: uuid = ""
     $description: String = ""
@@ -278,6 +282,10 @@ export const CREATE_SHOP_ACCOUNT = gql`
                 tax_amount: $tax_amount
               }
             }
+          }
+          on_conflict: {
+            constraint: shop_subscriptions_pkey
+            update_columns: [status, plan_id, end_date]
           }
         }
         merchant_wallet: {

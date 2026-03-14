@@ -39,7 +39,7 @@ class MomoService {
       subscriptionKey: process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
       userId: process.env.MOMO_API_USER_SANDBOX,
       apiKey: process.env.MOMO_API_KEY_SANDBOX,
-      baseUrl: process.env.MOMO_SANDBOX_URL || "https://sandbox.momodeveloper.mtn.com",
+      baseUrl: (process.env.MOMO_SANDBOX_URL || "https://sandbox.momodeveloper.mtn.com").replace(/\/$/, ""),
       environment: "sandbox" as const,
     };
   }
@@ -59,7 +59,13 @@ class MomoService {
       return this.token.access_token;
     }
 
-    console.log("🔄 [MoMo Service] Fetching new access token...");
+    console.log("🔄 [MoMo Service] Fetching new access token from:", `${baseUrl}/collection/token/`);
+    console.log("🔑 [MoMo Service] Using credentials:", {
+      hasSubscriptionKey: !!subscriptionKey,
+      hasUserId: !!userId,
+      hasApiKey: !!apiKey,
+      subKeyPreview: subscriptionKey ? `${subscriptionKey.substring(0, 4)}...` : "none"
+    });
     
     const auth = Buffer.from(`${userId}:${apiKey}`).toString("base64");
     
@@ -98,25 +104,19 @@ class MomoService {
     payerNumber: string;
     payerMessage?: string;
     payeeNote?: string;
+    referenceId?: string;
   }): Promise<{ referenceId: string }> {
-    const referenceId = randomUUID();
+    const referenceId = params.referenceId || randomUUID();
     const { subscriptionKey, baseUrl, environment } = this.getEnv();
     
-    // Normalize phone to MSISDN (250... for Rwanda)
-    let partyId = String(params.payerNumber).replace(/\D/g, "");
-    if (partyId.startsWith("0")) {
-      partyId = "250" + partyId.slice(1);
-    } else if (!partyId.startsWith("250")) {
-      partyId = "250" + partyId;
-    }
-
-    const body: RequestToPayBody = {
-      amount: Number(params.amount).toFixed(2),
-      currency: params.currency,
+    const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
+    const body = {
+      amount: String(params.amount),
+      currency: finalCurrency,
       externalId: params.externalId,
       payer: {
         partyIdType: "MSISDN",
-        partyId,
+        partyId: this.formatPhoneNumber(params.payerNumber),
       },
       payerMessage: params.payerMessage || "Payment Request",
       payeeNote: params.payeeNote || "Thank you",
@@ -189,7 +189,134 @@ class MomoService {
       throw new Error(`MoMo GetPaymentStatus Error: ${response.status} - ${errorText}`);
     }
 
-    return await response.json() as PaymentStatus;
+    return (await response.json()) as PaymentStatus;
+  }
+
+  /**
+   * Request a disbursement (transfer)
+   * @param amount Amount to transfer
+   * @param currency Currency code (e.g., "RWF")
+   * @param payeeNumber Phone number of the payee (e.g., "25078xxxxxxx")
+   * @param externalId External reference ID
+   * @param payerMessage Message for the payer
+   * @param payeeNote Note for the payee
+   * @returns Reference ID of the transfer request
+   */
+  async transfer(
+    amount: number | string,
+    currency: string,
+    payeeNumber: string,
+    externalId: string,
+    payerMessage: string = "Transfer request",
+    payeeNote: string = "Transfer confirmation",
+    referenceId?: string
+  ): Promise<{ referenceId: string }> {
+    const finalReferenceId = referenceId || randomUUID();
+    const token = await this.getAccessToken();
+    const { baseUrl, subscriptionKey, environment } = this.getEnv();
+
+    const url = `${baseUrl}/disbursement/v1_0/transfer`;
+    const payload = {
+      amount: amount.toString(),
+      currency,
+      externalId,
+      payee: {
+        partyIdType: "MSISDN",
+        partyId: this.formatPhoneNumber(payeeNumber),
+      },
+      payerMessage,
+      payeeNote,
+    };
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "X-Reference-Id": finalReferenceId,
+      "X-Target-Environment": environment,
+      "Content-Type": "application/json",
+      "Ocp-Apim-Subscription-Key": subscriptionKey!,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 202) {
+        return { referenceId: finalReferenceId };
+      }
+
+      if (response.status === 401) {
+        // Redo once with fresh token
+        this.token = null;
+        return this.transfer(
+          amount,
+          currency,
+          payeeNumber,
+          externalId,
+          payerMessage,
+          payeeNote,
+          finalReferenceId
+        );
+      }
+
+      const errorText = await response.text();
+      throw new Error(`MoMo transfer failed (${response.status}): ${errorText}`);
+    } catch (error) {
+      console.error("💥 [momoService] Transfer error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check the status of a disbursement (transfer)
+   * @param referenceId The X-Reference-Id used in the transfer request
+   * @returns Transfer status object
+   */
+  async getTransferStatus(referenceId: string): Promise<any> {
+    const token = await this.getAccessToken();
+    const { baseUrl, subscriptionKey, environment } = this.getEnv();
+
+    const url = `${baseUrl}/disbursement/v1_0/transfer/${referenceId}`;
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "X-Target-Environment": environment,
+      "Ocp-Apim-Subscription-Key": subscriptionKey!,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (response.status === 401) {
+        this.token = null;
+        return this.getTransferStatus(referenceId);
+      }
+
+      const errorText = await response.text();
+      throw new Error(
+        `MoMo getTransferStatus failed (${response.status}): ${errorText}`
+      );
+    } catch (error) {
+      console.error("💥 [momoService] GetTransferStatus error:", error);
+      throw error;
+    }
+  }
+  private formatPhoneNumber(phone: string): string {
+    let partyId = String(phone).replace(/\D/g, "");
+    if (partyId.startsWith("0")) {
+      partyId = "250" + partyId.slice(1);
+    } else if (!partyId.startsWith("250")) {
+      partyId = "250" + partyId;
+    }
+    return partyId;
   }
 }
 

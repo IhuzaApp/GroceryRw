@@ -58,9 +58,7 @@ const UPDATE_WALLET_BALANCES = gql`
 
 // GraphQL mutation to create wallet transactions
 const CREATE_WALLET_TRANSACTIONS = gql`
-  mutation createMultipleWalletTransactions(
-    $transactions: [Wallet_Transactions_insert_input!]!
-  ) {
+  mutation createMultipleWalletTransactions($transactions: [Wallet_Transactions_insert_input!]!) {
     insert_Wallet_Transactions(objects: $transactions) {
       returning {
         id
@@ -70,6 +68,9 @@ const CREATE_WALLET_TRANSACTIONS = gql`
         created_at
         wallet_id
         related_order_id
+        reference_id
+        phone
+        currency
       }
       affected_rows
     }
@@ -321,11 +322,13 @@ export default async function handler(
       {
         wallet_id: walletId,
         amount: formattedOrderAmount.toFixed(2),
+        currency: "RWF",
         type: "payment",
         status: "completed",
         related_order_id: orderId,
         related_reel_orderId: null,
         related_restaurant_order_id: null,
+        reference_id: momoReferenceId || null,
         description: description,
       },
     ];

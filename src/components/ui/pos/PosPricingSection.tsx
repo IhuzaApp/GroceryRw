@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { Check, Info, Loader2 } from "lucide-react";
 import { usePlans, Plan, Module } from "../../../hooks/usePlans";
 

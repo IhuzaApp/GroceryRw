@@ -54,13 +54,17 @@ const authLink = setContext(async (_, { headers }) => {
   const session = await getSession();
 
   // Return the headers to the context so httpLink can read them
+  const adminSecret = process.env.NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET || "";
+  const role = adminSecret 
+    ? "admin" 
+    : (session?.user as any)?.role || "anonymous";
+
   return {
     headers: {
       ...headers,
       // Use proper Hasura authentication headers
-      "x-hasura-admin-secret":
-        process.env.NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET || "",
-      "x-hasura-role": (session?.user as any)?.role || "anonymous",
+      "x-hasura-admin-secret": adminSecret,
+      "x-hasura-role": role,
       // Include user ID for row-level security
       ...(session?.user?.id && { "x-hasura-user-id": session.user.id }),
     },

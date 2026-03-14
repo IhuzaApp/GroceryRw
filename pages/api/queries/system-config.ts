@@ -3,21 +3,30 @@ import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 
 const GET_SYSTEM_CONFIG = gql`
-  query getSystemConfiguration {
-    System_configuratioins {
-      baseDeliveryFee
-      serviceFee
-      shoppingTime
-      unitsSurcharge
-      extraUnits
-      cappedDistanceFee
-      distanceSurcharge
-      currency
-      discounts
-      deliveryCommissionPercentage
-      productCommissionPercentage
-    }
+query getSystemConfiguration {
+  System_configuratioins {
+    baseDeliveryFee
+    serviceFee
+    shoppingTime
+    unitsSurcharge
+    extraUnits
+    cappedDistanceFee
+    distanceSurcharge
+    currency
+    discounts
+    deliveryCommissionPercentage
+    productCommissionPercentage
+    enableRush
+    id
+    rushHourSurcharge
+    rushHours
+    suggestedMinimumTip
+    tax
+    withDrawCharges
+    allowScheduledDeliveries
   }
+}
+
 `;
 
 interface SystemConfigResponse {
