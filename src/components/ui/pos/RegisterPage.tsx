@@ -26,6 +26,10 @@ import {
   Briefcase,
   Trash2,
   UploadCloud,
+  Wallet,
+  Brain,
+  Video,
+  Check,
 } from "lucide-react";
 import Image from "next/image";
 import { useMutation, useQuery } from "@apollo/client";
@@ -165,6 +169,17 @@ export default function RegisterPage() {
   >("idle");
   const [registeredBusinessId, setRegisteredBusinessId] = useState<string | null>(null);
   const [registeredSubscriptionId, setRegisteredSubscriptionId] = useState<string | null>(null);
+  const [registrationSubStep, setRegistrationSubStep] = useState(0);
+
+  const REGISTRATION_STEPS = [
+    { id: 1, title: "Setting up Business Profile", icon: Layout },
+    { id: 2, title: "Setting up Admin Account", icon: ShieldCheck },
+    { id: 3, title: "Setting up Business Wallet", icon: Wallet },
+    { id: 4, title: "Setting up AI Tracking", icon: Brain },
+    { id: 5, title: "Setting up Reels", icon: Video },
+    { id: 6, title: "Setting up Subscription Plan", icon: CreditCard },
+    { id: 7, title: "Generating Financial Invoice", icon: FileText },
+  ];
 
   const [uploading, setUploading] = useState({
     logo: false,
@@ -378,6 +393,7 @@ export default function RegisterPage() {
       orgEmployeeID: crypto.randomUUID(),
     };
 
+    setRegistrationSubStep(0);
     if (isShell) {
       setProcessingStep("creating_profile");
     } else {
@@ -388,6 +404,7 @@ export default function RegisterPage() {
       console.log("🚀 [POS Registration] Starting sequential registration for:", businessType);
 
       // STEP 1: Create Business
+      setRegistrationSubStep(1);
       let businessResult;
       if (businessType === "RESTAURANT") {
         businessResult = await createRestaurant({
@@ -434,7 +451,8 @@ export default function RegisterPage() {
       }
       console.log("✅ Step 1: Business created");
 
-      // STEP 2: Create Employee (Moved up to satisfy user_id dependency for ai_usage)
+      // STEP 2: Create Employee
+      setRegistrationSubStep(2);
       const employeeResult = await createEmployee({
         variables: {
           Address: formData.address,
@@ -464,6 +482,7 @@ export default function RegisterPage() {
       console.log("✅ Step 2: Employee created");
 
       // STEP 3: Create Wallet
+      setRegistrationSubStep(3);
       const walletResult = await createWallet({
         variables: {
           active: false,
@@ -476,6 +495,7 @@ export default function RegisterPage() {
       console.log("✅ Step 3: Wallet created");
 
       // STEP 4: Create AI Usage
+      setRegistrationSubStep(4);
       const aiUsageResult = await createAiUsage({
         variables: {
           id: commonIds.aiUsage_id,
@@ -492,6 +512,7 @@ export default function RegisterPage() {
       console.log("✅ Step 4: AI Usage created");
 
       // STEP 5: Create Reel Usage
+      setRegistrationSubStep(5);
       const reelUsageResult = await createReelUsage({
         variables: {
           id: commonIds.reelUsage_id,
@@ -507,6 +528,7 @@ export default function RegisterPage() {
       console.log("✅ Step 5: Reel Usage created");
 
       // STEP 6: Create Subscription
+      setRegistrationSubStep(6);
       const subResult = await createSubscription({
         variables: {
           id: commonIds.shopSubscription_id,
@@ -525,6 +547,7 @@ export default function RegisterPage() {
       console.log("✅ Step 6: Subscription created");
 
       // STEP 7: Create Invoice
+      setRegistrationSubStep(7);
       const invoiceResult = await createInvoice({
         variables: {
           aiUsage_id: commonIds.aiUsage_id,
@@ -547,6 +570,7 @@ export default function RegisterPage() {
       });
       if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
       console.log("✅ Step 7: Invoice created");
+      setRegistrationSubStep(8); // Completed all steps
 
       if (isShell) {
         setRegisteredBusinessId(businessId);
@@ -845,45 +869,101 @@ export default function RegisterPage() {
         />
       )}
       {/* Processing Overlay */}
-      {processingStep !== "idle" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className={`h-2 w-full ${processingStep === "success" ? "bg-green-500" : "bg-blue-600 animate-pulse"
-              }`} />
+      {(processingStep !== "idle" && processingStep !== "initiating_payment" && processingStep !== "awaiting_approval") && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#022C22]/40 backdrop-blur-md">
+          <div className="mx-4 w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl">
+            <div className={`h-[6px] w-full transition-all duration-1000 ${registrationSubStep >= 8 ? "bg-[#00c596]" : "bg-[#022C22] animate-pulse"
+              }`} style={{ width: `${(registrationSubStep / 8) * 100}%` }} />
 
-            <div className="p-8 text-center">
-              <div className="mb-6 flex justify-center">
-                {processingStep === "success" ? (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <CheckCircle className="h-12 w-12" />
-                  </div>
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                    <Loader2 className="h-12 w-12 animate-spin" />
-                  </div>
-                )}
+            <div className="p-8 md:p-12">
+              <div className="mb-10 text-center">
+                <div className="mb-6 flex justify-center">
+                  {registrationSubStep >= 8 ? (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#00c596]/10 text-[#00c596]">
+                      <CheckCircle className="h-14 w-14" />
+                    </div>
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#022C22]/5 text-[#022C22]">
+                      <Loader2 className="h-14 w-14 animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="mb-3 text-3xl font-extrabold text-[#022C22]">
+                  {registrationSubStep >= 8 ? "All Set!" : "Setting Up Your Workspace"}
+                </h3>
+                <p className="text-gray-500 font-medium max-w-sm mx-auto">
+                  {registrationSubStep >= 8
+                    ? "Welcome to the future of retail management. Redirecting to your dashboard..."
+                    : "Please wait while we configure your business environment safely."}
+                </p>
               </div>
 
+              <div className="space-y-4">
+                {REGISTRATION_STEPS.map((s, idx) => {
+                  const subIdx = idx + 1;
+                  const isDone = registrationSubStep > subIdx || registrationSubStep >= 8;
+                  const isActive = registrationSubStep === subIdx;
+
+                  return (
+                    <div
+                      key={s.id}
+                      className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-500 ${isActive ? "border-[#022C22] bg-[#022C22]/5 translate-x-1" :
+                        isDone ? "border-gray-100 opacity-60" : "border-transparent opacity-30"
+                        }`}
+                    >
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${isDone ? "bg-[#00c596] text-white" :
+                        isActive ? "bg-[#022C22] text-white animate-pulse" : "bg-gray-100 text-gray-400"
+                        }`}>
+                        {isDone ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className={`text-sm font-bold transition-all duration-500 ${isActive ? "text-[#022C22]" : isDone ? "text-gray-600" : "text-gray-400"
+                          }`}>
+                          {s.title}
+                        </div>
+                        {isActive && (
+                          <div className="text-[10px] font-medium text-[#022C22]/60 animate-pulse mt-0.5">
+                            Processing secure transaction...
+                          </div>
+                        )}
+                      </div>
+                      {isActive && <Loader2 className="h-4 w-4 animate-spin text-[#022C22]" />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {registrationSubStep < 8 && (
+                <div className="mt-8 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  Data Integrity Guaranteed • 100% Secure
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Legacy Processing Overlay (for MoMo steps) */}
+      {(processingStep === "initiating_payment" || processingStep === "awaiting_approval") && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="h-2 w-full bg-[#022C22] animate-pulse" />
+            <div className="p-8 text-center">
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-[#022C22]">
+                  <Loader2 className="h-12 w-12 animate-spin" />
+                </div>
+              </div>
               <h3 className="mb-2 text-2xl font-bold text-gray-900">
                 {processingStep === "initiating_payment" && "Initiating Payment"}
                 {processingStep === "awaiting_approval" && "Waiting for Approval"}
-                {processingStep === "creating_profile" && "Creating Your Business Profile"}
-                {processingStep === "setting_privileges" && "Configuring Privileges"}
-                {processingStep === "finalizing" && "Finalizing Setup"}
-                {processingStep === "success" && "Welcome Aboard!"}
               </h3>
-
               <p className="text-gray-600">
                 {processingStep === "initiating_payment" && "Connecting to MoMo secure gateway..."}
                 {processingStep === "awaiting_approval" && "Please check your phone and approve the payment request."}
-                {processingStep === "creating_profile" && "We're setting up your professional digital workspace."}
-                {processingStep === "setting_privileges" && "Tailoring your access based on your selected plan."}
-                {processingStep === "finalizing" && "Just a second, we're putting everything in place."}
-                {processingStep === "success" && "Your registration is complete. Redirecting you to your dashboard..."}
               </p>
-
               {processingStep === "awaiting_approval" && (
-                <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-blue-600 bg-blue-50 py-3 rounded-lg px-4 border border-blue-100">
+                <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-[#022C22] bg-[#022C22]/5 py-3 rounded-lg px-4 border border-[#022C22]/10">
                   <Phone className="h-4 w-4" />
                   <span>Check your phone now</span>
                 </div>
