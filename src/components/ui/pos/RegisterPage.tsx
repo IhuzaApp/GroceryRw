@@ -30,6 +30,8 @@ import {
   Brain,
   Video,
   Check,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import { useMutation, useQuery } from "@apollo/client";
@@ -170,6 +172,16 @@ export default function RegisterPage() {
   const [registeredBusinessId, setRegisteredBusinessId] = useState<string | null>(null);
   const [registeredSubscriptionId, setRegisteredSubscriptionId] = useState<string | null>(null);
   const [registrationSubStep, setRegistrationSubStep] = useState(0);
+  const [lastFailedStep, setLastFailedStep] = useState<number | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+
+  const [commonIds, setCommonIds] = useState({
+    aiUsage_id: "",
+    reelUsage_id: "",
+    shopSubscription_id: "",
+    employee_id: 0,
+    orgEmployeeID: "",
+  });
 
   const REGISTRATION_STEPS = [
     { id: 1, title: "Setting up Business Profile", icon: Layout },
@@ -372,7 +384,7 @@ export default function RegisterPage() {
     await performMutation(true);
   };
 
-  const performMutation = async (isShell: boolean = false) => {
+  const performMutation = async (isShell: boolean = false, startAt: number = 1) => {
     if (!selectedPlan) {
       setError("No plan selected. Please go back and select a plan.");
       return;
@@ -381,6 +393,8 @@ export default function RegisterPage() {
     const plan = selectedPlan;
     setIsSubmitting(true);
     setError(null);
+    setMutationError(null);
+    setLastFailedStep(null);
 
     const now = new Date().toISOString();
     const dueDate = new Date();
@@ -395,191 +409,212 @@ export default function RegisterPage() {
 
     const businessId = registeredBusinessId || crypto.randomUUID();
     const billingCycle = cycle;
-    const commonIds = {
-      aiUsage_id: crypto.randomUUID(),
-      reelUsage_id: crypto.randomUUID(),
-      shopSubscription_id: registeredSubscriptionId || crypto.randomUUID(),
-      employee_id: Math.floor(Math.random() * 1000000),
-      orgEmployeeID: crypto.randomUUID(),
-    };
 
-    setRegistrationSubStep(0);
-    if (isShell) {
-      setProcessingStep("creating_profile");
-    } else {
-      setProcessingStep("setting_privileges");
+    // Persistent/Resumeable IDs
+    let activeIds = { ...commonIds };
+    if (!activeIds.orgEmployeeID) {
+      activeIds = {
+        aiUsage_id: crypto.randomUUID(),
+        reelUsage_id: crypto.randomUUID(),
+        shopSubscription_id: registeredSubscriptionId || crypto.randomUUID(),
+        employee_id: Math.floor(Math.random() * 1000000),
+        orgEmployeeID: crypto.randomUUID(),
+      };
+      setCommonIds(activeIds);
     }
 
     try {
-      console.log("🚀 [POS Registration] Starting sequential registration for:", businessType);
+      console.log(`🚀 [POS Registration] Phase Execution - Starting at Step ${startAt}`);
 
       // STEP 1: Create Business
-      setRegistrationSubStep(1);
-      let businessResult;
-      if (businessType === "RESTAURANT") {
-        businessResult = await createRestaurant({
-          variables: {
-            email: formData.email,
-            lat: formData.lat,
-            location: formData.address,
-            logo: formData.logo,
-            long: formData.long,
-            name: formData.name,
-            phone: formData.phone,
-            profile: formData.profile,
-            tin: formData.tin,
-            ussd: formData.ussd,
-            rdb_cert: formData.rdb_cert_url || formData.rdb_cert,
-            restaurant_id: businessId,
-          },
-        });
-      } else {
-        businessResult = await createShop({
-          variables: {
-            address: formData.address,
-            category_id: "00000000-0000-0000-0000-000000000000",
-            description: formData.description,
-            image: formData.profile,
-            latitude: formData.lat,
-            logo: formData.logo,
-            longitude: formData.long,
-            name: formData.name,
-            operating_hours: formData.operating_hours,
-            phone: formData.phone,
-            relatedTo: "NONE",
-            ssd: formData.ussd,
-            tin: formData.tin,
-            shop_id: businessId,
-            is_active: false,
-          },
-        });
+      if (startAt <= 1) {
+        setRegistrationSubStep(1);
+        let businessResult;
+        if (businessType === "RESTAURANT") {
+          businessResult = await createRestaurant({
+            variables: {
+              email: formData.email,
+              lat: formData.lat,
+              location: formData.address,
+              logo: formData.logo,
+              long: formData.long,
+              name: formData.name,
+              phone: formData.phone,
+              profile: formData.profile,
+              tin: formData.tin,
+              ussd: formData.ussd,
+              rdb_cert: formData.rdb_cert_url || formData.rdb_cert,
+              restaurant_id: businessId,
+            },
+          });
+        } else {
+          businessResult = await createShop({
+            variables: {
+              address: formData.address,
+              category_id: "00000000-0000-0000-0000-000000000000",
+              description: formData.description,
+              image: formData.profile,
+              latitude: formData.lat,
+              logo: formData.logo,
+              longitude: formData.long,
+              name: formData.name,
+              operating_hours: formData.operating_hours,
+              phone: formData.phone,
+              relatedTo: "NONE",
+              ssd: formData.ussd,
+              tin: formData.tin,
+              shop_id: businessId,
+              is_active: false,
+            },
+          });
+        }
+        if (businessResult?.errors) throw new Error(businessResult.errors[0].message);
+        setRegisteredBusinessId(businessId);
+        console.log("✅ Step 1: Business created");
       }
-
-      if (businessResult?.errors) throw new Error(businessResult.errors[0].message);
-      if (businessResult?.data?.insert_Restaurants?.affected_rows === 0 && businessResult?.data?.insert_Shops?.affected_rows === 0) {
-        throw new Error("Failed to create business record.");
-      }
-      console.log("✅ Step 1: Business created");
 
       // STEP 2: Create Employee
-      setRegistrationSubStep(2);
-      const employeeResult = await createEmployee({
-        variables: {
-          Address: formData.address,
-          Position: formData.position || "system Administrator",
-          active: true,
-          dob: formData.dob,
-          email: formData.ownerEmail,
-          employeeID: commonIds.employee_id,
-          fullnames: formData.fullnames,
-          gender: formData.gender,
-          last_login: now,
-          password: formData.password,
-          phone: formData.ownerPhone,
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
-          roleType: "globalAdmin",
-          orgEmployeeID: commonIds.orgEmployeeID,
-          privillages: generatePrivileges(plan),
-          update_on: now,
-          generatePassword: false,
-          multAuthEnabled: false,
-          online: false,
-          twoFactorSecrets: "",
-        },
-      });
-      if (employeeResult?.errors) throw new Error(employeeResult.errors[0].message);
-      console.log("✅ Step 2: Employee created");
+      if (startAt <= 2) {
+        setRegistrationSubStep(2);
+        const employeeResult = await createEmployee({
+          variables: {
+            Address: formData.address,
+            Position: formData.position || "system Administrator",
+            active: true,
+            dob: formData.dob,
+            email: formData.ownerEmail,
+            employeeID: activeIds.employee_id,
+            fullnames: formData.fullnames,
+            gender: formData.gender,
+            last_login: now,
+            password: formData.password,
+            phone: formData.ownerPhone,
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+            roleType: "globalAdmin",
+            orgEmployeeID: activeIds.orgEmployeeID,
+            privillages: generatePrivileges(plan),
+            update_on: now,
+            generatePassword: false,
+            multAuthEnabled: false,
+            online: false,
+            twoFactorSecrets: "",
+          },
+        });
+        if (employeeResult?.errors) throw new Error(employeeResult.errors[0].message);
+        console.log("✅ Step 2: Employee created");
+      }
+
+      // BREAK POINT: Trigger Payment if this is the initial shell setup
+      if (isShell && startAt <= 2) {
+        setRegisteredBusinessId(businessId);
+        setRegisteredSubscriptionId(activeIds.shopSubscription_id);
+        setMomoNumber(formData.phone);
+        setProcessingStep("idle");
+        setShowPaymentModal(true);
+        return; // Pause here for user payment
+      }
 
       // STEP 3: Create Wallet
-      setRegistrationSubStep(3);
-      const walletResult = await createWallet({
-        variables: {
-          active: false,
-          balance: "0",
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
-        },
-      });
-      if (walletResult?.errors) throw new Error(walletResult.errors[0].message);
-      console.log("✅ Step 3: Wallet created");
+      if (startAt <= 3) {
+        setRegistrationSubStep(3);
+        const walletResult = await createWallet({
+          variables: {
+            active: false,
+            balance: "0",
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+          },
+        });
+        if (walletResult?.errors) throw new Error(walletResult.errors[0].message);
+        console.log("✅ Step 3: Wallet created");
+      }
 
       // STEP 4: Create AI Usage
-      setRegistrationSubStep(4);
-      const aiUsageResult = await createAiUsage({
-        variables: {
-          id: commonIds.aiUsage_id,
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
-          request_count: plan.ai_request_limit,
-          month: new Date().toLocaleString("default", { month: "long" }),
-          year: new Date().getFullYear().toString(),
-          business_id: null,
-          user_id: null,
-        },
-      });
-      if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
-      console.log("✅ Step 4: AI Usage created");
+      if (startAt <= 4) {
+        setRegistrationSubStep(4);
+        const aiUsageResult = await createAiUsage({
+          variables: {
+            id: activeIds.aiUsage_id,
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+            request_count: plan.ai_request_limit,
+            month: new Date().toLocaleString("default", { month: "long" }),
+            year: new Date().getFullYear().toString(),
+            business_id: null,
+            user_id: null,
+          },
+        });
+        if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
+        console.log("✅ Step 4: AI Usage created");
+      }
 
       // STEP 5: Create Reel Usage
-      setRegistrationSubStep(5);
-      const reelUsageResult = await createReelUsage({
-        variables: {
-          id: commonIds.reelUsage_id,
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
-          month: new Date().toLocaleString("default", { month: "long" }),
-          upload_count: plan.reel_limit,
-          year: new Date().getFullYear().toString(),
-          business_id: null,
-        },
-      });
-      if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
-      console.log("✅ Step 5: Reel Usage created");
+      if (startAt <= 5) {
+        setRegistrationSubStep(5);
+        const reelUsageResult = await createReelUsage({
+          variables: {
+            id: activeIds.reelUsage_id,
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+            month: new Date().toLocaleString("default", { month: "long" }),
+            upload_count: plan.reel_limit,
+            year: new Date().getFullYear().toString(),
+            business_id: null,
+          },
+        });
+        if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
+        console.log("✅ Step 5: Reel Usage created");
+      }
 
       // STEP 6: Create Subscription
-      setRegistrationSubStep(6);
-      const subResult = await createSubscription({
-        variables: {
-          id: commonIds.shopSubscription_id,
-          billing_cycle: billingCycle,
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
-          business_id: null,
-          start_date: now,
-          status: isShell ? "pending_payment" : "active",
-          updated_at: now,
-          end_date: endDate.toISOString(),
-          plan_id: plan.id,
-        },
-      });
-      if (subResult?.errors) throw new Error(subResult.errors[0].message);
-      console.log("✅ Step 6: Subscription created");
+      if (startAt <= 6) {
+        setRegistrationSubStep(6);
+        const subResult = await createSubscription({
+          variables: {
+            id: activeIds.shopSubscription_id,
+            billing_cycle: billingCycle,
+            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+            shop_id: businessType === "SHOP" ? businessId : null,
+            business_id: null,
+            start_date: now,
+            status: isShell ? "pending_payment" : "active",
+            updated_at: now,
+            end_date: endDate.toISOString(),
+            plan_id: plan.id,
+          },
+        });
+        if (subResult?.errors) throw new Error(subResult.errors[0].message);
+        console.log("✅ Step 6: Subscription created");
+      }
 
       // STEP 7: Create Invoice
-      setRegistrationSubStep(7);
-      const invoiceResult = await createInvoice({
-        variables: {
-          aiUsage_id: commonIds.aiUsage_id,
-          currency: "RWF",
-          discount_amount: "0",
-          due_date: dueDate.toISOString(),
-          invoice_number: `INV-${Date.now()}`,
-          issued_at: now,
-          paid_at: isShell ? null : now,
-          payment_method: isShell ? "UNPAID" : "MoMo",
-          plan_name: plan.name,
-          plan_price: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
-          reelUsage_id: commonIds.reelUsage_id,
-          shopSubscription_id: commonIds.shopSubscription_id,
-          status: "pending",
-          subtotal_amount: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
-          tax_amount: "0",
-          updated_at: now,
-        },
-      });
-      if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
-      console.log("✅ Step 7: Invoice created");
+      if (startAt <= 7) {
+        setRegistrationSubStep(7);
+        const invoiceResult = await createInvoice({
+          variables: {
+            aiUsage_id: activeIds.aiUsage_id,
+            currency: "RWF",
+            discount_amount: "0",
+            due_date: dueDate.toISOString(),
+            invoice_number: `INV-${Date.now()}`,
+            issued_at: now,
+            paid_at: isShell ? null : now,
+            payment_method: isShell ? "UNPAID" : "MoMo",
+            plan_name: plan.name,
+            plan_price: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
+            reelUsage_id: activeIds.reelUsage_id,
+            shopSubscription_id: activeIds.shopSubscription_id,
+            status: "pending",
+            subtotal_amount: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
+            tax_amount: "0",
+            updated_at: now,
+          },
+        });
+        if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
+        console.log("✅ Step 7: Invoice created");
+      }
+
       setRegistrationSubStep(8); // Completed all steps
 
       if (isShell) {
@@ -598,11 +633,12 @@ export default function RegisterPage() {
       if (err.graphQLErrors) console.error("🔍 Deep GraphQL Errors:", err.graphQLErrors);
 
       const errMsg = err.message || "Something went wrong. Please check your data.";
+      setLastFailedStep(registrationSubStep);
+      setMutationError(errMsg);
       setError(errMsg);
       toast.error(errMsg);
       setIsSuccess(false);
       setProcessingStep("idle");
-      setShowPaymentModal(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -660,13 +696,10 @@ export default function RegisterPage() {
             if (statusData.status === "SUCCESSFUL") {
               clearInterval(pollInterval);
               setPaymentStatus("success");
-              toast.success("Payment successful!");
-              setProcessingStep("success");
-              setIsSuccess(true);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-              setTimeout(() => {
-                setShowPaymentModal(false);
-              }, 2000);
+              toast.success("Payment successful! Finalizing setup...");
+
+              // RESUME PHASE 2: Steps 3-7
+              performMutation(false, 3);
             } else if (
               statusData.status === "FAILED" ||
               statusData.status === "REJECTED" ||
@@ -720,139 +753,232 @@ export default function RegisterPage() {
 
       <main className="container mx-auto px-4 py-12 md:py-20">
         <div className="mx-auto max-w-4xl">
-          {/* Progress Navigator */}
-          <div className="mb-12 hidden md:block">
-            <div className="flex items-center justify-between">
-              {steps.map((s, idx) => (
-                <div key={s.id} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${step >= s.id
-                        ? "border-[#022C22] bg-[#022C22] text-white"
-                        : "border-gray-200 bg-white text-gray-400"
-                        }`}
-                    >
-                      <s.icon className="h-5 w-5" />
+          {registrationSubStep > 0 ? (
+            <div className="mx-auto w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl md:p-12">
+              <div className="mb-10 text-center">
+                <div className="mb-8 flex justify-center">
+                  {registrationSubStep >= 8 ? (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#00c596]/10 text-[#00c596]">
+                      <CheckCircle className="h-14 w-14" />
                     </div>
-                    <span
-                      className={`text-xs font-bold ${step >= s.id ? "text-[#022C22]" : "text-gray-400"
-                        }`}
-                    >
-                      {s.title}
-                    </span>
-                  </div>
-                  {idx < steps.length - 1 && (
+                  ) : mutationError ? (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-50 text-red-500">
+                      <AlertCircle className="h-14 w-14" />
+                    </div>
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#022C22]/5 text-[#022C22]">
+                      <Loader2 className="h-14 w-14 animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="mb-3 text-3xl font-extrabold text-[#022C22]">
+                  {registrationSubStep >= 8 ? "All Set!" : mutationError ? "Setup Halted" : "Setting Up Your Workspace"}
+                </h3>
+                <p className="text-gray-500 font-medium max-w-sm mx-auto">
+                  {registrationSubStep >= 8
+                    ? "Welcome to the future of retail management. Redirecting to your dashboard..."
+                    : mutationError
+                      ? "We encountered an issue during setup. You can retry the failed step below."
+                      : "Please wait while we configure your business environment safely."}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {REGISTRATION_STEPS.filter((_, idx) => (registrationSubStep < 8 ? idx + 1 === (lastFailedStep || registrationSubStep) : true)).map((s, idx) => {
+                  const subIdx = registrationSubStep < 8 ? (lastFailedStep || registrationSubStep) : idx + 1;
+                  const isDone = registrationSubStep >= 8;
+                  const isActive = registrationSubStep < 8;
+                  const isError = mutationError && subIdx === lastFailedStep;
+
+                  return (
                     <div
-                      className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${step > s.id ? "bg-[#022C22]" : "bg-gray-200"
+                      key={s.id}
+                      className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-500 ${isError ? "border-red-200 bg-red-50" :
+                        isActive ? "border-[#022C22] bg-[#022C22]/5 translate-x-1 shadow-md shadow-[#022C22]/5" :
+                          isDone ? "border-gray-100 opacity-60" : "border-transparent opacity-30"
                         }`}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2.5rem] bg-white p-8 shadow-xl md:p-12">
-            {isSuccess ? (
-              <SuccessState />
-            ) : (
-              <div className="space-y-10">
-                {/* Step Content */}
-                {step === 1 && (
-                  <Step1Selection
-                    type={businessType}
-                    setType={setBusinessType}
-                    plan={selectedPlan}
-                    cycle={cycle}
-                  />
-                )}
-
-                {step === 2 && (
-                  <Step2Identity
-                    formData={formData}
-                    onChange={handleInputChange}
-                    handleUpload={handleFileUpload}
-                    uploading={uploading}
-                  />
-                )}
-
-                {step === 3 && (
-                  <Step3Branding
-                    formData={formData}
-                    handleUpload={handleFileUpload}
-                    uploading={uploading}
-                  />
-                )}
-
-                {step === 4 && (
-                  <Step4Location
-                    formData={formData}
-                    onChange={handleInputChange}
-                    onOperatingHoursChange={handleOperatingHoursChange}
-                    isLoaded={isLoaded}
-                    autocompleteRef={autocompleteRef}
-                    onPlaceChanged={onPlaceChanged}
-                  />
-                )}
-
-                {step === 5 && (
-                  <Step5Admin
-                    formData={formData}
-                    onChange={handleInputChange}
-                  />
-                )}
-
-                {step === 6 && (
-                  <Step6Review
-                    formData={formData}
-                    type={businessType}
-                    plan={selectedPlan}
-                    cycle={cycle}
-                  />
-                )}
-
-                {/* Footer Actions */}
-                <div className="mt-12 flex flex-col-reverse gap-4 border-t pt-10 md:flex-row md:justify-between">
-                  {step > 1 && (
-                    <button
-                      onClick={() => setStep((s) => s - 1)}
-                      className="flex h-16 items-center justify-center gap-2 rounded-2xl border-2 border-gray-100 bg-white px-8 font-bold text-gray-600 transition-all hover:bg-gray-50"
                     >
-                      <ChevronLeft className="h-5 w-5" />
-                      Previous Step
-                    </button>
-                  )}
-                  <div className="flex-1" />
-                  <button
-                    onClick={step === 6 ? handleCompleteSetup : handleNextStep}
-                    disabled={
-                      isSubmitting ||
-                      (step === 3 && (uploading.logo || uploading.profile))
-                    }
-                    className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-12 font-bold text-white shadow-lg transition-all hover:bg-[#00c596] active:scale-95 disabled:opacity-50"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                        Finishing...
-                      </>
-                    ) : (
-                      <>
-                        {step === 6 ? "Complete Setup" : "Continue"}
-                        {step < 6 && <ChevronRight className="h-5 w-5" />}
-                      </>
-                    )}
-                  </button>
-                </div>
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${isDone ? "bg-[#00c596] text-white" :
+                        isError ? "bg-red-500 text-white" :
+                          isActive ? "bg-[#022C22] text-white animate-pulse" : "bg-gray-100 text-gray-400"
+                        }`}>
+                        {isDone ? <Check className="h-5 w-5" /> : isError ? <AlertCircle className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className={`text-sm font-bold transition-all duration-500 ${isError ? "text-red-700" : isActive ? "text-[#022C22]" : isDone ? "text-gray-600" : "text-gray-400"
+                          }`}>
+                          {s.title}
+                        </div>
+                        {(isActive && !mutationError) && (
+                          <div className="text-[10px] font-medium text-[#022C22]/60 animate-pulse mt-0.5">
+                            Processing secure transaction...
+                          </div>
+                        )}
+                        {isError && (
+                          <div className="text-[10px] font-medium text-red-500 mt-1">
+                            {mutationError}
+                          </div>
+                        )}
+                      </div>
+                      {(isActive && !mutationError) && <Loader2 className="h-4 w-4 animate-spin text-[#022C22]" />}
+                    </div>
+                  );
+                })}
+              </div>
 
-                {error && (
-                  <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-600">
-                    {error}
+              {mutationError && (
+                <button
+                  onClick={() => performMutation(registrationSubStep <= 2, lastFailedStep || 1)}
+                  className="mt-8 flex w-full h-14 items-center justify-center gap-2 rounded-2xl bg-red-600 font-bold text-white shadow-lg transition-all hover:bg-red-700 active:scale-95"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                  Retry Step {lastFailedStep}
+                </button>
+              )}
+
+              {registrationSubStep < 8 && !mutationError && (
+                <div className="mt-8 text-center text-[10px] font-bold uppercase tracking-widest text-[#00c596] animate-pulse">
+                  Data Integrity Guaranteed • 100% Secure
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Progress Navigator */}
+              <div className="mb-12 hidden md:block">
+                <div className="flex items-center justify-between">
+                  {steps.map((s, idx) => (
+                    <div key={s.id} className="flex flex-1 items-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${step >= s.id
+                            ? "border-[#022C22] bg-[#022C22] text-white"
+                            : "border-gray-200 bg-white text-gray-400"
+                            }`}
+                        >
+                          <s.icon className="h-5 w-5" />
+                        </div>
+                        <span
+                          className={`text-xs font-bold ${step >= s.id ? "text-[#022C22]" : "text-gray-400"
+                            }`}
+                        >
+                          {s.title}
+                        </span>
+                      </div>
+                      {idx < steps.length - 1 && (
+                        <div
+                          className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${step > s.id ? "bg-[#022C22]" : "bg-gray-200"
+                            }`}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[2.5rem] bg-white p-8 shadow-xl md:p-12">
+                {isSuccess ? (
+                  <SuccessState />
+                ) : (
+                  <div className="space-y-10">
+                    {/* Step Content */}
+                    {step === 1 && (
+                      <Step1Selection
+                        type={businessType}
+                        setType={setBusinessType}
+                        plan={selectedPlan}
+                        cycle={cycle}
+                      />
+                    )}
+
+                    {step === 2 && (
+                      <Step2Identity
+                        formData={formData}
+                        onChange={handleInputChange}
+                        handleUpload={handleFileUpload}
+                        uploading={uploading}
+                      />
+                    )}
+
+                    {step === 3 && (
+                      <Step3Branding
+                        formData={formData}
+                        handleUpload={handleFileUpload}
+                        uploading={uploading}
+                      />
+                    )}
+
+                    {step === 4 && (
+                      <Step4Location
+                        formData={formData}
+                        onChange={handleInputChange}
+                        onOperatingHoursChange={handleOperatingHoursChange}
+                        isLoaded={isLoaded}
+                        autocompleteRef={autocompleteRef}
+                        onPlaceChanged={onPlaceChanged}
+                      />
+                    )}
+
+                    {step === 5 && (
+                      <Step5Admin
+                        formData={formData}
+                        onChange={handleInputChange}
+                      />
+                    )}
+
+                    {step === 6 && (
+                      <Step6Review
+                        formData={formData}
+                        type={businessType}
+                        plan={selectedPlan}
+                        cycle={cycle}
+                      />
+                    )}
+
+                    {/* Footer Actions */}
+                    <div className="mt-12 flex flex-col-reverse gap-4 border-t pt-10 md:flex-row md:justify-between">
+                      {step > 1 && (
+                        <button
+                          onClick={() => setStep((s) => s - 1)}
+                          className="flex h-16 items-center justify-center gap-2 rounded-2xl border-2 border-gray-100 bg-white px-8 font-bold text-gray-600 transition-all hover:bg-gray-50"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                          Previous Step
+                        </button>
+                      )}
+                      <div className="flex-1" />
+                      <button
+                        onClick={step === 6 ? handleCompleteSetup : handleNextStep}
+                        disabled={
+                          isSubmitting ||
+                          (step === 3 && (uploading.logo || uploading.profile))
+                        }
+                        className="flex h-16 items-center justify-center gap-2 rounded-2xl bg-[#022C22] px-12 font-bold text-white shadow-lg transition-all hover:bg-[#00c596] active:scale-95 disabled:opacity-50"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                            Finishing...
+                          </>
+                        ) : (
+                          <>
+                            {step === 6 ? "Complete Setup" : "Continue"}
+                            {step < 6 && <ChevronRight className="h-5 w-5" />}
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {error && (
+                      <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-600">
+                        {error}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </main>
 
@@ -879,80 +1005,7 @@ export default function RegisterPage() {
           }
         />
       )}
-      {/* Processing Overlay */}
-      {(processingStep !== "idle" && processingStep !== "initiating_payment" && processingStep !== "awaiting_approval") && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#022C22]/40 backdrop-blur-md">
-          <div className="mx-4 w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl">
-            <div className={`h-[6px] w-full transition-all duration-1000 ${registrationSubStep >= 8 ? "bg-[#00c596]" : "bg-[#022C22] animate-pulse"
-              }`} style={{ width: `${(registrationSubStep / 8) * 100}%` }} />
-
-            <div className="p-8 md:p-12">
-              <div className="mb-10 text-center">
-                <div className="mb-6 flex justify-center">
-                  {registrationSubStep >= 8 ? (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#00c596]/10 text-[#00c596]">
-                      <CheckCircle className="h-14 w-14" />
-                    </div>
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#022C22]/5 text-[#022C22]">
-                      <Loader2 className="h-14 w-14 animate-spin" />
-                    </div>
-                  )}
-                </div>
-                <h3 className="mb-3 text-3xl font-extrabold text-[#022C22]">
-                  {registrationSubStep >= 8 ? "All Set!" : "Setting Up Your Workspace"}
-                </h3>
-                <p className="text-gray-500 font-medium max-w-sm mx-auto">
-                  {registrationSubStep >= 8
-                    ? "Welcome to the future of retail management. Redirecting to your dashboard..."
-                    : "Please wait while we configure your business environment safely."}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {REGISTRATION_STEPS.filter((_, idx) => (registrationSubStep < 8 ? idx + 1 === registrationSubStep : true)).map((s, idx) => {
-                  const subIdx = registrationSubStep < 8 ? registrationSubStep : idx + 1;
-                  const isDone = registrationSubStep >= 8;
-                  const isActive = registrationSubStep < 8;
-
-                  return (
-                    <div
-                      key={s.id}
-                      className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-500 ${isActive ? "border-[#022C22] bg-[#022C22]/5 translate-x-1" :
-                        isDone ? "border-gray-100 opacity-60" : "border-transparent opacity-30"
-                        }`}
-                    >
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${isDone ? "bg-[#00c596] text-white" :
-                        isActive ? "bg-[#022C22] text-white animate-pulse" : "bg-gray-100 text-gray-400"
-                        }`}>
-                        {isDone ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className={`text-sm font-bold transition-all duration-500 ${isActive ? "text-[#022C22]" : isDone ? "text-gray-600" : "text-gray-400"
-                          }`}>
-                          {s.title}
-                        </div>
-                        {isActive && (
-                          <div className="text-[10px] font-medium text-[#022C22]/60 animate-pulse mt-0.5">
-                            Processing secure transaction...
-                          </div>
-                        )}
-                      </div>
-                      {isActive && <Loader2 className="h-4 w-4 animate-spin text-[#022C22]" />}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {registrationSubStep < 8 && (
-                <div className="mt-8 text-center text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  Data Integrity Guaranteed • 100% Secure
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Processing Overlay Removed - Integrated into main content */}
 
       {/* Legacy Processing Overlay (for MoMo steps) */}
       {(processingStep === "initiating_payment" || processingStep === "awaiting_approval") && (
