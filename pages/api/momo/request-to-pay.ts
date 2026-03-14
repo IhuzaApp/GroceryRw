@@ -138,8 +138,29 @@ export default async function handler(
 
   try {
     if (hasuraClient) {
+      // 0. Verify subscription existence for subscription payments
+      if (isSubscription) {
+        const checkRes = await hasuraClient.request<{ shop_subscriptions_by_pk: any }>(
+          gql`
+            query CheckSubscription($id: uuid!) {
+              shop_subscriptions_by_pk(id: $id) {
+                id
+              }
+            }
+          `,
+          { id: subscriptionId }
+        );
+
+        if (!checkRes.shop_subscriptions_by_pk) {
+          console.error(`❌ [MoMo RequestToPay] Subscription ${subscriptionId} not found.`);
+          return res.status(400).json({
+            error: "Subscription not found",
+            details: `The subscription record ${subscriptionId} must be created before initiating payment.`
+          });
+        }
+      }
+
       // 1. Create a PENDING transaction record BEFORE calling MoMo
-      // No need for ENSURE_SUBSCRIPTION_SHELL here as it's created by the UI before calling this.
       try {
         if (isSubscription) {
           const dbRes = await hasuraClient.request<any>(
@@ -159,7 +180,7 @@ export default async function handler(
           console.log("📝 [MoMo RequestToPay] PENDING subscription transaction created:", dbTransactionId);
         } else {
           const dbRes = await hasuraClient.request<{ insert_Wallet_Transactions_one: { id: string } }>(
-            CREATE_PENDING_TRANSACTION, 
+            CREATE_PENDING_TRANSACTION,
             {
               transaction: {
                 wallet_id: walletId || null,
@@ -231,10 +252,10 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("💥 [MoMo RequestToPay] Exception:", error);
-    
+
     // If it failed, we should probably update the DB status if we created a record
     if (hasuraClient && dbTransactionId) {
-       try {
+      try {
         if (isSubscription) {
           await hasuraClient.request(gql`
             mutation UpdateSubscriptionFailed($id: uuid!, $mtn_response: String!, $update_at: timestamptz!) {
