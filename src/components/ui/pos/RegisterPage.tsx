@@ -388,8 +388,9 @@ export default function RegisterPage() {
       console.log("🚀 [POS Registration] Starting sequential registration for:", businessType);
 
       // STEP 1: Create Business
+      let businessResult;
       if (businessType === "RESTAURANT") {
-        await createRestaurant({
+        businessResult = await createRestaurant({
           variables: {
             email: formData.email,
             lat: formData.lat,
@@ -406,7 +407,7 @@ export default function RegisterPage() {
           },
         });
       } else {
-        await createShop({
+        businessResult = await createShop({
           variables: {
             address: formData.address,
             category_id: "00000000-0000-0000-0000-000000000000",
@@ -426,10 +427,15 @@ export default function RegisterPage() {
           },
         });
       }
+
+      if (businessResult?.errors) throw new Error(businessResult.errors[0].message);
+      if (businessResult?.data?.insert_Restaurants?.affected_rows === 0 && businessResult?.data?.insert_Shops?.affected_rows === 0) {
+        throw new Error("Failed to create business record.");
+      }
       console.log("✅ Step 1: Business created");
 
       // STEP 2: Create Wallet
-      await createWallet({
+      const walletResult = await createWallet({
         variables: {
           active: false,
           balance: "0",
@@ -437,10 +443,11 @@ export default function RegisterPage() {
           shop_id: businessType === "SHOP" ? businessId : null,
         },
       });
+      if (walletResult?.errors) throw new Error(walletResult.errors[0].message);
       console.log("✅ Step 2: Wallet created");
 
       // STEP 3: Create AI Usage
-      await createAiUsage({
+      const aiUsageResult = await createAiUsage({
         variables: {
           id: commonIds.aiUsage_id,
           restaurant_id: businessType === "RESTAURANT" ? businessId : null,
@@ -449,12 +456,14 @@ export default function RegisterPage() {
           month: new Date().toLocaleString("default", { month: "long" }),
           year: new Date().getFullYear().toString(),
           business_id: businessId,
+          user_id: commonIds.orgEmployeeID,
         },
       });
+      if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
       console.log("✅ Step 3: AI Usage created");
 
       // STEP 4: Create Reel Usage
-      await createReelUsage({
+      const reelUsageResult = await createReelUsage({
         variables: {
           id: commonIds.reelUsage_id,
           restaurant_id: businessType === "RESTAURANT" ? businessId : null,
@@ -462,12 +471,14 @@ export default function RegisterPage() {
           month: new Date().toLocaleString("default", { month: "long" }),
           upload_count: plan.reel_limit,
           year: new Date().getFullYear().toString(),
+          business_id: businessId,
         },
       });
+      if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
       console.log("✅ Step 4: Reel Usage created");
 
       // STEP 5: Create Subscription
-      await createSubscription({
+      const subResult = await createSubscription({
         variables: {
           id: commonIds.shopSubscription_id,
           billing_cycle: billingCycle,
@@ -481,10 +492,11 @@ export default function RegisterPage() {
           plan_id: plan.id,
         },
       });
+      if (subResult?.errors) throw new Error(subResult.errors[0].message);
       console.log("✅ Step 5: Subscription created");
 
       // STEP 6: Create Invoice
-      await createInvoice({
+      const invoiceResult = await createInvoice({
         variables: {
           aiUsage_id: commonIds.aiUsage_id,
           currency: "RWF",
@@ -504,10 +516,11 @@ export default function RegisterPage() {
           updated_at: now,
         },
       });
+      if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
       console.log("✅ Step 6: Invoice created");
 
       // STEP 7: Create Employee
-      await createEmployee({
+      const employeeResult = await createEmployee({
         variables: {
           Address: formData.address,
           Position: formData.position,
@@ -532,6 +545,7 @@ export default function RegisterPage() {
           twoFactorSecrets: "",
         },
       });
+      if (employeeResult?.errors) throw new Error(employeeResult.errors[0].message);
       console.log("✅ Step 7: Employee created");
 
       if (isShell) {

@@ -1,41 +1,12 @@
 import { gql } from "@apollo/client";
 
 export const CREATE_RESTAURANT = gql`
-  mutation CreateRestaurant(
-    $email: String = ""
-    $lat: String = ""
-    $location: String = ""
-    $logo: String = ""
-    $long: String = ""
-    $name: String = ""
-    $phone: String = ""
-    $profile: String = ""
-    $tin: String = ""
-    $ussd: String = ""
-    $rdb_cert: String = ""
-    $restaurant_id: uuid = ""
-  ) {
-    insert_Restaurants(
-      objects: {
-        id: $restaurant_id
-        email: $email
-        is_active: false
-        lat: $lat
-        location: $location
-        logo: $logo
-        long: $long
-        name: $name
-        phone: $phone
-        profile: $profile
-        tin: $tin
-        ussd: $ussd
-        verified: false
-        rdb_cert: $rdb_cert
-      }
-    ) {
-      affected_rows
-    }
+ mutation CreateRestaurant($email: String = "", $lat: String = "", $location: String = "", $logo: String = "", $long: String = "", $name: String = "", $phone: String = "", $profile: String = "", $tin: String = "", $ussd: String = "", $rdb_cert: String = "", $restaurant_id: uuid = "", $relatedTo: String = null) {
+  insert_Restaurants(objects: {id: $restaurant_id, email: $email, is_active: false, lat: $lat, location: $location, logo: $logo, long: $long, name: $name, phone: $phone, profile: $profile, tin: $tin, ussd: $ussd, verified: false, rdb_cert: $rdb_cert, relatedTo: $relatedTo}) {
+    affected_rows
   }
+}
+
 `;
 
 export const CREATE_SHOP = gql`
@@ -102,13 +73,14 @@ export const CREATE_WALLET = gql`
 
 export const CREATE_AI_USAGE = gql`
   mutation CreateAiUsage(
-    $id: uuid = ""
-    $restaurant_id: uuid = null
-    $shop_id: uuid = null
-    $request_count: Int = 10
-    $month: String = ""
-    $year: String = ""
-    $business_id: uuid = null
+    $id: uuid!
+    $restaurant_id: uuid
+    $shop_id: uuid
+    $request_count: Int
+    $month: String
+    $year: String
+    $business_id: uuid
+    $user_id: uuid
   ) {
     insert_ai_usage(
       objects: {
@@ -119,6 +91,7 @@ export const CREATE_AI_USAGE = gql`
         month: $month
         year: $year
         business_id: $business_id
+        user_id: $user_id
       }
     ) {
       affected_rows
@@ -128,12 +101,13 @@ export const CREATE_AI_USAGE = gql`
 
 export const CREATE_REEL_USAGE = gql`
   mutation CreateReelUsage(
-    $id: uuid = ""
-    $restaurant_id: uuid = null
-    $shop_id: uuid = null
-    $month: String = ""
-    $upload_count: Int = 10
-    $year: String = ""
+    $id: uuid!
+    $restaurant_id: uuid
+    $shop_id: uuid
+    $month: String
+    $upload_count: Int
+    $year: String
+    $business_id: uuid
   ) {
     insert_reel_usage(
       objects: {
@@ -143,6 +117,7 @@ export const CREATE_REEL_USAGE = gql`
         month: $month
         upload_count: $upload_count
         year: $year
+        business_id: $business_id
       }
     ) {
       affected_rows
@@ -152,16 +127,16 @@ export const CREATE_REEL_USAGE = gql`
 
 export const CREATE_SUBSCRIPTION = gql`
   mutation CreateSubscription(
-    $id: uuid = ""
-    $billing_cycle: String = ""
-    $restaurant_id: uuid = null
-    $shop_id: uuid = null
-    $business_id: uuid = null
-    $start_date: timestamptz = ""
-    $status: String = ""
-    $updated_at: timestamptz = ""
-    $end_date: timestamptz = ""
-    $plan_id: uuid = ""
+    $id: uuid!
+    $billing_cycle: String
+    $restaurant_id: uuid
+    $shop_id: uuid
+    $business_id: uuid
+    $start_date: timestamptz
+    $status: String
+    $updated_at: timestamptz
+    $end_date: timestamptz
+    $plan_id: uuid
   ) {
     insert_shop_subscriptions(
       objects: {
@@ -231,10 +206,10 @@ export const CREATE_EMPLOYEE = gql`
   mutation CreateEmployee(
     $Address: String = ""
     $Position: String = ""
-    $active: Boolean = true
+    $active: Boolean = false
     $dob: String = ""
     $email: String = ""
-    $employeeID: Int = 10
+    $employeeID: Int = 0
     $fullnames: String = ""
     $gender: String = ""
     $last_login: String = ""
@@ -243,13 +218,13 @@ export const CREATE_EMPLOYEE = gql`
     $restaurant_id: uuid = null
     $shop_id: uuid = null
     $roleType: String = ""
+    $orgEmployeeID: uuid!
+    $privillages: jsonb = ""
+    $update_on: timestamptz = ""
     $generatePassword: Boolean = false
     $multAuthEnabled: Boolean = false
     $online: Boolean = false
     $twoFactorSecrets: String = ""
-    $orgEmployeeID: uuid = ""
-    $privillages: jsonb = ""
-    $update_on: timestamptz = ""
   ) {
     insert_orgEmployees(
       objects: {
@@ -261,23 +236,18 @@ export const CREATE_EMPLOYEE = gql`
         employeeID: $employeeID
         fullnames: $fullnames
         gender: $gender
-        generatePassword: $generatePassword
         last_login: $last_login
-        multAuthEnabled: $multAuthEnabled
-        online: $online
         password: $password
         phone: $phone
         restaurant_id: $restaurant_id
         shop_id: $shop_id
         roleType: $roleType
+        id: $orgEmployeeID
+        generatePassword: $generatePassword
+        multAuthEnabled: $multAuthEnabled
+        online: $online
         twoFactorSecrets: $twoFactorSecrets
-        orgEmployeeRoles: {
-          data: {
-            orgEmployeeID: $orgEmployeeID
-            privillages: $privillages
-            update_on: $update_on
-          }
-        }
+        orgEmployeeRoles: { data: { role: $roleType, privillages: $privillages } }
       }
     ) {
       affected_rows
