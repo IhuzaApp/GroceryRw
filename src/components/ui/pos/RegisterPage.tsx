@@ -154,8 +154,8 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     gender: "Male",
-    dob: "1990-01-01",
-    position: "Manager",
+    dob: "1980-01-01",
+    position: "Business Owner",
   });
 
   const [processingStep, setProcessingStep] = useState<
@@ -504,7 +504,7 @@ export default function RegisterPage() {
           request_count: plan.ai_request_limit,
           month: new Date().toLocaleString("default", { month: "long" }),
           year: new Date().getFullYear().toString(),
-          business_id: businessId,
+          business_id: null,
           user_id: null,
         },
       });
@@ -521,7 +521,7 @@ export default function RegisterPage() {
           month: new Date().toLocaleString("default", { month: "long" }),
           upload_count: plan.reel_limit,
           year: new Date().getFullYear().toString(),
-          business_id: businessId,
+          business_id: null,
         },
       });
       if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
@@ -535,7 +535,7 @@ export default function RegisterPage() {
           billing_cycle: billingCycle,
           restaurant_id: businessType === "RESTAURANT" ? businessId : null,
           shop_id: businessType === "SHOP" ? businessId : null,
-          business_id: businessId,
+          business_id: null,
           start_date: now,
           status: isShell ? "pending_payment" : "active",
           updated_at: now,
