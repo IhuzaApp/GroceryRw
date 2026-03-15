@@ -144,11 +144,10 @@ export default function UserBusinessOrderDetails({
           Status
         </h3>
         <span
-          className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
-            (order?.status || "").toLowerCase() === "delivered"
+          className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${(order?.status || "").toLowerCase() === "delivered"
               ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
               : "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
-          }`}
+            }`}
         >
           {order?.status || "Pending"}
         </span>
@@ -426,11 +425,10 @@ export default function UserBusinessOrderDetails({
                               {[...Array(5)].map((_, i) => (
                                 <svg
                                   key={i}
-                                  className={`h-3.5 w-3.5 ${
-                                    i < Number(rating.rating || 0)
+                                  className={`h-3.5 w-3.5 ${i < Number(rating.rating || 0)
                                       ? "fill-yellow-400 text-yellow-400"
                                       : "fill-gray-200 text-gray-200 dark:fill-gray-600 dark:text-gray-600"
-                                  }`}
+                                    }`}
                                   viewBox="0 0 20 20"
                                   xmlns="http://www.w3.org/2000/svg"
                                 >
@@ -450,29 +448,29 @@ export default function UserBusinessOrderDetails({
                           {(rating.packaging_quality ||
                             rating.delivery_experience ||
                             rating.professionalism) && (
-                            <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                              {rating.packaging_quality && (
-                                <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Packaging:{" "}
-                                  {Number(rating.packaging_quality).toFixed(1)}
-                                </span>
-                              )}
-                              {rating.delivery_experience && (
-                                <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Delivery:{" "}
-                                  {Number(rating.delivery_experience).toFixed(
-                                    1
-                                  )}
-                                </span>
-                              )}
-                              {rating.professionalism && (
-                                <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Professionalism:{" "}
-                                  {Number(rating.professionalism).toFixed(1)}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                              <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                                {rating.packaging_quality && (
+                                  <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    Packaging:{" "}
+                                    {Number(rating.packaging_quality).toFixed(1)}
+                                  </span>
+                                )}
+                                {rating.delivery_experience && (
+                                  <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    Delivery:{" "}
+                                    {Number(rating.delivery_experience).toFixed(
+                                      1
+                                    )}
+                                  </span>
+                                )}
+                                {rating.professionalism && (
+                                  <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    Professionalism:{" "}
+                                    {Number(rating.professionalism).toFixed(1)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                         </div>
                       ))}
                     </div>

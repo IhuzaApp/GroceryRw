@@ -314,19 +314,19 @@ export default function UserOrderDetails({
                     {order.status === "on_the_way"
                       ? "On the Way"
                       : order.status === "packing"
-                      ? "Packing"
-                      : order.status === "shopping"
-                      ? "Shopping"
-                      : "Pending Assignment"}
+                        ? "Packing"
+                        : order.status === "shopping"
+                          ? "Shopping"
+                          : "Pending Assignment"}
                   </div>
                   <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {order.status === "on_the_way"
                       ? "Heading to your location"
                       : order.status === "packing"
-                      ? "Preparing for delivery"
-                      : order.status === "shopping"
-                      ? "Picking your items"
-                      : "Waiting for assignment"}
+                        ? "Preparing for delivery"
+                        : order.status === "shopping"
+                          ? "Picking your items"
+                          : "Waiting for assignment"}
                   </div>
                 </div>
               )}
@@ -521,7 +521,7 @@ export default function UserOrderDetails({
                           <span className="font-bold">
                             {formatCurrency(
                               parseFloat(item.product?.final_price || "0") *
-                                item.quantity
+                              item.quantity
                             )}
                           </span>
                         </div>
@@ -573,8 +573,8 @@ export default function UserOrderDetails({
                 <span>
                   {formatCurrency(
                     getOrderItemsTotal(order.Order_Items) +
-                      (Number(order.serviceFee) || 0) +
-                      (Number(order.deliveryFee) || 0)
+                    (Number(order.serviceFee) || 0) +
+                    (Number(order.deliveryFee) || 0)
                   )}
                 </span>
               </div>
@@ -646,10 +646,10 @@ export default function UserOrderDetails({
                 {order.status === "shopping"
                   ? "Currently shopping for your items"
                   : order.status === "packing"
-                  ? "Preparing your order"
-                  : order.status === "on_the_way"
-                  ? "On the way to you"
-                  : "Assigned to your order"}
+                    ? "Preparing your order"
+                    : order.status === "on_the_way"
+                      ? "On the way to you"
+                      : "Assigned to your order"}
               </p>
             </div>
 
@@ -747,11 +747,10 @@ export default function UserOrderDetails({
                       }
                     }}
                     disabled={order.status === "delivered" || !shopperPhone}
-                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${
-                      order.status === "delivered" || !shopperPhone
+                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${order.status === "delivered" || !shopperPhone
                         ? "cursor-not-allowed bg-gray-400 opacity-50"
                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
-                    }`}
+                      }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -771,11 +770,10 @@ export default function UserOrderDetails({
                         router.push(`/Messages?orderId=${order.id}`);
                       }
                     }}
-                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-                      order.status === "delivered"
+                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${order.status === "delivered"
                         ? "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-400 opacity-50 dark:border-gray-700 dark:bg-gray-800"
                         : "border-green-500 bg-white text-green-600 hover:bg-green-50 hover:shadow-md active:scale-[0.98] dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
-                    }`}
+                      }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -832,11 +830,10 @@ export default function UserOrderDetails({
                               {[...Array(5)].map((_, i) => (
                                 <svg
                                   key={i}
-                                  className={`h-4 w-4 transition-all ${
-                                    i < Number(rating.rating || 0)
+                                  className={`h-4 w-4 transition-all ${i < Number(rating.rating || 0)
                                       ? "fill-yellow-400 text-yellow-400"
                                       : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
-                                  }`}
+                                    }`}
                                   viewBox="0 0 20 20"
                                   xmlns="http://www.w3.org/2000/svg"
                                 >
@@ -856,29 +853,29 @@ export default function UserOrderDetails({
                           {(rating.packaging_quality ||
                             rating.delivery_experience ||
                             rating.professionalism) && (
-                            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                              {rating.packaging_quality && (
-                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Packaging:{" "}
-                                  {Number(rating.packaging_quality).toFixed(1)}
-                                </span>
-                              )}
-                              {rating.delivery_experience && (
-                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Delivery:{" "}
-                                  {Number(rating.delivery_experience).toFixed(
-                                    1
-                                  )}
-                                </span>
-                              )}
-                              {rating.professionalism && (
-                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Professionalism:{" "}
-                                  {Number(rating.professionalism).toFixed(1)}
-                                </span>
-                              )}
-                            </div>
-                          )}
+                              <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                {rating.packaging_quality && (
+                                  <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    Packaging:{" "}
+                                    {Number(rating.packaging_quality).toFixed(1)}
+                                  </span>
+                                )}
+                                {rating.delivery_experience && (
+                                  <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    Delivery:{" "}
+                                    {Number(rating.delivery_experience).toFixed(
+                                      1
+                                    )}
+                                  </span>
+                                )}
+                                {rating.professionalism && (
+                                  <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                    Professionalism:{" "}
+                                    {Number(rating.professionalism).toFixed(1)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                         </div>
                       ))}
                     </div>

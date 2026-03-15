@@ -561,10 +561,10 @@ export default function UserReelOrderDetails({
                 {order.status === "shopping"
                   ? "Currently shopping for your items"
                   : order.status === "packing"
-                  ? "Preparing your order"
-                  : order.status === "on_the_way"
-                  ? "On the way to you"
-                  : "Assigned to your order"}
+                    ? "Preparing your order"
+                    : order.status === "on_the_way"
+                      ? "On the way to you"
+                      : "Assigned to your order"}
               </p>
             </div>
 
@@ -638,14 +638,13 @@ export default function UserReelOrderDetails({
                               {[...Array(5)].map((_: any, i: number) => (
                                 <svg
                                   key={i}
-                                  className={`h-3 w-3 ${
-                                    i <
-                                    Math.floor(
-                                      Number(order.assignedTo.rating) || 0
-                                    )
+                                  className={`h-3 w-3 ${i <
+                                      Math.floor(
+                                        Number(order.assignedTo.rating) || 0
+                                      )
                                       ? "fill-yellow-400 text-yellow-400"
                                       : "fill-gray-300 text-gray-300 dark:fill-gray-600 dark:text-gray-600"
-                                  }`}
+                                    }`}
                                   viewBox="0 0 20 20"
                                   xmlns="http://www.w3.org/2000/svg"
                                 >
@@ -662,26 +661,26 @@ export default function UserReelOrderDetails({
                       {/* Orders Count */}
                       {order.assignedTo?.orders_aggregate?.aggregate?.count !==
                         undefined && (
-                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                          <svg
-                            className="h-3.5 w-3.5 shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                            />
-                          </svg>
-                          <span className="text-xs">
-                            {order.assignedTo.orders_aggregate.aggregate.count}{" "}
-                            orders
-                          </span>
-                        </div>
-                      )}
+                          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                            <svg
+                              className="h-3.5 w-3.5 shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              />
+                            </svg>
+                            <span className="text-xs">
+                              {order.assignedTo.orders_aggregate.aggregate.count}{" "}
+                              orders
+                            </span>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -697,11 +696,10 @@ export default function UserReelOrderDetails({
                     disabled={
                       order.status === "delivered" || !order.assignedTo?.phone
                     }
-                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${
-                      order.status === "delivered" || !order.assignedTo?.phone
+                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${order.status === "delivered" || !order.assignedTo?.phone
                         ? "cursor-not-allowed bg-gray-400 opacity-50"
                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
-                    }`}
+                      }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -716,11 +714,10 @@ export default function UserReelOrderDetails({
                   </button>
                   <button
                     disabled={order.status === "delivered"}
-                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-                      order.status === "delivered"
+                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${order.status === "delivered"
                         ? "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-400 opacity-50 dark:border-gray-700 dark:bg-gray-800"
                         : "border-purple-500 bg-white text-purple-600 hover:bg-purple-50 hover:shadow-md active:scale-[0.98] dark:border-purple-600 dark:bg-gray-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
-                    }`}
+                      }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -810,11 +807,10 @@ export default function UserReelOrderDetails({
                                 {[...Array(5)].map((_, i) => (
                                   <svg
                                     key={i}
-                                    className={`h-4 w-4 transition-all ${
-                                      i < (review.rating || 0)
+                                    className={`h-4 w-4 transition-all ${i < (review.rating || 0)
                                         ? "fill-yellow-400 text-yellow-400"
                                         : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
-                                    }`}
+                                      }`}
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
                                   >
