@@ -65,6 +65,15 @@ export default function UserLogin() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", { callbackUrl: redirect || "/" });
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      toast.error("Failed to sign in with Google");
+    }
+  };
+
   return (
     <form onSubmit={handleLogin} className="space-y-4 lg:space-y-6">
       {/* Email/Username/Phone Input */}
@@ -272,6 +281,7 @@ export default function UserLogin() {
       {/* Google Sign In Button */}
       <button
         type="button"
+        onClick={handleGoogleSignIn}
         className="inline-flex w-full justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800"
       >
         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">

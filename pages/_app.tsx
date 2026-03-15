@@ -92,9 +92,8 @@ const getPageTitle = (
     if (names.restaurantName) {
       return `${baseTitle} - ${names.restaurantName}`;
     }
-    return `${baseTitle} - Restaurant ${
-      restaurantId ? `#${restaurantId}` : ""
-    }`;
+    return `${baseTitle} - Restaurant ${restaurantId ? `#${restaurantId}` : ""
+      }`;
   }
 
   if (pathname.startsWith("/Recipes/")) {
@@ -189,7 +188,18 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
       // Force reload the page to ensure we have the latest session data
       window.location.reload();
     }
-  }, [status]);
+
+    // New profile completion guard
+    if (
+      status === "authenticated" &&
+      session?.user &&
+      !(session.user as any).isProfileComplete &&
+      window.location.pathname !== "/Auth/CompleteProfile" &&
+      !window.location.pathname.startsWith("/api/")
+    ) {
+      window.location.href = "/Auth/CompleteProfile";
+    }
+  }, [status, session]);
 
   // Show loading state while session is being determined
   if (status === "loading") {
