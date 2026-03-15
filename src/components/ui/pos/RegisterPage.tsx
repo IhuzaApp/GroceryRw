@@ -253,7 +253,7 @@ export default function RegisterPage() {
     const businessSlug = sanitizeName(formData.name);
     const storageRef = ref(
       storage,
-      `business/${businessSlug}/${type}_${Date.now()}_${file.name}`
+      `business/${businessSlug}/rdb_certificates/${type}_${Date.now()}_${file.name}`
     );
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -310,8 +310,8 @@ export default function RegisterPage() {
         if (!formData.tin) return "TIN Number is required.";
         if (!formData.phone) return "Business Phone is required.";
         if (!formData.email) return "Business Email is required.";
-        if (!formData.rdb_cert_url && !formData.rdb_cert)
-          return "Please upload or provide your RDB Certificate.";
+        if (!formData.rdb_cert_url)
+          return "Please upload your RDB Certificate.";
         return null;
       case 3:
         if (!formData.logo) return "Business Logo is required.";
@@ -434,7 +434,7 @@ export default function RegisterPage() {
               profile: formData.profile,
               tin: formData.tin,
               ussd: formData.ussd,
-              rdb_cert: formData.rdb_cert_url || formData.rdb_cert,
+              rdb_cert: formData.rdb_cert_url,
               restaurant_id: businessId,
             },
           });
@@ -772,7 +772,7 @@ export default function RegisterPage() {
               {error}
             </div>
           )}
-          {registrationSubStep > 0 ? (
+          {registrationSubStep > 0 && registrationSubStep < 8 ? (
             <RegistrationProgress
               registrationSubStep={registrationSubStep}
               mutationError={mutationError}
@@ -783,10 +783,12 @@ export default function RegisterPage() {
           ) : (
             <>
               {/* Progress Navigator */}
-              <RegistrationNavigator
-                steps={steps}
-                currentStep={step}
-              />
+              {!isSuccess && (
+                <RegistrationNavigator
+                  steps={steps}
+                  currentStep={step}
+                />
+              )}
 
               <div className="rounded-[2.5rem] bg-white p-8 shadow-xl md:p-12">
                 {isSuccess ? (
