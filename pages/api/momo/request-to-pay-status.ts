@@ -79,8 +79,8 @@ const ACTIVATE_RESTAURANT = gql`
 
 const ACTIVATE_SHOP = gql`
   mutation ActivateShop($id: uuid!) {
-    update_Shops_by_pk(pk_columns: { shop_id: $id }, _set: { is_active: true }) {
-      shop_id
+    update_Shops_by_pk(pk_columns: { id: $id }, _set: { is_active: true }) {
+      id
     }
   }
 `;

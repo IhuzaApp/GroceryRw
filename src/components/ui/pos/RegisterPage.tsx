@@ -36,6 +36,7 @@ import {
   CREATE_EMPLOYEE,
 } from "../../../graphql/mutations/posRegistration";
 import { usePlans, Plan } from "../../../hooks/usePlans";
+import { useCategories, Category } from "../../../hooks/useCategories";
 import { MODULE_DESCRIPTIONS } from "../../../types/moduleDescriptions";
 import { UserPrivileges, DEFAULT_PRIVILEGES } from "../../../types/privileges";
 import AboutTopBar from "../landing/AboutTopBar";
@@ -102,6 +103,7 @@ export default function RegisterPage() {
     "RESTAURANT"
   );
   const { plans, isLoading: plansLoading } = usePlans();
+  const { categories, isLoading: categoriesLoading } = useCategories();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -114,6 +116,8 @@ export default function RegisterPage() {
   }, [plans, planId]);
 
   const [formData, setFormData] = useState({
+    // Step 1: Category
+    categoryId: "",
     // Step 2: Identity
     name: "",
     tin: "",
@@ -303,6 +307,7 @@ export default function RegisterPage() {
     switch (currentStep) {
       case 1:
         if (!businessType) return "Please select a business category.";
+        if (businessType === "SHOP" && !formData.categoryId) return "Please select a shop category.";
         if (!selectedPlan) return "Please select a pricing plan.";
         return null;
       case 2:
@@ -442,7 +447,7 @@ export default function RegisterPage() {
           businessResult = await createShop({
             variables: {
               address: formData.address,
-              category_id: "00000000-0000-0000-0000-000000000000",
+              category_id: formData.categoryId,
               description: formData.description,
               image: formData.profile,
               latitude: formData.lat,
@@ -802,6 +807,9 @@ export default function RegisterPage() {
                         setType={setBusinessType}
                         plan={selectedPlan}
                         cycle={cycle}
+                        categories={categories}
+                        selectedCategoryId={formData.categoryId}
+                        onCategoryChange={(id) => setFormData(prev => ({ ...prev, categoryId: id }))}
                       />
                     )}
 

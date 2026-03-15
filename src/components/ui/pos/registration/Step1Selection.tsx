@@ -1,11 +1,15 @@
-import { Utensils, Store } from "lucide-react";
+import { Utensils, Store, ChevronDown } from "lucide-react";
 import { Plan } from "../../../hooks/usePlans";
+import { Category } from "../../../hooks/useCategories";
 
 interface Step1SelectionProps {
   type: "RESTAURANT" | "SHOP";
   setType: (type: "RESTAURANT" | "SHOP") => void;
   plan: Plan | null;
   cycle: string;
+  categories: Category[];
+  selectedCategoryId: string;
+  onCategoryChange: (id: string) => void;
 }
 
 export default function Step1Selection({
@@ -13,6 +17,9 @@ export default function Step1Selection({
   setType,
   plan,
   cycle,
+  categories,
+  selectedCategoryId,
+  onCategoryChange,
 }: Step1SelectionProps) {
   return (
     <div className="duration-500 animate-in fade-in slide-in-from-bottom-4">
@@ -28,11 +35,10 @@ export default function Step1Selection({
       <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
         <button
           onClick={() => setType("RESTAURANT")}
-          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${
-            type === "RESTAURANT"
-              ? "border-[#022C22] bg-[#022C22]/5"
-              : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
-          }`}
+          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${type === "RESTAURANT"
+            ? "border-[#022C22] bg-[#022C22]/5"
+            : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
+            }`}
         >
           <div className="rounded-2xl bg-[#022C22]/10 p-5 text-[#022C22]">
             <Utensils className="h-12 w-12" />
@@ -47,11 +53,10 @@ export default function Step1Selection({
 
         <button
           onClick={() => setType("SHOP")}
-          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${
-            type === "SHOP"
-              ? "border-[#022C22] bg-[#022C22]/5"
-              : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
-          }`}
+          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${type === "SHOP"
+            ? "border-[#022C22] bg-[#022C22]/5"
+            : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
+            }`}
         >
           <div className="rounded-2xl bg-[#022C22]/10 p-5 text-[#022C22]">
             <Store className="h-12 w-12" />
@@ -64,6 +69,33 @@ export default function Step1Selection({
           </div>
         </button>
       </div>
+
+      {type === "SHOP" && (
+        <div className="mb-12 space-y-4 duration-500 animate-in fade-in slide-in-from-top-4">
+          <label className="text-sm font-bold text-gray-600">
+            Select Shop Category
+          </label>
+          <div className="relative">
+            <Store className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <select
+              value={selectedCategoryId}
+              onChange={(e) => onCategoryChange(e.target.value)}
+              className="h-14 w-full appearance-none rounded-xl border-2 border-gray-100 bg-gray-50 pl-12 pr-10 text-black outline-none focus:border-[#022C22] focus:bg-white font-bold"
+            >
+              <option value="">Select a category...</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
+          <p className="text-xs text-gray-400">
+            This helps us organize your shop correctly for your customers.
+          </p>
+        </div>
+      )}
 
       {plan && (
         <div className="rounded-2xl bg-[#022C22] p-8 text-white shadow-xl shadow-[#022C22]/20">
