@@ -6,45 +6,82 @@ const LoadingOverlay: React.FC = () => {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center ${
-        theme === "dark"
-          ? "bg-gray-900/90 backdrop-blur-sm"
-          : "bg-white/90 backdrop-blur-sm"
-      }`}
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
         width: "100vw",
         height: "100vh",
-        margin: 0,
-        padding: 0,
       }}
     >
-      <div className="flex flex-col items-center gap-4 px-4">
-        {/* Logo with Animation */}
-        <div className="relative transform transition-all duration-500">
-          <img
-            src="/assets/logos/PlasIcon.png"
-            alt="Plas Logo"
-            className="h-16 w-16 animate-pulse drop-shadow-lg sm:h-20 sm:w-20 md:h-24 md:w-24"
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent sm:h-10 sm:w-10 md:h-12 md:w-12"></div>
+      {/* Premium Glass Backdrop */}
+      <div
+        className={`absolute inset-0 backdrop-blur-xl transition-colors duration-700 ${theme === "dark"
+          ? "bg-[#020d0b]/80"
+          : "bg-white/70"
+          }`}
+      />
+
+      {/* Content Container */}
+      <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center">
+        {/* Animated Logo with Glow */}
+        <div className="relative group">
+          {/* Subtle Glow behind logo */}
+          <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-[#10b981]/20 blur-2xl dark:bg-[#10b981]/10" />
+
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-xl ring-1 ring-black/5 dark:bg-[#021c16] sm:h-28 sm:w-28">
+            <img
+              src="/assets/logos/PlasIcon.png"
+              alt="Plas Logo"
+              className="h-16 w-16 animate-[pulse_3s_ease-in-out_infinite] object-contain sm:h-18 sm:w-18"
+            />
           </div>
+
+          {/* Minimal Spinning Ring */}
+          <svg className="absolute -inset-3 h-30 w-30 animate-[spin_3s_linear_infinite] sm:h-34 sm:w-34" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="url(#overlayGradient)"
+              strokeWidth="1.5"
+              strokeDasharray="60 140"
+              strokeLinecap="round"
+            />
+            <defs>
+              <linearGradient id="overlayGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#022c22" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
 
-        {/* Loading Text */}
-        <span
-          className={`animate-pulse text-sm font-medium sm:text-base md:text-lg ${
-            theme === "dark" ? "text-gray-300" : "text-gray-600"
-          }`}
-        >
-          Loading...
-        </span>
+        {/* Loading Message */}
+        <div className="space-y-2">
+          <span
+            className={`font-['Poppins'] text-sm font-semibold tracking-wider uppercase ${theme === "dark" ? "text-[#10b981]" : "text-[#022c22]"
+              }`}
+          >
+            Processing
+          </span>
+          <div className="flex items-center justify-center gap-1.5 h-1">
+            {[0, 150, 300].map((delay) => (
+              <div
+                key={delay}
+                className="h-1 w-1 animate-bounce rounded-full bg-[#022c22] dark:bg-[#10b981]"
+                style={{ animationDelay: `${delay}ms` }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.85; }
+        }
+      `}</style>
     </div>
   );
 };

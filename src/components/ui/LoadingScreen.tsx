@@ -15,49 +15,45 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   showProgressBar = true,
   showBouncingDots = true,
   customMessages = [
-    "Initializing...",
-    "Loading user data...",
-    "Setting up your dashboard...",
-    "Almost ready...",
-    "Finalizing...",
+    "Initializing your Plas experience...",
+    "Curating fresh inventory...",
+    "Syncing with our smart servers...",
+    "Preparing your dashboard...",
+    "Final touches strictly for you...",
   ],
   onComplete,
 }) => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState(customMessages[0]);
 
-  // Use external progress if provided, otherwise simulate it
   useEffect(() => {
     if (externalProgress !== undefined) {
       setLoadingProgress(externalProgress);
       return;
     }
 
-    // Simulate loading progress
     let progress = 0;
     const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 5;
+      progress += Math.floor(Math.random() * 10) + 2;
 
       if (progress >= 100) {
         progress = 100;
         clearInterval(interval);
-        onComplete?.();
+        setTimeout(() => onComplete?.(), 500);
       }
 
       setLoadingProgress(progress);
 
-      // Update message based on progress
       const messageIndex = Math.min(
-        Math.floor(progress / 25),
+        Math.floor(progress / 20),
         customMessages.length - 1
       );
       setLoadingMessage(customMessages[messageIndex]);
-    }, 800);
+    }, 600);
 
     return () => clearInterval(interval);
   }, [externalProgress, customMessages, onComplete]);
 
-  // Use external message if provided
   useEffect(() => {
     if (externalMessage) {
       setLoadingMessage(externalMessage);
@@ -66,91 +62,114 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-[#fafdfc] font-['Nunito'] dark:bg-[#020d0b]"
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
         width: "100vw",
         height: "100vh",
-        margin: 0,
-        padding: 0,
       }}
     >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-green-200/20 dark:bg-green-800/20"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-green-300/20 dark:bg-green-700/20"></div>
+      {/* Dynamic Background Elements */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-1/4 -top-1/4 h-[70vw] w-[70vw] animate-pulse rounded-full bg-[#022c22]/5 blur-[120px] dark:bg-[#022c22]/10" />
+        <div
+          className="absolute -bottom-1/4 -right-1/4 h-[70vw] w-[70vw] animate-pulse rounded-full bg-[#10b981]/5 blur-[120px] dark:bg-[#10b981]/10"
+          style={{ animationDelay: "2s" }}
+        />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{ backgroundImage: 'radial-gradient(#022c22 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center px-4">
-        {/* Logo with Animation */}
-        <div className="mb-6 transform transition-all duration-500 sm:mb-8">
-          <img
-            src="/assets/logos/PlasIcon.png"
-            alt="Plas Logo"
-            className="h-16 w-16 drop-shadow-lg sm:h-20 sm:w-20 md:h-24 md:w-24"
-          />
-        </div>
+      <div className="relative z-10 flex flex-col items-center px-6 text-center">
+        {/* Premium Logo Presentation */}
+        <div className="group relative mb-12">
+          {/* Outer Glow */}
+          <div className="absolute inset-0 animate-ping rounded-full bg-[#022c22]/20 blur-xl dark:bg-[#10b981]/20" />
 
-        {/* Loading Container */}
-        <div className="mb-6 flex w-full max-w-md flex-col items-center space-y-4 sm:mb-8 sm:space-y-6">
-          {/* Animated Spinner */}
-          <div className="relative">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-200 dark:border-green-800 sm:h-16 sm:w-16"></div>
-            <div className="absolute left-0 top-0 h-12 w-12 animate-spin rounded-full border-4 border-transparent border-t-green-500 sm:h-16 sm:w-16"></div>
+          <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5 transition-transform duration-500 hover:scale-105 dark:bg-[#021c16] sm:h-32 sm:w-32">
+            <img
+              src="/assets/logos/PlasIcon.png"
+              alt="Plas Logo"
+              className="h-16 w-16 object-contain animate-[pulse_3s_ease-in-out_infinite] sm:h-20 sm:w-20"
+            />
           </div>
 
-          {/* Text Content */}
-          <div className="text-center">
-            <h2 className="mb-2 text-xl font-bold text-gray-800 dark:text-white sm:mb-3 sm:text-2xl">
-              Setting up your experience
+          {/* Minimal Ring Spinner around Logo */}
+          <svg className="absolute -inset-4 h-32 w-32 animate-[spin_4s_linear_infinite] sm:h-40 sm:w-40" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="url(#gradient)"
+              strokeWidth="2"
+              strokeDasharray="40 160"
+              strokeLinecap="round"
+            />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#022c22" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        {/* Content Section */}
+        <div className="max-w-sm space-y-6">
+          <div className="space-y-2">
+            <h2 className="font-['Poppins'] text-2xl font-bold tracking-tight text-[#022c22] dark:text-[#f0f9f6] sm:text-3xl">
+              Welcome to <span className="text-[#10b981]">Plas</span>
             </h2>
-            <p className="animate-pulse text-sm text-gray-600 dark:text-gray-300 sm:text-base md:text-lg">
+            <p className="min-h-[1.5rem] text-sm font-medium text-gray-500 transition-all duration-500 dark:text-gray-400 sm:text-base">
               {loadingMessage}
             </p>
           </div>
 
-          {/* Progress Bar Container */}
+          {/* Modern Progress Tracking */}
           {showProgressBar && (
-            <div className="w-full max-w-xs sm:max-w-sm md:w-80">
-              <div className="mb-2 flex justify-between text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-                <span>Loading</span>
-                <span>{loadingProgress}%</span>
+            <div className="relative py-4">
+              <div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[#022c22]/60 dark:text-[#f0f9f6]/60">
+                <span>Optimization Status</span>
+                <span className="tabular-nums">{loadingProgress}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner dark:bg-gray-700 sm:h-3">
+              <div className="relative h-1.5 w-64 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5 sm:w-80">
+                {/* Progress Fill */}
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600 shadow-lg transition-all duration-500 ease-out"
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#022c22] to-[#10b981] shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all duration-700 ease-out"
                   style={{ width: `${loadingProgress}%` }}
                 >
-                  <div className="h-full w-full animate-pulse bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                  {/* Shimmer Effect */}
+                  <div className="absolute inset-0 animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Loading Dots */}
-        {showBouncingDots && (
-          <div className="flex space-x-2">
-            <div
-              className="h-2 w-2 animate-bounce rounded-full bg-green-500"
-              style={{ animationDelay: "0ms" }}
-            ></div>
-            <div
-              className="h-2 w-2 animate-bounce rounded-full bg-green-500"
-              style={{ animationDelay: "150ms" }}
-            ></div>
-            <div
-              className="h-2 w-2 animate-bounce rounded-full bg-green-500"
-              style={{ animationDelay: "300ms" }}
-            ></div>
-          </div>
-        )}
+          {/* Soft Indicator */}
+          {showBouncingDots && (
+            <div className="flex justify-center space-x-1.5 opacity-50">
+              {[0, 150, 300].map((delay) => (
+                <div
+                  key={delay}
+                  className="h-1 w-1 animate-bounce rounded-full bg-[#022c22] dark:bg-[#10b981]"
+                  style={{ animationDelay: `${delay}ms` }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.9; }
+        }
+      `}</style>
     </div>
   );
 };
