@@ -17,9 +17,30 @@ const GET_TRANSACTION_BY_REF = gql`
   }
 `;
 
+const GET_PERSONAL_TRANSACTION_BY_REF = gql`
+  query GetPersonalTransactionByRef($reference_id: String!) {
+    personalWalletTransactions(where: { reference_id: { _eq: $reference_id }, status: { _eq: "PENDING" } }) {
+      id
+      wallet_id
+      amount
+    }
+  }
+`;
+
 const UPDATE_TRANSACTION_STATUS = gql`
   mutation UpdateTransactionStatus($id: uuid!, $status: String!, $mtn_response: String!) {
     update_Wallet_Transactions_by_pk(
+      pk_columns: { id: $id },
+      _set: { status: $status, mtn_response: $mtn_response }
+    ) {
+      id
+    }
+  }
+`;
+
+const UPDATE_PERSONAL_TRANSACTION_STATUS = gql`
+  mutation UpdatePersonalTransactionStatus($id: uuid!, $status: String!, $mtn_response: String!) {
+    update_personalWalletTransactions_by_pk(
       pk_columns: { id: $id },
       _set: { status: $status, mtn_response: $mtn_response }
     ) {
@@ -142,58 +163,162 @@ export default async function handler(
               if (orderId) {
                 console.log(`🚀 [MoMo Status] Activating order/subscription: ${orderId}`);
               }
+
+              // Update personal wallet balance if wallet_id is present
+              if (transaction.wallet_id) {
+                console.log(`💰 [MoMo Status] Updating wallet ${transaction.wallet_id} balance...`);
+                try {
+                  // Fetch current balance
+                  const walletRes = await hasuraClient.request<{ personalWallet: Array<{ balance: string }> }>(
+                    gql`
+                      query GetWalletBalance($id: uuid!) {
+                        personalWallet(where: { id: { _eq: $id } }) {
+                          balance
+                        }
+                      }
+                    `,
+                    { id: transaction.wallet_id }
+                  );
+
+                  if (walletRes.personalWallet && walletRes.personalWallet.length > 0) {
+                    const currentBalance = parseFloat(walletRes.personalWallet[0].balance || "0");
+                    const amountToAdd = parseFloat(transaction.amount || "0");
+                    const newBalance = currentBalance + amountToAdd;
+
+                    await hasuraClient.request(
+                      gql`
+                        mutation UpdateWalletBalance($id: uuid!, $balance: String!) {
+                          update_personalWallet(
+                            where: { id: { _eq: $id } },
+                            _set: { balance: $balance, updated_at: "now()" }
+                          ) {
+                            affected_rows
+                          }
+                        }
+                      `,
+                      {
+                        id: transaction.wallet_id,
+                        balance: newBalance.toFixed(2)
+                      }
+                    );
+                    console.log(`✅ [MoMo Status] Wallet ${transaction.wallet_id} updated: ${currentBalance} -> ${newBalance}`);
+                  }
+                } catch (walletError) {
+                  console.error("❌ [MoMo Status] Failed to update wallet balance:", walletError);
+                }
+              }
             }
           }
         } else {
-          // 3. If not in Wallet_Transactions, check subscription_transactions
-          const subRes = await hasuraClient.request<{ subscription_transactions: any[] }>(GET_SUBSCRIPTION_BY_REF, {
+          // 2b. Check personalWalletTransactions
+          const personalRes = await hasuraClient.request<{ personalWalletTransactions: any[] }>(GET_PERSONAL_TRANSACTION_BY_REF, {
             reference_id: referenceId,
           });
+          const personalTransaction = personalRes.personalWalletTransactions[0];
 
-          const subscription = subRes.subscription_transactions[0];
-          if (subscription) {
+          if (personalTransaction) {
             if (newStatus !== "PENDING") {
-              await hasuraClient.request(UPDATE_SUBSCRIPTION_STATUS, {
-                id: subscription.id,
+              await hasuraClient.request(UPDATE_PERSONAL_TRANSACTION_STATUS, {
+                id: personalTransaction.id,
                 status: newStatus,
                 mtn_response: JSON.stringify(data),
-                update_at: new Date().toISOString(),
               });
-              console.log(`📝 [MoMo Status] Subscription Transaction ${subscription.id} updated to ${newStatus}`);
+              console.log(`📝 [MoMo Status] Personal Wallet Transaction ${personalTransaction.id} updated to ${newStatus}`);
 
               if (newStatus === "SUCCESSFUL") {
-                console.log(`🚀 [MoMo Status] Activating shop subscription: ${subscription.subscription_id}`);
-                await hasuraClient.request(ACTIVATE_SUBSCRIPTION, {
-                  id: subscription.subscription_id,
-                  status: "active"
-                });
+                console.log(`💰 [MoMo Status] Updating personal wallet ${personalTransaction.wallet_id} balance...`);
+                try {
+                  const walletRes = await hasuraClient.request<{ personalWallet: Array<{ balance: string }> }>(
+                    gql`
+                      query GetPersonalWalletBalance($id: uuid!) {
+                        personalWallet(where: { id: { _eq: $id } }) {
+                          balance
+                        }
+                      }
+                    `,
+                    { id: personalTransaction.wallet_id }
+                  );
 
-                // Fetch subscription details separately to avoid missing relationship
-                const subDetailRes = await hasuraClient.request<{ shop_subscriptions_by_pk: any }>(GET_SUBSCRIPTION_DETAILS, {
-                  id: subscription.subscription_id
-                });
+                  if (walletRes.personalWallet && walletRes.personalWallet.length > 0) {
+                    const currentBalance = parseFloat(walletRes.personalWallet[0].balance || "0");
+                    const amountToAdd = parseFloat(personalTransaction.amount || "0");
+                    const newBalance = currentBalance + amountToAdd;
 
-                const subDetails = subDetailRes.shop_subscriptions_by_pk;
-
-                // Also activate the business shell
-                const restaurantId = subDetails?.restaurant_id;
-                const shopId = subDetails?.shop_id;
-
-                if (restaurantId && restaurantId !== "00000000-0000-0000-0000-000000000000") {
-                  console.log(`🚀 [MoMo Status] Activating Restaurant shell: ${restaurantId}`);
-                  await hasuraClient.request(ACTIVATE_RESTAURANT, { id: restaurantId });
-                } else if (shopId && shopId !== "00000000-0000-0000-0000-000000000000") {
-                  console.log(`🚀 [MoMo Status] Activating Shop shell: ${shopId}`);
-                  await hasuraClient.request(ACTIVATE_SHOP, { id: shopId });
+                    await hasuraClient.request(
+                      gql`
+                        mutation UpdatePersonalWalletBalance($id: uuid!, $balance: String!) {
+                          update_personalWallet(
+                            where: { id: { _eq: $id } },
+                            _set: { balance: $balance, updated_at: "now()" }
+                          ) {
+                            affected_rows
+                          }
+                        }
+                      `,
+                      {
+                        id: personalTransaction.wallet_id,
+                        balance: newBalance.toFixed(2)
+                      }
+                    );
+                    console.log(`✅ [MoMo Status] Personal Wallet ${personalTransaction.wallet_id} updated: ${currentBalance} -> ${newBalance}`);
+                  }
+                } catch (walletError) {
+                  console.error("❌ [MoMo Status] Failed to update personal wallet balance:", walletError);
                 }
-
-                // Also activate invoice
-                console.log(`🚀 [MoMo Status] Marking invoice as paid for sub: ${subscription.subscription_id}`);
-                await hasuraClient.request(ACTIVATE_INVOICE, { subscription_id: subscription.subscription_id });
               }
             }
           } else {
-            console.log(`⚠️ [MoMo Status] No pending transaction found for reference ${referenceId}`);
+            // 3. If not in Wallet_Transactions or personalWalletTransactions, check subscription_transactions
+            const subRes = await hasuraClient.request<{ subscription_transactions: any[] }>(GET_SUBSCRIPTION_BY_REF, {
+              reference_id: referenceId,
+            });
+            // ... (rest of the existing logic for subscription_transactions)
+
+            const subscription = subRes.subscription_transactions[0];
+            if (subscription) {
+              if (newStatus !== "PENDING") {
+                await hasuraClient.request(UPDATE_SUBSCRIPTION_STATUS, {
+                  id: subscription.id,
+                  status: newStatus,
+                  mtn_response: JSON.stringify(data),
+                  update_at: new Date().toISOString(),
+                });
+                console.log(`📝 [MoMo Status] Subscription Transaction ${subscription.id} updated to ${newStatus}`);
+
+                if (newStatus === "SUCCESSFUL") {
+                  console.log(`🚀 [MoMo Status] Activating shop subscription: ${subscription.subscription_id}`);
+                  await hasuraClient.request(ACTIVATE_SUBSCRIPTION, {
+                    id: subscription.subscription_id,
+                    status: "active"
+                  });
+
+                  // Fetch subscription details separately to avoid missing relationship
+                  const subDetailRes = await hasuraClient.request<{ shop_subscriptions_by_pk: any }>(GET_SUBSCRIPTION_DETAILS, {
+                    id: subscription.subscription_id
+                  });
+
+                  const subDetails = subDetailRes.shop_subscriptions_by_pk;
+
+                  // Also activate the business shell
+                  const restaurantId = subDetails?.restaurant_id;
+                  const shopId = subDetails?.shop_id;
+
+                  if (restaurantId && restaurantId !== "00000000-0000-0000-0000-000000000000") {
+                    console.log(`🚀 [MoMo Status] Activating Restaurant shell: ${restaurantId}`);
+                    await hasuraClient.request(ACTIVATE_RESTAURANT, { id: restaurantId });
+                  } else if (shopId && shopId !== "00000000-0000-0000-0000-000000000000") {
+                    console.log(`🚀 [MoMo Status] Activating Shop shell: ${shopId}`);
+                    await hasuraClient.request(ACTIVATE_SHOP, { id: shopId });
+                  }
+
+                  // Also activate invoice
+                  console.log(`🚀 [MoMo Status] Marking invoice as paid for sub: ${subscription.subscription_id}`);
+                  await hasuraClient.request(ACTIVATE_INVOICE, { subscription_id: subscription.subscription_id });
+                }
+              }
+            } else {
+              console.log(`⚠️ [MoMo Status] No pending transaction found for reference ${referenceId}`);
+            }
           }
         }
       } catch (dbError: any) {

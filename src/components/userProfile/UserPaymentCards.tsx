@@ -146,6 +146,7 @@ export default function UserPaymentCards({
     initialData ? !initialData.userId : true
   );
   const [error, setError] = useState<string | null>(initialData?.error || null);
+  const [userPhone, setUserPhone] = useState<string>("");
   const [balances, setBalances] = useState<BalancesType>(
     initialData?.balances || {
       refunds: [],
@@ -163,6 +164,7 @@ export default function UserPaymentCards({
         .then((data) => {
           if (data.user?.id) {
             setUserId(data.user.id);
+            setUserPhone(data.user.phone || "");
           }
         })
         .catch((err) => {
@@ -180,6 +182,7 @@ export default function UserPaymentCards({
         .then((data) => {
           if (data.user?.id) {
             setUserId(data.user.id);
+            setUserPhone(data.user.phone || "");
           }
         })
         .catch((err) => {
@@ -464,6 +467,8 @@ export default function UserPaymentCards({
           }}
           onSuccess={refreshWalletBalance}
           currentBalance={walletBalance}
+          walletId={balances.wallet?.id}
+          initialPhoneNumber={userPhone}
         />
       </div>
     </>

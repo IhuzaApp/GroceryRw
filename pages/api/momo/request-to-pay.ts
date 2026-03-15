@@ -3,6 +3,8 @@ import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { randomUUID } from "crypto";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 
 const CREATE_PENDING_TRANSACTION = gql`
   mutation CreatePendingMoMoTransaction($transaction: Wallet_Transactions_insert_input!) {
@@ -12,9 +14,28 @@ const CREATE_PENDING_TRANSACTION = gql`
   }
 `;
 
+const CREATE_PENDING_PERSONAL_TRANSACTION = gql`
+  mutation CreatePendingPersonalTransaction($transaction: personalWalletTransactions_insert_input!) {
+    insert_personalWalletTransactions_one(object: $transaction) {
+      id
+    }
+  }
+`;
+
 const UPDATE_TRANSACTION_RESPONSE = gql`
   mutation UpdateMoMoResponse($id: uuid!, $mtn_response: String!) {
     update_Wallet_Transactions_by_pk(
+      pk_columns: { id: $id },
+      _set: { mtn_response: $mtn_response }
+    ) {
+      id
+    }
+  }
+`;
+
+const UPDATE_PERSONAL_TRANSACTION_RESPONSE = gql`
+  mutation UpdatePersonalMoMoResponse($id: uuid!, $mtn_response: String!) {
+    update_personalWalletTransactions_by_pk(
       pk_columns: { id: $id },
       _set: { mtn_response: $mtn_response }
     ) {
@@ -126,6 +147,9 @@ export default async function handler(
     businessType, // For POS Registration
   } = req.body;
 
+  const session = await getServerSession(req, res, authOptions as any);
+  const userId = session?.user?.id;
+
   if (!amount || !payerNumber) {
     return res.status(400).json({
       error: "Missing required fields: amount, payerNumber",
@@ -135,6 +159,7 @@ export default async function handler(
   const referenceId = randomUUID();
   let dbTransactionId: string | null = null;
   let isSubscription = !!subscriptionId;
+  let isPersonalWallet = !!walletId && !orderId && !businessOrderId && !restaurantOrderId && !reelOrderId && !isSubscription;
 
   try {
     if (hasuraClient) {
@@ -178,6 +203,26 @@ export default async function handler(
           );
           dbTransactionId = dbRes.insert_subscription_transactions.returning[0].id;
           console.log("📝 [MoMo RequestToPay] PENDING subscription transaction created:", dbTransactionId);
+        } else if (isPersonalWallet) {
+          const dbRes = await hasuraClient.request<{ insert_personalWalletTransactions_one: { id: string } }>(
+            CREATE_PENDING_PERSONAL_TRANSACTION,
+            {
+              transaction: {
+                wallet_id: walletId,
+                received_wallet: walletId, // Fund the same wallet
+                amount: String(amount),
+                currency,
+                phone: payerNumber,
+                reference_id: referenceId,
+                status: "PENDING",
+                mtn_response: JSON.stringify({ status: "INITIATED", referenceId }),
+                action: "top-up",
+                doneBy: userId || null,
+              },
+            }
+          );
+          dbTransactionId = dbRes.insert_personalWalletTransactions_one.id;
+          console.log("📝 [MoMo RequestToPay] PENDING personal wallet transaction created:", dbTransactionId);
         } else {
           const dbRes = await hasuraClient.request<{ insert_Wallet_Transactions_one: { id: string } }>(
             CREATE_PENDING_TRANSACTION,
@@ -234,6 +279,11 @@ export default async function handler(
             mtn_response: JSON.stringify(momoResult),
             update_at: new Date().toISOString()
           });
+        } else if (isPersonalWallet) {
+          await hasuraClient.request(UPDATE_PERSONAL_TRANSACTION_RESPONSE, {
+            id: dbTransactionId,
+            mtn_response: JSON.stringify(momoResult),
+          });
         } else {
           await hasuraClient.request(UPDATE_TRANSACTION_RESPONSE, {
             id: dbTransactionId,
@@ -268,6 +318,18 @@ export default async function handler(
             id: dbTransactionId,
             mtn_response: JSON.stringify({ error: error.message }),
             update_at: new Date().toISOString()
+          });
+        } else if (isPersonalWallet) {
+          await hasuraClient.request(gql`
+            mutation UpdatePersonalFailed($id: uuid!, $mtn_response: String!) {
+              update_personalWalletTransactions_by_pk(
+                pk_columns: { id: $id },
+                _set: { status: "FAILED", mtn_response: $mtn_response }
+              ) { id }
+            }
+          `, {
+            id: dbTransactionId,
+            mtn_response: JSON.stringify({ error: error.message }),
           });
         } else {
           await hasuraClient.request(gql`
