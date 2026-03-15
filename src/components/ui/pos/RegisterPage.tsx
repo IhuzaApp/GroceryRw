@@ -3,15 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
-  X,
   Loader2,
   CheckCircle,
-  Store,
-  Utensils,
-  Building2,
-  User,
-  Phone,
-  Mail,
   MapPin,
   CreditCard,
   ShieldCheck,
@@ -20,16 +13,9 @@ import {
   Camera,
   Layout,
   FileText,
-  Globe,
-  Clock,
-  Lock,
-  Briefcase,
-  Trash2,
-  UploadCloud,
   Wallet,
   Brain,
   Video,
-  Check,
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
@@ -65,6 +51,9 @@ import {
   Step6Review,
   PaymentModal,
   SuccessState,
+  RegistrationProgress,
+  RegistrationNavigator,
+  PaymentProcessingOverlay,
 } from "./registration";
 
 
@@ -115,6 +104,7 @@ export default function RegisterPage() {
   const { plans, isLoading: plansLoading } = usePlans();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (plans.length > 0 && planId) {
@@ -385,6 +375,7 @@ export default function RegisterPage() {
   };
 
   const performMutation = async (isShell: boolean = false, startAt: number = 1) => {
+    if (isSubmitting && !isShell) return; // Prevent double trigger during phase completion
     if (!selectedPlan) {
       setError("No plan selected. Please go back and select a plan.");
       return;
@@ -604,16 +595,31 @@ export default function RegisterPage() {
       // STEP 7: Create Wallet
       if (startAt <= 7) {
         setRegistrationSubStep(7);
-        const walletResult = await createWallet({
-          variables: {
-            active: false,
-            balance: "0",
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-          },
-        });
-        if (walletResult?.errors) throw new Error(walletResult.errors[0].message);
-        console.log("✅ Step 7: Wallet created");
+        try {
+          const walletResult = await createWallet({
+            variables: {
+              active: false,
+              balance: "0",
+              restaurant_id: businessType === "RESTAURANT" ? businessId : null,
+              shop_id: businessType === "SHOP" ? businessId : null,
+            },
+          });
+          if (walletResult?.errors) {
+            // If it's a uniqueness violation, we can safely ignore it as it means the wallet exists
+            if (walletResult.errors[0].message.includes("Uniqueness violation")) {
+              console.log("ℹ️ Step 7: Wallet already exists, skipping...");
+            } else {
+              throw new Error(walletResult.errors[0].message);
+            }
+          }
+          console.log("✅ Step 7: Wallet created/verified");
+        } catch (walletErr: any) {
+          if (walletErr.message?.includes("Uniqueness violation")) {
+            console.log("ℹ️ Step 7: Wallet already exists (catch), skipping...");
+          } else {
+            throw walletErr;
+          }
+        }
       }
 
       setRegistrationSubStep(8); // Completed all steps
@@ -687,7 +693,8 @@ export default function RegisterPage() {
         setPaymentReference(referenceId);
 
         // Polling for payment status
-        const pollInterval = setInterval(async () => {
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = setInterval(async () => {
           try {
             const statusRes = await fetch(
               `/api/momo/request-to-pay-status?referenceId=${referenceId}`
@@ -695,7 +702,8 @@ export default function RegisterPage() {
             const statusData = await statusRes.json();
 
             if (statusData.status === "SUCCESSFUL") {
-              clearInterval(pollInterval);
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
               setPaymentStatus("success");
               toast.success("Payment successful! Finalizing setup...");
 
@@ -706,7 +714,8 @@ export default function RegisterPage() {
               statusData.status === "REJECTED" ||
               statusData.status === "EXPIRED"
             ) {
-              clearInterval(pollInterval);
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
               setPaymentStatus("failed");
               setProcessingStep("idle");
               const errMsg = statusData.reason || statusData.message || "Payment request was not successful.";
@@ -720,7 +729,10 @@ export default function RegisterPage() {
 
         // Timeout after 3 minutes
         setTimeout(() => {
-          clearInterval(pollInterval);
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
         }, 180000);
       } else {
         setPaymentStatus("failed");
@@ -761,127 +773,20 @@ export default function RegisterPage() {
             </div>
           )}
           {registrationSubStep > 0 ? (
-            <div className="mx-auto w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl md:p-12">
-              <div className="mb-10 text-center">
-                <div className="mb-8 flex justify-center">
-                  {registrationSubStep >= 8 ? (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#00c596]/10 text-[#00c596]">
-                      <CheckCircle className="h-14 w-14" />
-                    </div>
-                  ) : mutationError ? (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-50 text-red-500">
-                      <AlertCircle className="h-14 w-14" />
-                    </div>
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#022C22]/5 text-[#022C22]">
-                      <Loader2 className="h-14 w-14 animate-spin" />
-                    </div>
-                  )}
-                </div>
-                <h3 className="mb-3 text-3xl font-extrabold text-[#022C22]">
-                  {registrationSubStep >= 8 ? "All Set!" : mutationError ? "Setup Halted" : "Setting Up Your Workspace"}
-                </h3>
-                <p className="text-gray-500 font-medium max-w-sm mx-auto">
-                  {registrationSubStep >= 8
-                    ? "Welcome to the future of retail management. Redirecting to your dashboard..."
-                    : mutationError
-                      ? "We encountered an issue during setup. You can retry the failed step below."
-                      : "Please wait while we configure your business environment safely."}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {REGISTRATION_STEPS.filter((_, idx) => (registrationSubStep < 8 ? idx + 1 === (lastFailedStep || registrationSubStep) : true)).map((s, idx) => {
-                  const subIdx = registrationSubStep < 8 ? (lastFailedStep || registrationSubStep) : idx + 1;
-                  const isDone = registrationSubStep >= 8;
-                  const isActive = registrationSubStep < 8;
-                  const isError = mutationError && subIdx === lastFailedStep;
-
-                  return (
-                    <div
-                      key={s.id}
-                      className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-500 ${isError ? "border-red-200 bg-red-50" :
-                        isActive ? "border-[#022C22] bg-[#022C22]/5 translate-x-1 shadow-md shadow-[#022C22]/5" :
-                          isDone ? "border-gray-100 opacity-60" : "border-transparent opacity-30"
-                        }`}
-                    >
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${isDone ? "bg-[#00c596] text-white" :
-                        isError ? "bg-red-500 text-white" :
-                          isActive ? "bg-[#022C22] text-white animate-pulse" : "bg-gray-100 text-gray-400"
-                        }`}>
-                        {isDone ? <Check className="h-5 w-5" /> : isError ? <AlertCircle className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className={`text-sm font-bold transition-all duration-500 ${isError ? "text-red-700" : isActive ? "text-[#022C22]" : isDone ? "text-gray-600" : "text-gray-400"
-                          }`}>
-                          {s.title}
-                        </div>
-                        {(isActive && !mutationError) && (
-                          <div className="text-[10px] font-medium text-[#022C22]/60 animate-pulse mt-0.5">
-                            Processing secure transaction...
-                          </div>
-                        )}
-                        {isError && (
-                          <div className="text-[10px] font-medium text-red-500 mt-1">
-                            {mutationError}
-                          </div>
-                        )}
-                      </div>
-                      {(isActive && !mutationError) && <Loader2 className="h-4 w-4 animate-spin text-[#022C22]" />}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {mutationError && (
-                <button
-                  onClick={() => performMutation(registrationSubStep <= 2, lastFailedStep || 1)}
-                  className="mt-8 flex w-full h-14 items-center justify-center gap-2 rounded-2xl bg-red-600 font-bold text-white shadow-lg transition-all hover:bg-red-700 active:scale-95"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                  Retry Step {lastFailedStep}
-                </button>
-              )}
-
-              {registrationSubStep < 8 && !mutationError && (
-                <div className="mt-8 text-center text-[10px] font-bold uppercase tracking-widest text-[#00c596] animate-pulse">
-                  Data Integrity Guaranteed • 100% Secure
-                </div>
-              )}
-            </div>
+            <RegistrationProgress
+              registrationSubStep={registrationSubStep}
+              mutationError={mutationError}
+              lastFailedStep={lastFailedStep}
+              registrationSteps={REGISTRATION_STEPS}
+              onRetry={(startAt) => performMutation(registrationSubStep <= 2, startAt)}
+            />
           ) : (
             <>
               {/* Progress Navigator */}
-              <div className="mb-12 hidden md:block">
-                <div className="flex items-center justify-between">
-                  {steps.map((s, idx) => (
-                    <div key={s.id} className="flex flex-1 items-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${step >= s.id
-                            ? "border-[#022C22] bg-[#022C22] text-white"
-                            : "border-gray-200 bg-white text-gray-400"
-                            }`}
-                        >
-                          <s.icon className="h-5 w-5" />
-                        </div>
-                        <span
-                          className={`text-xs font-bold ${step >= s.id ? "text-[#022C22]" : "text-gray-400"
-                            }`}
-                        >
-                          {s.title}
-                        </span>
-                      </div>
-                      {idx < steps.length - 1 && (
-                        <div
-                          className={`h-[2px] flex-1 translate-y-[-12px] transition-all ${step > s.id ? "bg-[#022C22]" : "bg-gray-200"
-                            }`}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <RegistrationNavigator
+                steps={steps}
+                currentStep={step}
+              />
 
               <div className="rounded-[2.5rem] bg-white p-8 shadow-xl md:p-12">
                 {isSuccess ? (
@@ -1011,32 +916,7 @@ export default function RegisterPage() {
 
       {/* Legacy Processing Overlay (for MoMo steps) */}
       {(processingStep === "initiating_payment" || processingStep === "awaiting_approval") && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="h-2 w-full bg-[#022C22] animate-pulse" />
-            <div className="p-8 text-center">
-              <div className="mb-6 flex justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-[#022C22]">
-                  <Loader2 className="h-12 w-12 animate-spin" />
-                </div>
-              </div>
-              <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                {processingStep === "initiating_payment" && "Initiating Payment"}
-                {processingStep === "awaiting_approval" && "Waiting for Approval"}
-              </h3>
-              <p className="text-gray-600">
-                {processingStep === "initiating_payment" && "Connecting to MoMo secure gateway..."}
-                {processingStep === "awaiting_approval" && "Please check your phone and approve the payment request."}
-              </p>
-              {processingStep === "awaiting_approval" && (
-                <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-[#022C22] bg-[#022C22]/5 py-3 rounded-lg px-4 border border-[#022C22]/10">
-                  <Phone className="h-4 w-4" />
-                  <span>Check your phone now</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <PaymentProcessingOverlay processingStep={processingStep} />
       )}
     </div>
   );
