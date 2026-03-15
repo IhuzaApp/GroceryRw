@@ -1,6 +1,6 @@
 import { Utensils, Store, ChevronDown } from "lucide-react";
-import { Plan } from "../../../hooks/usePlans";
-import { Category } from "../../../hooks/useCategories";
+import { Plan } from "../../../../hooks/usePlans";
+import { Category } from "../../../../hooks/useCategories";
 
 interface Step1SelectionProps {
   type: "RESTAURANT" | "SHOP";
