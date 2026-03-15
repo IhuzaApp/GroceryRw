@@ -52,7 +52,7 @@ let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
 if (typeof window !== "undefined" && app) {
   try {
     messaging = getMessaging(app);
-  } catch (error) {}
+  } catch (error) { }
 }
 
 // ---- Global FCM singleton (prevents duplicate listeners across multiple hooks/components) ----
@@ -252,8 +252,7 @@ export const getFCMToken = async (): Promise<string | null> => {
     }
 
     const token = await getToken(messaging, {
-      vapidKey:
-        "BHlNUbElLjZwdCrqi9LxcPStpMhVtwpf1HRRUJA-iP1eqiXERJWSibJCiPwLJuOBOjRPT70RJL5n64EZxJgQfr4",
+      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
     });
 
     if (!token) {
@@ -327,7 +326,7 @@ export const setupFCMListener = (
 ): (() => void) => {
   try {
     if (!messaging) {
-      return () => {};
+      return () => { };
     }
 
     const unsubscribe = onMessage(messaging, (payload) => {
@@ -348,7 +347,7 @@ export const setupFCMListener = (
             silent: false,
             vibrate: [200, 100, 200],
             data: payload.data,
-          });
+          } as any);
 
           directNotif.onclick = () => {
             window.focus();
@@ -383,14 +382,14 @@ export const setupFCMListener = (
                   { action: "view", title: "View" },
                   { action: "close", title: "Close" },
                 ],
-              };
+              } as any;
 
               return registration.showNotification(
                 notificationTitle,
                 notificationOptions
               );
             })
-            .catch((error) => {});
+            .catch((error) => { });
         }
       }
 
@@ -399,7 +398,7 @@ export const setupFCMListener = (
 
     return unsubscribe;
   } catch (error) {
-    return () => {};
+    return () => { };
   }
 };
 
@@ -448,8 +447,8 @@ export async function syncStoredNotificationsToLocalStorage(): Promise<void> {
 export function setupServiceWorkerFCMBridge(
   onMessageReceived: (payload: any) => void
 ): () => void {
-  if (typeof window === "undefined") return () => {};
-  if (!("serviceWorker" in navigator)) return () => {};
+  if (typeof window === "undefined") return () => { };
+  if (!("serviceWorker" in navigator)) return () => { };
 
   const handler = async (event: MessageEvent) => {
     if (!event?.data || event.data.type !== "FCM_BACKGROUND_MESSAGE") return;
