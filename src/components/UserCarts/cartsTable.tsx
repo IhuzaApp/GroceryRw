@@ -487,31 +487,22 @@ export default function ItemCartTable({
   // Calculate total units and notify parent
   const totalUnits = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Call callbacks directly when values change, but only for shop carts
-  // Use useRef to track previous values and avoid unnecessary calls
   const prevTotalRef = useRef(totalNumber);
   const prevUnitsRef = useRef(totalUnits);
 
-  // Only call callbacks for regular shop carts when values actually change
-  if (
-    !isFoodCart &&
-    onTotalChange &&
-    typeof onTotalChange === "function" &&
-    prevTotalRef.current !== totalNumber
-  ) {
-    onTotalChange(totalNumber);
-    prevTotalRef.current = totalNumber;
-  }
+  // Call callbacks in useEffect to avoid "update while rendering" warning
+  useEffect(() => {
+    if (isFoodCart) return;
 
-  if (
-    !isFoodCart &&
-    onUnitsChange &&
-    typeof onUnitsChange === "function" &&
-    prevUnitsRef.current !== totalUnits
-  ) {
-    onUnitsChange(totalUnits);
-    prevUnitsRef.current = totalUnits;
-  }
+    if (onTotalChange && prevTotalRef.current !== totalNumber) {
+      onTotalChange(totalNumber);
+      prevTotalRef.current = totalNumber;
+    }
+    if (onUnitsChange && prevUnitsRef.current !== totalUnits) {
+      onUnitsChange(totalUnits);
+      prevUnitsRef.current = totalUnits;
+    }
+  }, [isFoodCart, onTotalChange, onUnitsChange, totalNumber, totalUnits]);
 
   return (
     <>

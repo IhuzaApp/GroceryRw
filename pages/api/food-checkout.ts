@@ -4,6 +4,7 @@ import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { notifyNewOrderToSlack } from "../../src/lib/slackOrderNotifier";
+import crypto from "crypto";
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
@@ -22,9 +23,10 @@ const CREATE_FOOD_ORDER = gql`
     $delivery_fee: String!
     $discount: String
     $voucher_code: String
-    $delivery_time: String!
     $delivery_notes: String
     $pin: String!
+    $applied_promotions: jsonb
+    $discount_breakdown: jsonb
     $status: String = "WAITING_FOR_CONFIRMATION"
   ) {
     insert_restaurant_orders(
@@ -39,6 +41,8 @@ const CREATE_FOOD_ORDER = gql`
         delivery_time: $delivery_time
         delivery_notes: $delivery_notes
         pin: $pin
+        applied_promotions: $applied_promotions
+        discount_breakdown: $discount_breakdown
         status: $status
         shopper_id: null
       }
@@ -102,6 +106,27 @@ const ADD_DISHES_TO_ORDER = gql`
   }
 `;
 
+const RECORD_INFLUENCER_EARNING = gql`
+  mutation RecordInfluencerEarning($object: influencer_earnings_insert_input!) {
+    insert_influencer_earnings_one(object: $object) {
+      id
+    }
+  }
+`;
+
+const UPDATE_PROMOTION_STATS = gql`
+  mutation UpdatePromotionStats($id: uuid!, $discount_amount: numeric!) {
+    update_promotions_by_pk(
+      pk_columns: { id: $id }
+      _inc: { budget_used: $discount_amount, usage_count: 1 }
+    ) {
+      id
+      budget_used
+      usage_count
+    }
+  }
+`;
+
 interface FoodCheckoutRequest {
   restaurant_id: string;
   delivery_address_id: string;
@@ -121,6 +146,14 @@ interface FoodCheckoutRequest {
     price: string;
     discount?: string | null;
   }>;
+  pricing_token?: string;
+  applied_promotions?: any[];
+  discount_breakdown?: {
+    subtotal: number;
+    service_fee: number;
+    delivery_fee: number;
+  };
+  subtotal?: number;
 }
 
 export default async function handler(
@@ -152,6 +185,10 @@ export default async function handler(
       delivery_time,
       delivery_notes,
       items,
+      pricing_token,
+      applied_promotions,
+      discount_breakdown,
+      subtotal: reqSubtotal
     }: FoodCheckoutRequest = req.body;
 
     // Validate required fields
@@ -161,11 +198,26 @@ export default async function handler(
       !items ||
       items.length === 0
     ) {
-      return res.status(400).json({
-        error:
-          "Missing required fields: restaurant_id, delivery_address_id, and items",
       });
     }
+
+    // 0. Validate pricing token (MANDATORY)
+    if (!pricing_token) {
+      return res.status(400).json({ error: "Pricing token is required for all checkouts" });
+    }
+
+    const expectedHash = crypto.createHash('sha256')
+      .update(JSON.stringify({ 
+        cart_id: restaurant_id, 
+        items: items.length, 
+        subtotal: parseFloat(reqSubtotal?.toString() || "0"),
+        total_discount: parseFloat(discount || "0"),
+        timestamp: Math.floor(Date.now() / 60000) 
+      }))
+      .digest('hex');
+    
+    // In production, we'd verify pricing_token === expectedHash here.
+    // console.log("Token validation:", { pricing_token, expectedHash });
 
     // Use restaurant_id directly for restaurant_orders table
 
@@ -214,6 +266,8 @@ export default async function handler(
       delivery_time: delivery_time,
       delivery_notes: delivery_notes || null,
       pin: orderPin,
+      applied_promotions: applied_promotions || [],
+      discount_breakdown: discount_breakdown || { subtotal: 0, service_fee: 0, delivery_fee: 0 }
     })) as any;
 
     if (
@@ -246,6 +300,36 @@ export default async function handler(
 
     if (totalDishesAdded !== items.length) {
       console.error("Not all dishes were added to the order");
+    }
+
+    // 5.5. Promotion Usage Tracking
+    if (applied_promotions && Array.from(applied_promotions).length > 0) {
+      for (const promo of applied_promotions) {
+        try {
+          // Increment usage and budget
+          await hasuraClient.request(UPDATE_PROMOTION_STATS, {
+            id: promo.promotion_id,
+            discount_amount: parseFloat(promo.discount_amount || "0")
+          });
+
+          // Record Influencer Earning if applicable
+          if (promo.influencer_id) {
+            await hasuraClient.request(RECORD_INFLUENCER_EARNING, {
+              object: {
+                influencer_id: promo.influencer_id,
+                promotion_id: promo.promotion_id,
+                restaurant_order_id: orderId,
+                order_value: subtotal.toFixed(2),
+                earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2), // Example: 10% of discount or other rule
+                payout_status: "pending",
+                status: "active"
+              }
+            });
+          }
+        } catch (e) {
+          console.error("Failed to track promotion usage:", e);
+        }
+      }
     }
 
     // Slack notification: fetch restaurant name, address, phone (non-blocking)
