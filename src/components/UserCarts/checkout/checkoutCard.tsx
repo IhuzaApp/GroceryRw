@@ -777,13 +777,21 @@ export default function CheckoutItems({
             );
             const walletData = await walletResponse.json();
             if (walletData.wallet) {
-              setWalletBalance(parseFloat(walletData.wallet.balance || "0"));
+              const balance = parseFloat(walletData.wallet.balance || "0");
+              setWalletBalance(balance);
+              setHasWallet(true);
+
+              // Set wallet as default payment method (per user request)
+              setSelectedPaymentValue("wallet");
+              setSelectedPaymentMethod({ type: "wallet" });
             } else {
               setWalletBalance(0);
+              setHasWallet(false);
             }
           } catch (walletError) {
             console.error("Error fetching wallet balance:", walletError);
             setWalletBalance(0);
+            setHasWallet(false);
           }
         } catch (error) {
           console.error("Error fetching payment data:", error);
@@ -1196,10 +1204,7 @@ export default function CheckoutItems({
           });
 
           const result = await response.json();
-          console.log("[Auto-Apply] Result:", result);
-
           if (result.success && result.discounts) {
-            console.log("[Auto-Apply] Applying Discounts:", result.discounts);
             setDiscounts((prev) => ({
               ...prev,
               ...result.discounts,
@@ -1255,10 +1260,7 @@ export default function CheckoutItems({
         });
 
         const data = await response.json();
-        console.log("[Pricing Sync] Sync Response:", data);
-
         if (data.success && data.pricing_token) {
-          console.log("[Pricing Sync] Applied Backend Discounts:", data.discounts);
           setDiscounts((prev) => ({
             ...prev,
             ...data.discounts,
@@ -1336,10 +1338,7 @@ export default function CheckoutItems({
         });
 
         const result = await response.json();
-        console.log("[Apply Code] Validation Result:", result);
-
         if (result.valid) {
-          console.log("[Apply Code] Code Accepted. Discounts:", result.discounts);
           setDiscounts({
             subtotal_discount: parseFloat(result.discounts.subtotal_discount || "0"),
             service_fee_discount: parseFloat(result.discounts.service_fee_discount || "0"),
@@ -1519,7 +1518,11 @@ export default function CheckoutItems({
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
           pricing_token: pricingToken,
-          payment_method: selectedPaymentMethod?.type === "card" ? "card" : "mobile_money",
+          payment_method: 
+            selectedPaymentMethod?.type === "card" ? "card" : 
+            selectedPaymentMethod?.type === "wallet" ? "wallet" : 
+            selectedPaymentMethod?.type === "refund" ? "refund" :
+            "mobile_money",
           payment_method_id: selectedPaymentMethod?.id || null,
           total_discount: Math.round(finalPayloadDiscounts.total_discount || 0),
           discount_breakdown: finalPayloadDiscounts.discount_breakdown || {
@@ -1851,25 +1854,25 @@ export default function CheckoutItems({
     const canUseRefund = refundBalance >= finalTotal;
     const canUseWallet = walletBalance >= finalTotal;
 
-    // Add refund option if balance is sufficient
+    // Add wallet option (Prioritized)
+    if (hasWallet) {
+      options.push({
+        label: canUseWallet
+          ? `Wallet (${formatCurrency(walletBalance)} available)`
+          : `Wallet (${formatCurrency(
+              walletBalance
+            )} available - Insufficient)`,
+        value: "wallet",
+      });
+    }
+
+    // Add refund option if balance is sufficient (Prioritized)
     if (canUseRefund) {
       options.push({
         label: `Use Refund Balance (${formatCurrency(
           refundBalance
         )} available)`,
         value: "refund",
-      });
-    }
-
-    // Add wallet option (always show if wallet exists)
-    if (hasWallet) {
-      options.push({
-        label: canUseWallet
-          ? `Use Wallet (${formatCurrency(walletBalance)} available)`
-          : `Use Wallet (${formatCurrency(
-              walletBalance
-            )} available - Insufficient)`,
-        value: "wallet",
       });
     }
 
@@ -1979,7 +1982,7 @@ export default function CheckoutItems({
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
             : selectedPaymentMethod.type === "wallet"
-            ? `Using Wallet (${formatCurrency(walletBalance)} available)`
+            ? `Wallet (${formatCurrency(walletBalance)} available)`
             : selectedPaymentMethod.type === "momo"
             ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
             : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
@@ -2755,488 +2758,406 @@ export default function CheckoutItems({
         </div>
       </div>
 
-      {/* Desktop View - Only visible on medium and larger devices */}
-      <div className="hidden w-full md:block lg:w-1/3">
-        <div className="sticky top-20">
-          <Panel
-            shaded
-            bordered
-            className={`overflow-hidden rounded-xl border-0 shadow-lg ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
+      {/* Desktop View - Premium Floating Bottom Card */}
+      <div
+        className={`fixed left-0 right-0 z-[9998] hidden transition-all duration-500 ease-in-out md:block md:left-16 ${
+          isExpanded
+            ? "bottom-0 h-[75vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
+            : "bottom-0 h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]"
+        } ${
+          theme === "dark"
+            ? "bg-gray-900/95 border-t border-gray-800"
+            : "bg-white/95 border-t border-gray-200"
+        } backdrop-blur-xl`}
+      >
+        <div className="mx-auto h-full max-w-7xl px-8">
+          {/* Collapsed Bar Content */}
+          <div
+            className={`flex h-24 items-center justify-between transition-opacity duration-300 ${
+              isExpanded ? "opacity-0 pointer-events-none absolute" : "opacity-100"
             }`}
-            style={{
-              boxShadow:
-                "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            }}
           >
-            <div
-              className={`-mx-4 -mt-4 mb-2 p-3 ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h2
-                  className={`text-xl font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+            <div className="flex items-center gap-8">
+              <div className="flex flex-col">
+                <span className={`text-xs font-medium uppercase tracking-wider ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
                   Order Summary
-                </h2>
-                {!loadingCarts && availableCarts.length > 0 && (
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Clear cart details and trigger refetch
-                      setCartDetails({});
-                      setRefetchCartDetails((prev) => prev + 1);
-                      setShowCombineModal(true);
-                    }}
-                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-                  >
-                    <span className="flex items-center gap-2">
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                      {selectedCartIds.size > 0
-                        ? `${selectedCartIds.size} Combined`
-                        : "Combine Carts"}
-                    </span>
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Subtotal{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(${selectedCartIds.size + 1} carts)`}
                 </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(grandSubtotal)}
-                </span>
-              </div>
-
-              {/* Backend Promotions Breakdown (Mobile) */}
-              {discounts?.promotions_applied?.map((promo: any, idx: number) => (
-                <div key={idx} className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <div className="flex items-center gap-1 text-sm">
-                    <span className="capitalize">{promo.name || promo.promotion_type?.replace(/_/g, " ")}</span>
-                    <span className={`text-[10px] uppercase font-bold px-1 rounded ${
-                      promo.funded_by === 'merchant' ? 'bg-orange-100 text-orange-600' :
-                      promo.funded_by === 'shared' ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-green-100 text-green-600'
-                    }`}>
-                      {promo.funded_by || "Platform"}
-                    </span>
-                    {promo.influencer_code && (
-                      <span className="text-[10px] uppercase font-bold px-1 rounded bg-purple-100 text-purple-600">
-                        Influencer
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm font-medium">
-                    -{formatCurrency(parseFloat(promo.discount_applied || "0"))}
-                  </div>
-                </div>
-              ))}
-
-              {/* Rejected Promotions (Mobile) */}
-              {discounts?.rejected_promotions?.map((rej: any, idx: number) => (
-                <div key={idx} className="flex justify-between py-1 text-red-500 opacity-70">
-                  <div className="flex items-center gap-1 text-sm italic">
-                    <span>{rej.code}</span>
-                    <span className="text-[10px] px-1 rounded border border-red-200">
-                      Rejected
-                    </span>
-                  </div>
-                  <div className="text-[10px] self-center">
-                    {rej.reason}
-                  </div>
-                </div>
-              ))}
-
-              {discounts.free_delivery && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <div className="flex items-center gap-1 text-sm">
-                    <span>Free Delivery</span>
-                    <span className="text-[10px] uppercase font-bold px-1 rounded bg-blue-100 text-blue-600">
-                      {discounts?.promotions_applied?.[0]?.delivery_paid_by || "Platform"}
-                    </span>
-                  </div>
-                  <div className="text-sm font-medium">
-                    Backend Applied
-                  </div>
-                </div>
-              )}
-
-              {discount > 0 && codeType === "promo" && !discounts?.promotions_applied?.length && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">Discount ({appliedCode})</span>
-                  <span className="text-sm font-medium">
-                    -{formatCurrency(discount)}
+                <div className="flex items-center gap-3">
+                  <span className={`text-2xl font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}>
+                    {grandTotalUnits} Items
                   </span>
+                  {selectedCartIds.size > 0 && (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                      {selectedCartIds.size + 1} Carts Combined
+                    </span>
+                  )}
                 </div>
-              )}
-              {referralDiscount > 0 && codeType === "referral" && !discounts?.promotions_applied?.length && (
-                <div className="flex justify-between py-1">
-                  <span className="text-sm text-green-600 dark:text-green-400">
-                    Referral Discount ({appliedCode})
-                  </span>
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                    17% off
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Units
-                </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {grandTotalUnits}
-                </span>
               </div>
 
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Service Fee
-                </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(finalServiceFee)}
-                </span>
-              </div>
+              <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
 
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Delivery Fee{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(+${selectedCartIds.size} at 70%)`}
+              <div className="flex flex-col">
+                <span className={`text-xs font-medium uppercase tracking-wider ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Total Payable
                 </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(finalDeliveryFee)}
-                </span>
-              </div>
-
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <div className="flex justify-between py-1">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  Total
-                </span>
-                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                <span className={`text-2xl font-black ${
+                  theme === "dark" ? "text-green-400" : "text-green-600"
+                }`}>
                   {isPricingAvailable ? formatCurrency(finalTotal) : (
-                    <span className="text-xs animate-pulse opacity-70 italic font-normal">Syncing...</span>
+                    <span className="text-sm animate-pulse opacity-70 italic font-normal">Syncing pricing...</span>
                   )}
                 </span>
               </div>
+
+              <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
+
+              <div className="flex flex-col">
+                <span className={`text-xs font-medium uppercase tracking-wider ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Payment Method
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                    theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                  }`}>
+                    {getPaymentMethodIcon(selectedPaymentValue)}
+                  </div>
+                  <span className={`text-sm font-bold truncate max-w-[130px] ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}>
+                    {getPaymentMethodOptions().find(opt => opt.value === selectedPaymentValue)?.label.split('(')[0].trim() || "Select Method"}
+                  </span>
+                </div>
+              </div>
+
+              <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
+
+              <div className="flex flex-col">
+                <span className={`text-xs font-medium uppercase tracking-wider ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Est. Delivery
+                </span>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <span className={theme === "dark" ? "text-white" : "text-gray-900"}>
+                    {deliveryTime ? (deliveryTime.includes('(') ? deliveryTime.split('(')[0].replace('Will be delivered in ', '').trim() : deliveryTime) : "30-45 mins"}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-2">
-              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-                Delivery Time
-              </h4>
-              <div className="flex items-center rounded-xl bg-gray-50 p-2 shadow-sm dark:bg-gray-700/50">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={toggleExpand}
+                className={`group flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <span>View Details</span>
                 <svg
-                  viewBox="0 0 24 24"
+                  className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-2 h-5 w-5 text-green-500"
+                  viewBox="0 0 24 24"
                 >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                 </svg>
-                <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                  {deliveryTime}
-                </span>
-              </div>
-            </div>
+              </button>
 
-            <div className="mt-6">
-              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-                Delivery Address
-              </h4>
-              <div className="relative">
+              <Button
+                appearance="primary"
+                color="green"
+                size="lg"
+                loading={isCheckoutLoading}
+                disabled={!canProceedToCheckout() || isCheckoutLoading}
+                onClick={handleProceedToCheckout}
+                className="min-w-[240px] rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-green-500/20 active:scale-[0.98] disabled:opacity-50"
+              >
+                Place Order Now
+              </Button>
+            </div>
+          </div>
+
+          {/* Expanded Content */}
+          {isExpanded && (
+            <div className="flex h-full flex-col py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="mb-6 flex items-center justify-between border-b pb-4 dark:border-gray-800">
+                <div className="flex items-center gap-4">
+                  <h2 className={`text-3xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    Checkout Details
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                      {grandTotalUnits} Items
+                    </span>
+                    {selectedCartIds.size > 0 && (
+                      <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                        {selectedCartIds.size + 1} Carts
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddressDropdown(!showAddressDropdown);
-                    setShowPaymentDropdown(false);
-                  }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedAddressId
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  onClick={toggleExpand}
+                  className={`rounded-full p-2 transition-colors ${
+                    theme === "dark" ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"
                   }`}
                 >
-                  {selectedAddressId
-                    ? getAddressOptions().find(
-                        (opt) => opt.value === selectedAddressId
-                      )?.label || "Select delivery address"
-                    : "Select delivery address"}
-                  <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showAddressDropdown ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
+                  <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                {showAddressDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowAddressDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getAddressOptions().map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            handleAddressChange(option.value);
-                            setShowAddressDropdown(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            selectedAddressId === option.value
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
               </div>
-              {/* Hide "Add New Address" button for guest users who already have an address */}
-              {(!isGuest || !selectedAddressId) && (
-                <button
-                  type="button"
-                  className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                  onClick={() => {
-                    setShowAddressModal(true);
-                  }}
-                >
-                  + Add New Address
-                </button>
-              )}
-            </div>
 
-            <div className="mt-2">
-              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-                Payment Method
-              </h4>
+              <div className="flex flex-1 gap-12 overflow-hidden">
+                {/* Left Side: Summary & Items */}
+                <div className="flex flex-1 flex-col overflow-y-auto pr-4 scrollbar-hide">
+                  <div className="space-y-6">
+                    {/* Combine Carts Action */}
+                    {!loadingCarts && availableCarts.length > 0 && (
+                      <div className={`rounded-2xl border-2 border-dashed p-6 transition-colors ${
+                        theme === "dark" ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="rounded-xl bg-blue-500/10 p-3 text-blue-500">
+                              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className={`font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                                Multiple Carts Available
+                              </h4>
+                              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                                Combine multiple shop orders to save on delivery fees
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            appearance="primary"
+                            color="blue"
+                            onClick={() => setShowCombineModal(true)}
+                            className="rounded-xl font-bold"
+                          >
+                            Manage Carts
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
-              {/* For guest users, show only phone input */}
-              {isGuest ? (
-                <div>
-                  <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-                    Pay with MTN Mobile Money
-                  </p>
-                  <input
-                    type="tel"
-                    placeholder="Enter phone number (e.g., 078XXXXXXX)"
-                    value={oneTimePhoneNumber}
-                    onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-                  />
+                    {/* Price Breakdown */}
+                    <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}`}>
+                      <h4 className={`mb-4 font-bold uppercase tracking-widest text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        Financial Summary
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Subtotal</span>
+                          <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                            {formatCurrency(grandSubtotal)}
+                          </span>
+                        </div>
+                        
+                        {/* Promotions */}
+                        {discounts?.promotions_applied?.map((promo: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center text-green-500">
+                            <div className="flex items-center gap-2">
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                              </svg>
+                              <span className="text-sm font-medium">{promo.name || "Promo Discount"}</span>
+                            </div>
+                            <span className="font-bold">-{formatCurrency(parseFloat(promo.discount_applied || "0"))}</span>
+                          </div>
+                        ))}
+
+                        <div className="flex justify-between">
+                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Service Fee</span>
+                          <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                            {formatCurrency(finalServiceFee)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Delivery Fee</span>
+                          <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                            {formatCurrency(finalDeliveryFee)}
+                          </span>
+                        </div>
+                        
+                        <div className={`mt-4 border-t pt-4 flex justify-between items-center ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                          <span className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Total</span>
+                          <span className={`text-2xl font-black ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+                            {isPricingAvailable ? formatCurrency(finalTotal) : "Calculating..."}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Promo Code Input */}
+                    {discountsEnabled && (
+                      <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}`}>
+                        <h4 className="mb-3 font-bold text-sm">Have a Promo Code?</h4>
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={discountCode}
+                            onChange={(e) => setDiscountCode(e.target.value)}
+                            placeholder="Enter code here"
+                            className={`flex-1 rounded-xl border px-4 py-3 transition-all ${
+                              theme === "dark"
+                                ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
+                                : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
+                            }`}
+                          />
+                          <Button
+                            appearance="primary"
+                            color="green"
+                            onClick={handleApplyCode}
+                            loading={validatingCode}
+                            className="rounded-xl px-6 font-bold"
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <>
-                  {/* For regular users, show payment method dropdown */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPaymentDropdown(!showPaymentDropdown);
-                        setShowAddressDropdown(false);
-                      }}
-                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                        selectedPaymentValue
-                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                      }`}
-                    >
-                      {selectedPaymentValue
-                        ? getPaymentMethodOptions().find(
-                            (opt) => opt.value === selectedPaymentValue
-                          )?.label || "Select payment method"
-                        : "Select payment method"}
-                      <svg
-                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                          showPaymentDropdown ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+
+                {/* Right Side: Delivery & Payment */}
+                <div className="w-[400px] flex flex-col gap-6">
+                  {/* Delivery Address */}
+                  <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"}`}>
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="font-bold">Delivery Address</h4>
+                      <button
+                        onClick={() => setShowAddressModal(true)}
+                        className="text-sm font-bold text-green-500 hover:text-green-600"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                    {showPaymentDropdown && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setShowPaymentDropdown(false)}
-                        />
-                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                        Change
+                      </button>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-xl bg-orange-500/10 p-3 text-orange-500">
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={`line-clamp-2 text-sm font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                          {selectedAddressId
+                            ? getAddressOptions().find(opt => opt.value === selectedAddressId)?.label || "Select an address"
+                            : "No address selected"}
+                        </p>
+                        <p className="mt-1 text-xs text-green-500 font-bold">
+                          Estimated Delivery: {deliveryTime}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Method */}
+                  <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"}`}>
+                    <h4 className="mb-4 font-bold">Payment Method</h4>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
+                        className={`group flex w-full items-center justify-between rounded-xl border-2 p-4 transition-all ${
+                          theme === "dark"
+                            ? "bg-gray-900 border-gray-700 hover:border-green-500"
+                            : "bg-white border-gray-200 hover:border-green-500"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-green-500">
+                            {getPaymentMethodIcon(selectedPaymentValue)}
+                          </div>
+                          <span className="font-bold">
+                            {getPaymentMethodOptions().find(opt => opt.value === selectedPaymentValue)?.label || "Select Payment"}
+                          </span>
+                        </div>
+                        <svg className={`h-5 w-5 transition-transform ${showPaymentDropdown ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {showPaymentDropdown && (
+                        <div className="absolute bottom-full z-10 mb-2 w-full rounded-2xl border bg-white p-2 shadow-2xl dark:bg-gray-800 dark:border-gray-700 animate-in fade-in zoom-in-95 duration-200">
                           {getPaymentMethodOptions().map((option) => {
-                            const isWalletInsufficient =
-                              option.value === "wallet" &&
-                              walletBalance < finalTotal;
+                            const isWalletInsufficient = option.value === "wallet" && walletBalance < finalTotal;
                             return (
                               <button
                                 key={option.value}
-                                type="button"
-                                onClick={() => {
-                                  if (!isWalletInsufficient) {
-                                    handlePaymentMethodChange(option.value);
-                                    setShowPaymentDropdown(false);
-                                  }
-                                }}
                                 disabled={isWalletInsufficient}
-                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                                  isWalletInsufficient
-                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                    : selectedPaymentValue === option.value
-                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                    : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                                onClick={() => {
+                                  handlePaymentMethodChange(option.value);
+                                  setShowPaymentDropdown(false);
+                                }}
+                                className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
+                                  isWalletInsufficient ? "opacity-40 grayscale cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-700"
                                 }`}
                               >
-                                <span
-                                  className={`flex-shrink-0 ${
-                                    isWalletInsufficient
-                                      ? "text-red-500 dark:text-red-400"
-                                      : selectedPaymentValue === option.value
-                                      ? "text-green-600 dark:text-green-400"
-                                      : "text-gray-500 dark:text-gray-400"
-                                  }`}
-                                >
-                                  {getPaymentMethodIcon(
-                                    option.value,
-                                    option.methodType
-                                  )}
-                                </span>
-                                <span className="flex-1">{option.label}</span>
+                                <span className="text-green-500">{getPaymentMethodIcon(option.value)}</span>
+                                <span className="font-medium">{option.label}</span>
                               </button>
                             );
                           })}
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
-                  {showOneTimePhoneInput && (
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={oneTimePhoneNumber}
-                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-                    />
-                  )}
-                </>
-              )}
-            </div>
 
-            {discountsEnabled && (
-              <div className="mt-4">
-                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                  Promo or Referral Code
-                </h4>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value)}
-                    disabled={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive')}
-                    placeholder={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "Exclusive promo applied" : "Enter promo or referral code"}
-                    className={`flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20 ${discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "opacity-50 cursor-not-allowed" : ""}`}
-                  />
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    disabled={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive')}
-                    className={`whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md ${discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={handleApplyCode}
-                    loading={validatingCode}
-                  >
-                    Apply
-                  </Button>
+                  {/* Place Order Action */}
+                  <div className="mt-auto">
+                    {/* Delivery Note */}
+                    <div className="mb-6">
+                      <h4 className={`mb-2 text-sm font-bold ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        Add a Note
+                      </h4>
+                      <textarea
+                        rows={2}
+                        value={deliveryNotes}
+                        onChange={(e) => setDeliveryNotes(e.target.value)}
+                        placeholder="Delivery instructions (e.g. Leave at door)"
+                        className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-green-500/20 ${
+                          theme === "dark"
+                            ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
+                            : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
+                        }`}
+                      />
+                    </div>
+
+                    <Button
+                      appearance="primary"
+                      color="green"
+                      block
+                      size="lg"
+                      loading={isCheckoutLoading}
+                      disabled={!canProceedToCheckout() || isCheckoutLoading}
+                      onClick={handleProceedToCheckout}
+                      className="rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 py-6 text-xl font-black text-white shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-green-500/30 active:scale-[0.98]"
+                    >
+                      Complete Checkout
+                    </Button>
+                    <p className="mt-4 text-center text-xs text-gray-500">
+                      Security Guaranteed. Secure Payments.
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
-
-            <div className="mt-2">
-              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-                Add a Note
-              </h4>
-              <textarea
-                rows={3}
-                value={deliveryNotes}
-                onChange={(e) => setDeliveryNotes(e.target.value)}
-                placeholder="Enter any delivery instructions or notes"
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-              />
             </div>
-
-            <Button
-              color="green"
-              appearance="primary"
-              block
-              size="lg"
-              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-              onClick={handleProceedToCheckout}
-              loading={isCheckoutLoading}
-              disabled={!canProceedToCheckout() || isCheckoutLoading}
-            >
-              Proceed to Checkout
-            </Button>
-
-            <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-              By placing your order, you agree to our{" "}
-              <Link
-                href="/terms"
-                className="text-green-600 dark:text-green-400"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                className="text-green-600 dark:text-green-400"
-              >
-                Privacy Policy
-              </Link>
-            </div>
-          </Panel>
+          )}
         </div>
       </div>
 

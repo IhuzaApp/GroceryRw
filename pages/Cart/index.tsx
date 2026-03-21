@@ -27,47 +27,33 @@ function RestaurantSelectionSkeleton() {
   );
 }
 
-// Skeleton loader for checkout summary
+// Skeleton loader for checkout summary - Updated for bottom bar layout
 function CheckoutSkeleton() {
   const { theme } = useTheme();
   return (
-    <>
-      {/* Mobile view skeleton */}
-      <div
-        className={`fixed bottom-4 left-1/2 z-50 w-[95%] max-w-4xl -translate-x-1/2 animate-pulse rounded-2xl p-6 shadow-2xl md:hidden ${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
-      />
-      {/* Desktop view skeleton */}
-      <div className="hidden w-full md:block lg:w-1/3">
-        <div
-          className={`sticky top-20 animate-pulse space-y-4 rounded-xl p-4 shadow-lg ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          }`}
-        >
-          <div
-            className={`h-8 rounded ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
-          />
-          <div
-            className={`h-4 w-3/4 rounded ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
-          />
-          <div
-            className={`h-4 w-1/2 rounded ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
-          />
-          <div
-            className={`h-12 rounded ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
-          />
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-[9998] md:left-16 transition-all duration-500 ease-in-out h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)] flex items-center px-8 ${
+        theme === "dark" ? "bg-gray-900 border-t border-gray-800" : "bg-white border-t border-gray-200"
+      }`}
+    >
+      <div className="mx-auto w-full max-w-7xl flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <div className="flex flex-col gap-2">
+            <div className={`h-3 w-20 rounded animate-pulse ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`} />
+            <div className={`h-8 w-32 rounded animate-pulse ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`} />
+          </div>
+          <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
+          <div className="flex flex-col gap-2">
+            <div className={`h-3 w-20 rounded animate-pulse ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`} />
+            <div className={`h-8 w-40 rounded animate-pulse ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`} />
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className={`h-12 w-32 rounded-xl animate-pulse ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`} />
+          <div className={`h-14 w-60 rounded-xl animate-pulse ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`} />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -75,9 +61,9 @@ function CheckoutSkeleton() {
 function CartLoadingSkeleton() {
   const { theme } = useTheme();
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    <div className="flex flex-col gap-6">
       {/* Cart Items Column Skeleton */}
-      <div className="w-full lg:w-2/3">
+      <div className="w-full">
         {/* Restaurant/Shop Selection Skeleton */}
         <div className="mb-6">
           <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
@@ -641,9 +627,9 @@ export default function CartMainPage() {
             {isInitialLoading ? (
               <CartLoadingSkeleton />
             ) : (
-              <div className="flex flex-col gap-6 lg:flex-row">
-                {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
-                <div className="w-full pb-44 md:pb-0 lg:w-2/3">
+              <div className="flex flex-col gap-6">
+                {/* Cart Items Column - Full width now */}
+                <div className="w-full pb-44 md:pb-32">
                   {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
                   <div className="mb-2 px-2 md:mb-6 md:px-0">
                     <div className="flex gap-2 overflow-x-auto pb-2">
@@ -1034,12 +1020,14 @@ export default function CartMainPage() {
                     </div>
                   ) : null}
                 </div>
-                {/* Order Summary Column */}
+                {/* Order Summary Component - Now handled as a floating card within CheckoutItems */}
                 {((selectedRestaurantId && selectedRestaurant) ||
                   (selectedShopId && selectedShop)) && (
-                  <>
+                  <div className="w-full">
                     {loadingItems ? (
-                      <CheckoutSkeleton />
+                      <div className="hidden md:block">
+                        <CheckoutSkeleton />
+                      </div>
                     ) : (
                       <AuthGuard requireAuth={true}>
                         {selectedRestaurant ? (
@@ -1080,7 +1068,7 @@ export default function CartMainPage() {
                         ) : null}
                       </AuthGuard>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             )}
