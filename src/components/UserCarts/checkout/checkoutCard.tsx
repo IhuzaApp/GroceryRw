@@ -2364,13 +2364,15 @@ export default function CheckoutItems({
             )}
 
             {discountsEnabled && (
-              <div>
-                <p
-                  className={`mb-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                >
-                  Promo or Referral Code
-                </p>
+              <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+                <div className="mb-2 flex items-center gap-2">
+                  <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-green-900/40 text-green-400" : "bg-green-100 text-green-600"}`}>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                  <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Promo or Referral Code</span>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -2397,172 +2399,188 @@ export default function CheckoutItems({
               </div>
             )}
 
-            <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
-
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                >
-                  Subtotal{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(${selectedCartIds.size + 1} carts)`}
-                </span>
-                <span
-                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  {formatCurrency(grandSubtotal)}
-                </span>
+            {/* Price Breakdown Card */}
+            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+              <div className="mb-3 flex items-center gap-2">
+                <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-blue-900/40 text-blue-400" : "bg-blue-100 text-blue-600"}`}>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Price Breakdown</span>
               </div>
-              {/* Backend Promotions Breakdown */}
-              {discounts?.promotions_applied?.map((promo: any, idx: number) => (
-                <div key={idx} className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <div className="flex items-center gap-1 text-sm">
-                    <span className="capitalize">{promo.name || promo.promotion_type?.replace(/_/g, " ")}</span>
-                    <span className={`text-[10px] uppercase font-bold px-1 rounded ${promo.funded_by === 'merchant' ? 'bg-orange-100 text-orange-600' :
-                      promo.funded_by === 'shared' ? 'bg-yellow-100 text-yellow-600' :
-                        'bg-green-100 text-green-600'
-                      }`}>
-                      {promo.funded_by || "Platform"}
-                    </span>
-                    {promo.influencer_code && (
-                      <span className="text-[10px] uppercase font-bold px-1 rounded bg-purple-100 text-purple-600">
-                        Influencer
+              <div className="space-y-2">
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
+                    Subtotal{" "}
+                    {selectedCartIds.size > 0 &&
+                      `(${selectedCartIds.size + 1} carts)`}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                  >
+                    {formatCurrency(grandSubtotal)}
+                  </span>
+                </div>
+                {/* Backend Promotions Breakdown */}
+                {discounts?.promotions_applied?.map((promo: any, idx: number) => (
+                  <div key={idx} className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-1 text-sm">
+                      <span className="capitalize">{promo.name || promo.promotion_type?.replace(/_/g, " ")}</span>
+                      <span className={`text-[10px] uppercase font-bold px-1 rounded ${promo.funded_by === 'merchant' ? 'bg-orange-100 text-orange-600' :
+                        promo.funded_by === 'shared' ? 'bg-yellow-100 text-yellow-600' :
+                          'bg-green-100 text-green-600'
+                        }`}>
+                        {promo.funded_by || "Platform"}
                       </span>
+                      {promo.influencer_code && (
+                        <span className="text-[10px] uppercase font-bold px-1 rounded bg-purple-100 text-purple-600">
+                          Influencer
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm font-medium">
+                      -{formatCurrency(parseFloat(promo.discount_applied || "0"))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Rejected Promotions */}
+                {discounts?.rejected_promotions?.map((rej: any, idx: number) => (
+                  <div key={idx} className="flex justify-between py-1 text-red-500 opacity-70">
+                    <div className="flex items-center gap-1 text-sm italic">
+                      <span>{rej.code}</span>
+                      <span className="text-[10px] px-1 rounded border border-red-200">
+                        Rejected
+                      </span>
+                    </div>
+                    <div className="text-[10px] self-center">
+                      {rej.reason}
+                    </div>
+                  </div>
+                ))}
+
+                {discounts.free_delivery && (
+                  <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-1 text-sm">
+                      <span>Free Delivery</span>
+                      <span className="text-[10px] uppercase font-bold px-1 rounded bg-blue-100 text-blue-600">
+                        {discounts?.promotions_applied?.[0]?.delivery_paid_by || "Platform"}
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium">
+                      Backend Applied
+                    </div>
+                  </div>
+                )}
+
+                {discount > 0 && codeType === "promo" && !discounts?.promotions_applied?.length && (
+                  <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                    <span className="text-sm">Discount ({appliedCode})</span>
+                    <span className="text-sm font-medium">
+                      -{formatCurrency(discount)}
+                    </span>
+                  </div>
+                )}
+                {referralDiscount > 0 && codeType === "referral" && !discounts?.promotions_applied?.length && (
+                  <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                    <span className="text-sm">
+                      Referral Discount ({appliedCode})
+                    </span>
+                    <span className="text-sm font-medium">17% off</span>
+                  </div>
+                )}
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
+                    Units
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                  >
+                    {grandTotalUnits}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
+                    Service Fee
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                  >
+                    {formatCurrency(finalServiceFee)}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
+                    Delivery Fee{" "}
+                    {selectedCartIds.size > 0 &&
+                      `(+${selectedCartIds.size} at 70%)`}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                  >
+                    {formatCurrency(finalDeliveryFee)}
+                  </span>
+                </div>
+                <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                  >
+                    Total
+                  </span>
+                  <span className="text-lg font-bold text-green-500 dark:text-green-400">
+                    {isPricingAvailable ? formatCurrency(finalTotal) : (
+                      <span className="text-xs animate-pulse opacity-70 italic font-normal">Syncing...</span>
                     )}
-                  </div>
-                  <div className="text-sm font-medium">
-                    -{formatCurrency(parseFloat(promo.discount_applied || "0"))}
-                  </div>
-                </div>
-              ))}
-
-              {/* Rejected Promotions */}
-              {discounts?.rejected_promotions?.map((rej: any, idx: number) => (
-                <div key={idx} className="flex justify-between py-1 text-red-500 opacity-70">
-                  <div className="flex items-center gap-1 text-sm italic">
-                    <span>{rej.code}</span>
-                    <span className="text-[10px] px-1 rounded border border-red-200">
-                      Rejected
-                    </span>
-                  </div>
-                  <div className="text-[10px] self-center">
-                    {rej.reason}
-                  </div>
-                </div>
-              ))}
-
-              {discounts.free_delivery && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <div className="flex items-center gap-1 text-sm">
-                    <span>Free Delivery</span>
-                    <span className="text-[10px] uppercase font-bold px-1 rounded bg-blue-100 text-blue-600">
-                      {discounts?.promotions_applied?.[0]?.delivery_paid_by || "Platform"}
-                    </span>
-                  </div>
-                  <div className="text-sm font-medium">
-                    Backend Applied
-                  </div>
-                </div>
-              )}
-
-              {discount > 0 && codeType === "promo" && !discounts?.promotions_applied?.length && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">Discount ({appliedCode})</span>
-                  <span className="text-sm font-medium">
-                    -{formatCurrency(discount)}
                   </span>
                 </div>
-              )}
-              {referralDiscount > 0 && codeType === "referral" && !discounts?.promotions_applied?.length && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">
-                    Referral Discount ({appliedCode})
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                  >
+                    Delivery Time
                   </span>
-                  <span className="text-sm font-medium">17% off</span>
+                  <span
+                    className={`text-sm font-medium text-green-600 dark:text-green-400`}
+                  >
+                    {deliveryTime}
+                  </span>
                 </div>
-              )}
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                >
-                  Units
-                </span>
-                <span
-                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  {grandTotalUnits}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                >
-                  Service Fee
-                </span>
-                <span
-                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  {formatCurrency(finalServiceFee)}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                >
-                  Delivery Fee{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(+${selectedCartIds.size} at 70%)`}
-                </span>
-                <span
-                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  {formatCurrency(finalDeliveryFee)}
-                </span>
-              </div>
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  Total
-                </span>
-                <span className="text-lg font-bold text-green-500 dark:text-green-400">
-                  {isPricingAvailable ? formatCurrency(finalTotal) : (
-                    <span className="text-xs animate-pulse opacity-70 italic font-normal">Syncing...</span>
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                >
-                  Delivery Time
-                </span>
-                <span
-                  className={`text-sm font-medium text-green-600 dark:text-green-400`}
-                >
-                  {deliveryTime}
-                </span>
               </div>
             </div>
-            <div className="mt-2">
-              <h4
-                className={`mb-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                Delivery Address
-              </h4>
+
+            {/* Delivery Address Card */}
+            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-orange-900/40 text-orange-400" : "bg-orange-100 text-orange-600"}`}>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Delivery Address</span>
+                </div>
+              </div>
               <div className="relative">
                 <button
                   type="button"
@@ -2570,9 +2588,9 @@ export default function CheckoutItems({
                     setShowAddressDropdown(!showAddressDropdown);
                     setShowPaymentDropdown(false);
                   }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${selectedAddressId
-                    ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                    : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${selectedAddressId
+                    ? theme === "dark" ? "border-gray-600 bg-gray-700/50 text-white" : "border-gray-200 bg-white text-gray-900"
+                    : theme === "dark" ? "border-gray-600 bg-gray-800 text-gray-400" : "border-gray-200 bg-white text-gray-400"
                     }`}
                 >
                   {selectedAddressId
@@ -2601,7 +2619,7 @@ export default function CheckoutItems({
                       className="fixed inset-0 z-10"
                       onClick={() => setShowAddressDropdown(false)}
                     />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div className={`absolute z-20 mt-1 w-full rounded-xl border shadow-xl overflow-hidden ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-100 bg-white"}`}>
                       {getAddressOptions().map((option) => (
                         <button
                           key={option.value}
@@ -2610,8 +2628,8 @@ export default function CheckoutItems({
                             handleAddressChange(option.value);
                             setShowAddressDropdown(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${selectedAddressId === option.value
-                            ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                          className={`w-full px-4 py-3 text-left text-sm transition-colors ${selectedAddressId === option.value
+                            ? "bg-green-50 text-green-700 font-semibold dark:bg-green-900/30 dark:text-green-300"
                             : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                             }`}
                         >
@@ -2622,26 +2640,18 @@ export default function CheckoutItems({
                   </>
                 )}
               </div>
-              {/* Hide "Add New Address" button for guest users who already have an address */}
-              {(!isGuest || !selectedAddressId) && (
-                <button
-                  type="button"
-                  className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                  onClick={() => {
-                    setShowAddressModal(true);
-                  }}
-                >
-                  + Add New Address
-                </button>
-              )}
             </div>
-            <div className="mt-2">
-              <h4
-                className={`mb-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                Payment Method
-              </h4>
+
+            {/* Payment Method Card */}
+            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+              <div className="mb-3 flex items-center gap-2">
+                <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-purple-900/40 text-purple-400" : "bg-purple-100 text-purple-600"}`}>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+                <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Payment Method</span>
+              </div>
 
               {/* For guest users, show only phone input */}
               {isGuest ? (
@@ -2673,16 +2683,19 @@ export default function CheckoutItems({
                         setShowPaymentDropdown(!showPaymentDropdown);
                         setShowAddressDropdown(false);
                       }}
-                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${selectedPaymentValue
-                        ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                        : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${selectedPaymentValue
+                        ? theme === "dark" ? "border-gray-600 bg-gray-700/50 text-white" : "border-gray-200 bg-white text-gray-900"
+                        : theme === "dark" ? "border-gray-600 bg-gray-800 text-gray-400" : "border-gray-200 bg-white text-gray-400"
                         }`}
                     >
-                      {selectedPaymentValue
-                        ? getPaymentMethodOptions().find(
-                          (opt) => opt.value === selectedPaymentValue
-                        )?.label || "Select payment method"
-                        : "Select payment method"}
+                      <span className="flex items-center gap-2 pr-6">
+                        <span className="text-green-500 flex-shrink-0">
+                          {getPaymentMethodIcon(selectedPaymentValue ?? "", getPaymentMethodOptions().find(o => o.value === selectedPaymentValue)?.methodType)}
+                        </span>
+                        {selectedPaymentValue
+                          ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label || "Select payment method"
+                          : "Select payment method"}
+                      </span>
                       <svg
                         className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${showPaymentDropdown ? "rotate-180" : ""
                           }`}
@@ -2704,7 +2717,7 @@ export default function CheckoutItems({
                           className="fixed inset-0 z-10"
                           onClick={() => setShowPaymentDropdown(false)}
                         />
-                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                        <div className={`absolute z-20 mt-1 w-full rounded-xl border shadow-xl overflow-hidden ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-100 bg-white"}`}>
                           {getPaymentMethodOptions().map((option) => {
                             const isWalletInsufficient =
                               option.value === "wallet" &&
@@ -2720,27 +2733,22 @@ export default function CheckoutItems({
                                   }
                                 }}
                                 disabled={isWalletInsufficient}
-                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${isWalletInsufficient
+                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${isWalletInsufficient
                                   ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
                                   : selectedPaymentValue === option.value
-                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                    ? "bg-green-50 text-green-700 font-semibold dark:bg-green-900/30 dark:text-green-300"
                                     : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                                   }`}
                               >
-                                <span
-                                  className={`flex-shrink-0 ${isWalletInsufficient
-                                    ? "text-red-500 dark:text-red-400"
-                                    : selectedPaymentValue === option.value
-                                      ? "text-green-600 dark:text-green-400"
-                                      : "text-gray-500 dark:text-gray-400"
-                                    }`}
-                                >
-                                  {getPaymentMethodIcon(
-                                    option.value,
-                                    option.methodType
-                                  )}
+                                <span className={`flex-shrink-0 ${isWalletInsufficient ? "text-red-500" : selectedPaymentValue === option.value ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"}`}>
+                                  {getPaymentMethodIcon(option.value, option.methodType)}
                                 </span>
                                 <span className="flex-1">{option.label}</span>
+                                {selectedPaymentValue === option.value && (
+                                  <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
                               </button>
                             );
                           })}
@@ -2768,14 +2776,17 @@ export default function CheckoutItems({
                 </>
               )}
             </div>
-            {/* Delivery Notes Input */}
-            <div className="mt-2">
-              <h4
-                className={`mb-0.5 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-              >
-                Add a Note
-              </h4>
+
+            {/* Delivery Notes Card */}
+            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+              <div className="mb-3 flex items-center gap-2">
+                <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-600"}`}>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Add a Note</span>
+              </div>
               <textarea
                 rows={3}
                 value={deliveryNotes}
@@ -2789,13 +2800,9 @@ export default function CheckoutItems({
               />
             </div>
           </div>
-          {/* Proceed to Checkout Button - Fixed at bottom */}
-          <div
-            className={`border-t p-4 ${theme === "dark"
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
-              }`}
-          >
+
+          {/* Place Order Button - Fixed at bottom */}
+          <div className={`border-t p-4 ${theme === "dark" ? "border-gray-700 bg-gray-900" : "border-gray-100 bg-white"}`}>
             <Button
               appearance="primary"
               color="green"
@@ -2804,10 +2811,11 @@ export default function CheckoutItems({
               loading={isCheckoutLoading}
               disabled={!canProceedToCheckout() || isCheckoutLoading}
               onClick={handleProceedToCheckout}
-              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+              className="rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-bold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-green-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
             >
-              Proceed to Checkout
+              Place Order Now
             </Button>
+            <p className="mt-2 text-center text-[10px] text-gray-400">Secure Payments · Guaranteed Delivery</p>
           </div>
         </div>
       </div>
