@@ -1444,6 +1444,7 @@ export default function CheckoutItems({
 
     setPaymentStatus("pending");
     setProcessingStep("initiating_payment");
+    setIsExpanded(false); // Collapse the order summary so the payment overlay is visible
 
     try {
       const response = await fetch("/api/momo/request-to-pay", {
@@ -1752,7 +1753,10 @@ export default function CheckoutItems({
               }
             }, 500);
 
-            setIsCheckoutLoading(false);
+            // Only reset loading if MoMo was NOT triggered. MoMo manages its own loading state via processingStep/polling.
+            if (selectedPaymentMethod?.type !== "momo") {
+              setIsCheckoutLoading(false);
+            }
           }
         })
         .catch((err) => {
@@ -1809,7 +1813,7 @@ export default function CheckoutItems({
       const method = savedPaymentMethods.find((m) => m.id === value);
       if (method) {
         setSelectedPaymentMethod({
-          type: method.method.toLowerCase() === "mtn momo" ? "momo" : "card",
+          type: method.method.toLowerCase().includes("momo") || method.method.toLowerCase().includes("mtn") ? "momo" : "card",
           id: method.id,
           number: method.number,
         });
