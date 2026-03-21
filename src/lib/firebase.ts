@@ -24,7 +24,8 @@ try {
 }
 
 // Initialize Firestore
-export const db = app ? getFirestore(app) : null;
+const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || "(default)";
+export const db = app ? getFirestore(app, databaseId) : null;
 
 // Initialize Storage
 export const storage = app ? getStorage(app) : null;

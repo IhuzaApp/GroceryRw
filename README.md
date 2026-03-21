@@ -13267,7 +13267,22 @@ To complete the refactoring:
 
 # Grocery App: Promotions & Checkout System (Developer Reference)
 
-This document outlines the backend-first promotions system, checkout architecture, and key rules. It is intended for developers, QA, and anyone integrating with the checkout flow.
+### 🛠 Database Migration Requirements
+
+To support the promotions and discount breakdown, the `Orders` table must have the following columns. If you see errors like `field 'applied_promotions' not found in type: 'Orders_insert_input'`, run this SQL in your **Hasura Console (Data -> SQL)** or Postgres editor:
+
+```sql
+-- Ensure Orders table has all promotion-related fields
+ALTER TABLE "Orders" 
+ADD COLUMN IF NOT EXISTS "discount" text DEFAULT '0',
+ADD COLUMN IF NOT EXISTS "voucher_code" text,
+ADD COLUMN IF NOT EXISTS "applied_promotions" jsonb DEFAULT '[]',
+ADD COLUMN IF NOT EXISTS "discount_breakdown" jsonb DEFAULT '{"subtotal": 0, "service_fee": 0, "delivery_fee": 0}';
+```
+
+**Next Steps in Hasura:**
+1.  **Track Columns**: Go to Data -> Public -> Orders and click **Track All** (or track these 4 columns).
+2.  **Permissions**: Update the `insert` and `select` permissions for the `user` role to allow access to these new fields.
 
 ### 🧩 Core Architecture
 
