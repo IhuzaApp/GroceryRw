@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Panel, toaster, Notification } from "rsuite";
 import Link from "next/link";
 import { formatCurrency } from "../../../lib/formatCurrency";
@@ -13,6 +13,7 @@ import {
 } from "../../../context/FoodCartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
 import CombineCartsModal from "./CombineCartsModal";
+import PaymentProcessingOverlay from "../../ui/pos/registration/PaymentProcessingOverlay";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -85,9 +86,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -121,6 +122,10 @@ export default function CheckoutItems({
   const [showAddressModal, setShowAddressModal] = useState(false);
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  // MoMo payment state
+  const [processingStep, setProcessingStep] = useState<"idle" | "initiating_payment" | "awaiting_approval">("idle");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "failed">("idle");
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to fetch fresh discounts from server (always called, never cached)
   const fetchFreshDiscounts = useCallback(async () => {
@@ -302,8 +307,10 @@ export default function CheckoutItems({
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
     window.addEventListener("addressChanged", handleAddressChange);
-    return () =>
+    return () => {
       window.removeEventListener("addressChanged", handleAddressChange);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
   }, []);
 
   // No router event listeners needed since we're not redirecting
@@ -644,195 +651,183 @@ export default function CheckoutItems({
       return null; // Can't calculate without user location
     }
 
-      // Create array of all shops (current + selected) with coordinates
-      const allShops = [
-        { id: shopId, lat: shopLat, lng: shopLng, name: "Current Shop" },
-        ...Array.from(selectedCartIds).map((cartId) => {
-          const details = cartDetails[cartId];
-          return {
-            id: cartId,
-            lat: details?.shopLat || 0,
-            lng: details?.shopLng || 0,
-            name: availableCarts.find((c) => c.id === cartId)?.name || "Shop",
-          };
-        }),
-      ].filter((shop) => shop.lat !== 0 && shop.lng !== 0); // Filter out shops without coordinates
+    // Create array of all shops (current + selected) with coordinates
+    const allShops = [
+      { id: shopId, lat: shopLat, lng: shopLng, name: "Current Shop" },
+      ...Array.from(selectedCartIds).map((cartId) => {
+        const details = cartDetails[cartId];
+        return {
+          id: cartId,
+          lat: details?.shopLat || 0,
+          lng: details?.shopLng || 0,
+          name: availableCarts.find((c) => c.id === cartId)?.name || "Shop",
+        };
+      }),
+    ].filter((shop) => shop.lat !== 0 && shop.lng !== 0); // Filter out shops without coordinates
 
-      // If we only have 1 shop (the current one), return null to use normal calculation
-      if (allShops.length <= 1) {
-        return null;
-      }
+    // If we only have 1 shop (the current one), return null to use normal calculation
+    if (allShops.length <= 1) {
+      return null;
+    }
 
-      // Shopping time: 15 minutes per shop (faster for combined orders)
-      const totalShoppingTime = 15 * allShops.length;
+    // Shopping time: 15 minutes per shop (faster for combined orders)
+    const totalShoppingTime = 15 * allShops.length;
 
-      // Initial travel time: Shopper → First Shop (estimated ~5 min buffer)
-      const initialTravelTime = 5; // Fixed 5 minutes for shopper to reach first shop
+    // Initial travel time: Shopper → First Shop (estimated ~5 min buffer)
+    const initialTravelTime = 5; // Fixed 5 minutes for shopper to reach first shop
 
-      // Calculate total travel distance between shops and to customer
-      // Route: Shopper → Shop 1 → Shop 2 → ... → Shop N → Customer
-      let totalTravelDistance = 0;
-      const routeLegs = [`Shopper → ${allShops[0].name}: ~5 min (buffer)`];
+    // Calculate total travel distance between shops and to customer
+    // Route: Shopper → Shop 1 → Shop 2 → ... → Shop N → Customer
+    let totalTravelDistance = 0;
+    const routeLegs = [`Shopper → ${allShops[0].name}: ~5 min (buffer)`];
 
-      // Distance between consecutive shops
-      for (let i = 0; i < allShops.length - 1; i++) {
-        const shop1 = allShops[i];
-        const shop2 = allShops[i + 1];
-        const distance = getDistanceFromLatLonInKm(
-          shop1.lat,
-          shop1.lng,
-          shop2.lat,
-          shop2.lng
-        );
-        totalTravelDistance += distance;
-        routeLegs.push(
-          `${shop1.name} → ${shop2.name}: ${distance.toFixed(2)} km`
-        );
-      }
-
-      // Distance from last shop to customer
-      const lastShop = allShops[allShops.length - 1];
-      const lastLegDistance = getDistanceFromLatLonInKm(
-        lastShop.lat,
-        lastShop.lng,
-        userLat,
-        userLng
+    // Distance between consecutive shops
+    for (let i = 0; i < allShops.length - 1; i++) {
+      const shop1 = allShops[i];
+      const shop2 = allShops[i + 1];
+      const distance = getDistanceFromLatLonInKm(
+        shop1.lat,
+        shop1.lng,
+        shop2.lat,
+        shop2.lng
       );
-      totalTravelDistance += lastLegDistance;
+      totalTravelDistance += distance;
       routeLegs.push(
-        `${lastShop.name} → Customer: ${lastLegDistance.toFixed(2)} km`
+        `${shop1.name} → ${shop2.name}: ${distance.toFixed(2)} km`
       );
+    }
 
-      // Travel time (1 min per km, capped at 240 min)
-      const shopToShopTravelTime = Math.min(Math.ceil(totalTravelDistance), 240);
-      const totalTravelTime = initialTravelTime + shopToShopTravelTime;
+    // Distance from last shop to customer
+    const lastShop = allShops[allShops.length - 1];
+    const lastLegDistance = getDistanceFromLatLonInKm(
+      lastShop.lat,
+      lastShop.lng,
+      userLat,
+      userLng
+    );
+    totalTravelDistance += lastLegDistance;
+    routeLegs.push(
+      `${lastShop.name} → Customer: ${lastLegDistance.toFixed(2)} km`
+    );
 
-      const totalTime = totalShoppingTime + totalTravelTime;
+    // Travel time (1 min per km, capped at 240 min)
+    const shopToShopTravelTime = Math.min(Math.ceil(totalTravelDistance), 240);
+    const totalTravelTime = initialTravelTime + shopToShopTravelTime;
 
-      return {
-        totalTime,
-        details: {
-          numberOfShops: allShops.length,
-          shoppingTime: totalShoppingTime,
-          initialTravelTime,
-          shopToShopTravelTime,
-          totalTravelDistance,
-          totalTravelTime,
-          route:
-            "Shopper → " +
-            allShops.map((s) => s.name).join(" → ") +
-            " → Customer",
-          routeLegs,
-        },
-      };
+    const totalTime = totalShoppingTime + totalTravelTime;
+
+    return {
+      totalTime,
+      details: {
+        numberOfShops: allShops.length,
+        shoppingTime: totalShoppingTime,
+        initialTravelTime,
+        shopToShopTravelTime,
+        totalTravelDistance,
+        totalTravelTime,
+        route:
+          "Shopper → " +
+          allShops.map((s) => s.name).join(" → ") +
+          " → Customer",
+        routeLegs,
+      },
     };
+  };
 
-    // Fetch payment methods, addresses, and refund balance on component mount
-    useEffect(() => {
-      const fetchPaymentData = async () => {
+  // Fetch payment methods, addresses, and refund balance on component mount
+  useEffect(() => {
+    const fetchPaymentData = async () => {
+      try {
+        // For guest users, skip fetching payment methods and just set up phone payment
+        if (isGuest) {
+          setSelectedPaymentValue("one-time-phone");
+          setShowOneTimePhoneInput(true);
+          setSelectedPaymentMethod({
+            type: "momo",
+            number: oneTimePhoneNumber,
+          });
+          setLoadingPayment(false);
+          return;
+        }
+
+        // Fetch payment methods for regular users
+        const paymentResponse = await fetch("/api/queries/payment-methods");
+        const paymentData = await paymentResponse.json();
+        const methods = paymentData.paymentMethods || [];
+        setSavedPaymentMethods(methods);
+
+        // Find and select the default payment method
+        const defaultMethod = methods.find(
+          (m: SavedPaymentMethod) => m.is_default
+        );
+        if (defaultMethod) {
+          setSelectedPaymentValue(defaultMethod.id);
+          setSelectedPaymentMethod({
+            type:
+              defaultMethod.method.toLowerCase() === "mtn momo"
+                ? "momo"
+                : "card",
+            id: defaultMethod.id,
+            number: defaultMethod.number,
+          });
+        }
+
+        // Fetch refund balance
+        const refundResponse = await fetch("/api/queries/refunds");
+        const refundData = await refundResponse.json();
+        setRefundBalance(parseFloat(refundData.totalAmount || "0"));
+
+        // Fetch wallet balance
         try {
-          // For guest users, skip fetching payment methods and just set up phone payment
-          if (isGuest) {
-            setSelectedPaymentValue("one-time-phone");
-            setShowOneTimePhoneInput(true);
-            setSelectedPaymentMethod({
-              type: "momo",
-              number: oneTimePhoneNumber,
-            });
-            setLoadingPayment(false);
-            return;
-          }
-
-          // Fetch payment methods for regular users
-          const paymentResponse = await fetch("/api/queries/payment-methods");
-          const paymentData = await paymentResponse.json();
-          const methods = paymentData.paymentMethods || [];
-          setSavedPaymentMethods(methods);
-
-          // Find and select the default payment method
-          const defaultMethod = methods.find(
-            (m: SavedPaymentMethod) => m.is_default
+          const walletResponse = await fetch(
+            "/api/queries/personal-wallet-balance"
           );
-          if (defaultMethod) {
-            setSelectedPaymentValue(defaultMethod.id);
-            setSelectedPaymentMethod({
-              type:
-                defaultMethod.method.toLowerCase() === "mtn momo"
-                  ? "momo"
-                  : "card",
-              id: defaultMethod.id,
-              number: defaultMethod.number,
-            });
-          }
+          const walletData = await walletResponse.json();
+          if (walletData.wallet) {
+            const balance = parseFloat(walletData.wallet.balance || "0");
+            setWalletBalance(balance);
+            setHasWallet(true);
 
-          // Fetch refund balance
-          const refundResponse = await fetch("/api/queries/refunds");
-          const refundData = await refundResponse.json();
-          setRefundBalance(parseFloat(refundData.totalAmount || "0"));
-
-          // Fetch wallet balance
-          try {
-            const walletResponse = await fetch(
-              "/api/queries/personal-wallet-balance"
-            );
-            const walletData = await walletResponse.json();
-            if (walletData.wallet) {
-              const balance = parseFloat(walletData.wallet.balance || "0");
-              setWalletBalance(balance);
-              setHasWallet(true);
-
-              // Set wallet as default payment method (per user request)
-              setSelectedPaymentValue("wallet");
-              setSelectedPaymentMethod({ type: "wallet" });
-            } else {
-              setWalletBalance(0);
-              setHasWallet(false);
-            }
-          } catch (walletError) {
-            console.error("Error fetching wallet balance:", walletError);
+            // Set wallet as default payment method (per user request)
+            setSelectedPaymentValue("wallet");
+            setSelectedPaymentMethod({ type: "wallet" });
+          } else {
             setWalletBalance(0);
             setHasWallet(false);
           }
-        } catch (error) {
-          console.error("Error fetching payment data:", error);
-        } finally {
-          setLoadingPayment(false);
+        } catch (walletError) {
+          console.error("Error fetching wallet balance:", walletError);
+          setWalletBalance(0);
+          setHasWallet(false);
         }
-      };
+      } catch (error) {
+        console.error("Error fetching payment data:", error);
+      } finally {
+        setLoadingPayment(false);
+      }
+    };
 
-      fetchPaymentData();
-    }, [isGuest]);
+    fetchPaymentData();
+  }, [isGuest]);
 
-    // Fetch addresses on component mount
-    useEffect(() => {
-      const fetchAddresses = async () => {
-        try {
-          const response = await fetch("/api/queries/addresses");
-          const data = await response.json();
-          const addresses = data.addresses || [];
-          setSavedAddresses(addresses);
+  // Fetch addresses on component mount
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await fetch("/api/queries/addresses");
+        const data = await response.json();
+        const addresses = data.addresses || [];
+        setSavedAddresses(addresses);
 
-          // Check if there's a selected address in cookie
-          const cookieValue = Cookies.get("delivery_address");
-          if (cookieValue) {
-            try {
-              const addressObj = JSON.parse(cookieValue);
-              if (addressObj.id) {
-                setSelectedAddressId(addressObj.id);
-              } else {
-                // If no ID in cookie, try to find default address
-                const defaultAddr = addresses.find(
-                  (a: SavedAddress) => a.is_default
-                );
-                if (defaultAddr) {
-                  setSelectedAddressId(defaultAddr.id);
-                  Cookies.set("delivery_address", JSON.stringify(defaultAddr));
-                  setTick((t) => t + 1);
-                }
-              }
-            } catch (err) {
-              console.error("Error parsing address cookie:", err);
-              // Try to find default address
+        // Check if there's a selected address in cookie
+        const cookieValue = Cookies.get("delivery_address");
+        if (cookieValue) {
+          try {
+            const addressObj = JSON.parse(cookieValue);
+            if (addressObj.id) {
+              setSelectedAddressId(addressObj.id);
+            } else {
+              // If no ID in cookie, try to find default address
               const defaultAddr = addresses.find(
                 (a: SavedAddress) => a.is_default
               );
@@ -842,396 +837,361 @@ export default function CheckoutItems({
                 setTick((t) => t + 1);
               }
             }
-          } else {
-            // No address in cookie, try to find default address
-            const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+          } catch (err) {
+            console.error("Error parsing address cookie:", err);
+            // Try to find default address
+            const defaultAddr = addresses.find(
+              (a: SavedAddress) => a.is_default
+            );
             if (defaultAddr) {
               setSelectedAddressId(defaultAddr.id);
               Cookies.set("delivery_address", JSON.stringify(defaultAddr));
               setTick((t) => t + 1);
             }
           }
-        } catch (error) {
-          console.error("Error fetching addresses:", error);
+        } else {
+          // No address in cookie, try to find default address
+          const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id);
+            Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+            setTick((t) => t + 1);
+          }
         }
-      };
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
 
-      fetchAddresses();
-    }, []);
+    fetchAddresses();
+  }, []);
 
-    // Get selected address for delivery fee calculation
-    const selectedAddress = selectedAddressId
-      ? savedAddresses.find((a) => a.id === selectedAddressId)
-      : null;
+  // Get selected address for delivery fee calculation
+  const selectedAddress = selectedAddressId
+    ? savedAddresses.find((a) => a.id === selectedAddressId)
+    : null;
 
-    // Service and Delivery Fee calculations - recalculates when selectedAddress changes
-    const serviceFee = isFoodCart
-      ? 0
-      : systemConfig
+  // Service and Delivery Fee calculations - recalculates when selectedAddress changes
+  const serviceFee = isFoodCart
+    ? 0
+    : systemConfig
       ? parseInt(systemConfig.serviceFee)
       : 0;
-    const baseDeliveryFee = systemConfig
-      ? parseInt(systemConfig.baseDeliveryFee)
-      : 0;
-    // Surcharge based on units beyond extraUnits threshold
-    const extraUnitsThreshold = systemConfig
-      ? parseInt(systemConfig.extraUnits)
-      : 0;
-    const extraUnits = Math.max(0, totalUnits - extraUnitsThreshold);
-    const unitsSurcharge =
-      extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
-    // Surcharge based on distance beyond 3km - uses selected address
-    let distanceKm = 0;
-    let userAlt = 0;
-    if (
-      selectedAddress &&
-      selectedAddress.latitude &&
-      selectedAddress.longitude
-    ) {
-      const userLat = parseFloat(selectedAddress.latitude.toString());
-      const userLng = parseFloat(selectedAddress.longitude.toString());
-      // Altitude is typically not stored in addresses, use 0 as default
-      userAlt = 0;
-      distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
-    } else {
-      // Fallback to cookie if no address selected yet
-      const cookie = Cookies.get("delivery_address");
-      if (cookie) {
-        try {
-          const userAddr = JSON.parse(cookie);
-          if (userAddr.latitude && userAddr.longitude) {
-            const userLat = parseFloat(userAddr.latitude.toString());
-            const userLng = parseFloat(userAddr.longitude.toString());
-            userAlt = parseFloat((userAddr.altitude || "0").toString());
-            distanceKm = getDistanceFromLatLonInKm(
-              userLat,
-              userLng,
-              shopLat,
-              shopLng
-            );
-          }
-        } catch (err) {
-          console.error("Error parsing delivery_address cookie:", err);
-        }
-      }
-    }
-    const extraDistance = Math.max(0, distanceKm - 3);
-    const distanceSurcharge =
-      Math.ceil(extraDistance) *
-      (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
-    // Cap the distance-based delivery fee (before units) at cappedDistanceFee
-    const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
-    const cappedDistanceFee = systemConfig
-      ? parseInt(systemConfig.cappedDistanceFee)
-      : 0;
-    const finalDistanceFee =
-      rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
-    // Local fallback calculations (Normal calculations we had)
-    const localDeliveryFee = finalDistanceFee + unitsSurcharge;
-    const localServiceFee = serviceFee;
-
-    // Use server values ONLY if a promotion/influencer/referral is actively applied
-    // This satisfies the requirement: "do the sync once the user add the promotopn code ... before that just show normal calculations"
-    const hasActiveDiscount = (discounts.promotions_applied && discounts.promotions_applied.length > 0) || appliedCode !== null;
-
-    const deliveryFee = hasActiveDiscount && discounts.final_delivery_fee !== undefined
-      ? discounts.final_delivery_fee 
-      : localDeliveryFee;
-      
-    const finalServiceFee = hasActiveDiscount && discounts.final_service_fee !== undefined
-      ? discounts.final_service_fee 
-      : localServiceFee;
-
-    // Helper to check if pricing is valid/available
-    const isPricingAvailable = deliveryFee !== undefined && finalServiceFee !== undefined;
-
-    // Update referral discounts when delivery fee changes (if referral code is applied)
-    useEffect(() => {
-      if (codeType === "referral" && appliedCode) {
-        // Recalculate referral discount based on current delivery fee
-        const serviceFeeDiscountAmount = serviceFee * 0.085;
-        const deliveryFeeDiscountAmount = deliveryFee * 0.085;
-        const totalReferralDiscount =
-          serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
-
-        setServiceFeeDiscount(serviceFeeDiscountAmount);
-        setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
-        setReferralDiscount(totalReferralDiscount);
-      }
-      
-      // Update basic discount state if we have backend discounts
-      if (discounts.subtotal_discount > 0 || discounts.service_fee_discount > 0 || discounts.delivery_fee_discount > 0) {
-        setDiscount(discounts.subtotal_discount);
-        setServiceFeeDiscount(discounts.service_fee_discount);
-        setDeliveryFeeDiscount(discounts.delivery_fee_discount);
-      }
-    }, [
-      codeType,
-      appliedCode,
-      serviceFee,
-      deliveryFee,
-      discounts.subtotal_discount,
-      discounts.service_fee_discount,
-      discounts.delivery_fee_discount,
-    ]);
-
-    // Compute total delivery time: travel time in 3D plus shopping time/preparation time
-    const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
-    const altKm = (shopAlt - userAlt) / 1000;
-    const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
-    // Cap travel time to reasonable maximum (4 hours = 240 minutes)
-    const travelTime = Math.min(Math.ceil(distance3D), 240); // assume 1 km ≈ 1 minute travel, max 4 hours
-
-    // Helper function to parse preparation time string from database
-    const parsePreparationTimeString = (timeString?: string): number => {
-      if (!timeString || timeString.trim() === "") {
-        return 0; // Empty means immediately available
-      }
-
-      const cleanTime = timeString.toLowerCase().trim();
-
-      // Handle minutes format: "15min", "30min", etc.
-      const minMatch = cleanTime.match(/^(\d+)min$/);
-      if (minMatch) {
-        return parseInt(minMatch[1]);
-      }
-
-      // Handle hours and minutes format: "2hr30min", "1hr15min", etc.
-      const hrMinMatch = cleanTime.match(/^(\d+)hr(\d+)min$/);
-      if (hrMinMatch) {
-        const hours = parseInt(hrMinMatch[1]);
-        const mins = parseInt(hrMinMatch[2]);
-        return hours * 60 + mins;
-      }
-
-      // Handle hours format: "1hr", "2hr", etc.
-      const hrMatch = cleanTime.match(/^(\d+)hr$/);
-      if (hrMatch) {
-        return parseInt(hrMatch[1]) * 60; // Convert hours to minutes
-      }
-
-      // Handle just numbers (assume minutes): "15", "30"
-      const numMatch = cleanTime.match(/^(\d+)$/);
-      if (numMatch) {
-        return parseInt(numMatch[1]);
-      }
-
-      // Default fallback
-      return 0;
-    };
-
-    // Calculate food preparation time for food orders
-    let preparationTime = 0;
-    if (isFoodCart && restaurant) {
-      // Calculate realistic preparation time - dishes are prepared simultaneously
-      // but the total time is closer to the longest dish time
-      const preparationTimes = restaurant.items.map((item) => {
-        // Parse the preparation time string from the dish data
-        const parsedTime = parsePreparationTimeString(item.preparingTime);
-        // If no preparation time or it's 0, use a default of 5 minutes
-        return parsedTime || 5;
-      });
-
-      if (preparationTimes.length > 0) {
-        const maxTime = Math.max(...preparationTimes);
-
-        if (preparationTimes.length === 1) {
-          // Single dish - use its preparation time
-          preparationTime = maxTime;
-        } else {
-          // Multiple dishes - find average of dishes with lower prep times
-          const lowerTimes = preparationTimes.filter((time) => time < maxTime);
-
-          if (lowerTimes.length > 0) {
-            // Average of dishes with lower prep times (can be prepared simultaneously)
-            const avgLowerTime =
-              lowerTimes.reduce((sum, time) => sum + time, 0) / lowerTimes.length;
-
-            // For longer prep times (>30min), use a more conservative approach
-            if (maxTime > 30) {
-              // Use 70% of the average of lower times to be more realistic
-              preparationTime = Math.round(maxTime + avgLowerTime * 0.7);
-            } else {
-              // For shorter prep times, add full average
-              preparationTime = Math.round(maxTime + avgLowerTime);
-            }
-          } else {
-            // All dishes have the same prep time
-            preparationTime = maxTime;
-          }
-        }
-
-        // Cap preparation time at 90 minutes maximum (1 hour 30 minutes)
-        // Dishes above 1 hour can have an exception but never exceed 1.5 hours
-        preparationTime = Math.min(preparationTime, 90);
-      }
-    }
-
-    // Use preparation time for food orders, shopping time for regular orders
-    const processingTime = isFoodCart ? preparationTime : shoppingTime;
-
-    // Calculate combined delivery time if multiple carts are selected
-    const combinedCalc = calculateCombinedDeliveryTime();
-    const totalTimeMinutes =
-      combinedCalc !== null
-        ? combinedCalc.totalTime
-        : travelTime + processingTime;
-
-    // Calculate the delivery timestamp (current time + totalTimeMinutes)
-    const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
-    const deliveryTimestamp = deliveryDate.toISOString();
-
-    // Format the delivery time for display
-    let deliveryTime: string;
-    const diffMs = deliveryDate.getTime() - Date.now();
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    // Helper function to format time in minutes to readable format
-    const formatTimeMinutes = (totalMinutes: number): string => {
-      if (totalMinutes < 60) {
-        return `${totalMinutes}min`;
-      } else if (totalMinutes < 1440) {
-        // Less than 24 hours (1 day)
-        const hours = Math.floor(totalMinutes / 60);
-        const remainingMinutes = totalMinutes % 60;
-        return remainingMinutes > 0
-          ? `${hours}h ${remainingMinutes}min`
-          : `${hours}h`;
-      } else if (totalMinutes < 43200) {
-        // Less than 30 days (1 month)
-        const days = Math.floor(totalMinutes / 1440);
-        const remainingHours = Math.floor((totalMinutes % 1440) / 60);
-        return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
-      } else {
-        const months = Math.floor(totalMinutes / 43200);
-        const remainingDays = Math.floor((totalMinutes % 43200) / 1440);
-        return remainingDays > 0 ? `${months}m ${remainingDays}d` : `${months}m`;
-      }
-    };
-
-    // Format distance for display
-    const formattedDistance =
-      distanceKm > 0 ? `${distanceKm.toFixed(1)} km` : "0 km";
-
-    // Create detailed delivery time message
-    if (isFoodCart) {
-      // For food orders, show preparation + delivery time breakdown with distance
-      const prepText =
-        preparationTime === 0 ? "ready now" : formatTimeMinutes(preparationTime);
-      const deliveryText = formatTimeMinutes(travelTime);
-
-      if (days > 0) {
-        deliveryTime = `${days} day${days > 1 ? "s" : ""}${
-          hours > 0 ? ` ${hours}h` : ""
-        } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
-      } else if (hours > 0) {
-        deliveryTime = `${hours}h${
-          mins > 0 ? ` ${mins}m` : ""
-        } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
-      } else {
-        deliveryTime = `${mins} minutes (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
-      }
-    } else {
-      // For regular shop orders, show shopping + delivery time with distance
-      const multiShopSuffix =
-        selectedCartIds.size > 0 ? ` - ${selectedCartIds.size + 1} shops` : "";
-
-      if (days > 0) {
-        deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
-          hours > 0 ? ` ${hours}h` : ""
-        } (${formattedDistance}${multiShopSuffix})`;
-      } else if (hours > 0) {
-        deliveryTime = `Will be delivered in ${hours}h${
-          mins > 0 ? ` ${mins}m` : ""
-        } (${formattedDistance}${multiShopSuffix})`;
-      } else {
-        deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance}${multiShopSuffix})`;
-      }
-    }
-
-    // discountsEnabled is now a separate state that's always fetched fresh from server
-
-    // Function to fetch cart items for snapshot
-    const fetchCartSnapshot = useCallback(async () => {
-      if (isFoodCart && restaurant) {
-        return restaurant.items.map((item) => ({
-          product_id: item.id,
-          quantity: item.quantity,
-          price: item.price,
-        }));
-      }
-
+  const baseDeliveryFee = systemConfig
+    ? parseInt(systemConfig.baseDeliveryFee)
+    : 0;
+  // Surcharge based on units beyond extraUnits threshold
+  const extraUnitsThreshold = systemConfig
+    ? parseInt(systemConfig.extraUnits)
+    : 0;
+  const extraUnits = Math.max(0, totalUnits - extraUnitsThreshold);
+  const unitsSurcharge =
+    extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
+  // Surcharge based on distance beyond 3km - uses selected address
+  let distanceKm = 0;
+  let userAlt = 0;
+  if (
+    selectedAddress &&
+    selectedAddress.latitude &&
+    selectedAddress.longitude
+  ) {
+    const userLat = parseFloat(selectedAddress.latitude.toString());
+    const userLng = parseFloat(selectedAddress.longitude.toString());
+    // Altitude is typically not stored in addresses, use 0 as default
+    userAlt = 0;
+    distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+  } else {
+    // Fallback to cookie if no address selected yet
+    const cookie = Cookies.get("delivery_address");
+    if (cookie) {
       try {
-        const response = await fetch(`/api/cart-items?shop_id=${shopId}`);
-        const data = await response.json();
-        return (data.items || []).map((item: any) => ({
-          product_id: item.id,
-          quantity: item.quantity,
-          price: item.price,
-        }));
-      } catch (error) {
-        console.error("Error fetching cart snapshot:", error);
-        return [];
-      }
-    }, [isFoodCart, restaurant, shopId]);
-
-    // AUTO PROMOTIONS: Apply store-wide/flash sales on load
-    useEffect(() => {
-      const applyAutoPromotions = async () => {
-        // Fix: Skip auto-apply if a manual code is already active
-        if (!discountsEnabled || autoApplying || appliedCode) return;
-        
-        setAutoApplying(true);
-        try {
-          const items = await fetchCartSnapshot();
-          const cartSnapshot = {
-            cart_id: shopId,
-            user_id: isGuest ? "guest" : "user", // Simplified for now
-            items,
-            items_count: items.length,
-            subtotal: Total,
-            service_fee: serviceFee,
-            delivery_fee: deliveryFee,
-            applied_codes: appliedCode ? [appliedCode] : [],
-          };
-
-          const response = await fetch("/api/promotions/auto-apply", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cart: cartSnapshot }),
-          });
-
-          const result = await response.json();
-          if (result.success && result.discounts) {
-            setDiscounts((prev) => ({
-              ...prev,
-              ...result.discounts,
-              subtotal_discount: parseFloat(result.discounts.subtotal_discount || "0"),
-              service_fee_discount: parseFloat(result.discounts.service_fee_discount || "0"),
-              delivery_fee_discount: parseFloat(result.discounts.delivery_fee_discount || "0"),
-              promotions_applied: result.promotions_applied || prev.promotions_applied || [],
-            }));
-          }
-        } catch (error) {
-          console.error("Error auto-applying promotions:", error);
-        } finally {
-          setAutoApplying(false);
+        const userAddr = JSON.parse(cookie);
+        if (userAddr.latitude && userAddr.longitude) {
+          const userLat = parseFloat(userAddr.latitude.toString());
+          const userLng = parseFloat(userAddr.longitude.toString());
+          userAlt = parseFloat((userAddr.altitude || "0").toString());
+          distanceKm = getDistanceFromLatLonInKm(
+            userLat,
+            userLng,
+            shopLat,
+            shopLng
+          );
         }
-      };
+      } catch (err) {
+        console.error("Error parsing delivery_address cookie:", err);
+      }
+    }
+  }
+  const extraDistance = Math.max(0, distanceKm - 3);
+  const distanceSurcharge =
+    Math.ceil(extraDistance) *
+    (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
+  // Cap the distance-based delivery fee (before units) at cappedDistanceFee
+  const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
+  const cappedDistanceFee = systemConfig
+    ? parseInt(systemConfig.cappedDistanceFee)
+    : 0;
+  const finalDistanceFee =
+    rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
+  // Local fallback calculations (Normal calculations we had)
+  const localDeliveryFee = finalDistanceFee + unitsSurcharge;
+  const localServiceFee = serviceFee;
 
-      applyAutoPromotions();
-    }, [shopId, Total, serviceFee, deliveryFee, selectedAddressId, discountsEnabled, appliedCode]);
+  // Use server values ONLY if a promotion/influencer/referral is actively applied
+  // This satisfies the requirement: "do the sync once the user add the promotopn code ... before that just show normal calculations"
+  const hasActiveDiscount = (discounts.promotions_applied && discounts.promotions_applied.length > 0) || appliedCode !== null;
 
-    const triggerPricingSync = useCallback(async () => {
-      // Backend is now the source of truth, so we always sync if possible
+  const deliveryFee = hasActiveDiscount && discounts.final_delivery_fee !== undefined
+    ? discounts.final_delivery_fee
+    : localDeliveryFee;
+
+  const finalServiceFee = hasActiveDiscount && discounts.final_service_fee !== undefined
+    ? discounts.final_service_fee
+    : localServiceFee;
+
+  // Helper to check if pricing is valid/available
+  const isPricingAvailable = deliveryFee !== undefined && finalServiceFee !== undefined;
+
+  // Update referral discounts when delivery fee changes (if referral code is applied)
+  useEffect(() => {
+    if (codeType === "referral" && appliedCode) {
+      // Recalculate referral discount based on current delivery fee
+      const serviceFeeDiscountAmount = serviceFee * 0.085;
+      const deliveryFeeDiscountAmount = deliveryFee * 0.085;
+      const totalReferralDiscount =
+        serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+
+      setServiceFeeDiscount(serviceFeeDiscountAmount);
+      setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
+      setReferralDiscount(totalReferralDiscount);
+    }
+
+    // Update basic discount state if we have backend discounts
+    if (discounts.subtotal_discount > 0 || discounts.service_fee_discount > 0 || discounts.delivery_fee_discount > 0) {
+      setDiscount(discounts.subtotal_discount);
+      setServiceFeeDiscount(discounts.service_fee_discount);
+      setDeliveryFeeDiscount(discounts.delivery_fee_discount);
+    }
+  }, [
+    codeType,
+    appliedCode,
+    serviceFee,
+    deliveryFee,
+    discounts.subtotal_discount,
+    discounts.service_fee_discount,
+    discounts.delivery_fee_discount,
+  ]);
+
+  // Compute total delivery time: travel time in 3D plus shopping time/preparation time
+  const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
+  const altKm = (shopAlt - userAlt) / 1000;
+  const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
+  // Cap travel time to reasonable maximum (4 hours = 240 minutes)
+  const travelTime = Math.min(Math.ceil(distance3D), 240); // assume 1 km ≈ 1 minute travel, max 4 hours
+
+  // Helper function to parse preparation time string from database
+  const parsePreparationTimeString = (timeString?: string): number => {
+    if (!timeString || timeString.trim() === "") {
+      return 0; // Empty means immediately available
+    }
+
+    const cleanTime = timeString.toLowerCase().trim();
+
+    // Handle minutes format: "15min", "30min", etc.
+    const minMatch = cleanTime.match(/^(\d+)min$/);
+    if (minMatch) {
+      return parseInt(minMatch[1]);
+    }
+
+    // Handle hours and minutes format: "2hr30min", "1hr15min", etc.
+    const hrMinMatch = cleanTime.match(/^(\d+)hr(\d+)min$/);
+    if (hrMinMatch) {
+      const hours = parseInt(hrMinMatch[1]);
+      const mins = parseInt(hrMinMatch[2]);
+      return hours * 60 + mins;
+    }
+
+    // Handle hours format: "1hr", "2hr", etc.
+    const hrMatch = cleanTime.match(/^(\d+)hr$/);
+    if (hrMatch) {
+      return parseInt(hrMatch[1]) * 60; // Convert hours to minutes
+    }
+
+    // Handle just numbers (assume minutes): "15", "30"
+    const numMatch = cleanTime.match(/^(\d+)$/);
+    if (numMatch) {
+      return parseInt(numMatch[1]);
+    }
+
+    // Default fallback
+    return 0;
+  };
+
+  // Calculate food preparation time for food orders
+  let preparationTime = 0;
+  if (isFoodCart && restaurant) {
+    // Calculate realistic preparation time - dishes are prepared simultaneously
+    // but the total time is closer to the longest dish time
+    const preparationTimes = restaurant.items.map((item) => {
+      // Parse the preparation time string from the dish data
+      const parsedTime = parsePreparationTimeString(item.preparingTime);
+      // If no preparation time or it's 0, use a default of 5 minutes
+      return parsedTime || 5;
+    });
+
+    if (preparationTimes.length > 0) {
+      const maxTime = Math.max(...preparationTimes);
+
+      if (preparationTimes.length === 1) {
+        // Single dish - use its preparation time
+        preparationTime = maxTime;
+      } else {
+        // Multiple dishes - find average of dishes with lower prep times
+        const lowerTimes = preparationTimes.filter((time) => time < maxTime);
+
+        if (lowerTimes.length > 0) {
+          // Average of dishes with lower prep times (can be prepared simultaneously)
+          const avgLowerTime =
+            lowerTimes.reduce((sum, time) => sum + time, 0) / lowerTimes.length;
+
+          // For longer prep times (>30min), use a more conservative approach
+          if (maxTime > 30) {
+            // Use 70% of the average of lower times to be more realistic
+            preparationTime = Math.round(maxTime + avgLowerTime * 0.7);
+          } else {
+            // For shorter prep times, add full average
+            preparationTime = Math.round(maxTime + avgLowerTime);
+          }
+        } else {
+          // All dishes have the same prep time
+          preparationTime = maxTime;
+        }
+      }
+
+      // Cap preparation time at 90 minutes maximum (1 hour 30 minutes)
+      // Dishes above 1 hour can have an exception but never exceed 1.5 hours
+      preparationTime = Math.min(preparationTime, 90);
+    }
+  }
+
+  // Use preparation time for food orders, shopping time for regular orders
+  const processingTime = isFoodCart ? preparationTime : shoppingTime;
+
+  // Calculate combined delivery time if multiple carts are selected
+  const combinedCalc = calculateCombinedDeliveryTime();
+  const totalTimeMinutes =
+    combinedCalc !== null
+      ? combinedCalc.totalTime
+      : travelTime + processingTime;
+
+  // Calculate the delivery timestamp (current time + totalTimeMinutes)
+  const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
+  const deliveryTimestamp = deliveryDate.toISOString();
+
+  // Format the delivery time for display
+  let deliveryTime: string;
+  const diffMs = deliveryDate.getTime() - Date.now();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  // Helper function to format time in minutes to readable format
+  const formatTimeMinutes = (totalMinutes: number): string => {
+    if (totalMinutes < 60) {
+      return `${totalMinutes}min`;
+    } else if (totalMinutes < 1440) {
+      // Less than 24 hours (1 day)
+      const hours = Math.floor(totalMinutes / 60);
+      const remainingMinutes = totalMinutes % 60;
+      return remainingMinutes > 0
+        ? `${hours}h ${remainingMinutes}min`
+        : `${hours}h`;
+    } else if (totalMinutes < 43200) {
+      // Less than 30 days (1 month)
+      const days = Math.floor(totalMinutes / 1440);
+      const remainingHours = Math.floor((totalMinutes % 1440) / 60);
+      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+    } else {
+      const months = Math.floor(totalMinutes / 43200);
+      const remainingDays = Math.floor((totalMinutes % 43200) / 1440);
+      return remainingDays > 0 ? `${months}m ${remainingDays}d` : `${months}m`;
+    }
+  };
+
+  // Format distance for display
+  const formattedDistance =
+    distanceKm > 0 ? `${distanceKm.toFixed(1)} km` : "0 km";
+
+  // Create detailed delivery time message
+  if (isFoodCart) {
+    // For food orders, show preparation + delivery time breakdown with distance
+    const prepText =
+      preparationTime === 0 ? "ready now" : formatTimeMinutes(preparationTime);
+    const deliveryText = formatTimeMinutes(travelTime);
+
+    if (days > 0) {
+      deliveryTime = `${days} day${days > 1 ? "s" : ""}${hours > 0 ? ` ${hours}h` : ""
+        } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
+    } else if (hours > 0) {
+      deliveryTime = `${hours}h${mins > 0 ? ` ${mins}m` : ""
+        } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
+    } else {
+      deliveryTime = `${mins} minutes (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
+    }
+  } else {
+    // For regular shop orders, show shopping + delivery time with distance
+    const multiShopSuffix =
+      selectedCartIds.size > 0 ? ` - ${selectedCartIds.size + 1} shops` : "";
+
+    if (days > 0) {
+      deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${hours > 0 ? ` ${hours}h` : ""
+        } (${formattedDistance}${multiShopSuffix})`;
+    } else if (hours > 0) {
+      deliveryTime = `Will be delivered in ${hours}h${mins > 0 ? ` ${mins}m` : ""
+        } (${formattedDistance}${multiShopSuffix})`;
+    } else {
+      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance}${multiShopSuffix})`;
+    }
+  }
+
+  // discountsEnabled is now a separate state that's always fetched fresh from server
+
+  // Function to fetch cart items for snapshot
+  const fetchCartSnapshot = useCallback(async () => {
+    if (isFoodCart && restaurant) {
+      return restaurant.items.map((item) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+    }
+
+    try {
+      const response = await fetch(`/api/cart-items?shop_id=${shopId}`);
+      const data = await response.json();
+      return (data.items || []).map((item: any) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+    } catch (error) {
+      console.error("Error fetching cart snapshot:", error);
+      return [];
+    }
+  }, [isFoodCart, restaurant, shopId]);
+
+  // AUTO PROMOTIONS: Apply store-wide/flash sales on load
+  useEffect(() => {
+    const applyAutoPromotions = async () => {
+      // Fix: Skip auto-apply if a manual code is already active
+      if (!discountsEnabled || autoApplying || appliedCode) return;
+
+      setAutoApplying(true);
       try {
         const items = await fetchCartSnapshot();
         const cartSnapshot = {
           cart_id: shopId,
-          restaurant_id: isFoodCart && restaurant ? restaurant.id : null,
-          user_id: isGuest ? "guest" : "user",
+          user_id: isGuest ? "guest" : "user", // Simplified for now
           items,
           items_count: items.length,
           subtotal: Total,
@@ -1240,400 +1200,537 @@ export default function CheckoutItems({
           applied_codes: appliedCode ? [appliedCode] : [],
         };
 
-        // For combined carts, include all shops for accuracy
-        if (selectedCartIds.size > 0) {
-          (cartSnapshot as any).carts = [
-            { cart_id: shopId, items, subtotal: Total },
-            ...Array.from(selectedCartIds).map(cartId => ({
-              cart_id: cartId,
-              items: cartDetails[cartId]?.items || [],
-              subtotal: cartDetails[cartId]?.subtotal || 0
-            }))
-          ];
-          (cartSnapshot as any).cart_ids = Array.from(selectedCartIds).concat(shopId);
-        }
-
-        const response = await fetch("/api/promotions/validate-final", {
+        const response = await fetch("/api/promotions/auto-apply", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cart: cartSnapshot }),
-        });
-
-        const data = await response.json();
-        if (data.success && data.pricing_token) {
-          setDiscounts((prev) => ({
-            ...prev,
-            ...data.discounts,
-            pricing_token: data.pricing_token,
-            promotions_applied: data.promotions_applied || prev.promotions_applied || [],
-          }));
-          // Update final total if returned
-          if (data.final_total !== undefined) {
-             // We can use this to display the final total from backend
-          }
-        }
-      } catch (error) {
-        console.error("Pricing sync failed:", error);
-      }
-    }, [shopId, Total, serviceFee, deliveryFee, appliedCode, isGuest, isFoodCart, restaurant, selectedCartIds, cartDetails, fetchCartSnapshot]);
-
-    // Re-sync pricing when cart or address changes - ALWAYS (No Promotion Flow)
-    useEffect(() => {
-      triggerPricingSync();
-    }, [Total, serviceFee, deliveryFee, appliedCode, triggerPricingSync]);
-
-    const handleApplyCode = async () => {
-      // If discounts are disabled, don't apply codes
-      if (!discountsEnabled) {
-        toaster.push(
-          <Notification type="warning" header="Discounts Disabled">
-            Discounts are currently disabled in the system.
-          </Notification>,
-          { placement: "topEnd" }
-        );
-        return;
-      }
-
-      const code = discountCode.trim().toUpperCase();
-      if (!code) {
-        toaster.push(
-          <Notification type="error" header="Code Required">
-            Please enter a promo or referral code.
-          </Notification>,
-          { placement: "topEnd" }
-        );
-        return;
-      }
-
-      // Check stacking rules from current applied promotions
-      const hasExclusive = discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive');
-      if (hasExclusive) {
-        toaster.push(
-          <Notification type="warning" header="Stacking Bound">
-            Existing promotion does not allow additional codes.
-          </Notification>,
-          { placement: "topEnd" }
-        );
-        return;
-      }
-
-      setValidatingCode(true);
-
-      try {
-        const items = await fetchCartSnapshot();
-        const cartSnapshot = {
-          cart_id: shopId,
-          user_id: isGuest ? "guest" : "user",
-          items,
-          subtotal: Total,
-          service_fee: serviceFee,
-          delivery_fee: deliveryFee,
-          applied_codes: appliedCode ? [appliedCode] : [],
-        };
-
-        const response = await fetch("/api/promotions/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, cart: cartSnapshot }),
         });
 
         const result = await response.json();
-        if (result.valid) {
-          setDiscounts({
+        if (result.success && result.discounts) {
+          setDiscounts((prev) => ({
+            ...prev,
+            ...result.discounts,
             subtotal_discount: parseFloat(result.discounts.subtotal_discount || "0"),
             service_fee_discount: parseFloat(result.discounts.service_fee_discount || "0"),
             delivery_fee_discount: parseFloat(result.discounts.delivery_fee_discount || "0"),
-            final_delivery_fee: result.discounts.final_delivery_fee,
-            final_service_fee: result.discounts.final_service_fee,
-            final_subtotal: result.discounts.final_subtotal,
-            final_total: result.discounts.final_total,
-            free_delivery: !!result.discounts.free_delivery,
-            promotions_applied: result.promotions_applied || [],
-            rejected_promotions: result.rejected_promotions || [],
-          });
-
-          setAppliedCode(code);
-          setCodeType(result.is_referral ? "referral" : "promo");
-          
-          // Re-sync will happen automatically via useEffect [appliedCode]
-
-          toaster.push(
-            <Notification type="success" header="Promotion Applied">
-              {result.message || "Discount applied successfully!"}
-            </Notification>,
-            { placement: "topEnd" }
-          );
-        } else {
-          setDiscounts((prev) => ({
-            ...prev,
-            rejected_promotions: result.rejected_promotions || [{ code, reason: result.message }],
+            promotions_applied: result.promotions_applied || prev.promotions_applied || [],
           }));
-
-          toaster.push(
-            <Notification type="error" header="Invalid Code">
-              {result.message || "Invalid code. Please check and try again."}
-            </Notification>,
-            { placement: "topEnd" }
-          );
         }
       } catch (error) {
-        console.error("Error validating code:", error);
-        toaster.push(
-          <Notification type="error" header="Error">
-            Failed to validate code. Please try again.
-          </Notification>,
-          { placement: "topEnd" }
-        );
+        console.error("Error auto-applying promotions:", error);
       } finally {
-        setValidatingCode(false);
+        setAutoApplying(false);
       }
     };
 
-    // Calculate combined totals from selected additional carts
-    let combinedSubtotal = 0;
-    let combinedUnits = 0;
-    let combinedServiceFee = 0; // Service fee stays the same, not added
-    let combinedDeliveryFee = 0; // This will be 70% for additional carts
+    applyAutoPromotions();
+  }, [shopId, Total, serviceFee, deliveryFee, selectedAddressId, discountsEnabled, appliedCode]);
 
-    selectedCartIds.forEach((cartId) => {
-      const details = cartDetails[cartId];
-      if (details) {
-        combinedSubtotal += details.total;
-        combinedUnits += details.units;
-        // Add 70% of delivery fee for additional carts
-        combinedDeliveryFee += (details.deliveryFee || 0) * 0.7;
-      }
-    });
+  const triggerPricingSync = useCallback(async () => {
+    // Backend is now the source of truth, so we always sync if possible
+    try {
+      const items = await fetchCartSnapshot();
+      const cartSnapshot = {
+        cart_id: shopId,
+        restaurant_id: isFoodCart && restaurant ? restaurant.id : null,
+        user_id: isGuest ? "guest" : "user",
+        items,
+        items_count: items.length,
+        subtotal: Total,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        applied_codes: appliedCode ? [appliedCode] : [],
+      };
 
-    const finalDeliveryFee = (deliveryFee || 0) + combinedDeliveryFee;
-
-    const grandSubtotal = Total + combinedSubtotal;
-    const grandTotalUnits = totalUnits + combinedUnits;
-
-    // Compute numeric final total including service fee and delivery fee, minus discounts
-    // PREFER BACKEND VALUE (Absolute Source of Truth)
-    const finalTotal = discounts.final_total !== undefined 
-      ? discounts.final_total 
-      : (grandSubtotal - discounts.subtotal_discount + (deliveryFee || 0) + (finalServiceFee || 0));
-
-    const handleProceedToCheckout = async () => {
-      // Validate cart has items
-      if (totalUnits <= 0) {
-        toaster.push(
-          <Notification type="warning" header="Empty Cart">
-            Your cart is empty.
-          </Notification>,
-          { placement: "topEnd" }
-        );
-        return;
+      // For combined carts, include all shops for accuracy
+      if (selectedCartIds.size > 0) {
+        (cartSnapshot as any).carts = [
+          { cart_id: shopId, items, subtotal: Total },
+          ...Array.from(selectedCartIds).map(cartId => ({
+            cart_id: cartId,
+            items: cartDetails[cartId]?.items || [],
+            subtotal: cartDetails[cartId]?.subtotal || 0
+          }))
+        ];
+        (cartSnapshot as any).cart_ids = Array.from(selectedCartIds).concat(shopId);
       }
 
-      // Get selected delivery address from cookie
-      const cookieValue = Cookies.get("delivery_address");
-      if (!cookieValue) {
-        toaster.push(
-          <Notification type="error" header="Address Required">
-            Please select a delivery address.
-          </Notification> ,
-          { placement: "topEnd" }
-        );
-        return;
+      const response = await fetch("/api/promotions/validate-final", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart: cartSnapshot }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.pricing_token) {
+        setDiscounts((prev) => ({
+          ...prev,
+          ...data.discounts,
+          pricing_token: data.pricing_token,
+          promotions_applied: data.promotions_applied || prev.promotions_applied || [],
+        }));
+        // Update final total if returned
+        if (data.final_total !== undefined) {
+          // We can use this to display the final total from backend
+        }
       }
+    } catch (error) {
+      console.error("Pricing sync failed:", error);
+    }
+  }, [shopId, Total, serviceFee, deliveryFee, appliedCode, isGuest, isFoodCart, restaurant, selectedCartIds, cartDetails, fetchCartSnapshot]);
 
-      let addressObj;
-      try {
-        addressObj = JSON.parse(cookieValue);
-      } catch (err) {
-        console.error("❌ Error parsing delivery_address cookie:", err);
-        toaster.push(
-          <Notification type="error" header="Invalid Address">
-            Invalid delivery address. Please select again.
-          </Notification>,
-          { placement: "topEnd" }
-        );
-        return;
-      }
+  // Re-sync pricing when cart or address changes - ALWAYS (No Promotion Flow)
+  useEffect(() => {
+    triggerPricingSync();
+  }, [Total, serviceFee, deliveryFee, appliedCode, triggerPricingSync]);
 
-      const deliveryAddressId = addressObj.id;
-      if (!deliveryAddressId) {
-        toaster.push(
-          <Notification type="error" header="Invalid Address">
-            Please select a valid delivery address.
-          </Notification>,
-          { placement: "topEnd" }
-        );
-        return;
-      }
+  const handleApplyCode = async () => {
+    // If discounts are disabled, don't apply codes
+    if (!discountsEnabled) {
+      toaster.push(
+        <Notification type="warning" header="Discounts Disabled">
+          Discounts are currently disabled in the system.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
 
-      setIsCheckoutLoading(true);
+    const code = discountCode.trim().toUpperCase();
+    if (!code) {
+      toaster.push(
+        <Notification type="error" header="Code Required">
+          Please enter a promo or referral code.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
 
-      try {
-        const items = await fetchCartSnapshot();
-        const cartSnapshot = {
-          cart_id: shopId,
-          user_id: isGuest ? "guest" : "user",
-          items,
-          subtotal: Total,
-          service_fee: serviceFee,
-          delivery_fee: deliveryFee,
-          applied_codes: appliedCode ? [appliedCode] : [],
-        };
+    // Check stacking rules from current applied promotions
+    const hasExclusive = discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive');
+    if (hasExclusive) {
+      toaster.push(
+        <Notification type="warning" header="Stacking Bound">
+          Existing promotion does not allow additional codes.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
 
-        const validateRes = await fetch("/api/promotions/validate-final", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart: cartSnapshot }),
+    setValidatingCode(true);
+
+    try {
+      const items = await fetchCartSnapshot();
+      const cartSnapshot = {
+        cart_id: shopId,
+        user_id: isGuest ? "guest" : "user",
+        items,
+        subtotal: Total,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        applied_codes: appliedCode ? [appliedCode] : [],
+      };
+
+      const response = await fetch("/api/promotions/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, cart: cartSnapshot }),
+      });
+
+      const result = await response.json();
+      if (result.valid) {
+        setDiscounts({
+          subtotal_discount: parseFloat(result.discounts.subtotal_discount || "0"),
+          service_fee_discount: parseFloat(result.discounts.service_fee_discount || "0"),
+          delivery_fee_discount: parseFloat(result.discounts.delivery_fee_discount || "0"),
+          final_delivery_fee: result.discounts.final_delivery_fee,
+          final_service_fee: result.discounts.final_service_fee,
+          final_subtotal: result.discounts.final_subtotal,
+          final_total: result.discounts.final_total,
+          free_delivery: !!result.discounts.free_delivery,
+          promotions_applied: result.promotions_applied || [],
+          rejected_promotions: result.rejected_promotions || [],
         });
 
-        const validateData = await validateRes.json();
-        if (!validateData.success || !validateData.pricing_token) {
-          toaster.push(
-            <Notification type="error" header="Price Sync Failed">
-              {validateData.message || "Unable to sync final prices. Please try again."}
-            </Notification>,
-            { placement: "topEnd" }
-          );
-          setIsCheckoutLoading(false);
-          return;
-        }
+        setAppliedCode(code);
+        setCodeType(result.is_referral ? "referral" : "promo");
 
-        const finalPayloadDiscounts = validateData.discounts;
-        const pricingToken = validateData.pricing_token;
-        const finalGrandTotal = validateData.final_total;
+        // Re-sync will happen automatically via useEffect [appliedCode]
 
-        if (!finalGrandTotal) {
-          toaster.push(
-            <Notification type="error" header="Price Sync Failed">
-              Unable to verify final total. Please try again.
-            </Notification>,
-            { placement: "topEnd" }
-          );
-          setIsCheckoutLoading(false);
-          return;
-        }
+        toaster.push(
+          <Notification type="success" header="Promotion Applied">
+            {result.message || "Discount applied successfully!"}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      } else {
+        setDiscounts((prev) => ({
+          ...prev,
+          rejected_promotions: result.rejected_promotions || [{ code, reason: result.message }],
+        }));
 
-        // --- Refactored payload builder (Backend = Single Source of Truth) ---
-        let payload: any = {
-          delivery_address_id: deliveryAddressId,
-          delivery_time: deliveryTimestamp,
-          delivery_notes: deliveryNotes || null,
-          pricing_token: pricingToken,
-          payment_method: 
-            selectedPaymentMethod?.type === "card" ? "card" : 
-            selectedPaymentMethod?.type === "wallet" ? "wallet" : 
-            selectedPaymentMethod?.type === "refund" ? "refund" :
-            "mobile_money",
-          payment_method_id: selectedPaymentMethod?.id || null,
-          total_discount: Math.round(finalPayloadDiscounts.total_discount || 0),
-          discount_breakdown: finalPayloadDiscounts.discount_breakdown || {
-            subtotal: 0,
-            service_fee: 0,
-            delivery_fee: 0
-          },
-          applied_promotions: finalPayloadDiscounts.promotions_applied || [],
-          subtotal: Total,
-          items_count: (cartSnapshot as any).items?.length || 0,
-        };
+        toaster.push(
+          <Notification type="error" header="Invalid Code">
+            {result.message || "Invalid code. Please check and try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      }
+    } catch (error) {
+      console.error("Error validating code:", error);
+      toaster.push(
+        <Notification type="error" header="Error">
+          Failed to validate code. Please try again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setValidatingCode(false);
+    }
+  };
 
-        let apiEndpoint = "/api/checkout";
+  // Calculate combined totals from selected additional carts
+  let combinedSubtotal = 0;
+  let combinedUnits = 0;
+  let combinedServiceFee = 0; // Service fee stays the same, not added
+  let combinedDeliveryFee = 0; // This will be 70% for additional carts
 
-        if (isFoodCart && restaurant) {
-          apiEndpoint = "/api/food-checkout";
-          payload = {
-            ...payload,
-            restaurant_id: restaurant.id,
-            service_fee: "0",
-            delivery_fee: Math.round(deliveryFee || 0).toString(),
-            items: restaurant.items.map((item) => ({
-              dish_id: item.id,
-              quantity: item.quantity,
-              price: Math.round(item.price),
-            })),
-          };
-        } else if (selectedCartIds.size > 0) {
-          apiEndpoint = "/api/mutations/create-combined-orders";
-          payload = {
-            ...payload,
-            cart_ids: Array.from(selectedCartIds).concat(shopId),
-            carts: (cartSnapshot as any).carts,
-            stores: [
-              {
-                store_id: shopId,
-                delivery_fee: Math.round(deliveryFee || 0).toString(),
-                service_fee: Math.round(finalServiceFee || 0).toString(),
-              },
-              ...Array.from(selectedCartIds).map((cartId) => ({
-                store_id: cartId,
-              })),
-            ],
-          };
-        } else {
-          payload = {
-            ...payload,
-            shop_id: shopId,
-            service_fee: Math.round(finalServiceFee || 0).toString(),
-            delivery_fee: Math.round(deliveryFee || 0).toString(),
-          };
-        }
+  selectedCartIds.forEach((cartId) => {
+    const details = cartDetails[cartId];
+    if (details) {
+      combinedSubtotal += details.total;
+      combinedUnits += details.units;
+      // Add 70% of delivery fee for additional carts
+      combinedDeliveryFee += (details.deliveryFee || 0) * 0.7;
+    }
+  });
 
-        fetch(apiEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        })
-          .then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) {
-              console.error("❌ Checkout error:", data.error || "Checkout failed");
+  const finalDeliveryFee = (deliveryFee || 0) + combinedDeliveryFee;
+
+  const grandSubtotal = Total + combinedSubtotal;
+  const grandTotalUnits = totalUnits + combinedUnits;
+
+  // Compute numeric final total including service fee and delivery fee, minus discounts
+  // PREFER BACKEND VALUE (Absolute Source of Truth)
+  const finalTotal = discounts.final_total !== undefined
+    ? discounts.final_total
+    : (grandSubtotal - discounts.subtotal_discount + (deliveryFee || 0) + (finalServiceFee || 0));
+
+  const formatPhoneForMoMo = (phone: string) => {
+    let partyId = String(phone).replace(/\D/g, "");
+    if (partyId.startsWith("0")) {
+      partyId = "250" + partyId.slice(1);
+    } else if (!partyId.startsWith("250")) {
+      partyId = "250" + partyId;
+    }
+    return partyId;
+  };
+
+  const handleMoMoPayment = async (orderId: string, amount: number) => {
+    const phone = selectedPaymentMethod?.number || oneTimePhoneNumber;
+    if (!phone) {
+      toaster.push(
+        <Notification type="error" header="Phone Number Required">
+          Please provide a valid MoMo phone number.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      setIsCheckoutLoading(false);
+      return;
+    }
+
+    setPaymentStatus("pending");
+    setProcessingStep("initiating_payment");
+
+    try {
+      const response = await fetch("/api/momo/request-to-pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Math.round(amount),
+          currency: "RWF",
+          payerNumber: formatPhoneForMoMo(phone),
+          externalId: orderId,
+          orderId: orderId,
+          payerMessage: `Order ${orderId.slice(-8)}`,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.referenceId) {
+        setProcessingStep("awaiting_approval");
+        const referenceId = data.referenceId;
+
+        // Polling for payment status
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = setInterval(async () => {
+          try {
+            const statusRes = await fetch(`/api/momo/request-to-pay-status?referenceId=${referenceId}`);
+            const statusData = await statusRes.json();
+
+            if (statusData.status === "SUCCESSFUL") {
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+              setPaymentStatus("success");
+              setProcessingStep("idle");
+
               toaster.push(
-                <Notification type="error" header="Checkout Failed">
-                  {data.error || "There was an error processing your order. Please try again."}
+                <Notification type="success" header="Payment Successful!">
+                  Your payment was successful and your order is being processed.
                 </Notification>,
                 { placement: "topEnd", duration: 5000 }
               );
+
+              // Redirect to success or refresh
+              setTimeout(() => {
+                router.push(`/stores/${shopId}/order-success?orderId=${orderId}`);
+              }, 2000);
+            } else if (["FAILED", "REJECTED", "EXPIRED"].includes(statusData.status)) {
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+              setPaymentStatus("failed");
+              setProcessingStep("idle");
               setIsCheckoutLoading(false);
-            } else {
-              if (isFoodCart && restaurant) {
-                clearRestaurant(restaurant.id);
+
+              toaster.push(
+                <Notification type="error" header="Payment Failed">
+                  {statusData.reason || "Payment request was not successful. Please try again."}
+                </Notification>,
+                { placement: "topEnd", duration: 7000 }
+              );
+            }
+          } catch (pollErr) {
+            console.error("Polling error:", pollErr);
+          }
+        }, 3000);
+
+        // Cleanup interval after 3 minutes
+        setTimeout(() => {
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setProcessingStep("idle");
+            setIsCheckoutLoading(false);
+          }
+        }, 180000);
+      } else {
+        setPaymentStatus("failed");
+        setProcessingStep("idle");
+        setIsCheckoutLoading(false);
+        toaster.push(
+          <Notification type="error" header="MoMo Request Failed">
+            {data.error || "Failed to initiate MoMo prompt. Please check your number and try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      }
+    } catch (err) {
+      setPaymentStatus("failed");
+      setProcessingStep("idle");
+      setIsCheckoutLoading(false);
+      console.error("MoMo payment error:", err);
+    }
+  };
+
+  const handleProceedToCheckout = async () => {
+    // Validate cart has items
+    if (totalUnits <= 0) {
+      toaster.push(
+        <Notification type="warning" header="Empty Cart">
+          Your cart is empty.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
+    // Get selected delivery address from cookie
+    const cookieValue = Cookies.get("delivery_address");
+    if (!cookieValue) {
+      toaster.push(
+        <Notification type="error" header="Address Required">
+          Please select a delivery address.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
+    let addressObj;
+    try {
+      addressObj = JSON.parse(cookieValue);
+    } catch (err) {
+      console.error("❌ Error parsing delivery_address cookie:", err);
+      toaster.push(
+        <Notification type="error" header="Invalid Address">
+          Invalid delivery address. Please select again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
+    const deliveryAddressId = addressObj.id;
+    if (!deliveryAddressId) {
+      toaster.push(
+        <Notification type="error" header="Invalid Address">
+          Please select a valid delivery address.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
+    setIsCheckoutLoading(true);
+
+    try {
+      const items = await fetchCartSnapshot();
+      const cartSnapshot = {
+        cart_id: shopId,
+        user_id: isGuest ? "guest" : "user",
+        items,
+        subtotal: Total,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        applied_codes: appliedCode ? [appliedCode] : [],
+      };
+
+      const validateRes = await fetch("/api/promotions/validate-final", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart: cartSnapshot }),
+      });
+
+      const validateData = await validateRes.json();
+      if (!validateData.success || !validateData.pricing_token) {
+        toaster.push(
+          <Notification type="error" header="Price Sync Failed">
+            {validateData.message || "Unable to sync final prices. Please try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+        setIsCheckoutLoading(false);
+        return;
+      }
+
+      const finalPayloadDiscounts = validateData.discounts;
+      const pricingToken = validateData.pricing_token;
+      const finalGrandTotal = validateData.final_total;
+
+      if (!finalGrandTotal) {
+        toaster.push(
+          <Notification type="error" header="Price Sync Failed">
+            Unable to verify final total. Please try again.
+          </Notification>,
+          { placement: "topEnd" }
+        );
+        setIsCheckoutLoading(false);
+        return;
+      }
+
+      // --- Refactored payload builder (Backend = Single Source of Truth) ---
+      let payload: any = {
+        delivery_address_id: deliveryAddressId,
+        delivery_time: deliveryTimestamp,
+        delivery_notes: deliveryNotes || null,
+        pricing_token: pricingToken,
+        payment_method:
+          selectedPaymentMethod?.type === "card" ? "card" :
+            selectedPaymentMethod?.type === "wallet" ? "wallet" :
+              selectedPaymentMethod?.type === "refund" ? "refund" :
+                "mobile_money",
+        payment_method_id: selectedPaymentMethod?.id || null,
+        total_discount: Math.round(finalPayloadDiscounts.total_discount || 0),
+        discount_breakdown: finalPayloadDiscounts.discount_breakdown || {
+          subtotal: 0,
+          service_fee: 0,
+          delivery_fee: 0
+        },
+        applied_promotions: finalPayloadDiscounts.promotions_applied || [],
+        subtotal: Total,
+        items_count: (cartSnapshot as any).items?.length || 0,
+      };
+
+      let apiEndpoint = "/api/checkout";
+
+      if (isFoodCart && restaurant) {
+        apiEndpoint = "/api/food-checkout";
+        payload = {
+          ...payload,
+          restaurant_id: restaurant.id,
+          service_fee: "0",
+          delivery_fee: Math.round(deliveryFee || 0).toString(),
+          items: restaurant.items.map((item) => ({
+            dish_id: item.id,
+            quantity: item.quantity,
+            price: Math.round(item.price),
+          })),
+        };
+      } else if (selectedCartIds.size > 0) {
+        apiEndpoint = "/api/mutations/create-combined-orders";
+        payload = {
+          ...payload,
+          cart_ids: Array.from(selectedCartIds).concat(shopId),
+          carts: (cartSnapshot as any).carts,
+          stores: [
+            {
+              store_id: shopId,
+              delivery_fee: Math.round(deliveryFee || 0).toString(),
+              service_fee: Math.round(finalServiceFee || 0).toString(),
+            },
+            ...Array.from(selectedCartIds).map((cartId) => ({
+              store_id: cartId,
+            })),
+          ],
+        };
+      } else {
+        payload = {
+          ...payload,
+          shop_id: shopId,
+          service_fee: Math.round(finalServiceFee || 0).toString(),
+          delivery_fee: Math.round(deliveryFee || 0).toString(),
+        };
+      }
+
+      fetch(apiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) {
+            console.error("❌ Checkout error:", data.error || "Checkout failed");
+            toaster.push(
+              <Notification type="error" header="Checkout Failed">
+                {data.error || "There was an error processing your order. Please try again."}
+              </Notification>,
+              { placement: "topEnd", duration: 5000 }
+            );
+            setIsCheckoutLoading(false);
+          } else {
+            if (isFoodCart && restaurant) {
+              clearRestaurant(restaurant.id);
+              if (selectedPaymentMethod?.type === "momo" && data.order_id) {
+                handleMoMoPayment(data.order_id, finalGrandTotal);
+              } else {
                 toaster.push(
                   <Notification type="success" header="Food Order Completed Successfully!">
                     Your food order has been placed! You can view it in "Current Orders".
                   </Notification>,
                   { placement: "topEnd", duration: 5000 }
                 );
+              }
+            } else {
+              const isCombinedOrder = data.combined_order_id && data.orders;
+              const orderId = isCombinedOrder ? data.combined_order_id : data.order_id;
+
+              if (selectedPaymentMethod?.type === "momo" && orderId) {
+                handleMoMoPayment(orderId, finalGrandTotal);
               } else {
-                const isCombinedOrder = data.combined_order_id && data.orders;
-                const orderId = isCombinedOrder ? data.combined_order_id : data.order_id;
-
-                if (selectedPaymentMethod?.type === "momo" && orderId) {
-                  const phone = selectedPaymentMethod.number || oneTimePhoneNumber;
-                  fetch("/api/momo/request-to-pay", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      amount: Math.round(finalGrandTotal),
-                      currency: "RWF",
-                      payerNumber: phone,
-                      externalId: orderId,
-                      orderId: orderId,
-                      payerMessage: `Order ${orderId.slice(-8)}`,
-                    }),
-                  })
-                    .then(async (momoRes) => {
-                      const momoData = await momoRes.json();
-                      if (momoRes.ok && momoData.referenceId) {
-                        router.push(`/stores/${shopId}/payment-pending?orderId=${orderId}&referenceId=${momoData.referenceId}`);
-                      } else {
-                        toaster.push(
-                          <Notification type="warning" header="Payment Pending">
-                            {momoData.error || "Failed to initiate MoMo prompt."}
-                          </Notification>,
-                          { placement: "topEnd", duration: 7000 }
-                        );
-                      }
-                    });
-                }
-
                 toaster.push(
                   <Notification type="success" header="Order Completed Successfully!">
                     {isCombinedOrder
@@ -1643,29 +1740,30 @@ export default function CheckoutItems({
                   { placement: "topEnd", duration: 5000 }
                 );
               }
-
-              setTimeout(() => {
-                const detail = isFoodCart ? { refetch: true } : { shop_id: shopId, refetch: true };
-                window.dispatchEvent(new CustomEvent("cartChanged", { detail }));
-                if (!isFoodCart && data.orders) {
-                  data.orders.forEach((o: any) => {
-                    window.dispatchEvent(new CustomEvent("cartChanged", { detail: { shop_id: o.shop_id, refetch: true } }));
-                  });
-                }
-              }, 500);
-              
-              setIsCheckoutLoading(false);
             }
-          })
-          .catch((err) => {
-            console.error("❌ Checkout fetch error:", err);
+
+            setTimeout(() => {
+              const detail = isFoodCart ? { refetch: true } : { shop_id: shopId, refetch: true };
+              window.dispatchEvent(new CustomEvent("cartChanged", { detail }));
+              if (!isFoodCart && data.orders) {
+                data.orders.forEach((o: any) => {
+                  window.dispatchEvent(new CustomEvent("cartChanged", { detail: { shop_id: o.shop_id, refetch: true } }));
+                });
+              }
+            }, 500);
+
             setIsCheckoutLoading(false);
-          });
-      } catch (err: any) {
-        console.error("❌ Checkout setup error:", err);
-        setIsCheckoutLoading(false);
-      }
-    };
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Checkout fetch error:", err);
+          setIsCheckoutLoading(false);
+        });
+    } catch (err: any) {
+      console.error("❌ Checkout setup error:", err);
+      setIsCheckoutLoading(false);
+    }
+  };
 
   // Toggle mobile checkout card expanded/collapsed state
   const toggleExpand = () => {
@@ -1806,12 +1904,14 @@ export default function CheckoutItems({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
+          <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+            d="M15 2l4 4"
           />
+          <rect x="8" y="10" width="8" height="5" rx="1" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     }
@@ -1860,8 +1960,8 @@ export default function CheckoutItems({
         label: canUseWallet
           ? `Wallet (${formatCurrency(walletBalance)} available)`
           : `Wallet (${formatCurrency(
-              walletBalance
-            )} available - Insufficient)`,
+            walletBalance
+          )} available - Insufficient)`,
         value: "wallet",
       });
     }
@@ -1878,14 +1978,8 @@ export default function CheckoutItems({
 
     // Add saved payment methods
     savedPaymentMethods.forEach((method) => {
-      const displayNumber =
-        method.method.toLowerCase() === "mtn momo"
-          ? `•••• ${method.number.slice(-3)}`
-          : `•••• ${method.number.slice(-4)}`;
       options.push({
-        label: `${method.method} ${displayNumber}${
-          method.is_default ? " (Default)" : ""
-        }`,
+        label: `${method.number}${method.is_default ? " · Primary" : ""}`,
         value: method.id,
         methodType: method.method,
       });
@@ -1893,7 +1987,7 @@ export default function CheckoutItems({
 
     // Add one-time phone number option
     options.push({
-      label: "Use One-Time Phone Number",
+      label: "Other Number (MTN)",
       value: "one-time-phone",
     });
 
@@ -1903,9 +1997,8 @@ export default function CheckoutItems({
   // Prepare address options for dropdown
   const getAddressOptions = () => {
     return savedAddresses.map((address) => ({
-      label: `${address.street}, ${address.city}${
-        address.is_default ? " (Default)" : ""
-      }`,
+      label: `${address.street}, ${address.city}${address.is_default ? " (Default)" : ""
+        }`,
       value: address.id,
     }));
   };
@@ -1973,19 +2066,19 @@ export default function CheckoutItems({
           {selectedPaymentMethod.type === "refund"
             ? "REFUND"
             : selectedPaymentMethod.type === "wallet"
-            ? "WALLET"
-            : selectedPaymentMethod.type === "momo"
-            ? "MOMO"
-            : "VISA"}
+              ? "WALLET"
+              : selectedPaymentMethod.type === "momo"
+                ? "MOMO"
+                : "VISA"}
         </div>
         <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
             : selectedPaymentMethod.type === "wallet"
-            ? `Wallet (${formatCurrency(walletBalance)} available)`
-            : selectedPaymentMethod.type === "momo"
-            ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
-            : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
+              ? `Wallet (${formatCurrency(walletBalance)} available)`
+              : selectedPaymentMethod.type === "momo"
+                ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
+                : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
         </span>
       </div>
     );
@@ -2022,9 +2115,8 @@ export default function CheckoutItems({
       {isCheckoutLoading && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div
-            className={`rounded-xl p-8 shadow-2xl ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
+            className={`rounded-xl p-8 shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
           >
             <div className="flex flex-col items-center space-y-4">
               {/* Spinner */}
@@ -2033,16 +2125,14 @@ export default function CheckoutItems({
               {/* Loading Text */}
               <div className="text-center">
                 <h3
-                  className={`text-lg font-semibold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   Processing Your Order
                 </h3>
                 <p
-                  className={`mt-2 text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`mt-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Please wait while we process your checkout and refresh your
                   cart...
@@ -2079,22 +2169,19 @@ export default function CheckoutItems({
       )}
 
       <div
-        className={`fixed w-full transition-all duration-300 md:hidden ${
-          theme === "dark" ? "bg-gray-900" : "bg-white"
-        } ${
-          isExpanded
+        className={`fixed w-full transition-all duration-300 md:hidden ${theme === "dark" ? "bg-gray-900" : "bg-white"
+          } ${isExpanded
             ? "inset-0 z-[10000] mt-[5vh] flex h-[95vh] flex-col rounded-t-3xl shadow-2xl"
             : "bottom-20 left-0 right-0 z-[9998] rounded-t-3xl border-t-2 shadow-2xl"
-        } ${
-          theme === "dark" && !isExpanded
+          } ${theme === "dark" && !isExpanded
             ? "border-gray-700"
             : !isExpanded
-            ? "border-gray-200"
-            : ""
-        }`}
+              ? "border-gray-200"
+              : ""
+          }`}
         style={{
           maxHeight: isExpanded ? "95vh" : "auto",
-          overflow: isExpanded ? "visible" : "hidden",
+          overflow: isExpanded ? "hidden" : "hidden",
           boxShadow: !isExpanded
             ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1)"
             : undefined,
@@ -2103,9 +2190,8 @@ export default function CheckoutItems({
       >
         {/* Header with toggle button */}
         <div
-          className={`px-4 ${isExpanded ? "border-b py-4" : "py-3"} ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
+          className={`px-4 ${isExpanded ? "border-b py-4" : "py-3"} ${theme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}
         >
           <div
             className="flex items-center justify-between"
@@ -2114,14 +2200,12 @@ export default function CheckoutItems({
             <div className="flex items-center gap-3">
               {isExpanded && (
                 <div
-                  className={`rounded-lg p-2 ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                  }`}
+                  className={`rounded-lg p-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                    }`}
                 >
                   <svg
-                    className={`h-6 w-6 ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                    className={`h-6 w-6 ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2137,19 +2221,16 @@ export default function CheckoutItems({
               )}
               <div>
                 <span
-                  className={`${
-                    isExpanded ? "text-xl" : "text-base"
-                  } font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`${isExpanded ? "text-xl" : "text-base"
+                    } font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   Order Summary
                 </span>
                 {isExpanded && (
                   <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
+                    className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
                   >
                     {grandTotalUnits} items
                     {selectedCartIds.size > 0 &&
@@ -2173,9 +2254,8 @@ export default function CheckoutItems({
             <div className="flex items-center gap-3">
               {!isExpanded && (
                 <span
-                  className={`text-lg font-bold ${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
-                  }`}
+                  className={`text-lg font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
                 >
                   {isPricingAvailable ? formatCurrency(finalTotal) : (
                     <span className="text-xs animate-pulse opacity-70 italic font-normal">Syncing...</span>
@@ -2187,11 +2267,10 @@ export default function CheckoutItems({
                   e.stopPropagation();
                   toggleExpand();
                 }}
-                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
-                  theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-700"
-                    : "text-gray-600 hover:bg-gray-100"
-                } ${isExpanded ? "active:scale-95" : ""}`}
+                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${theme === "dark"
+                  ? "text-gray-300 hover:bg-gray-700"
+                  : "text-gray-600 hover:bg-gray-100"
+                  } ${isExpanded ? "active:scale-95" : ""}`}
               >
                 {isExpanded ? (
                   <svg
@@ -2243,9 +2322,8 @@ export default function CheckoutItems({
 
         {/* Expanded content */}
         <div
-          className={`flex-1 ${
-            isExpanded ? "flex flex-col" : "hidden"
-          } overflow-hidden`}
+          className={`flex-1 ${isExpanded ? "flex flex-col" : "hidden"
+            } overflow-hidden`}
         >
           <div className="flex-1 overflow-y-auto p-4">
             {/* Combine button - Mobile (only show when expanded) */}
@@ -2278,9 +2356,8 @@ export default function CheckoutItems({
                     />
                   </svg>
                   {selectedCartIds.size > 0
-                    ? `${selectedCartIds.size} Cart${
-                        selectedCartIds.size !== 1 ? "s" : ""
-                      } Combined`
+                    ? `${selectedCartIds.size} Cart${selectedCartIds.size !== 1 ? "s" : ""
+                    } Combined`
                     : "Combine with Other Carts"}
                 </span>
               </Button>
@@ -2289,9 +2366,8 @@ export default function CheckoutItems({
             {discountsEnabled && (
               <div>
                 <p
-                  className={`mb-0.5 ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`mb-0.5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Promo or Referral Code
                 </p>
@@ -2302,11 +2378,10 @@ export default function CheckoutItems({
                     onChange={(e) => setDiscountCode(e.target.value)}
                     disabled={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive')}
                     placeholder={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "Exclusive promo applied" : "Enter promo or referral code"}
-                    className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                      theme === "dark"
-                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                    } ${discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      } ${discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "opacity-50 cursor-not-allowed" : ""}`}
                   />
                   <Button
                     appearance="primary"
@@ -2327,18 +2402,16 @@ export default function CheckoutItems({
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between py-1">
                 <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Subtotal{" "}
                   {selectedCartIds.size > 0 &&
                     `(${selectedCartIds.size + 1} carts)`}
                 </span>
                 <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   {formatCurrency(grandSubtotal)}
                 </span>
@@ -2348,11 +2421,10 @@ export default function CheckoutItems({
                 <div key={idx} className="flex justify-between py-1 text-green-600 dark:text-green-400">
                   <div className="flex items-center gap-1 text-sm">
                     <span className="capitalize">{promo.name || promo.promotion_type?.replace(/_/g, " ")}</span>
-                    <span className={`text-[10px] uppercase font-bold px-1 rounded ${
-                      promo.funded_by === 'merchant' ? 'bg-orange-100 text-orange-600' :
+                    <span className={`text-[10px] uppercase font-bold px-1 rounded ${promo.funded_by === 'merchant' ? 'bg-orange-100 text-orange-600' :
                       promo.funded_by === 'shared' ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-green-100 text-green-600'
-                    }`}>
+                        'bg-green-100 text-green-600'
+                      }`}>
                       {promo.funded_by || "Platform"}
                     </span>
                     {promo.influencer_code && (
@@ -2414,50 +2486,44 @@ export default function CheckoutItems({
               )}
               <div className="flex justify-between py-1">
                 <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Units
                 </span>
                 <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   {grandTotalUnits}
                 </span>
               </div>
               <div className="flex justify-between py-1">
                 <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Service Fee
                 </span>
                 <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   {formatCurrency(finalServiceFee)}
                 </span>
               </div>
               <div className="flex justify-between py-1">
                 <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Delivery Fee{" "}
                   {selectedCartIds.size > 0 &&
                     `(+${selectedCartIds.size} at 70%)`}
                 </span>
                 <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   {formatCurrency(finalDeliveryFee)}
                 </span>
@@ -2465,9 +2531,8 @@ export default function CheckoutItems({
               <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
               <div className="flex justify-between py-1">
                 <span
-                  className={`text-lg font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   Total
                 </span>
@@ -2479,9 +2544,8 @@ export default function CheckoutItems({
               </div>
               <div className="flex justify-between py-1">
                 <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Delivery Time
                 </span>
@@ -2494,9 +2558,8 @@ export default function CheckoutItems({
             </div>
             <div className="mt-2">
               <h4
-                className={`mb-1 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`mb-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
               >
                 Delivery Address
               </h4>
@@ -2507,21 +2570,19 @@ export default function CheckoutItems({
                     setShowAddressDropdown(!showAddressDropdown);
                     setShowPaymentDropdown(false);
                   }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedAddressId
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  }`}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${selectedAddressId
+                    ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                    : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                    }`}
                 >
                   {selectedAddressId
                     ? getAddressOptions().find(
-                        (opt) => opt.value === selectedAddressId
-                      )?.label || "Select delivery address"
+                      (opt) => opt.value === selectedAddressId
+                    )?.label || "Select delivery address"
                     : "Select delivery address"}
                   <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showAddressDropdown ? "rotate-180" : ""
-                    }`}
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${showAddressDropdown ? "rotate-180" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2549,11 +2610,10 @@ export default function CheckoutItems({
                             handleAddressChange(option.value);
                             setShowAddressDropdown(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            selectedAddressId === option.value
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                          }`}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${selectedAddressId === option.value
+                            ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                            : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                            }`}
                         >
                           {option.label}
                         </button>
@@ -2577,9 +2637,8 @@ export default function CheckoutItems({
             </div>
             <div className="mt-2">
               <h4
-                className={`mb-1 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`mb-1 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
               >
                 Payment Method
               </h4>
@@ -2588,9 +2647,8 @@ export default function CheckoutItems({
               {isGuest ? (
                 <div>
                   <p
-                    className={`mb-2 text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
+                    className={`mb-2 text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
                   >
                     Pay with MTN Mobile Money
                   </p>
@@ -2599,11 +2657,10 @@ export default function CheckoutItems({
                     placeholder="Enter phone number (e.g., 078XXXXXXX)"
                     value={oneTimePhoneNumber}
                     onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                      theme === "dark"
-                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                    }`}
+                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
                   />
                 </div>
               ) : (
@@ -2616,21 +2673,19 @@ export default function CheckoutItems({
                         setShowPaymentDropdown(!showPaymentDropdown);
                         setShowAddressDropdown(false);
                       }}
-                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                        selectedPaymentValue
-                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                      }`}
+                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${selectedPaymentValue
+                        ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                        : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
                     >
                       {selectedPaymentValue
                         ? getPaymentMethodOptions().find(
-                            (opt) => opt.value === selectedPaymentValue
-                          )?.label || "Select payment method"
+                          (opt) => opt.value === selectedPaymentValue
+                        )?.label || "Select payment method"
                         : "Select payment method"}
                       <svg
-                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                          showPaymentDropdown ? "rotate-180" : ""
-                        }`}
+                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${showPaymentDropdown ? "rotate-180" : ""
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -2665,22 +2720,20 @@ export default function CheckoutItems({
                                   }
                                 }}
                                 disabled={isWalletInsufficient}
-                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                                  isWalletInsufficient
-                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                    : selectedPaymentValue === option.value
+                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${isWalletInsufficient
+                                  ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                  : selectedPaymentValue === option.value
                                     ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                                     : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                                }`}
+                                  }`}
                               >
                                 <span
-                                  className={`flex-shrink-0 ${
-                                    isWalletInsufficient
-                                      ? "text-red-500 dark:text-red-400"
-                                      : selectedPaymentValue === option.value
+                                  className={`flex-shrink-0 ${isWalletInsufficient
+                                    ? "text-red-500 dark:text-red-400"
+                                    : selectedPaymentValue === option.value
                                       ? "text-green-600 dark:text-green-400"
                                       : "text-gray-500 dark:text-gray-400"
-                                  }`}
+                                    }`}
                                 >
                                   {getPaymentMethodIcon(
                                     option.value,
@@ -2696,17 +2749,21 @@ export default function CheckoutItems({
                     )}
                   </div>
                   {showOneTimePhoneInput && (
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={oneTimePhoneNumber}
-                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                      className={`mt-2 w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                        theme === "dark"
+                    <div className="mt-2">
+                      <p className={`mb-1 text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        Enter your MTN Mobile Money number
+                      </p>
+                      <input
+                        type="tel"
+                        placeholder="e.g. 078XXXXXXX"
+                        value={oneTimePhoneNumber}
+                        onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                        className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
                           ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
                           : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      }`}
-                    />
+                          }`}
+                      />
+                    </div>
                   )}
                 </>
               )}
@@ -2714,9 +2771,8 @@ export default function CheckoutItems({
             {/* Delivery Notes Input */}
             <div className="mt-2">
               <h4
-                className={`mb-0.5 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`mb-0.5 text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
               >
                 Add a Note
               </h4>
@@ -2726,21 +2782,19 @@ export default function CheckoutItems({
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
-                className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                  theme === "dark"
-                    ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                    : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                }`}
+                className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
+                  ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                  : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                  }`}
               />
             </div>
           </div>
           {/* Proceed to Checkout Button - Fixed at bottom */}
           <div
-            className={`border-t p-4 ${
-              theme === "dark"
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
+            className={`border-t p-4 ${theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-white"
+              }`}
           >
             <Button
               appearance="primary"
@@ -2760,34 +2814,29 @@ export default function CheckoutItems({
 
       {/* Desktop View - Premium Floating Bottom Card */}
       <div
-        className={`fixed left-0 right-0 z-[9998] hidden transition-all duration-500 ease-in-out md:block md:left-16 ${
-          isExpanded
-            ? "bottom-0 h-[75vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
-            : "bottom-0 h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]"
-        } ${
-          theme === "dark"
+        className={`fixed left-0 right-0 z-[9998] hidden transition-all duration-500 ease-in-out md:block md:left-16 ${isExpanded
+          ? "bottom-0 h-[75vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
+          : "bottom-0 h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]"
+          } ${theme === "dark"
             ? "bg-gray-900/95 border-t border-gray-800"
             : "bg-white/95 border-t border-gray-200"
-        } backdrop-blur-xl`}
+          } backdrop-blur-xl`}
       >
         <div className="mx-auto h-full max-w-7xl px-8">
           {/* Collapsed Bar Content */}
           <div
-            className={`flex h-24 items-center justify-between transition-opacity duration-300 ${
-              isExpanded ? "opacity-0 pointer-events-none absolute" : "opacity-100"
-            }`}
+            className={`flex h-24 items-center justify-between transition-opacity duration-300 ${isExpanded ? "opacity-0 pointer-events-none absolute" : "opacity-100"
+              }`}
           >
             <div className="flex items-center gap-8">
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
+                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}>
                   Order Summary
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className={`text-2xl font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}>
+                  <span className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}>
                     {grandTotalUnits} Items
                   </span>
                   {selectedCartIds.size > 0 && (
@@ -2801,14 +2850,12 @@ export default function CheckoutItems({
               <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
 
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
+                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}>
                   Total Payable
                 </span>
-                <span className={`text-2xl font-black ${
-                  theme === "dark" ? "text-green-400" : "text-green-600"
-                }`}>
+                <span className={`text-2xl font-black ${theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}>
                   {isPricingAvailable ? formatCurrency(finalTotal) : (
                     <span className="text-sm animate-pulse opacity-70 italic font-normal">Syncing pricing...</span>
                   )}
@@ -2818,20 +2865,17 @@ export default function CheckoutItems({
               <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
 
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
+                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}>
                   Payment Method
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                    theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-                  }`}>
+                  <div className={`flex h-5 w-5 items-center justify-center rounded-full ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                    }`}>
                     {getPaymentMethodIcon(selectedPaymentValue)}
                   </div>
-                  <span className={`text-sm font-bold truncate max-w-[130px] ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}>
+                  <span className={`text-sm font-bold truncate max-w-[130px] ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}>
                     {getPaymentMethodOptions().find(opt => opt.value === selectedPaymentValue)?.label.split('(')[0].trim() || "Select Method"}
                   </span>
                 </div>
@@ -2840,9 +2884,8 @@ export default function CheckoutItems({
               <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
 
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
+                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}>
                   Est. Delivery
                 </span>
                 <div className="flex items-center gap-2 text-sm font-bold">
@@ -2856,11 +2899,10 @@ export default function CheckoutItems({
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleExpand}
-                className={`group flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`group flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${theme === "dark"
+                  ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 <span>View Details</span>
                 <svg
@@ -2908,9 +2950,8 @@ export default function CheckoutItems({
                 </div>
                 <button
                   onClick={toggleExpand}
-                  className={`rounded-full p-2 transition-colors ${
-                    theme === "dark" ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"
-                  }`}
+                  className={`rounded-full p-2 transition-colors ${theme === "dark" ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"
+                    }`}
                 >
                   <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -2924,9 +2965,8 @@ export default function CheckoutItems({
                   <div className="space-y-6">
                     {/* Combine Carts Action */}
                     {!loadingCarts && availableCarts.length > 0 && (
-                      <div className={`rounded-2xl border-2 border-dashed p-6 transition-colors ${
-                        theme === "dark" ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"
-                      }`}>
+                      <div className={`rounded-2xl border-2 border-dashed p-6 transition-colors ${theme === "dark" ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"
+                        }`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="rounded-xl bg-blue-500/10 p-3 text-blue-500">
@@ -2967,7 +3007,7 @@ export default function CheckoutItems({
                             {formatCurrency(grandSubtotal)}
                           </span>
                         </div>
-                        
+
                         {/* Promotions */}
                         {discounts?.promotions_applied?.map((promo: any, idx: number) => (
                           <div key={idx} className="flex justify-between items-center text-green-500">
@@ -2993,7 +3033,7 @@ export default function CheckoutItems({
                             {formatCurrency(finalDeliveryFee)}
                           </span>
                         </div>
-                        
+
                         <div className={`mt-4 border-t pt-4 flex justify-between items-center ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
                           <span className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Total</span>
                           <span className={`text-2xl font-black ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
@@ -3013,11 +3053,10 @@ export default function CheckoutItems({
                             value={discountCode}
                             onChange={(e) => setDiscountCode(e.target.value)}
                             placeholder="Enter code here"
-                            className={`flex-1 rounded-xl border px-4 py-3 transition-all ${
-                              theme === "dark"
-                                ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
-                                : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
-                            }`}
+                            className={`flex-1 rounded-xl border px-4 py-3 transition-all ${theme === "dark"
+                              ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
+                              : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
+                              }`}
                           />
                           <Button
                             appearance="primary"
@@ -3035,7 +3074,7 @@ export default function CheckoutItems({
                 </div>
 
                 {/* Right Side: Delivery & Payment */}
-                <div className="w-[400px] flex flex-col gap-6">
+                <div className="w-[400px] flex flex-col gap-6 overflow-y-auto pr-1 scrollbar-hide">
                   {/* Delivery Address */}
                   <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"}`}>
                     <div className="mb-4 flex items-center justify-between">
@@ -3073,11 +3112,10 @@ export default function CheckoutItems({
                     <div className="relative">
                       <button
                         onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
-                        className={`group flex w-full items-center justify-between rounded-xl border-2 p-4 transition-all ${
-                          theme === "dark"
-                            ? "bg-gray-900 border-gray-700 hover:border-green-500"
-                            : "bg-white border-gray-200 hover:border-green-500"
-                        }`}
+                        className={`group flex w-full items-center justify-between rounded-xl border-2 p-4 transition-all ${theme === "dark"
+                          ? "bg-gray-900 border-gray-700 hover:border-green-500"
+                          : "bg-white border-gray-200 hover:border-green-500"
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-green-500">
@@ -3104,15 +3142,33 @@ export default function CheckoutItems({
                                   handlePaymentMethodChange(option.value);
                                   setShowPaymentDropdown(false);
                                 }}
-                                className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
-                                  isWalletInsufficient ? "opacity-40 grayscale cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                                }`}
+                                className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${isWalletInsufficient ? "opacity-40 grayscale cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                  }`}
                               >
                                 <span className="text-green-500">{getPaymentMethodIcon(option.value)}</span>
                                 <span className="font-medium">{option.label}</span>
                               </button>
                             );
                           })}
+                        </div>
+                      )}
+
+                      {/* Phone number input when "Use Another Number" is selected */}
+                      {showOneTimePhoneInput && (
+                        <div className="mt-3">
+                          <p className={`mb-1 text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                            Enter your MTN Mobile Money number
+                          </p>
+                          <input
+                            type="tel"
+                            placeholder="e.g. 078XXXXXXX"
+                            value={oneTimePhoneNumber}
+                            onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                            className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 ${theme === "dark"
+                              ? "border-gray-700 bg-gray-900 text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500/20"
+                              : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                              }`}
+                          />
                         </div>
                       )}
                     </div>
@@ -3130,11 +3186,10 @@ export default function CheckoutItems({
                         value={deliveryNotes}
                         onChange={(e) => setDeliveryNotes(e.target.value)}
                         placeholder="Delivery instructions (e.g. Leave at door)"
-                        className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-green-500/20 ${
-                          theme === "dark"
-                            ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
-                            : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
-                        }`}
+                        className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-green-500/20 ${theme === "dark"
+                          ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
+                          : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
+                          }`}
                       />
                     </div>
 
@@ -3198,6 +3253,10 @@ export default function CheckoutItems({
         loadingCarts={loadingCarts}
         onContinue={() => setShowCombineModal(false)}
       />
+
+      {processingStep !== "idle" && (
+        <PaymentProcessingOverlay processingStep={processingStep as "initiating_payment" | "awaiting_approval"} />
+      )}
     </>
   );
 }

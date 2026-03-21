@@ -224,7 +224,8 @@ export default async function handler(
     applied_promotions, // Array of { promotion_id, code, influencer_id, discount_amount, funded_by }
     discount_breakdown, // { subtotal, service_fee, delivery_fee }
     delivery_time,
-    subtotal
+    subtotal,
+    payment_method
   } = req.body;
   if (
     !shop_id ||
@@ -242,15 +243,15 @@ export default async function handler(
   }
 
   const expectedHash = crypto.createHash('sha256')
-    .update(JSON.stringify({ 
-      cart_id: shop_id, 
+    .update(JSON.stringify({
+      cart_id: shop_id,
       items: req.body.items_count || 0, // Should be passed or re-calculated
       subtotal: parseFloat(subtotal || "0"),
       total_discount: parseFloat(discount || "0"),
-      timestamp: Math.floor(Date.now() / 60000) 
+      timestamp: Math.floor(Date.now() / 60000)
     }))
     .digest('hex');
-  
+
   // Note: For now we'll allow a bit of drift or just log it if we're in dev.
   // if (pricing_token !== expectedHash) {
   //   return res.status(400).json({ error: "Invalid or expired pricing token" });
@@ -318,7 +319,7 @@ export default async function handler(
       shop_id,
       delivery_address_id,
       total: actualTotal.toFixed(2),
-      status: "PENDING",
+      status: payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
       service_fee,
       delivery_fee,
       discount: discount ?? "0",

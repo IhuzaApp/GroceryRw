@@ -217,7 +217,8 @@ export default async function handler(
       applied_promotions, // Array of { promotion_id, code, influencer_id, discount_amount, funded_by }
       discount_breakdown, // { subtotal, service_fee, delivery_fee }
       subtotal,
-      total_discount
+      total_discount,
+      payment_method
     } = req.body;
 
     // Validate required fields
@@ -239,15 +240,15 @@ export default async function handler(
     }
 
     const expectedHash = crypto.createHash('sha256')
-      .update(JSON.stringify({ 
-        cart_id: stores[0]?.store_id, 
+      .update(JSON.stringify({
+        cart_id: stores[0]?.store_id,
         items: req.body.items_count || 0,
         subtotal: parseFloat(subtotal || "0"),
         total_discount: parseFloat(total_discount || "0"),
-        timestamp: Math.floor(Date.now() / 60000) 
+        timestamp: Math.floor(Date.now() / 60000)
       }))
       .digest('hex');
-    
+
     // In production, we'd verify pricing_token === expectedHash here.
 
     // Generate a single combined_order_id and PIN for all orders
@@ -349,7 +350,7 @@ export default async function handler(
         shop_id: store_id,
         delivery_address_id,
         total: actualTotal.toFixed(2),
-        status: "PENDING",
+        status: payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
         service_fee,
         delivery_fee,
         discount: discount ?? null,
@@ -395,7 +396,7 @@ export default async function handler(
                   promotion_id: promo.promotion_id,
                   shop_order_id: orderId,
                   order_value: actualTotal.toFixed(2),
-                  earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2), 
+                  earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2),
                   payout_status: "pending",
                   status: "active"
                 }

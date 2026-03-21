@@ -6,7 +6,7 @@ import { formatCurrency } from "../lib/formatCurrency";
 // Check if Firebase credentials are available
 const hasFirebaseCredentials = () => {
   return !!(
-    process.env.FIREBASE_PROJECT_ID &&
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
     process.env.FIREBASE_CLIENT_EMAIL &&
     process.env.FIREBASE_PRIVATE_KEY
   );
@@ -19,13 +19,25 @@ let db: any = null;
 if (hasFirebaseCredentials()) {
   try {
     if (!getApps().length) {
-      const projectId = process.env.FIREBASE_PROJECT_ID;
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(
-        /\\n/g,
-        "\n"
-      );
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
+      if (privateKey) {
+        // Remove surrounding quotes and trim
+        privateKey = privateKey.trim();
+        privateKey = privateKey.replace(/^['"]+|['"]+$/g, '');
+        // Replace literal \n with newlines
+        privateKey = privateKey.replace(/\\n/g, '\n');
+
+        // Ensure it starts and ends correctly (PKCS#8 format)
+        if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+          privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
+        }
+        if (!privateKey.includes('-----END PRIVATE KEY-----')) {
+          privateKey = privateKey.trim() + '\n-----END PRIVATE KEY-----\n';
+        }
+      }
 
       initializeApp({
         credential: cert({
@@ -33,13 +45,13 @@ if (hasFirebaseCredentials()) {
           clientEmail,
           privateKey,
         }),
-        projectId, // Explicitly set projectId at top level
+        projectId,
       });
     }
     messaging = getMessaging();
-    const databaseId = process.env.FIREBASE_DATABASE_ID || "default";
-    db = getFirestore(databaseId);
-    console.log(`✅ [FCM Service] Firebase Admin SDK initialized successfully (DB: ${databaseId})`);
+    db = getFirestore();
+
+    console.log(`✅ [FCM Service] Firebase Admin SDK initialized successfully (Project: ${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID})`);
   } catch (error) {
     console.error(
       "❌ [FCM Service] Failed to initialize Firebase Admin SDK:",
@@ -121,9 +133,20 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
     });
 
     return tokens;
-  } catch (error) {
+  } catch (error: any) {
+    // gRPC code 5 = NOT_FOUND: Firestore database doesn't exist yet or hasn't been provisioned.
+    // Return empty tokens gracefully so FCM just no-ops rather than crashing callers.
+    if (error?.code === 5 || error?.message?.includes('NOT_FOUND')) {
+      console.warn(
+        "⚠️ [FCM Service] Firestore database not found (NOT_FOUND). " +
+        "Please enable Firestore in the Firebase console for project: " +
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID +
+        ". Returning empty tokens."
+      );
+      return [];
+    }
     console.error("❌ [FCM Service] Error getting tokens:", error);
-    throw error;
+    return [];
   }
 };
 
@@ -182,8 +205,6 @@ export const sendNotificationToUser = async (
     // Use sendEachForMulticast for better performance and reliability
     const response = await messaging.sendEachForMulticast(message);
 
-    let successCount = response.successCount;
-    let failureCount = response.failureCount;
     const invalidTokens: string[] = [];
 
     response.responses.forEach((resp: any, idx: number) => {
@@ -205,8 +226,8 @@ export const sendNotificationToUser = async (
       }
     }
   } catch (error) {
+    // Silent fail - don't propagate so callers aren't disrupted by FCM issues
     console.error("❌ [FCM Service] Error sending notification:", error);
-    throw error;
   }
 };
 

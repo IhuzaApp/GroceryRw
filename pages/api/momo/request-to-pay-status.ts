@@ -117,6 +117,30 @@ const ACTIVATE_INVOICE = gql`
   }
 `;
 
+const UPDATE_ORDER_STATUS = gql`
+  mutation UpdateOrderStatus($id: uuid!, $status: String!) {
+    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) {
+      id
+    }
+  }
+`;
+
+const UPDATE_FOOD_ORDER_STATUS = gql`
+  mutation UpdateFoodOrderStatus($id: uuid!, $status: String!) {
+    update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) {
+      id
+    }
+  }
+`;
+
+const UPDATE_COMBINED_ORDER_STATUS = gql`
+  mutation UpdateCombinedOrderStatus($combined_id: uuid!, $status: String!) {
+    update_Orders(where: { combined_order_id: { _eq: $combined_id } }, _set: { status: $status }) {
+      affected_rows
+    }
+  }
+`;
+
 /**
  * Check MoMo Collection API RequestToPay status.
  */
@@ -159,9 +183,26 @@ export default async function handler(
 
             // Trigger Business Logic if SUCCESSFUL
             if (newStatus === "SUCCESSFUL") {
-              const orderId = transaction.related_order_id || transaction.relate_business_order_id || transaction.related_restaurant_order_id;
+              const orderId = transaction.related_order_id;
+              const restaurantOrderId = transaction.related_restaurant_order_id;
+              const businessOrderId = transaction.relate_business_order_id;
+
               if (orderId) {
-                console.log(`🚀 [MoMo Status] Activating order/subscription: ${orderId}`);
+                console.log(`🚀 [MoMo Status] Activating grocery order: ${orderId}`);
+                // Try updating as single order first, then as combined if that's what it is
+                await hasuraClient.request(UPDATE_ORDER_STATUS, { id: orderId, status: "PENDING" });
+                await hasuraClient.request(UPDATE_COMBINED_ORDER_STATUS, { combined_id: orderId, status: "PENDING" });
+              }
+
+              if (restaurantOrderId) {
+                console.log(`🚀 [MoMo Status] Activating food order: ${restaurantOrderId}`);
+                await hasuraClient.request(UPDATE_FOOD_ORDER_STATUS, { id: restaurantOrderId, status: "WAITING_FOR_CONFIRMATION" });
+              }
+
+              if (businessOrderId) {
+                console.log(`🚀 [MoMo Status] Activating business order: ${businessOrderId}`);
+                // Add business order activation if needed, for now similar to regular orders
+                await hasuraClient.request(UPDATE_ORDER_STATUS, { id: businessOrderId, status: "PENDING" });
               }
 
               // Update personal wallet balance if wallet_id is present
