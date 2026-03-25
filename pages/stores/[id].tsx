@@ -174,13 +174,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         Image
         price
         unit
-        status
-        created_at
-        minimumOrders
-        maxOrders
-        delveryArea
-        query_id
-        speciality
         category
         otherDetails
       }
@@ -237,10 +230,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         : undefined,
     };
 
-    // Transform products
-    const products = productsData.PlasBusinessProductsOrSerive.filter(
-      (p) => p.status === "active"
-    ).map((product) => ({
+    // Transform products - Only include fields needed by StorePage and StoreProductCard
+    const products = productsData.PlasBusinessProductsOrSerive.map((product) => ({
       id: product.id,
       name: product.name,
       description: product.Description || "",
@@ -248,12 +239,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       price: product.price,
       unit: product.unit || "",
       measurement_unit: product.unit || "",
-      category:
-        product.category?.trim() || product.speciality?.trim() || "Other",
-      minimumOrders: product.minimumOrders,
-      maxOrders: product.maxOrders,
-      delveryArea: product.delveryArea,
-      status: product.status,
+      category: product.category?.trim() || "Other",
       otherDetails: product.otherDetails ?? null,
     }));
 

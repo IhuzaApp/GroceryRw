@@ -383,17 +383,21 @@ export default async function handler(
     }
     // await hasuraClient.request(ARCHIVE_CART, { cart_id: cart.id });
 
-    // 7. Delete cart items
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
-    }
-    await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
+    // 7. Delete cart items (Only if not using MoMo - MoMo handles this after success)
+    if (payment_method !== "mobile_money") {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+      await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
 
-    // 8. Delete the cart
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
+      // 8. Delete the cart
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+      await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+    } else {
+      console.log("🛒 [Checkout] Skipping cart deletion for MoMo payment - will be cleared after successful payment.");
     }
-    await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
 
     const orderTotal =
       actualTotal +

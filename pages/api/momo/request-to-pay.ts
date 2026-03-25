@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import type { Session } from "next-auth";
 import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
@@ -116,6 +117,25 @@ const ADD_SUBSCRIPTION_TRANSACTION = gql`
   }
 `;
 
+const CREATE_ORDER_TRANSACTION = gql`
+  mutation CreateOrderTransaction($object: order_transactions_insert_input!) {
+    insert_order_transactions_one(object: $object) {
+      id
+    }
+  }
+`;
+
+const UPDATE_ORDER_TRANSACTION_RESPONSE = gql`
+  mutation UpdateOrderTransactionResponse($id: uuid!, $mtn_response: String!) {
+    update_order_transactions_by_pk(
+      pk_columns: { id: $id },
+      _set: { mtn_response: $mtn_response }
+    ) {
+      id
+    }
+  }
+`;
+
 /**
  * MoMo Collection API - RequestToPay
  * Collects payment FROM the customer (payer) to the merchant.
@@ -147,7 +167,7 @@ export default async function handler(
     businessType, // For POS Registration
   } = req.body;
 
-  const session = await getServerSession(req, res, authOptions as any);
+  const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
   const userId = session?.user?.id;
 
   if (!amount || !payerNumber) {
@@ -160,6 +180,7 @@ export default async function handler(
   let dbTransactionId: string | null = null;
   let isSubscription = !!subscriptionId;
   let isPersonalWallet = !!walletId && !orderId && !businessOrderId && !restaurantOrderId && !reelOrderId && !isSubscription;
+  let isOrderPayment = !!(orderId || restaurantOrderId || businessOrderId || reelOrderId);
 
   try {
     if (hasuraClient) {
@@ -223,7 +244,32 @@ export default async function handler(
           );
           dbTransactionId = dbRes.insert_personalWalletTransactions_one.id;
           console.log("📝 [MoMo RequestToPay] PENDING personal wallet transaction created:", dbTransactionId);
+        } else if (isOrderPayment) {
+          // Use order_transactions table for orders
+          const dbRes = await hasuraClient.request<{ insert_order_transactions_one: { id: string } }>(
+            CREATE_ORDER_TRANSACTION,
+            {
+              object: {
+                wallet_id: walletId || null,
+                order_id: orderId || null,
+                business_order_id: businessOrderId || businessId || null,
+                restaurant_order_id: restaurantOrderId || (businessType === "RESTAURANT" ? businessId : null),
+                reel_order_id: reelOrderId || null,
+                amount: String(amount).toString(),
+                currency,
+                phone: payerNumber,
+                reference_id: referenceId,
+                type: "payment",
+                status: "PENDING",
+                mtn_response: JSON.stringify({ status: "INITIATED", referenceId }),
+                user_id: userId || null,
+              },
+            }
+          );
+          dbTransactionId = dbRes.insert_order_transactions_one.id;
+          console.log("📝 [MoMo RequestToPay] PENDING order transaction created:", dbTransactionId);
         } else {
+          // Fallback to Wallet_Transactions for any other generic shopping payment
           const dbRes = await hasuraClient.request<{ insert_Wallet_Transactions_one: { id: string } }>(
             CREATE_PENDING_TRANSACTION,
             {
@@ -284,6 +330,11 @@ export default async function handler(
             id: dbTransactionId,
             mtn_response: JSON.stringify(momoResult),
           });
+        } else if (isOrderPayment) {
+          await hasuraClient.request(UPDATE_ORDER_TRANSACTION_RESPONSE, {
+            id: dbTransactionId,
+            mtn_response: JSON.stringify(momoResult),
+          });
         } else {
           await hasuraClient.request(UPDATE_TRANSACTION_RESPONSE, {
             id: dbTransactionId,
@@ -323,6 +374,18 @@ export default async function handler(
           await hasuraClient.request(gql`
             mutation UpdatePersonalFailed($id: uuid!, $mtn_response: String!) {
               update_personalWalletTransactions_by_pk(
+                pk_columns: { id: $id },
+                _set: { status: "FAILED", mtn_response: $mtn_response }
+              ) { id }
+            }
+          `, {
+            id: dbTransactionId,
+            mtn_response: JSON.stringify({ error: error.message }),
+          });
+        } else if (isOrderPayment) {
+          await hasuraClient.request(gql`
+            mutation UpdateOrderTransactionFailed($id: uuid!, $mtn_response: String!) {
+              update_order_transactions_by_pk(
                 pk_columns: { id: $id },
                 _set: { status: "FAILED", mtn_response: $mtn_response }
               ) { id }

@@ -20,9 +20,8 @@ function RestaurantSelectionSkeleton() {
   const { theme } = useTheme();
   return (
     <div
-      className={`relative h-24 w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg p-2 ${
-        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-      }`}
+      className={`relative h-24 w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg p-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+        }`}
     />
   );
 }
@@ -32,9 +31,8 @@ function CheckoutSkeleton() {
   const { theme } = useTheme();
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-[9998] md:left-16 transition-all duration-500 ease-in-out h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)] flex items-center px-8 ${
-        theme === "dark" ? "bg-gray-900 border-t border-gray-800" : "bg-white border-t border-gray-200"
-      }`}
+      className={`fixed bottom-0 left-0 right-0 z-[9998] md:left-16 transition-all duration-500 ease-in-out h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)] flex items-center px-8 ${theme === "dark" ? "bg-gray-900 border-t border-gray-800" : "bg-white border-t border-gray-200"
+        }`}
     >
       <div className="mx-auto w-full max-w-7xl flex items-center justify-between">
         <div className="flex items-center gap-8">
@@ -71,28 +69,24 @@ function CartLoadingSkeleton() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className={`relative w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg border-2 p-2 ${
-                  theme === "dark"
-                    ? "border-gray-600 bg-gray-700"
-                    : "border-gray-300 bg-gray-200"
-                }`}
+                className={`relative w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg border-2 p-2 ${theme === "dark"
+                  ? "border-gray-600 bg-gray-700"
+                  : "border-gray-300 bg-gray-200"
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className={`h-8 w-8 rounded-full ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                    }`}
+                    className={`h-8 w-8 rounded-full ${theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                      }`}
                   />
                   <div
-                    className={`h-4 w-20 rounded ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                    }`}
+                    className={`h-4 w-20 rounded ${theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                      }`}
                   />
                 </div>
                 <div
-                  className={`absolute -right-2 top-1 h-6 w-6 rounded-full ${
-                    theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                  }`}
+                  className={`absolute -right-2 top-1 h-6 w-6 rounded-full ${theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                    }`}
                 />
               </div>
             ))}
@@ -101,41 +95,35 @@ function CartLoadingSkeleton() {
 
         {/* Cart Table Skeleton */}
         <div
-          className={`rounded-lg border p-4 ${
-            theme === "dark"
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
-          }`}
+          className={`rounded-lg border p-4 ${theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+            }`}
         >
           <div
-            className={`mb-4 h-6 w-32 rounded ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
+            className={`mb-4 h-6 w-32 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+              }`}
           />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-4">
                 <div
-                  className={`h-16 w-16 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
+                  className={`h-16 w-16 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    }`}
                 />
                 <div className="flex-1 space-y-2">
                   <div
-                    className={`h-4 w-3/4 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    }`}
+                    className={`h-4 w-3/4 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      }`}
                   />
                   <div
-                    className={`h-3 w-1/2 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    }`}
+                    className={`h-3 w-1/2 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      }`}
                   />
                 </div>
                 <div
-                  className={`h-8 w-16 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
+                  className={`h-8 w-16 rounded ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    }`}
                 />
               </div>
             ))}
@@ -163,7 +151,7 @@ interface ShopCart {
 export default function CartMainPage() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isLoading } = useAuth();
   const { restaurants, totalItems, totalPrice, clearRestaurant } =
     useFoodCart();
   const { count: cartCount } = useCart();
@@ -177,6 +165,9 @@ export default function CartMainPage() {
   const [loadingShops, setLoadingShops] = useState<boolean>(true);
   const [isSwitchingTabs, setIsSwitchingTabs] = useState<boolean>(false);
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  const [activeShopData, setActiveShopData] = useState<ShopCart | null>(null);
+  const [activeRestaurantData, setActiveRestaurantData] = useState<FoodCartRestaurant | null>(null);
+
 
   // Cache for cart data to prevent reloading
   const [cartDataCache, setCartDataCache] = useState<{
@@ -195,12 +186,12 @@ export default function CartMainPage() {
   const currentShopTotalRef = useRef(0);
   const currentShopUnitsRef = useRef(0);
 
-  // Redirect to home if not logged in
+  // Redirect to home if not logged in - wait for loading to finish
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoading && !isLoggedIn) {
       router.push("/");
     }
-  }, [isLoggedIn, router]);
+  }, [isLoading, isLoggedIn, router]);
 
   // Fetch shop carts
   useEffect(() => {
@@ -234,7 +225,6 @@ export default function CartMainPage() {
   useEffect(() => {
     // Only set initial selection if no selection exists
     if (!selectedRestaurantId && !selectedShopId) {
-      // Priority: restaurants first, then shops
       if (restaurants.length > 0) {
         setSelectedRestaurantId(restaurants[0].id);
         setSelectedShopId(null);
@@ -243,7 +233,35 @@ export default function CartMainPage() {
         setSelectedRestaurantId(null);
       }
     }
-  }, [restaurants, shopCarts]);
+  }, [restaurants, shopCarts, selectedRestaurantId, selectedShopId]);
+
+  // Update active data when selections or lists change
+  useEffect(() => {
+    if (selectedRestaurantId) {
+      const restaurant = restaurants.find((r) => r.id === selectedRestaurantId);
+      if (restaurant) {
+        setActiveRestaurantData(restaurant);
+      }
+      // Note: If restaurant is NOT found (e.g. cleared), we KEEP the last activeRestaurantData
+      // until the selection is manually changed to null or another shop.
+    } else {
+      setActiveRestaurantData(null);
+    }
+  }, [selectedRestaurantId, restaurants]);
+
+  useEffect(() => {
+    if (selectedShopId) {
+      const shop = shopCarts.find((s) => s.id === selectedShopId);
+      if (shop) {
+        setActiveShopData(shop);
+      }
+      // Note: If shop is NOT found (e.g. cleared by server), we KEEP the last activeShopData
+      // so the CheckoutItems component doesn't unmount prematurely.
+    } else {
+      setActiveShopData(null);
+    }
+  }, [selectedShopId, shopCarts]);
+
 
   // Get cached cart data (use callback to avoid dependency issues)
   const getCachedCartData = useCallback(
@@ -306,15 +324,10 @@ export default function CartMainPage() {
     }, 50); // Reduced delay since we're caching data
   };
 
-  // Find the selected restaurant and shop (memoized)
-  const selectedRestaurant = useMemo(
-    () => restaurants.find((r) => r.id === selectedRestaurantId),
-    [restaurants, selectedRestaurantId]
-  );
-  const selectedShop = useMemo(
-    () => shopCarts.find((s) => s.id === selectedShopId),
-    [shopCarts, selectedShopId]
-  );
+  // Use active data for rendering to ensure components stay mounted during finalization
+  const selectedRestaurant = activeRestaurantData;
+  const selectedShop = activeShopData;
+
 
   // Get current cart totals (memoized)
   const getCurrentCartTotal = useCallback(() => {
@@ -407,13 +420,16 @@ export default function CartMainPage() {
             return newCache;
           });
 
-          // If this shop was selected, clear the selection
+          // If this shop was selected, clear the selection with a slight delay
+          // This ensures the CheckoutItems component stays mounted until the redirect happens
           if (selectedShopId === shop_id) {
-            setSelectedShopId(null);
-            setCurrentShopTotal(0);
-            setCurrentShopUnits(0);
-            currentShopTotalRef.current = 0;
-            currentShopUnitsRef.current = 0;
+            setTimeout(() => {
+              setSelectedShopId(null);
+              setCurrentShopTotal(0);
+              setCurrentShopUnits(0);
+              currentShopTotalRef.current = 0;
+              currentShopUnitsRef.current = 0;
+            }, 3000); // 3 seconds delay (slightly more than the 2s redirect delay)
           }
 
           // Remove this shop from the shopCarts list immediately
@@ -474,11 +490,13 @@ export default function CartMainPage() {
               setLoadingShops(false);
             });
 
-          // Clear food cart if it was a food order
+          // Clear food cart with a delay if it was a food order
           if (restaurants.length > 0) {
-            restaurants.forEach((restaurant) => {
-              clearRestaurant(restaurant.id);
-            });
+            setTimeout(() => {
+              restaurants.forEach((restaurant) => {
+                clearRestaurant(restaurant.id);
+              });
+            }, 3000);
           }
         }
       }
@@ -600,9 +618,8 @@ export default function CartMainPage() {
             <div className="mb-6 hidden items-center md:flex">
               <Link
                 href="/"
-                className={`flex items-center ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`flex items-center ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -615,9 +632,8 @@ export default function CartMainPage() {
                 </svg>
               </Link>
               <h1
-                className={`text-2xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
               >
                 My Cart
               </h1>
@@ -637,7 +653,7 @@ export default function CartMainPage() {
                         Your Active Carts
                       </h2>
                     </div>
-                    
+
                     <div className={`flex gap-4 overflow-x-auto pb-6 pt-2 scrollbar-hide`}>
                       {hasAnyItems ? (
                         <>
@@ -650,19 +666,17 @@ export default function CartMainPage() {
                                   key={restaurant.id}
                                   onClick={() => !isSwitchingTabs && handleTabSwitch("restaurant", restaurant.id)}
                                   disabled={isSwitchingTabs}
-                                  className={`group relative flex flex-shrink-0 items-center gap-3 transition-all duration-300 ${isSwitchingTabs ? "cursor-not-allowed opacity-50" : ""} ${
-                                    isSelected 
-                                      ? "scale-105" 
-                                      : "hover:translate-y-[-2px]"
-                                  }`}
+                                  className={`group relative flex flex-shrink-0 items-center gap-3 transition-all duration-300 ${isSwitchingTabs ? "cursor-not-allowed opacity-50" : ""} ${isSelected
+                                    ? "scale-105"
+                                    : "hover:translate-y-[-2px]"
+                                    }`}
                                 >
-                                  <div className={`flex items-center gap-3 rounded-2xl p-2 pr-4 transition-all duration-300 ${
-                                    isSelected 
-                                      ? "bg-green-500 text-white shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)]" 
-                                      : theme === "dark"
-                                        ? "bg-gray-800/40 border border-gray-700/50 hover:bg-gray-800/80"
-                                        : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
-                                  }`}>
+                                  <div className={`flex items-center gap-3 rounded-2xl p-2 pr-4 transition-all duration-300 ${isSelected
+                                    ? "bg-green-500 text-white shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)]"
+                                    : theme === "dark"
+                                      ? "bg-gray-800/40 border border-gray-700/50 hover:bg-gray-800/80"
+                                      : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
+                                    }`}>
                                     {/* Logo Container */}
                                     <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl shadow-inner">
                                       {restaurant.logo ? (
@@ -673,19 +687,18 @@ export default function CartMainPage() {
                                         />
                                       ) : (
                                         <div className={`flex h-full w-full items-center justify-center ${isSelected ? "bg-white/20" : "bg-gray-100"}`}>
-                                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={isSelected ? "text-white" : "text-gray-400"}>
-                                              <path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                              <path d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                           </svg>
+                                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={isSelected ? "text-white" : "text-gray-400"}>
+                                            <path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
                                         </div>
                                       )}
-                                      
+
                                       {/* Item Count Badge */}
-                                      <div className={`absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-black border-2 ${
-                                        isSelected 
-                                          ? "bg-white text-green-500 border-green-500" 
-                                          : "bg-red-500 text-white border-white dark:border-gray-800"
-                                      }`}>
+                                      <div className={`absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-black border-2 ${isSelected
+                                        ? "bg-white text-green-500 border-green-500"
+                                        : "bg-red-500 text-white border-white dark:border-gray-800"
+                                        }`}>
                                         {restaurant.totalItems}
                                       </div>
                                     </div>
@@ -702,7 +715,7 @@ export default function CartMainPage() {
 
                                     {/* Active Indicator */}
                                     {isSelected && (
-                                       <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                                      <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
                                     )}
                                   </div>
                                 </button>
@@ -718,19 +731,17 @@ export default function CartMainPage() {
                                   key={shop.id}
                                   onClick={() => !isSwitchingTabs && handleTabSwitch("shop", shop.id)}
                                   disabled={isSwitchingTabs}
-                                  className={`group relative flex flex-shrink-0 items-center gap-3 transition-all duration-300 ${isSwitchingTabs ? "cursor-not-allowed opacity-50" : ""} ${
-                                    isSelected 
-                                      ? "scale-105" 
-                                      : "hover:translate-y-[-2px]"
-                                  }`}
+                                  className={`group relative flex flex-shrink-0 items-center gap-3 transition-all duration-300 ${isSwitchingTabs ? "cursor-not-allowed opacity-50" : ""} ${isSelected
+                                    ? "scale-105"
+                                    : "hover:translate-y-[-2px]"
+                                    }`}
                                 >
-                                  <div className={`flex items-center gap-3 rounded-2xl p-2 pr-4 transition-all duration-300 ${
-                                    isSelected 
-                                      ? "bg-green-500 text-white shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)]" 
-                                      : theme === "dark"
-                                        ? "bg-gray-800/40 border border-gray-700/50 hover:bg-gray-800/80"
-                                        : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
-                                  }`}>
+                                  <div className={`flex items-center gap-3 rounded-2xl p-2 pr-4 transition-all duration-300 ${isSelected
+                                    ? "bg-green-500 text-white shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)]"
+                                    : theme === "dark"
+                                      ? "bg-gray-800/40 border border-gray-700/50 hover:bg-gray-800/80"
+                                      : "bg-white border border-gray-200 hover:border-gray-300 shadow-sm"
+                                    }`}>
                                     {/* Logo Container */}
                                     <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl shadow-inner">
                                       {shop.logo ? (
@@ -741,20 +752,19 @@ export default function CartMainPage() {
                                         />
                                       ) : (
                                         <div className={`flex h-full w-full items-center justify-center ${isSelected ? "bg-white/20" : "bg-gray-100"}`}>
-                                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={isSelected ? "text-white" : "text-gray-400"}>
-                                              <circle cx="9" cy="21" r="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                              <circle cx="20" cy="21" r="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                           </svg>
+                                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={isSelected ? "text-white" : "text-gray-400"}>
+                                            <circle cx="9" cy="21" r="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            <circle cx="20" cy="21" r="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
                                         </div>
                                       )}
-                                      
+
                                       {/* Item Count Badge */}
-                                      <div className={`absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-black border-2 ${
-                                        isSelected 
-                                          ? "bg-white text-green-500 border-green-500" 
-                                          : "bg-red-500 text-white border-white dark:border-gray-800"
-                                      }`}>
+                                      <div className={`absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-black border-2 ${isSelected
+                                        ? "bg-white text-green-500 border-green-500"
+                                        : "bg-red-500 text-white border-white dark:border-gray-800"
+                                        }`}>
                                         {shop.count}
                                       </div>
                                     </div>
@@ -771,7 +781,7 @@ export default function CartMainPage() {
 
                                     {/* Active Indicator */}
                                     {isSelected && (
-                                       <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                                      <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
                                     )}
                                   </div>
                                 </button>
@@ -784,11 +794,10 @@ export default function CartMainPage() {
                           {/* Empty Cart Icon */}
                           <div className="mb-4 flex justify-center">
                             <svg
-                              className={`h-16 w-16 ${
-                                theme === "dark"
-                                  ? "text-gray-600"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-16 w-16 ${theme === "dark"
+                                ? "text-gray-600"
+                                : "text-gray-400"
+                                }`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -804,21 +813,19 @@ export default function CartMainPage() {
 
                           {/* Empty Text */}
                           <h3
-                            className={`text-lg font-semibold ${
-                              theme === "dark"
-                                ? "text-gray-300"
-                                : "text-gray-600"
-                            }`}
+                            className={`text-lg font-semibold ${theme === "dark"
+                              ? "text-gray-300"
+                              : "text-gray-600"
+                              }`}
                           >
                             Your cart is empty
                           </h3>
 
                           <p
-                            className={`mt-1 text-sm ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-500"
-                            }`}
+                            className={`mt-1 text-sm ${theme === "dark"
+                              ? "text-gray-500"
+                              : "text-gray-500"
+                              }`}
                           >
                             Browse restaurants and shops to add items to your
                             cart!
@@ -841,9 +848,8 @@ export default function CartMainPage() {
                       <div className="flex items-center space-x-2">
                         <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-green-500"></div>
                         <span
-                          className={`text-sm ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-600"
-                          }`}
+                          className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                            }`}
                         >
                           Switching tab...
                         </span>
@@ -852,16 +858,15 @@ export default function CartMainPage() {
                   ) : selectedRestaurantId && selectedRestaurant ? (
                     <>
                       <h2
-                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
                       >
                         {selectedRestaurant.name}
                       </h2>
                       <ItemCartTable
                         shopId={selectedRestaurantId}
-                        onTotalChange={() => {}} // No need to update cache for food carts
-                        onUnitsChange={() => {}} // No need to update cache for food carts
+                        onTotalChange={() => { }} // No need to update cache for food carts
+                        onUnitsChange={() => { }} // No need to update cache for food carts
                         onLoadingChange={setLoadingItems}
                         isFoodCart={true}
                         restaurant={selectedRestaurant}
@@ -870,9 +875,8 @@ export default function CartMainPage() {
                   ) : selectedShopId && selectedShop ? (
                     <>
                       <h2
-                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
                       >
                         {selectedShop.name}
                       </h2>
@@ -886,9 +890,8 @@ export default function CartMainPage() {
                     </>
                   ) : hasAnyItems ? (
                     <div
-                      className={`p-4 px-2 text-center md:px-4 ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
+                      className={`p-4 px-2 text-center md:px-4 ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
                     >
                       Select a restaurant or shop to view items.
                     </div>
@@ -897,53 +900,55 @@ export default function CartMainPage() {
                 {/* Order Summary Component - Now handled as a floating card within CheckoutItems */}
                 {((selectedRestaurantId && selectedRestaurant) ||
                   (selectedShopId && selectedShop)) && (
-                  <div className="w-full">
-                    {loadingItems ? (
-                      <div className="hidden md:block">
-                        <CheckoutSkeleton />
-                      </div>
-                    ) : (
-                      <AuthGuard requireAuth={true}>
-                        {selectedRestaurant ? (
-                          <CheckoutItems
-                            shopId={selectedRestaurantId!}
-                            Total={getCurrentCartTotal()}
-                            totalUnits={getCurrentCartUnits()}
-                            shopLat={parseFloat(selectedRestaurant.latitude)}
-                            shopLng={parseFloat(selectedRestaurant.longitude)}
-                            shopAlt={0}
-                            isFoodCart={true}
-                            restaurant={selectedRestaurant}
-                          />
-                        ) : selectedShop ? (
-                          (() => {
-                            const total = getCurrentCartTotal();
-                            const units = getCurrentCartUnits();
-                            return (
-                              <CheckoutItems
-                                shopId={selectedShopId!}
-                                Total={total}
-                                totalUnits={units}
-                                shopLat={
-                                  selectedShop.latitude
-                                    ? parseFloat(selectedShop.latitude)
-                                    : 0
-                                }
-                                shopLng={
-                                  selectedShop.longitude
-                                    ? parseFloat(selectedShop.longitude)
-                                    : 0
-                                }
-                                shopAlt={0}
-                                isFoodCart={false}
-                              />
-                            );
-                          })()
-                        ) : null}
-                      </AuthGuard>
-                    )}
-                  </div>
-                )}
+                    <div className="w-full">
+                      {loadingItems ? (
+                        <div className="hidden md:block">
+                          <CheckoutSkeleton />
+                        </div>
+                      ) : (
+                        <AuthGuard requireAuth={true}>
+                          {selectedRestaurant ? (
+                            <CheckoutItems
+                              shopId={selectedRestaurantId!}
+                              Total={getCurrentCartTotal()}
+                              totalUnits={getCurrentCartUnits()}
+                              shopLat={parseFloat(selectedRestaurant.latitude)}
+                              shopLng={parseFloat(selectedRestaurant.longitude)}
+                              shopAlt={0}
+                              isFoodCart={true}
+                              restaurant={selectedRestaurant}
+                              successRedirectPath="/restaurant/"
+                            />
+                          ) : selectedShop ? (
+                            (() => {
+                              const total = getCurrentCartTotal();
+                              const units = getCurrentCartUnits();
+                              return (
+                                <CheckoutItems
+                                  shopId={selectedShopId!}
+                                  Total={total}
+                                  totalUnits={units}
+                                  shopLat={
+                                    selectedShop.latitude
+                                      ? parseFloat(selectedShop.latitude)
+                                      : 0
+                                  }
+                                  shopLng={
+                                    selectedShop.longitude
+                                      ? parseFloat(selectedShop.longitude)
+                                      : 0
+                                  }
+                                  shopAlt={0}
+                                  isFoodCart={false}
+                                  successRedirectPath="/shops/"
+                                />
+                              );
+                            })()
+                          ) : null}
+                        </AuthGuard>
+                      )}
+                    </div>
+                  )}
               </div>
             )}
           </div>

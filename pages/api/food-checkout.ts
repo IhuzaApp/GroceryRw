@@ -27,6 +27,7 @@ const CREATE_FOOD_ORDER = gql`
     $pin: String!
     $applied_promotions: jsonb
     $discount_breakdown: jsonb
+    $delivery_time: timestamptz
     $status: String = "WAITING_FOR_CONFIRMATION"
   ) {
     insert_restaurant_orders(
@@ -42,6 +43,7 @@ const CREATE_FOOD_ORDER = gql`
         pin: $pin
         applied_promotions: $applied_promotions
         discount_breakdown: $discount_breakdown
+        delivery_time: $delivery_time
         status: $status
         shopper_id: null
       }

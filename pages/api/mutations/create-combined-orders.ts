@@ -408,11 +408,15 @@ export default async function handler(
         }
       }
 
-      // 6. Delete cart items
-      await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
+      // 6. Delete cart items (Only if not using MoMo - MoMo handles this after success)
+      if (payment_method !== "mobile_money") {
+        await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
 
-      // 7. Delete the cart
-      await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+        // 7. Delete the cart
+        await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+      } else {
+        console.log(`🛒 [Combined Checkout] Skipping cart deletion for store ${store_id} due to MoMo payment.`);
+      }
 
       // Track created order
       const orderTotal =

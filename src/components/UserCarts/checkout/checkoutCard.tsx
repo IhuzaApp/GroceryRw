@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Panel, toaster, Notification } from "rsuite";
-import Link from "next/link";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useTheme } from "../../../context/ThemeContext";
-import { useAuth } from "../../../context/AuthContext";
 import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import {
   useFoodCart,
@@ -55,6 +53,7 @@ interface CheckoutItemsProps {
   shopId: string;
   isFoodCart?: boolean;
   restaurant?: FoodCartRestaurant;
+  successRedirectPath?: string; // e.g. "/shops/", "/stores/", "/restaurant/"
 }
 
 // System configuration interface
@@ -102,6 +101,7 @@ export default function CheckoutItems({
   shopId,
   isFoodCart = false,
   restaurant,
+  successRedirectPath,
 }: CheckoutItemsProps) {
   const { theme } = useTheme();
   const router = useRouter();
@@ -123,7 +123,7 @@ export default function CheckoutItems({
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   // MoMo payment state
-  const [processingStep, setProcessingStep] = useState<"idle" | "initiating_payment" | "awaiting_approval">("idle");
+  const [processingStep, setProcessingStep] = useState<"idle" | "initiating_payment" | "awaiting_approval" | "success">("idle");
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "failed">("idle");
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -386,6 +386,8 @@ export default function CheckoutItems({
       deliveryTime: string;
       shopLat: number;
       shopLng: number;
+      items: any[];
+      subtotal: number;
     };
   }>({});
 
@@ -582,6 +584,12 @@ export default function CheckoutItems({
               deliveryTime: deliveryTimeText,
               shopLat: shopLatitude ? parseFloat(shopLatitude.toString()) : 0,
               shopLng: shopLongitude ? parseFloat(shopLongitude.toString()) : 0,
+              items: items.map((item: any) => ({
+                product_id: item.id,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+              subtotal: cartTotal,
             },
           }));
         } catch (error) {
@@ -1431,7 +1439,10 @@ export default function CheckoutItems({
 
   const handleMoMoPayment = async (orderId: string, amount: number) => {
     const phone = selectedPaymentMethod?.number || oneTimePhoneNumber;
+    console.log("🟡 [MoMo Checkout] handleMoMoPayment triggered", { orderId, amount, phone, selectedPaymentMethod });
+
     if (!phone) {
+      console.warn("⚠️ [MoMo Checkout] No phone number available — aborting");
       toaster.push(
         <Notification type="error" header="Phone Number Required">
           Please provide a valid MoMo phone number.
@@ -1442,18 +1453,22 @@ export default function CheckoutItems({
       return;
     }
 
+    const formattedPhone = formatPhoneForMoMo(phone);
+    console.log("📞 [MoMo Checkout] Formatted phone:", formattedPhone);
+
     setPaymentStatus("pending");
     setProcessingStep("initiating_payment");
     setIsExpanded(false); // Collapse the order summary so the payment overlay is visible
 
     try {
+      console.log("📡 [MoMo Checkout] Calling /api/momo/request-to-pay...", { amount: Math.round(amount), payerNumber: formattedPhone, orderId });
       const response = await fetch("/api/momo/request-to-pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: Math.round(amount),
           currency: "RWF",
-          payerNumber: formatPhoneForMoMo(phone),
+          payerNumber: formattedPhone,
           externalId: orderId,
           orderId: orderId,
           payerMessage: `Order ${orderId.slice(-8)}`,
@@ -1461,9 +1476,12 @@ export default function CheckoutItems({
       });
 
       const data = await response.json();
+      console.log("📬 [MoMo Checkout] /api/momo/request-to-pay response:", { ok: response.ok, status: response.status, data });
+
       if (response.ok && data.referenceId) {
         setProcessingStep("awaiting_approval");
         const referenceId = data.referenceId;
+        console.log("✅ [MoMo Checkout] MoMo request sent — polling for status. referenceId:", referenceId);
 
         // Polling for payment status
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
@@ -1476,7 +1494,7 @@ export default function CheckoutItems({
               if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
               setPaymentStatus("success");
-              setProcessingStep("idle");
+              setProcessingStep("success");
 
               toaster.push(
                 <Notification type="success" header="Payment Successful!">
@@ -1485,22 +1503,49 @@ export default function CheckoutItems({
                 { placement: "topEnd", duration: 5000 }
               );
 
-              // Redirect to success or refresh
+              // Clear food cart if applicable
+              if (isFoodCart) {
+                clearRestaurant(shopId);
+              } else {
+                // For grocery/shopping, notify other components to refetch carts for the main shop
+                window.dispatchEvent(new CustomEvent("cartChanged", {
+                  detail: { refetch: true, shop_id: shopId }
+                }));
+
+                // Also clear any combined carts if this was a combined checkout
+                if (selectedCartIds.size > 0) {
+                  selectedCartIds.forEach((id) => {
+                    window.dispatchEvent(new CustomEvent("cartChanged", {
+                      detail: { refetch: true, shop_id: id }
+                    }));
+                  });
+                  // Reset selected carts
+                  setSelectedCartIds(new Set());
+                }
+              }
+
+              // Redirect to success or refresh - wait 2.5 seconds to show the success overlay
               setTimeout(() => {
-                router.push(`/stores/${shopId}/order-success?orderId=${orderId}`);
-              }, 2000);
+                const basePath = successRedirectPath || (isFoodCart ? "/restaurant/" : "/stores/");
+                router.push(`${basePath}${shopId}?orderSuccess=true`);
+              }, 2500);
             } else if (["FAILED", "REJECTED", "EXPIRED"].includes(statusData.status)) {
               if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
               setPaymentStatus("failed");
               setProcessingStep("idle");
               setIsCheckoutLoading(false);
+              setIsExpanded(true); // Re-expand so user can see checkout and retry
+
+              const reason = statusData.reason || statusData.financial_transaction_id
+                ? "Your payment was declined or expired. Your order has been cancelled — please try again."
+                : "Payment was not completed. Your order has been cancelled. Please try again.";
 
               toaster.push(
-                <Notification type="error" header="Payment Failed">
-                  {statusData.reason || "Payment request was not successful. Please try again."}
+                <Notification type="error" header="Payment Failed — Order Cancelled">
+                  {reason}
                 </Notification>,
-                { placement: "topEnd", duration: 7000 }
+                { placement: "topEnd", duration: 9000 }
               );
             }
           } catch (pollErr) {
@@ -1667,7 +1712,7 @@ export default function CheckoutItems({
           items: restaurant.items.map((item) => ({
             dish_id: item.id,
             quantity: item.quantity,
-            price: Math.round(item.price),
+            price: Math.round(parseFloat(item.price)),
           })),
         };
       } else if (selectedCartIds.size > 0) {
@@ -1716,8 +1761,10 @@ export default function CheckoutItems({
             if (isFoodCart && restaurant) {
               clearRestaurant(restaurant.id);
               if (selectedPaymentMethod?.type === "momo" && data.order_id) {
+                console.log("🚀 [MoMo Checkout] Food order created, triggering MoMo payment:", data.order_id);
                 handleMoMoPayment(data.order_id, finalGrandTotal);
               } else {
+                console.log("ℹ️ [MoMo Checkout] Food order — non-MoMo payment or missing order_id", { type: selectedPaymentMethod?.type, order_id: data.order_id });
                 toaster.push(
                   <Notification type="success" header="Food Order Completed Successfully!">
                     Your food order has been placed! You can view it in "Current Orders".
@@ -1728,8 +1775,10 @@ export default function CheckoutItems({
             } else {
               const isCombinedOrder = data.combined_order_id && data.orders;
               const orderId = isCombinedOrder ? data.combined_order_id : data.order_id;
+              console.log("🛒 [MoMo Checkout] Order created:", { orderId, paymentType: selectedPaymentMethod?.type, isCombinedOrder });
 
               if (selectedPaymentMethod?.type === "momo" && orderId) {
+                console.log("🚀 [MoMo Checkout] Triggering MoMo payment for order:", orderId);
                 handleMoMoPayment(orderId, finalGrandTotal);
               } else {
                 toaster.push(
@@ -1845,7 +1894,7 @@ export default function CheckoutItems({
   };
 
   // Helper function to get payment method icon
-  const getPaymentMethodIcon = (value: string, methodType?: string) => {
+  const getPaymentMethodIcon = (value: string | null, methodType?: string) => {
     if (value === "refund") {
       return (
         <svg
@@ -2694,7 +2743,7 @@ export default function CheckoutItems({
                     >
                       <span className="flex items-center gap-2 pr-6">
                         <span className="text-green-500 flex-shrink-0">
-                          {getPaymentMethodIcon(selectedPaymentValue ?? "", getPaymentMethodOptions().find(o => o.value === selectedPaymentValue)?.methodType)}
+                          {getPaymentMethodIcon(selectedPaymentValue, getPaymentMethodOptions().find(o => o.value === selectedPaymentValue)?.methodType)}
                         </span>
                         {selectedPaymentValue
                           ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label || "Select payment method"
@@ -3267,7 +3316,7 @@ export default function CheckoutItems({
       />
 
       {processingStep !== "idle" && (
-        <PaymentProcessingOverlay processingStep={processingStep as "initiating_payment" | "awaiting_approval"} />
+        <PaymentProcessingOverlay processingStep={processingStep as "initiating_payment" | "awaiting_approval" | "success"} />
       )}
     </>
   );
