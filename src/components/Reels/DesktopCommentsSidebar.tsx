@@ -8,7 +8,7 @@ const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
     height="20"
     viewBox="0 0 24 24"
     fill={filled ? "#ef4444" : "none"}
-    stroke={filled ? "#fff" : "#9ca3af"}
+    stroke={filled ? "#ef4444" : "currentColor"}
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -66,11 +66,11 @@ export default function DesktopCommentsSidebar({
   const { theme } = useTheme();
 
   const isDark = theme === "dark";
-  const bgColor = isDark ? "#1f2937" : "#ffffff";
+  const bgColor = isDark ? "rgba(31, 41, 55, 0.4)" : "rgba(255, 255, 255, 0.4)";
   const textColor = isDark ? "#f9fafb" : "#111827";
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  const commentBgColor = isDark ? "#374151" : "#f3f4f6";
-  const commentTextColor = isDark ? "#d1d5db" : "#374151";
+  const borderColor = isDark ? "rgba(75, 85, 99, 0.3)" : "rgba(209, 213, 219, 0.3)";
+  const commentBgColor = isDark ? "rgba(55, 65, 81, 0.5)" : "rgba(243, 244, 246, 0.5)";
+  const commentTextColor = isDark ? "#e5e7eb" : "#374151";
   const secondaryTextColor = isDark ? "#9ca3af" : "#6b7280";
 
   const handleAddComment = async () => {
@@ -97,17 +97,18 @@ export default function DesktopCommentsSidebar({
   return (
     <div
       style={{
-        width: "520px",
-        minWidth: "520px",
-        height: "95vh",
-        minHeight: "95vh",
-        maxHeight: "95vh",
+        width: "100%",
+        height: "90vh",
         backgroundColor: bgColor,
+        backdropFilter: "blur(30px)",
+        WebkitBackdropFilter: "blur(30px)",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "1rem",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        borderRadius: "2rem",
+        border: `1px solid ${borderColor}`,
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
         overflow: "hidden",
+        transition: "all 0.3s ease",
       }}
     >
       {/* Header */}
@@ -115,284 +116,258 @@ export default function DesktopCommentsSidebar({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          padding: "16px 20px",
+          justifyContent: "space-between",
+          padding: "24px 28px",
           borderBottom: `1px solid ${borderColor}`,
-          backgroundColor: bgColor,
-          minHeight: "60px",
+          backgroundColor: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <h3
             style={{
-              fontSize: "18px",
-              fontWeight: 600,
+              fontSize: "20px",
+              fontWeight: 700,
               margin: 0,
               color: textColor,
+              letterSpacing: "-0.01em",
             }}
           >
-            {commentCount} Comments
+            Comments
           </h3>
-          {isRefreshing && (
-            <div
-              style={{
-                width: "12px",
-                height: "12px",
-                border: `2px solid ${borderColor}`,
-                borderTop: `2px solid ${textColor}`,
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-              }}
-            />
-          )}
+          <span
+            style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              color: secondaryTextColor,
+              backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+              padding: "2px 10px",
+              borderRadius: "12px",
+            }}
+          >
+            {commentCount}
+          </span>
         </div>
+        {isRefreshing && (
+          <div
+            className="animate-spin"
+            style={{
+              width: "18px",
+              height: "18px",
+              border: `2px solid ${borderColor}`,
+              borderTopColor: textColor,
+              borderRadius: "50%",
+            }}
+          />
+        )}
       </div>
 
       {/* Comments List */}
       <div
+        className="scrollbar-custom"
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "16px",
-          scrollbarWidth: "thin",
-          scrollbarColor: `${borderColor} transparent`,
+          padding: "24px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
         }}
       >
         {comments.length === 0 ? (
           <div
             style={{
-              textAlign: "center",
-              padding: "40px 20px",
-              color: secondaryTextColor,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "16px",
-                marginBottom: "8px",
-              }}
-            >
-              No comments yet
-            </div>
-            <div style={{ fontSize: "14px" }}>Be the first to comment!</div>
-          </div>
-        ) : (
-          <div
-            style={{
+              flex: 1,
               display: "flex",
               flexDirection: "column",
-              gap: "16px",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px",
+              color: secondaryTextColor,
+              opacity: 0.6,
             }}
           >
-            {comments.map((comment) => (
-              <div key={comment.id} style={{ display: "flex", gap: "12px" }}>
-                <Avatar
-                  circle
-                  size="sm"
-                  src={comment.user.avatar || "/placeholder.svg"}
-                  alt={comment.user.name}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      backgroundColor: commentBgColor,
-                      borderRadius: "16px",
-                      padding: "8px 12px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          fontSize: "14px",
-                          color: textColor,
-                        }}
-                      >
-                        {comment.user.name}
-                      </span>
-                      {comment.user.verified && (
-                        <div
-                          style={{
-                            width: 12,
-                            height: 12,
-                            backgroundColor: "#3b82f6",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color: "#fff",
-                              fontSize: "10px",
-                            }}
-                          >
-                            ✓
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        color: commentTextColor,
-                        lineHeight: 1.4,
-                        margin: 0,
-                      }}
-                    >
-                      {comment.text}
-                    </p>
-                  </div>
+            <div style={{ fontSize: "18px", fontWeight: 600 }}>No comments yet</div>
+            <div style={{ fontSize: "14px" }}>Start the conversation!</div>
+          </div>
+        ) : (
+          comments.map((comment) => (
+            <div key={comment.id} style={{ display: "flex", gap: "16px" }}>
+              <Avatar
+                circle
+                size="md"
+                src={comment.user.avatar || "/placeholder.svg"}
+                alt={comment.user.name}
+                style={{ border: `2px solid ${borderColor}` }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    backgroundColor: commentBgColor,
+                    borderRadius: "18px",
+                    padding: "12px 16px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                  }}
+                >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "16px",
-                      marginTop: 4,
-                      paddingLeft: "12px",
+                      gap: 6,
+                      marginBottom: 6,
                     }}
                   >
                     <span
                       style={{
-                        fontSize: "12px",
-                        color: secondaryTextColor,
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        color: textColor,
                       }}
                     >
-                      {comment.timestamp}
+                      {comment.user.name}
                     </span>
-                    <button
-                      style={{
-                        fontSize: "12px",
-                        color: secondaryTextColor,
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        padding: 0,
-                      }}
-                      onClick={() => onToggleCommentLike(postId, comment.id)}
-                    >
-                      {comment.likes > 0 && (
-                        <span
-                          style={{
-                            color: comment.isLiked
-                              ? "#ef4444"
-                              : secondaryTextColor,
-                            fontWeight: comment.isLiked ? 500 : 400,
-                          }}
-                        >
-                          {comment.likes}{" "}
-                          {comment.likes === 1 ? "like" : "likes"}
-                        </span>
-                      )}
-                    </button>
+                    {comment.user.verified && (
+                      <div
+                        style={{
+                          width: 14,
+                          height: 14,
+                          backgroundColor: "#3b82f6",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <span style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}>✓</span>
+                      </div>
+                    )}
                   </div>
+                  <p
+                    style={{
+                      fontSize: "15px",
+                      color: commentTextColor,
+                      lineHeight: 1.5,
+                      margin: 0,
+                    }}
+                  >
+                    {comment.text}
+                  </p>
                 </div>
-                <Button
-                  appearance="ghost"
-                  size="sm"
+                <div
                   style={{
-                    width: 36,
-                    height: 36,
-                    flexShrink: 0,
-                    background: "none",
-                    border: "none",
-                    color: comment.isLiked ? "#ef4444" : secondaryTextColor,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    padding: 0,
+                    gap: "20px",
+                    marginTop: 8,
+                    paddingLeft: "8px",
                   }}
-                  onClick={() => onToggleCommentLike(postId, comment.id)}
                 >
-                  <HeartIcon filled={comment.isLiked} />
-                </Button>
+                  <span style={{ fontSize: "12px", color: secondaryTextColor }}>
+                    {comment.timestamp}
+                  </span>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "12px",
+                      color: comment.isLiked ? "#ef4444" : secondaryTextColor,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      fontWeight: comment.isLiked ? 600 : 400,
+                      transition: "all 0.2s",
+                    }}
+                    onClick={() => onToggleCommentLike(postId, comment.id)}
+                  >
+                    <HeartIcon filled={comment.isLiked} />
+                    {comment.likes > 0 && <span>{comment.likes}</span>}
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
       </div>
 
       {/* Comment Input */}
       <div
         style={{
-          padding: "16px",
+          padding: "24px 28px",
           borderTop: `1px solid ${borderColor}`,
-          backgroundColor: bgColor,
+          backgroundColor: isDark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
         }}
       >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
+            gap: "16px",
           }}
         >
           <Avatar
             circle
-            size="sm"
-            src="/placeholder.svg?height=32&width=32"
+            size="md"
+            src="/placeholder.svg?height=40&width=40"
             alt="You"
+            style={{ border: `2px solid ${borderColor}` }}
           />
           <div
             style={{
               flex: 1,
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "12px",
+              position: "relative",
             }}
           >
             <Input
-              placeholder={
-                isAddingComment ? "Adding comment..." : "Add a comment..."
-              }
+              placeholder={isAddingComment ? "Posting..." : "Add a comment..."}
               value={newComment}
               onChange={setNewComment}
               disabled={isAddingComment}
               style={{
                 flex: 1,
-                border: "none",
+                border: `1px solid ${borderColor}`,
                 backgroundColor: commentBgColor,
-                borderRadius: "20px",
-                padding: "8px 16px",
+                borderRadius: "24px",
+                padding: "10px 48px 10px 20px",
                 color: textColor,
-                fontSize: "14px",
-                opacity: isAddingComment ? 0.7 : 1,
+                fontSize: "15px",
+                transition: "all 0.2s",
               }}
               onKeyPress={handleKeyPress}
             />
             <Button
               size="sm"
               appearance="primary"
-              color="blue"
               style={{
-                width: 32,
-                height: 32,
+                position: "absolute",
+                right: "6px",
+                width: "36px",
+                height: "36px",
                 borderRadius: "50%",
                 padding: 0,
-                backgroundColor: "#3b82f6",
+                backgroundColor: isDark ? "#3b82f6" : "#2563eb",
                 border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                transition: "all 0.2s",
               }}
               onClick={handleAddComment}
               disabled={!newComment.trim() || isAddingComment}
             >
               {isAddingComment ? (
                 <div
+                  className="animate-spin"
                   style={{
-                    width: "16px",
-                    height: "16px",
+                    width: "18px",
+                    height: "18px",
                     border: "2px solid white",
-                    borderTop: "2px solid transparent",
+                    borderTopColor: "transparent",
                     borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
                   }}
                 />
               ) : (
@@ -404,13 +379,22 @@ export default function DesktopCommentsSidebar({
       </div>
 
       <style jsx>{`
+        .scrollbar-custom::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+          background: ${borderColor};
+          border-radius: 10px;
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
         @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>

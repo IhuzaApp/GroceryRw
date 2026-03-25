@@ -1004,9 +1004,8 @@ export default function FoodReelsApp() {
             setError(null);
           }
         } else {
-          if (mountedRef.current) {
-            setIsRefreshing(true);
-          }
+          // Background refresh - don't show the full UI refresh indicator
+          // to prevent the "Refreshing Feed..." popup from persisting unnecessarily.
         }
 
         const response = await fetch("/api/queries/reels");
@@ -1796,10 +1795,10 @@ export default function FoodReelsApp() {
         ),
       ];
 
-      // Update posts with fresh comment data
+      // Update posts with fresh comment data using functional update to avoid stale state
       if (mountedRef.current) {
-        setPosts(
-          posts.map((post: FoodPost) =>
+        setPosts((prevPosts: FoodPost[]) =>
+          prevPosts.map((post: FoodPost) =>
             post.id === postId
               ? {
                   ...post,
@@ -1868,10 +1867,8 @@ export default function FoodReelsApp() {
         if (mountedRef.current) {
           setActivePostId(currentPost.id);
         }
-        // Auto-fetch comments for the visible post on desktop if user is logged in
-        if (session?.user) {
-          refetchComments(currentPost.id);
-        }
+        // Auto-fetch comments for the visible post on desktop to ensure they are always visible
+        refetchComments(currentPost.id);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

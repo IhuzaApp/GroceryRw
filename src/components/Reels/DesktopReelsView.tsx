@@ -1,10 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import RootLayout from "@components/ui/layout";
 import VideoReel from "./VideoReel";
 import DesktopCommentsSidebar from "./DesktopCommentsSidebar";
+import { ChevronUp, ChevronDown, Home } from "lucide-react";
+import {
+  isValidMediaUrl,
+  isYouTubeUrl,
+  getYouTubeVideoId,
+} from "./ReelTypes";
 
-// Types - will be imported from parent component
+// Types
 type FoodPost = any;
 type Comment = any;
 
@@ -41,7 +47,13 @@ export default function DesktopReelsView({
   isRefreshing,
   theme,
 }: DesktopReelsViewProps) {
-  // Get active post based on visible index - always show sidebar if there's a post
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Get active post based on visible index
   const activePost =
     posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length
       ? posts[visiblePostIndex]
@@ -76,21 +88,14 @@ export default function DesktopReelsView({
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle navigation if user is typing in an input field
       const activeElement = document.activeElement;
       const isTyping =
         activeElement &&
         (activeElement.tagName === "INPUT" ||
           activeElement.tagName === "TEXTAREA" ||
-          activeElement.getAttribute("contenteditable") === "true" ||
-          activeElement.closest("input") ||
-          activeElement.closest("textarea") ||
-          activeElement.closest("[contenteditable='true']"));
+          activeElement.getAttribute("contenteditable") === "true");
 
-      // For space key, only handle navigation if not typing
-      if (e.key === " " && isTyping) {
-        return;
-      }
+      if (e.key === " " && isTyping) return;
 
       const currentIndex = visiblePostIndex;
       let nextIndex = currentIndex;
@@ -102,6 +107,7 @@ export default function DesktopReelsView({
           e.preventDefault();
           if (currentIndex < posts.length - 1) {
             nextIndex = currentIndex + 1;
+            scrollToIndex(nextIndex);
           }
           break;
         case "ArrowUp":
@@ -109,26 +115,19 @@ export default function DesktopReelsView({
           e.preventDefault();
           if (currentIndex > 0) {
             nextIndex = currentIndex - 1;
+            scrollToIndex(nextIndex);
           }
-          break;
-        case "Home":
-          e.preventDefault();
-          nextIndex = 0;
-          break;
-        case "End":
-          e.preventDefault();
-          nextIndex = posts.length - 1;
           break;
         default:
           return;
       }
+    };
 
-      if (nextIndex !== currentIndex) {
-        const targetElement = container.children[nextIndex] as HTMLElement;
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: "smooth" });
-          setVisiblePostIndex(nextIndex);
-        }
+    const scrollToIndex = (index: number) => {
+      const targetElement = container.children[index] as HTMLElement;
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth" });
+        setVisiblePostIndex(index);
       }
     };
 
@@ -141,144 +140,171 @@ export default function DesktopReelsView({
     };
   }, [posts.length, visiblePostIndex, containerRef, setVisiblePostIndex]);
 
+  const handleNavClick = (direction: "up" | "down") => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const nextIndex = direction === "up" ? visiblePostIndex - 1 : visiblePostIndex + 1;
+
+    if (nextIndex >= 0 && nextIndex < posts.length) {
+      const targetElement = container.children[nextIndex] as HTMLElement;
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth" });
+        setVisiblePostIndex(nextIndex);
+      }
+    }
+  };
+
+  const isDark = theme === "dark";
+
   return (
     <RootLayout>
-      {/* Back to Home Button */}
-      <Link href="/">
-        <button
-          style={{
-            position: "fixed",
-            left: "24px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 100,
-            width: "48px",
-            height: "48px",
-            borderRadius: "50%",
-            backgroundColor:
-              theme === "dark"
-                ? "rgba(31, 41, 55, 0.9)"
-                : "rgba(255, 255, 255, 0.9)",
-            border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor =
-              theme === "dark"
-                ? "rgba(55, 65, 81, 0.95)"
-                : "rgba(255, 255, 255, 1)";
-            e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor =
-              theme === "dark"
-                ? "rgba(31, 41, 55, 0.9)"
-                : "rgba(255, 255, 255, 0.9)";
-            e.currentTarget.style.transform = "translateY(-50%) scale(1)";
-          }}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={theme === "dark" ? "#f9fafb" : "#111827"}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        </button>
-      </Link>
+      <div className={`relative min-h-screen w-full overflow-hidden ${isDark ? "bg-black" : "bg-gray-100"}`}>
+        {/* Immersive Blurred Background */}
+        {activePost &&
+          (() => {
+            let bgUrl = "";
+            const mediaUrl = activePost.content.video;
 
-      {/* Refresh Indicator */}
-      {isRefreshing && (
-        <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-          Refreshing...
+            if (isYouTubeUrl(mediaUrl)) {
+              const videoId = getYouTubeVideoId(mediaUrl);
+              if (videoId) {
+                bgUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+              }
+            } else if (isValidMediaUrl(mediaUrl)) {
+              bgUrl = mediaUrl;
+            }
+
+            if (!bgUrl) return null;
+
+            return (
+              <div className="absolute inset-0 z-0 overflow-hidden transition-opacity duration-1000">
+                <div
+                  className="absolute inset-0 scale-110 blur-[80px] brightness-[0.4]"
+                  style={{
+                    backgroundImage: `url(${bgUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
+                <div
+                  className={`absolute inset-0 ${
+                    isDark ? "bg-black/40" : "bg-white/20"
+                  }`}
+                />
+              </div>
+            );
+          })()}
+
+        {/* Navigation - Back to Home */}
+        <div className="fixed left-8 top-1/2 z-50 -translate-y-1/2 space-y-4">
+          <Link href="/">
+            <button
+              className={`flex h-14 w-14 items-center justify-center rounded-full border shadow-2xl backdrop-blur-xl transition-all hover:scale-110 active:scale-95 ${
+                isDark
+                  ? "border-gray-700 bg-gray-900/40 text-white hover:bg-gray-800/60"
+                  : "border-white/40 bg-white/40 text-gray-900 hover:bg-white/60"
+              }`}
+              title="Back to Home"
+            >
+              <Home size={28} />
+            </button>
+          </Link>
         </div>
-      )}
 
-      {/* Main Reels Container - Centered vertically and horizontally */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          padding: "2.5vh 0",
-          gap: "16px",
-        }}
-      >
-        {/* Video Reel Container */}
-        <div
-          ref={containerRef}
-          className="scrollbar-hide reels-container"
-          style={{
-            position: "relative",
-            width: "100%",
-            maxWidth: "28rem",
-            height: "95vh",
-            minHeight: "95vh",
-            maxHeight: "95vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollSnapType: "y mandatory",
-            scrollBehavior: "smooth",
-            overscrollBehavior: "none",
-            padding: 0,
-            borderRadius: "1rem",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-            backgroundColor: theme === "dark" ? "#111827" : "#ffffff",
-          }}
-        >
-          {posts.map((post, index) => (
+        {/* Main Content Area */}
+        <div className="relative z-10 mx-auto flex h-screen w-full items-center justify-center px-4 py-6 lg:gap-8 xl:gap-12">
+          {/* Video Reel Container */}
+          <div className="relative flex flex-col items-center">
             <div
-              key={`${post.id}-desktop`}
-              data-index={index}
+              ref={containerRef}
+              className="scrollbar-hide relative aspect-[9/16] h-[90vh] overflow-y-auto overflow-x-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-500"
               style={{
-                scrollSnapAlign: "start",
-                width: "100%",
-                height: "95vh",
-                minHeight: "95vh",
-                maxHeight: "95vh",
-                flexShrink: 0,
-                margin: 0,
-                padding: 0,
+                width: "calc(90vh * 9/16)",
+                maxWidth: "28rem",
+                scrollSnapType: "y mandatory",
+                scrollBehavior: "smooth",
+                overscrollBehavior: "none",
               }}
             >
-              <VideoReel
-                post={post}
-                isVisible={visiblePostIndex === index}
-                isAuthenticated={isAuthenticated}
-                onAuthRequired={onAuthRequired}
-                onLike={toggleLike}
-                onComment={() => {}}
-                onShare={handleShare}
+              {posts.map((post, index) => (
+                <div
+                  key={`${post.id}-desktop`}
+                  className="h-full w-full shrink-0"
+                  style={{ scrollSnapAlign: "start" }}
+                >
+                  <VideoReel
+                    post={post}
+                    isVisible={visiblePostIndex === index}
+                    isAuthenticated={isAuthenticated}
+                    onAuthRequired={onAuthRequired}
+                    onLike={toggleLike}
+                    onComment={() => {}}
+                    onShare={handleShare}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Floating Navigation Controls */}
+            <div className="mt-6 flex gap-4">
+              <button
+                onClick={() => handleNavClick("up")}
+                disabled={visiblePostIndex === 0}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${
+                  isDark
+                    ? "border-gray-700 bg-gray-900/40 text-white"
+                    : "border-white/40 bg-white/40 text-gray-800"
+                }`}
+              >
+                <ChevronUp size={24} />
+              </button>
+              <button
+                onClick={() => handleNavClick("down")}
+                disabled={visiblePostIndex === posts.length - 1}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${
+                  isDark
+                    ? "border-gray-700 bg-gray-900/40 text-white"
+                    : "border-white/40 bg-white/40 text-gray-800"
+                }`}
+              >
+                <ChevronDown size={24} />
+              </button>
+            </div>
+          </div>
+
+          {/* Comments Sidebar */}
+          {activePost && (
+            <div className="flex h-[90vh] w-full max-w-[500px] flex-col">
+              <DesktopCommentsSidebar
+                comments={mergedActiveComments}
+                commentCount={activePost.stats.comments}
+                postId={activePost.id}
+                onToggleCommentLike={toggleCommentLike}
+                onAddComment={addComment}
+                isRefreshing={isRefreshingComments}
               />
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Comments Sidebar - Outside and next to the reel container */}
-        {activePost && (
-          <DesktopCommentsSidebar
-            comments={mergedActiveComments}
-            commentCount={activePost.stats.comments}
-            postId={activePost.id}
-            onToggleCommentLike={toggleCommentLike}
-            onAddComment={addComment}
-            isRefreshing={isRefreshingComments}
-          />
+        {/* Refresh Indicator */}
+        {isRefreshing && (
+          <div className="fixed left-1/2 top-8 z-50 flex -translate-x-1/2 transform items-center gap-3 rounded-full bg-black/60 px-6 py-3 text-sm font-medium text-white backdrop-blur-xl transition-all shadow-2xl">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+            <span>Refreshing Feed...</span>
+          </div>
         )}
       </div>
+
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </RootLayout>
   );
 }

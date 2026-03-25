@@ -88,9 +88,16 @@ export default function VideoReel({
             await videoRef.current.play();
             if (mountedRef.current) setIsPlaying(true);
           } catch (error) {
-            if (mountedRef.current && (error as Error).name !== "AbortError") {
+            const errorName = (error as Error).name;
+            // Ignore AbortError and NotAllowedError (autoplay block)
+            if (
+              mountedRef.current &&
+              errorName !== "AbortError" &&
+              errorName !== "NotAllowedError"
+            ) {
               setVideoError(true);
             }
+            if (mountedRef.current) setIsPlaying(false);
           }
         };
         playVideo();
@@ -149,8 +156,15 @@ export default function VideoReel({
         try {
           if (!mountedRef.current || !videoRef.current) return;
           await videoRef.current.play();
+          if (mountedRef.current) setIsPlaying(true);
         } catch (error) {
-          if (mountedRef.current && (error as Error).name !== "AbortError") {
+          const errorName = (error as Error).name;
+          // Silence autoplay block errors as it's standard browser behavior
+          if (
+            mountedRef.current &&
+            errorName !== "AbortError" &&
+            errorName !== "NotAllowedError"
+          ) {
             toaster.push(
               <Message type="error" closable>
                 {`Failed to play video: ${
@@ -160,6 +174,7 @@ export default function VideoReel({
               { placement: "topEnd" }
             );
           }
+          if (mountedRef.current) setIsPlaying(false);
         }
       };
       playVideo();
