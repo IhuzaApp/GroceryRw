@@ -51,7 +51,7 @@ if (hasFirebaseCredentials()) {
     messaging = getMessaging();
     db = getFirestore();
 
-    console.log(`✅ [FCM Service] Firebase Admin SDK initialized successfully (Project: ${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID})`);
+    // console.log(`✅ [FCM Service] Firebase Admin SDK initialized successfully (Project: ${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID})`);
   } catch (error) {
     console.error(
       "❌ [FCM Service] Failed to initialize Firebase Admin SDK:",
@@ -138,7 +138,6 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
     // Return empty tokens gracefully so FCM just no-ops rather than crashing callers.
     if (error?.code === 5 || error?.message?.includes('NOT_FOUND')) {
       console.warn(
-        "⚠️ [FCM Service] Firestore database not found (NOT_FOUND). " +
         "Please enable Firestore in the Firebase console for project: " +
         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID +
         ". Returning empty tokens."
