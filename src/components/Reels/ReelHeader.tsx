@@ -1,6 +1,6 @@
 import React from "react";
 import { Avatar, Badge } from "rsuite";
-import { FoodPost, getPostTypeColor, getCategoryColor } from "./ReelTypes";
+import { FoodPost, getPostTypeColor, getCategoryColor, isValidMediaUrl } from "./ReelTypes";
 
 interface ReelHeaderProps {
   post: FoodPost;
@@ -25,7 +25,11 @@ const ReelHeader: React.FC<ReelHeaderProps> = ({ post }) => {
         <Avatar
           circle
           size="md"
-          src={post.creator.avatar || "/placeholder.svg"}
+          src={
+            post.creator.avatar && isValidMediaUrl(post.creator.avatar)
+              ? post.creator.avatar
+              : "/placeholder.svg"
+          }
           alt={post.creator.name}
           style={{ border: "2px solid white" }}
         />

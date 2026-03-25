@@ -123,7 +123,12 @@ export const isImageUrl = (url: string) => {
 };
 
 export const isValidMediaUrl = (url: string) => {
-  if (!url) return false;
+  if (!url || typeof url !== "string") return false;
+
+  // Stricter check: URLs shouldn't have spaces (sentences) and must start correctly.
+  // This prevents description text (like the Starbucks example) from being used as a media source.
+  if (url.trim().includes(" ")) return false;
+
   const validStarts = ["http://", "https://", "/", "blob:", "data:"];
   return validStarts.some((start) => url.startsWith(start));
 };

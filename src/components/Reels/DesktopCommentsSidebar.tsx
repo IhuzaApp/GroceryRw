@@ -31,6 +31,8 @@ const SendIcon = () => (
   </svg>
 );
 
+import { isValidMediaUrl } from "./ReelTypes";
+
 interface Comment {
   id: string;
   user: {
@@ -195,7 +197,11 @@ export default function DesktopCommentsSidebar({
               <Avatar
                 circle
                 size="md"
-                src={comment.user.avatar || "/placeholder.svg"}
+                src={
+                  comment.user.avatar && isValidMediaUrl(comment.user.avatar)
+                    ? comment.user.avatar
+                    : "/placeholder.svg"
+                }
                 alt={comment.user.name}
                 style={{ border: `2px solid ${borderColor}` }}
               />
