@@ -523,6 +523,7 @@ export default function FoodReelsApp() {
           comments: post.stats.comments,
         },
         isLiked: post.isLiked,
+        commentsList: post.commentsList || [],
         // Only store essential type-specific data
         ...(post.type === "restaurant" && {
           restaurant: {
@@ -606,6 +607,7 @@ export default function FoodReelsApp() {
             },
             stats: { likes: post.stats.likes, comments: post.stats.comments },
             isLiked: post.isLiked,
+            commentsList: post.commentsList || [],
           }));
 
           const minimalCache: CachedReels = {
@@ -982,6 +984,14 @@ export default function FoodReelsApp() {
         if (cached && !forceRefresh) {
           // console.log("Loading reels from cache");
           if (mountedRef.current) {
+            console.log("================ CACHED REELS & COMMENTS LOG ================");
+            console.log("Total Cached Reels:", cached.data.length);
+            cached.data.forEach((post: any) => {
+              console.log(`\n--- Reel [ID: ${post.id}] - Title: ${post.content?.title} ---`);
+              console.log("Full Reel Data:", post);
+              console.log(`Comments for Reel [${post.id}]:`, post.commentsList);
+            });
+            console.log("=============================================================");
             setPosts(cached.data);
             setLoading(false);
           }
@@ -1050,6 +1060,15 @@ export default function FoodReelsApp() {
 
         // Update state first
         if (mountedRef.current) {
+          console.log("================ REELS & COMMENTS LOG ================");
+          console.log("Total Reels fetched:", randomizedPosts.length);
+          randomizedPosts.forEach((post) => {
+            console.log(`\n--- Reel [ID: ${post.id}] - Title: ${post.content?.title} ---`);
+            console.log("Full Reel Data:", post);
+            console.log(`Comments for Reel [${post.id}]:`, post.commentsList);
+          });
+          console.log("======================================================");
+
           console.log(
             "DEBUG: Setting randomized posts to state:",
             randomizedPosts
