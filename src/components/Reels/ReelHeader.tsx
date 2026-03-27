@@ -14,77 +14,46 @@ const ReelHeader: React.FC<ReelHeaderProps> = ({ post }) => {
         top: 0,
         left: 0,
         right: 0,
-        padding: 16,
+        padding: "48px 16px 16px 16px", // Extra top padding for mobile status bar clearance
         display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
+        alignItems: "flex-start",
+        justifyContent: "flex-end",
         zIndex: 10,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <Avatar
-          circle
-          size="md"
-          src={
-            post.creator.avatar && isValidMediaUrl(post.creator.avatar)
-              ? post.creator.avatar
-              : "/placeholder.svg"
-          }
-          alt={post.creator.name}
-          style={{ border: "2px solid white" }}
-        />
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ color: "#fff", fontWeight: 600, fontSize: "14px" }}>
-              {post.creator.name}
-            </span>
-            {post.creator.verified && (
-              <div
-                style={{
-                  width: 16,
-                  height: 16,
-                  backgroundColor: "#3b82f6",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span style={{ color: "#fff", fontSize: "12px" }}>✓</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Badge
+        <div
           style={{
             border: "1px solid rgba(255,255,255,0.3)",
-            backgroundColor: `${getPostTypeColor(post.type)}20`,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
             color: "#fff",
             fontWeight: "600",
             fontSize: "12px",
-            padding: "4px 8px",
-            borderRadius: "12px",
-            backdropFilter: "blur(8px)",
+            padding: "4px 10px",
+            borderRadius: "16px",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           }}
         >
           <span style={{ textTransform: "capitalize" }}>{post.type}</span>
-        </Badge>
-        <Badge
+        </div>
+        <div
           style={{
-            backgroundColor: `${getCategoryColor(post.content.category)}20`,
+            backgroundColor: `${getCategoryColor(post.content.category)}99`, // slightly opaque category color
             color: "#fff",
-            border: "1px solid rgba(255,255,255,0.3)",
-            fontWeight: "500",
+            border: "1px solid rgba(255,255,255,0.4)",
+            fontWeight: "600",
             fontSize: "12px",
-            padding: "4px 8px",
-            borderRadius: "12px",
-            backdropFilter: "blur(8px)",
+            padding: "4px 10px",
+            borderRadius: "16px",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           }}
         >
-          {post.content.category}
-        </Badge>
+          <span style={{ textTransform: "capitalize" }}>{post.content.category}</span>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ export type PostType = "restaurant" | "supermarket" | "chef" | "business";
 
 export interface Comment {
   id: string;
+  user_id?: string; // Add this to identify ownership
   user: {
     name: string;
     avatar: string;

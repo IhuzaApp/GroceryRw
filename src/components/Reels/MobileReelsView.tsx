@@ -19,6 +19,7 @@ interface MobileReelsViewProps {
   mergedActiveComments: Comment[];
   toggleCommentLike: (commentId: string) => void;
   addComment: (text: string) => void;
+  deleteComment: (commentId: string) => void;
   isRefreshingComments: boolean;
   toggleLike: (postId: string) => void;
   handleShare: (post: FoodPost) => void;
@@ -39,6 +40,7 @@ export default function MobileReelsView({
   mergedActiveComments,
   toggleCommentLike,
   addComment,
+  deleteComment,
   isRefreshingComments,
   toggleLike,
   handleShare,
@@ -115,7 +117,7 @@ export default function MobileReelsView({
       >
         {posts.map((post, index) => (
           <div
-            key={`${post.id}-mobile`}
+            key={post.id}
             data-index={index}
             style={{
               scrollSnapAlign: "start",
@@ -148,6 +150,7 @@ export default function MobileReelsView({
           postId={activePost.id}
           onToggleCommentLike={toggleCommentLike}
           onAddComment={addComment}
+          onDeleteComment={deleteComment}
           isRefreshing={isRefreshingComments}
         />
       )}

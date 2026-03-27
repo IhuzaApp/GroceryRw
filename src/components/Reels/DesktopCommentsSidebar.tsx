@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Avatar, Input } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
+import { useSession } from "next-auth/react";
 
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
   <svg
@@ -31,10 +32,29 @@ const SendIcon = () => (
   </svg>
 );
 
+const TrashIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
+  </svg>
+);
+
 import { isValidMediaUrl } from "./ReelTypes";
 
 interface Comment {
   id: string;
+  user_id?: string;
   user: {
     name: string;
     avatar: string;
@@ -50,8 +70,9 @@ interface DesktopCommentsSidebarProps {
   comments: Comment[];
   commentCount: number;
   postId: string;
-  onToggleCommentLike: (postId: string, commentId: string) => void;
-  onAddComment: (postId: string, comment: string) => void;
+  onToggleCommentLike: (commentId: string) => void;
+  onAddComment: (comment: string) => void;
+  onDeleteComment: (commentId: string) => void;
   isRefreshing?: boolean;
 }
 
@@ -61,8 +82,11 @@ export default function DesktopCommentsSidebar({
   postId,
   onToggleCommentLike,
   onAddComment,
+  onDeleteComment,
   isRefreshing = false,
 }: DesktopCommentsSidebarProps) {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id;
   const [newComment, setNewComment] = useState("");
   const [isAddingComment, setIsAddingComment] = useState(false);
   const { theme } = useTheme();
@@ -80,7 +104,7 @@ export default function DesktopCommentsSidebar({
 
     try {
       setIsAddingComment(true);
-      await onAddComment(postId, newComment);
+      await onAddComment(newComment);
       setNewComment("");
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -246,6 +270,28 @@ export default function DesktopCommentsSidebar({
                         <span style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}>✓</span>
                       </div>
                     )}
+                    {/* Delete button for own comments */}
+                    {comment.user_id === currentUserId && (
+                      <button
+                        onClick={() => onDeleteComment(comment.id)}
+                        style={{
+                          marginLeft: "auto",
+                          background: "none",
+                          border: "none",
+                          padding: "4px",
+                          color: secondaryTextColor,
+                          opacity: 0.6,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.2s",
+                        }}
+                        title="Delete comment"
+                      >
+                        <TrashIcon />
+                      </button>
+                    )}
                   </div>
                   <p
                     style={{
@@ -284,7 +330,7 @@ export default function DesktopCommentsSidebar({
                       fontWeight: comment.isLiked ? 600 : 400,
                       transition: "all 0.2s",
                     }}
-                    onClick={() => onToggleCommentLike(postId, comment.id)}
+                    onClick={() => onToggleCommentLike(comment.id)}
                   >
                     <HeartIcon filled={comment.isLiked} />
                     {comment.likes > 0 && <span>{comment.likes}</span>}

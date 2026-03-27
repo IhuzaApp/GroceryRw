@@ -23,6 +23,7 @@ interface DesktopReelsViewProps {
   mergedActiveComments: Comment[];
   toggleCommentLike: (commentId: string) => void;
   addComment: (text: string) => void;
+  deleteComment: (commentId: string) => void;
   isRefreshingComments: boolean;
   toggleLike: (postId: string) => void;
   handleShare: (post: FoodPost) => void;
@@ -40,6 +41,7 @@ export default function DesktopReelsView({
   mergedActiveComments,
   toggleCommentLike,
   addComment,
+  deleteComment,
   isRefreshingComments,
   toggleLike,
   handleShare,
@@ -187,9 +189,8 @@ export default function DesktopReelsView({
                   }}
                 />
                 <div
-                  className={`absolute inset-0 ${
-                    isDark ? "bg-black/40" : "bg-white/20"
-                  }`}
+                  className={`absolute inset-0 ${isDark ? "bg-black/40" : "bg-white/20"
+                    }`}
                 />
               </div>
             );
@@ -199,11 +200,10 @@ export default function DesktopReelsView({
         <div className="fixed left-8 top-1/2 z-50 -translate-y-1/2 space-y-4">
           <Link href="/">
             <button
-              className={`flex h-14 w-14 items-center justify-center rounded-full border shadow-2xl backdrop-blur-xl transition-all hover:scale-110 active:scale-95 ${
-                isDark
-                  ? "border-gray-700 bg-gray-900/40 text-white hover:bg-gray-800/60"
-                  : "border-white/40 bg-white/40 text-gray-900 hover:bg-white/60"
-              }`}
+              className={`flex h-14 w-14 items-center justify-center rounded-full border shadow-2xl backdrop-blur-xl transition-all hover:scale-110 active:scale-95 ${isDark
+                ? "border-gray-700 bg-gray-900/40 text-white hover:bg-gray-800/60"
+                : "border-white/40 bg-white/40 text-gray-900 hover:bg-white/60"
+                }`}
               title="Back to Home"
             >
               <Home size={28} />
@@ -228,7 +228,7 @@ export default function DesktopReelsView({
             >
               {posts.map((post, index) => (
                 <div
-                  key={`${post.id}-desktop`}
+                  key={post.id}
                   className="h-full w-full shrink-0"
                   style={{ scrollSnapAlign: "start" }}
                 >
@@ -238,7 +238,7 @@ export default function DesktopReelsView({
                     isAuthenticated={isAuthenticated}
                     onAuthRequired={onAuthRequired}
                     onLike={toggleLike}
-                    onComment={() => {}}
+                    onComment={() => { }}
                     onShare={handleShare}
                   />
                 </div>
@@ -250,22 +250,20 @@ export default function DesktopReelsView({
               <button
                 onClick={() => handleNavClick("up")}
                 disabled={visiblePostIndex === 0}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${
-                  isDark
-                    ? "border-gray-700 bg-gray-900/40 text-white"
-                    : "border-white/40 bg-white/40 text-gray-800"
-                }`}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${isDark
+                  ? "border-gray-700 bg-gray-900/40 text-white"
+                  : "border-white/40 bg-white/40 text-gray-800"
+                  }`}
               >
                 <ChevronUp size={24} />
               </button>
               <button
                 onClick={() => handleNavClick("down")}
                 disabled={visiblePostIndex === posts.length - 1}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${
-                  isDark
-                    ? "border-gray-700 bg-gray-900/40 text-white"
-                    : "border-white/40 bg-white/40 text-gray-800"
-                }`}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${isDark
+                  ? "border-gray-700 bg-gray-900/40 text-white"
+                  : "border-white/40 bg-white/40 text-gray-800"
+                  }`}
               >
                 <ChevronDown size={24} />
               </button>
@@ -281,6 +279,7 @@ export default function DesktopReelsView({
                 postId={activePost.id}
                 onToggleCommentLike={toggleCommentLike}
                 onAddComment={addComment}
+                onDeleteComment={deleteComment}
                 isRefreshing={isRefreshingComments}
               />
             </div>

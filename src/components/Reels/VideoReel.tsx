@@ -109,6 +109,16 @@ export default function VideoReel({
       }
     }
   }, [isVisible, post.id, isMobile]);
+  
+  // Trigger like animation when post.isLiked becomes true
+  useEffect(() => {
+    if (post.isLiked && !showLikeAnimation) {
+      console.log(`[VideoReel] Like detected for ${post.id}. Triggering animation.`);
+      setShowLikeAnimation(true);
+      const timer = setTimeout(() => setShowLikeAnimation(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [post.isLiked]);
 
   // Handle background audio for images
   useEffect(() => {
@@ -167,9 +177,8 @@ export default function VideoReel({
           ) {
             toaster.push(
               <Message type="error" closable>
-                {`Failed to play video: ${
-                  (error as Error).message || "Unknown error occurred"
-                }`}
+                {`Failed to play video: ${(error as Error).message || "Unknown error occurred"
+                  }`}
               </Message>,
               { placement: "topEnd" }
             );
@@ -230,8 +239,7 @@ export default function VideoReel({
     if (!post.isLiked) {
       onLike(post.id);
     }
-    setShowLikeAnimation(true);
-    setTimeout(() => setShowLikeAnimation(false), 1000);
+    // Animation is now handled by useEffect watching post.isLiked
   };
 
   return (
@@ -267,7 +275,7 @@ export default function VideoReel({
           setVideoError={setVideoError}
         />
 
-        {/* Gradient overlay */}
+        {/* Gradient overlays for cinematic feel */}
         <div
           style={{
             position: "absolute",
@@ -279,7 +287,7 @@ export default function VideoReel({
             height: "100%",
             minHeight: "100%",
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+              "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 20%, rgba(0,0,0,0.15) 35%, transparent 50%, rgba(0,0,0,0.05) 75%, rgba(0,0,0,0.4) 100%)",
             zIndex: 2,
             pointerEvents: "none", // Let clicks pass through to the main container
           }}

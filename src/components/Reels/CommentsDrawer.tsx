@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Avatar, Input } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
+import { useSession } from "next-auth/react";
 
 // Inline SVGs for icons
 const XIcon = () => (
@@ -16,6 +17,24 @@ const XIcon = () => (
   >
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
   </svg>
 );
 
@@ -51,6 +70,7 @@ const SendIcon = () => (
 
 interface Comment {
   id: string;
+  user_id?: string;
   user: {
     name: string;
     avatar: string;
@@ -69,8 +89,9 @@ interface CommentsDrawerProps {
   comments: Comment[];
   commentCount: number;
   postId: string;
-  onToggleCommentLike: (postId: string, commentId: string) => void;
-  onAddComment: (postId: string, comment: string) => void;
+  onToggleCommentLike: (commentId: string) => void;
+  onAddComment: (comment: string) => void;
+  onDeleteComment: (commentId: string) => void;
   isRefreshing?: boolean;
 }
 
@@ -82,8 +103,11 @@ export default function CommentsDrawer({
   postId,
   onToggleCommentLike,
   onAddComment,
+  onDeleteComment,
   isRefreshing = false,
 }: CommentsDrawerProps) {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id;
   const [newComment, setNewComment] = useState("");
   const [isAddingComment, setIsAddingComment] = useState(false);
   const { theme } = useTheme();
@@ -124,7 +148,7 @@ export default function CommentsDrawer({
 
     try {
       setIsAddingComment(true);
-      await onAddComment(postId, newComment);
+      await onAddComment(newComment);
       setNewComment("");
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -192,7 +216,7 @@ export default function CommentsDrawer({
         height: "75vh", // Reduced height to not fill entire screen
         maxHeight: "600px", // Maximum height cap
         width: "100%",
-        transform: `translateY(${open ? currentTranslateY : 100}%)`,
+        transform: `translateY(${open ? (currentTranslateY === 0 ? '0%' : currentTranslateY + 'px') : '100%'})`,
         borderRadius: "24px 24px 0 0",
         maxWidth: "100%",
         touchAction: "pan-y" as const,
@@ -203,9 +227,8 @@ export default function CommentsDrawer({
         position: "fixed" as const,
         bottom: 0,
         left: "50%",
-        transform: `translateX(-50%) ${
-          open ? "translateY(0)" : "translateY(100%)"
-        }`,
+        transform: `translateX(-50%) ${open ? "translateY(0)" : "translateY(100%)"
+          }`,
         height: "75vh",
         width: "min(90vw, 500px)",
         borderRadius: "20px 20px 0 0",
@@ -450,6 +473,28 @@ export default function CommentsDrawer({
                               </span>
                             </div>
                           )}
+                          {/* Deletion button for own comments */}
+                          {comment.user_id === currentUserId && (
+                            <button
+                              onClick={() => onDeleteComment(comment.id)}
+                              style={{
+                                marginLeft: "auto",
+                                background: "none",
+                                border: "none",
+                                padding: "4px",
+                                color: secondaryTextColor,
+                                opacity: 0.6,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "all 0.2s",
+                              }}
+                              title="Delete comment"
+                            >
+                              <TrashIcon />
+                            </button>
+                          )}
                         </div>
                         <p
                           style={{
@@ -500,7 +545,7 @@ export default function CommentsDrawer({
                             cursor: "pointer",
                           }}
                           onClick={() =>
-                            onToggleCommentLike(postId, comment.id)
+                            onToggleCommentLike(comment.id)
                           }
                         >
                           {comment.likes > 0 && (
@@ -547,7 +592,7 @@ export default function CommentsDrawer({
                         cursor: "pointer",
                         padding: 0,
                       }}
-                      onClick={() => onToggleCommentLike(postId, comment.id)}
+                      onClick={() => onToggleCommentLike(comment.id)}
                     >
                       <HeartIcon filled={comment.isLiked} />
                     </Button>
