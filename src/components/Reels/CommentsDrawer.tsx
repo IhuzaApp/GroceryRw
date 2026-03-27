@@ -340,62 +340,62 @@ export default function CommentsDrawer({
            ) : (
              <div className="flex flex-col gap-6">
                 {comments.map((comment, index) => (
-                  <div key={comment.id} className="animate-comment flex gap-4" style={{ animationDelay: `${index * 0.05}s` }}>
-                     <div className="relative h-11 w-11 flex-shrink-0">
-                        <Avatar
-                          circle
-                          src={comment.user.avatar || "/placeholder.svg"}
-                          alt={comment.user.name}
-                          className="h-full w-full border-2 border-transparent ring-2 ring-green-500/20 shadow-sm"
-                        />
-                     </div>
-                     <div className="flex-1 space-y-1">
-                        <div className={`rounded-3xl px-5 py-4 transition-all hover:bg-opacity-80 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
-                           <div className="mb-1 flex items-center gap-2">
-                             <span className="text-sm font-black" style={{ color: textColor }}>
-                                {comment.user.name}
-                             </span>
-                             {comment.user.verified && (
-                               <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 shadow-sm">
-                                  <span className="text-[8px] font-bold text-white">✓</span>
-                               </div>
-                             )}
-                             {comment.user_id === currentUserId && (
-                               <button
-                                 onClick={() => onDeleteComment(comment.id)}
-                                 className="ml-auto flex h-6 w-6 items-center justify-center rounded-full text-red-400 opacity-60 transition-all hover:bg-red-500/10 hover:opacity-100"
-                               >
-                                 <TrashIcon />
+                   <div key={comment.id} className="group animate-comment flex items-start gap-4 py-3" style={{ animationDelay: `${index * 0.05}s` }}>
+                      <div className="relative h-10 w-10 flex-shrink-0">
+                         <Avatar
+                           circle
+                           src={comment.user.avatar || "/placeholder.svg"}
+                           alt={comment.user.name}
+                           className="h-full w-full ring-2 ring-white/5 shadow-sm"
+                         />
+                      </div>
+                      <div className="flex-1 min-w-0 pt-0.5">
+                         <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-bold" style={{ color: textColor }}>
+                                 {comment.user.name}
+                              </span>
+                              {comment.user.verified && (
+                                <div className="flex h-3 w-3 items-center justify-center rounded-full bg-blue-500">
+                                   <span className="text-[7px] font-bold text-white">✓</span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-[14px] leading-relaxed" style={{ color: commentTextColor, opacity: comment.id.startsWith("temp-") ? 0.6 : 1 }}>
+                               {comment.text}
+                            </p>
+                            <div className="flex items-center gap-5 mt-1.5">
+                               <span className="text-[11px] font-semibold tracking-wider" style={{ color: secondaryTextColor }}>
+                                  {comment.timestamp}
+                               </span>
+                               <button className="text-[11px] font-bold tracking-wider hover:text-white transition-colors" style={{ color: secondaryTextColor }}>
+                                 Reply
                                </button>
-                             )}
-                           </div>
-                           <p className="text-[14px] leading-relaxed" style={{ color: commentTextColor, opacity: comment.id.startsWith("temp-") ? 0.6 : 1 }}>
-                              {comment.text}
-                           </p>
-                        </div>
-                        <div className="flex items-center gap-5 px-2">
-                           <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: secondaryTextColor }}>
-                              {comment.timestamp}
-                           </span>
-                           <button
-                             onClick={() => onToggleCommentLike(comment.id)}
-                             className={`text-[11px] font-bold uppercase tracking-wider transition-colors hover:text-red-500 ${comment.isLiked ? "text-red-500" : ""}`}
-                             style={{ color: comment.isLiked ? "#ef4444" : secondaryTextColor }}
-                           >
-                             {comment.likes > 0 ? `${comment.likes} likes` : "Like"}
-                           </button>
-                           <button className="text-[11px] font-bold uppercase tracking-wider" style={{ color: secondaryTextColor }}>
-                             Reply
-                           </button>
-                        </div>
-                     </div>
-                     <button
-                       onClick={() => onToggleCommentLike(comment.id)}
-                       className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-125 ${comment.isLiked ? "text-red-500" : "text-gray-400 opacity-40 hover:opacity-100"}`}
-                     >
-                        <HeartIcon filled={comment.isLiked} />
-                     </button>
-                  </div>
+                               {comment.user_id === currentUserId && (
+                                 <button
+                                   onClick={() => onDeleteComment(comment.id)}
+                                   className="text-[11px] font-bold text-red-400 opacity-60 transition-all hover:opacity-100"
+                                 >
+                                   Delete
+                                 </button>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-1 pt-1 min-w-[32px]">
+                        <button
+                          onClick={() => onToggleCommentLike(comment.id)}
+                          className={`flex items-center justify-center transition-all active:scale-125 ${comment.isLiked ? "text-red-500" : "text-gray-400 opacity-30 hover:opacity-100"}`}
+                        >
+                           <HeartIcon filled={comment.isLiked} />
+                        </button>
+                        {comment.likes > 0 && (
+                          <span className="text-[10px] font-bold" style={{ color: secondaryTextColor }}>
+                            {comment.likes}
+                          </span>
+                        )}
+                      </div>
+                   </div>
                 ))}
              </div>
            )}

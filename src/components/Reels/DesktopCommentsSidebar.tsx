@@ -218,150 +218,109 @@ export default function DesktopCommentsSidebar({
             <div style={{ fontSize: "14px", fontWeight: 500 }}>Join the conversation!</div>
           </div>
         ) : (
-          comments.map((comment) => (
-            <div key={comment.id} style={{ display: "flex", gap: "16px" }}>
-              <div style={{ position: "relative" }}>
-                 <Avatar
-                   circle
-                   size="md"
-                   src={
-                     comment.user.avatar && isValidMediaUrl(comment.user.avatar)
-                       ? comment.user.avatar
-                       : "/placeholder.svg"
-                   }
-                   alt={comment.user.name}
-                   style={{ border: `2px solid transparent`, boxShadow: `0 0 0 2px rgba(34, 197, 94, 0.2)` }}
-                 />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    backgroundColor: commentBgColor,
-                    borderRadius: "1.5rem",
-                    padding: "16px 20px",
-                    boxShadow: isDark ? "0 4px 6px -1px rgba(0, 0, 0, 0.2)" : "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-                    border: `1px solid ${isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)"}`,
+          comments.map((comment, index) => (
+            <div 
+              key={comment.id} 
+              className="group flex items-start gap-4 transition-all"
+              style={{ 
+                padding: "12px 0",
+                animation: "slideIn 0.3s ease-out forwards",
+                animationDelay: `${index * 0.05}s`
+              }}
+            >
+              <div className="relative h-11 w-11 flex-shrink-0">
+                <Avatar
+                  circle
+                  src={
+                    comment.user.avatar && isValidMediaUrl(comment.user.avatar)
+                      ? comment.user.avatar
+                      : "/placeholder.svg"
+                  }
+                  alt={comment.user.name}
+                  style={{ 
+                    width: "44px", 
+                    height: "44px",
+                    border: "2px solid transparent",
                   }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: 800,
-                        fontSize: "14px",
-                        color: textColor,
+                  className="ring-2 ring-white/5 shadow-sm"
+                />
+              </div>
+              
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span 
+                      style={{ 
+                        fontWeight: 700, 
+                        fontSize: "13px", 
+                        color: textColor 
                       }}
                     >
                       {comment.user.name}
                     </span>
                     {comment.user.verified && (
-                      <div
-                        style={{
-                          width: 14,
-                          height: 14,
-                          backgroundColor: "#3b82f6",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          boxShadow: "0 2px 4px rgba(59, 130, 246, 0.3)",
-                        }}
-                      >
-                        <span style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}>✓</span>
+                      <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 shadow-sm">
+                        <span className="text-[8px] font-bold text-white">✓</span>
                       </div>
                     )}
-                    {/* Delete button for own comments */}
-                    {comment.user_id === currentUserId && (
-                      <button
-                        onClick={() => onDeleteComment(comment.id)}
-                        style={{
-                          marginLeft: "auto",
-                          background: "none",
-                          border: "none",
-                          padding: "4px",
-                          color: "#f87171",
-                          opacity: 0.5,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "all 0.2s",
-                        }}
-                        className="hover-opacity-100"
-                        title="Delete comment"
-                      >
-                        <TrashIcon />
-                      </button>
-                    )}
                   </div>
-                  <p
-                    style={{
-                      fontSize: "15px",
+                  
+                  <p 
+                    style={{ 
+                      fontSize: "14px", 
+                      lineHeight: "1.5", 
                       color: commentTextColor,
-                      lineHeight: 1.6,
-                      margin: 0,
-                      fontWeight: 500,
                       opacity: comment.id.startsWith("temp-") ? 0.6 : 1,
+                      margin: 0
                     }}
                   >
                     {comment.text}
                   </p>
+                  
+                  <div className="flex items-center gap-6 mt-1">
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: secondaryTextColor, textTransform: "lowercase" }}>
+                      {comment.timestamp}
+                    </span>
+                    <button style={{ fontSize: "11px", fontWeight: 700, color: secondaryTextColor, background: "none", border: "none", padding: 0, cursor: "pointer" }} className="hover:text-white transition-colors">
+                      Reply
+                    </button>
+                    {comment.user_id === currentUserId && (
+                      <button
+                        onClick={() => onDeleteComment(comment.id)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          color: "#f87171",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          opacity: 0,
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                        className="group-hover:opacity-60 hover:opacity-100"
+                        title="Delete comment"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "24px",
-                    marginTop: 10,
-                    paddingLeft: "12px",
-                  }}
+              </div>
+
+              <div className="flex flex-col items-center gap-1 pt-2 min-w-[32px]">
+                <button
+                  onClick={() => onToggleCommentLike(comment.id)}
+                  className={`flex items-center justify-center transition-all active:scale-125 ${comment.isLiked ? "text-red-500" : "text-gray-400 opacity-30 hover:opacity-100"}`}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
                 >
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: secondaryTextColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    {comment.timestamp}
+                  <HeartIcon filled={comment.isLiked} />
+                </button>
+                {comment.likes > 0 && (
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: secondaryTextColor }}>
+                    {comment.likes}
                   </span>
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      color: comment.isLiked ? "#ef4444" : secondaryTextColor,
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      transition: "all 0.2s",
-                    }}
-                    onClick={() => onToggleCommentLike(comment.id)}
-                  >
-                    <HeartIcon filled={comment.isLiked} />
-                    {comment.likes > 0 && <span>{comment.likes}</span>}
-                  </button>
-                  <button
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      color: secondaryTextColor,
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
-                  >
-                    Reply
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           ))
