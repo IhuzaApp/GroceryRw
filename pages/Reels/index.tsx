@@ -742,7 +742,10 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   };
 
   useEffect(() => {
+    console.log("[Reels UI] FoodReelsApp MOUNTED (mountedRef.current: true)");
+    mountedRef.current = true;
     return () => {
+      console.log("[Reels UI] FoodReelsApp UNMOUNTING (mountedRef.current: false)");
       mountedRef.current = false;
     };
   }, []);
@@ -1286,13 +1289,89 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   };
 
   const toggleCommentLike = async (postId: string, commentId: string) => {
+    console.log("[Reels UI] toggleCommentLike triggered:", { postId, commentId });
     // Check if user is logged in
     if (handleAuthRequired()) {
       return;
     }
 
+    // Storage for original state to revert on error
+    let originalPosts: FoodPost[] = [];
+    let originalOptimistic: Record<string, Comment[]> = {};
+
     try {
-      setIsRefreshingComments(true);
+      console.log("[Reels UI] toggleCommentLike starting optimistic update. mountedRef.current:", mountedRef.current);
+      
+      // 1. OPTIMISTIC UPDATE
+      // We don't guard the VERY FIRST state update with mountedRef.current 
+      // because if the user just clicked a button in the UI, the component MUST be mounted.
+      // Guards are mainly for async callbacks (after fetch/setTimeout).
+
+      // Backup current state for potential revert
+      originalPosts = [...posts];
+      originalOptimistic = { ...optimisticComments };
+
+      console.log("[Reels UI] Proceeding with setPosts...");
+      // Update posts state (server-side comments)
+      setPosts((prevPosts: FoodPost[]) => {
+          console.log("[Reels UI] setPosts callback running. prevPosts count:", prevPosts.length);
+          const updated = prevPosts.map((post: FoodPost) => {
+            if (post.id === postId) {
+              console.log("[Reels UI] Found post in posts state:", postId);
+              return {
+                ...post,
+                commentsList: post.commentsList.map((comment: Comment) => {
+                  if (comment.id === commentId) {
+                    console.log("[Reels UI] Toggling server comment:", {
+                      id: comment.id,
+                      prevLiked: comment.isLiked,
+                      prevLikes: comment.likes
+                    });
+                    return {
+                      ...comment,
+                      isLiked: !comment.isLiked,
+                      likes: comment.isLiked ? Math.max(0, comment.likes - 1) : comment.likes + 1,
+                    };
+                  }
+                  return comment;
+                }
+                ),
+              };
+            }
+            return post;
+          });
+          return updated;
+        });
+
+        // Update optimisticComments state (unsynced local comments)
+        setOptimisticComments((prev) => {
+          const postOptimistic = prev[postId] || [];
+          if (!postOptimistic.some(c => c.id === commentId)) {
+            console.log("[Reels UI] Comment not found in optimisticComments for post:", postId);
+            return prev;
+          }
+          
+          console.log("[Reels UI] Toggling optimistic comment:", commentId);
+          return {
+            ...prev,
+            [postId]: postOptimistic.map((comment: Comment) =>
+              comment.id === commentId
+                ? {
+                  ...comment,
+                  isLiked: !comment.isLiked,
+                  likes: comment.isLiked ? Math.max(0, comment.likes - 1) : comment.likes + 1,
+                }
+                : comment
+            ),
+          };
+        });
+
+        // Trigger a render tick to ensure UI update
+        setRenderTick(t => t + 1);
+        console.log("[Reels UI] Optimistic update state scheduled and done.");
+
+      // 2. API CALL IN BACKGROUND
+      // No need to set refreshing true/false here to avoid flickering overlays
       const response = await fetch("/api/queries/reel-comments", {
         method: "PUT",
         headers: {
@@ -1306,6 +1385,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
       if (response.ok) {
         const result = await response.json();
+        // 3. LOGICAL SYNC WITH SERVER RESULT
         if (mountedRef.current) {
           setPosts((prevPosts: FoodPost[]) =>
             prevPosts.map((post: FoodPost) =>
@@ -1326,9 +1406,17 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             )
           );
         }
+      } else {
+        throw new Error("Failed to toggle comment like on server");
       }
     } catch (error) {
       console.error("Error toggling comment like:", error);
+      // 4. REVERT ON ERROR
+      if (mountedRef.current) {
+        setPosts(originalPosts);
+        setOptimisticComments(originalOptimistic);
+        setRenderTick(t => t + 1);
+      }
     } finally {
       setIsRefreshingComments(false);
     }
@@ -1664,10 +1752,14 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     const localOptimistic = optimisticComments[targetId] || [];
     
     // Log merging process
-    if (localOptimistic.length > 0) {
-      console.log(`[Reels UI] MERGE START for ${targetId}:`, {
+    if (localOptimistic.length > 0 || serverComments.some(c => c.likes > 0 || c.isLiked)) {
+      console.log(`[Reels UI] MERGE for ${targetId}:`, {
         localCount: localOptimistic.length,
-        serverCount: serverComments.length
+        serverCount: serverComments.length,
+        likedIds: [
+          ...serverComments.filter(c => c.isLiked).map(c => c.id),
+          ...localOptimistic.filter(c => c.isLiked).map(c => c.id)
+        ]
       });
     }
 
