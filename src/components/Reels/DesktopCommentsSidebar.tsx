@@ -99,18 +99,14 @@ export default function DesktopCommentsSidebar({
   const commentTextColor = isDark ? "#e5e7eb" : "#374151";
   const secondaryTextColor = isDark ? "#9ca3af" : "#6b7280";
 
-  const handleAddComment = async () => {
+  const handleAddComment = () => {
     if (!newComment.trim() || isAddingComment) return;
 
-    try {
-      setIsAddingComment(true);
-      await onAddComment(newComment);
-      setNewComment("");
-    } catch (error) {
-      console.error("Error adding comment:", error);
-    } finally {
-      setIsAddingComment(false);
-    }
+    const commentText = newComment;
+    setNewComment(""); // Clear instantly
+    
+    // Trigger background submission without awaiting
+    onAddComment(commentText);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -122,17 +118,18 @@ export default function DesktopCommentsSidebar({
 
   return (
     <div
+      className="scrollbar-hide"
       style={{
         width: "100%",
         height: "90vh",
         backgroundColor: bgColor,
-        backdropFilter: "blur(30px)",
-        WebkitBackdropFilter: "blur(30px)",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "2rem",
+        borderRadius: "2.5rem",
         border: `1px solid ${borderColor}`,
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+        boxShadow: isDark ? "0 25px 50px -12px rgba(0, 0, 0, 0.5)" : "0 20px 40px -10px rgba(0, 0, 0, 0.1)",
         overflow: "hidden",
         transition: "all 0.3s ease",
       }}
@@ -143,31 +140,31 @@ export default function DesktopCommentsSidebar({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "24px 28px",
-          borderBottom: `1px solid ${borderColor}`,
-          backgroundColor: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)",
+          padding: "28px 32px",
+          borderBottom: "1px solid transparent",
+          backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <h3
             style={{
-              fontSize: "20px",
-              fontWeight: 700,
+              fontSize: "22px",
+              fontWeight: 900,
               margin: 0,
               color: textColor,
-              letterSpacing: "-0.01em",
+              letterSpacing: "-0.02em",
             }}
           >
             Comments
           </h3>
           <span
             style={{
-              fontSize: "14px",
-              fontWeight: 500,
-              color: secondaryTextColor,
-              backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-              padding: "2px 10px",
-              borderRadius: "12px",
+              fontSize: "12px",
+              fontWeight: 800,
+              color: "rgb(34 197 94)",
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+              padding: "2px 12px",
+              borderRadius: "20px",
             }}
           >
             {commentCount}
@@ -180,7 +177,7 @@ export default function DesktopCommentsSidebar({
               width: "18px",
               height: "18px",
               border: `2px solid ${borderColor}`,
-              borderTopColor: textColor,
+              borderTopColor: "rgb(34 197 94)",
               borderRadius: "50%",
             }}
           />
@@ -189,14 +186,14 @@ export default function DesktopCommentsSidebar({
 
       {/* Comments List */}
       <div
-        className="scrollbar-custom"
+        className="scrollbar-hide"
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "24px",
+          padding: "24px 32px",
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          gap: "28px",
         }}
       >
         {comments.length === 0 ? (
@@ -207,48 +204,56 @@ export default function DesktopCommentsSidebar({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: "12px",
+              gap: "16px",
               color: secondaryTextColor,
-              opacity: 0.6,
+              opacity: 0.5,
             }}
           >
-            <div style={{ fontSize: "18px", fontWeight: 600 }}>No comments yet</div>
-            <div style={{ fontSize: "14px" }}>Start the conversation!</div>
+            <div style={{ transform: "scale(1.5)", marginBottom: "8px" }}>
+               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+               </svg>
+            </div>
+            <div style={{ fontSize: "20px", fontWeight: 800 }}>No comments yet</div>
+            <div style={{ fontSize: "14px", fontWeight: 500 }}>Join the conversation!</div>
           </div>
         ) : (
           comments.map((comment) => (
             <div key={comment.id} style={{ display: "flex", gap: "16px" }}>
-              <Avatar
-                circle
-                size="md"
-                src={
-                  comment.user.avatar && isValidMediaUrl(comment.user.avatar)
-                    ? comment.user.avatar
-                    : "/placeholder.svg"
-                }
-                alt={comment.user.name}
-                style={{ border: `2px solid ${borderColor}` }}
-              />
+              <div style={{ position: "relative" }}>
+                 <Avatar
+                   circle
+                   size="md"
+                   src={
+                     comment.user.avatar && isValidMediaUrl(comment.user.avatar)
+                       ? comment.user.avatar
+                       : "/placeholder.svg"
+                   }
+                   alt={comment.user.name}
+                   style={{ border: `2px solid transparent`, boxShadow: `0 0 0 2px rgba(34, 197, 94, 0.2)` }}
+                 />
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     backgroundColor: commentBgColor,
-                    borderRadius: "18px",
-                    padding: "12px 16px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                    borderRadius: "1.5rem",
+                    padding: "16px 20px",
+                    boxShadow: isDark ? "0 4px 6px -1px rgba(0, 0, 0, 0.2)" : "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                    border: `1px solid ${isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)"}`,
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 6,
-                      marginBottom: 6,
+                      gap: 8,
+                      marginBottom: 8,
                     }}
                   >
                     <span
                       style={{
-                        fontWeight: 700,
+                        fontWeight: 800,
                         fontSize: "14px",
                         color: textColor,
                       }}
@@ -265,6 +270,7 @@ export default function DesktopCommentsSidebar({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          boxShadow: "0 2px 4px rgba(59, 130, 246, 0.3)",
                         }}
                       >
                         <span style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}>✓</span>
@@ -279,14 +285,15 @@ export default function DesktopCommentsSidebar({
                           background: "none",
                           border: "none",
                           padding: "4px",
-                          color: secondaryTextColor,
-                          opacity: 0.6,
+                          color: "#f87171",
+                          opacity: 0.5,
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           transition: "all 0.2s",
                         }}
+                        className="hover-opacity-100"
                         title="Delete comment"
                       >
                         <TrashIcon />
@@ -297,8 +304,10 @@ export default function DesktopCommentsSidebar({
                     style={{
                       fontSize: "15px",
                       color: commentTextColor,
-                      lineHeight: 1.5,
+                      lineHeight: 1.6,
                       margin: 0,
+                      fontWeight: 500,
+                      opacity: comment.id.startsWith("temp-") ? 0.6 : 1,
                     }}
                   >
                     {comment.text}
@@ -308,32 +317,49 @@ export default function DesktopCommentsSidebar({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "20px",
-                    marginTop: 8,
-                    paddingLeft: "8px",
+                    gap: "24px",
+                    marginTop: 10,
+                    paddingLeft: "12px",
                   }}
                 >
-                  <span style={{ fontSize: "12px", color: secondaryTextColor }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: secondaryTextColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     {comment.timestamp}
                   </span>
                   <button
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "4px",
-                      fontSize: "12px",
+                      gap: "6px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
                       color: comment.isLiked ? "#ef4444" : secondaryTextColor,
                       border: "none",
                       background: "none",
                       cursor: "pointer",
                       padding: 0,
-                      fontWeight: comment.isLiked ? 600 : 400,
                       transition: "all 0.2s",
                     }}
                     onClick={() => onToggleCommentLike(comment.id)}
                   >
                     <HeartIcon filled={comment.isLiked} />
                     {comment.likes > 0 && <span>{comment.likes}</span>}
+                  </button>
+                  <button
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      color: secondaryTextColor,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    Reply
                   </button>
                 </div>
               </div>
@@ -345,101 +371,80 @@ export default function DesktopCommentsSidebar({
       {/* Comment Input */}
       <div
         style={{
-          padding: "24px 28px",
-          borderTop: `1px solid ${borderColor}`,
-          backgroundColor: isDark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)",
+          padding: "32px",
+          borderTopColor: "transparent",
+          backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
         }}
       >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "16px",
+            gap: "20px",
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#fff",
+            borderRadius: "2rem",
+            padding: "6px 6px 6px 20px",
+            border: `2px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"}`,
+            boxShadow: isDark ? "none" : "0 4px 12px rgba(0,0,0,0.05)",
+            transition: "all 0.3s ease",
           }}
+          className="focus-within-ring"
         >
           <Avatar
             circle
             size="md"
-            src="/placeholder.svg?height=40&width=40"
+            src={session?.user?.image || "/placeholder.svg?height=40&width=40"}
             alt="You"
-            style={{ border: `2px solid ${borderColor}` }}
           />
-          <div
+          <input
+            placeholder="Add a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
             style={{
               flex: 1,
+              border: "none",
+              backgroundColor: "transparent",
+              color: textColor,
+              fontSize: "15px",
+              fontWeight: 600,
+              padding: "12px 0",
+              outline: "none",
+            }}
+            onKeyPress={handleKeyPress}
+          />
+          <button
+            onClick={handleAddComment}
+            disabled={!newComment.trim()}
+            style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "50%",
+              padding: 0,
+              backgroundColor: newComment.trim() ? "rgb(34 197 94)" : "rgba(255,255,255,0.05)",
+              color: newComment.trim() ? "#fff" : secondaryTextColor,
+              border: "none",
               display: "flex",
               alignItems: "center",
-              gap: "12px",
-              position: "relative",
+              justifyContent: "center",
+              boxShadow: newComment.trim() ? "0 8px 20px rgba(34, 197, 94, 0.3)" : "none",
+              transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+              cursor: newComment.trim() ? "pointer" : "not-allowed",
+              transform: newComment.trim() ? "scale(1)" : "scale(0.95)",
             }}
+            className={newComment.trim() ? "active-scale" : ""}
           >
-            <Input
-              placeholder={isAddingComment ? "Posting..." : "Add a comment..."}
-              value={newComment}
-              onChange={setNewComment}
-              disabled={isAddingComment}
-              style={{
-                flex: 1,
-                border: `1px solid ${borderColor}`,
-                backgroundColor: commentBgColor,
-                borderRadius: "24px",
-                padding: "10px 48px 10px 20px",
-                color: textColor,
-                fontSize: "15px",
-                transition: "all 0.2s",
-              }}
-              onKeyPress={handleKeyPress}
-            />
-            <Button
-              size="sm"
-              appearance="primary"
-              style={{
-                position: "absolute",
-                right: "6px",
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                padding: 0,
-                backgroundColor: isDark ? "#3b82f6" : "#2563eb",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
-                transition: "all 0.2s",
-              }}
-              onClick={handleAddComment}
-              disabled={!newComment.trim() || isAddingComment}
-            >
-              {isAddingComment ? (
-                <div
-                  className="animate-spin"
-                  style={{
-                    width: "18px",
-                    height: "18px",
-                    border: "2px solid white",
-                    borderTopColor: "transparent",
-                    borderRadius: "50%",
-                  }}
-                />
-              ) : (
-                <SendIcon />
-              )}
-            </Button>
-          </div>
+            <SendIcon />
+          </button>
         </div>
       </div>
 
       <style jsx>{`
-        .scrollbar-custom::-webkit-scrollbar {
-          width: 6px;
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
-        .scrollbar-custom::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-          background: ${borderColor};
-          border-radius: 10px;
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
         .animate-spin {
           animation: spin 1s linear infinite;
@@ -447,6 +452,16 @@ export default function DesktopCommentsSidebar({
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .hover-opacity-100:hover {
+          opacity: 1 !important;
+        }
+        .active-scale:active {
+          transform: scale(0.9) !important;
+        }
+        .focus-within-ring:focus-within {
+          border-color: rgba(34, 197, 94, 0.5) !important;
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
         }
       `}</style>
     </div>

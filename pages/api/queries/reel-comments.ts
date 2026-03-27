@@ -47,7 +47,7 @@ const ADD_REEL_COMMENT = gql`
 // Get all comments
 const GET_ALL_COMMENTS = gql`
   query GetComments {
-    Reels_comments(order_by: { created_on: desc }) {
+    Reels_comments(order_by: { created_on: asc }) {
       user_id
       text
       reel_id
@@ -79,7 +79,7 @@ const GET_COMMENTS_BY_REEL = gql`
   query GetCommentsWhereReelID($reel_id: uuid = "") {
     Reels_comments(
       where: { reel_id: { _eq: $reel_id } }
-      order_by: { created_on: desc }
+      order_by: { created_on: asc }
     ) {
       user_id
       text

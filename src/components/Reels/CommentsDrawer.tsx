@@ -143,18 +143,16 @@ export default function CommentsDrawer({
     }
   }, [open]);
 
-  const handleAddComment = async () => {
+  const handleAddComment = () => {
     if (!newComment.trim() || isAddingComment) return;
 
-    try {
-      setIsAddingComment(true);
-      await onAddComment(newComment);
-      setNewComment("");
-    } catch (error) {
-      console.error("Error adding comment:", error);
-    } finally {
-      setIsAddingComment(false);
-    }
+    const commentText = newComment;
+    setNewComment(""); // Clear instantly
+    
+    // Trigger background submission without awaiting
+    onAddComment(commentText);
+    
+    // Optional: Subtle haptic-like feedback or animation could be triggered here
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -197,55 +195,56 @@ export default function CommentsDrawer({
   if (!open) return null;
 
   const isDark = theme === "dark";
-  const bgColor = isDark ? "#1f2937" : "#ffffff";
-  const textColor = isDark ? "#f9fafb" : "#111827";
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  const commentBgColor = isDark ? "#374151" : "#f3f4f6";
-  const commentTextColor = isDark ? "#d1d5db" : "#374151";
+  const bgColor = isDark ? "rgba(17, 24, 39, 0.85)" : "rgba(255, 255, 255, 0.9)";
+  const textColor = isDark ? "#ffffff" : "#111827";
+  const borderColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
+  const commentBgColor = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)";
+  const commentTextColor = isDark ? "#e5e7eb" : "#374151";
   const secondaryTextColor = isDark ? "#9ca3af" : "#6b7280";
 
   // Responsive styles based on screen size
   const getDrawerStyles = () => {
     if (isMobile) {
-      // Mobile: Enhanced bottom sheet with drag support - expanded for better UX
       return {
         position: "fixed" as const,
         bottom: 0,
         left: 0,
         right: 0,
-        height: "75vh", // Reduced height to not fill entire screen
-        maxHeight: "600px", // Maximum height cap
+        height: "85vh", 
         width: "100%",
         transform: `translateY(${open ? (currentTranslateY === 0 ? '0%' : currentTranslateY + 'px') : '100%'})`,
-        borderRadius: "24px 24px 0 0",
+        borderRadius: "2rem 2rem 0 0",
         maxWidth: "100%",
         touchAction: "pan-y" as const,
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
       };
     } else if (isTablet) {
-      // Tablet: Centered modal
       return {
         position: "fixed" as const,
         bottom: 0,
         left: "50%",
-        transform: `translateX(-50%) ${open ? "translateY(0)" : "translateY(100%)"
-          }`,
-        height: "75vh",
-        width: "min(90vw, 500px)",
-        borderRadius: "20px 20px 0 0",
-        maxWidth: "500px",
+        transform: `translateX(-50%) ${open ? "translateY(0)" : "translateY(100%)"}`,
+        height: "80vh",
+        width: "min(95vw, 550px)",
+        borderRadius: "2rem 2rem 0 0",
+        maxWidth: "550px",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
       };
     } else {
-      // Desktop: Side panel
       return {
         position: "fixed" as const,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: "400px",
-        height: "100vh",
-        transform: open ? "translateX(0)" : "translateX(100%)",
-        borderRadius: "0",
-        maxWidth: "400px",
+        top: "2vh",
+        right: "1.5vw",
+        bottom: "2vh",
+        width: "420px",
+        height: "96vh",
+        transform: open ? "translateX(0)" : "translateX(120%)",
+        borderRadius: "2.5rem",
+        maxWidth: "420px",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
       };
     }
   };
@@ -256,46 +255,45 @@ export default function CommentsDrawer({
     <>
       <style jsx>{`
         @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+          from { transform: translateY(10px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-comment {
+          animation: slideIn 0.3s ease-out forwards;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
+      
       {/* Backdrop */}
       <div
+        className="fixed inset-0 z-[99998] bg-black/40 transition-opacity duration-300"
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          zIndex: 99998,
           opacity: open ? 1 : 0,
-          transition: "opacity 0.3s ease-out",
+          pointerEvents: open ? "auto" : "none",
         }}
         onClick={onClose}
       />
 
-      {/* Custom Modal */}
+      {/* Main Drawer Container */}
       <div
         ref={drawerRef}
+        className="flex flex-col border transition-all duration-300"
         style={{
           ...drawerStyles,
           backgroundColor: bgColor,
           zIndex: 99999,
-          display: "flex",
-          flexDirection: "column",
-          transition: isDragging
-            ? "none"
-            : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          boxShadow:
-            isMobile || isTablet
-              ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1)"
-              : "-10px 0 25px -5px rgba(0, 0, 0, 0.1)",
+          borderColor: borderColor,
+          boxShadow: isDark ? "0 25px 50px -12px rgba(0, 0, 0, 0.5)" : "0 20px 40px -10px rgba(0, 0, 0, 0.15)",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -303,419 +301,142 @@ export default function CommentsDrawer({
       >
         {/* Mobile Drag Handle */}
         {isMobile && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              padding: "8px 0",
-              borderBottom: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "40px",
-                height: "4px",
-                backgroundColor: isDark ? "#6b7280" : "#d1d5db",
-                borderRadius: "2px",
-              }}
-            />
+          <div className="flex w-full items-center justify-center pt-4" onClick={onClose}>
+            <div className={`h-1.5 w-12 rounded-full ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
           </div>
         )}
 
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: isMobile ? "14px 16px" : "16px 20px",
-            borderBottom: "none",
-            backgroundColor: bgColor,
-            minHeight: isMobile ? "50px" : "60px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: isMobile ? "18px" : "18px",
-                fontWeight: 600,
-                margin: 0,
-                color: textColor,
-              }}
-            >
-              {commentCount} Comments
-            </h3>
-            {isRefreshing && (
-              <div
-                style={{
-                  width: "12px",
-                  height: "12px",
-                  border: `2px solid ${borderColor}`,
-                  borderTop: `2px solid ${textColor}`,
-                  borderRadius: "50%",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-            )}
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-transparent px-8 py-6">
+          <div className="flex items-center gap-3">
+             <h3 className="text-xl font-black tracking-tight" style={{ color: textColor }}>
+                Comments
+             </h3>
+             <span className="flex h-6 items-center justify-center rounded-full bg-green-500/10 px-3 text-xs font-bold text-green-500">
+                {commentCount}
+             </span>
           </div>
+          <button
+            onClick={onClose}
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90 ${isDark ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"}`}
+          >
+            <XIcon />
+          </button>
         </div>
 
-        {/* Body */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: `calc(100% - ${isMobile ? "50px" : "60px"})`,
-            backgroundColor: bgColor,
-          }}
-        >
-          {/* Comments List */}
-          <div
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              padding: isMobile ? "12px" : "16px",
-              scrollbarWidth: "thin",
-              scrollbarColor: `${borderColor} transparent`,
-              // Prevent scroll when dragging
-              touchAction: isDragging ? "none" : "pan-y",
-            }}
-          >
-            {comments.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: isMobile ? "30px 15px" : "40px 20px",
-                  color: secondaryTextColor,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: isMobile ? "14px" : "16px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  No comments yet
+        {/* Comments List */}
+        <div className="scrollbar-hide flex-1 overflow-y-auto px-6 py-4">
+           {console.log(`[CommentsDrawer] Rendering ${comments.length} comments for post ${postId}`)}
+           {comments.length === 0 ? (
+             <div className="flex h-full flex-col items-center justify-center py-20 text-center">
+                <div className={`mb-4 flex h-20 w-20 items-center justify-center rounded-full ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                   <MessageIcon />
                 </div>
-                <div style={{ fontSize: isMobile ? "12px" : "14px" }}>
-                  Be the first to comment!
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: isMobile ? "12px" : "16px",
-                }}
-              >
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    style={{ display: "flex", gap: isMobile ? "8px" : "12px" }}
-                  >
-                    <Avatar
-                      circle
-                      size={isMobile ? "xs" : "sm"}
-                      src={comment.user.avatar || "/placeholder.svg"}
-                      alt={comment.user.name}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          backgroundColor: commentBgColor,
-                          borderRadius: isMobile ? "12px" : "16px",
-                          padding: isMobile ? "6px 10px" : "8px 12px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                            marginBottom: 4,
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontWeight: 600,
-                              fontSize: isMobile ? "12px" : "14px",
-                              color: textColor,
-                            }}
-                          >
-                            {comment.user.name}
-                          </span>
-                          {comment.user.verified && (
-                            <div
-                              style={{
-                                width: isMobile ? 10 : 12,
-                                height: isMobile ? 10 : 12,
-                                backgroundColor: "#3b82f6",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  color: "#fff",
-                                  fontSize: isMobile ? "8px" : "10px",
-                                }}
-                              >
-                                ✓
-                              </span>
-                            </div>
-                          )}
-                          {/* Deletion button for own comments */}
-                          {comment.user_id === currentUserId && (
-                            <button
-                              onClick={() => onDeleteComment(comment.id)}
-                              style={{
-                                marginLeft: "auto",
-                                background: "none",
-                                border: "none",
-                                padding: "4px",
-                                color: secondaryTextColor,
-                                opacity: 0.6,
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                transition: "all 0.2s",
-                              }}
-                              title="Delete comment"
-                            >
-                              <TrashIcon />
-                            </button>
-                          )}
+                <h4 className="text-lg font-bold" style={{ color: textColor }}>No comments yet</h4>
+                <p className="max-w-[200px] text-sm font-medium" style={{ color: secondaryTextColor }}>
+                  Start the conversation! Be the first to share your thoughts.
+                </p>
+             </div>
+           ) : (
+             <div className="flex flex-col gap-6">
+                {comments.map((comment, index) => (
+                  <div key={comment.id} className="animate-comment flex gap-4" style={{ animationDelay: `${index * 0.05}s` }}>
+                     <div className="relative h-11 w-11 flex-shrink-0">
+                        <Avatar
+                          circle
+                          src={comment.user.avatar || "/placeholder.svg"}
+                          alt={comment.user.name}
+                          className="h-full w-full border-2 border-transparent ring-2 ring-green-500/20 shadow-sm"
+                        />
+                     </div>
+                     <div className="flex-1 space-y-1">
+                        <div className={`rounded-3xl px-5 py-4 transition-all hover:bg-opacity-80 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                           <div className="mb-1 flex items-center gap-2">
+                             <span className="text-sm font-black" style={{ color: textColor }}>
+                                {comment.user.name}
+                             </span>
+                             {comment.user.verified && (
+                               <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 shadow-sm">
+                                  <span className="text-[8px] font-bold text-white">✓</span>
+                               </div>
+                             )}
+                             {comment.user_id === currentUserId && (
+                               <button
+                                 onClick={() => onDeleteComment(comment.id)}
+                                 className="ml-auto flex h-6 w-6 items-center justify-center rounded-full text-red-400 opacity-60 transition-all hover:bg-red-500/10 hover:opacity-100"
+                               >
+                                 <TrashIcon />
+                               </button>
+                             )}
+                           </div>
+                           <p className="text-[14px] leading-relaxed" style={{ color: commentTextColor, opacity: comment.id.startsWith("temp-") ? 0.6 : 1 }}>
+                              {comment.text}
+                           </p>
                         </div>
-                        <p
-                          style={{
-                            fontSize: isMobile ? "12px" : "14px",
-                            color: commentTextColor,
-                            lineHeight: 1.4,
-                            opacity: comment.id.startsWith("temp-") ? 0.7 : 1,
-                          }}
-                        >
-                          {comment.text}
-                          {comment.id.startsWith("temp-") && (
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                color: secondaryTextColor,
-                                fontStyle: "italic",
-                                marginLeft: "4px",
-                              }}
-                            >
-                              (sending...)
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: isMobile ? "12px" : "16px",
-                          marginTop: 4,
-                          paddingLeft: isMobile ? "8px" : "12px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: isMobile ? "10px" : "12px",
-                            color: secondaryTextColor,
-                          }}
-                        >
-                          {comment.timestamp}
-                        </span>
-                        <button
-                          style={{
-                            fontSize: isMobile ? "10px" : "12px",
-                            color: secondaryTextColor,
-                            border: "none",
-                            background: "none",
-                            cursor: "pointer",
-                          }}
-                          onClick={() =>
-                            onToggleCommentLike(comment.id)
-                          }
-                        >
-                          {comment.likes > 0 && (
-                            <span
-                              style={{
-                                color: comment.isLiked
-                                  ? "#ef4444"
-                                  : secondaryTextColor,
-                                fontWeight: comment.isLiked ? 500 : 400,
-                              }}
-                            >
-                              {comment.likes}{" "}
-                              {comment.likes === 1 ? "like" : "likes"}
-                            </span>
-                          )}
-                        </button>
-                        <button
-                          style={{
-                            fontSize: isMobile ? "10px" : "12px",
-                            color: secondaryTextColor,
-                            border: "none",
-                            background: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Reply
-                        </button>
-                      </div>
-                    </div>
-                    <Button
-                      appearance="ghost"
-                      size="sm"
-                      style={{
-                        width: isMobile ? 32 : 36,
-                        height: isMobile ? 32 : 36,
-                        flexShrink: 0,
-                        background: "none",
-                        border: "none",
-                        color: comment.isLiked ? "#ef4444" : secondaryTextColor,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.2s",
-                        cursor: "pointer",
-                        padding: 0,
-                      }}
-                      onClick={() => onToggleCommentLike(comment.id)}
-                    >
-                      <HeartIcon filled={comment.isLiked} />
-                    </Button>
+                        <div className="flex items-center gap-5 px-2">
+                           <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: secondaryTextColor }}>
+                              {comment.timestamp}
+                           </span>
+                           <button
+                             onClick={() => onToggleCommentLike(comment.id)}
+                             className={`text-[11px] font-bold uppercase tracking-wider transition-colors hover:text-red-500 ${comment.isLiked ? "text-red-500" : ""}`}
+                             style={{ color: comment.isLiked ? "#ef4444" : secondaryTextColor }}
+                           >
+                             {comment.likes > 0 ? `${comment.likes} likes` : "Like"}
+                           </button>
+                           <button className="text-[11px] font-bold uppercase tracking-wider" style={{ color: secondaryTextColor }}>
+                             Reply
+                           </button>
+                        </div>
+                     </div>
+                     <button
+                       onClick={() => onToggleCommentLike(comment.id)}
+                       className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-125 ${comment.isLiked ? "text-red-500" : "text-gray-400 opacity-40 hover:opacity-100"}`}
+                     >
+                        <HeartIcon filled={comment.isLiked} />
+                     </button>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
+             </div>
+           )}
+        </div>
 
-          {/* Comment Input - Enhanced for mobile */}
-          <div
-            style={{
-              padding: isMobile ? "16px" : "16px",
-              paddingBottom: isMobile ? "20px" : "16px",
-              borderTop: `1px solid ${borderColor}`,
-              backgroundColor: bgColor,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-end",
-                gap: isMobile ? "10px" : "12px",
-              }}
-            >
-              <Avatar
-                circle
-                size={isMobile ? "sm" : "sm"}
-                src="/placeholder.svg?height=32&width=32"
-                alt="You"
-                style={{
-                  flexShrink: 0,
-                  marginBottom: isMobile ? "2px" : "0",
-                }}
-              />
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "flex-end",
-                  gap: isMobile ? "8px" : "8px",
-                  minHeight: isMobile ? "48px" : "44px",
-                }}
-              >
-                <Input
-                  placeholder={
-                    isAddingComment ? "Adding comment..." : "Add a comment..."
-                  }
-                  value={newComment}
-                  onChange={setNewComment}
-                  disabled={isAddingComment}
-                  style={{
-                    flex: 1,
-                    border: `1px solid ${borderColor}`,
-                    backgroundColor: commentBgColor,
-                    borderRadius: isMobile ? "24px" : "20px",
-                    padding: isMobile ? "12px 18px" : "10px 16px",
-                    color: textColor,
-                    fontSize: isMobile ? "16px" : "14px",
-                    minHeight: isMobile ? "48px" : "44px",
-                    lineHeight: "1.5",
-                    opacity: isAddingComment ? 0.7 : 1,
-                    transition: "all 0.2s ease",
-                  }}
-                  onKeyPress={handleKeyPress}
-                  onFocus={(e) => {
-                    if (isMobile) {
-                      e.target.style.borderColor = "#3b82f6";
-                      e.target.style.backgroundColor = isDark
-                        ? "#4b5563"
-                        : "#ffffff";
-                    }
-                  }}
-                  onBlur={(e) => {
-                    if (isMobile) {
-                      e.target.style.borderColor = borderColor;
-                      e.target.style.backgroundColor = commentBgColor;
-                    }
-                  }}
-                />
-                <Button
-                  size={isMobile ? "md" : "sm"}
-                  appearance="primary"
-                  color="blue"
-                  style={{
-                    width: isMobile ? 48 : 40,
-                    height: isMobile ? 48 : 40,
-                    borderRadius: "50%",
-                    padding: 0,
-                    backgroundColor: newComment.trim() ? "#3b82f6" : "#9ca3af",
-                    border: "none",
-                    transition: "all 0.2s ease",
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim() || isAddingComment}
-                >
-                  {isAddingComment ? (
-                    <svg
-                      width={isMobile ? "24" : "20"}
-                      height={isMobile ? "24" : "20"}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v6l4 2" />
-                    </svg>
-                  ) : (
-                    <SendIcon />
-                  )}
-                </Button>
+        {/* Input Area */}
+        <div className={`p-6 pb-8 sm:p-8 ${isDark ? "bg-black/20" : "bg-gray-50/50"}`}>
+           <div className={`flex items-center gap-4 rounded-[1.75rem] border-2 p-1.5 transition-all focus-within:ring-4 focus-within:ring-green-500/10 ${isDark ? "border-white/5 bg-gray-800/50 focus-within:border-green-500/50" : "border-gray-100 bg-white focus-within:border-green-500/50"}`}>
+              <div className="ml-2 h-10 w-10 flex-shrink-0">
+                 <Avatar
+                   circle
+                   src={session?.user?.image || "/placeholder.svg"}
+                   alt="You"
+                   className="h-full w-full"
+                 />
               </div>
-            </div>
-          </div>
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Add a comment..."
+                className="flex-1 border-none bg-transparent px-2 py-3 text-[15px] font-medium placeholder-gray-500 focus:outline-none focus:ring-0"
+                style={{ color: textColor }}
+              />
+              <button
+                onClick={handleAddComment}
+                disabled={!newComment.trim()}
+                className={`flex h-11 w-11 items-center justify-center rounded-full transition-all active:scale-90 ${newComment.trim() ? "bg-green-600 text-white shadow-lg shadow-green-600/20" : "bg-gray-200 text-gray-400 dark:bg-white/5"}`}
+              >
+                <SendIcon />
+              </button>
+           </div>
         </div>
       </div>
     </>
   );
 }
+
+const MessageIcon = () => (
+   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+   </svg>
+);

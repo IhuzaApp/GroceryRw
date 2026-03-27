@@ -392,31 +392,34 @@ const extractStringValue = (value: any): string | null => {
   return null;
 };
 
+// Helper to convert DB comment to UI Comment
+const convertDBCommentToComment = (comment: any): Comment => ({
+  id: comment.id,
+  user: {
+    name: comment.User?.name || "Plas Reel Agent",
+    avatar:
+      comment.User?.profile_picture &&
+        isValidMediaUrl(comment.User.profile_picture)
+        ? comment.User.profile_picture
+        : "/placeholder.svg?height=32&width=32",
+    verified:
+      comment.User?.role === "admin" ||
+      comment.User?.role === "verified" ||
+      false,
+  },
+  text: comment.text,
+  timestamp: formatTimestamp(comment.created_on),
+  likes: parseInt(comment.likes || "0"),
+  isLiked: comment.isLiked || false,
+});
+
 // Convert database reel to FoodPost format
 const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
   // console.log(`[Reels Sync] Converting DB Reel ${dbReel.id} | isLiked: ${dbReel.isLiked}`);
   const userHasLiked = dbReel.isLiked || false;
 
   const commentsList: Comment[] = (dbReel.Reels_comments || []).map(
-    (comment) => ({
-      id: comment.id,
-      user: {
-        name: comment.User?.name || "Plas Reel Agent",
-        avatar:
-          comment.User?.profile_picture &&
-            isValidMediaUrl(comment.User.profile_picture)
-            ? comment.User.profile_picture
-            : "/placeholder.svg?height=32&width=32",
-        verified:
-          comment.User?.role === "admin" ||
-          comment.User?.role === "verified" ||
-          false,
-      },
-      text: comment.text,
-      timestamp: formatTimestamp(comment.created_on),
-      likes: parseInt(comment.likes || "0"),
-      isLiked: comment.isLiked,
-    })
+    (comment) => convertDBCommentToComment(comment)
   );
 
   let shopLat = 0, shopLng = 0, shopAlt = 0;
@@ -1289,6 +1292,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     }
 
     try {
+      setIsRefreshingComments(true);
       const response = await fetch("/api/queries/reel-comments", {
         method: "PUT",
         headers: {
@@ -1325,15 +1329,12 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       }
     } catch (error) {
       console.error("Error toggling comment like:", error);
+    } finally {
+      setIsRefreshingComments(false);
     }
   };
 
   const addComment = async (postId: string, commentText: string) => {
-    // Check if user is logged in
-    if (handleAuthRequired()) {
-      return;
-    }
-
     try {
       // Create optimistic comment for immediate UI update
       const optimisticComment: Comment = {
@@ -1350,31 +1351,31 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       };
 
       // Add to optimisticComments state
-      if (mountedRef.current) {
-        setOptimisticComments((prev) => ({
+      setOptimisticComments((prev) => {
+        return {
           ...prev,
-          [postId]: [optimisticComment, ...(prev[postId] || [])],
-        }));
-      }
+          [postId]: [...(prev[postId] || []), optimisticComment],
+        };
+      });
 
-      // Optimistic update - add comment immediately to UI
-      if (mountedRef.current) {
-        setPosts((prevPosts: FoodPost[]) =>
-          prevPosts.map((post: FoodPost) =>
-            post.id === postId
-              ? {
-                ...post,
-                stats: {
-                  ...post.stats,
-                  comments: post.stats.comments + 1,
-                },
-              }
-              : post
-          )
+      // Optimistic update - increment count immediately to UI
+      setPosts((prevPosts: FoodPost[]) => {
+        return prevPosts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+              ...post,
+              stats: {
+                ...post.stats,
+                comments: post.stats.comments + 1,
+              },
+            }
+            : post
         );
-      }
+      });
+      setRenderTick(t => t + 1);
 
       // Make API call to add comment
+      setIsRefreshingComments(true);
       const response = await fetch("/api/queries/reel-comments", {
         method: "POST",
         headers: {
@@ -1393,24 +1394,46 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       const result = await response.json();
 
       if (result.success && result.comment) {
-        // Remove optimistic comment
+        // Success - update posts state with REAL server comment directly
+        const serverComment = convertDBCommentToComment(result.comment);
+
         if (mountedRef.current) {
-          setOptimisticComments((prev) => ({
-            ...prev,
-            [postId]: (prev[postId] || []).filter(
+          setPosts((prevPosts: FoodPost[]) =>
+            prevPosts.map((post: FoodPost) =>
+              post.id === postId
+                ? {
+                  ...post,
+                  commentsList: [...(post.commentsList || []), serverComment],
+                  stats: {
+                    ...post.stats,
+                    comments: Math.max(post.stats.comments, (post.commentsList || []).length + 1)
+                  }
+                }
+                : post
+            )
+          );
+
+          setOptimisticComments((prev) => {
+            const newList = (prev[postId] || []).filter(
               (c) => c.id !== optimisticComment.id
-            ),
-          }));
+            );
+            return {
+              ...prev,
+              [postId]: newList,
+            };
+          });
+          
+          setRenderTick(t => t + 1);
         }
-        // Optionally, you can trigger a refetch here for extra safety
-        // REFETCH REAL-TIME DATA (Stats + Comments)
-        await refetchReelData(postId);
+
+        // Trigger background sync but don't await it
+        refetchReelData(postId);
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Error adding comment:", error);
-      // Remove optimistic comment on error
+      // Remove optimistic comment and revert count on error
       if (mountedRef.current) {
         setOptimisticComments((prev) => ({
           ...prev,
@@ -1431,8 +1454,10 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
               : post
           )
         );
+        setRenderTick(t => t + 1);
       }
-      alert("Failed to add comment. Please try again.");
+    } finally {
+      setIsRefreshingComments(false);
     }
   };
 
@@ -1472,6 +1497,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       }
 
       // Make API call to delete comment
+      setIsRefreshingComments(true);
       const response = await fetch("/api/queries/reel-comments", {
         method: "DELETE",
         headers: {
@@ -1493,7 +1519,8 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       console.error("Error deleting comment:", error);
       // Revert optimistic update (simplified - just refetch everything for this post)
       await refetchReelData(postId);
-      alert("Failed to delete comment. Please try again.");
+    } finally {
+      setIsRefreshingComments(false);
     }
   };
 
@@ -1619,17 +1646,42 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       : null;
 
   const activePost = activePostForComments;
-  const mergedActiveComments = activePost
-    ? [
-      ...(optimisticComments[activePost.id] || []),
-      ...(activePost.commentsList || []).filter(
-        (c) =>
-          !(optimisticComments[activePost.id] || []).some(
-            (o) => o.text === c.text && o.user.name === c.user.name
-          )
+
+  // AGGRESSIVE DEBUGGING: Log state on every render
+  // console.log("[Reels UI] Render Debug:", {
+  //   activePostId,
+  //   postsCount: posts.length,
+  //   activePostFound: !!activePost,
+  //   optimisticKeys: Object.keys(optimisticComments)
+  // });
+
+  const mergedActiveComments = React.useMemo(() => {
+    // If we have an activePostId, we should at least try to show optimistic comments for it
+    const targetId = activePostId || (activePost ? activePost.id : null);
+    if (!targetId) return [];
+
+    const serverComments = activePost ? (activePost.commentsList || []) : [];
+    const localOptimistic = optimisticComments[targetId] || [];
+    
+    // Log merging process
+    if (localOptimistic.length > 0) {
+      console.log(`[Reels UI] MERGE START for ${targetId}:`, {
+        localCount: localOptimistic.length,
+        serverCount: serverComments.length
+      });
+    }
+
+    const merged = [
+      ...serverComments.filter(
+        (sc) => !localOptimistic.some((oc) => 
+          oc.id === sc.id || (oc.text === sc.text && oc.user.name === sc.user.name)
+        )
       ),
-    ]
-    : [];
+      ...localOptimistic,
+    ];
+
+    return merged;
+  }, [activePost, activePostId, optimisticComments]);
 
   if (loading) {
     return isMobile ? (
