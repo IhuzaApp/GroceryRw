@@ -134,8 +134,8 @@ export default function VideoReel({
         audioRef.current.play().catch((err) => {
           if (err.name !== "AbortError") {
             // console.log(`Audio playback failed for ${audioSource}:`, err);
-            if (!audioSource.includes("newMessage.mp3")) {
-              setAudioSource("/assets/sounds/newMessage.mp3");
+            if (!audioSource.includes("reel-background.mp3")) {
+              setAudioSource("/assets/sounds/reel-background.mp3");
             }
           }
         });

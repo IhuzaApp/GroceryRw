@@ -742,10 +742,8 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   };
 
   useEffect(() => {
-    console.log("[Reels UI] FoodReelsApp MOUNTED (mountedRef.current: true)");
     mountedRef.current = true;
     return () => {
-      console.log("[Reels UI] FoodReelsApp UNMOUNTING (mountedRef.current: false)");
       mountedRef.current = false;
     };
   }, []);
@@ -1289,7 +1287,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   };
 
   const toggleCommentLike = async (postId: string, commentId: string) => {
-    console.log("[Reels UI] toggleCommentLike triggered:", { postId, commentId });
     // Check if user is logged in
     if (handleAuthRequired()) {
       return;
@@ -1300,8 +1297,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     let originalOptimistic: Record<string, Comment[]> = {};
 
     try {
-      console.log("[Reels UI] toggleCommentLike starting optimistic update. mountedRef.current:", mountedRef.current);
-      
       // 1. OPTIMISTIC UPDATE
       // We don't guard the VERY FIRST state update with mountedRef.current 
       // because if the user just clicked a button in the UI, the component MUST be mounted.
@@ -1311,22 +1306,14 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       originalPosts = [...posts];
       originalOptimistic = { ...optimisticComments };
 
-      console.log("[Reels UI] Proceeding with setPosts...");
       // Update posts state (server-side comments)
       setPosts((prevPosts: FoodPost[]) => {
-          console.log("[Reels UI] setPosts callback running. prevPosts count:", prevPosts.length);
           const updated = prevPosts.map((post: FoodPost) => {
             if (post.id === postId) {
-              console.log("[Reels UI] Found post in posts state:", postId);
               return {
                 ...post,
                 commentsList: post.commentsList.map((comment: Comment) => {
                   if (comment.id === commentId) {
-                    console.log("[Reels UI] Toggling server comment:", {
-                      id: comment.id,
-                      prevLiked: comment.isLiked,
-                      prevLikes: comment.likes
-                    });
                     return {
                       ...comment,
                       isLiked: !comment.isLiked,
@@ -1347,11 +1334,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         setOptimisticComments((prev) => {
           const postOptimistic = prev[postId] || [];
           if (!postOptimistic.some(c => c.id === commentId)) {
-            console.log("[Reels UI] Comment not found in optimisticComments for post:", postId);
             return prev;
           }
           
-          console.log("[Reels UI] Toggling optimistic comment:", commentId);
           return {
             ...prev,
             [postId]: postOptimistic.map((comment: Comment) =>
@@ -1368,7 +1353,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
         // Trigger a render tick to ensure UI update
         setRenderTick(t => t + 1);
-        console.log("[Reels UI] Optimistic update state scheduled and done.");
 
       // 2. API CALL IN BACKGROUND
       // No need to set refreshing true/false here to avoid flickering overlays
@@ -1752,15 +1736,11 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     const localOptimistic = optimisticComments[targetId] || [];
     
     // Log merging process
-    if (localOptimistic.length > 0 || serverComments.some(c => c.likes > 0 || c.isLiked)) {
-      console.log(`[Reels UI] MERGE for ${targetId}:`, {
-        localCount: localOptimistic.length,
-        serverCount: serverComments.length,
-        likedIds: [
-          ...serverComments.filter(c => c.isLiked).map(c => c.id),
-          ...localOptimistic.filter(c => c.isLiked).map(c => c.id)
-        ]
-      });
+    if (localOptimistic.length > 0) {
+      // console.log(`[Reels UI] MERGE for ${targetId}:`, {
+      //   localCount: localOptimistic.length,
+      //   serverCount: serverComments.length
+      // });
     }
 
     const merged = [

@@ -99,7 +99,6 @@ export default function DesktopCommentsSidebar({
   const commentTextColor = isDark ? "#e5e7eb" : "#374151";
   const secondaryTextColor = isDark ? "#9ca3af" : "#6b7280";
 
-  // console.log(`[Reels UI] DesktopCommentsSidebar rendering for ${postId}. Comments: ${comments.length}`, comments);
 
   const handleAddComment = () => {
     if (!newComment.trim() || isAddingComment) return;
