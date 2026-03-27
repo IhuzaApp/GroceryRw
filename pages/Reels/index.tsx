@@ -646,19 +646,11 @@ interface CachedReels {
 }
 
 export default function FoodReelsApp({ initialReels = [], initialUserPreferences = {} }: { initialReels?: any[], initialUserPreferences?: any }) {
-  useEffect(() => {
-    console.log("[Reels UI] FoodReelsApp Mounted", { 
-      hasInitialReels: initialReels.length > 0,
-      initialReelsCount: initialReels.length,
-      timestamp: new Date().toISOString()
-    });
-  }, []);
 
   const { theme } = useTheme();
   const { data: session, status: sessionStatus } = useSession();
   const [posts, setPosts] = useState<FoodPost[]>(() => {
     if (initialReels && initialReels.length > 0) {
-      console.log("[Reels UI] Initializing posts from SSR data");
       return initialReels.map((reel: any) => convertDatabaseReelToFoodPost(reel));
     }
     return [];
@@ -693,7 +685,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
   // Function to refetch ALL data for a specific reel (Stats + Comments)
   const refetchReelData = async (postId: string) => {
-    console.log(`[Reels UI] refetchReelData triggered for ${postId} at ${new Date().toISOString()}`);
     try {
       // Use timestamp for cache-busting to ensure we always get fresh data from server
       const response = await fetch(`/api/queries/reels?id=${postId}&_t=${Date.now()}`);
@@ -705,19 +696,15 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       const updatedReel = convertDatabaseReelToFoodPost(data.reels[0]);
 
       if (mountedRef.current) {
-        console.log(`[Reels Sync] Starting state update for ${postId}...`);
         setPosts((prevPosts: FoodPost[]) => {
           const matchingPost = prevPosts.find(p => p.id === postId);
           if (!matchingPost) {
-            console.warn(`[Reels Sync] CRITICAL: Could not find post ${postId} in current posts array!`);
           }
 
           const newPosts = prevPosts.map((post: FoodPost) => {
             if (post.id === postId) {
               const isProcessing = processingLikesRef.current.has(postId);
               const lastTarget = lastLikedTargetRef.current.get(postId);
-
-              console.log(`[Reels Sync] Updating ${postId}: ServerLiked=${updatedReel.isLiked}, LastTarget=${lastTarget}, CurrentIsLiked=${post.isLiked}`);
 
               const finalIsLiked = lastTarget !== undefined ? lastTarget : updatedReel.isLiked;
               const finalLikes = lastTarget !== undefined
@@ -736,7 +723,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             }
             return post;
           });
-          console.log(`[Reels Sync] Finalized new posts array for ${postId}. Re-rendering.`);
           return newPosts;
         });
         // Force a re-render tick just in case React's reconciliation is stuck
@@ -797,7 +783,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         setTimeout(() => {
           if (mountedRef.current) {
             setLoading(prev => {
-              if (prev) console.warn("[Reels UI] Safety timeout triggered. Forcing loading false.");
               return false;
             });
           }
@@ -834,10 +819,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         setError(err instanceof Error ? err.message : "Failed to fetch reels");
       }
     } finally {
-      console.log("[Reels UI] fetchReelsFromAPI FINALLY block", { 
-        mounted: mountedRef.current,
-        timestamp: new Date().toISOString()
-      });
       if (mountedRef.current) {
         setLoading(false);
         setIsRefreshing(false);
@@ -847,17 +828,10 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
   // Initial fetch (if not already loaded via SSR)
   useEffect(() => {
-    console.log("[Reels UI] Initial Fetch Trigger", { 
-      sessionStatus, 
-      userId: session?.user?.id, 
-      postsCount: posts.length,
-      loading
-    });
     
     // If we have posts from SSR, we might still want to re-run 
     // to get personalized likes if the session just loaded
     if (mountedRef.current && (posts.length === 0 || sessionStatus === "authenticated")) {
-       console.log("[Reels UI] Calling fetchReelsFromAPI...");
        fetchReelsFromAPI(posts.length > 0); // isBackground if we already have posts
     }
   }, [session?.user?.id, sessionStatus]);
@@ -1168,18 +1142,15 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     const isCurrentlyLiked = currentPost.isLiked;
     const targetLikedState = !isCurrentlyLiked;
 
-    console.log(`[Reels UI] toggleLike START: ${postId} | CurrentLiked: ${isCurrentlyLiked} | Processing: ${processingLikesRef.current.has(postId)}`);
 
     try {
       // 1. Check strict processing lock
       if (processingLikesRef.current.has(postId)) {
-        console.log(`[Reels UI] Request for ${postId} already in flight. Dropping click.`);
         return;
       }
 
       // 2. Check if we just sent this exact target state (deduplication)
       if (lastLikedTargetRef.current.get(postId) === targetLikedState) {
-        console.log(`[Reels UI] Already sent request for ${targetLikedState} on ${postId}. Dropping duplicate.`);
         return;
       }
 
@@ -1187,7 +1158,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       lastLikedTargetRef.current.set(postId, targetLikedState);
 
       // Immediately update UI for instant feedback
-      console.log(`[Reels UI] Optimistic Update: Setting ${postId} to ${targetLikedState}`);
       setPosts((prevPosts: FoodPost[]) => {
         const newPosts = prevPosts.map((post: FoodPost) =>
           post.id === postId
@@ -1210,7 +1180,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
       // Process backend request
       const method = targetLikedState ? "POST" : "DELETE";
-      console.log(`[Reels UI] Fetching ${method} /api/queries/reel-likes for ${postId}...`);
 
       const response = await fetch("/api/queries/reel-likes", {
         method,
@@ -1230,7 +1199,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
           (response.status === 400 && result.error?.includes("already liked")) ||
           (response.status === 404 && result.error?.includes("Like not found"))
         ) {
-          console.log(`[Reels UI] Post ${postId} already in target state ${targetLikedState}. Syncing silently.`);
           if (mountedRef.current) {
             setPosts((prevPosts: FoodPost[]) =>
               prevPosts.map((post: FoodPost) =>
@@ -1272,7 +1240,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
           }
         }
       } else {
-        console.log(`[Reels UI] SUCCESS for ${postId}. Target was: ${targetLikedState}`);
         // Success - ensure UI is in target state and clear processing flag
         if (mountedRef.current) {
           setPosts((prevPosts: FoodPost[]) =>
@@ -1303,7 +1270,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         }
 
         // REFETCH REAL-TIME DATA
-        console.log(`[Reels UI] Triggering real-time refetch for ${postId} after LIKE interaction`);
         refetchReelData(postId);
       }
     } catch (error) {
@@ -1319,11 +1285,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   const toggleCommentLike = async (postId: string, commentId: string) => {
     // Check if user is logged in
     if (handleAuthRequired()) {
-      console.log(`[Reels UI] Auth required for toggleCommentLike.`);
       return;
     }
 
-    console.log(`[Reels UI] toggleCommentLike triggered for post ${postId}, comment ${commentId}`);
     try {
       const response = await fetch("/api/queries/reel-comments", {
         method: "PUT",
@@ -1367,11 +1331,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   const addComment = async (postId: string, commentText: string) => {
     // Check if user is logged in
     if (handleAuthRequired()) {
-      console.log(`[Reels UI] Auth required for addComment on ${postId}.`);
       return;
     }
 
-    console.log(`[Reels UI] addComment triggered for ${postId} with text: "${commentText.substring(0, 20)}..."`);
     try {
       // Create optimistic comment for immediate UI update
       const optimisticComment: Comment = {
@@ -1524,7 +1486,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         throw new Error("Failed to delete comment");
       }
 
-      console.log(`[Reels UI] Comment ${commentId} deleted successfully`);
 
       // REFETCH REAL-TIME DATA
       await refetchReelData(postId);

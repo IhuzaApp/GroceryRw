@@ -19,7 +19,6 @@ const ReelActions: React.FC<ReelActionsProps> = ({
   onShare,
   onAuthRequired,
 }) => {
-  console.log(`[ReelActions Render] ${post.id} | isLiked: ${post.isLiked} | likes: ${post.stats.likes}`);
   return (
     <>
       <div
@@ -46,7 +45,6 @@ const ReelActions: React.FC<ReelActionsProps> = ({
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              console.log(`[ReelActions] Clicked like for post: ${post.id} | CurrentLiked: ${post.isLiked} | Likes: ${post.stats.likes}`);
               isAuthenticated ? onLike(post.id) : onAuthRequired();
             }}
             style={{
@@ -62,7 +60,10 @@ const ReelActions: React.FC<ReelActionsProps> = ({
               color: post.isLiked ? "#ef4444" : "#fff",
             }}
           >
-            <div className={`reel-action-icon ${post.isLiked ? "heart-liked" : ""}`}>
+            <div
+              key={post.isLiked ? "liked" : "unliked"}
+              className={`reel-action-icon ${post.isLiked ? "heart-liked" : "heart-unliked"}`}
+            >
               <HeartIcon filled={post.isLiked} />
             </div>
           </button>
@@ -170,20 +171,28 @@ const ReelActions: React.FC<ReelActionsProps> = ({
         }
         @keyframes heartPulse {
           0% { transform: scale(1.15); }
-          15% { transform: scale(1.7); }
-          30% { transform: scale(0.9); }
-          45% { transform: scale(1.4); }
+          15% { transform: scale(1.8); }
+          30% { transform: scale(0.8); }
+          45% { transform: scale(1.5); }
           60% { transform: scale(1.1); }
           100% { transform: scale(1.15); }
         }
+        @keyframes heartShrink {
+          0% { transform: scale(1.15); }
+          50% { transform: scale(0.7); opacity: 0.7; }
+          100% { transform: scale(1.15); opacity: 1; }
+        }
         @keyframes heartGlow {
           0% { filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4)); }
-          50% { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8)); }
+          50% { filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.9)); }
           100% { filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4)); }
         }
         .heart-liked {
           animation: heartPulse 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           color: #ef4444 !important;
+        }
+        .heart-unliked {
+          animation: heartShrink 0.35s ease-out;
         }
         .heart-liked svg {
           animation: heartGlow 1.5s ease-in-out infinite;

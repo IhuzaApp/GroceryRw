@@ -43,6 +43,7 @@ export default function VideoReel({
   const [lastTap, setLastTap] = useState(0);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prevIsLikedRef = useRef<boolean>(post.isLiked);
 
   // Track component mount state
   useEffect(() => {
@@ -76,11 +77,11 @@ export default function VideoReel({
   useEffect(() => {
     if (!mountedRef.current) return;
 
-    if (
-      videoRef.current &&
-      !isYouTubeUrl(post.content.video) &&
-      !isImageUrl(post.content.video)
-    ) {
+    const isYT = isYouTubeUrl(post.content.video);
+    const isImg = isImageUrl(post.content.video);
+
+    if (videoRef.current && !isYT && !isImg) {
+      // Standard Video logic
       if (isVisible) {
         const playVideo = async () => {
           try {
@@ -89,12 +90,7 @@ export default function VideoReel({
             if (mountedRef.current) setIsPlaying(true);
           } catch (error) {
             const errorName = (error as Error).name;
-            // Ignore AbortError and NotAllowedError (autoplay block)
-            if (
-              mountedRef.current &&
-              errorName !== "AbortError" &&
-              errorName !== "NotAllowedError"
-            ) {
+            if (mountedRef.current && errorName !== "AbortError" && errorName !== "NotAllowedError") {
               setVideoError(true);
             }
             if (mountedRef.current) setIsPlaying(false);
@@ -107,17 +103,25 @@ export default function VideoReel({
           setIsPlaying(false);
         }
       }
+    } else if (isVisible && (isYT || isImg)) {
+      // YouTube or Image logic: Automatically "play" to hide pause icon
+      if (mountedRef.current) setIsPlaying(true);
+    } else if (!isVisible && (isYT || isImg)) {
+      if (mountedRef.current) setIsPlaying(false);
     }
-  }, [isVisible, post.id, isMobile]);
+  }, [isVisible, post.id, isMobile, post.content.video]);
   
-  // Trigger like animation when post.isLiked becomes true
+  // Trigger like animation ONLY on state TRANSITION (false -> true) 
+  // to avoid pop on initial load or background refresh
   useEffect(() => {
-    if (post.isLiked && !showLikeAnimation) {
-      console.log(`[VideoReel] Like detected for ${post.id}. Triggering animation.`);
+    // Only trigger if we transition from false to true AND it's not the first mount check
+    if (post.isLiked && !prevIsLikedRef.current && !showLikeAnimation) {
       setShowLikeAnimation(true);
       const timer = setTimeout(() => setShowLikeAnimation(false), 800);
       return () => clearTimeout(timer);
     }
+    // Sync the ref with the current state for the next check
+    prevIsLikedRef.current = post.isLiked;
   }, [post.isLiked]);
 
   // Handle background audio for images
@@ -129,7 +133,7 @@ export default function VideoReel({
         audioRef.current.load();
         audioRef.current.play().catch((err) => {
           if (err.name !== "AbortError") {
-            console.log(`Audio playback failed for ${audioSource}:`, err);
+            // console.log(`Audio playback failed for ${audioSource}:`, err);
             if (!audioSource.includes("newMessage.mp3")) {
               setAudioSource("/assets/sounds/newMessage.mp3");
             }
@@ -236,10 +240,9 @@ export default function VideoReel({
       onAuthRequired();
       return;
     }
-    if (!post.isLiked) {
-      onLike(post.id);
-    }
-    // Animation is now handled by useEffect watching post.isLiked
+    // Toggle Like (Like if unliked, Unlike if already liked)
+    onLike(post.id);
+    // Note: showLikeAnimation is handled by useEffect watching post.isLiked
   };
 
   return (
