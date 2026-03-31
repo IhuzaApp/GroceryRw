@@ -39,7 +39,9 @@ class MomoService {
       subscriptionKey: process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
       userId: process.env.MOMO_API_USER_SANDBOX,
       apiKey: process.env.MOMO_API_KEY_SANDBOX,
-      baseUrl: (process.env.MOMO_SANDBOX_URL || "https://sandbox.momodeveloper.mtn.com").replace(/\/$/, ""),
+      baseUrl: (
+        process.env.MOMO_SANDBOX_URL || "https://sandbox.momodeveloper.mtn.com"
+      ).replace(/\/$/, ""),
       environment: "sandbox" as const,
     };
   }
@@ -51,20 +53,31 @@ class MomoService {
     const { subscriptionKey, userId, apiKey, baseUrl } = this.getEnv();
 
     if (!subscriptionKey || !userId || !apiKey) {
-      throw new Error("MTN MoMo credentials are not configured in environment variables.");
+      throw new Error(
+        "MTN MoMo credentials are not configured in environment variables."
+      );
     }
 
     const now = Math.floor(Date.now() / 1000);
-    if (this.token && this.token.generated_at + this.token.expires_in > now + this.TOKEN_EXPIRY_BUFFER) {
+    if (
+      this.token &&
+      this.token.generated_at + this.token.expires_in >
+        now + this.TOKEN_EXPIRY_BUFFER
+    ) {
       return this.token.access_token;
     }
 
-    console.log("🔄 [MoMo Service] Fetching new access token from:", `${baseUrl}/collection/token/`);
+    console.log(
+      "🔄 [MoMo Service] Fetching new access token from:",
+      `${baseUrl}/collection/token/`
+    );
     console.log("🔑 [MoMo Service] Using credentials:", {
       hasSubscriptionKey: !!subscriptionKey,
       hasUserId: !!userId,
       hasApiKey: !!apiKey,
-      subKeyPreview: subscriptionKey ? `${subscriptionKey.substring(0, 4)}...` : "none"
+      subKeyPreview: subscriptionKey
+        ? `${subscriptionKey.substring(0, 4)}...`
+        : "none",
     });
 
     const auth = Buffer.from(`${userId}:${apiKey}`).toString("base64");
@@ -149,10 +162,15 @@ class MomoService {
     if (response.status !== 202) {
       const errorText = await response.text();
       console.error("❌ [MoMo Service] RequestToPay failed:", errorText);
-      throw new Error(`MoMo RequestToPay Error: ${response.status} - ${errorText}`);
+      throw new Error(
+        `MoMo RequestToPay Error: ${response.status} - ${errorText}`
+      );
     }
 
-    console.log("✅ [MoMo Service] RequestToPay accepted, referenceId:", referenceId);
+    console.log(
+      "✅ [MoMo Service] RequestToPay accepted, referenceId:",
+      referenceId
+    );
     return { referenceId };
   }
 
@@ -164,14 +182,17 @@ class MomoService {
 
     const callApi = async (retry = true): Promise<Response> => {
       const token = await this.getAccessToken();
-      const response = await fetch(`${baseUrl}/collection/v1_0/requesttopay/${referenceId}`, {
-        method: "GET",
-        headers: {
-          "Ocp-Apim-Subscription-Key": subscriptionKey!,
-          Authorization: `Bearer ${token}`,
-          "X-Target-Environment": environment,
-        },
-      });
+      const response = await fetch(
+        `${baseUrl}/collection/v1_0/requesttopay/${referenceId}`,
+        {
+          method: "GET",
+          headers: {
+            "Ocp-Apim-Subscription-Key": subscriptionKey!,
+            Authorization: `Bearer ${token}`,
+            "X-Target-Environment": environment,
+          },
+        }
+      );
 
       if (response.status === 401 && retry) {
         console.warn("⚠️ [MoMo Service] 401 Unauthorized, retrying once...");
@@ -186,7 +207,9 @@ class MomoService {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("❌ [MoMo Service] GetPaymentStatus failed:", errorText);
-      throw new Error(`MoMo GetPaymentStatus Error: ${response.status} - ${errorText}`);
+      throw new Error(
+        `MoMo GetPaymentStatus Error: ${response.status} - ${errorText}`
+      );
     }
 
     return (await response.json()) as PaymentStatus;
@@ -262,7 +285,9 @@ class MomoService {
       }
 
       const errorText = await response.text();
-      throw new Error(`MoMo transfer failed (${response.status}): ${errorText}`);
+      throw new Error(
+        `MoMo transfer failed (${response.status}): ${errorText}`
+      );
     } catch (error) {
       console.error("💥 [momoService] Transfer error:", error);
       throw error;

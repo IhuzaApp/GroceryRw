@@ -13,7 +13,7 @@ export default async function handler(
 
   try {
     const accessToken = await momoService.getAccessToken();
-    
+
     // We return a simplified response that matches what the frontend might expect,
     // or we could return the full token data. The service handles caching.
     res.status(200).json({ access_token: accessToken });
@@ -22,5 +22,3 @@ export default async function handler(
     res.status(500).json({ error: "Token fetch failed" });
   }
 }
-
-

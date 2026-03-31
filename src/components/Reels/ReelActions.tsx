@@ -62,7 +62,9 @@ const ReelActions: React.FC<ReelActionsProps> = ({
           >
             <div
               key={post.isLiked ? "liked" : "unliked"}
-              className={`reel-action-icon ${post.isLiked ? "heart-liked" : "heart-unliked"}`}
+              className={`reel-action-icon ${
+                post.isLiked ? "heart-liked" : "heart-unliked"
+              }`}
             >
               <HeartIcon filled={post.isLiked} />
             </div>
@@ -151,7 +153,8 @@ const ReelActions: React.FC<ReelActionsProps> = ({
 
       <style jsx>{`
         .reel-action-btn {
-          transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+          transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+            opacity 0.2s ease;
           -webkit-tap-highlight-color: transparent;
         }
         .reel-action-btn:active {
@@ -170,22 +173,48 @@ const ReelActions: React.FC<ReelActionsProps> = ({
           text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
         }
         @keyframes heartPulse {
-          0% { transform: scale(1.15); }
-          15% { transform: scale(1.8); }
-          30% { transform: scale(0.8); }
-          45% { transform: scale(1.5); }
-          60% { transform: scale(1.1); }
-          100% { transform: scale(1.15); }
+          0% {
+            transform: scale(1.15);
+          }
+          15% {
+            transform: scale(1.8);
+          }
+          30% {
+            transform: scale(0.8);
+          }
+          45% {
+            transform: scale(1.5);
+          }
+          60% {
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1.15);
+          }
         }
         @keyframes heartShrink {
-          0% { transform: scale(1.15); }
-          50% { transform: scale(0.7); opacity: 0.7; }
-          100% { transform: scale(1.15); opacity: 1; }
+          0% {
+            transform: scale(1.15);
+          }
+          50% {
+            transform: scale(0.7);
+            opacity: 0.7;
+          }
+          100% {
+            transform: scale(1.15);
+            opacity: 1;
+          }
         }
         @keyframes heartGlow {
-          0% { filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4)); }
-          50% { filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.9)); }
-          100% { filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4)); }
+          0% {
+            filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4));
+          }
+          50% {
+            filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.9));
+          }
+          100% {
+            filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4));
+          }
         }
         .heart-liked {
           animation: heartPulse 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);

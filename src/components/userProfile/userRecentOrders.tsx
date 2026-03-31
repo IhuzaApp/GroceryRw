@@ -235,8 +235,9 @@ function EstimatedDelivery({
         )}
       </svg>
       <span
-        className={`font-bold tabular-nums ${isLate ? "!text-red-500" : "!text-green-600"
-          }`}
+        className={`font-bold tabular-nums ${
+          isLate ? "!text-red-500" : "!text-green-600"
+        }`}
       >
         {countdownText}
       </span>
@@ -421,151 +422,153 @@ export default function UserRecentOrders({
           group.is_combined
             ? null
             : // Single Order (Original Display)
-            group.orders.map((order: Order) => (
-              <Link
-                key={order.id}
-                href={`/CurrentPendingOrders/viewOrderDetails/${order.id}${order.orderType ? `?type=${order.orderType}` : ""
+              group.orders.map((order: Order) => (
+                <Link
+                  key={order.id}
+                  href={`/CurrentPendingOrders/viewOrderDetails/${order.id}${
+                    order.orderType ? `?type=${order.orderType}` : ""
                   }`}
-                className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
+                  className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
+                    isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
                   }`}
-              >
-                <div className="flex items-center gap-3 md:gap-4">
-                  {/* Shop Image */}
-                  {order.shop && (
-                    <div className="flex-shrink-0">
-                      {(order.shop as any)?.logo || order.shop?.image ? (
-                        <img
-                          src={(order.shop as any)?.logo || order.shop.image}
-                          alt={order.shop.name}
-                          className="h-12 w-12 rounded-full object-cover md:h-10 md:w-10"
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              "/images/shop-placeholder.jpg";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 md:h-10 md:w-10">
-                          <svg
-                            className="h-6 w-6 text-gray-400 dark:text-gray-500 md:h-5 md:w-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
+                >
+                  <div className="flex items-center gap-3 md:gap-4">
+                    {/* Shop Image */}
+                    {order.shop && (
+                      <div className="flex-shrink-0">
+                        {(order.shop as any)?.logo || order.shop?.image ? (
+                          <img
+                            src={(order.shop as any)?.logo || order.shop.image}
+                            alt={order.shop.name}
+                            className="h-12 w-12 rounded-full object-cover md:h-10 md:w-10"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "/images/shop-placeholder.jpg";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 md:h-10 md:w-10">
+                            <svg
+                              className="h-6 w-6 text-gray-400 dark:text-gray-500 md:h-5 md:w-5"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                            >
+                              <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Order Details - Left Column */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="truncate text-xs font-semibold text-gray-900 dark:text-white md:text-sm">
+                          {order.orderType === "reel" && order.reel
+                            ? order.reel.title
+                            : order?.shop?.name || "Unknown Shop"}
+                        </div>
+                        {order.orderType === "business" && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            Store
+                          </span>
+                        )}
+                        {order.orderType === "reel" && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                            <svg
+                              className="mr-1 h-3 w-3"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle cx="12" cy="12" r="3" />
+                              <rect
+                                x="3"
+                                y="3"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                              <rect
+                                x="14"
+                                y="3"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                              <rect
+                                x="3"
+                                y="14"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                              <rect
+                                x="14"
+                                y="14"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                            </svg>
+                            Reel
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
+                        <span>
+                          {order.unitsCount || 0}{" "}
+                          {order.unitsCount === 1 ? "unit" : "units"}
+                        </span>
+                        <span className="hidden text-gray-300 dark:text-gray-600 md:inline">
+                          •
+                        </span>
+                        <span className="font-mono text-[11px] md:text-xs">
+                          ID #{formatOrderID(order?.OrderID)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Time, Total & PIN - Right Column */}
+                    <div className="flex flex-col items-end gap-1 text-right">
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 md:text-[11px]">
+                        {timeAgo(order?.created_at)}
+                      </div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white md:text-sm">
+                        {formatCurrency(order.total)}
+                      </div>
+                      {order?.pin && (
+                        <div className="mt-0.5 inline-flex items-center gap-1 rounded-full border border-dashed border-green-400 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:border-green-600 dark:bg-green-900/20 dark:text-green-400">
+                          <span>PIN</span>
+                          <span className="font-mono text-xs leading-none">
+                            {order.pin}
+                          </span>
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Delivery Time */}
+                  {order?.delivery_time && (
+                    <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
+                      <span className="text-[10px] text-gray-600 dark:text-gray-400 md:text-xs">
+                        Expected Delivery:
+                      </span>
+                      <EstimatedDelivery
+                        deliveryTime={order.delivery_time}
+                        status={order.status}
+                        orderId={order.id}
+                        orderType={order.orderType}
+                      />
+                    </div>
                   )}
-
-                  {/* Order Details - Left Column */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="truncate text-xs font-semibold text-gray-900 dark:text-white md:text-sm">
-                        {order.orderType === "reel" && order.reel
-                          ? order.reel.title
-                          : order?.shop?.name || "Unknown Shop"}
-                      </div>
-                      {order.orderType === "business" && (
-                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                          Store
-                        </span>
-                      )}
-                      {order.orderType === "reel" && (
-                        <span className="inline-flex items-center justify-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                          <svg
-                            className="mr-1 h-3 w-3"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <circle cx="12" cy="12" r="3" />
-                            <rect
-                              x="3"
-                              y="3"
-                              width="7"
-                              height="7"
-                              rx="1.5"
-                              ry="1.5"
-                            />
-                            <rect
-                              x="14"
-                              y="3"
-                              width="7"
-                              height="7"
-                              rx="1.5"
-                              ry="1.5"
-                            />
-                            <rect
-                              x="3"
-                              y="14"
-                              width="7"
-                              height="7"
-                              rx="1.5"
-                              ry="1.5"
-                            />
-                            <rect
-                              x="14"
-                              y="14"
-                              width="7"
-                              height="7"
-                              rx="1.5"
-                              ry="1.5"
-                            />
-                          </svg>
-                          Reel
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
-                      <span>
-                        {order.unitsCount || 0}{" "}
-                        {order.unitsCount === 1 ? "unit" : "units"}
-                      </span>
-                      <span className="hidden text-gray-300 dark:text-gray-600 md:inline">
-                        •
-                      </span>
-                      <span className="font-mono text-[11px] md:text-xs">
-                        ID #{formatOrderID(order?.OrderID)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Time, Total & PIN - Right Column */}
-                  <div className="flex flex-col items-end gap-1 text-right">
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400 md:text-[11px]">
-                      {timeAgo(order?.created_at)}
-                    </div>
-                    <div className="text-xs font-bold text-gray-900 dark:text-white md:text-sm">
-                      {formatCurrency(order.total)}
-                    </div>
-                    {order?.pin && (
-                      <div className="mt-0.5 inline-flex items-center gap-1 rounded-full border border-dashed border-green-400 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:border-green-600 dark:bg-green-900/20 dark:text-green-400">
-                        <span>PIN</span>
-                        <span className="font-mono text-xs leading-none">
-                          {order.pin}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Delivery Time */}
-                {order?.delivery_time && (
-                  <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
-                    <span className="text-[10px] text-gray-600 dark:text-gray-400 md:text-xs">
-                      Expected Delivery:
-                    </span>
-                    <EstimatedDelivery
-                      deliveryTime={order.delivery_time}
-                      status={order.status}
-                      orderId={order.id}
-                      orderType={order.orderType}
-                    />
-                  </div>
-                )}
-              </Link>
-            ))
+                </Link>
+              ))
         )
       )}
       {/* Pagination */}
@@ -602,10 +605,11 @@ export default function UserRecentOrders({
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${currentPage === page
+                  className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
+                    currentPage === page
                       ? "border-green-500 bg-green-500 text-white"
                       : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                    }`}
+                  }`}
                 >
                   {page}
                 </button>

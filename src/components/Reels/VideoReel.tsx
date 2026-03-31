@@ -90,7 +90,11 @@ export default function VideoReel({
             if (mountedRef.current) setIsPlaying(true);
           } catch (error) {
             const errorName = (error as Error).name;
-            if (mountedRef.current && errorName !== "AbortError" && errorName !== "NotAllowedError") {
+            if (
+              mountedRef.current &&
+              errorName !== "AbortError" &&
+              errorName !== "NotAllowedError"
+            ) {
               setVideoError(true);
             }
             if (mountedRef.current) setIsPlaying(false);
@@ -110,8 +114,8 @@ export default function VideoReel({
       if (mountedRef.current) setIsPlaying(false);
     }
   }, [isVisible, post.id, isMobile, post.content.video]);
-  
-  // Trigger like animation ONLY on state TRANSITION (false -> true) 
+
+  // Trigger like animation ONLY on state TRANSITION (false -> true)
   // to avoid pop on initial load or background refresh
   useEffect(() => {
     // Only trigger if we transition from false to true AND it's not the first mount check
@@ -181,8 +185,9 @@ export default function VideoReel({
           ) {
             toaster.push(
               <Message type="error" closable>
-                {`Failed to play video: ${(error as Error).message || "Unknown error occurred"
-                  }`}
+                {`Failed to play video: ${
+                  (error as Error).message || "Unknown error occurred"
+                }`}
               </Message>,
               { placement: "topEnd" }
             );

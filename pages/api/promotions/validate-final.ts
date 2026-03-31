@@ -7,7 +7,11 @@ import crypto from "crypto";
 
 const VALIDATE_PROMOTION = gql`
   query ValidatePromotion($code: String!) {
-    promotions(where: { _or: [{ code: { _eq: $code } }, { influencer_code: { _eq: $code } }] }) {
+    promotions(
+      where: {
+        _or: [{ code: { _eq: $code } }, { influencer_code: { _eq: $code } }]
+      }
+    ) {
       affects
       applies_to_id
       applies_to_type
@@ -89,15 +93,20 @@ export default async function handler(
       if (!result.promotions || result.promotions.length === 0) continue;
 
       const promo = result.promotions[0];
-      const isInfluencerCode = promo.influencer_code?.toUpperCase() === code.trim().toUpperCase();
+      const isInfluencerCode =
+        promo.influencer_code?.toUpperCase() === code.trim().toUpperCase();
 
       // 1. Basic Status Check
       if (promo.status !== "active") continue;
 
       // 2. Date/Time Validation
       const now = new Date();
-      const startDate = new Date(`${promo.start_date}T${promo.start_time || "00:00:00"}`);
-      const endDate = promo.end_date ? new Date(`${promo.end_date}T${promo.end_time || "23:59:59"}`) : null;
+      const startDate = new Date(
+        `${promo.start_date}T${promo.start_time || "00:00:00"}`
+      );
+      const endDate = promo.end_date
+        ? new Date(`${promo.end_date}T${promo.end_time || "23:59:59"}`)
+        : null;
 
       if (now < startDate || (endDate && now > endDate)) continue;
 
@@ -117,7 +126,8 @@ export default async function handler(
 
       if (promo.promotion_scope === "restaurant") {
         const targetRestaurantId = promo.restaurant_id || promo.applies_to_id;
-        if (targetRestaurantId && cart.restaurant_id !== targetRestaurantId) continue;
+        if (targetRestaurantId && cart.restaurant_id !== targetRestaurantId)
+          continue;
       }
 
       // 5. Min Order Value
@@ -130,23 +140,33 @@ export default async function handler(
 
       // Calculation logic
       const discountValue = parseFloat(promo.discount_value || "0");
-      const customerDiscountPercent = parseFloat(promo.customer_discount_percent || "0");
-      const effectivePercentage = customerDiscountPercent > 0 ? customerDiscountPercent : discountValue;
+      const customerDiscountPercent = parseFloat(
+        promo.customer_discount_percent || "0"
+      );
+      const effectivePercentage =
+        customerDiscountPercent > 0 ? customerDiscountPercent : discountValue;
       let currentSubtotalDiscount = 0;
       let calculationTrace = "";
 
       if (promo.promotion_type === "bogo") {
         const buyQty = parseInt(promo.buy_quantity || "1");
         const cartItems = cart.items || [];
-        const totalQty = cartItems.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
-        
+        const totalQty = cartItems.reduce(
+          (sum: number, item: any) => sum + (item.quantity || 1),
+          0
+        );
+
         if (totalQty >= buyQty + 1) {
           // Simplistic BOGO: Discount the cheapest item
-          const prices = cartItems.map((item: any) => parseFloat(item.price || "0")).sort((a: number, b: number) => a - b);
+          const prices = cartItems
+            .map((item: any) => parseFloat(item.price || "0"))
+            .sort((a: number, b: number) => a - b);
           currentSubtotalDiscount = prices[0] || 0;
           calculationTrace = `BOGO: Applied on cheapest item (${currentSubtotalDiscount})`;
         } else {
-          calculationTrace = `BOGO: Not enough items (Need ${buyQty + 1}, have ${totalQty})`;
+          calculationTrace = `BOGO: Not enough items (Need ${
+            buyQty + 1
+          }, have ${totalQty})`;
         }
       } else if (promo.affects === "subtotal" || promo.affects === "total") {
         const baseAmount = promo.affects === "total" ? totalWithFees : subtotal;
@@ -158,8 +178,11 @@ export default async function handler(
           currentSubtotalDiscount = discountValue;
           calculationTrace = `${promo.discount_type}: Fixed amount ${discountValue}`;
         }
-        
-        if (promo.max_discount && currentSubtotalDiscount > promo.max_discount) {
+
+        if (
+          promo.max_discount &&
+          currentSubtotalDiscount > promo.max_discount
+        ) {
           calculationTrace += ` (Capped at ${promo.max_discount})`;
           currentSubtotalDiscount = promo.max_discount;
         }
@@ -180,26 +203,36 @@ export default async function handler(
       });
 
       // Handle exclusive promotions (stop here if one is found)
-      console.log(`[API Validate-Final] Applied: ${promo.code || promo.influencer_code}, Discount: ${currentSubtotalDiscount}`);
-      if (promo.stacking_type === 'exclusive') break;
+      console.log(
+        `[API Validate-Final] Applied: ${
+          promo.code || promo.influencer_code
+        }, Discount: ${currentSubtotalDiscount}`
+      );
+      if (promo.stacking_type === "exclusive") break;
     }
 
-    const total_discount = subtotal_discount + service_fee_discount + delivery_fee_discount;
+    const total_discount =
+      subtotal_discount + service_fee_discount + delivery_fee_discount;
     const subtotalNum = Number(cart.subtotal || 0);
     const serviceFeeNum = Number(cart.service_fee || 0);
     const deliveryFeeNum = Number(cart.delivery_fee || 0);
-    const final_total = (subtotalNum + serviceFeeNum + deliveryFeeNum) - total_discount;
+    const final_total =
+      subtotalNum + serviceFeeNum + deliveryFeeNum - total_discount;
 
     // Generate pricing token
-    const pricingToken = crypto.createHash('sha256')
-      .update(JSON.stringify({ 
-        cart_id: cart.cart_id, 
-        items: cart.items.length, 
-        subtotal: cart.subtotal,
-        total_discount: subtotal_discount + service_fee_discount + delivery_fee_discount,
-        timestamp: Math.floor(Date.now() / 60000) // 1 minute window
-      }))
-      .digest('hex');
+    const pricingToken = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          cart_id: cart.cart_id,
+          items: cart.items.length,
+          subtotal: cart.subtotal,
+          total_discount:
+            subtotal_discount + service_fee_discount + delivery_fee_discount,
+          timestamp: Math.floor(Date.now() / 60000), // 1 minute window
+        })
+      )
+      .digest("hex");
 
     return res.status(200).json({
       success: true,
@@ -208,7 +241,8 @@ export default async function handler(
         subtotal_discount,
         service_fee_discount,
         delivery_fee_discount,
-        total_discount: subtotal_discount + service_fee_discount + delivery_fee_discount,
+        total_discount:
+          subtotal_discount + service_fee_discount + delivery_fee_discount,
         discount_breakdown: {
           subtotal: subtotal_discount,
           service_fee: service_fee_discount,
@@ -218,9 +252,10 @@ export default async function handler(
       promotions_applied,
       final_total,
     });
-
   } catch (error) {
     console.error("Error in validate-final:", error);
-    return res.status(500).json({ error: "Failed to perform final validation" });
+    return res
+      .status(500)
+      .json({ error: "Failed to perform final validation" });
   }
 }

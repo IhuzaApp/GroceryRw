@@ -27,18 +27,26 @@ export default function Step6Review({
       <div className="rounded-xl bg-white p-3 text-[#022C22] shadow-sm">
         <Icon className="h-6 w-6" />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
           {label}
         </p>
-        <p className="text-lg font-bold text-[#1A1A1A] truncate">
+        <p className="truncate text-lg font-bold text-[#1A1A1A]">
           {value || "Not provided"}
         </p>
       </div>
     </div>
   );
 
-  const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  const days = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
 
   return (
     <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-right-4">
@@ -83,11 +91,22 @@ export default function Step6Review({
           <Clock className="h-4 w-4" />
           Operating Hours
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {days.map((day) => (
-            <div key={day} className="flex justify-between items-center p-3 rounded-xl bg-white border border-gray-100 shadow-sm">
-              <span className="text-xs font-bold text-gray-400 uppercase capitalize">{day.slice(0, 3)}</span>
-              <span className={`text-xs font-bold ${formData.operating_hours[day] === "Closed" ? "text-red-500" : "text-emerald-600"}`}>
+            <div
+              key={day}
+              className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-3 shadow-sm"
+            >
+              <span className="text-xs font-bold uppercase capitalize text-gray-400">
+                {day.slice(0, 3)}
+              </span>
+              <span
+                className={`text-xs font-bold ${
+                  formData.operating_hours[day] === "Closed"
+                    ? "text-red-500"
+                    : "text-emerald-600"
+                }`}
+              >
                 {formData.operating_hours[day]}
               </span>
             </div>

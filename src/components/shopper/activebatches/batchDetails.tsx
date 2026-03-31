@@ -1016,14 +1016,13 @@ export default function BatchDetails({
                   statusData.status === "EXPIRED"
                 ) {
                   throw new Error(
-                    statusData.reason || "MoMo payment failed. Please try again."
+                    statusData.reason ||
+                      "MoMo payment failed. Please try again."
                   );
                 } else {
                   // PENDING or other status
                   if (attempt < maxAttempts - 1) {
-                    await new Promise((resolve) =>
-                      setTimeout(resolve, 10000)
-                    ); // Wait 10 seconds
+                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds
                   } else {
                     throw new Error(
                       "MoMo payment timeout. Please check your phone or try again."

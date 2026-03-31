@@ -131,7 +131,10 @@ export default async function handler(
       return res.status(400).json({ error: "Missing or invalid fields" });
     }
     const lowerMethod = method.toLowerCase();
-    const isMobileMoney = lowerMethod === "mtn momo" || lowerMethod === "airtel" || lowerMethod === "airtel money";
+    const isMobileMoney =
+      lowerMethod === "mtn momo" ||
+      lowerMethod === "airtel" ||
+      lowerMethod === "airtel money";
 
     if (!isMobileMoney && (!CCV || !validity)) {
       return res

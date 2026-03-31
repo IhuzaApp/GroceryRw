@@ -256,7 +256,9 @@ async function handleAddComment(req: NextApiRequest, res: NextApiResponse) {
     if (!hasuraClient) throw new Error("Hasura client is not initialized");
     const userId = (session.user as any).id;
     if (!userId) {
-      console.warn(`[Backend API] handleAddComment: Missing user ID in session`);
+      console.warn(
+        `[Backend API] handleAddComment: Missing user ID in session`
+      );
       return res.status(400).json({ error: "Missing user ID in session" });
     }
     console.log(`[Backend API] handleAddComment: userId: ${userId}`);
@@ -400,7 +402,9 @@ async function handleDeleteComment(req: NextApiRequest, res: NextApiResponse) {
       console.warn(`[Backend API] handleDeleteComment: Missing comment ID`);
       return res.status(400).json({ error: "Missing comment ID" });
     }
-    console.log(`[Backend API] handleDeleteComment: userId: ${userId}, commentId: ${comment_id}`);
+    console.log(
+      `[Backend API] handleDeleteComment: userId: ${userId}, commentId: ${comment_id}`
+    );
 
     // Verify the comment belongs to the user or user has admin rights
     const commentData = await hasuraClient.request<CommentResponse>(
@@ -438,7 +442,9 @@ async function handleDeleteComment(req: NextApiRequest, res: NextApiResponse) {
       commentId: comment_id,
       userId,
     });
-    console.log(`[Backend API] handleDeleteComment: Success for commentId: ${comment_id}`);
+    console.log(
+      `[Backend API] handleDeleteComment: Success for commentId: ${comment_id}`
+    );
     res
       .status(200)
       .json({ success: true, message: "Comment deleted successfully" });

@@ -225,7 +225,7 @@ export default async function handler(
     discount_breakdown, // { subtotal, service_fee, delivery_fee }
     delivery_time,
     subtotal,
-    payment_method
+    payment_method,
   } = req.body;
   if (
     !shop_id ||
@@ -239,18 +239,23 @@ export default async function handler(
 
   // 0. Validate pricing token (MANDATORY)
   if (!pricing_token) {
-    return res.status(400).json({ error: "Pricing token is required for all checkouts" });
+    return res
+      .status(400)
+      .json({ error: "Pricing token is required for all checkouts" });
   }
 
-  const expectedHash = crypto.createHash('sha256')
-    .update(JSON.stringify({
-      cart_id: shop_id,
-      items: req.body.items_count || 0, // Should be passed or re-calculated
-      subtotal: parseFloat(subtotal || "0"),
-      total_discount: parseFloat(discount || "0"),
-      timestamp: Math.floor(Date.now() / 60000)
-    }))
-    .digest('hex');
+  const expectedHash = crypto
+    .createHash("sha256")
+    .update(
+      JSON.stringify({
+        cart_id: shop_id,
+        items: req.body.items_count || 0, // Should be passed or re-calculated
+        subtotal: parseFloat(subtotal || "0"),
+        total_discount: parseFloat(discount || "0"),
+        timestamp: Math.floor(Date.now() / 60000),
+      })
+    )
+    .digest("hex");
 
   // Note: For now we'll allow a bit of drift or just log it if we're in dev.
   // if (pricing_token !== expectedHash) {
@@ -319,7 +324,8 @@ export default async function handler(
       shop_id,
       delivery_address_id,
       total: actualTotal.toFixed(2),
-      status: payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
+      status:
+        payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
       service_fee,
       delivery_fee,
       discount: discount ?? "0",
@@ -328,7 +334,11 @@ export default async function handler(
       delivery_notes: delivery_notes ?? null,
       pin: orderPin,
       applied_promotions: applied_promotions || [],
-      discount_breakdown: discount_breakdown || { subtotal: 0, service_fee: 0, delivery_fee: 0 }
+      discount_breakdown: discount_breakdown || {
+        subtotal: 0,
+        service_fee: 0,
+        delivery_fee: 0,
+      },
     });
     const orderId = orderRes.insert_Orders_one.id;
 
@@ -351,7 +361,7 @@ export default async function handler(
           // Increment usage and budget
           await hasuraClient.request(UPDATE_PROMOTION_STATS, {
             id: promo.promotion_id,
-            discount_amount: parseFloat(promo.discount_amount || "0")
+            discount_amount: parseFloat(promo.discount_amount || "0"),
           });
 
           // Record Influencer Earning if applicable
@@ -362,10 +372,12 @@ export default async function handler(
                 promotion_id: promo.promotion_id,
                 shop_order_id: orderId,
                 order_value: actualTotal.toFixed(2),
-                earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2), // Example: 10% of discount or other rule
+                earning_amount: (
+                  parseFloat(promo.discount_amount || "0") * 0.1
+                ).toFixed(2), // Example: 10% of discount or other rule
                 payout_status: "pending",
-                status: "active"
-              }
+                status: "active",
+              },
             });
           }
         } catch (e) {
@@ -396,7 +408,9 @@ export default async function handler(
       }
       await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
     } else {
-      console.log("🛒 [Checkout] Skipping cart deletion for MoMo payment - will be cleared after successful payment.");
+      console.log(
+        "🛒 [Checkout] Skipping cart deletion for MoMo payment - will be cleared after successful payment."
+      );
     }
 
     const orderTotal =

@@ -201,7 +201,7 @@ export default function UserRegistration() {
           id="gender"
           value={gender}
           onChange={(e) => setGender(e.target.value)}
-          className="block w-full rounded-xl border border-gray-300 py-2.5 px-3 text-gray-900 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400"
+          className="block w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400"
           required
         >
           <option value="male">Male</option>

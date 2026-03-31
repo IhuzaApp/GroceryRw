@@ -52,7 +52,7 @@ let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
 if (typeof window !== "undefined" && app) {
   try {
     messaging = getMessaging(app);
-  } catch (error) { }
+  } catch (error) {}
 }
 
 // ---- Global FCM singleton (prevents duplicate listeners across multiple hooks/components) ----
@@ -326,7 +326,7 @@ export const setupFCMListener = (
 ): (() => void) => {
   try {
     if (!messaging) {
-      return () => { };
+      return () => {};
     }
 
     const unsubscribe = onMessage(messaging, (payload) => {
@@ -389,7 +389,7 @@ export const setupFCMListener = (
                 notificationOptions
               );
             })
-            .catch((error) => { });
+            .catch((error) => {});
         }
       }
 
@@ -398,7 +398,7 @@ export const setupFCMListener = (
 
     return unsubscribe;
   } catch (error) {
-    return () => { };
+    return () => {};
   }
 };
 
@@ -447,8 +447,8 @@ export async function syncStoredNotificationsToLocalStorage(): Promise<void> {
 export function setupServiceWorkerFCMBridge(
   onMessageReceived: (payload: any) => void
 ): () => void {
-  if (typeof window === "undefined") return () => { };
-  if (!("serviceWorker" in navigator)) return () => { };
+  if (typeof window === "undefined") return () => {};
+  if (!("serviceWorker" in navigator)) return () => {};
 
   const handler = async (event: MessageEvent) => {
     if (!event?.data || event.data.type !== "FCM_BACKGROUND_MESSAGE") return;

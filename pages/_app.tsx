@@ -93,8 +93,9 @@ const getPageTitle = (
     if (names.restaurantName) {
       return `${baseTitle} - ${names.restaurantName}`;
     }
-    return `${baseTitle} - Restaurant ${restaurantId ? `#${restaurantId}` : ""
-      }`;
+    return `${baseTitle} - Restaurant ${
+      restaurantId ? `#${restaurantId}` : ""
+    }`;
   }
 
   if (pathname.startsWith("/Recipes/")) {

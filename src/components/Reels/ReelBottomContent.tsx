@@ -122,9 +122,13 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 e.stopPropagation();
                 isAuthenticated ? setShowOrderModal(true) : onAuthRequired();
               }}
-              onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.97)")
+              }
               onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
               disabled={false}
             >
               <UtensilsIcon />
@@ -226,13 +230,26 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                     router.push(`/shops/${post.shop_id}`);
                   }
                 }}
-                onMouseDown={(e) => { if (post.shop_id) e.currentTarget.style.transform = "scale(0.97)" }}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onMouseDown={(e) => {
+                  if (post.shop_id)
+                    e.currentTarget.style.transform = "scale(0.97)";
+                }}
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={!post.shop_id}
               >
                 <StoreIcon />
-                <span style={{ marginLeft: 6, whiteSpace: "nowrap", fontSize: "14px" }}>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  }}
+                >
                   Visit Store
                 </span>
               </button>
@@ -261,9 +278,16 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                   e.stopPropagation();
                   isAuthenticated ? setShowOrderModal(true) : onAuthRequired();
                 }}
-                onMouseDown={(e) => { if (supermarketPost.product.inStock) e.currentTarget.style.transform = "scale(0.97)" }}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onMouseDown={(e) => {
+                  if (supermarketPost.product.inStock)
+                    e.currentTarget.style.transform = "scale(0.97)";
+                }}
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={!supermarketPost.product.inStock}
               >
                 <ShoppingCartIcon />
@@ -340,14 +364,29 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                   transition: "transform 0.1s ease",
                   opacity: 1,
                 }}
-                onClick={(e) => { e.stopPropagation(); isAuthenticated ? undefined : onAuthRequired(); }}
-                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  isAuthenticated ? undefined : onAuthRequired();
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.97)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={false}
               >
                 <YoutubeIcon />
-                <span style={{ marginLeft: 6, whiteSpace: "nowrap", fontSize: "14px" }}>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  }}
+                >
                   YouTube
                 </span>
               </button>
@@ -370,14 +409,29 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                   transition: "transform 0.1s ease",
                   opacity: 1,
                 }}
-                onClick={(e) => { e.stopPropagation(); isAuthenticated ? undefined : onAuthRequired(); }}
-                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  isAuthenticated ? undefined : onAuthRequired();
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.97)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={false}
               >
                 <BookOpenIcon />
-                <span style={{ marginLeft: 6, whiteSpace: "nowrap", fontSize: "14px" }}>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  }}
+                >
                   Get Recipe
                 </span>
               </button>
@@ -434,9 +488,15 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                     window.location.href = `tel:${businessPost.business.phone}`;
                   }
                 }}
-                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.97)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={false}
               >
                 <span style={{ whiteSpace: "nowrap" }}>Contact Business</span>
@@ -465,7 +525,14 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
       }}
     >
       {/* Creator Info */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 12,
+        }}
+      >
         <Avatar
           circle
           size="sm"
@@ -475,10 +542,20 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
               : "/placeholder.svg"
           }
           alt={post.creator.name}
-          style={{ border: "1.5px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }}
+          style={{
+            border: "1.5px solid rgba(255,255,255,0.9)",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+          }}
         />
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: "15px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
+          <span
+            style={{
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "15px",
+              textShadow: "0 1px 3px rgba(0,0,0,0.8)",
+            }}
+          >
             {post.creator.name}
           </span>
           {post.creator.verified && (
@@ -491,10 +568,14 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.3)"
+                boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
               }}
             >
-              <span style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}>✓</span>
+              <span
+                style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}
+              >
+                ✓
+              </span>
             </div>
           )}
         </div>

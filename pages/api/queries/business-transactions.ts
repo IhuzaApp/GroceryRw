@@ -14,23 +14,25 @@ const GET_WALLET_BY_BUSINESS = gql`
 `;
 
 const GET_TRANSACTIONS_BY_WALLET = gql`
-query GetBusinessTransactionsByWallet($wallet_id: uuid!) {
-  businessTransactions(where: {wallet_id: {_eq: $wallet_id}}, order_by: {created_at: desc}) {
-    id
-    action
-    type
-    related_order
-    status
-    description
-    created_at
-    wallet_id
-    mtn_response
-    phone
-    reference_id
-    updated_at
+  query GetBusinessTransactionsByWallet($wallet_id: uuid!) {
+    businessTransactions(
+      where: { wallet_id: { _eq: $wallet_id } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      action
+      type
+      related_order
+      status
+      description
+      created_at
+      wallet_id
+      mtn_response
+      phone
+      reference_id
+      updated_at
+    }
   }
-}
-
 `;
 
 interface SessionUser {

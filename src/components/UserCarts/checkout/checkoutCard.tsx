@@ -85,9 +85,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -123,8 +123,12 @@ export default function CheckoutItems({
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   // MoMo payment state
-  const [processingStep, setProcessingStep] = useState<"idle" | "initiating_payment" | "awaiting_approval" | "success">("idle");
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "failed">("idle");
+  const [processingStep, setProcessingStep] = useState<
+    "idle" | "initiating_payment" | "awaiting_approval" | "success"
+  >("idle");
+  const [paymentStatus, setPaymentStatus] = useState<
+    "idle" | "pending" | "success" | "failed"
+  >("idle");
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to fetch fresh discounts from server (always called, never cached)
@@ -883,8 +887,8 @@ export default function CheckoutItems({
   const serviceFee = isFoodCart
     ? 0
     : systemConfig
-      ? parseInt(systemConfig.serviceFee)
-      : 0;
+    ? parseInt(systemConfig.serviceFee)
+    : 0;
   const baseDeliveryFee = systemConfig
     ? parseInt(systemConfig.baseDeliveryFee)
     : 0;
@@ -947,18 +951,23 @@ export default function CheckoutItems({
 
   // Use server values ONLY if a promotion/influencer/referral is actively applied
   // This satisfies the requirement: "do the sync once the user add the promotopn code ... before that just show normal calculations"
-  const hasActiveDiscount = (discounts.promotions_applied && discounts.promotions_applied.length > 0) || appliedCode !== null;
+  const hasActiveDiscount =
+    (discounts.promotions_applied && discounts.promotions_applied.length > 0) ||
+    appliedCode !== null;
 
-  const deliveryFee = hasActiveDiscount && discounts.final_delivery_fee !== undefined
-    ? discounts.final_delivery_fee
-    : localDeliveryFee;
+  const deliveryFee =
+    hasActiveDiscount && discounts.final_delivery_fee !== undefined
+      ? discounts.final_delivery_fee
+      : localDeliveryFee;
 
-  const finalServiceFee = hasActiveDiscount && discounts.final_service_fee !== undefined
-    ? discounts.final_service_fee
-    : localServiceFee;
+  const finalServiceFee =
+    hasActiveDiscount && discounts.final_service_fee !== undefined
+      ? discounts.final_service_fee
+      : localServiceFee;
 
   // Helper to check if pricing is valid/available
-  const isPricingAvailable = deliveryFee !== undefined && finalServiceFee !== undefined;
+  const isPricingAvailable =
+    deliveryFee !== undefined && finalServiceFee !== undefined;
 
   // Update referral discounts when delivery fee changes (if referral code is applied)
   useEffect(() => {
@@ -975,7 +984,11 @@ export default function CheckoutItems({
     }
 
     // Update basic discount state if we have backend discounts
-    if (discounts.subtotal_discount > 0 || discounts.service_fee_discount > 0 || discounts.delivery_fee_discount > 0) {
+    if (
+      discounts.subtotal_discount > 0 ||
+      discounts.service_fee_discount > 0 ||
+      discounts.delivery_fee_discount > 0
+    ) {
       setDiscount(discounts.subtotal_discount);
       setServiceFeeDiscount(discounts.service_fee_discount);
       setDeliveryFeeDiscount(discounts.delivery_fee_discount);
@@ -1138,11 +1151,13 @@ export default function CheckoutItems({
     const deliveryText = formatTimeMinutes(travelTime);
 
     if (days > 0) {
-      deliveryTime = `${days} day${days > 1 ? "s" : ""}${hours > 0 ? ` ${hours}h` : ""
-        } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
+      deliveryTime = `${days} day${days > 1 ? "s" : ""}${
+        hours > 0 ? ` ${hours}h` : ""
+      } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     } else if (hours > 0) {
-      deliveryTime = `${hours}h${mins > 0 ? ` ${mins}m` : ""
-        } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
+      deliveryTime = `${hours}h${
+        mins > 0 ? ` ${mins}m` : ""
+      } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     } else {
       deliveryTime = `${mins} minutes (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     }
@@ -1152,11 +1167,13 @@ export default function CheckoutItems({
       selectedCartIds.size > 0 ? ` - ${selectedCartIds.size + 1} shops` : "";
 
     if (days > 0) {
-      deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${hours > 0 ? ` ${hours}h` : ""
-        } (${formattedDistance}${multiShopSuffix})`;
+      deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
+        hours > 0 ? ` ${hours}h` : ""
+      } (${formattedDistance}${multiShopSuffix})`;
     } else if (hours > 0) {
-      deliveryTime = `Will be delivered in ${hours}h${mins > 0 ? ` ${mins}m` : ""
-        } (${formattedDistance}${multiShopSuffix})`;
+      deliveryTime = `Will be delivered in ${hours}h${
+        mins > 0 ? ` ${mins}m` : ""
+      } (${formattedDistance}${multiShopSuffix})`;
     } else {
       deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance}${multiShopSuffix})`;
     }
@@ -1219,10 +1236,17 @@ export default function CheckoutItems({
           setDiscounts((prev) => ({
             ...prev,
             ...result.discounts,
-            subtotal_discount: parseFloat(result.discounts.subtotal_discount || "0"),
-            service_fee_discount: parseFloat(result.discounts.service_fee_discount || "0"),
-            delivery_fee_discount: parseFloat(result.discounts.delivery_fee_discount || "0"),
-            promotions_applied: result.promotions_applied || prev.promotions_applied || [],
+            subtotal_discount: parseFloat(
+              result.discounts.subtotal_discount || "0"
+            ),
+            service_fee_discount: parseFloat(
+              result.discounts.service_fee_discount || "0"
+            ),
+            delivery_fee_discount: parseFloat(
+              result.discounts.delivery_fee_discount || "0"
+            ),
+            promotions_applied:
+              result.promotions_applied || prev.promotions_applied || [],
           }));
         }
       } catch (error) {
@@ -1233,7 +1257,15 @@ export default function CheckoutItems({
     };
 
     applyAutoPromotions();
-  }, [shopId, Total, serviceFee, deliveryFee, selectedAddressId, discountsEnabled, appliedCode]);
+  }, [
+    shopId,
+    Total,
+    serviceFee,
+    deliveryFee,
+    selectedAddressId,
+    discountsEnabled,
+    appliedCode,
+  ]);
 
   const triggerPricingSync = useCallback(async () => {
     // Backend is now the source of truth, so we always sync if possible
@@ -1255,13 +1287,14 @@ export default function CheckoutItems({
       if (selectedCartIds.size > 0) {
         (cartSnapshot as any).carts = [
           { cart_id: shopId, items, subtotal: Total },
-          ...Array.from(selectedCartIds).map(cartId => ({
+          ...Array.from(selectedCartIds).map((cartId) => ({
             cart_id: cartId,
             items: cartDetails[cartId]?.items || [],
-            subtotal: cartDetails[cartId]?.subtotal || 0
-          }))
+            subtotal: cartDetails[cartId]?.subtotal || 0,
+          })),
         ];
-        (cartSnapshot as any).cart_ids = Array.from(selectedCartIds).concat(shopId);
+        (cartSnapshot as any).cart_ids =
+          Array.from(selectedCartIds).concat(shopId);
       }
 
       const response = await fetch("/api/promotions/validate-final", {
@@ -1276,7 +1309,8 @@ export default function CheckoutItems({
           ...prev,
           ...data.discounts,
           pricing_token: data.pricing_token,
-          promotions_applied: data.promotions_applied || prev.promotions_applied || [],
+          promotions_applied:
+            data.promotions_applied || prev.promotions_applied || [],
         }));
         // Update final total if returned
         if (data.final_total !== undefined) {
@@ -1286,7 +1320,19 @@ export default function CheckoutItems({
     } catch (error) {
       console.error("Pricing sync failed:", error);
     }
-  }, [shopId, Total, serviceFee, deliveryFee, appliedCode, isGuest, isFoodCart, restaurant, selectedCartIds, cartDetails, fetchCartSnapshot]);
+  }, [
+    shopId,
+    Total,
+    serviceFee,
+    deliveryFee,
+    appliedCode,
+    isGuest,
+    isFoodCart,
+    restaurant,
+    selectedCartIds,
+    cartDetails,
+    fetchCartSnapshot,
+  ]);
 
   // Re-sync pricing when cart or address changes - ALWAYS (No Promotion Flow)
   useEffect(() => {
@@ -1317,7 +1363,9 @@ export default function CheckoutItems({
     }
 
     // Check stacking rules from current applied promotions
-    const hasExclusive = discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive');
+    const hasExclusive = discounts?.promotions_applied?.some(
+      (p) => p.stacking_type === "exclusive"
+    );
     if (hasExclusive) {
       toaster.push(
         <Notification type="warning" header="Stacking Bound">
@@ -1351,9 +1399,15 @@ export default function CheckoutItems({
       const result = await response.json();
       if (result.valid) {
         setDiscounts({
-          subtotal_discount: parseFloat(result.discounts.subtotal_discount || "0"),
-          service_fee_discount: parseFloat(result.discounts.service_fee_discount || "0"),
-          delivery_fee_discount: parseFloat(result.discounts.delivery_fee_discount || "0"),
+          subtotal_discount: parseFloat(
+            result.discounts.subtotal_discount || "0"
+          ),
+          service_fee_discount: parseFloat(
+            result.discounts.service_fee_discount || "0"
+          ),
+          delivery_fee_discount: parseFloat(
+            result.discounts.delivery_fee_discount || "0"
+          ),
           final_delivery_fee: result.discounts.final_delivery_fee,
           final_service_fee: result.discounts.final_service_fee,
           final_subtotal: result.discounts.final_subtotal,
@@ -1377,7 +1431,9 @@ export default function CheckoutItems({
       } else {
         setDiscounts((prev) => ({
           ...prev,
-          rejected_promotions: result.rejected_promotions || [{ code, reason: result.message }],
+          rejected_promotions: result.rejected_promotions || [
+            { code, reason: result.message },
+          ],
         }));
 
         toaster.push(
@@ -1423,9 +1479,13 @@ export default function CheckoutItems({
 
   // Compute numeric final total including service fee and delivery fee, minus discounts
   // PREFER BACKEND VALUE (Absolute Source of Truth)
-  const finalTotal = discounts.final_total !== undefined
-    ? discounts.final_total
-    : (grandSubtotal - discounts.subtotal_discount + (deliveryFee || 0) + (finalServiceFee || 0));
+  const finalTotal =
+    discounts.final_total !== undefined
+      ? discounts.final_total
+      : grandSubtotal -
+        discounts.subtotal_discount +
+        (deliveryFee || 0) +
+        (finalServiceFee || 0);
 
   const formatPhoneForMoMo = (phone: string) => {
     let partyId = String(phone).replace(/\D/g, "");
@@ -1439,7 +1499,12 @@ export default function CheckoutItems({
 
   const handleMoMoPayment = async (orderId: string, amount: number) => {
     const phone = selectedPaymentMethod?.number || oneTimePhoneNumber;
-    console.log("🟡 [MoMo Checkout] handleMoMoPayment triggered", { orderId, amount, phone, selectedPaymentMethod });
+    console.log("🟡 [MoMo Checkout] handleMoMoPayment triggered", {
+      orderId,
+      amount,
+      phone,
+      selectedPaymentMethod,
+    });
 
     if (!phone) {
       console.warn("⚠️ [MoMo Checkout] No phone number available — aborting");
@@ -1461,7 +1526,11 @@ export default function CheckoutItems({
     setIsExpanded(false); // Collapse the order summary so the payment overlay is visible
 
     try {
-      console.log("📡 [MoMo Checkout] Calling /api/momo/request-to-pay...", { amount: Math.round(amount), payerNumber: formattedPhone, orderId });
+      console.log("📡 [MoMo Checkout] Calling /api/momo/request-to-pay...", {
+        amount: Math.round(amount),
+        payerNumber: formattedPhone,
+        orderId,
+      });
       const response = await fetch("/api/momo/request-to-pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1476,22 +1545,32 @@ export default function CheckoutItems({
       });
 
       const data = await response.json();
-      console.log("📬 [MoMo Checkout] /api/momo/request-to-pay response:", { ok: response.ok, status: response.status, data });
+      console.log("📬 [MoMo Checkout] /api/momo/request-to-pay response:", {
+        ok: response.ok,
+        status: response.status,
+        data,
+      });
 
       if (response.ok && data.referenceId) {
         setProcessingStep("awaiting_approval");
         const referenceId = data.referenceId;
-        console.log("✅ [MoMo Checkout] MoMo request sent — polling for status. referenceId:", referenceId);
+        console.log(
+          "✅ [MoMo Checkout] MoMo request sent — polling for status. referenceId:",
+          referenceId
+        );
 
         // Polling for payment status
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = setInterval(async () => {
           try {
-            const statusRes = await fetch(`/api/momo/request-to-pay-status?referenceId=${referenceId}`);
+            const statusRes = await fetch(
+              `/api/momo/request-to-pay-status?referenceId=${referenceId}`
+            );
             const statusData = await statusRes.json();
 
             if (statusData.status === "SUCCESSFUL") {
-              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
               setPaymentStatus("success");
               setProcessingStep("success");
@@ -1508,16 +1587,20 @@ export default function CheckoutItems({
                 clearRestaurant(shopId);
               } else {
                 // For grocery/shopping, notify other components to refetch carts for the main shop
-                window.dispatchEvent(new CustomEvent("cartChanged", {
-                  detail: { refetch: true, shop_id: shopId }
-                }));
+                window.dispatchEvent(
+                  new CustomEvent("cartChanged", {
+                    detail: { refetch: true, shop_id: shopId },
+                  })
+                );
 
                 // Also clear any combined carts if this was a combined checkout
                 if (selectedCartIds.size > 0) {
                   selectedCartIds.forEach((id) => {
-                    window.dispatchEvent(new CustomEvent("cartChanged", {
-                      detail: { refetch: true, shop_id: id }
-                    }));
+                    window.dispatchEvent(
+                      new CustomEvent("cartChanged", {
+                        detail: { refetch: true, shop_id: id },
+                      })
+                    );
                   });
                   // Reset selected carts
                   setSelectedCartIds(new Set());
@@ -1526,23 +1609,32 @@ export default function CheckoutItems({
 
               // Redirect to success or refresh - wait 2.5 seconds to show the success overlay
               setTimeout(() => {
-                const basePath = successRedirectPath || (isFoodCart ? "/restaurant/" : "/stores/");
+                const basePath =
+                  successRedirectPath ||
+                  (isFoodCart ? "/restaurant/" : "/stores/");
                 router.push(`${basePath}${shopId}?orderSuccess=true`);
               }, 2500);
-            } else if (["FAILED", "REJECTED", "EXPIRED"].includes(statusData.status)) {
-              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+            } else if (
+              ["FAILED", "REJECTED", "EXPIRED"].includes(statusData.status)
+            ) {
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
               setPaymentStatus("failed");
               setProcessingStep("idle");
               setIsCheckoutLoading(false);
               setIsExpanded(true); // Re-expand so user can see checkout and retry
 
-              const reason = statusData.reason || statusData.financial_transaction_id
-                ? "Your payment was declined or expired. Your order has been cancelled — please try again."
-                : "Payment was not completed. Your order has been cancelled. Please try again.";
+              const reason =
+                statusData.reason || statusData.financial_transaction_id
+                  ? "Your payment was declined or expired. Your order has been cancelled — please try again."
+                  : "Payment was not completed. Your order has been cancelled. Please try again.";
 
               toaster.push(
-                <Notification type="error" header="Payment Failed — Order Cancelled">
+                <Notification
+                  type="error"
+                  header="Payment Failed — Order Cancelled"
+                >
                   {reason}
                 </Notification>,
                 { placement: "topEnd", duration: 9000 }
@@ -1568,7 +1660,8 @@ export default function CheckoutItems({
         setIsCheckoutLoading(false);
         toaster.push(
           <Notification type="error" header="MoMo Request Failed">
-            {data.error || "Failed to initiate MoMo prompt. Please check your number and try again."}
+            {data.error ||
+              "Failed to initiate MoMo prompt. Please check your number and try again."}
           </Notification>,
           { placement: "topEnd" }
         );
@@ -1654,7 +1747,8 @@ export default function CheckoutItems({
       if (!validateData.success || !validateData.pricing_token) {
         toaster.push(
           <Notification type="error" header="Price Sync Failed">
-            {validateData.message || "Unable to sync final prices. Please try again."}
+            {validateData.message ||
+              "Unable to sync final prices. Please try again."}
           </Notification>,
           { placement: "topEnd" }
         );
@@ -1684,16 +1778,19 @@ export default function CheckoutItems({
         delivery_notes: deliveryNotes || null,
         pricing_token: pricingToken,
         payment_method:
-          selectedPaymentMethod?.type === "card" ? "card" :
-            selectedPaymentMethod?.type === "wallet" ? "wallet" :
-              selectedPaymentMethod?.type === "refund" ? "refund" :
-                "mobile_money",
+          selectedPaymentMethod?.type === "card"
+            ? "card"
+            : selectedPaymentMethod?.type === "wallet"
+            ? "wallet"
+            : selectedPaymentMethod?.type === "refund"
+            ? "refund"
+            : "mobile_money",
         payment_method_id: selectedPaymentMethod?.id || null,
         total_discount: Math.round(finalPayloadDiscounts.total_discount || 0),
         discount_breakdown: finalPayloadDiscounts.discount_breakdown || {
           subtotal: 0,
           service_fee: 0,
-          delivery_fee: 0
+          delivery_fee: 0,
         },
         applied_promotions: finalPayloadDiscounts.promotions_applied || [],
         subtotal: Total,
@@ -1749,10 +1846,14 @@ export default function CheckoutItems({
         .then(async (res) => {
           const data = await res.json();
           if (!res.ok) {
-            console.error("❌ Checkout error:", data.error || "Checkout failed");
+            console.error(
+              "❌ Checkout error:",
+              data.error || "Checkout failed"
+            );
             toaster.push(
               <Notification type="error" header="Checkout Failed">
-                {data.error || "There was an error processing your order. Please try again."}
+                {data.error ||
+                  "There was an error processing your order. Please try again."}
               </Notification>,
               { placement: "topEnd", duration: 5000 }
             );
@@ -1761,28 +1862,50 @@ export default function CheckoutItems({
             if (isFoodCart && restaurant) {
               clearRestaurant(restaurant.id);
               if (selectedPaymentMethod?.type === "momo" && data.order_id) {
-                console.log("🚀 [MoMo Checkout] Food order created, triggering MoMo payment:", data.order_id);
+                console.log(
+                  "🚀 [MoMo Checkout] Food order created, triggering MoMo payment:",
+                  data.order_id
+                );
                 handleMoMoPayment(data.order_id, finalGrandTotal);
               } else {
-                console.log("ℹ️ [MoMo Checkout] Food order — non-MoMo payment or missing order_id", { type: selectedPaymentMethod?.type, order_id: data.order_id });
+                console.log(
+                  "ℹ️ [MoMo Checkout] Food order — non-MoMo payment or missing order_id",
+                  { type: selectedPaymentMethod?.type, order_id: data.order_id }
+                );
                 toaster.push(
-                  <Notification type="success" header="Food Order Completed Successfully!">
-                    Your food order has been placed! You can view it in "Current Orders".
+                  <Notification
+                    type="success"
+                    header="Food Order Completed Successfully!"
+                  >
+                    Your food order has been placed! You can view it in "Current
+                    Orders".
                   </Notification>,
                   { placement: "topEnd", duration: 5000 }
                 );
               }
             } else {
               const isCombinedOrder = data.combined_order_id && data.orders;
-              const orderId = isCombinedOrder ? data.combined_order_id : data.order_id;
-              console.log("🛒 [MoMo Checkout] Order created:", { orderId, paymentType: selectedPaymentMethod?.type, isCombinedOrder });
+              const orderId = isCombinedOrder
+                ? data.combined_order_id
+                : data.order_id;
+              console.log("🛒 [MoMo Checkout] Order created:", {
+                orderId,
+                paymentType: selectedPaymentMethod?.type,
+                isCombinedOrder,
+              });
 
               if (selectedPaymentMethod?.type === "momo" && orderId) {
-                console.log("🚀 [MoMo Checkout] Triggering MoMo payment for order:", orderId);
+                console.log(
+                  "🚀 [MoMo Checkout] Triggering MoMo payment for order:",
+                  orderId
+                );
                 handleMoMoPayment(orderId, finalGrandTotal);
               } else {
                 toaster.push(
-                  <Notification type="success" header="Order Completed Successfully!">
+                  <Notification
+                    type="success"
+                    header="Order Completed Successfully!"
+                  >
                     {isCombinedOrder
                       ? `Your ${data.orders.length} combined orders have been placed successfully!`
                       : `Your order has been placed and is being prepared!`}
@@ -1793,11 +1916,17 @@ export default function CheckoutItems({
             }
 
             setTimeout(() => {
-              const detail = isFoodCart ? { refetch: true } : { shop_id: shopId, refetch: true };
+              const detail = isFoodCart
+                ? { refetch: true }
+                : { shop_id: shopId, refetch: true };
               window.dispatchEvent(new CustomEvent("cartChanged", { detail }));
               if (!isFoodCart && data.orders) {
                 data.orders.forEach((o: any) => {
-                  window.dispatchEvent(new CustomEvent("cartChanged", { detail: { shop_id: o.shop_id, refetch: true } }));
+                  window.dispatchEvent(
+                    new CustomEvent("cartChanged", {
+                      detail: { shop_id: o.shop_id, refetch: true },
+                    })
+                  );
                 });
               }
             }, 500);
@@ -1862,7 +1991,11 @@ export default function CheckoutItems({
       const method = savedPaymentMethods.find((m) => m.id === value);
       if (method) {
         setSelectedPaymentMethod({
-          type: method.method.toLowerCase().includes("momo") || method.method.toLowerCase().includes("mtn") ? "momo" : "card",
+          type:
+            method.method.toLowerCase().includes("momo") ||
+            method.method.toLowerCase().includes("mtn")
+              ? "momo"
+              : "card",
           id: method.id,
           number: method.number,
         });
@@ -1957,14 +2090,32 @@ export default function CheckoutItems({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          <rect
+            x="5"
+            y="2"
+            width="14"
+            height="20"
+            rx="2"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
             d="M15 2l4 4"
           />
-          <rect x="8" y="10" width="8" height="5" rx="1" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          <rect
+            x="8"
+            y="10"
+            width="8"
+            height="5"
+            rx="1"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       );
     }
@@ -2013,8 +2164,8 @@ export default function CheckoutItems({
         label: canUseWallet
           ? `Wallet (${formatCurrency(walletBalance)} available)`
           : `Wallet (${formatCurrency(
-            walletBalance
-          )} available - Insufficient)`,
+              walletBalance
+            )} available - Insufficient)`,
         value: "wallet",
       });
     }
@@ -2050,8 +2201,9 @@ export default function CheckoutItems({
   // Prepare address options for dropdown
   const getAddressOptions = () => {
     return savedAddresses.map((address) => ({
-      label: `${address.street}, ${address.city}${address.is_default ? " (Default)" : ""
-        }`,
+      label: `${address.street}, ${address.city}${
+        address.is_default ? " (Default)" : ""
+      }`,
       value: address.id,
     }));
   };
@@ -2119,19 +2271,19 @@ export default function CheckoutItems({
           {selectedPaymentMethod.type === "refund"
             ? "REFUND"
             : selectedPaymentMethod.type === "wallet"
-              ? "WALLET"
-              : selectedPaymentMethod.type === "momo"
-                ? "MOMO"
-                : "VISA"}
+            ? "WALLET"
+            : selectedPaymentMethod.type === "momo"
+            ? "MOMO"
+            : "VISA"}
         </div>
         <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
             : selectedPaymentMethod.type === "wallet"
-              ? `Wallet (${formatCurrency(walletBalance)} available)`
-              : selectedPaymentMethod.type === "momo"
-                ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
-                : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
+            ? `Wallet (${formatCurrency(walletBalance)} available)`
+            : selectedPaymentMethod.type === "momo"
+            ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
+            : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
         </span>
       </div>
     );
@@ -2168,8 +2320,9 @@ export default function CheckoutItems({
       {isCheckoutLoading && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div
-            className={`rounded-xl p-8 shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
+            className={`rounded-xl p-8 shadow-2xl ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
           >
             <div className="flex flex-col items-center space-y-4">
               {/* Spinner */}
@@ -2178,14 +2331,16 @@ export default function CheckoutItems({
               {/* Loading Text */}
               <div className="text-center">
                 <h3
-                  className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
+                  className={`text-lg font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
                 >
                   Processing Your Order
                 </h3>
                 <p
-                  className={`mt-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
+                  className={`mt-2 text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
                 >
                   Please wait while we process your checkout and refresh your
                   cart...
@@ -2222,16 +2377,19 @@ export default function CheckoutItems({
       )}
 
       <div
-        className={`fixed w-full transition-all duration-300 md:hidden ${theme === "dark" ? "bg-gray-900" : "bg-white"
-          } ${isExpanded
+        className={`fixed w-full transition-all duration-300 md:hidden ${
+          theme === "dark" ? "bg-gray-900" : "bg-white"
+        } ${
+          isExpanded
             ? "inset-0 z-[10000] mt-[5vh] flex h-[95vh] flex-col rounded-t-3xl shadow-2xl"
             : "bottom-20 left-0 right-0 z-[9998] rounded-t-3xl border-t-2 shadow-2xl"
-          } ${theme === "dark" && !isExpanded
+        } ${
+          theme === "dark" && !isExpanded
             ? "border-gray-700"
             : !isExpanded
-              ? "border-gray-200"
-              : ""
-          }`}
+            ? "border-gray-200"
+            : ""
+        }`}
         style={{
           maxHeight: isExpanded ? "95vh" : "auto",
           overflow: isExpanded ? "hidden" : "hidden",
@@ -2243,8 +2401,9 @@ export default function CheckoutItems({
       >
         {/* Header with toggle button */}
         <div
-          className={`px-4 ${isExpanded ? "border-b py-4" : "py-3"} ${theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
+          className={`px-4 ${isExpanded ? "border-b py-4" : "py-3"} ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
         >
           <div
             className="flex items-center justify-between"
@@ -2253,12 +2412,14 @@ export default function CheckoutItems({
             <div className="flex items-center gap-3">
               {isExpanded && (
                 <div
-                  className={`rounded-lg p-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                    }`}
+                  className={`rounded-lg p-2 ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                  }`}
                 >
                   <svg
-                    className={`h-6 w-6 ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                      }`}
+                    className={`h-6 w-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2274,16 +2435,19 @@ export default function CheckoutItems({
               )}
               <div>
                 <span
-                  className={`${isExpanded ? "text-xl" : "text-base"
-                    } font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
+                  className={`${
+                    isExpanded ? "text-xl" : "text-base"
+                  } font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
                 >
                   Order Summary
                 </span>
                 {isExpanded && (
                   <p
-                    className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
                   >
                     {grandTotalUnits} items
                     {selectedCartIds.size > 0 &&
@@ -2307,11 +2471,16 @@ export default function CheckoutItems({
             <div className="flex items-center gap-3">
               {!isExpanded && (
                 <span
-                  className={`text-lg font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"
-                    }`}
+                  className={`text-lg font-bold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
                 >
-                  {isPricingAvailable ? formatCurrency(finalTotal) : (
-                    <span className="text-xs animate-pulse opacity-70 italic font-normal">Syncing...</span>
+                  {isPricingAvailable ? (
+                    formatCurrency(finalTotal)
+                  ) : (
+                    <span className="animate-pulse text-xs font-normal italic opacity-70">
+                      Syncing...
+                    </span>
                   )}
                 </span>
               )}
@@ -2320,10 +2489,11 @@ export default function CheckoutItems({
                   e.stopPropagation();
                   toggleExpand();
                 }}
-                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${theme === "dark"
-                  ? "text-gray-300 hover:bg-gray-700"
-                  : "text-gray-600 hover:bg-gray-100"
-                  } ${isExpanded ? "active:scale-95" : ""}`}
+                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
+                  theme === "dark"
+                    ? "text-gray-300 hover:bg-gray-700"
+                    : "text-gray-600 hover:bg-gray-100"
+                } ${isExpanded ? "active:scale-95" : ""}`}
               >
                 {isExpanded ? (
                   <svg
@@ -2375,8 +2545,9 @@ export default function CheckoutItems({
 
         {/* Expanded content */}
         <div
-          className={`flex-1 ${isExpanded ? "flex flex-col" : "hidden"
-            } overflow-hidden`}
+          className={`flex-1 ${
+            isExpanded ? "flex flex-col" : "hidden"
+          } overflow-hidden`}
         >
           <div className="flex-1 overflow-y-auto p-4">
             {/* Combine button - Mobile (only show when expanded) */}
@@ -2409,40 +2580,92 @@ export default function CheckoutItems({
                     />
                   </svg>
                   {selectedCartIds.size > 0
-                    ? `${selectedCartIds.size} Cart${selectedCartIds.size !== 1 ? "s" : ""
-                    } Combined`
+                    ? `${selectedCartIds.size} Cart${
+                        selectedCartIds.size !== 1 ? "s" : ""
+                      } Combined`
                     : "Combine with Other Carts"}
                 </span>
               </Button>
             )}
 
             {discountsEnabled && (
-              <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+              <div
+                className={`mb-3 rounded-2xl p-4 ${
+                  theme === "dark"
+                    ? "bg-gray-800/70"
+                    : "border border-gray-100 bg-gray-50"
+                }`}
+              >
                 <div className="mb-2 flex items-center gap-2">
-                  <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-green-900/40 text-green-400" : "bg-green-100 text-green-600"}`}>
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  <div
+                    className={`rounded-lg p-1.5 ${
+                      theme === "dark"
+                        ? "bg-green-900/40 text-green-400"
+                        : "bg-green-100 text-green-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
                     </svg>
                   </div>
-                  <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Promo or Referral Code</span>
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Promo or Referral Code
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
-                    disabled={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive')}
-                    placeholder={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "Exclusive promo applied" : "Enter promo or referral code"}
-                    className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
-                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      } ${discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={discounts?.promotions_applied?.some(
+                      (p) => p.stacking_type === "exclusive"
+                    )}
+                    placeholder={
+                      discounts?.promotions_applied?.some(
+                        (p) => p.stacking_type === "exclusive"
+                      )
+                        ? "Exclusive promo applied"
+                        : "Enter promo or referral code"
+                    }
+                    className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    } ${
+                      discounts?.promotions_applied?.some(
+                        (p) => p.stacking_type === "exclusive"
+                      )
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
                   />
                   <Button
                     appearance="primary"
                     color="green"
-                    disabled={discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive')}
-                    className={`whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md ${discounts?.promotions_applied?.some(p => p.stacking_type === 'exclusive') ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={discounts?.promotions_applied?.some(
+                      (p) => p.stacking_type === "exclusive"
+                    )}
+                    className={`whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md ${
+                      discounts?.promotions_applied?.some(
+                        (p) => p.stacking_type === "exclusive"
+                      )
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
                     onClick={handleApplyCode}
                     loading={validatingCode}
                   >
@@ -2453,140 +2676,200 @@ export default function CheckoutItems({
             )}
 
             {/* Price Breakdown Card */}
-            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
               <div className="mb-3 flex items-center gap-2">
-                <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-blue-900/40 text-blue-400" : "bg-blue-100 text-blue-600"}`}>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <div
+                  className={`rounded-lg p-1.5 ${
+                    theme === "dark"
+                      ? "bg-blue-900/40 text-blue-400"
+                      : "bg-blue-100 text-blue-600"
+                  }`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
-                <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Price Breakdown</span>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Price Breakdown
+                </span>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between py-1">
                   <span
-                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                   >
                     Subtotal{" "}
                     {selectedCartIds.size > 0 &&
                       `(${selectedCartIds.size + 1} carts)`}
                   </span>
                   <span
-                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                   >
                     {formatCurrency(grandSubtotal)}
                   </span>
                 </div>
                 {/* Backend Promotions Breakdown */}
-                {discounts?.promotions_applied?.map((promo: any, idx: number) => (
-                  <div key={idx} className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                    <div className="flex items-center gap-1 text-sm">
-                      <span className="capitalize">{promo.name || promo.promotion_type?.replace(/_/g, " ")}</span>
-                      <span className={`text-[10px] uppercase font-bold px-1 rounded ${promo.funded_by === 'merchant' ? 'bg-orange-100 text-orange-600' :
-                        promo.funded_by === 'shared' ? 'bg-yellow-100 text-yellow-600' :
-                          'bg-green-100 text-green-600'
-                        }`}>
-                        {promo.funded_by || "Platform"}
-                      </span>
-                      {promo.influencer_code && (
-                        <span className="text-[10px] uppercase font-bold px-1 rounded bg-purple-100 text-purple-600">
-                          Influencer
+                {discounts?.promotions_applied?.map(
+                  (promo: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between py-1 text-green-600 dark:text-green-400"
+                    >
+                      <div className="flex items-center gap-1 text-sm">
+                        <span className="capitalize">
+                          {promo.name ||
+                            promo.promotion_type?.replace(/_/g, " ")}
                         </span>
-                      )}
+                        <span
+                          className={`rounded px-1 text-[10px] font-bold uppercase ${
+                            promo.funded_by === "merchant"
+                              ? "bg-orange-100 text-orange-600"
+                              : promo.funded_by === "shared"
+                              ? "bg-yellow-100 text-yellow-600"
+                              : "bg-green-100 text-green-600"
+                          }`}
+                        >
+                          {promo.funded_by || "Platform"}
+                        </span>
+                        {promo.influencer_code && (
+                          <span className="rounded bg-purple-100 px-1 text-[10px] font-bold uppercase text-purple-600">
+                            Influencer
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm font-medium">
+                        -
+                        {formatCurrency(
+                          parseFloat(promo.discount_applied || "0")
+                        )}
+                      </div>
                     </div>
-                    <div className="text-sm font-medium">
-                      -{formatCurrency(parseFloat(promo.discount_applied || "0"))}
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
 
                 {/* Rejected Promotions */}
-                {discounts?.rejected_promotions?.map((rej: any, idx: number) => (
-                  <div key={idx} className="flex justify-between py-1 text-red-500 opacity-70">
-                    <div className="flex items-center gap-1 text-sm italic">
-                      <span>{rej.code}</span>
-                      <span className="text-[10px] px-1 rounded border border-red-200">
-                        Rejected
-                      </span>
+                {discounts?.rejected_promotions?.map(
+                  (rej: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between py-1 text-red-500 opacity-70"
+                    >
+                      <div className="flex items-center gap-1 text-sm italic">
+                        <span>{rej.code}</span>
+                        <span className="rounded border border-red-200 px-1 text-[10px]">
+                          Rejected
+                        </span>
+                      </div>
+                      <div className="self-center text-[10px]">
+                        {rej.reason}
+                      </div>
                     </div>
-                    <div className="text-[10px] self-center">
-                      {rej.reason}
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
 
                 {discounts.free_delivery && (
                   <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                     <div className="flex items-center gap-1 text-sm">
                       <span>Free Delivery</span>
-                      <span className="text-[10px] uppercase font-bold px-1 rounded bg-blue-100 text-blue-600">
-                        {discounts?.promotions_applied?.[0]?.delivery_paid_by || "Platform"}
+                      <span className="rounded bg-blue-100 px-1 text-[10px] font-bold uppercase text-blue-600">
+                        {discounts?.promotions_applied?.[0]?.delivery_paid_by ||
+                          "Platform"}
                       </span>
                     </div>
-                    <div className="text-sm font-medium">
-                      Backend Applied
-                    </div>
+                    <div className="text-sm font-medium">Backend Applied</div>
                   </div>
                 )}
 
-                {discount > 0 && codeType === "promo" && !discounts?.promotions_applied?.length && (
-                  <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                    <span className="text-sm">Discount ({appliedCode})</span>
-                    <span className="text-sm font-medium">
-                      -{formatCurrency(discount)}
-                    </span>
-                  </div>
-                )}
-                {referralDiscount > 0 && codeType === "referral" && !discounts?.promotions_applied?.length && (
-                  <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                    <span className="text-sm">
-                      Referral Discount ({appliedCode})
-                    </span>
-                    <span className="text-sm font-medium">17% off</span>
-                  </div>
-                )}
+                {discount > 0 &&
+                  codeType === "promo" &&
+                  !discounts?.promotions_applied?.length && (
+                    <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                      <span className="text-sm">Discount ({appliedCode})</span>
+                      <span className="text-sm font-medium">
+                        -{formatCurrency(discount)}
+                      </span>
+                    </div>
+                  )}
+                {referralDiscount > 0 &&
+                  codeType === "referral" &&
+                  !discounts?.promotions_applied?.length && (
+                    <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                      <span className="text-sm">
+                        Referral Discount ({appliedCode})
+                      </span>
+                      <span className="text-sm font-medium">17% off</span>
+                    </div>
+                  )}
                 <div className="flex justify-between py-1">
                   <span
-                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                   >
                     Units
                   </span>
                   <span
-                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                   >
                     {grandTotalUnits}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span
-                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                   >
                     Service Fee
                   </span>
                   <span
-                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                   >
                     {formatCurrency(finalServiceFee)}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span
-                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                   >
                     Delivery Fee{" "}
                     {selectedCartIds.size > 0 &&
                       `(+${selectedCartIds.size} at 70%)`}
                   </span>
                   <span
-                    className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                   >
                     {formatCurrency(finalDeliveryFee)}
                   </span>
@@ -2594,21 +2877,27 @@ export default function CheckoutItems({
                 <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
                 <div className="flex justify-between py-1">
                   <span
-                    className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                    className={`text-lg font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                   >
                     Total
                   </span>
                   <span className="text-lg font-bold text-green-500 dark:text-green-400">
-                    {isPricingAvailable ? formatCurrency(finalTotal) : (
-                      <span className="text-xs animate-pulse opacity-70 italic font-normal">Syncing...</span>
+                    {isPricingAvailable ? (
+                      formatCurrency(finalTotal)
+                    ) : (
+                      <span className="animate-pulse text-xs font-normal italic opacity-70">
+                        Syncing...
+                      </span>
                     )}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span
-                    className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                   >
                     Delivery Time
                   </span>
@@ -2622,16 +2911,49 @@ export default function CheckoutItems({
             </div>
 
             {/* Delivery Address Card */}
-            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-orange-900/40 text-orange-400" : "bg-orange-100 text-orange-600"}`}>
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <div
+                    className={`rounded-lg p-1.5 ${
+                      theme === "dark"
+                        ? "bg-orange-900/40 text-orange-400"
+                        : "bg-orange-100 text-orange-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   </div>
-                  <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Delivery Address</span>
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Delivery Address
+                  </span>
                 </div>
               </div>
               <div className="relative">
@@ -2641,19 +2963,25 @@ export default function CheckoutItems({
                     setShowAddressDropdown(!showAddressDropdown);
                     setShowPaymentDropdown(false);
                   }}
-                  className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${selectedAddressId
-                    ? theme === "dark" ? "border-gray-600 bg-gray-700/50 text-white" : "border-gray-200 bg-white text-gray-900"
-                    : theme === "dark" ? "border-gray-600 bg-gray-800 text-gray-400" : "border-gray-200 bg-white text-gray-400"
-                    }`}
+                  className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
+                    selectedAddressId
+                      ? theme === "dark"
+                        ? "border-gray-600 bg-gray-700/50 text-white"
+                        : "border-gray-200 bg-white text-gray-900"
+                      : theme === "dark"
+                      ? "border-gray-600 bg-gray-800 text-gray-400"
+                      : "border-gray-200 bg-white text-gray-400"
+                  }`}
                 >
                   {selectedAddressId
                     ? getAddressOptions().find(
-                      (opt) => opt.value === selectedAddressId
-                    )?.label || "Select delivery address"
+                        (opt) => opt.value === selectedAddressId
+                      )?.label || "Select delivery address"
                     : "Select delivery address"}
                   <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${showAddressDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showAddressDropdown ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2672,7 +3000,13 @@ export default function CheckoutItems({
                       className="fixed inset-0 z-10"
                       onClick={() => setShowAddressDropdown(false)}
                     />
-                    <div className={`absolute z-20 mt-1 w-full rounded-xl border shadow-xl overflow-hidden ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-100 bg-white"}`}>
+                    <div
+                      className={`absolute z-20 mt-1 w-full overflow-hidden rounded-xl border shadow-xl ${
+                        theme === "dark"
+                          ? "border-gray-700 bg-gray-800"
+                          : "border-gray-100 bg-white"
+                      }`}
+                    >
                       {getAddressOptions().map((option) => (
                         <button
                           key={option.value}
@@ -2681,10 +3015,11 @@ export default function CheckoutItems({
                             handleAddressChange(option.value);
                             setShowAddressDropdown(false);
                           }}
-                          className={`w-full px-4 py-3 text-left text-sm transition-colors ${selectedAddressId === option.value
-                            ? "bg-green-50 text-green-700 font-semibold dark:bg-green-900/30 dark:text-green-300"
-                            : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                            }`}
+                          className={`w-full px-4 py-3 text-left text-sm transition-colors ${
+                            selectedAddressId === option.value
+                              ? "bg-green-50 font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
                         >
                           {option.label}
                         </button>
@@ -2696,22 +3031,51 @@ export default function CheckoutItems({
             </div>
 
             {/* Payment Method Card */}
-            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
               <div className="mb-3 flex items-center gap-2">
-                <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-purple-900/40 text-purple-400" : "bg-purple-100 text-purple-600"}`}>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <div
+                  className={`rounded-lg p-1.5 ${
+                    theme === "dark"
+                      ? "bg-purple-900/40 text-purple-400"
+                      : "bg-purple-100 text-purple-600"
+                  }`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
                   </svg>
                 </div>
-                <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Payment Method</span>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Payment Method
+                </span>
               </div>
 
               {/* For guest users, show only phone input */}
               {isGuest ? (
                 <div>
                   <p
-                    className={`mb-2 text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
+                    className={`mb-2 text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
                   >
                     Pay with MTN Mobile Money
                   </p>
@@ -2720,10 +3084,11 @@ export default function CheckoutItems({
                     placeholder="Enter phone number (e.g., 078XXXXXXX)"
                     value={oneTimePhoneNumber}
                     onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
-                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      }`}
+                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    }`}
                   />
                 </div>
               ) : (
@@ -2736,22 +3101,35 @@ export default function CheckoutItems({
                         setShowPaymentDropdown(!showPaymentDropdown);
                         setShowAddressDropdown(false);
                       }}
-                      className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${selectedPaymentValue
-                        ? theme === "dark" ? "border-gray-600 bg-gray-700/50 text-white" : "border-gray-200 bg-white text-gray-900"
-                        : theme === "dark" ? "border-gray-600 bg-gray-800 text-gray-400" : "border-gray-200 bg-white text-gray-400"
-                        }`}
+                      className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
+                        selectedPaymentValue
+                          ? theme === "dark"
+                            ? "border-gray-600 bg-gray-700/50 text-white"
+                            : "border-gray-200 bg-white text-gray-900"
+                          : theme === "dark"
+                          ? "border-gray-600 bg-gray-800 text-gray-400"
+                          : "border-gray-200 bg-white text-gray-400"
+                      }`}
                     >
                       <span className="flex items-center gap-2 pr-6">
-                        <span className="text-green-500 flex-shrink-0">
-                          {getPaymentMethodIcon(selectedPaymentValue, getPaymentMethodOptions().find(o => o.value === selectedPaymentValue)?.methodType)}
+                        <span className="flex-shrink-0 text-green-500">
+                          {getPaymentMethodIcon(
+                            selectedPaymentValue,
+                            getPaymentMethodOptions().find(
+                              (o) => o.value === selectedPaymentValue
+                            )?.methodType
+                          )}
                         </span>
                         {selectedPaymentValue
-                          ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label || "Select payment method"
+                          ? getPaymentMethodOptions().find(
+                              (opt) => opt.value === selectedPaymentValue
+                            )?.label || "Select payment method"
                           : "Select payment method"}
                       </span>
                       <svg
-                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${showPaymentDropdown ? "rotate-180" : ""
-                          }`}
+                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                          showPaymentDropdown ? "rotate-180" : ""
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -2770,7 +3148,13 @@ export default function CheckoutItems({
                           className="fixed inset-0 z-10"
                           onClick={() => setShowPaymentDropdown(false)}
                         />
-                        <div className={`absolute z-20 mt-1 w-full rounded-xl border shadow-xl overflow-hidden ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-100 bg-white"}`}>
+                        <div
+                          className={`absolute z-20 mt-1 w-full overflow-hidden rounded-xl border shadow-xl ${
+                            theme === "dark"
+                              ? "border-gray-700 bg-gray-800"
+                              : "border-gray-100 bg-white"
+                          }`}
+                        >
                           {getPaymentMethodOptions().map((option) => {
                             const isWalletInsufficient =
                               option.value === "wallet" &&
@@ -2786,20 +3170,40 @@ export default function CheckoutItems({
                                   }
                                 }}
                                 disabled={isWalletInsufficient}
-                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${isWalletInsufficient
-                                  ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                  : selectedPaymentValue === option.value
-                                    ? "bg-green-50 text-green-700 font-semibold dark:bg-green-900/30 dark:text-green-300"
+                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
+                                  isWalletInsufficient
+                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                    : selectedPaymentValue === option.value
+                                    ? "bg-green-50 font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300"
                                     : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                                  }`}
+                                }`}
                               >
-                                <span className={`flex-shrink-0 ${isWalletInsufficient ? "text-red-500" : selectedPaymentValue === option.value ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500"}`}>
-                                  {getPaymentMethodIcon(option.value, option.methodType)}
+                                <span
+                                  className={`flex-shrink-0 ${
+                                    isWalletInsufficient
+                                      ? "text-red-500"
+                                      : selectedPaymentValue === option.value
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-gray-400 dark:text-gray-500"
+                                  }`}
+                                >
+                                  {getPaymentMethodIcon(
+                                    option.value,
+                                    option.methodType
+                                  )}
                                 </span>
                                 <span className="flex-1">{option.label}</span>
                                 {selectedPaymentValue === option.value && (
-                                  <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  <svg
+                                    className="h-4 w-4 text-green-600 dark:text-green-400"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
                                   </svg>
                                 )}
                               </button>
@@ -2811,18 +3215,25 @@ export default function CheckoutItems({
                   </div>
                   {showOneTimePhoneInput && (
                     <div className="mt-2">
-                      <p className={`mb-1 text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                      <p
+                        className={`mb-1 text-xs font-medium ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         Enter your MTN Mobile Money number
                       </p>
                       <input
                         type="tel"
                         placeholder="e.g. 078XXXXXXX"
                         value={oneTimePhoneNumber}
-                        onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                        className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
-                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                          }`}
+                        onChange={(e) =>
+                          handleOneTimePhoneChange(e.target.value)
+                        }
+                        className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                          theme === "dark"
+                            ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                            : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        }`}
                       />
                     </div>
                   )}
@@ -2831,14 +3242,42 @@ export default function CheckoutItems({
             </div>
 
             {/* Delivery Notes Card */}
-            <div className={`mb-3 rounded-2xl p-4 ${theme === "dark" ? "bg-gray-800/70" : "bg-gray-50 border border-gray-100"}`}>
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
               <div className="mb-3 flex items-center gap-2">
-                <div className={`rounded-lg p-1.5 ${theme === "dark" ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-600"}`}>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <div
+                  className={`rounded-lg p-1.5 ${
+                    theme === "dark"
+                      ? "bg-gray-700 text-gray-400"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                 </div>
-                <span className={`text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Add a Note</span>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Add a Note
+                </span>
               </div>
               <textarea
                 rows={3}
@@ -2846,16 +3285,23 @@ export default function CheckoutItems({
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
-                className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${theme === "dark"
-                  ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                  : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                  }`}
+                className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                  theme === "dark"
+                    ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                }`}
               />
             </div>
           </div>
 
           {/* Place Order Button - Fixed at bottom */}
-          <div className={`border-t p-4 ${theme === "dark" ? "border-gray-700 bg-gray-900" : "border-gray-100 bg-white"}`}>
+          <div
+            className={`border-t p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-900"
+                : "border-gray-100 bg-white"
+            }`}
+          >
             <Button
               appearance="primary"
               color="green"
@@ -2868,36 +3314,49 @@ export default function CheckoutItems({
             >
               Place Order Now
             </Button>
-            <p className="mt-2 text-center text-[10px] text-gray-400">Secure Payments · Guaranteed Delivery</p>
+            <p className="mt-2 text-center text-[10px] text-gray-400">
+              Secure Payments · Guaranteed Delivery
+            </p>
           </div>
         </div>
       </div>
 
       {/* Desktop View - Premium Floating Bottom Card */}
       <div
-        className={`fixed left-0 right-0 z-[9998] hidden transition-all duration-500 ease-in-out md:block md:left-16 ${isExpanded
-          ? "bottom-0 h-[75vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
-          : "bottom-0 h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]"
-          } ${theme === "dark"
-            ? "bg-gray-900/95 border-t border-gray-800"
-            : "bg-white/95 border-t border-gray-200"
-          } backdrop-blur-xl`}
+        className={`fixed left-0 right-0 z-[9998] hidden transition-all duration-500 ease-in-out md:left-16 md:block ${
+          isExpanded
+            ? "bottom-0 h-[75vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
+            : "bottom-0 h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]"
+        } ${
+          theme === "dark"
+            ? "border-t border-gray-800 bg-gray-900/95"
+            : "border-t border-gray-200 bg-white/95"
+        } backdrop-blur-xl`}
       >
         <div className="mx-auto h-full max-w-7xl px-8">
           {/* Collapsed Bar Content */}
           <div
-            className={`flex h-24 items-center justify-between transition-opacity duration-300 ${isExpanded ? "opacity-0 pointer-events-none absolute" : "opacity-100"
-              }`}
+            className={`flex h-24 items-center justify-between transition-opacity duration-300 ${
+              isExpanded
+                ? "pointer-events-none absolute opacity-0"
+                : "opacity-100"
+            }`}
           >
             <div className="flex items-center gap-8">
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Order Summary
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}>
+                  <span
+                    className={`text-2xl font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {grandTotalUnits} Items
                   </span>
                   {selectedCartIds.size > 0 && (
@@ -2908,50 +3367,98 @@ export default function CheckoutItems({
                 </div>
               </div>
 
-              <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
+              <div
+                className={`h-10 w-px ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
 
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Total Payable
                 </span>
-                <span className={`text-2xl font-black ${theme === "dark" ? "text-green-400" : "text-green-600"
-                  }`}>
-                  {isPricingAvailable ? formatCurrency(finalTotal) : (
-                    <span className="text-sm animate-pulse opacity-70 italic font-normal">Syncing pricing...</span>
+                <span
+                  className={`text-2xl font-black ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {isPricingAvailable ? (
+                    formatCurrency(finalTotal)
+                  ) : (
+                    <span className="animate-pulse text-sm font-normal italic opacity-70">
+                      Syncing pricing...
+                    </span>
                   )}
                 </span>
               </div>
 
-              <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
+              <div
+                className={`h-10 w-px ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
 
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Payment Method
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className={`flex h-5 w-5 items-center justify-center rounded-full ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-                    }`}>
+                  <div
+                    className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                      theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                    }`}
+                  >
                     {getPaymentMethodIcon(selectedPaymentValue)}
                   </div>
-                  <span className={`text-sm font-bold truncate max-w-[130px] ${theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}>
-                    {getPaymentMethodOptions().find(opt => opt.value === selectedPaymentValue)?.label.split('(')[0].trim() || "Select Method"}
+                  <span
+                    className={`max-w-[130px] truncate text-sm font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {getPaymentMethodOptions()
+                      .find((opt) => opt.value === selectedPaymentValue)
+                      ?.label.split("(")[0]
+                      .trim() || "Select Method"}
                   </span>
                 </div>
               </div>
 
-              <div className={`h-10 w-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`} />
+              <div
+                className={`h-10 w-px ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
 
               <div className="flex flex-col">
-                <span className={`text-xs font-medium uppercase tracking-wider ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Est. Delivery
                 </span>
                 <div className="flex items-center gap-2 text-sm font-bold">
-                  <span className={theme === "dark" ? "text-white" : "text-gray-900"}>
-                    {deliveryTime ? (deliveryTime.includes('(') ? deliveryTime.split('(')[0].replace('Will be delivered in ', '').trim() : deliveryTime) : "30-45 mins"}
+                  <span
+                    className={
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }
+                  >
+                    {deliveryTime
+                      ? deliveryTime.includes("(")
+                        ? deliveryTime
+                            .split("(")[0]
+                            .replace("Will be delivered in ", "")
+                            .trim()
+                        : deliveryTime
+                      : "30-45 mins"}
                   </span>
                 </div>
               </div>
@@ -2960,19 +3467,27 @@ export default function CheckoutItems({
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleExpand}
-                className={`group flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${theme === "dark"
-                  ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                className={`group flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
               >
                 <span>View Details</span>
                 <svg
-                  className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
+                  className={`h-4 w-4 transition-transform duration-300 ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
                 </svg>
               </button>
 
@@ -2992,10 +3507,14 @@ export default function CheckoutItems({
 
           {/* Expanded Content */}
           {isExpanded && (
-            <div className="flex h-full flex-col py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex h-full flex-col py-8 duration-500 animate-in fade-in slide-in-from-bottom-4">
               <div className="mb-6 flex items-center justify-between border-b pb-4 dark:border-gray-800">
                 <div className="flex items-center gap-4">
-                  <h2 className={`text-3xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h2
+                    className={`text-3xl font-black ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Checkout Details
                   </h2>
                   <div className="flex items-center gap-2">
@@ -3011,36 +3530,77 @@ export default function CheckoutItems({
                 </div>
                 <button
                   onClick={toggleExpand}
-                  className={`rounded-full p-2 transition-colors ${theme === "dark" ? "hover:bg-gray-800 text-gray-400" : "hover:bg-gray-100 text-gray-500"
-                    }`}
+                  className={`rounded-full p-2 transition-colors ${
+                    theme === "dark"
+                      ? "text-gray-400 hover:bg-gray-800"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
                 >
-                  <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
               </div>
 
               <div className="flex flex-1 gap-12 overflow-hidden">
                 {/* Left Side: Summary & Items */}
-                <div className="flex flex-1 flex-col overflow-y-auto pr-4 scrollbar-hide">
+                <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto pr-4">
                   <div className="space-y-6">
                     {/* Combine Carts Action */}
                     {!loadingCarts && availableCarts.length > 0 && (
-                      <div className={`rounded-2xl border-2 border-dashed p-6 transition-colors ${theme === "dark" ? "border-gray-800 bg-gray-800/50" : "border-gray-200 bg-gray-50"
-                        }`}>
+                      <div
+                        className={`rounded-2xl border-2 border-dashed p-6 transition-colors ${
+                          theme === "dark"
+                            ? "border-gray-800 bg-gray-800/50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="rounded-xl bg-blue-500/10 p-3 text-blue-500">
-                              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              <svg
+                                className="h-6 w-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
                               </svg>
                             </div>
                             <div>
-                              <h4 className={`font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                              <h4
+                                className={`font-bold ${
+                                  theme === "dark"
+                                    ? "text-white"
+                                    : "text-gray-900"
+                                }`}
+                              >
                                 Multiple Carts Available
                               </h4>
-                              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                                Combine multiple shop orders to save on delivery fees
+                              <p
+                                className={`text-sm ${
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                Combine multiple shop orders to save on delivery
+                                fees
                               </p>
                             </div>
                           </div>
@@ -3057,48 +3617,134 @@ export default function CheckoutItems({
                     )}
 
                     {/* Price Breakdown */}
-                    <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}`}>
-                      <h4 className={`mb-4 font-bold uppercase tracking-widest text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                    <div
+                      className={`rounded-2xl p-6 ${
+                        theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                      }`}
+                    >
+                      <h4
+                        className={`mb-4 text-xs font-bold uppercase tracking-widest ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         Financial Summary
                       </h4>
                       <div className="space-y-4">
                         <div className="flex justify-between">
-                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Subtotal</span>
-                          <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                          <span
+                            className={
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }
+                          >
+                            Subtotal
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
                             {formatCurrency(grandSubtotal)}
                           </span>
                         </div>
 
                         {/* Promotions */}
-                        {discounts?.promotions_applied?.map((promo: any, idx: number) => (
-                          <div key={idx} className="flex justify-between items-center text-green-500">
-                            <div className="flex items-center gap-2">
-                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                              </svg>
-                              <span className="text-sm font-medium">{promo.name || "Promo Discount"}</span>
+                        {discounts?.promotions_applied?.map(
+                          (promo: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-green-500"
+                            >
+                              <div className="flex items-center gap-2">
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  {promo.name || "Promo Discount"}
+                                </span>
+                              </div>
+                              <span className="font-bold">
+                                -
+                                {formatCurrency(
+                                  parseFloat(promo.discount_applied || "0")
+                                )}
+                              </span>
                             </div>
-                            <span className="font-bold">-{formatCurrency(parseFloat(promo.discount_applied || "0"))}</span>
-                          </div>
-                        ))}
+                          )
+                        )}
 
                         <div className="flex justify-between">
-                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Service Fee</span>
-                          <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                          <span
+                            className={
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }
+                          >
+                            Service Fee
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
                             {formatCurrency(finalServiceFee)}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Delivery Fee</span>
-                          <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                          <span
+                            className={
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }
+                          >
+                            Delivery Fee
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
                             {formatCurrency(finalDeliveryFee)}
                           </span>
                         </div>
 
-                        <div className={`mt-4 border-t pt-4 flex justify-between items-center ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
-                          <span className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Total</span>
-                          <span className={`text-2xl font-black ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
-                            {isPricingAvailable ? formatCurrency(finalTotal) : "Calculating..."}
+                        <div
+                          className={`mt-4 flex items-center justify-between border-t pt-4 ${
+                            theme === "dark"
+                              ? "border-gray-700"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`text-xl font-black ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            Total
+                          </span>
+                          <span
+                            className={`text-2xl font-black ${
+                              theme === "dark"
+                                ? "text-green-400"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {isPricingAvailable
+                              ? formatCurrency(finalTotal)
+                              : "Calculating..."}
                           </span>
                         </div>
                       </div>
@@ -3106,18 +3752,25 @@ export default function CheckoutItems({
 
                     {/* Promo Code Input */}
                     {discountsEnabled && (
-                      <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}`}>
-                        <h4 className="mb-3 font-bold text-sm">Have a Promo Code?</h4>
+                      <div
+                        className={`rounded-2xl p-6 ${
+                          theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                        }`}
+                      >
+                        <h4 className="mb-3 text-sm font-bold">
+                          Have a Promo Code?
+                        </h4>
                         <div className="flex gap-3">
                           <input
                             type="text"
                             value={discountCode}
                             onChange={(e) => setDiscountCode(e.target.value)}
                             placeholder="Enter code here"
-                            className={`flex-1 rounded-xl border px-4 py-3 transition-all ${theme === "dark"
-                              ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
-                              : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
-                              }`}
+                            className={`flex-1 rounded-xl border px-4 py-3 transition-all ${
+                              theme === "dark"
+                                ? "border-gray-700 bg-gray-900 text-white focus:border-green-500"
+                                : "border-gray-200 bg-white text-gray-900 focus:border-green-500"
+                            }`}
                           />
                           <Button
                             appearance="primary"
@@ -3135,9 +3788,13 @@ export default function CheckoutItems({
                 </div>
 
                 {/* Right Side: Delivery & Payment */}
-                <div className="w-[400px] flex flex-col gap-6 overflow-y-auto pr-1 scrollbar-hide">
+                <div className="scrollbar-hide flex w-[400px] flex-col gap-6 overflow-y-auto pr-1">
                   {/* Delivery Address */}
-                  <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"}`}>
+                  <div
+                    className={`rounded-2xl p-6 ${
+                      theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"
+                    }`}
+                  >
                     <div className="mb-4 flex items-center justify-between">
                       <h4 className="font-bold">Delivery Address</h4>
                       <button
@@ -3149,18 +3806,39 @@ export default function CheckoutItems({
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="rounded-xl bg-orange-500/10 p-3 text-orange-500">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="h-6 w-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className={`line-clamp-2 text-sm font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                        <p
+                          className={`line-clamp-2 text-sm font-medium ${
+                            theme === "dark" ? "text-gray-200" : "text-gray-700"
+                          }`}
+                        >
                           {selectedAddressId
-                            ? getAddressOptions().find(opt => opt.value === selectedAddressId)?.label || "Select an address"
+                            ? getAddressOptions().find(
+                                (opt) => opt.value === selectedAddressId
+                              )?.label || "Select an address"
                             : "No address selected"}
                         </p>
-                        <p className="mt-1 text-xs text-green-500 font-bold">
+                        <p className="mt-1 text-xs font-bold text-green-500">
                           Estimated Delivery: {deliveryTime}
                         </p>
                       </div>
@@ -3168,33 +3846,56 @@ export default function CheckoutItems({
                   </div>
 
                   {/* Payment Method */}
-                  <div className={`rounded-2xl p-6 ${theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"}`}>
+                  <div
+                    className={`rounded-2xl p-6 ${
+                      theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"
+                    }`}
+                  >
                     <h4 className="mb-4 font-bold">Payment Method</h4>
                     <div className="relative">
                       <button
-                        onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
-                        className={`group flex w-full items-center justify-between rounded-xl border-2 p-4 transition-all ${theme === "dark"
-                          ? "bg-gray-900 border-gray-700 hover:border-green-500"
-                          : "bg-white border-gray-200 hover:border-green-500"
-                          }`}
+                        onClick={() =>
+                          setShowPaymentDropdown(!showPaymentDropdown)
+                        }
+                        className={`group flex w-full items-center justify-between rounded-xl border-2 p-4 transition-all ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-900 hover:border-green-500"
+                            : "border-gray-200 bg-white hover:border-green-500"
+                        }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className="text-green-500">
                             {getPaymentMethodIcon(selectedPaymentValue)}
                           </div>
                           <span className="font-bold">
-                            {getPaymentMethodOptions().find(opt => opt.value === selectedPaymentValue)?.label || "Select Payment"}
+                            {getPaymentMethodOptions().find(
+                              (opt) => opt.value === selectedPaymentValue
+                            )?.label || "Select Payment"}
                           </span>
                         </div>
-                        <svg className={`h-5 w-5 transition-transform ${showPaymentDropdown ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <svg
+                          className={`h-5 w-5 transition-transform ${
+                            showPaymentDropdown ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         </svg>
                       </button>
 
                       {showPaymentDropdown && (
-                        <div className="absolute bottom-full z-10 mb-2 w-full rounded-2xl border bg-white p-2 shadow-2xl dark:bg-gray-800 dark:border-gray-700 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute bottom-full z-10 mb-2 w-full rounded-2xl border bg-white p-2 shadow-2xl duration-200 animate-in fade-in zoom-in-95 dark:border-gray-700 dark:bg-gray-800">
                           {getPaymentMethodOptions().map((option) => {
-                            const isWalletInsufficient = option.value === "wallet" && walletBalance < finalTotal;
+                            const isWalletInsufficient =
+                              option.value === "wallet" &&
+                              walletBalance < finalTotal;
                             return (
                               <button
                                 key={option.value}
@@ -3203,11 +3904,18 @@ export default function CheckoutItems({
                                   handlePaymentMethodChange(option.value);
                                   setShowPaymentDropdown(false);
                                 }}
-                                className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${isWalletInsufficient ? "opacity-40 grayscale cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                                  }`}
+                                className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
+                                  isWalletInsufficient
+                                    ? "cursor-not-allowed opacity-40 grayscale"
+                                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                }`}
                               >
-                                <span className="text-green-500">{getPaymentMethodIcon(option.value)}</span>
-                                <span className="font-medium">{option.label}</span>
+                                <span className="text-green-500">
+                                  {getPaymentMethodIcon(option.value)}
+                                </span>
+                                <span className="font-medium">
+                                  {option.label}
+                                </span>
                               </button>
                             );
                           })}
@@ -3217,18 +3925,27 @@ export default function CheckoutItems({
                       {/* Phone number input when "Use Another Number" is selected */}
                       {showOneTimePhoneInput && (
                         <div className="mt-3">
-                          <p className={`mb-1 text-xs font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                          <p
+                            className={`mb-1 text-xs font-medium ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
                             Enter your MTN Mobile Money number
                           </p>
                           <input
                             type="tel"
                             placeholder="e.g. 078XXXXXXX"
                             value={oneTimePhoneNumber}
-                            onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                            className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 ${theme === "dark"
-                              ? "border-gray-700 bg-gray-900 text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500/20"
-                              : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                              }`}
+                            onChange={(e) =>
+                              handleOneTimePhoneChange(e.target.value)
+                            }
+                            className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 ${
+                              theme === "dark"
+                                ? "border-gray-700 bg-gray-900 text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500/20"
+                                : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                            }`}
                           />
                         </div>
                       )}
@@ -3239,7 +3956,11 @@ export default function CheckoutItems({
                   <div className="mt-auto">
                     {/* Delivery Note */}
                     <div className="mb-6">
-                      <h4 className={`mb-2 text-sm font-bold ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                      <h4
+                        className={`mb-2 text-sm font-bold ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         Add a Note
                       </h4>
                       <textarea
@@ -3247,10 +3968,11 @@ export default function CheckoutItems({
                         value={deliveryNotes}
                         onChange={(e) => setDeliveryNotes(e.target.value)}
                         placeholder="Delivery instructions (e.g. Leave at door)"
-                        className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-green-500/20 ${theme === "dark"
-                          ? "bg-gray-900 border-gray-700 text-white focus:border-green-500"
-                          : "bg-white border-gray-200 text-gray-900 focus:border-green-500"
-                          }`}
+                        className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-green-500/20 ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-900 text-white focus:border-green-500"
+                            : "border-gray-200 bg-white text-gray-900 focus:border-green-500"
+                        }`}
                       />
                     </div>
 
@@ -3316,7 +4038,14 @@ export default function CheckoutItems({
       />
 
       {processingStep !== "idle" && (
-        <PaymentProcessingOverlay processingStep={processingStep as "initiating_payment" | "awaiting_approval" | "success"} />
+        <PaymentProcessingOverlay
+          processingStep={
+            processingStep as
+              | "initiating_payment"
+              | "awaiting_approval"
+              | "success"
+          }
+        />
       )}
     </>
   );

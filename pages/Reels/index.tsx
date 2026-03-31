@@ -343,7 +343,9 @@ const formatTimestamp = (timestamp: string): string => {
   try {
     const now = new Date();
     const commentTime = new Date(timestamp);
-    const diffInSeconds = Math.floor((now.getTime() - commentTime.getTime()) / 1000);
+    const diffInSeconds = Math.floor(
+      (now.getTime() - commentTime.getTime()) / 1000
+    );
 
     if (diffInSeconds < 60) return "Just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
@@ -380,7 +382,7 @@ const extractStringValue = (value: any): string | null => {
         const trimmed = str.trim();
         return trimmed.length > 0 ? trimmed : null;
       }
-    } catch (e) { }
+    } catch (e) {}
     const keys = Object.keys(value);
     for (const key of keys) {
       if (typeof value[key] === "string") {
@@ -399,7 +401,7 @@ const convertDBCommentToComment = (comment: any): Comment => ({
     name: comment.User?.name || "Plas Reel Agent",
     avatar:
       comment.User?.profile_picture &&
-        isValidMediaUrl(comment.User.profile_picture)
+      isValidMediaUrl(comment.User.profile_picture)
         ? comment.User.profile_picture
         : "/placeholder.svg?height=32&width=32",
     verified:
@@ -418,11 +420,13 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
   // console.log(`[Reels Sync] Converting DB Reel ${dbReel.id} | isLiked: ${dbReel.isLiked}`);
   const userHasLiked = dbReel.isLiked || false;
 
-  const commentsList: Comment[] = (dbReel.Reels_comments || []).map(
-    (comment) => convertDBCommentToComment(comment)
+  const commentsList: Comment[] = (dbReel.Reels_comments || []).map((comment) =>
+    convertDBCommentToComment(comment)
   );
 
-  let shopLat = 0, shopLng = 0, shopAlt = 0;
+  let shopLat = 0,
+    shopLng = 0,
+    shopAlt = 0;
   if (dbReel.Restaurant) {
     shopLat = dbReel.Restaurant.lat || 0;
     shopLng = dbReel.Restaurant.long || 0;
@@ -444,15 +448,18 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
     creator: {
       name: creatorName,
       avatar:
-        dbReel.User?.profile_picture && isValidMediaUrl(dbReel.User.profile_picture)
+        dbReel.User?.profile_picture &&
+        isValidMediaUrl(dbReel.User.profile_picture)
           ? dbReel.User.profile_picture
-          : dbReel.business_account?.face_image && isValidMediaUrl(dbReel.business_account.face_image)
-            ? dbReel.business_account.face_image
-            : dbReel.Restaurant?.profile && isValidMediaUrl(dbReel.Restaurant.profile)
-              ? dbReel.Restaurant.profile
-              : dbReel.Shops?.image && isValidMediaUrl(dbReel.Shops.image)
-                ? dbReel.Shops.image
-                : "/placeholder.svg?height=40&width=40",
+          : dbReel.business_account?.face_image &&
+            isValidMediaUrl(dbReel.business_account.face_image)
+          ? dbReel.business_account.face_image
+          : dbReel.Restaurant?.profile &&
+            isValidMediaUrl(dbReel.Restaurant.profile)
+          ? dbReel.Restaurant.profile
+          : dbReel.Shops?.image && isValidMediaUrl(dbReel.Shops.image)
+          ? dbReel.Shops.image
+          : "/placeholder.svg?height=40&width=40",
       verified:
         dbReel.User?.role === "admin" ||
         dbReel.User?.role === "verified" ||
@@ -463,11 +470,17 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
       title: dbReel.title,
       description: dbReel.description,
       video: dbReel.video_url,
-      thumbnail: dbReel.Product?.image || dbReel.Product?.thumbnail || dbReel.Product?.img || null,
+      thumbnail:
+        dbReel.Product?.image ||
+        dbReel.Product?.thumbnail ||
+        dbReel.Product?.img ||
+        null,
       category: dbReel.category,
     },
     stats: {
-      likes: dbReel.reel_likes_aggregate?.aggregate?.count || parseInt(dbReel.likes || "0"),
+      likes:
+        dbReel.reel_likes_aggregate?.aggregate?.count ||
+        parseInt(dbReel.likes || "0"),
       comments: (dbReel.Reels_comments || []).length,
     },
     isLiked: userHasLiked,
@@ -475,14 +488,18 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
     shop_id: dbReel.shop_id || null,
     restaurant_id: dbReel.restaurant_id || null,
     created_on: dbReel.created_on,
-    shopLat, shopLng, shopAlt,
+    shopLat,
+    shopLng,
+    shopAlt,
   };
 
   switch (dbReel.type) {
     case "restaurant":
       let restaurantLocation = extractStringValue(dbReel.Restaurant?.location);
       if (!restaurantLocation && dbReel.Shops) {
-        restaurantLocation = extractStringValue(dbReel.Shops.address) || extractStringValue(dbReel.Shops.name);
+        restaurantLocation =
+          extractStringValue(dbReel.Shops.address) ||
+          extractStringValue(dbReel.Shops.name);
       }
       return {
         ...basePost,
@@ -500,9 +517,14 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
     case "shop":
     case "store":
       const product = dbReel.Product || {};
-      let storeName = dbReel.Shops ? (extractStringValue(dbReel.Shops.name) || extractStringValue(dbReel.Shops.address)) : null;
+      let storeName = dbReel.Shops
+        ? extractStringValue(dbReel.Shops.name) ||
+          extractStringValue(dbReel.Shops.address)
+        : null;
       if (!storeName && product) {
-        storeName = extractStringValue(product.store) || extractStringValue(product.storeName);
+        storeName =
+          extractStringValue(product.store) ||
+          extractStringValue(product.storeName);
       }
       return {
         ...basePost,
@@ -537,7 +559,9 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
         type: "business",
         business: {
           name: dbReel.business_account?.business_name || "Business",
-          location: dbReel.business_account?.business_location || "Location unavailable",
+          location:
+            dbReel.business_account?.business_location ||
+            "Location unavailable",
           email: dbReel.business_account?.business_email || "",
           phone: dbReel.business_account?.business_phone || "",
         },
@@ -650,13 +674,20 @@ interface CachedReels {
   version: string;
 }
 
-export default function FoodReelsApp({ initialReels = [], initialUserPreferences = {} }: { initialReels?: any[], initialUserPreferences?: any }) {
-
+export default function FoodReelsApp({
+  initialReels = [],
+  initialUserPreferences = {},
+}: {
+  initialReels?: any[];
+  initialUserPreferences?: any;
+}) {
   const { theme } = useTheme();
   const { data: session, status: sessionStatus } = useSession();
   const [posts, setPosts] = useState<FoodPost[]>(() => {
     if (initialReels && initialReels.length > 0) {
-      return initialReels.map((reel: any) => convertDatabaseReelToFoodPost(reel));
+      return initialReels.map((reel: any) =>
+        convertDatabaseReelToFoodPost(reel)
+      );
     }
     return [];
   });
@@ -667,7 +698,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [isRefreshingComments, setIsRefreshingComments] = useState(false);
   const [visiblePostIndex, setVisiblePostIndex] = useState(0);
-  
+
   // Use robust hook for mobile detection
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -692,7 +723,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   const refetchReelData = async (postId: string) => {
     try {
       // Use timestamp for cache-busting to ensure we always get fresh data from server
-      const response = await fetch(`/api/queries/reels?id=${postId}&_t=${Date.now()}`);
+      const response = await fetch(
+        `/api/queries/reels?id=${postId}&_t=${Date.now()}`
+      );
       if (!response.ok) throw new Error("Failed to fetch reel data");
 
       const data = await response.json();
@@ -702,7 +735,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
       if (mountedRef.current) {
         setPosts((prevPosts: FoodPost[]) => {
-          const matchingPost = prevPosts.find(p => p.id === postId);
+          const matchingPost = prevPosts.find((p) => p.id === postId);
           if (!matchingPost) {
           }
 
@@ -711,10 +744,14 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
               const isProcessing = processingLikesRef.current.has(postId);
               const lastTarget = lastLikedTargetRef.current.get(postId);
 
-              const finalIsLiked = lastTarget !== undefined ? lastTarget : updatedReel.isLiked;
-              const finalLikes = lastTarget !== undefined
-                ? (lastTarget ? Math.max(post.stats.likes, updatedReel.stats.likes) : Math.min(post.stats.likes, updatedReel.stats.likes))
-                : updatedReel.stats.likes;
+              const finalIsLiked =
+                lastTarget !== undefined ? lastTarget : updatedReel.isLiked;
+              const finalLikes =
+                lastTarget !== undefined
+                  ? lastTarget
+                    ? Math.max(post.stats.likes, updatedReel.stats.likes)
+                    : Math.min(post.stats.likes, updatedReel.stats.likes)
+                  : updatedReel.stats.likes;
 
               return {
                 ...updatedReel,
@@ -722,8 +759,8 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
                 isProcessingLike: isProcessing || post.isProcessingLike,
                 stats: {
                   ...updatedReel.stats,
-                  likes: finalLikes
-                }
+                  likes: finalLikes,
+                },
               };
             }
             return post;
@@ -731,7 +768,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
           return newPosts;
         });
         // Force a re-render tick just in case React's reconciliation is stuck
-        setRenderTick(t => t + 1);
+        setRenderTick((t) => t + 1);
       }
     } catch (error) {
       console.error(`Error refetching reel data for ${postId}:`, error);
@@ -751,7 +788,10 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   }, []);
 
   // State reconciliation: merged server data with local optimistic state
-  const reconcileReelWithLocalState = (newPost: FoodPost, prevPosts: FoodPost[]): FoodPost => {
+  const reconcileReelWithLocalState = (
+    newPost: FoodPost,
+    prevPosts: FoodPost[]
+  ): FoodPost => {
     const existingPost = prevPosts.find((p) => p.id === newPost.id);
     if (!existingPost) return newPost;
 
@@ -770,11 +810,14 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       stats: {
         ...newPost.stats,
         // If we have an active click, use our predicted count until server definitely syncs
-        likes: lastTarget !== undefined
-          ? (lastTarget ? Math.max(existingPost.stats.likes, newPost.stats.likes) : Math.min(existingPost.stats.likes, newPost.stats.likes))
-          : newPost.stats.likes,
-        comments: Math.max(newPost.stats.comments, existingPost.stats.comments)
-      }
+        likes:
+          lastTarget !== undefined
+            ? lastTarget
+              ? Math.max(existingPost.stats.likes, newPost.stats.likes)
+              : Math.min(existingPost.stats.likes, newPost.stats.likes)
+            : newPost.stats.likes,
+        comments: Math.max(newPost.stats.comments, existingPost.stats.comments),
+      },
     };
   };
 
@@ -784,11 +827,11 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       if (!isBackgroundRefresh && mountedRef.current) {
         setLoading(true);
         setError(null);
-        
+
         // Safety timeout to prevent stuck loading
         setTimeout(() => {
           if (mountedRef.current) {
-            setLoading(prev => {
+            setLoading((prev) => {
               return false;
             });
           }
@@ -800,10 +843,15 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       if (!response.ok) throw new Error("Failed to fetch reels");
 
       const data = await response.json();
-      const convertedPosts = data.reels.map((reel: DatabaseReel) => convertDatabaseReelToFoodPost(reel));
+      const convertedPosts = data.reels.map((reel: DatabaseReel) =>
+        convertDatabaseReelToFoodPost(reel)
+      );
 
       let userPreferences: Map<string, number> | undefined;
-      if (data.userPreferences && Object.keys(data.userPreferences).length > 0) {
+      if (
+        data.userPreferences &&
+        Object.keys(data.userPreferences).length > 0
+      ) {
         userPreferences = new Map(Object.entries(data.userPreferences));
       } else {
         userPreferences = calculateUserPreferences(convertedPosts);
@@ -816,7 +864,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
       if (mountedRef.current) {
         setPosts((prevPosts: FoodPost[]) => {
-          return randomizedPosts.map((newPost: FoodPost) => reconcileReelWithLocalState(newPost, prevPosts));
+          return randomizedPosts.map((newPost: FoodPost) =>
+            reconcileReelWithLocalState(newPost, prevPosts)
+          );
         });
       }
     } catch (err) {
@@ -834,11 +884,13 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
   // Initial fetch (if not already loaded via SSR)
   useEffect(() => {
-    
-    // If we have posts from SSR, we might still want to re-run 
+    // If we have posts from SSR, we might still want to re-run
     // to get personalized likes if the session just loaded
-    if (mountedRef.current && (posts.length === 0 || sessionStatus === "authenticated")) {
-       fetchReelsFromAPI(posts.length > 0); // isBackground if we already have posts
+    if (
+      mountedRef.current &&
+      (posts.length === 0 || sessionStatus === "authenticated")
+    ) {
+      fetchReelsFromAPI(posts.length > 0); // isBackground if we already have posts
     }
   }, [session?.user?.id, sessionStatus]);
 
@@ -1148,7 +1200,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     const isCurrentlyLiked = currentPost.isLiked;
     const targetLikedState = !isCurrentlyLiked;
 
-
     try {
       // 1. Check strict processing lock
       if (processingLikesRef.current.has(postId)) {
@@ -1168,21 +1219,21 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         const newPosts = prevPosts.map((post: FoodPost) =>
           post.id === postId
             ? {
-              ...post,
-              isLiked: targetLikedState,
-              isProcessingLike: true,
-              stats: {
-                ...post.stats,
-                likes: targetLikedState
-                  ? (post.stats.likes || 0) + 1
-                  : Math.max(0, (post.stats.likes || 0) - 1),
-              },
-            }
+                ...post,
+                isLiked: targetLikedState,
+                isProcessingLike: true,
+                stats: {
+                  ...post.stats,
+                  likes: targetLikedState
+                    ? (post.stats.likes || 0) + 1
+                    : Math.max(0, (post.stats.likes || 0) - 1),
+                },
+              }
             : post
         );
         return newPosts;
       });
-      setRenderTick(t => t + 1);
+      setRenderTick((t) => t + 1);
 
       // Process backend request
       const method = targetLikedState ? "POST" : "DELETE";
@@ -1202,13 +1253,20 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       if (!response.ok) {
         // Handle specific "already in sync" errors quietly
         if (
-          (response.status === 400 && result.error?.includes("already liked")) ||
+          (response.status === 400 &&
+            result.error?.includes("already liked")) ||
           (response.status === 404 && result.error?.includes("Like not found"))
         ) {
           if (mountedRef.current) {
             setPosts((prevPosts: FoodPost[]) =>
               prevPosts.map((post: FoodPost) =>
-                post.id === postId ? { ...post, isProcessingLike: false, isLiked: targetLikedState } : post
+                post.id === postId
+                  ? {
+                      ...post,
+                      isProcessingLike: false,
+                      isLiked: targetLikedState,
+                    }
+                  : post
               )
             );
             toaster.push(
@@ -1220,20 +1278,25 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
           }
         } else {
           // Revert on other errors
-          console.error(`[Reels UI] Backend returned ${response.status} for ${postId}:`, result);
+          console.error(
+            `[Reels UI] Backend returned ${response.status} for ${postId}:`,
+            result
+          );
           if (mountedRef.current) {
             setPosts((prevPosts: FoodPost[]) =>
               prevPosts.map((post: FoodPost) =>
                 post.id === postId
                   ? {
-                    ...post,
-                    isLiked: isCurrentlyLiked,
-                    isProcessingLike: false,
-                    stats: {
-                      ...post.stats,
-                      likes: isCurrentlyLiked ? post.stats.likes : Math.max(0, post.stats.likes - 1),
-                    },
-                  }
+                      ...post,
+                      isLiked: isCurrentlyLiked,
+                      isProcessingLike: false,
+                      stats: {
+                        ...post.stats,
+                        likes: isCurrentlyLiked
+                          ? post.stats.likes
+                          : Math.max(0, post.stats.likes - 1),
+                      },
+                    }
                   : post
               )
             );
@@ -1252,17 +1315,20 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             prevPosts.map((post: FoodPost) =>
               post.id === postId
                 ? {
-                  ...post,
-                  isProcessingLike: false,
-                  isLiked: targetLikedState,
-                  // Re-calculate stats conservatively until refetch completes
-                  stats: {
-                    ...post.stats,
-                    likes: targetLikedState
-                      ? Math.max(post.stats.likes, (post.stats.likes || 0) + 1)
-                      : Math.max(0, post.stats.likes - 1)
+                    ...post,
+                    isProcessingLike: false,
+                    isLiked: targetLikedState,
+                    // Re-calculate stats conservatively until refetch completes
+                    stats: {
+                      ...post.stats,
+                      likes: targetLikedState
+                        ? Math.max(
+                            post.stats.likes,
+                            (post.stats.likes || 0) + 1
+                          )
+                        : Math.max(0, post.stats.likes - 1),
+                    },
                   }
-                }
                 : post
             )
           );
@@ -1300,7 +1366,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
     try {
       // 1. OPTIMISTIC UPDATE
-      // We don't guard the VERY FIRST state update with mountedRef.current 
+      // We don't guard the VERY FIRST state update with mountedRef.current
       // because if the user just clicked a button in the UI, the component MUST be mounted.
       // Guards are mainly for async callbacks (after fetch/setTimeout).
 
@@ -1310,51 +1376,54 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
       // Update posts state (server-side comments)
       setPosts((prevPosts: FoodPost[]) => {
-          const updated = prevPosts.map((post: FoodPost) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                commentsList: post.commentsList.map((comment: Comment) => {
-                  if (comment.id === commentId) {
-                    return {
-                      ...comment,
-                      isLiked: !comment.isLiked,
-                      likes: comment.isLiked ? Math.max(0, comment.likes - 1) : comment.likes + 1,
-                    };
-                  }
-                  return comment;
+        const updated = prevPosts.map((post: FoodPost) => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              commentsList: post.commentsList.map((comment: Comment) => {
+                if (comment.id === commentId) {
+                  return {
+                    ...comment,
+                    isLiked: !comment.isLiked,
+                    likes: comment.isLiked
+                      ? Math.max(0, comment.likes - 1)
+                      : comment.likes + 1,
+                  };
                 }
-                ),
-              };
-            }
-            return post;
-          });
-          return updated;
-        });
-
-        // Update optimisticComments state (unsynced local comments)
-        setOptimisticComments((prev) => {
-          const postOptimistic = prev[postId] || [];
-          if (!postOptimistic.some(c => c.id === commentId)) {
-            return prev;
+                return comment;
+              }),
+            };
           }
-          
-          return {
-            ...prev,
-            [postId]: postOptimistic.map((comment: Comment) =>
-              comment.id === commentId
-                ? {
+          return post;
+        });
+        return updated;
+      });
+
+      // Update optimisticComments state (unsynced local comments)
+      setOptimisticComments((prev) => {
+        const postOptimistic = prev[postId] || [];
+        if (!postOptimistic.some((c) => c.id === commentId)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [postId]: postOptimistic.map((comment: Comment) =>
+            comment.id === commentId
+              ? {
                   ...comment,
                   isLiked: !comment.isLiked,
-                  likes: comment.isLiked ? Math.max(0, comment.likes - 1) : comment.likes + 1,
+                  likes: comment.isLiked
+                    ? Math.max(0, comment.likes - 1)
+                    : comment.likes + 1,
                 }
-                : comment
-            ),
-          };
-        });
+              : comment
+          ),
+        };
+      });
 
-        // Trigger a render tick to ensure UI update
-        setRenderTick(t => t + 1);
+      // Trigger a render tick to ensure UI update
+      setRenderTick((t) => t + 1);
 
       // 2. API CALL IN BACKGROUND
       // No need to set refreshing true/false here to avoid flickering overlays
@@ -1377,17 +1446,17 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             prevPosts.map((post: FoodPost) =>
               post.id === postId
                 ? {
-                  ...post,
-                  commentsList: post.commentsList.map((comment: Comment) =>
-                    comment.id === commentId
-                      ? {
-                        ...comment,
-                        isLiked: result.isLiked,
-                        likes: parseInt(result.likes),
-                      }
-                      : comment
-                  ),
-                }
+                    ...post,
+                    commentsList: post.commentsList.map((comment: Comment) =>
+                      comment.id === commentId
+                        ? {
+                            ...comment,
+                            isLiked: result.isLiked,
+                            likes: parseInt(result.likes),
+                          }
+                        : comment
+                    ),
+                  }
                 : post
             )
           );
@@ -1401,7 +1470,7 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
       if (mountedRef.current) {
         setPosts(originalPosts);
         setOptimisticComments(originalOptimistic);
-        setRenderTick(t => t + 1);
+        setRenderTick((t) => t + 1);
       }
     } finally {
       setIsRefreshingComments(false);
@@ -1437,16 +1506,16 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         return prevPosts.map((post: FoodPost) =>
           post.id === postId
             ? {
-              ...post,
-              stats: {
-                ...post.stats,
-                comments: post.stats.comments + 1,
-              },
-            }
+                ...post,
+                stats: {
+                  ...post.stats,
+                  comments: post.stats.comments + 1,
+                },
+              }
             : post
         );
       });
-      setRenderTick(t => t + 1);
+      setRenderTick((t) => t + 1);
 
       // Make API call to add comment
       setIsRefreshingComments(true);
@@ -1476,13 +1545,16 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             prevPosts.map((post: FoodPost) =>
               post.id === postId
                 ? {
-                  ...post,
-                  commentsList: [...(post.commentsList || []), serverComment],
-                  stats: {
-                    ...post.stats,
-                    comments: Math.max(post.stats.comments, (post.commentsList || []).length + 1)
+                    ...post,
+                    commentsList: [...(post.commentsList || []), serverComment],
+                    stats: {
+                      ...post.stats,
+                      comments: Math.max(
+                        post.stats.comments,
+                        (post.commentsList || []).length + 1
+                      ),
+                    },
                   }
-                }
                 : post
             )
           );
@@ -1496,8 +1568,8 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
               [postId]: newList,
             };
           });
-          
-          setRenderTick(t => t + 1);
+
+          setRenderTick((t) => t + 1);
         }
 
         // Trigger background sync but don't await it
@@ -1519,16 +1591,16 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
           prevPosts.map((post: FoodPost) =>
             post.id === postId
               ? {
-                ...post,
-                stats: {
-                  ...post.stats,
-                  comments: Math.max(0, post.stats.comments - 1),
-                },
-              }
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    comments: Math.max(0, post.stats.comments - 1),
+                  },
+                }
               : post
           )
         );
-        setRenderTick(t => t + 1);
+        setRenderTick((t) => t + 1);
       }
     } finally {
       setIsRefreshingComments(false);
@@ -1542,7 +1614,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     try {
       // Find the comment to revert if needed
       const post = posts.find((p) => p.id === postId);
-      const commentToDelete = post?.commentsList.find((c) => c.id === commentId);
+      const commentToDelete = post?.commentsList.find(
+        (c) => c.id === commentId
+      );
 
       // Optimistic update - remove comment immediately from UI
       if (mountedRef.current) {
@@ -1550,15 +1624,15 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
           prevPosts.map((post: FoodPost) =>
             post.id === postId
               ? {
-                ...post,
-                stats: {
-                  ...post.stats,
-                  comments: Math.max(0, post.stats.comments - 1),
-                },
-                commentsList: post.commentsList.filter(
-                  (comment: Comment) => comment.id !== commentId
-                ),
-              }
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    comments: Math.max(0, post.stats.comments - 1),
+                  },
+                  commentsList: post.commentsList.filter(
+                    (comment: Comment) => comment.id !== commentId
+                  ),
+                }
               : post
           )
         );
@@ -1586,7 +1660,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
         throw new Error("Failed to delete comment");
       }
 
-
       // REFETCH REAL-TIME DATA
       await refetchReelData(postId);
     } catch (error) {
@@ -1600,7 +1673,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
   // Enhanced openComments function with comment refetching
   const openComments = async (postId: string) => {
-
     // console.log("Opening comments for post:", postId);
     if (mountedRef.current) {
       setActivePostId(postId);
@@ -1658,7 +1730,6 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   };
 
   const handleShare = async (post: FoodPost) => {
-
     try {
       // Create share link - link to the reel page with the post ID
       const shareUrl = `${window.location.origin}/Reels?reel=${post.id}`;
@@ -1716,8 +1787,8 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     : posts.length > 0 &&
       visiblePostIndex >= 0 &&
       visiblePostIndex < posts.length
-      ? posts[visiblePostIndex]
-      : null;
+    ? posts[visiblePostIndex]
+    : null;
 
   const activePost = activePostForComments;
 
@@ -1734,9 +1805,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     const targetId = activePostId || (activePost ? activePost.id : null);
     if (!targetId) return [];
 
-    const serverComments = activePost ? (activePost.commentsList || []) : [];
+    const serverComments = activePost ? activePost.commentsList || [] : [];
     const localOptimistic = optimisticComments[targetId] || [];
-    
+
     // Log merging process
     if (localOptimistic.length > 0) {
       // console.log(`[Reels UI] MERGE for ${targetId}:`, {
@@ -1747,9 +1818,12 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
     const merged = [
       ...serverComments.filter(
-        (sc) => !localOptimistic.some((oc) => 
-          oc.id === sc.id || (oc.text === sc.text && oc.user.name === sc.user.name)
-        )
+        (sc) =>
+          !localOptimistic.some(
+            (oc) =>
+              oc.id === sc.id ||
+              (oc.text === sc.text && oc.user.name === sc.user.name)
+          )
       ),
       ...localOptimistic,
     ];
@@ -1777,8 +1851,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
   if (error) {
     return (
       <div
-        className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-          }`}
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
       >
         <div className="text-center">
           <p className="mb-4 text-red-500">Error: {error}</p>
@@ -1798,8 +1873,11 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
     return (
       <RootLayout>
         <div
-          className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-            }`}
+          className={`flex min-h-screen items-center justify-center ${
+            theme === "dark"
+              ? "bg-gray-900 text-white"
+              : "bg-white text-gray-900"
+          }`}
         >
           <div className="text-center">
             <p className="mb-4 text-gray-500">No reels available</p>
@@ -1832,7 +1910,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             activePost && toggleCommentLike(activePost.id, commentId)
           }
           addComment={(text) => activePost && addComment(activePost.id, text)}
-          deleteComment={(commentId) => activePost && deleteComment(activePost.id, commentId)}
+          deleteComment={(commentId) =>
+            activePost && deleteComment(activePost.id, commentId)
+          }
           isRefreshingComments={isRefreshingComments}
           toggleLike={toggleLike}
           handleShare={(post) => handleShare(post)}
@@ -1851,7 +1931,9 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
             activePost && toggleCommentLike(activePost.id, commentId)
           }
           addComment={(text) => activePost && addComment(activePost.id, text)}
-          deleteComment={(commentId) => activePost && deleteComment(activePost.id, commentId)}
+          deleteComment={(commentId) =>
+            activePost && deleteComment(activePost.id, commentId)
+          }
           isRefreshingComments={isRefreshingComments}
           toggleLike={toggleLike}
           handleShare={(post) => handleShare(post)}
@@ -1879,45 +1961,48 @@ export default function FoodReelsApp({ initialReels = [], initialUserPreferences
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req, res, query } = context;
-  
+
   console.log("[Reels SSR] Start getServerSideProps");
-  
+
   try {
     const session = await getServerSession(req, res, authOptions as any);
     const currentUserId = session?.user ? (session.user as any).id : null;
-    
-    console.log("[Reels SSR] Session Status:", { hasSession: !!session, currentUserId });
+
+    console.log("[Reels SSR] Session Status:", {
+      hasSession: !!session,
+      currentUserId,
+    });
 
     const result = await getReelsData({
-      ...query as any,
-      currentUserId
+      ...(query as any),
+      currentUserId,
     });
-    
+
     if (!result) {
       console.log("[Reels SSR] No result from getReelsData");
-      return { 
-        props: { 
-          initialReels: [], 
-          initialUserPreferences: {} 
-        } 
+      return {
+        props: {
+          initialReels: [],
+          initialUserPreferences: {},
+        },
       };
     }
-    
+
     console.log("[Reels SSR] Success. Reels fetched:", result.reels.length);
 
     return {
       props: {
         initialReels: JSON.parse(JSON.stringify(result.reels)),
-        initialUserPreferences: result.userPreferences || {}
-      }
+        initialUserPreferences: result.userPreferences || {},
+      },
     };
   } catch (error) {
     console.error("[Reels SSR] Error:", error);
-    return { 
-      props: { 
-        initialReels: [], 
-        initialUserPreferences: {} 
-      } 
+    return {
+      props: {
+        initialReels: [],
+        initialUserPreferences: {},
+      },
     };
   }
 };

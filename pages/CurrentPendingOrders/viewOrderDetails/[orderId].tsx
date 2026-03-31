@@ -282,8 +282,9 @@ const MobileOrderDetails = ({
             <p className="mt-1 text-sm !text-white/90">
               {combinedOrders.length === 2
                 ? `${combinedOrders[0]?.shop?.name} & ${combinedOrders[1]?.shop?.name}`
-                : `${combinedOrders[0]?.shop?.name} & ${combinedOrders.length - 1
-                } others`}
+                : `${combinedOrders[0]?.shop?.name} & ${
+                    combinedOrders.length - 1
+                  } others`}
             </p>
           ) : (
             <>
@@ -506,25 +507,25 @@ function ViewOrderDetailsPage() {
         }> =
           typeHint === "business"
             ? [
-              {
-                type: "business",
-                url: `/api/queries/business-order-details?id=${orderId}`,
-              },
-              {
-                type: "regular",
-                url: `/api/queries/orderDetails?id=${orderId}`,
-              },
-              {
-                type: "reel",
-                url: `/api/queries/reel-order-details?id=${orderId}`,
-              },
-              {
-                type: "restaurant",
-                url: `/api/queries/restaurant-order-details?id=${orderId}`,
-              },
-            ]
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+              ]
             : typeHint === "restaurant"
-              ? [
+            ? [
                 {
                   type: "restaurant",
                   url: `/api/queries/restaurant-order-details?id=${orderId}`,
@@ -542,43 +543,43 @@ function ViewOrderDetailsPage() {
                   url: `/api/queries/business-order-details?id=${orderId}`,
                 },
               ]
-              : typeHint === "reel"
-                ? [
-                  {
-                    type: "reel",
-                    url: `/api/queries/reel-order-details?id=${orderId}`,
-                  },
-                  {
-                    type: "regular",
-                    url: `/api/queries/orderDetails?id=${orderId}`,
-                  },
-                  {
-                    type: "restaurant",
-                    url: `/api/queries/restaurant-order-details?id=${orderId}`,
-                  },
-                  {
-                    type: "business",
-                    url: `/api/queries/business-order-details?id=${orderId}`,
-                  },
-                ]
-                : [
-                  {
-                    type: "regular",
-                    url: `/api/queries/orderDetails?id=${orderId}`,
-                  },
-                  {
-                    type: "reel",
-                    url: `/api/queries/reel-order-details?id=${orderId}`,
-                  },
-                  {
-                    type: "restaurant",
-                    url: `/api/queries/restaurant-order-details?id=${orderId}`,
-                  },
-                  {
-                    type: "business",
-                    url: `/api/queries/business-order-details?id=${orderId}`,
-                  },
-                ];
+            : typeHint === "reel"
+            ? [
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+              ]
+            : [
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+              ];
 
         for (const { type, url } of apis) {
           const res = await fetch(url);

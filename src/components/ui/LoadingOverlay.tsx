@@ -14,16 +14,15 @@ const LoadingOverlay: React.FC = () => {
     >
       {/* Premium Glass Backdrop */}
       <div
-        className={`absolute inset-0 backdrop-blur-xl transition-colors duration-700 ${theme === "dark"
-          ? "bg-[#020d0b]/80"
-          : "bg-white/70"
-          }`}
+        className={`absolute inset-0 backdrop-blur-xl transition-colors duration-700 ${
+          theme === "dark" ? "bg-[#020d0b]/80" : "bg-white/70"
+        }`}
       />
 
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center">
         {/* Animated Logo with Glow */}
-        <div className="relative group">
+        <div className="group relative">
           {/* Subtle Glow behind logo */}
           <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-[#10b981]/20 blur-2xl dark:bg-[#10b981]/10" />
 
@@ -31,12 +30,15 @@ const LoadingOverlay: React.FC = () => {
             <img
               src="/assets/logos/PlasIcon.png"
               alt="Plas Logo"
-              className="h-16 w-16 animate-[pulse_3s_ease-in-out_infinite] object-contain sm:h-18 sm:w-18"
+              className="sm:h-18 sm:w-18 h-16 w-16 animate-[pulse_3s_ease-in-out_infinite] object-contain"
             />
           </div>
 
           {/* Minimal Spinning Ring */}
-          <svg className="absolute -inset-3 h-30 w-30 animate-[spin_3s_linear_infinite] sm:h-34 sm:w-34" viewBox="0 0 100 100">
+          <svg
+            className="h-30 w-30 sm:h-34 sm:w-34 absolute -inset-3 animate-[spin_3s_linear_infinite]"
+            viewBox="0 0 100 100"
+          >
             <circle
               cx="50"
               cy="50"
@@ -48,7 +50,13 @@ const LoadingOverlay: React.FC = () => {
               strokeLinecap="round"
             />
             <defs>
-              <linearGradient id="overlayGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <linearGradient
+                id="overlayGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
                 <stop offset="0%" stopColor="#022c22" />
                 <stop offset="100%" stopColor="#10b981" />
               </linearGradient>
@@ -59,12 +67,13 @@ const LoadingOverlay: React.FC = () => {
         {/* Loading Message */}
         <div className="space-y-2">
           <span
-            className={`font-['Poppins'] text-sm font-semibold tracking-wider uppercase ${theme === "dark" ? "text-[#10b981]" : "text-[#022c22]"
-              }`}
+            className={`font-['Poppins'] text-sm font-semibold uppercase tracking-wider ${
+              theme === "dark" ? "text-[#10b981]" : "text-[#022c22]"
+            }`}
           >
             Processing
           </span>
-          <div className="flex items-center justify-center gap-1.5 h-1">
+          <div className="flex h-1 items-center justify-center gap-1.5">
             {[0, 150, 300].map((delay) => (
               <div
                 key={delay}
@@ -78,8 +87,15 @@ const LoadingOverlay: React.FC = () => {
 
       <style jsx global>{`
         @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.85; }
+          0%,
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.05);
+            opacity: 0.85;
+          }
         }
       `}</style>
     </div>

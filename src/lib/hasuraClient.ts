@@ -13,9 +13,9 @@ const hasEnv =
 export const hasuraClient =
   !isClient && hasEnv
     ? new GraphQLClient(process.env.HASURA_GRAPHQL_URL as string, {
-      headers: {
-        "x-hasura-admin-secret": process.env
-          .HASURA_GRAPHQL_ADMIN_SECRET as string,
-      },
-    })
+        headers: {
+          "x-hasura-admin-secret": process.env
+            .HASURA_GRAPHQL_ADMIN_SECRET as string,
+        },
+      })
     : null;

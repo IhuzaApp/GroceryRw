@@ -1,12 +1,43 @@
 import { gql } from "@apollo/client";
 
 export const CREATE_RESTAURANT = gql`
- mutation CreateRestaurant($email: String = "", $lat: String = "", $location: String = "", $logo: String = "", $long: String = "", $name: String = "", $phone: String = "", $profile: String = "", $tin: String = "", $ussd: String = "", $rdb_cert: String = "", $restaurant_id: uuid = "", $relatedTo: String = null) {
-  insert_Restaurants(objects: {id: $restaurant_id, email: $email, is_active: false, lat: $lat, location: $location, logo: $logo, long: $long, name: $name, phone: $phone, profile: $profile, tin: $tin, ussd: $ussd, verified: false, rdb_cert: $rdb_cert, relatedTo: $relatedTo}) {
-    affected_rows
+  mutation CreateRestaurant(
+    $email: String = ""
+    $lat: String = ""
+    $location: String = ""
+    $logo: String = ""
+    $long: String = ""
+    $name: String = ""
+    $phone: String = ""
+    $profile: String = ""
+    $tin: String = ""
+    $ussd: String = ""
+    $rdb_cert: String = ""
+    $restaurant_id: uuid = ""
+    $relatedTo: String = null
+  ) {
+    insert_Restaurants(
+      objects: {
+        id: $restaurant_id
+        email: $email
+        is_active: false
+        lat: $lat
+        location: $location
+        logo: $logo
+        long: $long
+        name: $name
+        phone: $phone
+        profile: $profile
+        tin: $tin
+        ussd: $ussd
+        verified: false
+        rdb_cert: $rdb_cert
+        relatedTo: $relatedTo
+      }
+    ) {
+      affected_rows
+    }
   }
-}
-
 `;
 
 export const CREATE_SHOP = gql`

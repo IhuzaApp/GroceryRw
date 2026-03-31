@@ -422,7 +422,8 @@ export async function getReelsData(params: {
     throw new Error("Hasura client not initialized");
   }
 
-  const { user_id, restaurant_id, type, limit, offset, id, currentUserId } = params;
+  const { user_id, restaurant_id, type, limit, offset, id, currentUserId } =
+    params;
 
   // 2. Fetch the data (either by ID or batch)
   const limitValue = limit ? parseInt(limit as string) : 100;
@@ -449,14 +450,11 @@ export async function getReelsData(params: {
       offset: offsetValue,
     });
   } else if (restaurant_id) {
-    data = await hasuraClient.request<ReelsResponse>(
-      GET_REELS_BY_RESTAURANT,
-      {
-        restaurant_id: restaurant_id as string,
-        limit: limitValue,
-        offset: offsetValue,
-      }
-    );
+    data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_RESTAURANT, {
+      restaurant_id: restaurant_id as string,
+      limit: limitValue,
+      offset: offsetValue,
+    });
   } else {
     data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS, {
       limit: limitValue,
@@ -646,8 +644,8 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
 
     // 2. Fetch data using the shared logic
     const result = await getReelsData({
-      ...req.query as any,
-      currentUserId
+      ...(req.query as any),
+      currentUserId,
     });
 
     if (!result) {
@@ -657,7 +655,7 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
     // 3. Respond
     res.status(200).json({
       ...result,
-      success: true
+      success: true,
     });
   } catch (error) {
     logger.error("Error in handleGetReels", "ReelsAPI", error);

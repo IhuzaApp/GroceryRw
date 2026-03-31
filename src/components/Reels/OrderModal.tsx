@@ -3,18 +3,7 @@
 import React, { useState, useEffect } from "react";
 import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
 import Link from "next/link";
-import {
-  X,
-  ShoppingCart,
-  Package,
-  MessageSquare,
-  Tag,
-  CreditCard,
-  CheckCircle,
-  ChevronDown,
-  Plus,
-  Clock,
-} from "lucide-react";
+import { X, ShoppingCart, ChevronDown, Plus, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrency } from "../../lib/formatCurrency";
 import Cookies from "js-cookie";
@@ -82,7 +71,7 @@ export default function OrderModal({
 }: OrderModalProps) {
   const router = useRouter();
   const { theme } = useTheme();
-  
+
   useEffect(() => {
     if (open) {
       console.log("[OrderModal] Initialized with post:", post);
@@ -92,12 +81,17 @@ export default function OrderModal({
   // States
   const [quantity, setQuantity] = useState(1);
   const [comments, setComments] = useState("");
-  const [systemConfig, setSystemConfig] = useState<SystemConfiguration | null>(null);
+  const [systemConfig, setSystemConfig] = useState<SystemConfiguration | null>(
+    null
+  );
   const [configLoading, setConfigLoading] = useState(true);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
   const [isOrderLoading, setIsOrderLoading] = useState(false);
-  const [processingStep, setProcessingStep] = useState<"initiating_payment" | "awaiting_approval" | "success" | null>(null);
+  const [processingStep, setProcessingStep] = useState<
+    "initiating_payment" | "awaiting_approval" | "success" | null
+  >(null);
   const [isAddressesLoading, setIsAddressesLoading] = useState(false);
 
   // Reset state on close
@@ -124,14 +118,18 @@ export default function OrderModal({
   const [isMobile, setIsMobile] = useState(false);
   const [manualPhoneNumber, setManualPhoneNumber] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
   const [priceBounce, setPriceBounce] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [savedPaymentMethods, setSavedPaymentMethods] = useState<any[]>([]);
   const [showOneTimePhoneInput, setShowOneTimePhoneInput] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [hasWallet, setHasWallet] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "polling" | "success" | "failed">("idle");
+  const [paymentStatus, setPaymentStatus] = useState<
+    "idle" | "pending" | "polling" | "success" | "failed"
+  >("idle");
   const [discounts, setDiscounts] = useState<{
     subtotal_discount: number;
     service_fee_discount: number;
@@ -158,7 +156,8 @@ export default function OrderModal({
   // Derived Values
   const basePrice = post?.restaurant?.price || post?.product?.price || 0;
   const subtotal = basePrice * quantity;
-  const selectedAddress = savedAddresses.find(a => a.id === selectedAddressId) || null;
+  const selectedAddress =
+    savedAddresses.find((a) => a.id === selectedAddressId) || null;
 
   // Calculate distance if address selected
   let distanceKm = 0;
@@ -175,21 +174,29 @@ export default function OrderModal({
     if (!config) return 0;
     const baseFee = parseInt(config.baseDeliveryFee) || 0;
     const cappedFee = parseInt(config.cappedDistanceFee) || 0;
-    const surcharge = config.distanceSurcharge ? parseInt(config.distanceSurcharge) : 0;
-    
-    const rawFee = baseFee + (Math.ceil(Math.max(0, dist - 3)) * surcharge);
+    const surcharge = config.distanceSurcharge
+      ? parseInt(config.distanceSurcharge)
+      : 0;
+
+    const rawFee = baseFee + Math.ceil(Math.max(0, dist - 3)) * surcharge;
     const origFee = rawFee > cappedFee ? cappedFee : rawFee;
     return sub > 30000 ? origFee * 0.5 : origFee;
   };
 
   const deliveryFee = getDeliveryFee(systemConfig, distanceKm, subtotal);
 
-  const finalTotal = (discounts?.final_total !== undefined) 
-    ? Number(discounts.final_total) 
-    : (Number(subtotal) + Number(deliveryFee) - Number(discounts?.subtotal_discount || 0));
+  const finalTotal =
+    discounts?.final_total !== undefined
+      ? Number(discounts.final_total)
+      : Number(subtotal) +
+        Number(deliveryFee) -
+        Number(discounts?.subtotal_discount || 0);
 
-  const totalDiscount = (Number(subtotal) - Number(discounts?.final_subtotal ?? subtotal)) + 
-                      (Number(deliveryFee) - Number(discounts?.final_delivery_fee ?? deliveryFee));
+  const totalDiscount =
+    Number(subtotal) -
+    Number(discounts?.final_subtotal ?? subtotal) +
+    (Number(deliveryFee) -
+      Number(discounts?.final_delivery_fee ?? deliveryFee));
 
   useEffect(() => {
     if (open) {
@@ -197,7 +204,7 @@ export default function OrderModal({
         subtotal,
         deliveryFee,
         finalTotal,
-        discounts
+        discounts,
       });
     }
   }, [open, subtotal, deliveryFee, finalTotal, discounts]);
@@ -213,7 +220,8 @@ export default function OrderModal({
 
     // "2hr30min", "1hr15min"
     const hrMinMatch = cleanTime.match(/^(\d+)\s*hr\s*(\d+)\s*min$/);
-    if (hrMinMatch) return parseInt(hrMinMatch[1]) * 60 + parseInt(hrMinMatch[2]);
+    if (hrMinMatch)
+      return parseInt(hrMinMatch[1]) * 60 + parseInt(hrMinMatch[2]);
 
     // "1hr", "2hr"
     const hrMatch = cleanTime.match(/^(\d+)\s*hr$/);
@@ -236,7 +244,9 @@ export default function OrderModal({
 
   const calculateDeliveryTimestamp = () => {
     // 1. Shopping time from system config (for non-food orders)
-    const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) || 0 : 0;
+    const shoppingTime = systemConfig
+      ? parseInt(systemConfig.shoppingTime) || 0
+      : 0;
 
     // 2. Preparation time for food orders (from restaurant's deliveryTime field)
     let preparationTime = 0;
@@ -244,7 +254,8 @@ export default function OrderModal({
 
     if (isFood) {
       // Parse the restaurant's deliveryTime (e.g. "30-45 min", "1hr", "15min")
-      const rawPrepTime = post?.restaurant?.deliveryTime || post?.content?.deliveryTime;
+      const rawPrepTime =
+        post?.restaurant?.deliveryTime || post?.content?.deliveryTime;
       preparationTime = parsePreparationTimeString(rawPrepTime);
 
       // If no prep time found, default to 20 min for food
@@ -258,7 +269,9 @@ export default function OrderModal({
     const processingTime = isFood ? preparationTime : shoppingTime;
 
     // 4. Travel time: 3D distance (includes altitude), 1 km ≈ 1 min, capped at 240 min
-    const userAlt = selectedAddress?.altitude ? parseFloat(selectedAddress.altitude) : 0;
+    const userAlt = selectedAddress?.altitude
+      ? parseFloat(selectedAddress.altitude)
+      : 0;
     const altKm = (shopAlt - userAlt) / 1000;
     const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
     const travelTime = Math.min(Math.ceil(distance3D), 240);
@@ -268,8 +281,10 @@ export default function OrderModal({
     return new Date(Date.now() + totalTimeMinutes * 60000).toISOString();
   };
 
-
-  const [deliveryEstimate, setDeliveryEstimate] = useState({ time: "--:--", duration: "--" });
+  const [deliveryEstimate, setDeliveryEstimate] = useState({
+    time: "--:--",
+    duration: "--",
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -280,7 +295,10 @@ export default function OrderModal({
       const totalMins = Math.max(0, Math.round(diffMs / 60000));
       const hours = deliveryDate.getHours().toString().padStart(2, "0");
       const minutes = deliveryDate.getMinutes().toString().padStart(2, "0");
-      setDeliveryEstimate({ time: `${hours}:${minutes}`, duration: `${totalMins} min` });
+      setDeliveryEstimate({
+        time: `${hours}:${minutes}`,
+        duration: `${totalMins} min`,
+      });
     };
     update();
     const interval = setInterval(update, 30000); // refresh every 30s
@@ -307,10 +325,10 @@ export default function OrderModal({
         try {
           setConfigLoading(true);
           const [configRes, addrRes, walletRes, payRes] = await Promise.all([
-            fetch("/api/queries/system-configuration").then(r => r.json()),
-            fetch("/api/queries/addresses").then(r => r.json()),
-            fetch("/api/queries/personal-wallet-balance").then(r => r.json()),
-            fetch("/api/queries/payment-methods").then(r => r.json())
+            fetch("/api/queries/system-configuration").then((r) => r.json()),
+            fetch("/api/queries/addresses").then((r) => r.json()),
+            fetch("/api/queries/personal-wallet-balance").then((r) => r.json()),
+            fetch("/api/queries/payment-methods").then((r) => r.json()),
           ]);
 
           if (configRes.success) {
@@ -319,11 +337,17 @@ export default function OrderModal({
             setWalletBalance(parseFloat(walletRes.wallet?.balance || "0"));
             setHasWallet(true);
             setSavedPaymentMethods(payRes.paymentMethods);
-            
-            const defaultAddr = addrRes.addresses.find((a: any) => a.is_default);
+
+            const defaultAddr = addrRes.addresses.find(
+              (a: any) => a.is_default
+            );
             if (defaultAddr) setSelectedAddressId(defaultAddr.id);
 
-            applyAutoPromotions(configRes.config, defaultAddr, (post?.restaurant?.price || 0) * quantity);
+            applyAutoPromotions(
+              configRes.config,
+              defaultAddr,
+              (post?.restaurant?.price || 0) * quantity
+            );
           }
         } catch (e) {
           console.error("Initialization failed", e);
@@ -344,7 +368,7 @@ export default function OrderModal({
 
   const triggerPricingSync = async (code?: string) => {
     if (!systemConfig) return;
-    
+
     // Explicitly calculate distance using the CURRENT selection
     let dist = 0;
     if (selectedAddress?.latitude && selectedAddress?.longitude) {
@@ -365,20 +389,23 @@ export default function OrderModal({
           cart: {
             cart_id: shopId,
             restaurant_id: post?.restaurant_id || shopId,
-            items: [{
-              product_id: post?.product?.id || post?.restaurant?.id || post?.id,
-              quantity,
-              price: basePrice,
-              type: post?.restaurant ? "dish" : "product"
-            }],
+            items: [
+              {
+                product_id:
+                  post?.product?.id || post?.restaurant?.id || post?.id,
+                quantity,
+                price: basePrice,
+                type: post?.restaurant ? "dish" : "product",
+              },
+            ],
             subtotal,
             delivery_fee: currentDeliveryFee,
-            service_fee: 0
+            service_fee: 0,
           },
           promoCode: code || promoCode,
           delivery_fee: currentDeliveryFee,
-          service_fee: 0
-        })
+          service_fee: 0,
+        }),
       });
       const data = await response.json();
       if (data.success) {
@@ -386,7 +413,7 @@ export default function OrderModal({
           ...data.discounts,
           final_total: data.final_total,
           pricing_token: data.pricing_token,
-          promotions_applied: data.promotions_applied
+          promotions_applied: data.promotions_applied,
         };
         setDiscounts(pricing);
         return pricing;
@@ -398,7 +425,11 @@ export default function OrderModal({
     }
   };
 
-  const applyAutoPromotions = async (forcedConfig?: any, forcedAddress?: any, forcedSubtotal?: number) => {
+  const applyAutoPromotions = async (
+    forcedConfig?: any,
+    forcedAddress?: any,
+    forcedSubtotal?: number
+  ) => {
     const config = forcedConfig || systemConfig;
     const address = forcedAddress || selectedAddress;
     const sub = forcedSubtotal || subtotal;
@@ -425,17 +456,20 @@ export default function OrderModal({
           cart: {
             cart_id: shopId,
             restaurant_id: post?.restaurant_id || shopId,
-            items: [{
-              product_id: post?.product?.id || post?.restaurant?.id || post?.id,
-              quantity,
-              price: (post?.restaurant?.price || 0),
-              type: post?.restaurant ? "dish" : "product"
-            }],
+            items: [
+              {
+                product_id:
+                  post?.product?.id || post?.restaurant?.id || post?.id,
+                quantity,
+                price: post?.restaurant?.price || 0,
+                type: post?.restaurant ? "dish" : "product",
+              },
+            ],
             subtotal: sub,
             delivery_fee: currentDeliveryFee,
-            service_fee: 0
-          }
-        })
+            service_fee: 0,
+          },
+        }),
       });
       const data = await response.json();
       if (data.success) {
@@ -443,7 +477,7 @@ export default function OrderModal({
           ...data.discounts,
           final_total: data.final_total,
           pricing_token: data.pricing_token,
-          promotions_applied: data.promotions_applied
+          promotions_applied: data.promotions_applied,
         };
         setDiscounts(pricing);
       }
@@ -467,8 +501,8 @@ export default function OrderModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: promoCode.trim().toUpperCase(),
-          cart: { items: [], subtotal }
-        })
+          cart: { items: [], subtotal },
+        }),
       });
       const data = await res.json();
       if (data.valid) {
@@ -495,7 +529,7 @@ export default function OrderModal({
   const handleMoMoPayment = async (orderId: string, amount: number) => {
     let phone = selectedPaymentMethod?.number || manualPhoneNumber;
     if (showOneTimePhoneInput) phone = manualPhoneNumber;
-    
+
     if (!phone) {
       toast.error("Provide a MoMo number");
       setIsOrderLoading(false);
@@ -513,14 +547,16 @@ export default function OrderModal({
           payerNumber: formatted,
           externalId: orderId,
           reelOrderId: orderId, // Specifically linked to reel order in backend
-        })
+        }),
       });
       const data = await res.json();
       if (res.ok) {
         setProcessingStep("awaiting_approval");
         setPaymentStatus("polling");
         pollIntervalRef.current = setInterval(async () => {
-          const sRes = await fetch(`/api/momo/request-to-pay-status?referenceId=${data.referenceId}`);
+          const sRes = await fetch(
+            `/api/momo/request-to-pay-status?referenceId=${data.referenceId}`
+          );
           const sData = await sRes.json();
           if (sData.status === "SUCCESSFUL") {
             clearInterval(pollIntervalRef.current!);
@@ -548,7 +584,8 @@ export default function OrderModal({
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) return toast.error("Select address");
     if (!selectedPaymentMethod) return toast.error("Select payment");
-    if (selectedPaymentMethod.type === "wallet" && walletBalance < finalTotal) return toast.error("Insufficient wallet");
+    if (selectedPaymentMethod.type === "wallet" && walletBalance < finalTotal)
+      return toast.error("Insufficient wallet");
 
     setIsOrderLoading(true);
     setProcessingStep("initiating_payment");
@@ -573,9 +610,10 @@ export default function OrderModal({
           discount_breakdown: pricing?.discount_breakdown || {
             subtotal: pricing?.subtotal_discount || 0,
             service_fee: 0,
-            delivery_fee: deliveryFee - (pricing?.final_delivery_fee ?? deliveryFee)
+            delivery_fee:
+              deliveryFee - (pricing?.final_delivery_fee ?? deliveryFee),
           },
-        })
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -597,11 +635,15 @@ export default function OrderModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-md transition-all sm:items-center p-0 sm:p-4" onClick={onClose}>
-      <div className="flex w-full max-w-[550px] flex-col overflow-hidden rounded-t-[2rem] bg-white/95 dark:bg-gray-900/90 shadow-2xl sm:rounded-[1.5rem]" 
-           onClick={e => e.stopPropagation()}
-           style={{ height: isMobile ? "92vh" : "auto", maxHeight: "85vh" }}>
-        
+    <div
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 p-0 backdrop-blur-md transition-all sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="flex w-full max-w-[550px] flex-col overflow-hidden rounded-t-[2rem] bg-white/95 shadow-2xl dark:bg-gray-900/90 sm:rounded-[1.5rem]"
+        onClick={(e) => e.stopPropagation()}
+        style={{ height: isMobile ? "92vh" : "auto", maxHeight: "85vh" }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b px-6 py-5 dark:border-white/5">
           <div className="flex items-center gap-4">
@@ -609,69 +651,137 @@ export default function OrderModal({
               <ShoppingCart className="h-6 w-6" />
             </div>
             <div>
-              <h3 className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Checkout</h3>
+              <h3
+                className={`text-xl font-black ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Checkout
+              </h3>
               <p className="text-xs font-bold text-green-600 dark:text-green-400">
-                {selectedAddress ? `Arriving at ${deliveryEstimate.time} (${deliveryEstimate.duration})` : "Please select address"}
+                {selectedAddress
+                  ? `Arriving at ${deliveryEstimate.time} (${deliveryEstimate.duration})`
+                  : "Please select address"}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-full bg-gray-100 p-2 dark:bg-white/5"><X className="h-5 w-5" /></button>
+          <button
+            onClick={onClose}
+            className="rounded-full bg-gray-100 p-2 dark:bg-white/5"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 space-y-6 overflow-y-auto p-6">
           {configLoading ? (
-            <div className="space-y-4 animate-pulse">
-              {[1,2,3].map(i => <div key={i} className="h-24 rounded-2xl bg-gray-100 dark:bg-white/5" />)}
+            <div className="animate-pulse space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-24 rounded-2xl bg-gray-100 dark:bg-white/5"
+                />
+              ))}
             </div>
           ) : (
             <>
               {/* Product Info */}
-              <div className={`p-4 rounded-2xl border ${theme === "dark" ? "border-white/5 bg-white/5" : "bg-gray-50"}`}>
+              <div
+                className={`rounded-2xl border p-4 ${
+                  theme === "dark" ? "border-white/5 bg-white/5" : "bg-gray-50"
+                }`}
+              >
                 <div className="flex gap-4">
-                  <div className="h-20 w-20 rounded-xl bg-gray-200 overflow-hidden">
-                    <img src={post.content.thumbnail || post.creator.avatar || "/placeholder.svg"} alt="" className="h-full w-full object-cover" />
+                  <div className="h-20 w-20 overflow-hidden rounded-xl bg-gray-200">
+                    <img
+                      src={
+                        post.content.thumbnail ||
+                        post.creator.avatar ||
+                        "/placeholder.svg"
+                      }
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div>
-                    <h4 className={`font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{post.content?.title || post.title || post.product?.name}</h4>
-                    <p className="text-sm text-green-500 font-bold">{formatCurrency(basePrice)}</p>
+                    <h4
+                      className={`font-bold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {post.content?.title || post.title || post.product?.name}
+                    </h4>
+                    <p className="text-sm font-bold text-green-500">
+                      {formatCurrency(basePrice)}
+                    </p>
                     <div className="mt-2 flex items-center gap-3">
-                       <button onClick={() => setQuantity(q => Math.max(1, q-1))} className="h-6 w-6 rounded bg-gray-200 dark:bg-white/10">-</button>
-                       <span className="font-bold">{quantity}</span>
-                       <button onClick={() => setQuantity(q => q+1)} className="h-6 w-6 rounded bg-gray-200 dark:bg-white/10">+</button>
+                      <button
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="h-6 w-6 rounded bg-gray-200 dark:bg-white/10"
+                      >
+                        -
+                      </button>
+                      <span className="font-bold">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity((q) => q + 1)}
+                        className="h-6 w-6 rounded bg-gray-200 dark:bg-white/10"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-               {/* Delivery Address */}
+              {/* Delivery Address */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase text-gray-400">Delivery Address</label>
+                  <label className="text-xs font-black uppercase text-gray-400">
+                    Delivery Address
+                  </label>
                   {savedAddresses.length > 0 && (
-                    <Link href="/profile?tab=addresses" className="text-xs font-bold text-green-600 hover:underline">Manage</Link>
+                    <Link
+                      href="/profile?tab=addresses"
+                      className="text-xs font-bold text-green-600 hover:underline"
+                    >
+                      Manage
+                    </Link>
                   )}
                 </div>
                 <div className="relative">
                   {savedAddresses.length > 0 ? (
                     <>
-                      <select 
-                        value={selectedAddressId || ""} 
-                        onChange={e => setSelectedAddressId(e.target.value)}
-                        className={`w-full appearance-none rounded-2xl border-2 p-4 font-bold ${theme === "dark" ? "bg-gray-800 border-white/5 text-white" : "bg-white border-gray-100"}`}
+                      <select
+                        value={selectedAddressId || ""}
+                        onChange={(e) => setSelectedAddressId(e.target.value)}
+                        className={`w-full appearance-none rounded-2xl border-2 p-4 font-bold ${
+                          theme === "dark"
+                            ? "border-white/5 bg-gray-800 text-white"
+                            : "border-gray-100 bg-white"
+                        }`}
                       >
-                        <option value="" disabled>Select Address</option>
-                        {savedAddresses.map(a => (
+                        <option value="" disabled>
+                          Select Address
+                        </option>
+                        {savedAddresses.map((a) => (
                           <option key={a.id} value={a.id}>
-                            {a.street || a.name || "Address"} - {a.landmark || a.city || ""}
+                            {a.street || a.name || "Address"} -{" "}
+                            {a.landmark || a.city || ""}
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     </>
                   ) : (
                     <Link href="/profile?tab=addresses">
-                      <div className={`flex items-center justify-between w-full rounded-2xl border-2 border-dashed p-4 font-bold ${theme === "dark" ? "bg-gray-800 border-white/10 text-gray-400" : "bg-gray-50 border-gray-200 text-gray-500"}`}>
+                      <div
+                        className={`flex w-full items-center justify-between rounded-2xl border-2 border-dashed p-4 font-bold ${
+                          theme === "dark"
+                            ? "border-white/10 bg-gray-800 text-gray-400"
+                            : "border-gray-200 bg-gray-50 text-gray-500"
+                        }`}
+                      >
                         <span>Add delivery address</span>
                         <Plus className="h-4 w-4" />
                       </div>
@@ -682,11 +792,20 @@ export default function OrderModal({
 
               {/* Payment Method */}
               <div className="space-y-3">
-                <label className="text-xs font-black uppercase text-gray-400">Payment Method</label>
+                <label className="text-xs font-black uppercase text-gray-400">
+                  Payment Method
+                </label>
                 <div className="relative">
-                  <select 
-                    value={showOneTimePhoneInput ? "other" : (selectedPaymentMethod?.id || (selectedPaymentMethod?.type === "wallet" ? "wallet" : ""))}
-                    onChange={e => {
+                  <select
+                    value={
+                      showOneTimePhoneInput
+                        ? "other"
+                        : selectedPaymentMethod?.id ||
+                          (selectedPaymentMethod?.type === "wallet"
+                            ? "wallet"
+                            : "")
+                    }
+                    onChange={(e) => {
                       const val = e.target.value;
                       if (val === "wallet") {
                         setSelectedPaymentMethod({ type: "wallet" });
@@ -695,41 +814,57 @@ export default function OrderModal({
                         setSelectedPaymentMethod({ type: "momo" });
                         setShowOneTimePhoneInput(true);
                       } else {
-                        const m = savedPaymentMethods.find(pm => pm.id === val);
+                        const m = savedPaymentMethods.find(
+                          (pm) => pm.id === val
+                        );
                         if (m) {
-                          setSelectedPaymentMethod({ 
-                            type: m.method.toLowerCase().includes("momo") ? "momo" : "card",
+                          setSelectedPaymentMethod({
+                            type: m.method.toLowerCase().includes("momo")
+                              ? "momo"
+                              : "card",
                             id: m.id,
-                            number: m.number
+                            number: m.number,
                           });
                         }
                         setShowOneTimePhoneInput(false);
                       }
                     }}
-                    className={`w-full appearance-none rounded-2xl border-2 p-4 font-bold ${theme === "dark" ? "bg-gray-800 border-white/5 text-white" : "bg-white border-gray-100"}`}
+                    className={`w-full appearance-none rounded-2xl border-2 p-4 font-bold ${
+                      theme === "dark"
+                        ? "border-white/5 bg-gray-800 text-white"
+                        : "border-gray-100 bg-white"
+                    }`}
                   >
-                    <option value="" disabled>Select Payment Method</option>
+                    <option value="" disabled>
+                      Select Payment Method
+                    </option>
                     {hasWallet && (
-                      <option value="wallet">Personal Wallet ({formatCurrency(walletBalance)})</option>
+                      <option value="wallet">
+                        Personal Wallet ({formatCurrency(walletBalance)})
+                      </option>
                     )}
-                    {savedPaymentMethods.map(m => (
+                    {savedPaymentMethods.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.number} ({m.method})
                       </option>
                     ))}
                     <option value="other">Other Number (MTN MoMo)</option>
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 {showOneTimePhoneInput && (
-                  <div className="mt-2 animate-in slide-in-from-top-2 duration-300">
-                    <input 
+                  <div className="mt-2 duration-300 animate-in slide-in-from-top-2">
+                    <input
                       type="tel"
                       value={manualPhoneNumber}
-                      onChange={e => setManualPhoneNumber(e.target.value)}
+                      onChange={(e) => setManualPhoneNumber(e.target.value)}
                       placeholder="Enter MoMo Number (e.g. 078...)"
-                      className={`w-full rounded-2xl border-2 p-4 font-bold ${theme === "dark" ? "bg-gray-800 border-white/5 text-white" : "bg-white border-gray-100"}`}
+                      className={`w-full rounded-2xl border-2 p-4 font-bold ${
+                        theme === "dark"
+                          ? "border-white/5 bg-gray-800 text-white"
+                          : "border-gray-100 bg-white"
+                      }`}
                     />
                   </div>
                 )}
@@ -737,11 +872,25 @@ export default function OrderModal({
 
               {/* Promo Code */}
               <div className="space-y-3">
-                <label className="text-xs font-black uppercase text-gray-400">Promotion Code</label>
+                <label className="text-xs font-black uppercase text-gray-400">
+                  Promotion Code
+                </label>
                 <div className="flex gap-2">
-                  <input value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="Enter code" 
-                         className={`flex-1 rounded-2xl border-2 p-4 font-bold ${theme === "dark" ? "bg-gray-800 border-white/5" : "bg-white"}`} />
-                  <button onClick={handleApplyPromo} disabled={validatingCode} className="rounded-2xl bg-black px-6 font-bold text-white dark:bg-white dark:text-black">
+                  <input
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder="Enter code"
+                    className={`flex-1 rounded-2xl border-2 p-4 font-bold ${
+                      theme === "dark"
+                        ? "border-white/5 bg-gray-800"
+                        : "bg-white"
+                    }`}
+                  />
+                  <button
+                    onClick={handleApplyPromo}
+                    disabled={validatingCode}
+                    className="rounded-2xl bg-black px-6 font-bold text-white dark:bg-white dark:text-black"
+                  >
                     {validatingCode ? "..." : "Apply"}
                   </button>
                 </div>
@@ -756,28 +905,44 @@ export default function OrderModal({
                 {totalDiscount > 0 && (
                   <div className="flex justify-between text-sm text-green-500">
                     <span>Total Savings</span>
-                    <span className="font-bold">-{formatCurrency(totalDiscount)}</span>
+                    <span className="font-bold">
+                      -{formatCurrency(totalDiscount)}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Delivery Fee</span>
-                  <span>{formatCurrency(discounts.final_delivery_fee ?? deliveryFee)}</span>
+                  <span>
+                    {formatCurrency(
+                      discounts.final_delivery_fee ?? deliveryFee
+                    )}
+                  </span>
                 </div>
-
               </div>
             </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="border-t p-6 pb-8 bg-white dark:bg-gray-900">
-          <div className="flex items-center justify-between mb-4">
+        <div className="border-t bg-white p-6 pb-8 dark:bg-gray-900">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase text-gray-400">Total payable</p>
-              <div className={`text-3xl font-black ${priceBounce ? "scale-110 text-green-500" : ""}`}>{formatCurrency(finalTotal)}</div>
+              <p className="text-[10px] font-black uppercase text-gray-400">
+                Total payable
+              </p>
+              <div
+                className={`text-3xl font-black ${
+                  priceBounce ? "scale-110 text-green-500" : ""
+                }`}
+              >
+                {formatCurrency(finalTotal)}
+              </div>
             </div>
-            <button onClick={handlePlaceOrder} disabled={isOrderLoading} 
-                    className="h-14 px-8 rounded-2xl bg-green-600 font-black text-white shadow-lg shadow-green-600/20 active:scale-95 transition-all flex items-center gap-2">
+            <button
+              onClick={handlePlaceOrder}
+              disabled={isOrderLoading}
+              className="flex h-14 items-center gap-2 rounded-2xl bg-green-600 px-8 font-black text-white shadow-lg shadow-green-600/20 transition-all active:scale-95"
+            >
               {isOrderLoading ? "Processing..." : "Place Order"}
             </button>
           </div>

@@ -4,25 +4,27 @@ import { gql } from "graphql-request";
 
 const ADD_SUBSCRIPTION_TRANSACTION = gql`
   mutation addSubscriptionTransactions(
-    $amount: String = "", 
-    $currency: String = "", 
-    $mtn_response: String = "", 
-    $phone: String = "", 
-    $reference_id: String = "", 
-    $status: String = "", 
-    $subscription_id: uuid = "", 
+    $amount: String = ""
+    $currency: String = ""
+    $mtn_response: String = ""
+    $phone: String = ""
+    $reference_id: String = ""
+    $status: String = ""
+    $subscription_id: uuid = ""
     $type: String = ""
   ) {
-    insert_subscription_transactions(objects: {
-      amount: $amount, 
-      currency: $currency, 
-      mtn_response: $mtn_response, 
-      phone: $phone, 
-      reference_id: $reference_id, 
-      status: $status, 
-      subscription_id: $subscription_id, 
-      type: $type
-    }) {
+    insert_subscription_transactions(
+      objects: {
+        amount: $amount
+        currency: $currency
+        mtn_response: $mtn_response
+        phone: $phone
+        reference_id: $reference_id
+        status: $status
+        subscription_id: $subscription_id
+        type: $type
+      }
+    ) {
       affected_rows
     }
   }

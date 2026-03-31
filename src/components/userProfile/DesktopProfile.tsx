@@ -233,9 +233,9 @@ export default function DesktopProfile({
                   Member since{" "}
                   {user
                     ? new Date(user.created_at).toLocaleString("default", {
-                      month: "long",
-                      year: "numeric",
-                    })
+                        month: "long",
+                        year: "numeric",
+                      })
                     : ""}
                 </p>
                 <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
@@ -343,7 +343,8 @@ export default function DesktopProfile({
                         );
                         toggleRole();
                         toast.success(
-                          `Switched to ${nextRole === "user" ? "User" : "Shopper"
+                          `Switched to ${
+                            nextRole === "user" ? "User" : "Shopper"
                           }`
                         );
                       } catch (error) {
@@ -372,21 +373,22 @@ export default function DesktopProfile({
                       {isSwitchingRole
                         ? t("common.loading")
                         : role === "user"
-                          ? t("nav.switchToShopper")
-                          : t("nav.switchToUser")}
+                        ? t("nav.switchToShopper")
+                        : t("nav.switchToUser")}
                     </span>
                   </button>
                 ) : (
                   <button
-                    className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${isGuest
+                    className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isGuest
                         ? "bg-gradient-to-r from-gray-400 to-gray-500"
                         : shopperStatus?.needCollection
-                          ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                          : shopperStatus?.status === "pending" ||
-                            shopperStatus?.status === "under_review"
-                            ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                            : "bg-gradient-to-r from-green-500 to-emerald-600"
-                      }`}
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                        : shopperStatus?.status === "pending" ||
+                          shopperStatus?.status === "under_review"
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                        : "bg-gradient-to-r from-green-500 to-emerald-600"
+                    }`}
                     onClick={() => {
                       if (isGuest) {
                         toast.error(
@@ -395,7 +397,7 @@ export default function DesktopProfile({
                         return;
                       }
                       handleBecomePlasa({
-                        preventDefault: () => { },
+                        preventDefault: () => {},
                       } as React.MouseEvent);
                     }}
                     disabled={
@@ -438,11 +440,11 @@ export default function DesktopProfile({
                       {isGuest
                         ? "Not Available"
                         : shopperStatus?.needCollection
-                          ? "Update"
-                          : shopperStatus?.status === "pending" ||
-                            shopperStatus?.status === "under_review"
-                            ? "Pending"
-                            : "Become Shopper"}
+                        ? "Update"
+                        : shopperStatus?.status === "pending" ||
+                          shopperStatus?.status === "under_review"
+                        ? "Pending"
+                        : "Become Shopper"}
                     </span>
                   </button>
                 )}
@@ -614,26 +616,26 @@ export default function DesktopProfile({
               // Hide payment tab for guests
               ...(!isGuest
                 ? [
-                  {
-                    key: "payment",
-                    label: t("nav.payment"),
-                    icon: (
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                        />
-                      </svg>
-                    ),
-                  },
-                ]
+                    {
+                      key: "payment",
+                      label: t("nav.payment"),
+                      icon: (
+                        <svg
+                          className="mr-2 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                          />
+                        </svg>
+                      ),
+                    },
+                  ]
                 : []),
               {
                 key: "preferences",
@@ -657,38 +659,39 @@ export default function DesktopProfile({
               // Show referrals tab if user is approved OR not registered (so they can register)
               // Hide if registered but pending approval OR if user is a guest
               ...(!loadingReferral &&
-                !isGuest &&
-                (referralStatus?.approved || !referralStatus?.registered)
+              !isGuest &&
+              (referralStatus?.approved || !referralStatus?.registered)
                 ? [
-                  {
-                    key: "referrals",
-                    label: "Referrals",
-                    icon: (
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                        />
-                      </svg>
-                    ),
-                  },
-                ]
+                    {
+                      key: "referrals",
+                      label: "Referrals",
+                      icon: (
+                        <svg
+                          className="mr-2 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                          />
+                        </svg>
+                      ),
+                    },
+                  ]
                 : []),
             ].map((tab) => (
               <Nav.Item
                 key={tab.key}
                 eventKey={tab.key}
-                className={`!bg-transparent !px-4 !py-2 !text-sm hover:!bg-transparent ${activeTab === tab.key
+                className={`!bg-transparent !px-4 !py-2 !text-sm hover:!bg-transparent ${
+                  activeTab === tab.key
                     ? "font-semibold !text-green-500 dark:!text-green-400"
                     : "!text-inherit hover:!text-green-500 dark:hover:!text-green-400"
-                  }`}
+                }`}
               >
                 <div className="flex items-center">
                   {tab.icon}

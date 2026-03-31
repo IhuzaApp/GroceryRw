@@ -55,8 +55,8 @@ const authLink = setContext(async (_, { headers }) => {
 
   // Return the headers to the context so httpLink can read them
   const adminSecret = process.env.NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET || "";
-  const role = adminSecret 
-    ? "admin" 
+  const role = adminSecret
+    ? "admin"
     : (session?.user as any)?.role || "anonymous";
 
   return {

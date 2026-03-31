@@ -13,7 +13,12 @@ interface AddMoneyModalProps {
   initialPhoneNumber?: string;
 }
 
-type TransactionStatus = "idle" | "initiating" | "pending" | "success" | "failed";
+type TransactionStatus =
+  | "idle"
+  | "initiating"
+  | "pending"
+  | "success"
+  | "failed";
 
 export default function AddMoneyModal({
   isOpen,
@@ -47,7 +52,9 @@ export default function AddMoneyModal({
 
   const checkStatus = async (refId: string) => {
     try {
-      const response = await fetch(`/api/momo/request-to-pay-status?referenceId=${refId}`);
+      const response = await fetch(
+        `/api/momo/request-to-pay-status?referenceId=${refId}`
+      );
       const data = await response.json();
 
       if (data.status === "SUCCESSFUL") {
@@ -98,22 +105,19 @@ export default function AddMoneyModal({
     setStatus("initiating");
 
     try {
-      const response = await authenticatedFetch(
-        "/api/momo/request-to-pay",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: amountNum,
-            payerNumber: phoneNumber,
-            payerMessage,
-            walletId,
-            externalId: `WALLET-${Date.now()}`,
-          }),
-        }
-      );
+      const response = await authenticatedFetch("/api/momo/request-to-pay", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: amountNum,
+          payerNumber: phoneNumber,
+          payerMessage,
+          walletId,
+          externalId: `WALLET-${Date.now()}`,
+        }),
+      });
 
       const data = await response.json();
 
@@ -123,9 +127,10 @@ export default function AddMoneyModal({
 
       setReferenceId(data.referenceId);
       setStatus("pending");
-      setStatusMessage(data.message || "Please approve the payment on your phone");
+      setStatusMessage(
+        data.message || "Please approve the payment on your phone"
+      );
       startPolling(data.referenceId);
-
     } catch (error: any) {
       console.error("Error adding money:", error);
       setStatus("failed");
@@ -240,12 +245,15 @@ export default function AddMoneyModal({
                     type="button"
                     onClick={() => handleQuickAmount(quickAmount)}
                     disabled={loading}
-                    className={`rounded-lg border-2 px-3 py-2 text-xs font-semibold transition-all ${amount === quickAmount.toString()
-                      ? "border-green-500 bg-green-50 text-green-700 dark:border-green-500 dark:bg-green-900/30 dark:text-green-400"
-                      : "border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
-                      }`}
+                    className={`rounded-lg border-2 px-3 py-2 text-xs font-semibold transition-all ${
+                      amount === quickAmount.toString()
+                        ? "border-green-500 bg-green-50 text-green-700 dark:border-green-500 dark:bg-green-900/30 dark:text-green-400"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
+                    }`}
                   >
-                    {quickAmount >= 1000 ? `${quickAmount / 1000}k` : quickAmount}
+                    {quickAmount >= 1000
+                      ? `${quickAmount / 1000}k`
+                      : quickAmount}
                   </button>
                 ))}
               </div>
@@ -339,16 +347,30 @@ export default function AddMoneyModal({
                 <div className="relative mx-auto h-20 w-20">
                   <div className="absolute inset-0 animate-ping rounded-full bg-green-500 opacity-20"></div>
                   <div className="relative flex h-full w-full items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                    <svg className="h-10 w-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <svg
+                      className="h-10 w-10 animate-pulse"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
                     </svg>
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Waiting for Approval</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{statusMessage}</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Waiting for Approval
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {statusMessage}
+                </p>
                 <div className="pt-4">
                   <div className="mx-auto h-1 w-24 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                    <div className="h-full animate-progress bg-green-500"></div>
+                    <div className="animate-progress h-full bg-green-500"></div>
                   </div>
                 </div>
               </div>
@@ -357,24 +379,52 @@ export default function AddMoneyModal({
             {status === "success" && (
               <div className="space-y-4">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                  <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="h-12 w-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Success!</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Your wallet has been topped up successfully.</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Success!
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Your wallet has been topped up successfully.
+                </p>
               </div>
             )}
 
             {status === "failed" && (
               <div className="space-y-4">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                  <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-12 w-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Payment Failed</h3>
-                <p className="text-sm text-gray-700 dark:text-red-400">{statusMessage}</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Payment Failed
+                </h3>
+                <p className="text-sm text-gray-700 dark:text-red-400">
+                  {statusMessage}
+                </p>
                 <button
                   onClick={() => setStatus("idle")}
                   className="mt-4 rounded-xl bg-gray-100 px-6 py-2 font-semibold text-gray-700 transition-all hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
@@ -388,16 +438,26 @@ export default function AddMoneyModal({
 
         {/* Footer info */}
         <div className="mt-6 flex items-center justify-center gap-2 border-t border-gray-100 pt-4 dark:border-gray-700">
-          <svg className="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+          <svg
+            className="h-4 w-4 text-gray-400"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
           </svg>
-          <span className="text-xs text-gray-400">Secure payment powered by MoMo</span>
+          <span className="text-xs text-gray-400">
+            Secure payment powered by MoMo
+          </span>
         </div>
       </div>
       <style jsx>{`
         @keyframes progress {
-          0% { width: 0; }
-          100% { width: 100%; }
+          0% {
+            width: 0;
+          }
+          100% {
+            width: 100%;
+          }
         }
         .animate-progress {
           animation: progress 30s linear infinite;

@@ -196,8 +196,9 @@ export default function UserAccount() {
               aria-label={isAccountInfoExpanded ? "Minimize" : "Expand"}
             >
               <svg
-                className={`h-5 w-5 transition-transform duration-200 ${isAccountInfoExpanded ? "rotate-180" : ""
-                  }`}
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  isAccountInfoExpanded ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -460,8 +461,9 @@ export default function UserAccount() {
               aria-label={isPasswordExpanded ? "Minimize" : "Expand"}
             >
               <svg
-                className={`h-5 w-5 transition-transform duration-200 ${isPasswordExpanded ? "rotate-180" : ""
-                  }`}
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  isPasswordExpanded ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

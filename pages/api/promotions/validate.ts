@@ -5,7 +5,11 @@ import crypto from "crypto";
 
 const VALIDATE_PROMOTION = gql`
   query ValidatePromotion($code: String!) {
-    promotions(where: { _or: [{ code: { _eq: $code } }, { influencer_code: { _eq: $code } }] }) {
+    promotions(
+      where: {
+        _or: [{ code: { _eq: $code } }, { influencer_code: { _eq: $code } }]
+      }
+    ) {
       affects
       applies_to_id
       applies_to_type
@@ -88,8 +92,13 @@ export default async function handler(
     }
 
     const promo = result.promotions[0];
-    console.log(`[API Validate] Checking promo: ${promo.code || promo.influencer_code} (Status: ${promo.status})`);
-    const isInfluencerCode = promo.influencer_code?.toUpperCase() === code.trim().toUpperCase();
+    console.log(
+      `[API Validate] Checking promo: ${
+        promo.code || promo.influencer_code
+      } (Status: ${promo.status})`
+    );
+    const isInfluencerCode =
+      promo.influencer_code?.toUpperCase() === code.trim().toUpperCase();
 
     // 1. Basic Status Check
     if (promo.status !== "active") {
@@ -101,8 +110,12 @@ export default async function handler(
 
     // 2. Date/Time Validation
     const now = new Date();
-    const startDate = new Date(`${promo.start_date}T${promo.start_time || "00:00:00"}`);
-    const endDate = promo.end_date ? new Date(`${promo.end_date}T${promo.end_time || "23:59:59"}`) : null;
+    const startDate = new Date(
+      `${promo.start_date}T${promo.start_time || "00:00:00"}`
+    );
+    const endDate = promo.end_date
+      ? new Date(`${promo.end_date}T${promo.end_time || "23:59:59"}`)
+      : null;
 
     if (now < startDate) {
       return res.status(200).json({
@@ -174,26 +187,37 @@ export default async function handler(
     let calculationTrace = "";
 
     const discountValue = parseFloat(promo.discount_value || "0");
-    const customerDiscountPercent = parseFloat(promo.customer_discount_percent || "0");
+    const customerDiscountPercent = parseFloat(
+      promo.customer_discount_percent || "0"
+    );
 
     // Effective percentage to use
-    const effectivePercentage = customerDiscountPercent > 0 ? customerDiscountPercent : discountValue;
+    const effectivePercentage =
+      customerDiscountPercent > 0 ? customerDiscountPercent : discountValue;
 
     // subtotal is defined at the top of the handler
-    const totalWithFees = subtotal + (cart?.service_fee || 0) + (cart?.delivery_fee || 0);
+    const totalWithFees =
+      subtotal + (cart?.service_fee || 0) + (cart?.delivery_fee || 0);
 
     if (promo.promotion_type === "bogo") {
       const buyQty = parseInt(promo.buy_quantity || "1");
       const cartItems = cart.items || [];
-      const totalQty = cartItems.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
+      const totalQty = cartItems.reduce(
+        (sum: number, item: any) => sum + (item.quantity || 1),
+        0
+      );
 
       if (totalQty >= buyQty + 1) {
         // Simplistic BOGO: Discount the cheapest item
-        const prices = cartItems.map((item: any) => parseFloat(item.price || "0")).sort((a: number, b: number) => a - b);
+        const prices = cartItems
+          .map((item: any) => parseFloat(item.price || "0"))
+          .sort((a: number, b: number) => a - b);
         subtotalDiscount = prices[0] || 0;
         calculationTrace = `BOGO: Applied on cheapest item (${subtotalDiscount})`;
       } else {
-        calculationTrace = `BOGO: Not enough items (Need ${buyQty + 1}, have ${totalQty})`;
+        calculationTrace = `BOGO: Not enough items (Need ${
+          buyQty + 1
+        }, have ${totalQty})`;
       }
     } else if (promo.affects === "subtotal" || promo.affects === "total") {
       const baseAmount = promo.affects === "total" ? totalWithFees : subtotal;
@@ -217,21 +241,30 @@ export default async function handler(
 
     if (promo.free_delivery) {
       deliveryFeeDiscount = cart?.delivery_fee || 0;
-      calculationTrace += (calculationTrace ? " + " : "") + "Free Delivery Applied";
+      calculationTrace +=
+        (calculationTrace ? " + " : "") + "Free Delivery Applied";
     }
 
-    const finalTotal = (subtotal + (cart?.service_fee || 0) + (cart?.delivery_fee || 0)) - (subtotalDiscount + serviceFeeDiscount + deliveryFeeDiscount);
+    const finalTotal =
+      subtotal +
+      (cart?.service_fee || 0) +
+      (cart?.delivery_fee || 0) -
+      (subtotalDiscount + serviceFeeDiscount + deliveryFeeDiscount);
 
     // Generate pricing token
-    const pricingToken = crypto.createHash('sha256')
-      .update(JSON.stringify({
-        cart_id: cart.cart_id,
-        items: cart.items.length,
-        subtotal: cart.subtotal,
-        total_discount: subtotalDiscount + serviceFeeDiscount + deliveryFeeDiscount,
-        timestamp: Math.floor(Date.now() / 60000) // 1 minute window
-      }))
-      .digest('hex');
+    const pricingToken = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          cart_id: cart.cart_id,
+          items: cart.items.length,
+          subtotal: cart.subtotal,
+          total_discount:
+            subtotalDiscount + serviceFeeDiscount + deliveryFeeDiscount,
+          timestamp: Math.floor(Date.now() / 60000), // 1 minute window
+        })
+      )
+      .digest("hex");
 
     return res.status(200).json({
       valid: true,
@@ -243,23 +276,25 @@ export default async function handler(
         subtotal_discount: subtotalDiscount,
         service_fee_discount: serviceFeeDiscount,
         delivery_fee_discount: deliveryFeeDiscount,
-        total_discount: subtotalDiscount + serviceFeeDiscount + deliveryFeeDiscount,
+        total_discount:
+          subtotalDiscount + serviceFeeDiscount + deliveryFeeDiscount,
         discount_breakdown: {
           subtotal: subtotalDiscount,
           service_fee: serviceFeeDiscount,
           delivery_fee: deliveryFeeDiscount,
         },
       },
-      promotions_applied: [{
-        promotion_id: promo.id,
-        code: promo.code,
-        influencer_id: isInfluencerCode ? promo.influencer_id : null,
-        funded_by: promo.funded_by,
-        stacking_type: promo.stacking_type,
-        calculation_trace: calculationTrace,
-      }]
+      promotions_applied: [
+        {
+          promotion_id: promo.id,
+          code: promo.code,
+          influencer_id: isInfluencerCode ? promo.influencer_id : null,
+          funded_by: promo.funded_by,
+          stacking_type: promo.stacking_type,
+          calculation_trace: calculationTrace,
+        },
+      ],
     });
-
   } catch (error) {
     console.error("[API Validate] Error:", error);
     return res.status(500).json({ error: "Failed to validate promotion" });

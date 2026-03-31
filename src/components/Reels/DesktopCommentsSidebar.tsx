@@ -94,18 +94,21 @@ export default function DesktopCommentsSidebar({
   const isDark = theme === "dark";
   const bgColor = isDark ? "rgba(31, 41, 55, 0.4)" : "rgba(255, 255, 255, 0.4)";
   const textColor = isDark ? "#f9fafb" : "#111827";
-  const borderColor = isDark ? "rgba(75, 85, 99, 0.3)" : "rgba(209, 213, 219, 0.3)";
-  const commentBgColor = isDark ? "rgba(55, 65, 81, 0.5)" : "rgba(243, 244, 246, 0.5)";
+  const borderColor = isDark
+    ? "rgba(75, 85, 99, 0.3)"
+    : "rgba(209, 213, 219, 0.3)";
+  const commentBgColor = isDark
+    ? "rgba(55, 65, 81, 0.5)"
+    : "rgba(243, 244, 246, 0.5)";
   const commentTextColor = isDark ? "#e5e7eb" : "#374151";
   const secondaryTextColor = isDark ? "#9ca3af" : "#6b7280";
-
 
   const handleAddComment = () => {
     if (!newComment.trim() || isAddingComment) return;
 
     const commentText = newComment;
     setNewComment(""); // Clear instantly
-    
+
     // Trigger background submission without awaiting
     onAddComment(commentText);
   };
@@ -130,7 +133,9 @@ export default function DesktopCommentsSidebar({
         flexDirection: "column",
         borderRadius: "2.5rem",
         border: `1px solid ${borderColor}`,
-        boxShadow: isDark ? "0 25px 50px -12px rgba(0, 0, 0, 0.5)" : "0 20px 40px -10px rgba(0, 0, 0, 0.1)",
+        boxShadow: isDark
+          ? "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+          : "0 20px 40px -10px rgba(0, 0, 0, 0.1)",
         overflow: "hidden",
         transition: "all 0.3s ease",
       }}
@@ -143,7 +148,9 @@ export default function DesktopCommentsSidebar({
           justifyContent: "space-between",
           padding: "28px 32px",
           borderBottom: "1px solid transparent",
-          backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+          backgroundColor: isDark
+            ? "rgba(255,255,255,0.02)"
+            : "rgba(0,0,0,0.02)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -211,22 +218,35 @@ export default function DesktopCommentsSidebar({
             }}
           >
             <div style={{ transform: "scale(1.5)", marginBottom: "8px" }}>
-               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-               </svg>
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
             </div>
-            <div style={{ fontSize: "20px", fontWeight: 800 }}>No comments yet</div>
-            <div style={{ fontSize: "14px", fontWeight: 500 }}>Join the conversation!</div>
+            <div style={{ fontSize: "20px", fontWeight: 800 }}>
+              No comments yet
+            </div>
+            <div style={{ fontSize: "14px", fontWeight: 500 }}>
+              Join the conversation!
+            </div>
           </div>
         ) : (
           comments.map((comment, index) => (
-            <div 
-              key={comment.id} 
+            <div
+              key={comment.id}
               className="group flex items-start gap-4 transition-all"
-              style={{ 
+              style={{
                 padding: "12px 0",
                 animation: "slideIn 0.3s ease-out forwards",
-                animationDelay: `${index * 0.05}s`
+                animationDelay: `${index * 0.05}s`,
               }}
             >
               <div className="relative h-11 w-11 flex-shrink-0">
@@ -238,51 +258,71 @@ export default function DesktopCommentsSidebar({
                       : "/placeholder.svg"
                   }
                   alt={comment.user.name}
-                  style={{ 
-                    width: "44px", 
+                  style={{
+                    width: "44px",
                     height: "44px",
                     border: "2px solid transparent",
                   }}
-                  className="ring-2 ring-white/5 shadow-sm"
+                  className="shadow-sm ring-2 ring-white/5"
                 />
               </div>
-              
-              <div className="flex-1 min-w-0 pt-0.5">
+
+              <div className="min-w-0 flex-1 pt-0.5">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
-                    <span 
-                      style={{ 
-                        fontWeight: 700, 
-                        fontSize: "13px", 
-                        color: textColor 
+                    <span
+                      style={{
+                        fontWeight: 700,
+                        fontSize: "13px",
+                        color: textColor,
                       }}
                     >
                       {comment.user.name}
                     </span>
                     {comment.user.verified && (
                       <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 shadow-sm">
-                        <span className="text-[8px] font-bold text-white">✓</span>
+                        <span className="text-[8px] font-bold text-white">
+                          ✓
+                        </span>
                       </div>
                     )}
                   </div>
-                  
-                  <p 
-                    style={{ 
-                      fontSize: "14px", 
-                      lineHeight: "1.5", 
+
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: "1.5",
                       color: commentTextColor,
                       opacity: comment.id.startsWith("temp-") ? 0.6 : 1,
-                      margin: 0
+                      margin: 0,
                     }}
                   >
                     {comment.text}
                   </p>
-                  
-                  <div className="flex items-center gap-6 mt-1">
-                    <span style={{ fontSize: "11px", fontWeight: 600, color: secondaryTextColor, textTransform: "lowercase" }}>
+
+                  <div className="mt-1 flex items-center gap-6">
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        color: secondaryTextColor,
+                        textTransform: "lowercase",
+                      }}
+                    >
                       {comment.timestamp}
                     </span>
-                    <button style={{ fontSize: "11px", fontWeight: 700, color: secondaryTextColor, background: "none", border: "none", padding: 0, cursor: "pointer" }} className="hover:text-white transition-colors">
+                    <button
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        color: secondaryTextColor,
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                      }}
+                      className="transition-colors hover:text-white"
+                    >
                       Reply
                     </button>
                     {comment.user_id === currentUserId && (
@@ -299,7 +339,7 @@ export default function DesktopCommentsSidebar({
                           cursor: "pointer",
                           transition: "all 0.2s",
                         }}
-                        className="group-hover:opacity-60 hover:opacity-100"
+                        className="hover:opacity-100 group-hover:opacity-60"
                         title="Delete comment"
                       >
                         Delete
@@ -309,16 +349,31 @@ export default function DesktopCommentsSidebar({
                 </div>
               </div>
 
-              <div className="flex flex-col items-center gap-1 pt-2 min-w-[32px]">
+              <div className="flex min-w-[32px] flex-col items-center gap-1 pt-2">
                 <button
                   onClick={() => onToggleCommentLike(comment.id)}
-                  className={`flex items-center justify-center transition-all active:scale-125 ${comment.isLiked ? "text-red-500" : "text-gray-400 opacity-30 hover:opacity-100"}`}
-                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                  className={`flex items-center justify-center transition-all active:scale-125 ${
+                    comment.isLiked
+                      ? "text-red-500"
+                      : "text-gray-400 opacity-30 hover:opacity-100"
+                  }`}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                  }}
                 >
                   <HeartIcon filled={comment.isLiked} />
                 </button>
                 {comment.likes > 0 && (
-                  <span style={{ fontSize: "11px", fontWeight: 600, color: secondaryTextColor }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: secondaryTextColor,
+                    }}
+                  >
                     {comment.likes}
                   </span>
                 )}
@@ -333,7 +388,9 @@ export default function DesktopCommentsSidebar({
         style={{
           padding: "32px",
           borderTopColor: "transparent",
-          backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+          backgroundColor: isDark
+            ? "rgba(255,255,255,0.02)"
+            : "rgba(0,0,0,0.01)",
         }}
       >
         <div
@@ -344,7 +401,9 @@ export default function DesktopCommentsSidebar({
             backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#fff",
             borderRadius: "2rem",
             padding: "6px 6px 6px 20px",
-            border: `2px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"}`,
+            border: `2px solid ${
+              isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"
+            }`,
             boxShadow: isDark ? "none" : "0 4px 12px rgba(0,0,0,0.05)",
             transition: "all 0.3s ease",
           }}
@@ -380,13 +439,17 @@ export default function DesktopCommentsSidebar({
               height: "48px",
               borderRadius: "50%",
               padding: 0,
-              backgroundColor: newComment.trim() ? "rgb(34 197 94)" : "rgba(255,255,255,0.05)",
+              backgroundColor: newComment.trim()
+                ? "rgb(34 197 94)"
+                : "rgba(255,255,255,0.05)",
               color: newComment.trim() ? "#fff" : secondaryTextColor,
               border: "none",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: newComment.trim() ? "0 8px 20px rgba(34, 197, 94, 0.3)" : "none",
+              boxShadow: newComment.trim()
+                ? "0 8px 20px rgba(34, 197, 94, 0.3)"
+                : "none",
               transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
               cursor: newComment.trim() ? "pointer" : "not-allowed",
               transform: newComment.trim() ? "scale(1)" : "scale(0.95)",
@@ -410,8 +473,12 @@ export default function DesktopCommentsSidebar({
           animation: spin 1s linear infinite;
         }
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
         .hover-opacity-100:hover {
           opacity: 1 !important;

@@ -269,8 +269,9 @@ export default function UserRestaurantOrderDetails({
       {/* Restaurant Information */}
       {order.Restaurant && (
         <Panel
-          className={`border border-gray-200 dark:border-gray-700 ${isMobile ? "!mx-0 !rounded-none border-x-0" : ""
-            }`}
+          className={`border border-gray-200 dark:border-gray-700 ${
+            isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+          }`}
         >
           <div className="flex items-center gap-4">
             <div className="flex-grow">
@@ -292,8 +293,9 @@ export default function UserRestaurantOrderDetails({
 
       {/* Order Status */}
       <Panel
-        className={`border border-gray-200 dark:border-gray-700 ${isMobile ? "!mx-0 !rounded-none border-x-0" : ""
-          }`}
+        className={`border border-gray-200 dark:border-gray-700 ${
+          isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+        }`}
       >
         <div className="mb-4">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
@@ -303,36 +305,38 @@ export default function UserRestaurantOrderDetails({
             {/* Current Status Badge */}
             <div className="flex items-center gap-3">
               <div
-                className={`flex h-10 w-10 items-center justify-center rounded-full ${order.status === "WAITING_FOR_CONFIRMATION"
+                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                  order.status === "WAITING_FOR_CONFIRMATION"
                     ? "bg-yellow-100 dark:bg-yellow-900/20"
                     : order.status === "PENDING"
-                      ? "bg-blue-100 dark:bg-blue-900/20"
-                      : order.status === "CONFIRMED"
-                        ? "bg-blue-100 dark:bg-blue-900/20"
-                        : order.status === "READY"
-                          ? "bg-green-100 dark:bg-green-900/20"
-                          : order.status === "OUT_FOR_DELIVERY"
-                            ? "bg-purple-100 dark:bg-purple-900/20"
-                            : order.status === "DELIVERED"
-                              ? "bg-green-100 dark:bg-green-900/20"
-                              : "bg-gray-100 dark:bg-gray-900/20"
-                  }`}
+                    ? "bg-blue-100 dark:bg-blue-900/20"
+                    : order.status === "CONFIRMED"
+                    ? "bg-blue-100 dark:bg-blue-900/20"
+                    : order.status === "READY"
+                    ? "bg-green-100 dark:bg-green-900/20"
+                    : order.status === "OUT_FOR_DELIVERY"
+                    ? "bg-purple-100 dark:bg-purple-900/20"
+                    : order.status === "DELIVERED"
+                    ? "bg-green-100 dark:bg-green-900/20"
+                    : "bg-gray-100 dark:bg-gray-900/20"
+                }`}
               >
                 <svg
-                  className={`h-5 w-5 ${order.status === "WAITING_FOR_CONFIRMATION"
+                  className={`h-5 w-5 ${
+                    order.status === "WAITING_FOR_CONFIRMATION"
                       ? "text-yellow-600 dark:text-yellow-400"
                       : order.status === "PENDING"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : order.status === "CONFIRMED"
-                          ? "text-blue-600 dark:text-blue-400"
-                          : order.status === "READY"
-                            ? "text-green-600 dark:text-green-400"
-                            : order.status === "OUT_FOR_DELIVERY"
-                              ? "text-purple-600 dark:text-purple-400"
-                              : order.status === "DELIVERED"
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-600 dark:text-gray-400"
-                    }`}
+                      ? "text-blue-600 dark:text-blue-400"
+                      : order.status === "CONFIRMED"
+                      ? "text-blue-600 dark:text-blue-400"
+                      : order.status === "READY"
+                      ? "text-green-600 dark:text-green-400"
+                      : order.status === "OUT_FOR_DELIVERY"
+                      ? "text-purple-600 dark:text-purple-400"
+                      : order.status === "DELIVERED"
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -391,20 +395,21 @@ export default function UserRestaurantOrderDetails({
               </div>
               <div className="flex-grow">
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium md:px-3 md:py-1 md:text-sm ${order.status === "WAITING_FOR_CONFIRMATION"
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium md:px-3 md:py-1 md:text-sm ${
+                    order.status === "WAITING_FOR_CONFIRMATION"
                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
                       : order.status === "PENDING"
-                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
-                        : order.status === "CONFIRMED"
-                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
-                          : order.status === "READY"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                            : order.status === "OUT_FOR_DELIVERY"
-                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
-                              : order.status === "DELIVERED"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
-                    }`}
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                      : order.status === "CONFIRMED"
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                      : order.status === "READY"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                      : order.status === "OUT_FOR_DELIVERY"
+                      ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
+                      : order.status === "DELIVERED"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
+                  }`}
                 >
                   {getOrderStatus()}
                 </span>
@@ -514,13 +519,15 @@ export default function UserRestaurantOrderDetails({
 
       {/* Delivery & Plaser Information */}
       <div
-        className={`grid grid-cols-1 ${isMobile ? "gap-0" : "gap-6"
-          } lg:grid-cols-2`}
+        className={`grid grid-cols-1 ${
+          isMobile ? "gap-0" : "gap-6"
+        } lg:grid-cols-2`}
       >
         {/* Delivery Information */}
         <Panel
-          className={`border border-gray-200 dark:border-gray-700 ${isMobile ? "!mx-0 !rounded-none border-x-0" : ""
-            }`}
+          className={`border border-gray-200 dark:border-gray-700 ${
+            isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+          }`}
         >
           <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Delivery Information
@@ -704,8 +711,9 @@ export default function UserRestaurantOrderDetails({
 
       {/* Order Items */}
       <Panel
-        className={`border border-gray-200 dark:border-gray-700 ${isMobile ? "!mx-0 !rounded-none border-x-0" : ""
-          }`}
+        className={`border border-gray-200 dark:border-gray-700 ${
+          isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+        }`}
       >
         <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
           Order Items ({order.itemsCount} dishes)
@@ -760,7 +768,7 @@ export default function UserRestaurantOrderDetails({
                     <p className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm md:text-base">
                       {formatCurrency(
                         parseFloat(item.dish?.price || item.price) *
-                        parseInt(item.quantity)
+                          parseInt(item.quantity)
                       )}
                     </p>
                   </div>
@@ -773,8 +781,9 @@ export default function UserRestaurantOrderDetails({
 
       {/* Order Summary */}
       <Panel
-        className={`border border-gray-200 dark:border-gray-700 ${isMobile ? "!mx-0 !rounded-none border-x-0" : ""
-          }`}
+        className={`border border-gray-200 dark:border-gray-700 ${
+          isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+        }`}
       >
         <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
           Order Summary
@@ -834,8 +843,9 @@ export default function UserRestaurantOrderDetails({
       {/* Rating Section */}
       {order.status === "DELIVERED" && (
         <Panel
-          className={`border border-gray-200 dark:border-gray-700 ${isMobile ? "!mx-0 !rounded-none border-x-0" : ""
-            }`}
+          className={`border border-gray-200 dark:border-gray-700 ${
+            isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+          }`}
         >
           <div className="flex items-center justify-between">
             <div>

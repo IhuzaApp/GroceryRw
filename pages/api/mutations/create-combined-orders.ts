@@ -218,7 +218,7 @@ export default async function handler(
       discount_breakdown, // { subtotal, service_fee, delivery_fee }
       subtotal,
       total_discount,
-      payment_method
+      payment_method,
     } = req.body;
 
     // Validate required fields
@@ -236,18 +236,23 @@ export default async function handler(
 
     // 0. Validate pricing token (MANDATORY)
     if (!pricing_token) {
-      return res.status(400).json({ error: "Pricing token is required for all checkouts" });
+      return res
+        .status(400)
+        .json({ error: "Pricing token is required for all checkouts" });
     }
 
-    const expectedHash = crypto.createHash('sha256')
-      .update(JSON.stringify({
-        cart_id: stores[0]?.store_id,
-        items: req.body.items_count || 0,
-        subtotal: parseFloat(subtotal || "0"),
-        total_discount: parseFloat(total_discount || "0"),
-        timestamp: Math.floor(Date.now() / 60000)
-      }))
-      .digest('hex');
+    const expectedHash = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          cart_id: stores[0]?.store_id,
+          items: req.body.items_count || 0,
+          subtotal: parseFloat(subtotal || "0"),
+          total_discount: parseFloat(total_discount || "0"),
+          timestamp: Math.floor(Date.now() / 60000),
+        })
+      )
+      .digest("hex");
 
     // In production, we'd verify pricing_token === expectedHash here.
 
@@ -350,7 +355,8 @@ export default async function handler(
         shop_id: store_id,
         delivery_address_id,
         total: actualTotal.toFixed(2),
-        status: payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
+        status:
+          payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
         service_fee,
         delivery_fee,
         discount: discount ?? null,
@@ -360,7 +366,11 @@ export default async function handler(
         pin: sharedPin,
         combined_order_id: combinedOrderId,
         applied_promotions: applied_promotions || [],
-        discount_breakdown: discount_breakdown || { subtotal: 0, service_fee: 0, delivery_fee: 0 }
+        discount_breakdown: discount_breakdown || {
+          subtotal: 0,
+          service_fee: 0,
+          delivery_fee: 0,
+        },
       });
 
       const orderId = orderRes.insert_Orders_one.id;
@@ -385,7 +395,7 @@ export default async function handler(
             // Increment usage and budget
             await hasuraClient.request(UPDATE_PROMOTION_STATS, {
               id: promo.promotion_id,
-              discount_amount: parseFloat(promo.discount_amount || "0")
+              discount_amount: parseFloat(promo.discount_amount || "0"),
             });
 
             // Record Influencer Earning if applicable
@@ -396,14 +406,19 @@ export default async function handler(
                   promotion_id: promo.promotion_id,
                   shop_order_id: orderId,
                   order_value: actualTotal.toFixed(2),
-                  earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2),
+                  earning_amount: (
+                    parseFloat(promo.discount_amount || "0") * 0.1
+                  ).toFixed(2),
                   payout_status: "pending",
-                  status: "active"
-                }
+                  status: "active",
+                },
               });
             }
           } catch (e) {
-            console.error("Failed to track promotion usage in combined cart:", e);
+            console.error(
+              "Failed to track promotion usage in combined cart:",
+              e
+            );
           }
         }
       }
@@ -415,7 +430,9 @@ export default async function handler(
         // 7. Delete the cart
         await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
       } else {
-        console.log(`🛒 [Combined Checkout] Skipping cart deletion for store ${store_id} due to MoMo payment.`);
+        console.log(
+          `🛒 [Combined Checkout] Skipping cart deletion for store ${store_id} due to MoMo payment.`
+        );
       }
 
       // Track created order

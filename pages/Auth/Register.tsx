@@ -17,8 +17,9 @@ function ThemeAwareLogo() {
         alt="Plas Logo"
         width={200}
         height={90}
-        className={`h-20 w-auto transition-all duration-200 ${theme === "dark" ? "brightness-0 invert" : ""
-          }`}
+        className={`h-20 w-auto transition-all duration-200 ${
+          theme === "dark" ? "brightness-0 invert" : ""
+        }`}
       />
     </div>
   );
@@ -43,7 +44,7 @@ export default function RegisterPage() {
               </div>
 
               {/* Registration Form */}
-              <div className="rounded-2xl bg-white/80 p-4 shadow-xl backdrop-blur-sm dark:bg-gray-800/80 lg:p-8 text-black dark:text-white">
+              <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-gray-800/80 dark:text-white lg:p-8">
                 <UserRegistration />
               </div>
 

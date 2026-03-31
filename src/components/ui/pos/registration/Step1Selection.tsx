@@ -35,10 +35,11 @@ export default function Step1Selection({
       <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
         <button
           onClick={() => setType("RESTAURANT")}
-          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${type === "RESTAURANT"
-            ? "border-[#022C22] bg-[#022C22]/5"
-            : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
-            }`}
+          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${
+            type === "RESTAURANT"
+              ? "border-[#022C22] bg-[#022C22]/5"
+              : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
+          }`}
         >
           <div className="rounded-2xl bg-[#022C22]/10 p-5 text-[#022C22]">
             <Utensils className="h-12 w-12" />
@@ -53,10 +54,11 @@ export default function Step1Selection({
 
         <button
           onClick={() => setType("SHOP")}
-          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${type === "SHOP"
-            ? "border-[#022C22] bg-[#022C22]/5"
-            : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
-            }`}
+          className={`flex flex-col items-center gap-6 rounded-[2rem] border-4 p-10 transition-all ${
+            type === "SHOP"
+              ? "border-[#022C22] bg-[#022C22]/5"
+              : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
+          }`}
         >
           <div className="rounded-2xl bg-[#022C22]/10 p-5 text-[#022C22]">
             <Store className="h-12 w-12" />
@@ -80,7 +82,7 @@ export default function Step1Selection({
             <select
               value={selectedCategoryId}
               onChange={(e) => onCategoryChange(e.target.value)}
-              className="h-14 w-full appearance-none rounded-xl border-2 border-gray-100 bg-gray-50 pl-12 pr-10 text-black outline-none focus:border-[#022C22] focus:bg-white font-bold"
+              className="h-14 w-full appearance-none rounded-xl border-2 border-gray-100 bg-gray-50 pl-12 pr-10 font-bold text-black outline-none focus:border-[#022C22] focus:bg-white"
             >
               <option value="">Select a category...</option>
               {categories.map((cat) => (
@@ -89,7 +91,7 @@ export default function Step1Selection({
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           </div>
           <p className="text-xs text-gray-400">
             This helps us organize your shop correctly for your customers.

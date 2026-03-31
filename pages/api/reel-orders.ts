@@ -191,15 +191,15 @@ export default async function handler(
       const walletData = await hasuraClient.request<{
         personalWallet: Array<{ id: string; balance: string }>;
       }>(GET_PERSONAL_WALLET, { user_id });
-      
+
       const wallet = walletData.personalWallet?.[0];
       if (!wallet) return res.status(400).json({ error: "Wallet not found" });
-      
+
       const currentBalance = parseFloat(wallet.balance || "0");
       if (currentBalance < parseFloat(total)) {
         return res.status(400).json({ error: "Insufficient wallet balance" });
       }
-      
+
       const newBalance = (currentBalance - parseFloat(total)).toFixed(2);
       await hasuraClient.request(UPDATE_PERSONAL_WALLET_BALANCE, {
         user_id,
@@ -225,8 +225,15 @@ export default async function handler(
       pin: orderPin,
       payment_method: payment_method || "mobile_money",
       applied_promotions: applied_promotions || [],
-      discount_breakdown: discount_breakdown || { subtotal: 0, service_fee: 0, delivery_fee: 0 },
-      status: payment_method === "momo" || payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
+      discount_breakdown: discount_breakdown || {
+        subtotal: 0,
+        service_fee: 0,
+        delivery_fee: 0,
+      },
+      status:
+        payment_method === "momo" || payment_method === "mobile_money"
+          ? "AWAITING_PAYMENT"
+          : "PENDING",
     });
 
     const orderId = orderRes.insert_reel_orders_one.id;
@@ -244,7 +251,7 @@ export default async function handler(
             type: "payment",
             status: "SUCCESSFUL",
             phone: "", // Not essential for wallet
-          }
+          },
         });
       } catch (e) {
         console.error("Failed to create wallet transaction record:", e);
@@ -288,7 +295,7 @@ export default async function handler(
           // Increment usage and budget
           await hasuraClient.request(UPDATE_PROMOTION_STATS, {
             id: promo.promotion_id,
-            discount_amount: parseFloat(promo.discount_amount || "0")
+            discount_amount: parseFloat(promo.discount_amount || "0"),
           });
 
           // Record Influencer Earning if applicable
@@ -299,10 +306,12 @@ export default async function handler(
                 promotion_id: promo.promotion_id,
                 reel_order_id: orderId,
                 order_value: parseFloat(total).toFixed(2),
-                earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2),
+                earning_amount: (
+                  parseFloat(promo.discount_amount || "0") * 0.1
+                ).toFixed(2),
                 payout_status: "pending",
-                status: "active"
-              }
+                status: "active",
+              },
             });
           }
         } catch (e) {

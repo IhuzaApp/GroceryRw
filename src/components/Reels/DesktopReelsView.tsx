@@ -4,11 +4,7 @@ import RootLayout from "@components/ui/layout";
 import VideoReel from "./VideoReel";
 import DesktopCommentsSidebar from "./DesktopCommentsSidebar";
 import { ChevronUp, ChevronDown, Home } from "lucide-react";
-import {
-  isValidMediaUrl,
-  isYouTubeUrl,
-  getYouTubeVideoId,
-} from "./ReelTypes";
+import { isValidMediaUrl, isYouTubeUrl, getYouTubeVideoId } from "./ReelTypes";
 
 // Types
 type FoodPost = any;
@@ -145,7 +141,8 @@ export default function DesktopReelsView({
   const handleNavClick = (direction: "up" | "down") => {
     if (!containerRef.current) return;
     const container = containerRef.current;
-    const nextIndex = direction === "up" ? visiblePostIndex - 1 : visiblePostIndex + 1;
+    const nextIndex =
+      direction === "up" ? visiblePostIndex - 1 : visiblePostIndex + 1;
 
     if (nextIndex >= 0 && nextIndex < posts.length) {
       const targetElement = container.children[nextIndex] as HTMLElement;
@@ -160,7 +157,11 @@ export default function DesktopReelsView({
 
   return (
     <RootLayout>
-      <div className={`relative min-h-screen w-full overflow-hidden ${isDark ? "bg-black" : "bg-gray-100"}`}>
+      <div
+        className={`relative min-h-screen w-full overflow-hidden ${
+          isDark ? "bg-black" : "bg-gray-100"
+        }`}
+      >
         {/* Immersive Blurred Background */}
         {activePost &&
           (() => {
@@ -189,8 +190,9 @@ export default function DesktopReelsView({
                   }}
                 />
                 <div
-                  className={`absolute inset-0 ${isDark ? "bg-black/40" : "bg-white/20"
-                    }`}
+                  className={`absolute inset-0 ${
+                    isDark ? "bg-black/40" : "bg-white/20"
+                  }`}
                 />
               </div>
             );
@@ -200,10 +202,11 @@ export default function DesktopReelsView({
         <div className="fixed left-8 top-1/2 z-50 -translate-y-1/2 space-y-4">
           <Link href="/">
             <button
-              className={`flex h-14 w-14 items-center justify-center rounded-full border shadow-2xl backdrop-blur-xl transition-all hover:scale-110 active:scale-95 ${isDark
-                ? "border-gray-700 bg-gray-900/40 text-white hover:bg-gray-800/60"
-                : "border-white/40 bg-white/40 text-gray-900 hover:bg-white/60"
-                }`}
+              className={`flex h-14 w-14 items-center justify-center rounded-full border shadow-2xl backdrop-blur-xl transition-all hover:scale-110 active:scale-95 ${
+                isDark
+                  ? "border-gray-700 bg-gray-900/40 text-white hover:bg-gray-800/60"
+                  : "border-white/40 bg-white/40 text-gray-900 hover:bg-white/60"
+              }`}
               title="Back to Home"
             >
               <Home size={28} />
@@ -238,7 +241,7 @@ export default function DesktopReelsView({
                     isAuthenticated={isAuthenticated}
                     onAuthRequired={onAuthRequired}
                     onLike={toggleLike}
-                    onComment={() => { }}
+                    onComment={() => {}}
                     onShare={handleShare}
                   />
                 </div>
@@ -250,20 +253,22 @@ export default function DesktopReelsView({
               <button
                 onClick={() => handleNavClick("up")}
                 disabled={visiblePostIndex === 0}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${isDark
-                  ? "border-gray-700 bg-gray-900/40 text-white"
-                  : "border-white/40 bg-white/40 text-gray-800"
-                  }`}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${
+                  isDark
+                    ? "border-gray-700 bg-gray-900/40 text-white"
+                    : "border-white/40 bg-white/40 text-gray-800"
+                }`}
               >
                 <ChevronUp size={24} />
               </button>
               <button
                 onClick={() => handleNavClick("down")}
                 disabled={visiblePostIndex === posts.length - 1}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${isDark
-                  ? "border-gray-700 bg-gray-900/40 text-white"
-                  : "border-white/40 bg-white/40 text-gray-800"
-                  }`}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 ${
+                  isDark
+                    ? "border-gray-700 bg-gray-900/40 text-white"
+                    : "border-white/40 bg-white/40 text-gray-800"
+                }`}
               >
                 <ChevronDown size={24} />
               </button>
@@ -288,7 +293,7 @@ export default function DesktopReelsView({
 
         {/* Refresh Indicator */}
         {isRefreshing && (
-          <div className="fixed left-1/2 top-8 z-50 flex -translate-x-1/2 transform items-center gap-3 rounded-full bg-black/60 px-6 py-3 text-sm font-medium text-white backdrop-blur-xl transition-all shadow-2xl">
+          <div className="fixed left-1/2 top-8 z-50 flex -translate-x-1/2 transform items-center gap-3 rounded-full bg-black/60 px-6 py-3 text-sm font-medium text-white shadow-2xl backdrop-blur-xl transition-all">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
             <span>Refreshing Feed...</span>
           </div>

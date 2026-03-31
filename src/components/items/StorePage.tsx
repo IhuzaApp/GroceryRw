@@ -86,9 +86,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -187,7 +187,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     setSelectedProducts((prev) =>
       prev.map((p) =>
         p.id === productId &&
-          JSON.stringify(p.selectedDetails ?? {}) === detailsKey
+        JSON.stringify(p.selectedDetails ?? {}) === detailsKey
           ? { ...p, quantity: newQuantity }
           : p
       )
@@ -389,12 +389,13 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
               </svg>
             </button>
             <div
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${store.is_active && storeStatus.isOpen
-                ? "bg-green-500/90 !text-white"
-                : store.is_active && !storeStatus.isOpen
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+                store.is_active && storeStatus.isOpen
+                  ? "bg-green-500/90 !text-white"
+                  : store.is_active && !storeStatus.isOpen
                   ? "bg-orange-500/90 !text-white"
                   : "bg-red-500/90 !text-white"
-                }`}
+              }`}
             >
               {store.is_active ? (
                 <>
@@ -520,12 +521,13 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     </h1>
                     {/* Status Badge */}
                     <div
-                      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${store.is_active
-                        ? storeStatus.isOpen
-                          ? "bg-green-500/90"
-                          : "bg-orange-500/90"
-                        : "bg-red-500/90"
-                        }`}
+                      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${
+                        store.is_active
+                          ? storeStatus.isOpen
+                            ? "bg-green-500/90"
+                            : "bg-orange-500/90"
+                          : "bg-red-500/90"
+                      }`}
                     >
                       {store.is_active ? (
                         <>
@@ -641,10 +643,11 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
-                  className={`flex-shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${activeCategory === category
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40"
-                    : "bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                    }`}
+                  className={`flex-shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${
+                    activeCategory === category
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40"
+                      : "bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  }`}
                 >
                   {category === "all" ? "All" : category}
                 </button>
@@ -777,7 +780,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             </h3>
                             {product.selectedDetails &&
                               Object.keys(product.selectedDetails).length >
-                              0 && (
+                                0 && (
                                 <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
                                   {Object.entries(product.selectedDetails)
                                     .map(([k, v]) => `${k}: ${v}`)
@@ -874,10 +877,11 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
               )}
 
               <div
-                className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 lg:hidden ${isCartExpanded
-                  ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
-                  : "shadow-2xl"
-                  } rounded-t-2xl bg-white dark:bg-gray-800`}
+                className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 lg:hidden ${
+                  isCartExpanded
+                    ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
+                    : "shadow-2xl"
+                } rounded-t-2xl bg-white dark:bg-gray-800`}
                 style={{
                   maxHeight: isCartExpanded ? "calc(90vh - 64px)" : "160px",
                   overflow: "hidden",
@@ -947,8 +951,9 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
                 {/* Expanded content */}
                 <div
-                  className={`p-4 ${isCartExpanded ? "block" : "hidden"
-                    } overflow-y-auto`}
+                  className={`p-4 ${
+                    isCartExpanded ? "block" : "hidden"
+                  } overflow-y-auto`}
                   style={{ maxHeight: "calc(90vh - 124px)" }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -982,7 +987,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             </h3>
                             {product.selectedDetails &&
                               Object.keys(product.selectedDetails).length >
-                              0 && (
+                                0 && (
                                 <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
                                   {Object.entries(product.selectedDetails)
                                     .map(([k, v]) => `${k}: ${v}`)

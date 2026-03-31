@@ -76,8 +76,14 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           style={{ animationDelay: "2s" }}
         />
         {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
-          style={{ backgroundImage: 'radial-gradient(#022c22 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
+        <div
+          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "radial-gradient(#022c22 0.5px, transparent 0.5px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
       </div>
 
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
@@ -90,12 +96,15 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             <img
               src="/assets/logos/PlasIcon.png"
               alt="Plas Logo"
-              className="h-16 w-16 object-contain animate-[pulse_3s_ease-in-out_infinite] sm:h-20 sm:w-20"
+              className="h-16 w-16 animate-[pulse_3s_ease-in-out_infinite] object-contain sm:h-20 sm:w-20"
             />
           </div>
 
           {/* Minimal Ring Spinner around Logo */}
-          <svg className="absolute -inset-4 h-32 w-32 animate-[spin_4s_linear_infinite] sm:h-40 sm:w-40" viewBox="0 0 100 100">
+          <svg
+            className="absolute -inset-4 h-32 w-32 animate-[spin_4s_linear_infinite] sm:h-40 sm:w-40"
+            viewBox="0 0 100 100"
+          >
             <circle
               cx="50"
               cy="50"
@@ -163,11 +172,20 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
       <style jsx global>{`
         @keyframes shimmer {
-          100% { transform: translateX(100%); }
+          100% {
+            transform: translateX(100%);
+          }
         }
         @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.9; }
+          0%,
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.05);
+            opacity: 0.9;
+          }
         }
       `}</style>
     </div>

@@ -89,7 +89,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Fetch personal wallet balance for all users
     let wallet = null;
     const walletRes = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || ""
+      `${
+        process.env.NEXT_PUBLIC_API_URL || ""
       }/api/queries/personal-wallet-balance`,
       {
         headers: {
@@ -385,8 +386,12 @@ export default function UserPaymentCards({
 
           <div className="mb-8 flex items-start justify-between">
             <div>
-              <p className="mb-0.5 text-[10px] opacity-80 uppercase tracking-widest font-bold">Wallet Balance</p>
-              <h4 className="text-base font-black tracking-tight uppercase tracking-tighter">My Wallet</h4>
+              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                Wallet Balance
+              </p>
+              <h4 className="text-base font-black uppercase tracking-tight tracking-tighter">
+                My Wallet
+              </h4>
             </div>
             <div className="flex items-center">
               <div className="mr-1 h-5 w-8 rounded-sm bg-yellow-400"></div>
@@ -403,7 +408,7 @@ export default function UserPaymentCards({
                   alt=""
                 />
               </div>
-              <p className="font-mono text-base tracking-wider font-black">
+              <p className="font-mono text-base font-black tracking-wider">
                 {formatCurrencySync(walletBalance)}
               </p>
             </div>
@@ -411,7 +416,9 @@ export default function UserPaymentCards({
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="mb-0.5 text-[10px] opacity-80 uppercase tracking-widest font-bold">Last Updated</p>
+              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                Last Updated
+              </p>
               <p className="text-xs font-black">Today</p>
             </div>
             <div className="text-right">
@@ -432,7 +439,7 @@ export default function UserPaymentCards({
           <div className="mt-4">
             <button
               onClick={() => setShowAddMoneyModal(true)}
-              className="w-full rounded-lg bg-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest !text-white backdrop-blur-sm transition-all hover:scale-[1.02] hover:bg-white/30 active:scale-95 shadow-lg border border-white/10"
+              className="w-full rounded-lg border border-white/10 bg-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest !text-white shadow-lg backdrop-blur-sm transition-all hover:scale-[1.02] hover:bg-white/30 active:scale-95"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg
@@ -454,7 +461,9 @@ export default function UserPaymentCards({
           </div>
 
           <div className="absolute bottom-3 right-3">
-            <p className="text-xs font-bold opacity-70 uppercase">PERSONAL USE ONLY</p>
+            <p className="text-xs font-bold uppercase opacity-70">
+              PERSONAL USE ONLY
+            </p>
           </div>
         </div>
 

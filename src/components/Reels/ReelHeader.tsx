@@ -1,6 +1,11 @@
 import React from "react";
 import { Avatar, Badge } from "rsuite";
-import { FoodPost, getPostTypeColor, getCategoryColor, isValidMediaUrl } from "./ReelTypes";
+import {
+  FoodPost,
+  getPostTypeColor,
+  getCategoryColor,
+  isValidMediaUrl,
+} from "./ReelTypes";
 
 interface ReelHeaderProps {
   post: FoodPost;
@@ -33,7 +38,8 @@ const ReelHeader: React.FC<ReelHeaderProps> = ({ post }) => {
             borderRadius: "16px",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           }}
         >
           <span style={{ textTransform: "capitalize" }}>{post.type}</span>
@@ -49,10 +55,13 @@ const ReelHeader: React.FC<ReelHeaderProps> = ({ post }) => {
             borderRadius: "16px",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           }}
         >
-          <span style={{ textTransform: "capitalize" }}>{post.content.category}</span>
+          <span style={{ textTransform: "capitalize" }}>
+            {post.content.category}
+          </span>
         </div>
       </div>
     </div>

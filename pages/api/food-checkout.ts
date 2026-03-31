@@ -166,7 +166,11 @@ export default async function handler(
   }
 
   try {
-    const session = (await getServerSession(req, res, authOptions as any)) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
 
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -190,7 +194,7 @@ export default async function handler(
       applied_promotions,
       discount_breakdown,
       subtotal: reqSubtotal,
-      payment_method
+      payment_method,
     }: FoodCheckoutRequest & { payment_method?: string } = req.body;
 
     // Validate required fields
@@ -201,24 +205,30 @@ export default async function handler(
       items.length === 0
     ) {
       return res.status(400).json({
-        error: "Missing required fields: restaurant_id, delivery_address_id, or items"
+        error:
+          "Missing required fields: restaurant_id, delivery_address_id, or items",
       });
     }
 
     // 0. Validate pricing token (MANDATORY)
     if (!pricing_token) {
-      return res.status(400).json({ error: "Pricing token is required for all checkouts" });
+      return res
+        .status(400)
+        .json({ error: "Pricing token is required for all checkouts" });
     }
 
-    const expectedHash = crypto.createHash('sha256')
-      .update(JSON.stringify({
-        cart_id: restaurant_id,
-        items: items.length,
-        subtotal: parseFloat(reqSubtotal?.toString() || "0"),
-        total_discount: parseFloat(discount || "0"),
-        timestamp: Math.floor(Date.now() / 60000)
-      }))
-      .digest('hex');
+    const expectedHash = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          cart_id: restaurant_id,
+          items: items.length,
+          subtotal: parseFloat(reqSubtotal?.toString() || "0"),
+          total_discount: parseFloat(discount || "0"),
+          timestamp: Math.floor(Date.now() / 60000),
+        })
+      )
+      .digest("hex");
 
     // In production, we'd verify pricing_token === expectedHash here.
     // console.log("Token validation:", { pricing_token, expectedHash });
@@ -271,8 +281,15 @@ export default async function handler(
       delivery_notes: delivery_notes || null,
       pin: orderPin,
       applied_promotions: applied_promotions || [],
-      discount_breakdown: discount_breakdown || { subtotal: 0, service_fee: 0, delivery_fee: 0 },
-      status: payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "WAITING_FOR_CONFIRMATION"
+      discount_breakdown: discount_breakdown || {
+        subtotal: 0,
+        service_fee: 0,
+        delivery_fee: 0,
+      },
+      status:
+        payment_method === "mobile_money"
+          ? "AWAITING_PAYMENT"
+          : "WAITING_FOR_CONFIRMATION",
     })) as any;
 
     if (
@@ -314,7 +331,7 @@ export default async function handler(
           // Increment usage and budget
           await hasuraClient.request(UPDATE_PROMOTION_STATS, {
             id: promo.promotion_id,
-            discount_amount: parseFloat(promo.discount_amount || "0")
+            discount_amount: parseFloat(promo.discount_amount || "0"),
           });
 
           // Record Influencer Earning if applicable
@@ -325,10 +342,12 @@ export default async function handler(
                 promotion_id: promo.promotion_id,
                 restaurant_order_id: orderId,
                 order_value: subtotal.toFixed(2),
-                earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2), // Example: 10% of discount or other rule
+                earning_amount: (
+                  parseFloat(promo.discount_amount || "0") * 0.1
+                ).toFixed(2), // Example: 10% of discount or other rule
                 payout_status: "pending",
-                status: "active"
-              }
+                status: "active",
+              },
             });
           }
         } catch (e) {

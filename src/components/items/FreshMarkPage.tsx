@@ -66,9 +66,9 @@ function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -187,10 +187,10 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
     activeCategory === "all"
       ? shopData.products
       : shopData.products.filter(
-        (product) =>
-          (product.ProductName?.name || product.name) &&
-          product.category === activeCategory
-      );
+          (product) =>
+            (product.ProductName?.name || product.name) &&
+            product.category === activeCategory
+        );
 
   const sanitizeSrc = (raw: string | null | undefined) => {
     if (raw && raw.startsWith("/")) return raw;
@@ -304,10 +304,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
           {/* Shop Status Badge */}
           <div className="absolute right-4 top-7 z-20">
             <div
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${isCurrentlyOpen
-                ? "bg-green-500/90 !text-white"
-                : "bg-red-500/90 !text-white"
-                }`}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+                isCurrentlyOpen
+                  ? "bg-green-500/90 !text-white"
+                  : "bg-red-500/90 !text-white"
+              }`}
             >
               {isCurrentlyOpen ? "Open" : "Closed"}
             </div>
@@ -579,20 +580,22 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                     <button
                       key={category}
                       onClick={() => setActiveCategory(category)}
-                      className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === category
-                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                        }`}
+                      className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                        activeCategory === category
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      }`}
                     >
                       {category.charAt(0).toUpperCase() + category.slice(1)}
                     </button>
                   ))}
                   <button
                     onClick={() => setActiveCategory("all")}
-                    className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === "all"
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                      }`}
+                    className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                      activeCategory === "all"
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    }`}
                   >
                     All Products
                   </button>
@@ -668,10 +671,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
             <div className="flex gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setActiveCategory("all")}
-                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === "all"
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  }`}
+                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  activeCategory === "all"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                }`}
               >
                 All Products
               </button>
@@ -681,10 +685,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
-                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === category
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                    }`}
+                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    activeCategory === category
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  }`}
                 >
                   {category.charAt(0).toUpperCase() + category.slice(1)}
                 </button>
@@ -697,10 +702,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
             <div className="flex gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setActiveCategory("all")}
-                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === "all"
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  }`}
+                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  activeCategory === "all"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                }`}
               >
                 All Products
               </button>
@@ -710,10 +716,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
-                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === category
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                    }`}
+                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    activeCategory === category
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  }`}
                 >
                   {category.charAt(0).toUpperCase() + category.slice(1)}
                 </button>

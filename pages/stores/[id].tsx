@@ -231,17 +231,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
 
     // Transform products - Only include fields needed by StorePage and StoreProductCard
-    const products = productsData.PlasBusinessProductsOrSerive.map((product) => ({
-      id: product.id,
-      name: product.name,
-      description: product.Description || "",
-      image: product.Image || "",
-      price: product.price,
-      unit: product.unit || "",
-      measurement_unit: product.unit || "",
-      category: product.category?.trim() || "Other",
-      otherDetails: product.otherDetails ?? null,
-    }));
+    const products = productsData.PlasBusinessProductsOrSerive.map(
+      (product) => ({
+        id: product.id,
+        name: product.name,
+        description: product.Description || "",
+        image: product.Image || "",
+        price: product.price,
+        unit: product.unit || "",
+        measurement_unit: product.unit || "",
+        category: product.category?.trim() || "Other",
+        otherDetails: product.otherDetails ?? null,
+      })
+    );
 
     return {
       props: {

@@ -242,7 +242,7 @@ export default function StoreProductCard({
           <p className="mb-1 line-clamp-1 text-sm font-semibold leading-tight text-gray-900 dark:text-white">
             {name}
           </p>
-          <div className="flex items-center justify-between gap-1.5 mt-1">
+          <div className="mt-1 flex items-center justify-between gap-1.5">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black text-green-600 dark:text-green-400">
                 {formatCurrencySync(parseFloat(price || "0"))}
@@ -259,7 +259,7 @@ export default function StoreProductCard({
                 e.stopPropagation();
                 setShowQuantityModal(true);
               }}
-              className="flex h-8 w-8 items-center justify-center flex-shrink-0 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-md shadow-green-500/20 transition-all active:scale-95"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-md shadow-green-500/20 transition-all active:scale-95"
             >
               <Plus className="h-5 w-5 !text-white" />
             </button>
@@ -442,15 +442,15 @@ export default function StoreProductCard({
                                         colorStyle
                                           ? isTransparent
                                             ? {
-                                              border: "2px solid #d4d4d4",
-                                              background: "#f5f5f5",
-                                              color: "#171717",
-                                            }
+                                                border: "2px solid #d4d4d4",
+                                                background: "#f5f5f5",
+                                                color: "#171717",
+                                              }
                                             : {
-                                              background:
-                                                colorStyle.background,
-                                              color: colorStyle.color,
-                                            }
+                                                background:
+                                                  colorStyle.background,
+                                                color: colorStyle.color,
+                                              }
                                           : undefined
                                       }
                                     >
@@ -498,10 +498,11 @@ export default function StoreProductCard({
                               {[1, 2, 3, 4, 5].map((i) => (
                                 <Star
                                   key={i}
-                                  className={`h-3.5 w-3.5 ${i <= (parseFloat(r.ratings || "0") || 0)
-                                    ? "fill-amber-500"
-                                    : "fill-gray-200 dark:fill-gray-600"
-                                    }`}
+                                  className={`h-3.5 w-3.5 ${
+                                    i <= (parseFloat(r.ratings || "0") || 0)
+                                      ? "fill-amber-500"
+                                      : "fill-gray-200 dark:fill-gray-600"
+                                  }`}
                                 />
                               ))}
                             </div>
@@ -631,10 +632,11 @@ export default function StoreProductCard({
                                   [opt.key]: val,
                                 }))
                               }
-                              className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${selectedDetails[opt.key] === val
-                                ? "border-green-500 bg-green-500 text-white dark:bg-green-600"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-green-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-500"
-                                }`}
+                              className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
+                                selectedDetails[opt.key] === val
+                                  ? "border-green-500 bg-green-500 text-white dark:bg-green-600"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-green-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-500"
+                              }`}
                             >
                               {val}
                             </button>
@@ -683,10 +685,11 @@ export default function StoreProductCard({
                       <button
                         key={qty}
                         onClick={() => setSelectedQuantity(qty)}
-                        className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-200 ${selectedQuantity === qty
-                          ? "scale-105 border-green-500 bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-500 dark:hover:bg-green-900/20"
-                          }`}
+                        className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-200 ${
+                          selectedQuantity === qty
+                            ? "scale-105 border-green-500 bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-500 dark:hover:bg-green-900/20"
+                        }`}
                       >
                         {qty}
                       </button>

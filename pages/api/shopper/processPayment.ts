@@ -127,7 +127,9 @@ const UPDATE_WALLET_BALANCES = gql`
 
 // GraphQL mutation to create wallet transactions
 const CREATE_WALLET_TRANSACTIONS = gql`
-  mutation createWalletTransactions($transactions: [Wallet_Transactions_insert_input!]!) {
+  mutation createWalletTransactions(
+    $transactions: [Wallet_Transactions_insert_input!]!
+  ) {
     insert_Wallet_Transactions(objects: $transactions) {
       returning {
         id

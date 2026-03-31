@@ -155,7 +155,9 @@ async function handleAddLike(req: NextApiRequest, res: NextApiResponse) {
 
     const userId = (session.user as any).id;
     const { reel_id } = req.body;
-    console.log(`[Backend API] handleAddLike: userId: ${userId}, reel_id: ${reel_id}`);
+    console.log(
+      `[Backend API] handleAddLike: userId: ${userId}, reel_id: ${reel_id}`
+    );
 
     if (!reel_id) {
       return res.status(400).json({ error: "Missing reel_id" });
@@ -168,7 +170,9 @@ async function handleAddLike(req: NextApiRequest, res: NextApiResponse) {
     );
 
     if (existingLike.reel_likes.length > 0) {
-      console.warn(`[Backend API] handleAddLike rejected: User ${userId} already liked reel ${reel_id}`);
+      console.warn(
+        `[Backend API] handleAddLike rejected: User ${userId} already liked reel ${reel_id}`
+      );
       return res.status(400).json({ error: "User already liked this reel" });
     }
 
@@ -192,7 +196,10 @@ async function handleAddLike(req: NextApiRequest, res: NextApiResponse) {
 async function handleRemoveLike(req: NextApiRequest, res: NextApiResponse) {
   if (!hasuraClient) throw new Error("Hasura client is not initialized");
   try {
-    console.log(`[Backend API] handleRemoveLike triggered with body:`, req.body);
+    console.log(
+      `[Backend API] handleRemoveLike triggered with body:`,
+      req.body
+    );
     const session = (await getServerSession(
       req,
       res,
@@ -200,13 +207,17 @@ async function handleRemoveLike(req: NextApiRequest, res: NextApiResponse) {
     )) as Session | null;
 
     if (!session?.user) {
-      console.warn(`[Backend API] handleRemoveLike: Unauthorized access attempt`);
+      console.warn(
+        `[Backend API] handleRemoveLike: Unauthorized access attempt`
+      );
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const userId = (session.user as any).id;
     const { reel_id } = req.body;
-    console.log(`[Backend API] handleRemoveLike: userId: ${userId}, reel_id: ${reel_id}`);
+    console.log(
+      `[Backend API] handleRemoveLike: userId: ${userId}, reel_id: ${reel_id}`
+    );
 
     if (!reel_id) {
       return res.status(400).json({ error: "Missing reel_id" });
@@ -222,7 +233,9 @@ async function handleRemoveLike(req: NextApiRequest, res: NextApiResponse) {
     );
 
     if (result.delete_reel_likes.affected_rows === 0) {
-      console.warn(`[Backend API] handleRemoveLike rejected: Like not found for user ${userId} and reel ${reel_id}`);
+      console.warn(
+        `[Backend API] handleRemoveLike rejected: Like not found for user ${userId} and reel ${reel_id}`
+      );
       return res.status(404).json({ error: "Like not found" });
     }
 

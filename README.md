@@ -13117,9 +13117,7 @@ When status changes to "delivered":
 
 The Combined Order System provides a seamless multi-store shopping experience that benefits customers, the platform, and shoppers. By grouping orders with a shared Combined Order ID and PIN, the system maintains simplicity while enabling powerful cross-store functionality. The architecture is designed for scalability and can be enhanced with additional features like transaction safety, parallel processing, and intelligent order optimization.
 
-
 ---
-
 
 # Map Components
 
@@ -13273,7 +13271,7 @@ To support the promotions and discount breakdown, the `Orders` table must have t
 
 ```sql
 -- Ensure Orders table has all promotion-related fields
-ALTER TABLE "Orders" 
+ALTER TABLE "Orders"
 ADD COLUMN IF NOT EXISTS "discount" text DEFAULT '0',
 ADD COLUMN IF NOT EXISTS "voucher_code" text,
 ADD COLUMN IF NOT EXISTS "applied_promotions" jsonb DEFAULT '[]',
@@ -13281,6 +13279,7 @@ ADD COLUMN IF NOT EXISTS "discount_breakdown" jsonb DEFAULT '{"subtotal": 0, "se
 ```
 
 **Next Steps in Hasura:**
+
 1.  **Track Columns**: Go to Data -> Public -> Orders and click **Track All** (or track these 4 columns).
 2.  **Permissions**: Update the `insert` and `select` permissions for the `user` role to allow access to these new fields.
 
@@ -13290,16 +13289,19 @@ ADD COLUMN IF NOT EXISTS "discount_breakdown" jsonb DEFAULT '{"subtotal": 0, "se
 All pricing, discounts, and validations happen on the backend. The frontend (`checkoutCard.tsx`) never calculates final totals locally.
 
 **Pricing Token:**
+
 - Every validation response includes a `pricing_token` (SHA256).
 - Required for order creation to ensure the order total matches backend calculations.
 
 **Atomic Validation:**
 Promotions are validated against a full cart snapshot including:
+
 - Items
 - Quantities
 - User location
 
 **Discount Types Supported:**
+
 - Percentage (e.g., 5% off)
 - Fixed (e.g., $500 off)
 - BOGO (Buy-One-Get-One on specific items)
@@ -13309,13 +13311,14 @@ Promotions are validated against a full cart snapshot including:
 **1. Auto-Apply Promotions**
 On load, the system checks store-wide or flash sales via:
 `GET /api/promotions/auto-apply`
-*Note: Skip auto-apply if appliedCode exists to prevent overwriting manual codes.*
+_Note: Skip auto-apply if appliedCode exists to prevent overwriting manual codes._
 
 **2. Manual Apply**
 User enters a code, validated via:
 `POST /api/promotions/validate`
 
 Returns:
+
 ```json
 {
   "valid": true,
@@ -13334,6 +13337,7 @@ Returns:
 ```
 
 **3. Sync Loop**
+
 - Any cart change (quantity, address, item removal) triggers a re-validation.
 - Ensures promotions remain valid.
 - Manually applied codes are never overwritten by auto-sync.
@@ -13344,6 +13348,7 @@ On “Proceed to Checkout”, call:
 Issues the definitive `pricing_token` for the order.
 
 Payload must include:
+
 ```json
 {
   "cart_ids": [...],
@@ -13354,21 +13359,25 @@ Payload must include:
 ```
 
 **5. Checkout**
+
 - Order creation API uses the pricing token and discount breakdown.
 - Orders without a valid `pricing_token` are rejected.
 
 ### 👥 Referral System
+
 - Referral codes (e.g., `REF-123`) are validated through the same backend pipeline.
 - Stacking type is typically `with_referral`, allowing combination with certain store promotions.
 - Successful usage is logged in the backend for payout and analytics.
 
 ### 🛡️ Stacking Rules
+
 - **Exclusive**: Only one exclusive promotion can apply. UI disables manual code entry when active.
 - **With Referral**: Can coexist with certain other promotions.
 - **Stackable**: Multiple non-exclusive promotions can stack if backend permits.
-*Backend enforces these rules; frontend only reflects restrictions.*
+  _Backend enforces these rules; frontend only reflects restrictions._
 
 ### 💸 Discounts & Payload
+
 - Backend calculates all discount types: percentage, fixed, BOGO.
 - Checkout payload always includes:
   - `cart_ids`
@@ -13378,6 +13387,7 @@ Payload must include:
 - Frontend never modifies totals; only displays backend values.
 
 **Example Backend Discounts Response:**
+
 ```json
 {
   "discounts": {
@@ -13405,12 +13415,14 @@ Payload must include:
 ```
 
 ### ⚡ Promotion Sync Rules
+
 1. **Preserve Manual Codes**: Codes entered by the user remain applied during cart updates.
 2. **Auto-Apply Guard**: Auto-sync skips execution if `appliedCode` exists.
 3. **Always Include Codes in Payloads**: Both auto-apply and `validate-final` must include `applied_codes`.
 4. **Merge Discounts**: `setDiscounts` must merge new discounts with existing `promotions_applied` to avoid zeroing out.
 
 ### 📝 Notes & Best Practices
+
 - **Logging**: Console logs use emojis for quick filtering (🗺️, ✅, ❌, ⚠️).
 - **Error Handling**: Centralized in utility functions.
 - **Location Sync**: Real-time via `useLocationSyncer`.
@@ -13420,19 +13432,19 @@ Payload must include:
 ### 🔧 Verification
 
 **Automated Tests:**
+
 - Combined cart checkout with valid `pricing_token`.
 - Promotion usage recorded in database.
 - UI lock when exclusive promotion is applied.
 
 **Manual Tests:**
+
 - Single shop checkout with promotion.
 - Combined shop checkout with promotion.
 - Food order checkout with promotion.
 - Checkout without any promo code (full payment).
 
 ---
-
-
 
 # User Dashboard Components
 

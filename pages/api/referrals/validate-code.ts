@@ -6,21 +6,25 @@ import { gql } from "graphql-request";
 
 // Query to validate referral code
 const VALIDATE_REFERRAL_CODE = gql`
-query ValidateReferralCode($referralCode: String!) {
-  Referral_window(where: {referralCode: {_eq: $referralCode}, status: {_in: ["approved", "active"]}}) {
-    id
-    referralCode
-    status
-    user_id
-    deviceFingerprint
-    email
-    name
-    phone
-    phoneVerified
-    created_at
+  query ValidateReferralCode($referralCode: String!) {
+    Referral_window(
+      where: {
+        referralCode: { _eq: $referralCode }
+        status: { _in: ["approved", "active"] }
+      }
+    ) {
+      id
+      referralCode
+      status
+      user_id
+      deviceFingerprint
+      email
+      name
+      phone
+      phoneVerified
+      created_at
+    }
   }
-}
-
 `;
 
 export default async function handler(

@@ -26,16 +26,16 @@ if (hasFirebaseCredentials()) {
       if (privateKey) {
         // Remove surrounding quotes and trim
         privateKey = privateKey.trim();
-        privateKey = privateKey.replace(/^['"]+|['"]+$/g, '');
+        privateKey = privateKey.replace(/^['"]+|['"]+$/g, "");
         // Replace literal \n with newlines
-        privateKey = privateKey.replace(/\\n/g, '\n');
+        privateKey = privateKey.replace(/\\n/g, "\n");
 
         // Ensure it starts and ends correctly (PKCS#8 format)
-        if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
-          privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
+        if (!privateKey.startsWith("-----BEGIN PRIVATE KEY-----")) {
+          privateKey = "-----BEGIN PRIVATE KEY-----\n" + privateKey;
         }
-        if (!privateKey.includes('-----END PRIVATE KEY-----')) {
-          privateKey = privateKey.trim() + '\n-----END PRIVATE KEY-----\n';
+        if (!privateKey.includes("-----END PRIVATE KEY-----")) {
+          privateKey = privateKey.trim() + "\n-----END PRIVATE KEY-----\n";
         }
       }
 
@@ -136,11 +136,11 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
   } catch (error: any) {
     // gRPC code 5 = NOT_FOUND: Firestore database doesn't exist yet or hasn't been provisioned.
     // Return empty tokens gracefully so FCM just no-ops rather than crashing callers.
-    if (error?.code === 5 || error?.message?.includes('NOT_FOUND')) {
+    if (error?.code === 5 || error?.message?.includes("NOT_FOUND")) {
       console.warn(
         "Please enable Firestore in the Firebase console for project: " +
-        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID +
-        ". Returning empty tokens."
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID +
+          ". Returning empty tokens."
       );
       return [];
     }

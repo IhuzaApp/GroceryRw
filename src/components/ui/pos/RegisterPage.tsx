@@ -57,10 +57,11 @@ import {
   PaymentProcessingOverlay,
 } from "./registration";
 
-
 const generatePrivileges = (plan: Plan): UserPrivileges => {
   // Use DEFAULT_PRIVILEGES as base so all modules are present with default false
-  const privileges: UserPrivileges = JSON.parse(JSON.stringify(DEFAULT_PRIVILEGES));
+  const privileges: UserPrivileges = JSON.parse(
+    JSON.stringify(DEFAULT_PRIVILEGES)
+  );
 
   // Explicitly ensure pages access is true as it's the core navigation
   if (privileges.pages) {
@@ -90,7 +91,6 @@ const generatePrivileges = (plan: Plan): UserPrivileges => {
 
   return privileges;
 };
-
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -163,8 +163,12 @@ export default function RegisterPage() {
     | "finalizing"
     | "success"
   >("idle");
-  const [registeredBusinessId, setRegisteredBusinessId] = useState<string | null>(null);
-  const [registeredSubscriptionId, setRegisteredSubscriptionId] = useState<string | null>(null);
+  const [registeredBusinessId, setRegisteredBusinessId] = useState<
+    string | null
+  >(null);
+  const [registeredSubscriptionId, setRegisteredSubscriptionId] = useState<
+    string | null
+  >(null);
   const [registrationSubStep, setRegistrationSubStep] = useState(0);
   const [lastFailedStep, setLastFailedStep] = useState<number | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -257,7 +261,9 @@ export default function RegisterPage() {
     const businessSlug = sanitizeName(formData.name);
     const storageRef = ref(
       storage,
-      `business/${businessSlug}/rdb_certificates/${type}_${Date.now()}_${file.name}`
+      `business/${businessSlug}/rdb_certificates/${type}_${Date.now()}_${
+        file.name
+      }`
     );
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -307,7 +313,8 @@ export default function RegisterPage() {
     switch (currentStep) {
       case 1:
         if (!businessType) return "Please select a business category.";
-        if (businessType === "SHOP" && !formData.categoryId) return "Please select a shop category.";
+        if (businessType === "SHOP" && !formData.categoryId)
+          return "Please select a shop category.";
         if (!selectedPlan) return "Please select a pricing plan.";
         return null;
       case 2:
@@ -379,7 +386,10 @@ export default function RegisterPage() {
     await performMutation(true);
   };
 
-  const performMutation = async (isShell: boolean = false, startAt: number = 1) => {
+  const performMutation = async (
+    isShell: boolean = false,
+    startAt: number = 1
+  ) => {
     if (isSubmitting && !isShell) return; // Prevent double trigger during phase completion
     if (!selectedPlan) {
       setError("No plan selected. Please go back and select a plan.");
@@ -420,7 +430,9 @@ export default function RegisterPage() {
     }
 
     try {
-      console.log(`🚀 [POS Registration] Phase Execution - Starting at Step ${startAt}`);
+      console.log(
+        `🚀 [POS Registration] Phase Execution - Starting at Step ${startAt}`
+      );
 
       // STEP 1: Create Business
       if (startAt <= 1) {
@@ -464,7 +476,8 @@ export default function RegisterPage() {
             },
           });
         }
-        if (businessResult?.errors) throw new Error(businessResult.errors[0].message);
+        if (businessResult?.errors)
+          throw new Error(businessResult.errors[0].message);
         setRegisteredBusinessId(businessId);
         console.log("✅ Step 1: Business created");
       }
@@ -497,7 +510,8 @@ export default function RegisterPage() {
             twoFactorSecrets: "",
           },
         });
-        if (employeeResult?.errors) throw new Error(employeeResult.errors[0].message);
+        if (employeeResult?.errors)
+          throw new Error(employeeResult.errors[0].message);
         console.log("✅ Step 2: Employee created");
       }
 
@@ -516,7 +530,8 @@ export default function RegisterPage() {
             user_id: null,
           },
         });
-        if (aiUsageResult?.errors) throw new Error(aiUsageResult.errors[0].message);
+        if (aiUsageResult?.errors)
+          throw new Error(aiUsageResult.errors[0].message);
         console.log("✅ Step 3: AI Usage created");
       }
 
@@ -534,7 +549,8 @@ export default function RegisterPage() {
             business_id: null,
           },
         });
-        if (reelUsageResult?.errors) throw new Error(reelUsageResult.errors[0].message);
+        if (reelUsageResult?.errors)
+          throw new Error(reelUsageResult.errors[0].message);
         console.log("✅ Step 4: Reel Usage created");
       }
 
@@ -574,16 +590,23 @@ export default function RegisterPage() {
             paid_at: isShell ? null : now,
             payment_method: isShell ? "UNPAID" : "MoMo",
             plan_name: plan.name,
-            plan_price: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
+            plan_price: (cycle === "monthly"
+              ? plan.price_monthly
+              : plan.price_yearly
+            ).toString(),
             reelUsage_id: activeIds.reelUsage_id,
             shopSubscription_id: activeIds.shopSubscription_id,
             status: "pending",
-            subtotal_amount: (cycle === "monthly" ? plan.price_monthly : plan.price_yearly).toString(),
+            subtotal_amount: (cycle === "monthly"
+              ? plan.price_monthly
+              : plan.price_yearly
+            ).toString(),
             tax_amount: "0",
             updated_at: now,
           },
         });
-        if (invoiceResult?.errors) throw new Error(invoiceResult.errors[0].message);
+        if (invoiceResult?.errors)
+          throw new Error(invoiceResult.errors[0].message);
         console.log("✅ Step 6: Invoice created");
       }
 
@@ -611,7 +634,9 @@ export default function RegisterPage() {
           });
           if (walletResult?.errors) {
             // If it's a uniqueness violation, we can safely ignore it as it means the wallet exists
-            if (walletResult.errors[0].message.includes("Uniqueness violation")) {
+            if (
+              walletResult.errors[0].message.includes("Uniqueness violation")
+            ) {
               console.log("ℹ️ Step 7: Wallet already exists, skipping...");
             } else {
               throw new Error(walletResult.errors[0].message);
@@ -620,7 +645,9 @@ export default function RegisterPage() {
           console.log("✅ Step 7: Wallet created/verified");
         } catch (walletErr: any) {
           if (walletErr.message?.includes("Uniqueness violation")) {
-            console.log("ℹ️ Step 7: Wallet already exists (catch), skipping...");
+            console.log(
+              "ℹ️ Step 7: Wallet already exists (catch), skipping..."
+            );
           } else {
             throw walletErr;
           }
@@ -642,9 +669,11 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       console.error("❌ [POS Registration] Mutation Failure:", err);
-      if (err.graphQLErrors) console.error("🔍 Deep GraphQL Errors:", err.graphQLErrors);
+      if (err.graphQLErrors)
+        console.error("🔍 Deep GraphQL Errors:", err.graphQLErrors);
 
-      const errMsg = err.message || "Something went wrong. Please check your data.";
+      const errMsg =
+        err.message || "Something went wrong. Please check your data.";
       setLastFailedStep(registrationSubStep);
       setMutationError(errMsg);
       setError(errMsg);
@@ -677,10 +706,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount:
-            cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly,
+          amount: cycle === "monthly" ? plan.price_monthly : plan.price_yearly,
           payerNumber: formatPhoneForMoMo(momoNumber),
           subscriptionId: registeredSubscriptionId,
           businessId: registeredBusinessId,
@@ -707,7 +733,8 @@ export default function RegisterPage() {
             const statusData = await statusRes.json();
 
             if (statusData.status === "SUCCESSFUL") {
-              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
               setPaymentStatus("success");
               toast.success("Payment successful! Finalizing setup...");
@@ -719,11 +746,15 @@ export default function RegisterPage() {
               statusData.status === "REJECTED" ||
               statusData.status === "EXPIRED"
             ) {
-              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
               setPaymentStatus("failed");
               setProcessingStep("idle");
-              const errMsg = statusData.reason || statusData.message || "Payment request was not successful.";
+              const errMsg =
+                statusData.reason ||
+                statusData.message ||
+                "Payment request was not successful.";
               setError(errMsg);
               toast.error(errMsg);
             }
@@ -771,7 +802,6 @@ export default function RegisterPage() {
 
       <main className="container mx-auto px-4 py-12 md:py-20">
         <div className="mx-auto max-w-4xl">
-
           {error && (
             <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-bold text-red-600">
               {error}
@@ -783,16 +813,15 @@ export default function RegisterPage() {
               mutationError={mutationError}
               lastFailedStep={lastFailedStep}
               registrationSteps={REGISTRATION_STEPS}
-              onRetry={(startAt) => performMutation(registrationSubStep <= 2, startAt)}
+              onRetry={(startAt) =>
+                performMutation(registrationSubStep <= 2, startAt)
+              }
             />
           ) : (
             <>
               {/* Progress Navigator */}
               {!isSuccess && (
-                <RegistrationNavigator
-                  steps={steps}
-                  currentStep={step}
-                />
+                <RegistrationNavigator steps={steps} currentStep={step} />
               )}
 
               <div className="rounded-[2.5rem] bg-white p-8 shadow-xl md:p-12">
@@ -809,7 +838,9 @@ export default function RegisterPage() {
                         cycle={cycle}
                         categories={categories}
                         selectedCategoryId={formData.categoryId}
-                        onCategoryChange={(id) => setFormData(prev => ({ ...prev, categoryId: id }))}
+                        onCategoryChange={(id) =>
+                          setFormData((prev) => ({ ...prev, categoryId: id }))
+                        }
                       />
                     )}
 
@@ -870,7 +901,9 @@ export default function RegisterPage() {
                       )}
                       <div className="flex-1" />
                       <button
-                        onClick={step === 6 ? handleCompleteSetup : handleNextStep}
+                        onClick={
+                          step === 6 ? handleCompleteSetup : handleNextStep
+                        }
                         disabled={
                           isSubmitting ||
                           (step === 3 && (uploading.logo || uploading.profile))
@@ -890,7 +923,6 @@ export default function RegisterPage() {
                         )}
                       </button>
                     </div>
-
                   </div>
                 )}
               </div>
@@ -925,7 +957,8 @@ export default function RegisterPage() {
       {/* Processing Overlay Removed - Integrated into main content */}
 
       {/* Legacy Processing Overlay (for MoMo steps) */}
-      {(processingStep === "initiating_payment" || processingStep === "awaiting_approval") && (
+      {(processingStep === "initiating_payment" ||
+        processingStep === "awaiting_approval") && (
         <PaymentProcessingOverlay processingStep={processingStep} />
       )}
     </div>

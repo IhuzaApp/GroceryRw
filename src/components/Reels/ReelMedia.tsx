@@ -128,8 +128,8 @@ const ReelMedia: React.FC<ReelMediaProps> = ({
             post.content.thumbnail && isValidMediaUrl(post.content.thumbnail)
               ? post.content.thumbnail
               : post.creator.avatar && isValidMediaUrl(post.creator.avatar)
-                ? post.creator.avatar
-                : "/placeholder.svg"
+              ? post.creator.avatar
+              : "/placeholder.svg"
           }
           onLoadedData={handleVideoLoad}
           onError={handleVideoError}

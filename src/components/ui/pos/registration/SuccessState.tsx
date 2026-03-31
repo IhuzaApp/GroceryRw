@@ -17,20 +17,23 @@ export default function SuccessState() {
           <CheckCircle className="h-20 w-20" />
         </div>
       </div>
-      <h2 className="text-3xl md:text-4xl font-extrabold text-[#022C22]">
+      <h2 className="text-3xl font-extrabold text-[#022C22] md:text-4xl">
         All set! We are directing you to the POS page
       </h2>
       <div className="mt-8 space-y-4">
-        <p className="text-lg text-gray-500 font-medium">
-          Congratulations! Your account is ready . Redirecting you to the dashboard...
+        <p className="text-lg font-medium text-gray-500">
+          Congratulations! Your account is ready . Redirecting you to the
+          dashboard...
         </p>
         <div className="flex flex-col items-center gap-2">
-          <p className="text-sm text-gray-400">If the redirect doesn't work in 3 seconds, click below:</p>
+          <p className="text-sm text-gray-400">
+            If the redirect doesn't work in 3 seconds, click below:
+          </p>
           <a
             href="https://dash.plas.rw"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-3 bg-[#022C22]/5 text-[#022C22] rounded-xl font-bold hover:bg-[#022C22]/10 transition-colors"
+            className="rounded-xl bg-[#022C22]/5 px-6 py-3 font-bold text-[#022C22] transition-colors hover:bg-[#022C22]/10"
           >
             https://dash.plas.rw
           </a>

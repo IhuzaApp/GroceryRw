@@ -46,11 +46,11 @@ function trimOrderForCache(o: any): any {
     ...o,
     shop: o.shop
       ? {
-        id: o.shop.id,
-        name: o.shop.name,
-        image: o.shop.image ?? "",
-        logo: (o.shop as any)?.logo ?? "",
-      }
+          id: o.shop.id,
+          name: o.shop.name,
+          image: o.shop.image ?? "",
+          logo: (o.shop as any)?.logo ?? "",
+        }
       : null,
     reel: o.reel
       ? { id: o.reel.id, title: o.reel.title, video_url: undefined }
@@ -90,11 +90,11 @@ function setOrdersCache(orders: any[], hasMore: boolean, page: number) {
         combined_order_id: o.combined_order_id,
         shop: o.shop
           ? {
-            id: o.shop.id,
-            name: o.shop.name,
-            image: o.shop.image ?? "",
-            logo: (o.shop as any)?.logo ?? "",
-          }
+              id: o.shop.id,
+              name: o.shop.name,
+              image: o.shop.image ?? "",
+              logo: (o.shop as any)?.logo ?? "",
+            }
           : null,
         reel: o.reel ? { id: o.reel.id, title: o.reel.title } : o.reel,
       }));
@@ -348,14 +348,16 @@ function CurrentOrdersPage() {
               <div className="inline-flex w-full rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:w-auto">
                 <button
                   onClick={() => setFilter("pending")}
-                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${filter === "pending"
+                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
+                    filter === "pending"
                       ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
                       : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                    }`}
+                  }`}
                 >
                   <svg
-                    className={`h-4 w-4 ${filter === "pending" ? "!text-white" : "text-gray-500"
-                      }`}
+                    className={`h-4 w-4 ${
+                      filter === "pending" ? "!text-white" : "text-gray-500"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -372,10 +374,11 @@ function CurrentOrdersPage() {
                   </span>
                   {pendingCount > 0 && (
                     <span
-                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${filter === "pending"
+                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        filter === "pending"
                           ? "bg-white/20 !text-white"
                           : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                        }`}
+                      }`}
                     >
                       {pendingCount}
                     </span>
@@ -383,14 +386,16 @@ function CurrentOrdersPage() {
                 </button>
                 <button
                   onClick={() => setFilter("done")}
-                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${filter === "done"
+                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
+                    filter === "done"
                       ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
                       : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                    }`}
+                  }`}
                 >
                   <svg
-                    className={`h-4 w-4 ${filter === "done" ? "!text-white" : "text-gray-500"
-                      }`}
+                    className={`h-4 w-4 ${
+                      filter === "done" ? "!text-white" : "text-gray-500"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -407,10 +412,11 @@ function CurrentOrdersPage() {
                   </span>
                   {completedCount > 0 && (
                     <span
-                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${filter === "done"
+                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        filter === "done"
                           ? "bg-white/20 !text-white"
                           : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                        }`}
+                      }`}
                     >
                       {completedCount}
                     </span>

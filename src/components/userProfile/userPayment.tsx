@@ -114,8 +114,18 @@ export default function UserPayment() {
           onClick={() => setShowAddModal(true)}
           className="group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest !text-white shadow-xl transition-all hover:scale-[1.02] hover:shadow-2xl active:scale-95 sm:w-auto"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           {t("payment.addMethod") || "Add New Method"}
         </button>
@@ -124,10 +134,11 @@ export default function UserPayment() {
         {paymentMethods.map((pm) => (
           <div
             key={pm.id}
-            className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-2xl ${pm.is_default
-              ? "border-green-500 bg-gradient-to-r from-green-50/80 to-emerald-50/80 dark:border-green-600 dark:from-green-900/10 dark:to-emerald-900/10"
-              : "border-gray-200 bg-white/80 dark:border-gray-700 dark:bg-gray-800/80"
-              } backdrop-blur-md`}
+            className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-2xl ${
+              pm.is_default
+                ? "border-green-500 bg-gradient-to-r from-green-50/80 to-emerald-50/80 dark:border-green-600 dark:from-green-900/10 dark:to-emerald-900/10"
+                : "border-gray-200 bg-white/80 dark:border-gray-700 dark:bg-gray-800/80"
+            } backdrop-blur-md`}
           >
             {/* Main Content Container */}
             <div className="flex flex-col items-center gap-6 p-6 sm:flex-row">
@@ -154,8 +165,16 @@ export default function UserPayment() {
                   </h4>
                   {pm.is_default && (
                     <span className="inline-flex items-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider !text-white shadow-sm">
-                      <svg className="mr-1 h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <svg
+                        className="mr-1 h-2.5 w-2.5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       {t("address.default")}
                     </span>
@@ -163,11 +182,17 @@ export default function UserPayment() {
                 </div>
                 <div className="mt-0.5 flex flex-col gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400 sm:flex-row">
                   <span className="font-medium">
-                    {t("payment.endingIn")} <span className="text-gray-900 dark:text-gray-200">{pm.number.slice(-4)}</span>
+                    {t("payment.endingIn")}{" "}
+                    <span className="text-gray-900 dark:text-gray-200">
+                      {pm.number.slice(-4)}
+                    </span>
                   </span>
                   {pm.validity && (
                     <span className="font-medium">
-                      {t("payment.expires")} <span className="text-gray-900 dark:text-gray-200">{pm.validity}</span>
+                      {t("payment.expires")}{" "}
+                      <span className="text-gray-900 dark:text-gray-200">
+                        {pm.validity}
+                      </span>
                     </span>
                   )}
                   <span className="font-semibold text-green-600 dark:text-green-400">
@@ -183,17 +208,35 @@ export default function UserPayment() {
                     onClick={() => handleSetDefault(pm.id)}
                     className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-[10px] font-bold text-green-600 transition-all duration-200 hover:bg-green-500 hover:!text-white hover:shadow-lg active:scale-95 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-600 dark:hover:!text-white"
                   >
-                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     {t("address.setDefault")}
                   </button>
                 )}
-                <button
-                  className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-red-100 bg-red-50 px-4 py-2 text-[10px] font-bold text-red-600 transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:!text-white hover:shadow-lg active:scale-95 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-600 dark:hover:!text-white"
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <button className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-red-100 bg-red-50 px-4 py-2 text-[10px] font-bold text-red-600 transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:!text-white hover:shadow-lg active:scale-95 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-600 dark:hover:!text-white">
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                   {t("payment.delete")}
                 </button>
@@ -201,8 +244,16 @@ export default function UserPayment() {
             </div>
 
             {/* Premium Decorative Accents */}
-            <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full blur-2xl transition-opacity duration-500 group-hover:opacity-100 ${pm.is_default ? "bg-green-400/20" : "bg-blue-400/10"}`} />
-            <div className={`absolute -bottom-4 -left-4 h-16 w-16 rounded-full blur-xl transition-opacity duration-500 group-hover:opacity-100 ${pm.is_default ? "bg-emerald-400/20" : "bg-purple-400/10"}`} />
+            <div
+              className={`absolute -right-4 -top-4 h-20 w-20 rounded-full blur-2xl transition-opacity duration-500 group-hover:opacity-100 ${
+                pm.is_default ? "bg-green-400/20" : "bg-blue-400/10"
+              }`}
+            />
+            <div
+              className={`absolute -bottom-4 -left-4 h-16 w-16 rounded-full blur-xl transition-opacity duration-500 group-hover:opacity-100 ${
+                pm.is_default ? "bg-emerald-400/20" : "bg-purple-400/10"
+              }`}
+            />
           </div>
         ))}
       </div>
@@ -210,8 +261,18 @@ export default function UserPayment() {
         <div className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-gray-200 bg-white p-16 text-center shadow-sm transition-all hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800/50">
           <div className="relative z-10">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 transition-transform duration-500 group-hover:scale-110 group-hover:text-green-500 dark:bg-gray-700/50">
-              <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              <svg
+                className="h-10 w-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
               </svg>
             </div>
             <p className="text-xl font-bold text-gray-900 dark:text-white">
