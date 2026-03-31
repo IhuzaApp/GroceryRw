@@ -198,7 +198,7 @@ export default function OrderModal({
           if (configRes.success) {
             setSystemConfig(configRes.config);
             setSavedAddresses(addrRes.addresses);
-            setWalletBalance(parseFloat(walletRes.wallet[0]?.balance || "0"));
+            setWalletBalance(parseFloat(walletRes.wallet?.balance || "0"));
             setHasWallet(true);
             setSavedPaymentMethods(payRes.paymentMethods);
             
