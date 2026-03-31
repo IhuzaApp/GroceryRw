@@ -141,6 +141,14 @@ const UPDATE_COMBINED_ORDER_STATUS = gql`
   }
 `;
 
+const UPDATE_REEL_ORDER_STATUS = gql`
+  mutation UpdateReelOrderStatus($id: uuid!, $status: String!) {
+    update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) {
+      id
+    }
+  }
+`;
+
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
     order_transactions(where: { reference_id: { _eq: $reference_id } }) {
@@ -279,6 +287,7 @@ export default async function handler(
             const orderId = orderTransaction.order_id;
             const restaurantOrderId = orderTransaction.restaurant_order_id;
             const businessOrderId = orderTransaction.business_order_id;
+            const reelOrderId = orderTransaction.reel_order_id;
 
             if (newStatus === "SUCCESSFUL") {
               // SUCCESS: Activate orders and CLEAR CART
@@ -322,6 +331,11 @@ export default async function handler(
                 console.log(`🚀[MoMo Status] Activating business order: ${ businessOrderId } `);
                 await hasuraClient.request(UPDATE_ORDER_STATUS, { id: businessOrderId, status: "PENDING" });
               }
+
+              if (reelOrderId) {
+                console.log(`🚀[MoMo Status] Activating reel order: ${ reelOrderId } `);
+                await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, { id: reelOrderId, status: "PENDING" });
+              }
             } else if (newStatus === "FAILED") {
               // FAILURE: Mark orders as PAYMENT_FAILED
               if (orderId) {
@@ -336,6 +350,10 @@ export default async function handler(
               if (businessOrderId) {
                 console.log(`❌[MoMo Status] Payment FAILED for business order: ${ businessOrderId } `);
                 await hasuraClient.request(UPDATE_ORDER_STATUS, { id: businessOrderId, status: "PAYMENT_FAILED" });
+              }
+              if (reelOrderId) {
+                console.log(`❌[MoMo Status] Payment FAILED for reel order: ${ reelOrderId } `);
+                await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, { id: reelOrderId, status: "PAYMENT_FAILED" });
               }
             }
           }

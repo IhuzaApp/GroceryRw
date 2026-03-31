@@ -29,6 +29,7 @@ export interface BasePost {
     title: string;
     description: string;
     video: string;
+    thumbnail?: string;
     category: string;
   };
   stats: {
@@ -66,6 +67,7 @@ export interface SupermarketPost extends BasePost {
     store: string;
     inStock: boolean;
     discount?: number;
+    image?: string;
   };
 }
 

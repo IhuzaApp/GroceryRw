@@ -463,6 +463,7 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
       title: dbReel.title,
       description: dbReel.description,
       video: dbReel.video_url,
+      thumbnail: dbReel.Product?.image || dbReel.Product?.thumbnail || dbReel.Product?.img || null,
       category: dbReel.category,
     },
     stats: {
@@ -512,6 +513,7 @@ const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
           store: storeName || "Store information unavailable",
           inStock: product.inStock !== false,
           discount: product.discount,
+          image: product.image || product.thumbnail || product.img,
         },
       } as SupermarketPost;
 

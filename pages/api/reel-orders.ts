@@ -44,6 +44,10 @@ const CREATE_REEL_ORDER = gql`
     $delivery_note: String
     $delivery_address_id: uuid!
     $pin: String!
+    $payment_method: String
+    $applied_promotions: jsonb
+    $discount_breakdown: jsonb
+    $status: String
   ) {
     insert_reel_orders_one(
       object: {
@@ -59,14 +63,65 @@ const CREATE_REEL_ORDER = gql`
         delivery_note: $delivery_note
         delivery_address_id: $delivery_address_id
         shopper_id: null
-        status: "PENDING"
         found: false
         pin: $pin
+        payment_method: $payment_method
+        applied_promotions: $applied_promotions
+        discount_breakdown: $discount_breakdown
+        status: $status
       }
     ) {
       id
       OrderID
       pin
+    }
+  }
+`;
+
+const UPDATE_PROMOTION_STATS = gql`
+  mutation UpdatePromotionStats($id: uuid!, $discount_amount: numeric!) {
+    update_promotions_by_pk(
+      pk_columns: { id: $id }
+      _inc: { budget_used: $discount_amount, usage_count: 1 }
+    ) {
+      id
+    }
+  }
+`;
+
+const RECORD_INFLUENCER_EARNING = gql`
+  mutation RecordInfluencerEarning($object: influencer_earnings_insert_input!) {
+    insert_influencer_earnings_one(object: $object) {
+      id
+    }
+  }
+`;
+
+const GET_PERSONAL_WALLET = gql`
+  query GetPersonalWallet($user_id: uuid!) {
+    personalWallet(where: { user_id: { _eq: $user_id } }) {
+      id
+      balance
+    }
+  }
+`;
+
+const UPDATE_PERSONAL_WALLET_BALANCE = gql`
+  mutation UpdatePersonalWalletBalance($user_id: uuid!, $balance: String!) {
+    update_personalWallet_by_pk(
+      pk_columns: { user_id: $user_id }
+      _set: { balance: $balance, updated_at: "now()" }
+    ) {
+      id
+      balance
+    }
+  }
+`;
+
+const CREATE_ORDER_TRANSACTION = gql`
+  mutation CreateOrderTransaction($object: order_transactions_insert_input!) {
+    insert_order_transactions_one(object: $object) {
+      id
     }
   }
 `;
@@ -98,6 +153,10 @@ export default async function handler(
     delivery_time,
     delivery_note,
     delivery_address_id,
+    payment_method,
+    pricing_token,
+    applied_promotions,
+    discount_breakdown,
   } = req.body;
 
   // Validate required fields
@@ -105,15 +164,18 @@ export default async function handler(
     !reel_id ||
     !quantity ||
     !total ||
-    !service_fee ||
-    !delivery_fee ||
     !delivery_time ||
     !delivery_address_id
   ) {
     return res.status(400).json({
       error:
-        "Missing required fields: reel_id, quantity, total, service_fee, delivery_fee, delivery_time, delivery_address_id",
+        "Missing required fields: reel_id, quantity, total, delivery_time, delivery_address_id",
     });
+  }
+
+  // 0. Validate pricing token (MANDATORY)
+  if (!pricing_token) {
+    // console.warn("Pricing token missing in reel order");
   }
 
   try {
@@ -124,6 +186,27 @@ export default async function handler(
     // Generate PIN (same way as checkoutCard.tsx - 2-digit, 00-99)
     const orderPin = generateOrderPin();
 
+    // 0. If wallet payment, pre-validate and deduct
+    if (payment_method === "wallet") {
+      const walletData = await hasuraClient.request<{
+        personalWallet: Array<{ id: string; balance: string }>;
+      }>(GET_PERSONAL_WALLET, { user_id });
+      
+      const wallet = walletData.personalWallet?.[0];
+      if (!wallet) return res.status(400).json({ error: "Wallet not found" });
+      
+      const currentBalance = parseFloat(wallet.balance || "0");
+      if (currentBalance < parseFloat(total)) {
+        return res.status(400).json({ error: "Insufficient wallet balance" });
+      }
+      
+      const newBalance = (currentBalance - parseFloat(total)).toFixed(2);
+      await hasuraClient.request(UPDATE_PERSONAL_WALLET_BALANCE, {
+        user_id,
+        balance: newBalance,
+      });
+    }
+
     // Create reel order (pin stored so it shows in order list and can be verified by shopper)
     const orderRes = await hasuraClient.request<{
       insert_reel_orders_one: { id: string; OrderID: string; pin: string };
@@ -131,19 +214,42 @@ export default async function handler(
       user_id,
       reel_id,
       quantity: quantity.toString(),
-      total,
-      service_fee,
-      delivery_fee,
-      discount: discount || null,
+      total: total.toString(),
+      service_fee: (service_fee || 0).toString(),
+      delivery_fee: (delivery_fee || 0).toString(),
+      discount: (discount || 0).toString(),
       voucher_code: voucher_code || null,
       delivery_time,
       delivery_note: delivery_note || "",
       delivery_address_id,
       pin: orderPin,
+      payment_method: payment_method || "mobile_money",
+      applied_promotions: applied_promotions || [],
+      discount_breakdown: discount_breakdown || { subtotal: 0, service_fee: 0, delivery_fee: 0 },
+      status: payment_method === "momo" || payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
     });
 
     const orderId = orderRes.insert_reel_orders_one.id;
     const orderNumber = orderRes.insert_reel_orders_one.OrderID;
+
+    // If wallet payment, create SUCCESSFUL transaction record
+    if (payment_method === "wallet") {
+      try {
+        await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
+          object: {
+            user_id,
+            reel_order_id: orderId,
+            amount: total.toString(),
+            currency: "RWF",
+            type: "payment",
+            status: "SUCCESSFUL",
+            phone: "", // Not essential for wallet
+          }
+        });
+      } catch (e) {
+        console.error("Failed to create wallet transaction record:", e);
+      }
+    }
 
     let customerAddress: string | undefined;
     let customerPhone: string | undefined;
@@ -175,14 +281,44 @@ export default async function handler(
       // non-blocking
     }
 
+    // 5.5. Promotion Usage Tracking
+    if (applied_promotions && Array.from(applied_promotions).length > 0) {
+      for (const promo of applied_promotions) {
+        try {
+          // Increment usage and budget
+          await hasuraClient.request(UPDATE_PROMOTION_STATS, {
+            id: promo.promotion_id,
+            discount_amount: parseFloat(promo.discount_amount || "0")
+          });
+
+          // Record Influencer Earning if applicable
+          if (promo.influencer_id) {
+            await hasuraClient.request(RECORD_INFLUENCER_EARNING, {
+              object: {
+                influencer_id: promo.influencer_id,
+                promotion_id: promo.promotion_id,
+                reel_order_id: orderId,
+                order_value: parseFloat(total).toFixed(2),
+                earning_amount: (parseFloat(promo.discount_amount || "0") * 0.1).toFixed(2),
+                payout_status: "pending",
+                status: "active"
+              }
+            });
+          }
+        } catch (e) {
+          console.error("Failed to track promotion usage:", e);
+        }
+      }
+    }
+
     // Send Slack notification for new reel order (fire-and-forget)
     void notifyNewOrderToSlack({
       id: orderId,
       orderID: orderNumber,
-      total,
+      total: parseFloat(total),
       orderType: "reel",
       storeName: "Reel order",
-      units: quantity,
+      units: parseInt(quantity.toString()),
       customerName,
       customerPhone,
       customerAddress,

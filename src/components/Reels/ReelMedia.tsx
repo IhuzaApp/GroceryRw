@@ -125,9 +125,11 @@ const ReelMedia: React.FC<ReelMediaProps> = ({
           playsInline
           preload="metadata"
           poster={
-            post.creator.avatar && isValidMediaUrl(post.creator.avatar)
-              ? post.creator.avatar
-              : "/placeholder.svg"
+            post.content.thumbnail && isValidMediaUrl(post.content.thumbnail)
+              ? post.content.thumbnail
+              : post.creator.avatar && isValidMediaUrl(post.creator.avatar)
+                ? post.creator.avatar
+                : "/placeholder.svg"
           }
           onLoadedData={handleVideoLoad}
           onError={handleVideoError}
