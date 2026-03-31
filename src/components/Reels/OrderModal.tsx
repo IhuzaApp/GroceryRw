@@ -13,6 +13,7 @@ import {
   CheckCircle,
   ChevronDown,
   Plus,
+  Clock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrency } from "../../lib/formatCurrency";
@@ -98,6 +99,26 @@ export default function OrderModal({
   const [isOrderLoading, setIsOrderLoading] = useState(false);
   const [processingStep, setProcessingStep] = useState<"initiating_payment" | "awaiting_approval" | "success" | null>(null);
   const [isAddressesLoading, setIsAddressesLoading] = useState(false);
+
+  // Reset state on close
+  useEffect(() => {
+    if (!open) {
+      setQuantity(1);
+      setComments("");
+      setPromoCode("");
+      setAppliedPromo(null);
+      setDiscounts({
+        subtotal_discount: 0,
+        service_fee_discount: 0,
+        delivery_fee_discount: 0,
+        final_subtotal: undefined,
+        free_delivery: false,
+        promotions_applied: [],
+      });
+      setProcessingStep(null);
+      setIsOrderLoading(false);
+    }
+  }, [open]);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -139,35 +160,132 @@ export default function OrderModal({
   const subtotal = basePrice * quantity;
   const selectedAddress = savedAddresses.find(a => a.id === selectedAddressId) || null;
 
-  const getDeliveryFee = (config: any, address: any, sub: number) => {
+  // Calculate distance if address selected
+  let distanceKm = 0;
+  if (selectedAddress?.latitude && selectedAddress?.longitude) {
+    distanceKm = getDistanceFromLatLonInKm(
+      parseFloat(selectedAddress.latitude),
+      parseFloat(selectedAddress.longitude),
+      shopLat,
+      shopLng
+    );
+  }
+
+  const getDeliveryFee = (config: any, dist: number, sub: number) => {
     if (!config) return 0;
     const baseFee = parseInt(config.baseDeliveryFee) || 0;
     const cappedFee = parseInt(config.cappedDistanceFee) || 0;
     const surcharge = config.distanceSurcharge ? parseInt(config.distanceSurcharge) : 0;
     
-    let distance = 0;
-    if (address?.latitude && address?.longitude) {
-       distance = getDistanceFromLatLonInKm(
-         parseFloat(address.latitude),
-         parseFloat(address.longitude),
-         shopLat,
-         shopLng
-       );
-    }
-    
-    const rawFee = baseFee + (Math.ceil(Math.max(0, distance - 3)) * surcharge);
+    const rawFee = baseFee + (Math.ceil(Math.max(0, dist - 3)) * surcharge);
     const origFee = rawFee > cappedFee ? cappedFee : rawFee;
     return sub > 30000 ? origFee * 0.5 : origFee;
   };
 
-  const deliveryFee = getDeliveryFee(systemConfig, selectedAddress, subtotal);
+  const deliveryFee = getDeliveryFee(systemConfig, distanceKm, subtotal);
 
-  const finalTotal = (discounts && discounts.final_total !== undefined) 
-    ? discounts.final_total 
-    : (subtotal - (discounts?.subtotal_discount || 0) + (discounts?.final_delivery_fee ?? deliveryFee));
+  const finalTotal = (discounts?.final_total !== undefined) 
+    ? Number(discounts.final_total) 
+    : (Number(subtotal) + Number(deliveryFee) - Number(discounts?.subtotal_discount || 0));
 
-  const totalDiscount = (subtotal - (discounts?.final_subtotal ?? subtotal)) + 
-                      (deliveryFee - (discounts?.final_delivery_fee ?? deliveryFee));
+  const totalDiscount = (Number(subtotal) - Number(discounts?.final_subtotal ?? subtotal)) + 
+                      (Number(deliveryFee) - Number(discounts?.final_delivery_fee ?? deliveryFee));
+
+  useEffect(() => {
+    if (open) {
+      console.log("[OrderModal PRICING]", {
+        subtotal,
+        deliveryFee,
+        finalTotal,
+        discounts
+      });
+    }
+  }, [open, subtotal, deliveryFee, finalTotal, discounts]);
+
+  // Parse preparation time string from database (matches checkoutCard.tsx)
+  const parsePreparationTimeString = (timeString?: string): number => {
+    if (!timeString || timeString.trim() === "") return 0;
+    const cleanTime = timeString.toLowerCase().trim();
+
+    // "15min", "30min"
+    const minMatch = cleanTime.match(/^(\d+)\s*min$/);
+    if (minMatch) return parseInt(minMatch[1]);
+
+    // "2hr30min", "1hr15min"
+    const hrMinMatch = cleanTime.match(/^(\d+)\s*hr\s*(\d+)\s*min$/);
+    if (hrMinMatch) return parseInt(hrMinMatch[1]) * 60 + parseInt(hrMinMatch[2]);
+
+    // "1hr", "2hr"
+    const hrMatch = cleanTime.match(/^(\d+)\s*hr$/);
+    if (hrMatch) return parseInt(hrMatch[1]) * 60;
+
+    // "30-45 min" → take the higher bound
+    const rangeMatch = cleanTime.match(/(\d+)\s*-\s*(\d+)/);
+    if (rangeMatch) {
+      const upper = parseInt(rangeMatch[2]);
+      if (cleanTime.includes("hr")) return upper * 60;
+      return upper;
+    }
+
+    // Just a number → assume minutes
+    const numMatch = cleanTime.match(/^(\d+)$/);
+    if (numMatch) return parseInt(numMatch[1]);
+
+    return 0;
+  };
+
+  const calculateDeliveryTimestamp = () => {
+    // 1. Shopping time from system config (for non-food orders)
+    const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) || 0 : 0;
+
+    // 2. Preparation time for food orders (from restaurant's deliveryTime field)
+    let preparationTime = 0;
+    const isFood = post?.type === "restaurant";
+
+    if (isFood) {
+      // Parse the restaurant's deliveryTime (e.g. "30-45 min", "1hr", "15min")
+      const rawPrepTime = post?.restaurant?.deliveryTime || post?.content?.deliveryTime;
+      preparationTime = parsePreparationTimeString(rawPrepTime);
+
+      // If no prep time found, default to 20 min for food
+      if (preparationTime === 0) preparationTime = 20;
+
+      // Cap at 90 minutes (matches checkoutCard.tsx)
+      preparationTime = Math.min(preparationTime, 90);
+    }
+
+    // 3. Processing time: prep for food, shopping time for grocery/product
+    const processingTime = isFood ? preparationTime : shoppingTime;
+
+    // 4. Travel time: 3D distance (includes altitude), 1 km ≈ 1 min, capped at 240 min
+    const userAlt = selectedAddress?.altitude ? parseFloat(selectedAddress.altitude) : 0;
+    const altKm = (shopAlt - userAlt) / 1000;
+    const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
+    const travelTime = Math.min(Math.ceil(distance3D), 240);
+
+    // 5. Total time = travel + processing
+    const totalTimeMinutes = travelTime + processingTime;
+    return new Date(Date.now() + totalTimeMinutes * 60000).toISOString();
+  };
+
+
+  const [deliveryEstimate, setDeliveryEstimate] = useState({ time: "--:--", duration: "--" });
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const timestamp = calculateDeliveryTimestamp();
+      const deliveryDate = new Date(timestamp);
+      const diffMs = deliveryDate.getTime() - Date.now();
+      const totalMins = Math.max(0, Math.round(diffMs / 60000));
+      const hours = deliveryDate.getHours().toString().padStart(2, "0");
+      const minutes = deliveryDate.getMinutes().toString().padStart(2, "0");
+      setDeliveryEstimate({ time: `${hours}:${minutes}`, duration: `${totalMins} min` });
+    };
+    update();
+    const interval = setInterval(update, 30000); // refresh every 30s
+    return () => clearInterval(interval);
+  }, [open, distanceKm, selectedAddressId]);
 
   // Effects
   useEffect(() => {
@@ -218,7 +336,27 @@ export default function OrderModal({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (open && systemConfig && selectedAddressId) {
+      triggerPricingSync();
+    }
+  }, [selectedAddressId, quantity]);
+
   const triggerPricingSync = async (code?: string) => {
+    if (!systemConfig) return;
+    
+    // Explicitly calculate distance using the CURRENT selection
+    let dist = 0;
+    if (selectedAddress?.latitude && selectedAddress?.longitude) {
+      dist = getDistanceFromLatLonInKm(
+        parseFloat(selectedAddress.latitude),
+        parseFloat(selectedAddress.longitude),
+        shopLat,
+        shopLng
+      );
+    }
+    const currentDeliveryFee = getDeliveryFee(systemConfig, dist, subtotal);
+
     try {
       const response = await fetch("/api/promotions/validate-final", {
         method: "POST",
@@ -234,11 +372,11 @@ export default function OrderModal({
               type: post?.restaurant ? "dish" : "product"
             }],
             subtotal,
-            delivery_fee: deliveryFee,
+            delivery_fee: currentDeliveryFee,
             service_fee: 0
           },
           promoCode: code || promoCode,
-          delivery_fee: deliveryFee,
+          delivery_fee: currentDeliveryFee,
           service_fee: 0
         })
       });
@@ -264,7 +402,18 @@ export default function OrderModal({
     const config = forcedConfig || systemConfig;
     const address = forcedAddress || selectedAddress;
     const sub = forcedSubtotal || subtotal;
-    const currentDeliveryFee = getDeliveryFee(config, address, sub);
+
+    // Calculate distance locally using the passed/selected address
+    let dist = 0;
+    if (address?.latitude && address?.longitude) {
+      dist = getDistanceFromLatLonInKm(
+        parseFloat(address.latitude),
+        parseFloat(address.longitude),
+        shopLat,
+        shopLng
+      );
+    }
+    const currentDeliveryFee = getDeliveryFee(config, dist, sub);
 
     if (!shopId) return;
     try {
@@ -415,7 +564,7 @@ export default function OrderModal({
           total: total.toString(),
           payment_method: selectedPaymentMethod.type,
           delivery_address_id: selectedAddressId,
-          delivery_time: post?.restaurant?.deliveryTime || "1 - 2 hrs",
+          delivery_time: calculateDeliveryTimestamp(),
           delivery_fee: (pricing?.final_delivery_fee ?? deliveryFee).toString(),
           service_fee: (pricing?.final_service_fee ?? 0).toString(),
           discount: (pricing?.total_discount ?? totalDiscount).toString(),
@@ -461,7 +610,9 @@ export default function OrderModal({
             </div>
             <div>
               <h3 className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Checkout</h3>
-              <p className="text-xs text-gray-500">Reel Order Delivery</p>
+              <p className="text-xs font-bold text-green-600 dark:text-green-400">
+                {selectedAddress ? `Arriving at ${deliveryEstimate.time} (${deliveryEstimate.duration})` : "Please select address"}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="rounded-full bg-gray-100 p-2 dark:bg-white/5"><X className="h-5 w-5" /></button>
@@ -612,6 +763,7 @@ export default function OrderModal({
                   <span>Delivery Fee</span>
                   <span>{formatCurrency(discounts.final_delivery_fee ?? deliveryFee)}</span>
                 </div>
+
               </div>
             </>
           )}

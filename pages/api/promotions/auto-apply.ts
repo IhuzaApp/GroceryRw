@@ -81,8 +81,10 @@ export default async function handler(
     let promotions_applied: any[] = [];
 
     const now = new Date();
-    const subtotal = cart.subtotal || 0;
-    const totalWithFees = subtotal + (cart.service_fee || 0) + (cart.delivery_fee || 0);
+    const subtotal = Number(cart.subtotal || 0);
+    const serviceFee = Number(cart.service_fee || 0);
+    const deliveryFee = Number(cart.delivery_fee || 0);
+    const totalWithFees = subtotal + serviceFee + deliveryFee;
 
     for (const promo of activePromos) {
       // 1. Date/Time Validation

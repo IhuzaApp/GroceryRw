@@ -121,15 +121,17 @@ export default async function handler(
       }
 
       // 5. Min Order Value
-      const subtotal = cart.subtotal || 0;
+      const subtotal = Number(cart.subtotal || 0);
+      const serviceFee = Number(cart.service_fee || 0);
+      const deliveryFee = Number(cart.delivery_fee || 0);
+      const totalWithFees = subtotal + serviceFee + deliveryFee;
+
       if (promo.min_order_value && subtotal < promo.min_order_value) continue;
 
       // Calculation logic
       const discountValue = parseFloat(promo.discount_value || "0");
       const customerDiscountPercent = parseFloat(promo.customer_discount_percent || "0");
       const effectivePercentage = customerDiscountPercent > 0 ? customerDiscountPercent : discountValue;
-      
-      const totalWithFees = subtotal + (cart.service_fee || 0) + (cart.delivery_fee || 0);
       let currentSubtotalDiscount = 0;
       let calculationTrace = "";
 
@@ -183,7 +185,10 @@ export default async function handler(
     }
 
     const total_discount = subtotal_discount + service_fee_discount + delivery_fee_discount;
-    const final_total = (cart.subtotal + (cart.service_fee || 0) + (cart.delivery_fee || 0)) - total_discount;
+    const subtotalNum = Number(cart.subtotal || 0);
+    const serviceFeeNum = Number(cart.service_fee || 0);
+    const deliveryFeeNum = Number(cart.delivery_fee || 0);
+    const final_total = (subtotalNum + serviceFeeNum + deliveryFeeNum) - total_discount;
 
     // Generate pricing token
     const pricingToken = crypto.createHash('sha256')
