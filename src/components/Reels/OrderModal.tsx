@@ -106,7 +106,7 @@ export default function OrderModal({
       setQuantity(1);
       setComments("");
       setPromoCode("");
-      setAppliedPromo(null);
+      setAppliedPromo("");
       setDiscounts({
         subtotal_discount: 0,
         service_fee_discount: 0,
@@ -573,7 +573,7 @@ export default function OrderModal({
           discount_breakdown: pricing?.discount_breakdown || {
             subtotal: pricing?.subtotal_discount || 0,
             service_fee: 0,
-            delivery_fee: originalDeliveryFee - (pricing?.final_delivery_fee ?? deliveryFee)
+            delivery_fee: deliveryFee - (pricing?.final_delivery_fee ?? deliveryFee)
           },
         })
       });
