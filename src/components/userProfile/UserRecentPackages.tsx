@@ -1,0 +1,200 @@
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { formatCurrency } from "../../lib/formatCurrency";
+import { MapPin, Package, User, ChevronRight, Clock } from "lucide-react";
+
+type PackageDelivery = {
+  id: string;
+  DeliveryCode: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  status: string;
+  delivery_fee: string;
+  created_at: string;
+  package_image?: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  comment?: string;
+  deliveryMethod?: string;
+  distance?: string;
+};
+
+interface UserRecentPackagesProps {
+  packages: PackageDelivery[];
+  loading: boolean;
+  onRefresh?: () => void;
+}
+
+function timeAgo(timestamp: string): string {
+  const now = Date.now();
+  const past = new Date(timestamp).getTime();
+  const diff = now - past;
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+export default function UserRecentPackages({
+  packages = [],
+  loading,
+  onRefresh,
+}: UserRecentPackagesProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPackages = packages.filter((pkg) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      pkg.DeliveryCode.toLowerCase().includes(query) ||
+      pkg.pickupLocation.toLowerCase().includes(query) ||
+      pkg.dropoffLocation.toLowerCase().includes(query) ||
+      (pkg.receiverName || "").toLowerCase().includes(query)
+    );
+  });
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="flex gap-4">
+              <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/4 rounded bg-gray-200 dark:bg-gray-700" />
+                <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (packages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="mb-4 rounded-full bg-gray-50 p-4 dark:bg-gray-800">
+          <Package className="h-8 w-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">No deliveries yet</h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Your parcel delivery history will appear here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search Header */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by code, location, or receiver..."
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm transition-all focus:border-green-500 focus:ring-2 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          />
+          <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        </div>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+          >
+            <Clock className="h-4 w-4" />
+            Refresh
+          </button>
+        )}
+      </div>
+
+      <div className="grid gap-4">
+        {filteredPackages.map((pkg) => (
+          <div
+            key={pkg.id}
+            className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:border-green-200 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/40"
+          >
+            <div className="flex items-start gap-4">
+              {/* Package Icon/Image */}
+              <div className="relative flex-shrink-0">
+                {pkg.package_image ? (
+                  <img
+                    src={pkg.package_image}
+                    alt="Parcel"
+                    className="h-14 w-14 rounded-xl object-cover shadow-sm ring-1 ring-gray-100 dark:ring-gray-700"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                    <Package className="h-7 w-7" />
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 rounded-full bg-white p-1 shadow-sm dark:bg-gray-800">
+                  <div className={`h-2.5 w-2.5 rounded-full ${
+                    pkg.status === "AWAITING_PAYMENT" ? "bg-amber-400" :
+                    pkg.status === "PENDING" ? "bg-blue-400" :
+                    pkg.status === "DELIVERED" ? "bg-green-500" : "bg-gray-400"
+                  }`} />
+                </div>
+              </div>
+
+              {/* Info Column */}
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-mono text-xs font-black tracking-wider text-green-600 dark:text-green-400">
+                    {pkg.DeliveryCode}
+                  </span>
+                  <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                    {timeAgo(pkg.created_at)}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-gray-400" />
+                    <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
+                      From: <span className="font-normal text-gray-500 dark:text-gray-400">{pkg.pickupLocation}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="mt-0.5 h-3 w-3 shrink-0 flex items-center justify-center font-black text-[8px] border border-gray-400 text-gray-400 rounded-sm">TO</div>
+                    <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
+                      To: <span className="font-normal text-gray-500 dark:text-gray-400">{pkg.dropoffLocation}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-3 dark:border-gray-700/50">
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-gray-100 p-1 dark:bg-gray-700">
+                      <User className="h-full w-full text-gray-400" />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300">
+                      {pkg.receiverName || "Assigning Shopper..."}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-black text-gray-900 dark:text-white">
+                      {formatCurrency(parseFloat(pkg.delivery_fee))}
+                    </p>
+                    <p className="text-[9px] uppercase tracking-tighter text-gray-400">
+                      {pkg.status.replace("_", " ")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Indicator */}
+              <div className="flex h-14 items-center pl-2">
+                <ChevronRight className="h-5 w-5 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-green-500" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

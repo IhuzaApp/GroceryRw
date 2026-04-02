@@ -1,5 +1,7 @@
 import RootLayout from "@components/ui/layout";
 import UserRecentOrders from "@components/userProfile/userRecentOrders";
+import UserRecentPackages from "@components/userProfile/UserRecentPackages";
+import { Package } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -121,6 +123,8 @@ function CurrentOrdersPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
   const initialMountDone = useRef(false);
   const { data: session } = useSession();
 
@@ -167,6 +171,19 @@ function CurrentOrdersPage() {
     }
   }, []);
 
+  const fetchPackages = useCallback(async () => {
+    setLoadingPackages(true);
+    try {
+      const res = await authenticatedFetch("/api/queries/user-packages");
+      const data = await res.json();
+      setPackages(data.packages || []);
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+    } finally {
+      setLoadingPackages(false);
+    }
+  }, []);
+
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       fetchOrders(page + 1, true);
@@ -187,7 +204,8 @@ function CurrentOrdersPage() {
       return;
     }
     fetchOrders(1, false);
-  }, [fetchOrders]);
+    fetchPackages();
+  }, [fetchOrders, fetchPackages]);
 
   if (!session) {
     return (
@@ -249,6 +267,7 @@ function CurrentOrdersPage() {
     return o.status !== "delivered";
   }).length;
   const completedCount = orders.filter((o) => o.status === "delivered").length;
+  const packagesCount = packages.length;
 
   return (
     <AuthGuard requireAuth={true}>
@@ -343,20 +362,21 @@ function CurrentOrdersPage() {
               </div>
             </div>
 
-            {/* Filter Tabs - Modern Design */}
-            <div className="mb-4 px-3 md:mb-6 md:px-8">
-              <div className="inline-flex w-full rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:w-auto">
+            {/* Filter Tabs - Premium Segmented Control */}
+            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 mb-6 -mx-3 px-3 py-2 animate-in fade-in slide-in-from-top-4 duration-500 md:relative md:top-0 md:m-0 md:p-0 md:bg-transparent">
+              {/* Glassmorphic Container */}
+              <div className="flex w-full overflow-x-auto no-scrollbar rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
                 <button
                   onClick={() => setFilter("pending")}
-                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "pending"
-                      ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
-                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                      ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
+                      : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
                   <svg
-                    className={`h-4 w-4 ${
-                      filter === "pending" ? "!text-white" : "text-gray-500"
+                    className={`h-4.5 w-4.5 transition-transform duration-300 ${
+                      filter === "pending" ? "scale-110 !text-white" : ""
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -369,32 +389,31 @@ function CurrentOrdersPage() {
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className={filter === "pending" ? "!text-white" : ""}>
-                    Ongoing
-                  </span>
+                  <span className={filter === "pending" ? "!text-white" : ""}>Ongoing</span>
                   {pendingCount > 0 && (
                     <span
-                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
                         filter === "pending"
                           ? "bg-white/20 !text-white"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
                       }`}
                     >
                       {pendingCount}
                     </span>
                   )}
                 </button>
+
                 <button
                   onClick={() => setFilter("done")}
-                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "done"
-                      ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
-                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                      ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
+                      : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
                   <svg
-                    className={`h-4 w-4 ${
-                      filter === "done" ? "!text-white" : "text-gray-500"
+                    className={`h-4.5 w-4.5 transition-transform duration-300 ${
+                      filter === "done" ? "scale-110 !text-white" : ""
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -407,18 +426,43 @@ function CurrentOrdersPage() {
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className={filter === "done" ? "!text-white" : ""}>
-                    Completed
-                  </span>
+                  <span className={filter === "done" ? "!text-white" : ""}>Completed</span>
                   {completedCount > 0 && (
                     <span
-                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
                         filter === "done"
                           ? "bg-white/20 !text-white"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
                       }`}
                     >
                       {completedCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setFilter("packages")}
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all duration-300 md:min-w-0 md:flex-initial ${
+                    filter === "packages"
+                      ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
+                      : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <Package
+                    className={`h-4.5 w-4.5 transition-transform duration-300 ${
+                      filter === "packages" ? "scale-110 !text-white" : ""
+                    }`}
+                  />
+                  <span className={filter === "packages" ? "!text-white" : ""}>Deliveries</span>
+                  {packagesCount > 0 && (
+                    <span
+                      className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
+                        filter === "packages"
+                          ? "bg-white/20 !text-white"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                      }`}
+                    >
+                      {packagesCount}
                     </span>
                   )}
                 </button>
@@ -428,12 +472,20 @@ function CurrentOrdersPage() {
             {/* Orders List */}
             <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-20 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
               <div className="px-3 py-4 md:p-6">
-                <UserRecentOrders
-                  filter={filter}
-                  orders={orders}
-                  loading={loading}
-                  onRefresh={() => fetchOrders(1, false)}
-                />
+                {filter === "packages" ? (
+                  <UserRecentPackages 
+                    packages={packages} 
+                    loading={loadingPackages} 
+                    onRefresh={fetchPackages}
+                  />
+                ) : (
+                  <UserRecentOrders
+                    filter={filter}
+                    orders={orders}
+                    loading={loading}
+                    onRefresh={() => fetchOrders(1, false)}
+                  />
+                )}
 
                 {/* Load More Button */}
                 {!loading && hasMore && orders.length > 0 && (

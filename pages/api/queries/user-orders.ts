@@ -153,32 +153,6 @@ const GET_USER_ORDERS = gql`
         count
       }
     }
-    package_delivery(
-      where: { user_id: { _eq: $user_id } }
-      order_by: { created_at: desc }
-      limit: $limit
-      offset: $offset
-    ) {
-      id
-      DeliveryCode
-      status
-      created_at
-      delivery_fee
-      distance
-      pickupLocation
-      dropoffLocation
-      receiverName
-      receiverPhone
-      package_image
-      payment_method
-      scheduled
-      timeAndDate
-    }
-    package_delivery_aggregate(where: { user_id: { _eq: $user_id } }) {
-      aggregate {
-        count
-      }
-    }
   }
 `;
 
@@ -308,25 +282,6 @@ interface OrdersResponse {
   businessProductOrders_aggregate: {
     aggregate: { count: number } | null;
   };
-  package_delivery: Array<{
-    id: string;
-    DeliveryCode: string | null;
-    status: string;
-    created_at: string;
-    delivery_fee: string;
-    distance: string;
-    pickupLocation: string;
-    dropoffLocation: string;
-    receiverName: string;
-    receiverPhone: string;
-    package_image: string | null;
-    payment_method: string;
-    scheduled: boolean;
-    timeAndDate: any;
-  }>;
-  package_delivery_aggregate: {
-    aggregate: { count: number } | null;
-  };
 }
 
 export default async function handler(
@@ -382,22 +337,18 @@ export default async function handler(
       data.restaurant_orders_aggregate?.aggregate?.count || 0;
     const totalBusinessOrders =
       data.businessProductOrders_aggregate?.aggregate?.count || 0;
-    const totalPackageOrders =
-      data.package_delivery_aggregate?.aggregate?.count || 0;
     const totalCount =
       totalOrders +
       totalReelOrders +
       totalRestaurantOrders +
-      totalBusinessOrders +
-      totalPackageOrders;
+      totalBusinessOrders;
 
     // If no orders of any type, return empty array
     if (
       (!orders || orders.length === 0) &&
       reelOrders.length === 0 &&
       restaurantOrders.length === 0 &&
-      businessOrders.length === 0 &&
-      (data.package_delivery || []).length === 0
+      businessOrders.length === 0
     ) {
       console.log("📭 No orders found for this user");
       return res.status(200).json({ orders: [] });
@@ -609,48 +560,12 @@ export default async function handler(
       };
     });
 
-    // Enrich package delivery orders into same shape
-    const packageEnriched = (data.package_delivery || []).map((p) => {
-      return {
-        orderType: "parcel" as const,
-        id: p.id,
-        OrderID: p.DeliveryCode || p.id.substring(0, 8).toUpperCase(),
-        user_id: userId,
-        status: p.status,
-        created_at: p.created_at,
-        delivery_time: p.created_at,
-        pin: p.DeliveryCode ? p.DeliveryCode.split("-")[1] || "" : "",
-        combined_order_id: null,
-        total: parseFloat(p.delivery_fee || "0"),
-        shop_id: null,
-        shopper_id: null,
-        // Map parcel to a "shop-like" object so UI can render name & image
-        shop: {
-          id: p.id,
-          name: "Express Parcel Delivery",
-          address: p.pickupLocation,
-          image: p.package_image || "/images/parcel-placeholder.jpg",
-          logo: "",
-          category_id: "parcel",
-        },
-        itemsCount: 1,
-        unitsCount: 1,
-        pickupLocation: p.pickupLocation,
-        dropoffLocation: p.dropoffLocation,
-        receiverName: p.receiverName,
-        receiverPhone: p.receiverPhone,
-        package_image: p.package_image,
-        distance: p.distance,
-      };
-    });
-
     // Merge and sort all orders by created_at (newest first)
     let allEnriched = [
       ...regularEnriched,
       ...reelEnriched,
       ...restaurantEnriched,
       ...businessEnriched,
-      ...packageEnriched,
     ].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -690,7 +605,6 @@ export default async function handler(
         totalReelOrders,
         totalRestaurantOrders,
         totalBusinessOrders,
-        totalPackageOrders,
         currentPageCount,
         hasMore,
       },
