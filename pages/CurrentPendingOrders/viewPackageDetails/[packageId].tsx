@@ -357,16 +357,6 @@ function PackageDetailsPage() {
                       Contact Support
                     </Button>
                   )}
-
-                  {pkg.shopper && (
-                    <Link
-                      href={`/Messages?orderId=${pkg.id}`}
-                      className="flex items-center gap-2 rounded-xl border-2 border-indigo-500/20 bg-indigo-500/5 px-6 py-2.5 text-sm font-black text-indigo-600 transition-all hover:bg-indigo-500/10 hover:shadow-md active:scale-95 dark:border-indigo-400/30 dark:bg-indigo-400/10 dark:text-indigo-400"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      Message Plaser
-                    </Link>
-                  )}
                 </div>
 
                 <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
