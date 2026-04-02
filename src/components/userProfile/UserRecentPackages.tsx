@@ -139,8 +139,9 @@ export default function UserRecentPackages({
 
       <div className="grid gap-4">
         {visiblePackages.map((pkg) => (
-          <div
+          <Link
             key={pkg.id}
+            href={`/CurrentPendingOrders/viewPackageDetails/${pkg.id}`}
             className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:border-green-200 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/40"
           >
             <div className="flex items-start gap-4">
@@ -217,7 +218,7 @@ export default function UserRecentPackages({
                 <ChevronRight className="h-5 w-5 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-green-500" />
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
