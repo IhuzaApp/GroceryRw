@@ -17,6 +17,7 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { downloadContractAsPdf } from "../../lib/contractUtils";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 // Signature Pad Component
 function SignaturePad({
@@ -234,6 +235,7 @@ interface ContractDetailDrawerProps {
   onClose: () => void;
   contractId: string | null;
   onContractUpdated?: () => void;
+  businessAccount?: any;
 }
 
 interface ContractData {
@@ -290,6 +292,7 @@ export function ContractDetailDrawer({
   onClose,
   contractId,
   onContractUpdated,
+  businessAccount,
 }: ContractDetailDrawerProps) {
   const { data: session } = useSession();
   const [contract, setContract] = useState<ContractData | null>(null);
@@ -401,6 +404,20 @@ export function ContractDetailDrawer({
 
     try {
       setAccepting(true);
+
+      const timestamp = Date.now();
+      const businessNameSlug = businessAccount?.businessName
+        ?.toLowerCase()
+        .replace(/[^a-z0-9]/g, "_") || "unknown_business";
+
+      // Upload signature
+      const signaturePath = `plasbusiness/${businessNameSlug}/contracts/${contractId}/signatures/signature_${timestamp}.png`;
+      const signatureUrl = await uploadToFirebase(supplierSignature, signaturePath);
+
+      // Upload photo
+      const photoPath = `plasbusiness/${businessNameSlug}/contracts/${contractId}/signatures/photo_${timestamp}.jpg`;
+      const photoUrl = await uploadToFirebase(supplierPhoto, photoPath);
+
       const response = await fetch("/api/mutations/accept-contract", {
         method: "POST",
         headers: {
@@ -408,8 +425,8 @@ export function ContractDetailDrawer({
         },
         body: JSON.stringify({
           contractId: contractId,
-          supplierSignature: supplierSignature,
-          supplierPhoto: supplierPhoto,
+          supplierSignature: signatureUrl,
+          supplierPhoto: photoUrl,
         }),
       });
 

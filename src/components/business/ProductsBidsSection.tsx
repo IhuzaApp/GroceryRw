@@ -24,6 +24,7 @@ import {
 import { CreateProductForm } from "./CreateProductForm";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import toast from "react-hot-toast";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 const mockProducts = [
   {
@@ -179,7 +180,13 @@ const mockServiceRequests = [
   },
 ];
 
-export function ProductsBidsSection() {
+interface ProductsBidsSectionProps {
+  businessAccount?: any;
+}
+
+export function ProductsBidsSection({
+  businessAccount: initialBusinessAccount,
+}: ProductsBidsSectionProps) {
   const [activeSubTab, setActiveSubTab] = useState("products");
   const [selectedServiceRequest, setSelectedServiceRequest] =
     useState<any>(null);
@@ -188,15 +195,21 @@ export function ProductsBidsSection() {
   const [isCreateServiceOpen, setIsCreateServiceOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(null);
-  const [businessAccount, setBusinessAccount] = useState<any>(null);
+  const [businessAccount, setBusinessAccount] = useState<any>(
+    initialBusinessAccount || null
+  );
   const [services, setServices] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
   const [editingService, setEditingService] = useState<any>(null);
   const [isBusinessAccount, setIsBusinessAccount] = useState(false);
 
   useEffect(() => {
-    fetchBusinessAccount();
-  }, []);
+    if (!initialBusinessAccount) {
+      fetchBusinessAccount();
+    } else {
+      setIsBusinessAccount(initialBusinessAccount.accountType === "business");
+    }
+  }, [initialBusinessAccount]);
 
   useEffect(() => {
     if (activeSubTab === "products" && isBusinessAccount) {
@@ -242,14 +255,6 @@ export function ProductsBidsSection() {
     setIsCreateServiceOpen(true);
   };
 
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
   const handleServiceSubmit = async (serviceData: any) => {
     try {
@@ -280,18 +285,37 @@ export function ProductsBidsSection() {
         priceValue = priceValue.replace(/[^0-9.]/g, "");
       }
 
-      // Convert image to base64 if provided
-      let imageBase64 = "";
+      // Upload image to Firebase if provided
+      let imageUrl = "";
       if (serviceData.image && serviceData.image instanceof File) {
-        imageBase64 = await convertFileToBase64(serviceData.image);
+        const timestamp = Date.now();
+        const businessNameSlug = businessAccount?.businessName
+          ?.toLowerCase()
+          .replace(/[^a-z0-9]/g, "_") || "unknown_business";
+        const serviceNameSlug = serviceData.name
+          ?.toLowerCase()
+          .replace(/[^a-z0-9]/g, "_") || "service";
+        
+        const extension = serviceData.image.name.split('.').pop() || 'jpg';
+        const imagePath = `plasbusiness/${businessNameSlug}/services/${serviceNameSlug}_${timestamp}.${extension}`;
+        imageUrl = await uploadToFirebase(serviceData.image, imagePath);
       } else if (
         typeof serviceData.image === "string" &&
         serviceData.image.startsWith("data:")
       ) {
-        imageBase64 = serviceData.image;
+        const timestamp = Date.now();
+        const businessNameSlug = businessAccount?.businessName
+          ?.toLowerCase()
+          .replace(/[^a-z0-9]/g, "_") || "unknown_business";
+        const serviceNameSlug = serviceData.name
+          ?.toLowerCase()
+          .replace(/[^a-z0-9]/g, "_") || "service";
+        
+        const imagePath = `plasbusiness/${businessNameSlug}/services/${serviceNameSlug}_${timestamp}.png`;
+        imageUrl = await uploadToFirebase(serviceData.image, imagePath);
       } else if (editingService?.Image) {
         // Keep existing image if editing and no new image provided
-        imageBase64 = editingService.Image;
+        imageUrl = editingService.Image;
       }
 
       const payload = {
@@ -309,7 +333,7 @@ export function ProductsBidsSection() {
         speciality: Array.isArray(serviceData.specialties)
           ? serviceData.specialties.filter((s: string) => s.trim()).join(", ")
           : serviceData.specialties || "",
-        image: imageBase64,
+        image: imageUrl,
       };
 
       const url = editingService

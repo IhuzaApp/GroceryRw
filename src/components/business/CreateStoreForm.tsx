@@ -19,6 +19,8 @@ import {
 import toast from "react-hot-toast";
 import { RichTextEditor } from "../ui/RichTextEditor";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
+import { storage } from "../../lib/firebase";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 interface CreateStoreFormProps {
   isOpen: boolean;
@@ -37,6 +39,7 @@ interface CreateStoreFormProps {
     longitude?: string;
     operating_hours?: Record<string, string>;
   } | null;
+  businessAccount?: any;
 }
 
 type ImageSource = "upload" | "url";
@@ -114,6 +117,7 @@ export function CreateStoreForm({
   onClose,
   onSubmit,
   editingStore,
+  businessAccount,
 }: CreateStoreFormProps) {
   const isEditMode = !!editingStore?.id;
   const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
@@ -431,12 +435,27 @@ export function CreateStoreForm({
 
       // Image: base64 (upload) or URL string
       let imageValue = "";
-      if (formData.imageSource === "upload" && formData.image) {
+      if (formData.imageSource === "upload" && imagePreview && imagePreview.startsWith("data:")) {
         try {
-          imageValue = await convertFileToBase64(formData.image);
-        } catch (error) {
-          console.error("Error converting image to base64:", error);
-          toast.error("Failed to process image");
+          const businessNameSlug = (businessAccount?.businessName || "anonymous")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          const storeNameSlug = formData.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          const timestamp = Date.now();
+          const fileName = `store_image_${timestamp}`;
+          const storagePath = `plasbusiness/${businessNameSlug}/stores/${storeNameSlug}/${fileName}`;
+          const storageRef = ref(storage!, storagePath);
+
+          // Upload data_url
+          await uploadString(storageRef, imagePreview, "data_url");
+          imageValue = await getDownloadURL(storageRef);
+        } catch (uploadError) {
+          console.error("Error uploading store image to Firebase:", uploadError);
+          toast.error("Failed to upload image. Please try again.");
           setIsSubmitting(false);
           return;
         }

@@ -246,6 +246,7 @@ export function StoresSection({
         isOpen={isCreateStoreModalOpen}
         onClose={() => setIsCreateStoreModalOpen(false)}
         onSubmit={handleStoreCreated}
+        businessAccount={businessAccount}
       />
     </div>
   );

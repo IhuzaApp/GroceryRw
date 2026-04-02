@@ -34,6 +34,7 @@ import { ServicesSection } from "../../../src/components/business/ServicesSectio
 import { StoresSection } from "../../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../../src/components/business/BusinessChatDrawer";
 import { PortalSkeleton } from "../../../src/components/business/PortalSkeleton";
+import { ContractDetailDrawer } from "../../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
@@ -170,6 +171,8 @@ function BuyerDashboardContent({
   setIsChatDrawerOpen: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
   const isPersonalAccount = businessAccount?.accountType === "personal";
   const isBusinessAccount = businessAccount?.accountType === "business";
   // Service provider status should come from user data/API
@@ -216,7 +219,8 @@ function BuyerDashboardContent({
   };
 
   const handleViewContract = (contractId: string) => {
-    // Handle view contract logic
+    setSelectedContractId(contractId);
+    setIsContractDrawerOpen(true);
   };
 
   const handleEditContract = (contractId: string) => {
@@ -366,7 +370,7 @@ function BuyerDashboardContent({
 
         {isServiceProvider &&
           isBusinessAccount &&
-          activeTab === "products-bids" && <ProductsBidsSection />}
+          activeTab === "products-bids" && <ProductsBidsSection businessAccount={businessAccount} />}
 
         {isServiceProvider &&
           isBusinessAccount &&
@@ -445,6 +449,16 @@ function BuyerDashboardContent({
       <BusinessChatDrawer
         isOpen={isChatDrawerOpen}
         onClose={() => setIsChatDrawerOpen(false)}
+      />
+
+      <ContractDetailDrawer
+        isOpen={isContractDrawerOpen}
+        onClose={() => {
+          setIsContractDrawerOpen(false);
+          setSelectedContractId(null);
+        }}
+        contractId={selectedContractId}
+        businessAccount={businessAccount}
       />
     </div>
   );
