@@ -33,6 +33,7 @@ import { BusinessOverview } from "../../../src/components/business/BusinessOverv
 import { ServicesSection } from "../../../src/components/business/ServicesSection";
 import { StoresSection } from "../../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../../src/components/business/BusinessChatDrawer";
+import { PortalSkeleton } from "../../../src/components/business/PortalSkeleton";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
@@ -94,10 +95,9 @@ export default function PlasBusinessPage() {
   if (!authReady || checkingAccount) {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+          <div className="max-w-8xl container mx-auto">
+            <PortalSkeleton />
           </div>
         </div>
       </RootLayout>
