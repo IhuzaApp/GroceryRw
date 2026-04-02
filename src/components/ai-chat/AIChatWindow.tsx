@@ -54,6 +54,16 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     }
   }, [isOpen, messages]);
 
+  // Hook dedicated ONLY to resetting the chat state when closing
+  useEffect(() => {
+    if (!isOpen) {
+      setMessages([getInitialMessage()]);
+      setInputValue("");
+      setIsTyping(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -116,7 +126,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         history,
         systemInstruction: {
           role: "system",
-          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. Provide concise, helpful answers about food recommendations, orders, and delivery. If the user asks for recommendations or what they can buy with a certain budget, use your search tools to find real data to show them. You have access to store coordinates and reviews; use them to evaluate distance (ask for the user's location if unknown) and recommend places based on their actual ratings!\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store or restaurant is currently open based on their operating hours.\n\nFormatting rules:\n- Use neat spacing and line breaks for readability.\n- Use • (bullet points) or numbered lists for items instead of asterisks.\n- Bold the store names and prices for emphasis.` }]
+          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. Provide concise, helpful answers about food recommendations, orders, and delivery. If the user asks for recommendations or what they can buy with a certain budget, use your search tools to find real data to show them. You have access to store coordinates, reviews, images, and IDs; use them to evaluate distance (ask for the user's location if unknown) and recommend places based on their actual ratings!\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store or restaurant is currently open based on their operating hours.\n\nFormatting rules:\n- ALWAYS display the shop logo next to the name, wrapped in a clickable link. Use the correct URL path based on the store type:\n  * For regular Shops: [![Logo](image_url)](/shops/shop_id) **Store Name**\n  * For Restaurants: [![Logo](image_url)](/restaurant/restaurant_id) **Store Name**\n  * For Businesses: [![Logo](image_url)](/plasBusiness/store/business_id) **Store Name**\n- If no image is available, just link the bold text: [**Store Name**](/shops/shop_id)\n- Use neat spacing and line breaks for readability.\n- Use • (bullet points) or numbered lists for items instead of asterisks.` }]
         },
       });
 
@@ -302,6 +312,8 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                       // Convert markdown asterisk bullet point to a proper dot bullet point
                       .replace(/(^|\n)\*\s/g, '$1• ')
+                      // Convert markdown images
+                      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />')
                       // Make sure links are clickable (if model passes them)
                       .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-[#115e59] underline hover:text-green-700">$1</a>')
                   }}

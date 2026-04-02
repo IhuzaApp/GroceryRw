@@ -7,6 +7,7 @@ const SEARCH_ALL_PRODUCTS = gql`
   Products(where: {is_active: {_eq: true}, ProductName: {name: {_ilike: $keyword}}, Shop: {name: {_ilike: $shopKeyword}}}) {
     final_price
     Shop {
+      id
       name
       latitude
       longitude
@@ -52,6 +53,7 @@ const SEARCH_ALL_PRODUCTS = gql`
   restaurant_menu(where: {is_active: {_eq: true}, dishes: {name: {_ilike: $keyword}}, Restaurants: {name: {_ilike: $shopKeyword}}}) {
     price
     Restaurants {
+      id
       name
       lat
       long
@@ -82,6 +84,7 @@ const SEARCH_ALL_PRODUCTS = gql`
     updated_at
   }
   business_stores(where: {is_active: {_eq: true}, name: {_ilike: $shopKeyword}}) {
+    id
     name
     latitude
     longitude
@@ -148,8 +151,9 @@ const SEARCH_ALL_PRODUCTS = gql`
 `;
 
 const SEARCH_ALL_STORES = gql`
- query SearchAllStores($keyword: String!) {
+  query SearchAllStores($keyword: String!) {
   Shops(where: {is_active: {_eq: true}, name: {_ilike: $keyword}}, limit: 40) {
+    id
     name
     description
     address
@@ -177,6 +181,7 @@ const SEARCH_ALL_STORES = gql`
     image
   }
   Restaurants(where: {is_active: {_eq: true}, name: {_ilike: $keyword}}, limit: 40) {
+    id
     name
     location
     profile
@@ -189,6 +194,7 @@ const SEARCH_ALL_STORES = gql`
     logo
   }
   business_stores(where: {is_active: {_eq: true}, name: {_ilike: $keyword}}, limit: 60) {
+    id
     name
     description
     address
@@ -259,6 +265,8 @@ export default async function handler(
       (result.Products || []).forEach((p: any) => {
         formattedProducts.push({
           source: "Shop",
+          id: p.Shop?.id,
+          image: p.Shop?.image || p.Shop?.logo,
           store_name: p.Shop?.name || "Unknown Shop",
           latitude: p.Shop?.latitude,
           longitude: p.Shop?.longitude,
@@ -273,6 +281,8 @@ export default async function handler(
       (result.restaurant_menu || []).forEach((m: any) => {
         formattedProducts.push({
           source: "Restaurant",
+          id: m.Restaurants?.id,
+          image: m.image || m.Restaurants?.logo,
           store_name: m.Restaurants?.name || "Unknown Restaurant",
           latitude: m.Restaurants?.lat,
           longitude: m.Restaurants?.long,
@@ -288,6 +298,8 @@ export default async function handler(
         (store.PlasBusinessProductsOrSerives || []).forEach((s: any) => {
           formattedProducts.push({
             source: "BusinessStore",
+            id: store.id,
+            image: s.Image || store.Category?.image,
             store_name: store.name || "Unknown Store",
             latitude: store.latitude,
             longitude: store.longitude,
@@ -343,6 +355,7 @@ export default async function handler(
 
         allStores.push({
           type: "Shop",
+          id: s.id,
           name: s.name,
           description: s.description,
           address: s.address,
@@ -352,12 +365,13 @@ export default async function handler(
           latitude: s.latitude,
           longitude: s.longitude,
           average_rating: avgRating,
-          recent_reviews: reviews.slice(0, 3)
+          recent_reviews: reviews.slice(0, 3),
+          image: s.image || s.Category?.image
         });
       });
 
-      (result.Restaurants || []).forEach((r: any) => allStores.push({ type: "Restaurant", name: r.name, location: r.location, description: r.profile, phone: r.phone, email: r.email, latitude: r.lat, longitude: r.long }));
-      (result.business_stores || []).forEach((bs: any) => allStores.push({ type: "Business", name: bs.name, description: bs.description, address: bs.address, category: bs.Category?.name, operating_hours: bs.operating_hours, latitude: bs.latitude, longitude: bs.longitude }));
+      (result.Restaurants || []).forEach((r: any) => allStores.push({ type: "Restaurant", id: r.id, name: r.name, location: r.location, description: r.profile, phone: r.phone, email: r.email, latitude: r.lat, longitude: r.long, image: r.logo }));
+      (result.business_stores || []).forEach((bs: any) => allStores.push({ type: "Business", id: bs.id, name: bs.name, description: bs.description, address: bs.address, category: bs.Category?.name, operating_hours: bs.operating_hours, latitude: bs.latitude, longitude: bs.longitude, image: bs.Category?.image }));
       console.log(`[AI Search API] All Stores matched: ${allStores.length}`);
       return res.status(200).json({ results: allStores });
     }
