@@ -877,10 +877,16 @@ export default function BottomBar() {
 
             {/* More Dropdown Menu */}
             {moreOpen && (
-              <div
-                className="fixed bottom-20 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-xl border border-gray-200 bg-white py-2 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
-                ref={moreRef}
-              >
+              <>
+                {/* Backdrop Overlay to hide what's behind */}
+                <div
+                  className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-300"
+                  onClick={() => setMoreOpen(false)}
+                />
+                <div
+                  className="fixed bottom-24 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-2xl border border-gray-200/50 bg-white/95 p-2 shadow-2xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/95"
+                  ref={moreRef}
+                >
                 {/* Guest Badge - Show for guest users */}
                 {isGuest && (
                   <div className="mx-3 mb-3 mt-2">
@@ -1248,8 +1254,9 @@ export default function BottomBar() {
                   </span>
                 </button>
               </div>
-            )}
-          </div>
+            </>
+          )}
+        </div>
         </nav>
       )}
 
