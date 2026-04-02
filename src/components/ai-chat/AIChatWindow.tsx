@@ -21,7 +21,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
   const getInitialMessage = () => ({
     id: "1",
-    text: `Hello ${userName}! 😊 I'm your Plas Agent. I can help you with orders, food recommendations, and more. How can I assist you today?`,
+    text: `Hey there, ${userName}! 👋 I'm Plas Agent, your personal grocery & dining assistant! Whether you're craving a quick bite, hunting for the best deals, or planning your weekly shopping, I'm here to help. What's on your mind today? 🍔🛒`,
     sender: "ai" as const,
     timestamp: new Date(),
   });
@@ -109,6 +109,28 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   keyword: { type: "STRING", description: "The store name or type to search for, e.g., 'supermarket', 'bakery'. Omit to see all." }
                 }
               }
+            },
+            {
+              name: "search_recipes",
+              description: "Search for recipe ideas and cooking instructions from a global recipe database. Use this when the user asks how to cook something, wants recipe ideas, or asks about ingredients for a dish.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  keyword: { type: "STRING", description: "The recipe name or main ingredient to search for, e.g., 'pasta', 'chicken', 'chocolate cake'." },
+                  category: { type: "STRING", description: "Filter by meal category, e.g., 'Seafood', 'Chicken', 'Vegan', 'Dessert'. Use this for broad category requests." }
+                }
+              }
+            },
+            {
+              name: "search_web",
+              description: "Search the web for any recipe-related question that the recipe database may not cover — e.g. cooking tips, nutrition facts, substitution advice, dish history, or any food topic the user is curious about.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  query: { type: "STRING", description: "A specific, focused search query about food, cooking, or nutrition, e.g., 'how to make fluffy scrambled eggs without butter'." }
+                },
+                required: ["query"]
+              }
             }
           ]
         } as any]
@@ -126,7 +148,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         history,
         systemInstruction: {
           role: "system",
-          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. Provide concise, helpful answers about food recommendations, orders, and delivery. If the user asks for recommendations or what they can buy with a certain budget, use your search tools to find real data to show them. You have access to store coordinates, reviews, images, and IDs; use them to evaluate distance (ask for the user's location if unknown) and recommend places based on their actual ratings!\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store or restaurant is currently open based on their operating hours.\n\nFormatting rules:\n- ALWAYS display the shop logo next to the name, wrapped in a clickable link. Use the correct URL path based on the store type:\n  * For regular Shops: [![Logo](image_url)](/shops/shop_id) **Store Name**\n  * For Restaurants: [![Logo](image_url)](/restaurant/restaurant_id) **Store Name**\n  * For Businesses: [![Logo](image_url)](/plasBusiness/store/business_id) **Store Name**\n- If no image is available, just link the bold text: [**Store Name**](/shops/shop_id)\n- Use neat spacing and line breaks for readability.\n- Use • (bullet points) or numbered lists for items instead of asterisks.` }]
+          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. You can help with orders, food recommendations, store locations, cooking recipes, and food-related web searches!\n\nYou have access to FOUR search tools:\n1. search_products — searches real-time grocery & restaurant inventory (with prices).\n2. search_stores — searches shops, restaurants, and businesses (with coordinates, operating hours, and reviews).\n3. search_recipes — searches a global recipe database (TheMealDB) for step-by-step cooking instructions.\n4. search_web — searches the web for any food/recipe topic NOT covered by the recipe database (e.g. cooking tips, nutrition, substitutions, dish history, dietary advice). Do NOT share raw URLs from this result, just summarize the information well.\n\nWhen the user asks how to cook something, use search_recipes first; if you can't find it or need more detail, supplement with search_web. For order/delivery questions use search_products and search_stores.\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store or restaurant is currently open based on their operating hours.\n\nFormatting rules:\n- For stores: [![Logo](image_url)](/shops/shop_id) **Store Name** | [![Logo](image_url)](/restaurant/id) **Restaurant** | [![Logo](image_url)](/plasBusiness/store/id) **Business**\n- For recipes: [![Thumb](image_url)](/Recipes/recipe_id) **Recipe Name**, then full step-by-step instructions.\n- Never share raw Google or DuckDuckGo URLs in your responses.\n- Use • bullet points or numbered steps. Keep responses concise and scannable.` }]
         },
       });
 
@@ -180,11 +202,23 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         try {
           const fnName = pendingFunctionCall.name;
           const args = pendingFunctionCall.args || pendingFunctionCall.arguments || {};
-          
-          const response = await fetch("/api/ai/search-plas-data", {
+
+          let apiUrl = "/api/ai/search-plas-data";
+          let body: any = { action: fnName, params: args };
+
+          // Route recipes calls to a separate lightweight endpoint
+          if (fnName === "search_recipes") {
+            apiUrl = "/api/ai/search-recipes";
+            body = { keyword: args.keyword || "", category: args.category || "" };
+          } else if (fnName === "search_web") {
+            apiUrl = "/api/ai/search-web";
+            body = { query: args.query || "" };
+          }
+
+          const response = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: fnName, params: args })
+            body: JSON.stringify(body)
           });
           const data = await response.json();
 
@@ -243,13 +277,16 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       />
 
       {/* Chat Window */}
-      <div className="fixed inset-0 z-[10000] flex flex-col bg-white transition-all duration-300 dark:bg-gray-800 md:inset-auto md:bottom-20 md:right-4 md:h-[500px] md:w-full md:max-w-md md:rounded-2xl md:border md:border-gray-200 md:shadow-2xl dark:md:border-gray-700">
+      <div className="fixed inset-0 z-[10000] flex flex-col overflow-hidden bg-white/95 backdrop-blur-2xl transition-all duration-300 dark:bg-gray-900/95 md:inset-auto md:bottom-24 md:right-6 md:h-[600px] md:w-full md:max-w-md md:rounded-3xl md:border md:border-white/20 md:shadow-[0_20px_50px_-12px_rgba(17,94,89,0.3)] dark:md:border-gray-700/50">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 bg-[#115e59] px-6 py-4 dark:border-gray-700">
+        <div className="relative flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#064e3b] via-[#115e59] to-[#047857] px-6 py-4 shadow-md">
+          {/* Subtle lime accent line */}
+          <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-[#84cc16] to-transparent opacity-50"></div>
+          
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
               <svg
-                className="h-6 w-6 text-white"
+                className="h-5 w-5 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -258,18 +295,23 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
+              {/* Active pulsing dot */}
+              <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#84cc16] opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-[#84cc16]"></span>
+              </span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Plas Agent</h3>
-              <p className="text-xs text-white/80">Always here to help</p>
+              <h3 className="text-lg font-bold tracking-tight text-white drop-shadow-sm">Plas Agent</h3>
+              <p className="text-xs font-medium text-[#84cc16]">Online & Ready</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/20 hover:scale-110 active:scale-95"
             aria-label="Close chat"
           >
             <svg
@@ -289,19 +331,19 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <div className="flex-1 space-y-5 overflow-y-auto p-5 pb-6">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${
                 message.sender === "user" ? "justify-end" : "justify-start"
-              }`}
+              } animate-in fade-in slide-in-from-bottom-3 duration-300`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                className={`max-w-[85%] rounded-3xl px-5 py-3.5 shadow-sm ${
                   message.sender === "user"
-                    ? "bg-[#115e59] text-white"
-                    : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
+                    ? "rounded-tr-sm bg-gradient-to-br from-[#115e59] to-[#047857] text-white shadow-[#115e59]/20"
+                    : "rounded-tl-sm bg-white border border-gray-100 text-gray-800 shadow-gray-200/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:shadow-none"
                 }`}
               >
                 <div 
@@ -319,10 +361,10 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   }}
                 />
                 <span
-                  className={`mt-1 block text-xs ${
+                  className={`mt-2 block text-[10px] font-medium tracking-wider uppercase ${
                     message.sender === "user"
-                      ? "text-white/70"
-                      : "text-gray-500 dark:text-gray-400"
+                      ? "text-white/60"
+                      : "text-gray-400 dark:text-gray-500"
                   }`}
                 >
                   {message.timestamp.toLocaleTimeString([], {
@@ -335,12 +377,12 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           ))}
 
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl bg-gray-100 px-4 py-3 dark:bg-gray-700">
-                <div className="flex space-x-2">
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]"></div>
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]"></div>
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></div>
+            <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="rounded-2xl rounded-tl-sm bg-white/80 border border-gray-100 px-5 py-4 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex space-x-1.5 items-center">
+                  <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#115e59]/60 [animation-delay:-0.3s]"></div>
+                  <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#115e59]/80 [animation-delay:-0.15s]"></div>
+                  <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#115e59]"></div>
                 </div>
               </div>
             </div>
@@ -350,25 +392,25 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
+        <div className="border-t border-gray-100 bg-white/80 backdrop-blur-xl p-4 dark:border-gray-800 dark:bg-gray-900/80">
+          <div className="flex items-center gap-3">
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-green-400"
+              placeholder="Ask anything..."
+              className="flex-1 rounded-full border border-gray-200 bg-gray-50/50 px-5 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 shadow-inner focus:border-[#84cc16] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#84cc16]/10 transition-all dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-100 dark:focus:bg-gray-800"
             />
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || isTyping}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#115e59] text-white transition-all duration-200 hover:bg-[#197a74] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#115e59]"
+              className="group flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#115e59] to-[#047857] text-white shadow-md shadow-[#115e59]/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#115e59]/40 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
               aria-label="Send message"
             >
               <svg
-                className="h-5 w-5"
+                className="h-5 w-5 transform transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-active:translate-x-0 group-active:translate-y-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -382,9 +424,15 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               </svg>
             </button>
           </div>
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Powered by Firebase AI Logic
-          </p>
+          <div className="mt-3 flex items-center justify-center gap-1.5">
+            <svg className="h-3 w-3 text-[#115e59] dark:text-[#84cc16]" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+            </svg>
+            <p className="text-[10px] uppercase font-semibold tracking-wider text-gray-400 dark:text-gray-500">
+              Powered by Firebase AI Logic
+            </p>
+          </div>
         </div>
       </div>
     </>
