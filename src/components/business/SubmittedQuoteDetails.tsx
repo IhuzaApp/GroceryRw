@@ -140,9 +140,14 @@ export function SubmittedQuoteDetails({
     });
   };
 
-  const downloadAttachment = (base64String: string, index: number) => {
+  const downloadAttachment = (attachment: string, index: number) => {
     try {
-      const [mimeType, base64Data] = base64String.split(",");
+      if (attachment.startsWith("http")) {
+        window.open(attachment, "_blank");
+        return;
+      }
+      
+      const [mimeType, base64Data] = attachment.split(",");
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {

@@ -344,6 +344,10 @@ export default function QuoteDetailsModal({
                             key={index}
                             onClick={() => {
                               try {
+                                if (attachment.startsWith("http")) {
+                                  window.open(attachment, "_blank");
+                                  return;
+                                }
                                 const [mimeType, base64Data] =
                                   attachment.split(",");
                                 const byteCharacters = atob(base64Data);
@@ -750,6 +754,10 @@ export default function QuoteDetailsModal({
                                 key={index}
                                 onClick={() => {
                                   try {
+                                    if (attachment.startsWith("http")) {
+                                      window.open(attachment, "_blank");
+                                      return;
+                                    }
                                     const [mimeType, base64Data] =
                                       attachment.split(",");
                                     const byteCharacters = atob(base64Data);

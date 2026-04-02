@@ -373,6 +373,7 @@ function BuyerDashboardContent({
           activeTab === "rfq-opportunities" && (
             <RFQOpportunitiesSection
               onMessageCustomer={handleMessageQuoteSupplier}
+              businessAccount={businessAccount}
             />
           )}
 
@@ -437,6 +438,7 @@ function BuyerDashboardContent({
         isOpen={isCreateRFQOpen}
         onClose={() => setIsCreateRFQOpen(false)}
         onSubmit={handleRFQSubmit}
+        businessAccount={businessAccount}
       />
 
       {/* Business Chat Drawer */}

@@ -24,10 +24,12 @@ import { SubmittedQuoteDetails } from "./SubmittedQuoteDetails";
 
 interface RFQOpportunitiesSectionProps {
   onMessageCustomer?: (customerId: string) => void;
+  businessAccount?: any;
 }
 
 export function RFQOpportunitiesSection({
   onMessageCustomer,
+  businessAccount,
 }: RFQOpportunitiesSectionProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -228,6 +230,37 @@ export function RFQOpportunitiesSection({
   const handleViewRFQ = (rfq: any) => {
     setSelectedRFQ(rfq);
     setIsQuoteModalOpen(true);
+  };
+
+  const handleDownloadAttachment = (attachment: string, index: number) => {
+    try {
+      if (attachment.startsWith("http")) {
+        window.open(attachment, "_blank");
+        return;
+      }
+      const [mimeType, base64Data] = attachment.split(",");
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], {
+        type: mimeType.split(":")[1].split(";")[0],
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `rfq-attachment-${index + 1}.${
+        blob.type.includes("pdf") ? "pdf" : "jpg"
+      }`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading attachment:", error);
+    }
   };
 
   const handleShareQuote = async (rfq: any) => {
@@ -901,8 +934,21 @@ export function RFQOpportunitiesSection({
                     <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
                       If applicable, please include any relevant documentation:
                     </p>
-                    <div className="space-y-2 text-sm text-gray-900 dark:text-white">
-                      <div>Attachment 1: [Download/View Attachment]</div>
+                    <div className="space-y-2 text-sm">
+                      {selectedRFQ.attachment.split(",").map((att: string, index: number) => {
+                        const trimmedAtt = att.trim();
+                        if (!trimmedAtt) return null;
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleDownloadAttachment(trimmedAtt, index)}
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>Attachment {index + 1}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       (Feel free to attach your product catalog, pricing list,
@@ -1052,6 +1098,7 @@ export function RFQOpportunitiesSection({
           rfqId={selectedRFQForQuote.id}
           rfqTitle={selectedRFQForQuote.title}
           onSuccess={handleQuoteSubmitted}
+          businessAccount={businessAccount}
         />
       )}
 

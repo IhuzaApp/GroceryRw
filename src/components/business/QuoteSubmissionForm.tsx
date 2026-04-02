@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { X, DollarSign, Clock, FileText, Send, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { storage } from "../../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface QuoteSubmissionFormProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface QuoteSubmissionFormProps {
   rfqId: string;
   rfqTitle?: string;
   onSuccess?: () => void;
+  businessAccount?: any;
 }
 
 export function QuoteSubmissionForm({
@@ -19,6 +22,7 @@ export function QuoteSubmissionForm({
   rfqId,
   rfqTitle,
   onSuccess,
+  businessAccount,
 }: QuoteSubmissionFormProps) {
   const [formData, setFormData] = useState({
     quote_amount: "",
@@ -294,39 +298,34 @@ export function QuoteSubmissionForm({
         return;
       }
 
-      // Convert attachments to base64
-      // Note: Files are already compressed in handleFileChange
-      const attachmentPromises = attachments.map(async (file) => {
-        const base64 = await convertFileToBase64(file);
-        // Validate actual base64 size (2MB limit per file)
-        if (base64.length > maxPerFileBase64) {
-          throw new Error(
-            `File "${file.name}" is too large after encoding (${(
-              base64.length /
-              1024 /
-              1024
-            ).toFixed(
-              2
-            )}MB). Maximum size is 2MB per file. Please use a smaller file.`
-          );
+      // Upload attachments to Firebase Storage
+      const uploadedUrls: string[] = [];
+      const businessName = businessAccount?.businessName || "anonymous";
+      const timestamp = Date.now();
+      
+      const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const bNameSlug = slugify(businessName);
+
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          try {
+            const fileName = `${timestamp}_${file.name}`;
+            const storagePath = `plasbusiness/${bNameSlug}/quotes/${rfqId}/${fileName}`;
+            const storageRef = ref(storage!, storagePath);
+            await uploadBytes(storageRef, file);
+            const downloadUrl = await getDownloadURL(storageRef);
+            uploadedUrls.push(downloadUrl);
+          } catch (uploadError) {
+            console.error(`Error uploading ${file.name}:`, uploadError);
+            toast.error(`Failed to upload ${file.name}`);
+          }
         }
-        return base64;
-      });
-
-      const attachmentData = await Promise.all(attachmentPromises);
-
-      // Prepare terms object
-      const terms = {
-        payment: formData.payment_terms || "",
-        warranty: formData.warranty || "",
-        delivery: formData.delivery_terms || "",
-        cancellation: formData.cancellation_terms || "",
-      };
+      }
 
       // Map attachments to the three fields: attachement, attachment_1, attachment_2
-      const attachement = attachmentData.length > 0 ? attachmentData[0] : "";
-      const attachment_1 = attachmentData.length > 1 ? attachmentData[1] : "";
-      const attachment_2 = attachmentData.length > 2 ? attachmentData[2] : "";
+      const attachement = uploadedUrls.length > 0 ? uploadedUrls[0] : "";
+      const attachment_1 = uploadedUrls.length > 1 ? uploadedUrls[1] : "";
+      const attachment_2 = uploadedUrls.length > 2 ? uploadedUrls[2] : "";
 
       const response = await fetch("/api/mutations/submit-rfq-quote", {
         method: "POST",
