@@ -201,11 +201,17 @@ function CurrentOrdersPage() {
       setHasMore(cached.hasMore);
       setPage(cached.page);
       setLoading(false);
-      return;
+    } else {
+      fetchOrders(1, false);
     }
-    fetchOrders(1, false);
-    fetchPackages();
-  }, [fetchOrders, fetchPackages]);
+  }, [fetchOrders]);
+
+  // Fetch packages whenever session is ready (distinct from orders cache)
+  useEffect(() => {
+    if (session?.user) {
+      fetchPackages();
+    }
+  }, [session, fetchPackages]);
 
   if (!session) {
     return (
@@ -363,7 +369,7 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Filter Tabs - Premium Segmented Control */}
-            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 mb-2 -mx-3 px-3 py-2 animate-in fade-in slide-in-from-top-4 duration-500 md:relative md:top-0 md:m-0 md:p-0 md:bg-transparent">
+            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 mb-2 -mx-3 px-3 py-2 animate-in fade-in slide-in-from-top-4 duration-500 md:relative md:top-0 md:m-0 md:mb-12 md:p-0 md:bg-transparent md:flex md:justify-center">
               {/* Glassmorphic Container */}
               <div className="flex w-full overflow-x-auto no-scrollbar rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
                 <button
@@ -487,58 +493,7 @@ function CurrentOrdersPage() {
                   />
                 )}
 
-                {/* Load More Button */}
-                {!loading && hasMore && orders.length > 0 && (
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={loadMore}
-                      disabled={loadingMore}
-                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
-                    >
-                      {loadingMore ? (
-                        <>
-                          <svg
-                            className="h-4 w-4 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                          Load More Orders
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
+                {/* Load More Button removed in favor of component-level pagination */}
               </div>
             </div>
           </div>

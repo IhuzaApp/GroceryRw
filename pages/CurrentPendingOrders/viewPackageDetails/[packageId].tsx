@@ -368,8 +368,9 @@ function PackageDetailsPage() {
     <AuthGuard requireAuth={true}>
       <RootLayout>
         <div className="min-h-screen pb-20 md:pb-10">
-          {/* Header Section - Full Bleed handled by RootLayout */}
-          <div className="relative h-52 w-full md:h-80">
+          {/* Header Section - Full Bleed on Mobile, Contained on Desktop */}
+          <div className="md:container md:mx-auto md:px-8 md:pt-4">
+            <div className="relative h-52 w-full overflow-hidden md:h-80 md:rounded-3xl shadow-2xl">
             <Image
               src={pkg.package_image || "/images/package-placeholder.jpg"}
               alt="Package"
@@ -443,6 +444,7 @@ function PackageDetailsPage() {
                   </button>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 

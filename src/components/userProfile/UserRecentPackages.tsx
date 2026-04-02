@@ -52,9 +52,9 @@ export default function UserRecentPackages({
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
-      pkg.DeliveryCode.toLowerCase().includes(query) ||
-      pkg.pickupLocation.toLowerCase().includes(query) ||
-      pkg.dropoffLocation.toLowerCase().includes(query) ||
+      (pkg.DeliveryCode || "").toLowerCase().includes(query) ||
+      (pkg.pickupLocation || "").toLowerCase().includes(query) ||
+      (pkg.dropoffLocation || "").toLowerCase().includes(query) ||
       (pkg.receiverName || "").toLowerCase().includes(query)
     );
   });
