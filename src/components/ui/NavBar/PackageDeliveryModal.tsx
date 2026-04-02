@@ -712,7 +712,7 @@ export default function PackageDeliveryModal({
             </div>
             <div>
               <h2 className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                Express Parcel Delivery
+                Express Plas Package
               </h2>
               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                 Step {step} of 5: {
@@ -963,7 +963,7 @@ export default function PackageDeliveryModal({
                     </button>
                   </div>
                   <p className={`mt-3 text-xs leading-relaxed ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    Share this code with the receiver. They must provide it to the delivery person to confirm the parcel has been received.
+                    Share this code with the receiver. They must provide it to the delivery person to confirm the Plas Package has been received.
                   </p>
                 </div>
 

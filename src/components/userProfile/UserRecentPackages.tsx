@@ -95,7 +95,7 @@ export default function UserRecentPackages({
           <Package className="h-8 w-8 text-gray-400" />
         </div>
         <h3 className="text-lg font-bold text-gray-900 dark:text-white">No deliveries yet</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Your parcel delivery history will appear here.</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Your Plas Package history will appear here.</p>
       </div>
     );
   }
@@ -150,7 +150,7 @@ export default function UserRecentPackages({
                 {pkg.package_image ? (
                   <img
                     src={pkg.package_image}
-                    alt="Parcel"
+                    alt="Plas Package"
                     className="h-14 w-14 rounded-xl object-cover shadow-sm ring-1 ring-gray-100 dark:ring-gray-700"
                   />
                 ) : (
