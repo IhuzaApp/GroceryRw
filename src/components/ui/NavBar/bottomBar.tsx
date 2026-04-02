@@ -669,7 +669,7 @@ export default function BottomBar() {
           {/* Business - Only show for non-guest logged-in users - Second icon */}
           {session?.user && !isGuest && (
             <NavItem
-              href="/plasBusiness/manager"
+              href="/plasBusiness/portal"
               icon={
                 <div className="relative inline-block">
                   <svg
