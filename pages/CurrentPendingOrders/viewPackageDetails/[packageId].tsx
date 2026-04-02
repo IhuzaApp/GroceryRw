@@ -8,13 +8,13 @@ import { useTheme } from "../../../src/context/ThemeContext";
 import Image from "next/image";
 import ContactSupportModal from "@components/UserCarts/orders/ContactSupportModal";
 import FeedbackModal from "@components/UserCarts/orders/FeedbackModal";
-import { 
-  Package, 
-  MapPin, 
-  User, 
-  Phone, 
-  Clock, 
-  ChevronLeft, 
+import {
+  Package,
+  MapPin,
+  User,
+  Phone,
+  Clock,
+  ChevronLeft,
   Calendar,
   Navigation,
   Info,
@@ -66,37 +66,38 @@ const getDeliveryMethodInfo = (method: string) => {
 
 // Package Status Configuration
 const getPackageStatusInfo = (status: string) => {
-  const s = status?.toUpperCase() || "PENDING";
+  const s = status?.toLowerCase() || "pending";
   switch (s) {
-    case "DELIVERED":
+    case "delivered":
       return {
         label: "Delivered",
         color: "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400",
         icon: <Package className="h-5 w-5" />,
         description: "Package delivered successfully"
       };
-    case "PICKED_UP":
+    case "on_the_way":
+    case "picked_up":
       return {
-        label: "In Transit",
+        label: "On the Way",
         color: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
         icon: <Navigation className="h-5 w-5" />,
-        description: "Plaser is on the way to dropoff"
+        description: "Package is on the way for delivery"
       };
-    case "ASSIGNED":
+    case "accepted":
       return {
-        label: "Assigned",
+        label: "Accepted",
         color: "text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400",
         icon: <User className="h-5 w-5" />,
-        description: "A Plaser has been assigned to your order"
+        description: "Plasa has accepted and is heading to pickup"
       };
-    case "CANCELLED":
+    case "cancelled":
       return {
         label: "Cancelled",
         color: "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400",
         icon: <Info className="h-5 w-5" />,
         description: "This delivery has been cancelled"
       };
-    case "AWAITING_PAYMENT":
+    case "awaiting_payment":
       return {
         label: "Awaiting Payment",
         color: "text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400",
@@ -105,17 +106,17 @@ const getPackageStatusInfo = (status: string) => {
       };
     default:
       return {
-        label: "Processing",
+        label: "PENDING",
         color: "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400",
         icon: <Clock className="h-5 w-5" />,
-        description: "Waiting for Plaser assignment"
+        description: "Waiting for Plasa assignment"
       };
   }
 };
 
 const formatLocationDetails = (details: any) => {
   if (!details) return null;
-  
+
   let data = details;
   if (typeof details === "string" && details.startsWith("{")) {
     try {
@@ -132,7 +133,7 @@ const formatLocationDetails = (details: any) => {
     if (data.gateColor) parts.push(`${data.gateColor} gate`);
     return parts.length > 0 ? parts.join(", ") : null;
   }
-  
+
   return typeof data === "string" ? data : null;
 };
 
@@ -264,7 +265,7 @@ function PackageDetailsPage() {
             {/* Dual Gradient Overlays for Readability */}
             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            
+
             {/* Back Button */}
             <button
               onClick={() => router.back()}
@@ -281,10 +282,10 @@ function PackageDetailsPage() {
                     <User className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 pr-1">
-                    <p className="text-[9px] font-bold uppercase tracking-widest !text-white/60 leading-none">Plaser</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest !text-white/60 leading-none">Plasa</p>
                     <p className="truncate text-[11px] font-black !text-white mt-0.5">{pkg.shopper.full_name}</p>
                   </div>
-                  <a 
+                  <a
                     href={`tel:${pkg.shopper.phone_number || pkg.shopper.phone}`}
                     className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500 !text-white transition-transform hover:scale-110 active:scale-90 shadow-lg"
                   >
@@ -317,7 +318,7 @@ function PackageDetailsPage() {
                     ) : (
                       <Copy className="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
                     )}
-                    
+
                     {/* Tooltip */}
                     {copied && (
                       <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 rounded-lg bg-green-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg animate-in fade-in slide-in-from-top-1">
@@ -332,10 +333,10 @@ function PackageDetailsPage() {
 
           <div className="container mx-auto relative z-20 mt-6 px-4 md:px-8">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              
+
               {/* Left Column: Status & Route */}
               <div className="space-y-6 lg:col-span-2">
-                
+
                 {/* Action Row: Support / Feedback / Message */}
                 <div className="flex flex-wrap items-center gap-3">
                   {pkg.status === "delivered" ? (
@@ -373,11 +374,11 @@ function PackageDetailsPage() {
                 {/* Route Card */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                   <h3 className="mb-6 text-lg font-bold">Trip Details</h3>
-                  
+
                   <div className="relative space-y-8">
                     {/* Vertical Line */}
                     <div className="absolute bottom-4 left-2.5 top-4 w-0.5 bg-gray-100 dark:bg-gray-800" />
-                    
+
                     {/* Pickup */}
                     <div className="relative flex gap-4">
                       <div className="z-10 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 ring-4 ring-green-100 dark:ring-green-900/30">
@@ -407,7 +408,7 @@ function PackageDetailsPage() {
                     </div>
                   </div>
 
-                   <div className="mt-8 flex flex-wrap gap-4">
+                  <div className="mt-8 flex flex-wrap gap-4">
                     <div className="flex flex-1 items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
                         <Navigation className="h-5 w-5 text-green-600" />
@@ -444,11 +445,11 @@ function PackageDetailsPage() {
 
               {/* Right Column: Receiver & Payment */}
               <div className="space-y-6">
-                
+
                 {/* Shopper Info (if assigned) */}
                 {pkg.shopper && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                    <h3 className="mb-4 text-lg font-bold text-green-600 dark:text-green-400">Assigned Plaser</h3>
+                    <h3 className="mb-4 text-lg font-bold text-green-600 dark:text-green-400">Assigned Plasa</h3>
                     <div className="flex items-center gap-4">
                       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-green-100 dark:border-green-900/30">
                         <Image
@@ -460,7 +461,7 @@ function PackageDetailsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold truncate text-gray-900 dark:text-white">{pkg.shopper.full_name}</p>
-                        <a 
+                        <a
                           href={`tel:${pkg.shopper.phone_number || pkg.shopper.phone}`}
                           className="mt-1 flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 transition-colors"
                         >
@@ -512,13 +513,13 @@ function PackageDetailsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {pkg.status === "AWAITING_PAYMENT" && (
-                    <Button 
-                      appearance="primary" 
-                      color="green" 
-                      block 
-                      size="lg" 
+                    <Button
+                      appearance="primary"
+                      color="green"
+                      block
+                      size="lg"
                       className="mt-6 font-bold shadow-lg shadow-green-500/20"
                     >
                       Pay Now
@@ -541,7 +542,7 @@ function PackageDetailsPage() {
         </div>
 
         {/* Modals */}
-        <FeedbackModal 
+        <FeedbackModal
           isOpen={feedbackModal}
           onClose={() => setFeedbackModal(false)}
           onSubmit={handleFeedbackSubmit}
