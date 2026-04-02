@@ -75,7 +75,33 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       }
 
       const model = getGenerativeModel(ai, { 
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
+        tools: [{
+          functionDeclarations: [
+            {
+              name: "search_products",
+              description: "Search for available grocery items, food products, or restaurant dishes by name, optionally filtered by a maximum price/budget.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  keyword: { type: "STRING", description: "The keyword to search for, e.g., 'pizza', 'burger', 'milk'. Omit to view all." },
+                  max_price: { type: "NUMBER", description: "The maximum price the user is willing to pay. Omit if not specified." },
+                  store_name: { type: "STRING", description: "If the user mentions a specific shop or restaurant, put the name here. Omit to search everywhere." }
+                }
+              }
+            },
+            {
+              name: "search_stores",
+              description: "Search for available shops, restaurants, or grocery stores by keyword or category.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  keyword: { type: "STRING", description: "The store name or type to search for, e.g., 'supermarket', 'bakery'. Omit to see all." }
+                }
+              }
+            }
+          ]
+        } as any]
       });
 
       // Prepare chat history (exclude initial greeting to keep context clean, or map it)
@@ -90,34 +116,86 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         history,
         systemInstruction: {
           role: "system",
-          parts: [{ text: "You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. Provide concise, helpful answers about food recommendations, orders, and delivery." }]
+          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. Provide concise, helpful answers about food recommendations, orders, and delivery. If the user asks for recommendations or what they can buy with a certain budget, use your search tools to find real data to show them. You have access to store coordinates and reviews; use them to evaluate distance (ask for the user's location if unknown) and recommend places based on their actual ratings!\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store or restaurant is currently open based on their operating hours.\n\nFormatting rules:\n- Use neat spacing and line breaks for readability.\n- Use • (bullet points) or numbered lists for items instead of asterisks.\n- Bold the store names and prices for emphasis.` }]
         },
       });
 
       const responseId = (Date.now() + 1).toString();
       let isFirstChunk = true;
 
-      const result = await chat.sendMessageStream(inputValue);
+      // Wrap the message handling in a helper so we can recursively call it if a function is used
+      const handleStream = async (requestPayload: any) => {
+        const streamResult = await chat.sendMessageStream(requestPayload);
+        let fullText = "";
+        let functionCallToHandle: any = null;
 
-      let fullText = "";
-      for await (const chunk of result.stream) {
-        if (isFirstChunk) {
-          setIsTyping(false);
-          setMessages(prev => [...prev, {
-            id: responseId,
-            text: "",
-            sender: "ai",
-            timestamp: new Date(),
-          }]);
-          isFirstChunk = false;
+        for await (const chunk of streamResult.stream) {
+          const fCalls = typeof chunk.functionCalls === "function" ? chunk.functionCalls() : chunk.functionCalls;
+          if (fCalls && Array.isArray(fCalls) && fCalls.length > 0) {
+            functionCallToHandle = fCalls[0];
+            break;
+          }
+
+          if (isFirstChunk) {
+            setIsTyping(false);
+            setMessages(prev => [...prev, {
+              id: responseId,
+              text: "",
+              sender: "ai",
+              timestamp: new Date(),
+            }]);
+            isFirstChunk = false;
+          }
+          
+          if (chunk.text && typeof chunk.text === "function") {
+             const chunkStr = chunk.text();
+             if (chunkStr) {
+               fullText += chunkStr;
+               setMessages(prev => prev.map(m => 
+                 m.id === responseId ? { ...m, text: fullText } : m
+               ));
+             }
+          }
         }
         
-        fullText += chunk.text();
-        setMessages(prev => prev.map(m => 
-          m.id === responseId ? { ...m, text: fullText } : m
-        ));
+        return functionCallToHandle;
+      };
+
+      let pendingFunctionCall = await handleStream(inputValue);
+
+      if (pendingFunctionCall) {
+        // Show typing again while we fetch
+        if (isFirstChunk) setIsTyping(true);
+        
+        try {
+          const fnName = pendingFunctionCall.name;
+          const args = pendingFunctionCall.args || pendingFunctionCall.arguments || {};
+          
+          const response = await fetch("/api/ai/search-plas-data", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: fnName, params: args })
+          });
+          const data = await response.json();
+
+          // Pass the database results back to the AI
+          await handleStream([{
+            functionResponse: {
+              name: fnName,
+              response: { results: data.results || [] }
+            }
+          }]);
+        } catch (fnErr) {
+          console.error("Function call error:", fnErr);
+          await handleStream([{
+            functionResponse: {
+              name: pendingFunctionCall.name,
+              response: { error: "Error contacting internal database API." }
+            }
+          }]);
+        }
       }
-      
+
       if (isFirstChunk) { // Fallback if stream was empty
         setIsTyping(false);
       }
@@ -216,7 +294,18 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                     : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.text}</p>
+                <div 
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{
+                    __html: message.text
+                      // Convert markdown bold to HTML bold
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      // Convert markdown asterisk bullet point to a proper dot bullet point
+                      .replace(/(^|\n)\*\s/g, '$1• ')
+                      // Make sure links are clickable (if model passes them)
+                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-[#115e59] underline hover:text-green-700">$1</a>')
+                  }}
+                />
                 <span
                   className={`mt-1 block text-xs ${
                     message.sender === "user"
