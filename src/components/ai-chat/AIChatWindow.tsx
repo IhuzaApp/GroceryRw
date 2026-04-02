@@ -3,17 +3,113 @@ import { useSession } from "next-auth/react";
 import { getGenerativeModel } from "firebase/ai";
 import { ai } from "../../lib/firebase";
 
+interface CartConfirmPayload {
+  product_id: string;
+  shop_id: string;
+  product_name: string;
+  price: number | string;
+  quantity: number;
+  image?: string;
+}
+
 interface Message {
   id: string;
   text: string;
   sender: "user" | "ai";
   timestamp: Date;
+  // Optional: cart confirmation action card
+  cartConfirm?: CartConfirmPayload;
+  cartAdded?: boolean; // true after successful add
 }
 
 interface AIChatWindowProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// ─── Cart Confirmation Card ────────────────────────────────────────────────────
+function CartConfirmCard({
+  msgId,
+  payload,
+  isDone,
+  onConfirm,
+  onDecline,
+}: {
+  msgId: string;
+  payload: CartConfirmPayload;
+  isDone?: boolean;
+  onConfirm: (msgId: string, payload: CartConfirmPayload, qty: number) => void;
+  onDecline: (msgId: string) => void;
+}) {
+  const [qty, setQty] = React.useState(payload.quantity || 1);
+  if (isDone) {
+    return (
+      <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
+        <div className="max-w-[85%] rounded-3xl rounded-tl-sm border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/30">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white text-lg">✓</div>
+            <div>
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Added to cart!</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">{payload.product_name} ×{qty}</p>
+            </div>
+          </div>
+          <a href="/Cart" className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
+            🛒 Go to Cart &amp; Checkout →
+          </a>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="max-w-[85%] overflow-hidden rounded-3xl rounded-tl-sm border border-gray-100 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+        {/* Product header */}
+        <div className="flex items-center gap-3 bg-gradient-to-r from-[#064e3b]/10 to-[#047857]/5 px-4 py-3 dark:from-[#064e3b]/30">
+          <img
+            src={payload.image || "/images/groceryPlaceholder.png"}
+            alt={payload.product_name}
+            className="h-12 w-12 rounded-xl object-cover shadow-sm"
+            onError={(e) => { (e.target as HTMLImageElement).src = "/images/groceryPlaceholder.png"; }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-bold text-gray-800 dark:text-white">{payload.product_name}</p>
+            <p className="text-xs font-semibold text-[#115e59]">{Number(payload.price).toLocaleString()} RWF</p>
+          </div>
+        </div>
+        {/* Quantity + actions */}
+        <div className="px-4 py-3">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Quantity</span>
+            <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-2 py-1 dark:border-gray-600">
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">−</button>
+              <span className="w-6 text-center text-sm font-bold text-gray-800 dark:text-white">{qty}</span>
+              <button onClick={() => setQty(q => Math.min(20, q + 1))} className="flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">+</button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {/* Icon-only Add to Cart button */}
+            <button
+              onClick={() => onConfirm(msgId, payload, qty)}
+              title="Add to cart"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-2.5 text-white shadow-sm transition hover:opacity-90 active:scale-95"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                <line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => onDecline(msgId)}
+              className="flex-1 rounded-2xl border border-gray-200 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
+            >No thanks</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const { data: session } = useSession();
@@ -131,6 +227,22 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 },
                 required: ["query"]
               }
+            },
+            {
+              name: "add_to_cart",
+              description: "Add a specific shop product to the user's cart. ONLY use this AFTER the user explicitly confirms they want to add an item. The product_id and shop_id must come from a prior search_products result.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  product_id: { type: "STRING", description: "The exact UUID of the product from the search_products result." },
+                  shop_id: { type: "STRING", description: "The exact UUID of the shop from the search_products result." },
+                  product_name: { type: "STRING", description: "Human-readable product name to display in the confirmation card." },
+                  price: { type: "NUMBER", description: "The product price in RWF." },
+                  quantity: { type: "NUMBER", description: "How many units to add, default 1." },
+                  image: { type: "STRING", description: "Optional image URL of the product or its store logo." }
+                },
+                required: ["product_id", "shop_id", "product_name", "price"]
+              }
             }
           ]
         } as any]
@@ -148,7 +260,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         history,
         systemInstruction: {
           role: "system",
-          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. You can help with orders, food recommendations, store locations, cooking recipes, and food-related web searches!\n\nYou have access to FOUR search tools:\n1. search_products — searches real-time grocery & restaurant inventory (with prices).\n2. search_stores — searches shops, restaurants, and businesses (with coordinates, operating hours, and reviews).\n3. search_recipes — searches a global recipe database (TheMealDB) for step-by-step cooking instructions.\n4. search_web — searches the web for any food/recipe topic NOT covered by the recipe database (e.g. cooking tips, nutrition, substitutions, dish history, dietary advice). Do NOT share raw URLs from this result, just summarize the information well.\n\nWhen the user asks how to cook something, use search_recipes first; if you can't find it or need more detail, supplement with search_web. For order/delivery questions use search_products and search_stores.\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store or restaurant is currently open based on their operating hours.\n\nFormatting rules:\n- For stores: [![Logo](image_url)](/shops/shop_id) **Store Name** | [![Logo](image_url)](/restaurant/id) **Restaurant** | [![Logo](image_url)](/plasBusiness/store/id) **Business**\n- For recipes: [![Thumb](image_url)](/Recipes/recipe_id) **Recipe Name**, then full step-by-step instructions.\n- Never share raw Google or DuckDuckGo URLs in your responses.\n- Use • bullet points or numbered steps. Keep responses concise and scannable.` }]
+          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app. You can help with shopping, orders, food recommendations, store locations, recipes, and food-related topics!\n\nYou have access to FIVE tools:\n1. search_products — searches real-time grocery inventory from shops (with prices, product_id, shop_id).\n2. search_stores — searches shops, restaurants, and businesses (with coordinates, operating hours, reviews).\n3. search_recipes — searches TheMealDB for step-by-step cooking instructions.\n4. search_web — searches the web for food/recipe topics NOT in the recipe database.\n5. add_to_cart — adds a shop product to the user's cart. ONLY call this AFTER the user explicitly says YES/confirm. DO NOT call add_to_cart unprompted — always ask first: "Would you like me to add [item] to your cart?".\n\nWhen the user asks to order something or you suggest a product: first show it with search_products, then ASK: "Would you like me to add [product name] to your cart?" — wait for confirmation before calling add_to_cart.\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store is currently open.\n\nFormatting rules:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Store Name**\n- Restaurants: [![Logo](image_url)](/restaurant/id) **Restaurant Name**\n- Businesses: [![Logo](image_url)](/plasBusiness/store/id) **Business Name**\n- Recipes: [![Thumb](image_url)](/Recipes/recipe_id) **Recipe Name**, then full instructions.\n- Never share raw Google or DuckDuckGo URLs.\n- Use • bullets or numbered steps. Keep responses concise and scannable.` }]
         },
       });
 
@@ -213,6 +325,32 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           } else if (fnName === "search_web") {
             apiUrl = "/api/ai/search-web";
             body = { query: args.query || "" };
+          } else if (fnName === "add_to_cart") {
+            // Show an inline confirmation card in the chat instead of calling the API immediately
+            const confirmPayload: CartConfirmPayload = {
+              product_id: args.product_id,
+              shop_id: args.shop_id,
+              product_name: args.product_name || "Item",
+              price: args.price || 0,
+              quantity: Number(args.quantity) || 1,
+              image: args.image,
+            };
+            setIsTyping(false);
+            setMessages(prev => [...prev, {
+              id: (Date.now() + 2).toString(),
+              text: "",
+              sender: "ai",
+              timestamp: new Date(),
+              cartConfirm: confirmPayload,
+            }]);
+            // Tell AI the card was shown so it can send a follow-up message
+            await handleStream([{
+              functionResponse: {
+                name: fnName,
+                response: { status: "confirmation_card_shown", message: "A confirmation card was displayed to the user. Wait for user to click 'Yes, add it!' or 'No thanks'." }
+              }
+            }]);
+            return; // Don't proceed with normal API call
           }
 
           const response = await fetch(apiUrl, {
@@ -265,6 +403,51 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       handleSend();
     }
   };
+
+  // Handle cart confirmation — called when user clicks "Yes, add it!" on the inline card
+  const handleConfirmCart = async (msgId: string, payload: CartConfirmPayload, qty: number) => {
+    try {
+      const res = await fetch("/api/ai/search-plas-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_to_cart",
+          params: { product_id: payload.product_id, shop_id: payload.shop_id, quantity: qty },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      // Mark the card as "added"
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, cartAdded: true } : m));
+
+      // Add a follow-up AI message
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 3).toString(),
+        text: `✅ **${payload.product_name}** (×${qty}) has been added to your cart! Ready to checkout? Head to your cart whenever you're ready. 🛒`,
+        sender: "ai",
+        timestamp: new Date(),
+      }]);
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 3).toString(),
+        text: `❌ Oops! I couldn't add that to your cart right now. Please try adding it manually from the shop page.`,
+        sender: "ai",
+        timestamp: new Date(),
+      }]);
+    }
+  };
+
+  const handleDeclineCart = (msgId: string) => {
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, cartAdded: false, cartConfirm: { ...m.cartConfirm!, quantity: -1 } } : m));
+    setMessages(prev => [...prev, {
+      id: (Date.now() + 3).toString(),
+      text: `No problem! Let me know if there's anything else I can help you with. 😊`,
+      sender: "ai",
+      timestamp: new Date(),
+    }]);
+  };
+
 
   if (!isOpen) return null;
 
@@ -332,7 +515,23 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
         {/* Messages */}
         <div className="flex-1 space-y-5 overflow-y-auto p-5 pb-6">
-          {messages.map((message) => (
+          {messages.map((message) => {
+            // Cart confirmation card — special render
+            if (message.cartConfirm && message.cartConfirm.quantity !== -1) {
+              return (
+                <CartConfirmCard
+                  key={message.id}
+                  msgId={message.id}
+                  payload={message.cartConfirm}
+                  isDone={message.cartAdded}
+                  onConfirm={handleConfirmCart}
+                  onDecline={handleDeclineCart}
+                />
+              );
+            }
+
+            // Standard message bubble
+            return (
             <div
               key={message.id}
               className={`flex ${
@@ -355,11 +554,11 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                       // Convert markdown asterisk bullet point to a proper dot bullet point
                       .replace(/(^|\n)\*\s/g, '$1• ')
                       // Recipe thumbnails (![Thumb](url)) — large card style. Handles both http URLs and data: URIs
-                      .replace(/!\[Thumb\]\(([^)]*)\)/g, '<img src="$1" alt="Recipe" style="display:block; width:100%; max-width:280px; height:160px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
+                      .replace(/!\[Thumb\]\(([^)]*)\)/g, '<img src="$1" alt="Recipe" onerror="this.onerror=null; this.src=\'/images/groceryPlaceholder.png\';" style="display:block; width:100%; max-width:280px; height:160px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
                       // Standalone base64 images (no markdown wrapper) — render as large card
-                      .replace(/(data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)/g, '<img src="$1" alt="Image" style="display:block; width:100%; max-width:280px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
+                      .replace(/(data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)/g, '<img src="$1" alt="Image" onerror="this.onerror=null; this.src=\'/images/groceryPlaceholder.png\';" style="display:block; width:100%; max-width:280px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
                       // Store/restaurant logos (![Logo](url)) — small circular icon. [^)]* handles base64 data URIs too
-                      .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '<img src="$2" alt="$1" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />')
+                      .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '<img src="$2" alt="$1" onerror="this.onerror=null; this.src=\'/images/groceryPlaceholder.png\';" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />')
                       // Make clickable links
                       .replace(/\[([^\]]*)\]\(([^)]*)\)/g, '<a href="$2" class="text-[#115e59] underline hover:text-green-700">$1</a>')
                   }}
@@ -378,7 +577,8 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 </span>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {isTyping && (
             <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -428,15 +628,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               </svg>
             </button>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-1.5">
-            <svg className="h-3 w-3 text-[#115e59] dark:text-[#84cc16]" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-            </svg>
-            <p className="text-[10px] uppercase font-semibold tracking-wider text-gray-400 dark:text-gray-500">
-              Powered by Firebase AI Logic
-            </p>
-          </div>
+
         </div>
       </div>
     </>

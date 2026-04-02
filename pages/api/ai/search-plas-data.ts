@@ -5,7 +5,9 @@ import { gql } from "graphql-request";
 const SEARCH_ALL_PRODUCTS = gql`
  query SearchAllProducts($keyword: String!, $shopKeyword: String!) {
   Products(where: {is_active: {_eq: true}, ProductName: {name: {_ilike: $keyword}}, Shop: {name: {_ilike: $shopKeyword}}}) {
+    id
     final_price
+    shop_id
     Shop {
       id
       name
@@ -265,6 +267,8 @@ export default async function handler(
       (result.Products || []).forEach((p: any) => {
         formattedProducts.push({
           source: "Shop",
+          product_id: p.id,           // UUID for add_to_cart
+          shop_id: p.shop_id,         // UUID for add_to_cart
           id: p.Shop?.id,
           image: p.Shop?.image || p.Shop?.logo,
           store_name: p.Shop?.name || "Unknown Shop",
@@ -374,6 +378,28 @@ export default async function handler(
       (result.business_stores || []).forEach((bs: any) => allStores.push({ type: "Business", id: bs.id, name: bs.name, description: bs.description, address: bs.address, category: bs.Category?.name, operating_hours: bs.operating_hours, latitude: bs.latitude, longitude: bs.longitude, image: bs.Category?.image }));
       console.log(`[AI Search API] All Stores matched: ${allStores.length}`);
       return res.status(200).json({ results: allStores });
+
+    } else if (action === "add_to_cart") {
+      const { product_id, shop_id, quantity = 1 } = params;
+      if (!product_id || !shop_id) {
+        return res.status(400).json({ error: "Missing product_id or shop_id" });
+      }
+      console.log(`[AI Cart] Adding product ${product_id} from shop ${shop_id} x${quantity}`);
+
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3000}`;
+      const cartRes = await fetch(`${baseUrl}/api/cart-items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.cookie || "",
+        },
+        body: JSON.stringify({ shop_id, product_id, quantity: Number(quantity) }),
+      });
+      const cartData = await cartRes.json();
+      if (!cartRes.ok) {
+        return res.status(cartRes.status).json({ error: cartData.error || "Failed to add to cart" });
+      }
+      return res.status(200).json({ success: true, cart: cartData });
     }
 
     return res.status(400).json({ error: "Unknown action" });
