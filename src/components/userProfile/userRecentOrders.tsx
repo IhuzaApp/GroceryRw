@@ -326,40 +326,12 @@ export default function UserRecentOrders({
 
   return (
     <>
-      <div className="mb-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white md:text-lg">
-            Orders
-          </h3>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <svg
-                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+      {/* Premium Search & Actions Header */}
+      <div className="mb-6 flex items-center gap-2.5">
+        <div className="relative flex-1 group">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
             <svg
-              className="h-4 w-4 text-gray-400"
+              className="h-4.5 w-4.5 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -367,7 +339,7 @@ export default function UserRecentOrders({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
@@ -376,30 +348,42 @@ export default function UserRecentOrders({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search orders by ID, shop name, or amount..."
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm shadow-sm transition-all duration-200 placeholder:text-gray-400 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-green-400 dark:focus:ring-green-400/20"
+            placeholder="Search orders (ID, shop, price)..."
+            className="w-full rounded-2xl border border-gray-200 bg-white/50 py-3 pl-11 pr-10 text-sm shadow-sm backdrop-blur-md transition-all duration-300 placeholder:text-gray-400 focus:border-green-500/50 focus:bg-white focus:ring-4 focus:ring-green-500/5 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/10"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-green-500 transition-colors"
             >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           )}
         </div>
+
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            className="group flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-gray-200 bg-white/50 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-green-200 hover:bg-white hover:text-green-600 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-green-400 disabled:opacity-50"
+          >
+            <svg
+              className={`h-5 w-5 transition-transform duration-700 ${loading ? "animate-spin" : "group-hover:rotate-180"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </button>
+        )}
       </div>
       {loading ? (
         <div className="space-y-4">
@@ -577,10 +561,10 @@ export default function UserRecentOrders({
           <button
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
           >
             <svg
-              className="h-4 w-4"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -588,7 +572,7 @@ export default function UserRecentOrders({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M15 19l-7-7 7-7"
               />
             </svg>
@@ -605,10 +589,10 @@ export default function UserRecentOrders({
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-bold transition-all duration-300 ${
                     currentPage === page
-                      ? "border-green-500 bg-green-500 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      ? "bg-gradient-to-br from-green-500 to-green-600 border-transparent !text-white shadow-lg shadow-green-500/30 scale-110"
+                      : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
                   {page}
@@ -632,10 +616,10 @@ export default function UserRecentOrders({
               setCurrentPage((prev) => Math.min(totalPages, prev + 1))
             }
             disabled={currentPage === totalPages}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
           >
             <svg
-              className="h-4 w-4"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -643,7 +627,7 @@ export default function UserRecentOrders({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M9 5l7 7-7 7"
               />
             </svg>

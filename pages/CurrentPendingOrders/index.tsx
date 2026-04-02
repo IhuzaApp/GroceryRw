@@ -363,7 +363,7 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Filter Tabs - Premium Segmented Control */}
-            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 mb-6 -mx-3 px-3 py-2 animate-in fade-in slide-in-from-top-4 duration-500 md:relative md:top-0 md:m-0 md:p-0 md:bg-transparent">
+            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 mb-2 -mx-3 px-3 py-2 animate-in fade-in slide-in-from-top-4 duration-500 md:relative md:top-0 md:m-0 md:p-0 md:bg-transparent">
               {/* Glassmorphic Container */}
               <div className="flex w-full overflow-x-auto no-scrollbar rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
                 <button
@@ -470,7 +470,7 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Orders List */}
-            <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-20 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
+            <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-10 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
               <div className="px-3 py-4 md:p-6">
                 {filter === "packages" ? (
                   <UserRecentPackages 

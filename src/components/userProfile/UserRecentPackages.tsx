@@ -44,6 +44,8 @@ export default function UserRecentPackages({
   loading,
   onRefresh,
 }: UserRecentPackagesProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const packagesPerPage = 4;
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredPackages = packages.filter((pkg) => {
@@ -56,6 +58,17 @@ export default function UserRecentPackages({
       (pkg.receiverName || "").toLowerCase().includes(query)
     );
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPackages.length / packagesPerPage);
+  const startIndex = (currentPage - 1) * packagesPerPage;
+  const endIndex = startIndex + packagesPerPage;
+  const visiblePackages = filteredPackages.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   if (loading) {
     return (
@@ -89,31 +102,43 @@ export default function UserRecentPackages({
 
   return (
     <div className="space-y-4">
-      {/* Search Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
+      {/* Premium Search & Actions Header */}
+      <div className="mb-6 flex items-center gap-2.5">
+        <div className="relative flex-1 group">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+            <Package className="h-4.5 w-4.5 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200" />
+          </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by code, location, or receiver..."
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm transition-all focus:border-green-500 focus:ring-2 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            placeholder="Search deliveries (code, location, receiver)..."
+            className="w-full rounded-2xl border border-gray-200 bg-white/50 py-3 pl-11 pr-10 text-sm shadow-sm backdrop-blur-md transition-all duration-300 placeholder:text-gray-400 focus:border-green-500/50 focus:bg-white focus:ring-4 focus:ring-green-500/5 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/10"
           />
-          <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-green-500 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
+
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="group flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-gray-200 bg-white/50 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-green-200 hover:bg-white hover:text-green-600 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-green-400"
           >
-            <Clock className="h-4 w-4" />
-            Refresh
+            <Clock className={`h-5 w-5 transition-transform duration-700 ${loading ? "animate-spin" : "group-hover:rotate-180"}`} />
           </button>
         )}
       </div>
 
       <div className="grid gap-4">
-        {filteredPackages.map((pkg) => (
+        {visiblePackages.map((pkg) => (
           <div
             key={pkg.id}
             className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:border-green-200 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/40"
@@ -195,6 +220,56 @@ export default function UserRecentPackages({
           </div>
         ))}
       </div>
+
+      {/* Premium Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
+          >
+            <ChevronRight className="h-5 w-5 rotate-180" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+              if (
+                page === 1 ||
+                page === totalPages ||
+                (page >= currentPage - 1 && page <= currentPage + 1)
+              ) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-bold transition-all duration-300 ${
+                      currentPage === page
+                        ? "bg-gradient-to-br from-green-500 to-green-600 border-transparent !text-white shadow-lg shadow-green-500/30 scale-110"
+                        : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              } else if (page === currentPage - 2 || page === currentPage + 2) {
+                return (
+                  <span key={page} className="text-gray-400">...</span>
+                );
+              }
+              return null;
+            })}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
