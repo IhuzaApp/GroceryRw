@@ -193,6 +193,17 @@ const UPDATE_REEL_ORDER_STATUS = gql`
   }
 `;
 
+const UPDATE_PACKAGE_DELIVERY_STATUS = gql`
+  mutation UpdatePackageDeliveryStatus($id: uuid!, $status: String!) {
+    update_package_delivery_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status }
+    ) {
+      id
+    }
+  }
+`;
+
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
     order_transactions(where: { reference_id: { _eq: $reference_id } }) {
@@ -202,6 +213,7 @@ const GET_ORDER_TRANSACTION_BY_REF = gql`
       restaurant_order_id
       business_order_id
       reel_order_id
+      package_id
       amount
       user_id
     }
@@ -356,6 +368,7 @@ export default async function handler(
             const restaurantOrderId = orderTransaction.restaurant_order_id;
             const businessOrderId = orderTransaction.business_order_id;
             const reelOrderId = orderTransaction.reel_order_id;
+            const packageId = orderTransaction.package_id;
 
             if (newStatus === "SUCCESSFUL") {
               // SUCCESS: Activate orders and CLEAR CART
@@ -449,6 +462,16 @@ export default async function handler(
                   status: "PENDING",
                 });
               }
+
+              if (packageId) {
+                console.log(
+                  `🚀[MoMo Status] Activating package delivery: ${packageId} `
+                );
+                await hasuraClient.request(UPDATE_PACKAGE_DELIVERY_STATUS, {
+                  id: packageId,
+                  status: "PENDING",
+                });
+              }
             } else if (newStatus === "FAILED") {
               // FAILURE: Mark orders as PAYMENT_FAILED
               if (orderId) {
@@ -488,6 +511,15 @@ export default async function handler(
                 );
                 await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, {
                   id: reelOrderId,
+                  status: "PAYMENT_FAILED",
+                });
+              }
+              if (packageId) {
+                console.log(
+                  `❌[MoMo Status] Payment FAILED for package delivery: ${packageId} `
+                );
+                await hasuraClient.request(UPDATE_PACKAGE_DELIVERY_STATUS, {
+                  id: packageId,
                   status: "PAYMENT_FAILED",
                 });
               }

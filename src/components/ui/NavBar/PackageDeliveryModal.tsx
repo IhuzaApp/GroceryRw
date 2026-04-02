@@ -2,21 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
-import { 
-  ChevronRight, 
-  MapPin, 
-  User, 
-  Package, 
-  Clock, 
-  CreditCard, 
-  Wallet, 
-  Smartphone, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Info,
-  Loader2,
-  Calendar
-} from "lucide-react";
+import { MapPin, Phone, User, Package, Calendar, Clock, ChevronRight, X, Camera, ShieldCheck, ArrowRight, Wallet, Smartphone, CheckCircle2, CreditCard, Info, Loader2 } from "lucide-react";
+import { storage } from "../../../lib/firebase";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import CameraCapture from "../CameraCapture";
 import PaymentProcessingOverlay from "../pos/registration/PaymentProcessingOverlay";
 import toast from "react-hot-toast";
@@ -34,11 +22,27 @@ interface PackageDeliveryModalProps {
   onClose: () => void;
 }
 
+interface SavedPaymentMethod {
+  id: string;
+  method: string;
+  names: string;
+  number: string;
+  is_default: boolean;
+}
+
 interface UserAddress {
   id: string;
   street: string;
   city: string;
   type?: string;
+  latitude?: string | number;
+  longitude?: string | number;
+  placeDetails?: {
+    gateNumber?: string;
+    gateColor?: string;
+    floor?: string;
+    doorNumber?: string;
+  };
   is_default: boolean;
 }
 
@@ -89,6 +93,10 @@ export default function PackageDeliveryModal({
     transportMethod: "motorbike", // foot | bicycle | motorbike | car
     distance: 0,
     calculatedFee: 0,
+    pickupLat: "",
+    pickupLng: "",
+    dropoffLat: "",
+    dropoffLng: "",
   });
 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -97,7 +105,9 @@ export default function PackageDeliveryModal({
   const [systemConfig, setSystemConfig] = useState<any>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'wallet' | 'momo' | null>(null);
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
+  const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState("");
+  const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
   const [processingStep, setProcessingStep] = useState<"idle" | "initiating_payment" | "awaiting_approval" | "success">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -145,7 +155,14 @@ export default function PackageDeliveryModal({
             if (pickupAutocomplete) {
               const place = pickupAutocomplete.getPlace();
               if (place?.formatted_address) {
-                setFormData((prev) => ({ ...prev, pickup: place.formatted_address! }));
+                const lat = place.geometry?.location?.lat();
+                const lng = place.geometry?.location?.lng();
+                setFormData((prev) => ({ 
+                  ...prev, 
+                  pickup: place.formatted_address!,
+                  pickupLat: lat?.toString() || "",
+                  pickupLng: lng?.toString() || "",
+                }));
               }
             }
           });
@@ -164,7 +181,14 @@ export default function PackageDeliveryModal({
             if (dropoffAutocomplete) {
               const place = dropoffAutocomplete.getPlace();
               if (place?.formatted_address) {
-                setFormData((prev) => ({ ...prev, dropoff: place.formatted_address! }));
+                const lat = place.geometry?.location?.lat();
+                const lng = place.geometry?.location?.lng();
+                setFormData((prev) => ({ 
+                  ...prev, 
+                  dropoff: place.formatted_address!,
+                  dropoffLat: lat?.toString() || "",
+                  dropoffLng: lng?.toString() || "",
+                }));
               }
             }
           });
@@ -242,6 +266,16 @@ export default function PackageDeliveryModal({
           console.error("Error fetching addresses:", err);
           setLoadingAddresses(false);
         });
+
+      // Fetch Saved Payment Methods
+      authenticatedFetch("/api/queries/payment-methods")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.paymentMethods) {
+            setSavedPaymentMethods(data.paymentMethods);
+          }
+        })
+        .catch((err) => console.error("Error fetching payment methods:", err));
     }
   }, [open, session?.user?.id]);
 
@@ -265,7 +299,59 @@ export default function PackageDeliveryModal({
     }
   }, [formData.transportMethod, systemConfig, step]);
 
+  // Handle distance-based transportation restrictions
+  useEffect(() => {
+    if (formData.distance > 8 && formData.transportMethod === 'bicycle') {
+      setFormData(prev => ({ ...prev, transportMethod: 'motorbike' }));
+    } else if (formData.distance > 2 && formData.transportMethod === 'foot') {
+      setFormData(prev => ({ ...prev, transportMethod: 'motorbike' }));
+    }
+  }, [formData.distance]);
+
   if (!open) return null;
+
+  const applyAddressToForm = (addr: UserAddress, isPickup: boolean) => {
+    const rawType = addr.type?.toLowerCase() || "";
+    let mappedType = "Home";
+    if (rawType === "office") mappedType = "Office";
+    else if (rawType === "apartment") mappedType = "Apartment";
+    else if (rawType === "hotel") mappedType = "Hotel";
+    else if (rawType === "house") mappedType = "Home";
+
+    const details = addr.placeDetails || {};
+    
+    if (isPickup) {
+      setFormData(prev => ({
+        ...prev,
+        pickup: addr.street,
+        pickupType: mappedType,
+        pickupLat: addr.latitude?.toString() || "",
+        pickupLng: addr.longitude?.toString() || "",
+        pickupGateNumber: details.gateNumber || "",
+        pickupGateColor: details.gateColor || "",
+        pickupFloor: details.floor || "",
+        pickupRoomNumber: details.doorNumber || "",
+        pickupOfficeName: "",
+        pickupApartmentName: "",
+        pickupHotelName: "",
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        dropoff: addr.street,
+        dropoffType: mappedType,
+        dropoffLat: addr.latitude?.toString() || "",
+        dropoffLng: addr.longitude?.toString() || "",
+        dropoffGateNumber: details.gateNumber || "",
+        dropoffGateColor: details.gateColor || "",
+        dropoffFloor: details.floor || "",
+        dropoffRoomNumber: details.doorNumber || "",
+        dropoffOfficeName: "",
+        dropoffApartmentName: "",
+        dropoffHotelName: "",
+      }));
+    }
+  };
 
   const handleClose = () => {
     setStep(1);
@@ -364,43 +450,52 @@ export default function PackageDeliveryModal({
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   const handleSubmit = async () => {
-    if (!selectedPaymentMethod) {
+    if (!selectedPaymentValue) {
       toast.error("Please select a payment method");
       return;
     }
 
-    if (selectedPaymentMethod === 'wallet' && walletBalance < formData.calculatedFee) {
-      toast.error("Insufficient wallet balance");
-      return;
+    let finalPaymentMethod: 'wallet' | 'momo' = 'momo';
+    let momoPhoneNumber = "";
+
+    if (selectedPaymentValue === "wallet") {
+      finalPaymentMethod = "wallet";
+      if (walletBalance < formData.calculatedFee) {
+        toast.error("Insufficient wallet balance");
+        return;
+      }
+    } else if (selectedPaymentValue === "other") {
+      finalPaymentMethod = "momo";
+      momoPhoneNumber = oneTimePhoneNumber;
+      if (!momoPhoneNumber || momoPhoneNumber.length < 10) {
+        toast.error("Please enter a valid phone number");
+        return;
+      }
+    } else {
+      finalPaymentMethod = "momo";
+      const method = savedPaymentMethods.find(m => m.id === selectedPaymentValue);
+      if (method) {
+        momoPhoneNumber = method.number;
+      }
     }
 
     setIsSubmitting(true);
     
     try {
-      // 1. Create the delivery record
-      const payload = {
-        DeliveryCode: formData.deliveryId,
-        comment: formData.instructions,
-        deliveryMethod: formData.transportMethod,
-        delivery_fee: formData.calculatedFee.toString(),
-        distance: formData.distance.toString(),
-        dropoffDetails: {
-          type: formData.dropoffType,
-          officeName: formData.dropoffOfficeName,
-          floor: formData.dropoffFloor,
-          gateNumber: formData.dropoffGateNumber,
-          gateColor: formData.dropoffGateColor,
-          roomNumber: formData.dropoffRoomNumber,
-          apartmentName: formData.dropoffApartmentName,
-          hotelName: formData.dropoffHotelName,
-        },
-        dropoffLocation: formData.dropoff,
-        dropoff_latitude: "", // Could be fetched from autocomplete if needed
-        dropoff_longitude: "",
-        package_image: formData.capturedImage,
-        payment_method: selectedPaymentMethod,
-        pickupDetials: {
-          type: formData.pickupType,
+      // 0. Upload Image to Firebase if exists
+      let finalImageUrl = formData.capturedImage;
+      if (formData.capturedImage && formData.capturedImage.startsWith("data:image")) {
+        try {
+          const storageRef = ref(storage!, `package-deliveries/${Date.now()}-${formData.deliveryId}.jpg`);
+          await uploadString(storageRef, formData.capturedImage, 'data_url');
+          finalImageUrl = await getDownloadURL(storageRef);
+        } catch (uploadError) {
+          console.error("Firebase upload failed, falling back to base64:", uploadError);
+        }
+      }
+
+      const getFilteredDetails = (type: string, isPickup: boolean) => {
+        const details = isPickup ? {
           officeName: formData.pickupOfficeName,
           floor: formData.pickupFloor,
           gateNumber: formData.pickupGateNumber,
@@ -408,18 +503,51 @@ export default function PackageDeliveryModal({
           roomNumber: formData.pickupRoomNumber,
           apartmentName: formData.pickupApartmentName,
           hotelName: formData.pickupHotelName,
-        },
+        } : {
+          officeName: formData.dropoffOfficeName,
+          floor: formData.dropoffFloor,
+          gateNumber: formData.dropoffGateNumber,
+          gateColor: formData.dropoffGateColor,
+          roomNumber: formData.dropoffRoomNumber,
+          apartmentName: formData.dropoffApartmentName,
+          hotelName: formData.dropoffHotelName,
+        };
+
+        if (type === "Home") return { type, gateNumber: details.gateNumber, gateColor: details.gateColor };
+        if (type === "Office") return { type, officeName: details.officeName, floor: details.floor };
+        if (type === "Apartment") return { type, apartmentName: details.apartmentName, gateNumber: details.gateNumber, floor: details.floor };
+        if (type === "Hotel") return { type, hotelName: details.hotelName, roomNumber: details.roomNumber };
+        return { type };
+      };
+
+      const isScheduled = formData.deliveryType === 'scheduled';
+
+      // 1. Create the delivery record
+      const payload = {
+        DeliveryCode: formData.deliveryId,
+        comment: formData.instructions,
+        deliveryMethod: formData.transportMethod,
+        delivery_fee: formData.calculatedFee.toString(),
+        distance: formData.distance.toString(),
+        dropoffDetails: getFilteredDetails(formData.dropoffType, false),
+        dropoffLocation: formData.dropoff,
+        dropoff_latitude: formData.dropoffLat,
+        dropoff_longitude: formData.dropoffLng,
+        package_image: finalImageUrl,
+        payment_method: finalPaymentMethod,
+        pickupDetials: getFilteredDetails(formData.pickupType, true),
         pickupLocation: formData.pickup,
-        pickup_latitude: "",
-        pickup_longitude: "",
+        pickup_latitude: formData.pickupLat,
+        pickup_longitude: formData.pickupLng,
         receiverName: formData.receiverName,
         receiverPhone: formData.receiverPhone,
-        status: selectedPaymentMethod === 'momo' ? "AWAITING_PAYMENT" : "PENDING",
-        timeAndDate: {
+        status: finalPaymentMethod === 'momo' ? "AWAITING_PAYMENT" : "PENDING",
+        scheduled: isScheduled,
+        timeAndDate: isScheduled ? {
           type: formData.deliveryType,
           date: formData.scheduledDate,
           time: formData.scheduledTime,
-        },
+        } : null,
       };
 
       const response = await authenticatedFetch("/api/mutations/insert-package-delivery", {
@@ -437,8 +565,8 @@ export default function PackageDeliveryModal({
       const deliveryId = result.data.insert_package_delivery.returning[0].id;
 
       // 2. Handle Payment
-      if (selectedPaymentMethod === 'momo') {
-        const phone = session?.user?.phone || formData.receiverPhone; // Use session phone or receiver if guest
+      if (finalPaymentMethod === 'momo') {
+        const phone = momoPhoneNumber || session?.user?.phone || formData.receiverPhone;
         if (!phone) throw new Error("Phone number required for MoMo");
 
         setProcessingStep("initiating_payment");
@@ -450,7 +578,7 @@ export default function PackageDeliveryModal({
             currency: "RWF",
             payerNumber: formatPhoneForMoMo(phone),
             externalId: deliveryId,
-            orderId: deliveryId,
+            packageId: deliveryId,
             payerMessage: `Delivery ${formData.deliveryId}`,
           }),
         });
@@ -462,7 +590,6 @@ export default function PackageDeliveryModal({
 
         setProcessingStep("awaiting_approval");
         
-        // Polling
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
         const pollInterval = setInterval(async () => {
           try {
@@ -486,10 +613,24 @@ export default function PackageDeliveryModal({
         }, 3000);
         pollIntervalRef.current = pollInterval;
 
-      } else {
-        // Wallet payment success
+      } else if (finalPaymentMethod === 'wallet') {
+        // Wallet payment success -> Deduct Balance
+        setProcessingStep("initiating_payment");
+        
+        const deductRes = await authenticatedFetch("/api/user/deduct-money-from-wallet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: formData.calculatedFee }),
+        });
+
+        if (!deductRes.ok) {
+          const deductData = await deductRes.json();
+          throw new Error(deductData.error || "Wallet deduction failed");
+        }
+
         setProcessingStep("success");
         toast.success("Delivery requested successfully!");
+        fetchWalletBalance();
         setTimeout(() => handleClose(), 2000);
       }
 
@@ -611,7 +752,20 @@ export default function PackageDeliveryModal({
                           className={inputStyle}
                           placeholder="Pickup location (From where?)"
                           value={formData.pickup}
-                          onChange={(e) => setFormData({...formData, pickup: e.target.value})}
+                          onChange={(e) => setFormData({
+                            ...formData, 
+                            pickup: e.target.value,
+                            pickupType: "Home",
+                            pickupLat: "",
+                            pickupLng: "",
+                            pickupGateNumber: "",
+                            pickupGateColor: "",
+                            pickupFloor: "",
+                            pickupRoomNumber: "",
+                            pickupOfficeName: "",
+                            pickupApartmentName: "",
+                            pickupHotelName: "",
+                          })}
                         />
                         <div className="absolute left-[-12px] top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border-2 border-green-500 bg-white" />
                       </div>
@@ -681,7 +835,7 @@ export default function PackageDeliveryModal({
                             {userAddresses.slice(0, 3).map((addr) => (
                               <button
                                 key={addr.id}
-                                onClick={() => setFormData({ ...formData, pickup: addr.street })}
+                                onClick={() => applyAddressToForm(addr, true)}
                                 className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium transition-all hover:scale-105 active:scale-95 ${
                                   theme === "dark"
                                     ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-600/50"
@@ -707,10 +861,24 @@ export default function PackageDeliveryModal({
                           className={inputStyle}
                           placeholder="Dropoff location (To where?)"
                           value={formData.dropoff}
-                          onChange={(e) => setFormData({...formData, dropoff: e.target.value})}
+                          onChange={(e) => setFormData({
+                            ...formData, 
+                            dropoff: e.target.value,
+                            dropoffType: "Home",
+                            dropoffLat: "",
+                            dropoffLng: "",
+                            dropoffGateNumber: "",
+                            dropoffGateColor: "",
+                            dropoffFloor: "",
+                            dropoffRoomNumber: "",
+                            dropoffOfficeName: "",
+                            dropoffApartmentName: "",
+                            dropoffHotelName: "",
+                          })}
                         />
                         <div className="absolute left-[-12px] top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-green-500 shadow-sm" />
                       </div>
+
 
                       {/* Dropoff Location Type & Details - Show only when dropoff is set */}
                       {formData.dropoff && (
@@ -973,7 +1141,11 @@ export default function PackageDeliveryModal({
                             </svg>
                           )
                         }
-                      ].map((method) => (
+                      ].filter(method => {
+                        if (method.id === 'foot' && formData.distance > 2) return false;
+                        if (method.id === 'bicycle' && formData.distance > 8) return false;
+                        return true;
+                      }).map((method) => (
                         <button
                           key={method.id}
                           onClick={() => setFormData({ ...formData, transportMethod: method.id as any })}
@@ -1036,6 +1208,137 @@ export default function PackageDeliveryModal({
               </div>
             )}
 
+            {step === 5 && (
+              <div className="space-y-6 animate-in slide-in-from-right-4 duration-300 pb-4">
+                <div className="space-y-4">
+                  <label className={`block text-base font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Final Review</label>
+                  
+                  {/* Detailed Location Summary */}
+                  <div className={`rounded-2xl border p-5 space-y-5 ${theme === "dark" ? "border-gray-700 bg-gray-900/40" : "border-gray-100 bg-gray-50/50"}`}>
+                    <div className="flex items-start gap-4">
+                      <div className={`mt-1 rounded-full p-2.5 ${theme === "dark" ? "bg-green-500/10 text-green-400" : "bg-green-50 text-green-600"}`}>
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Pickup Location</p>
+                        <p className={`text-sm font-bold truncate ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>{formData.pickup}</p>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-white border border-gray-100 text-gray-500"}`}>{formData.pickupType}</span>
+                           {formData.pickupGateNumber && <span className="text-[10px] text-gray-500">Gate: {formData.pickupGateNumber}</span>}
+                           {formData.pickupRoomNumber && <span className="text-[10px] text-gray-500">Room: {formData.pickupRoomNumber}</span>}
+                           {formData.pickupFloor && <span className="text-[10px] text-gray-500">Floor: {formData.pickupFloor}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className={`mt-1 rounded-full p-2.5 ${theme === "dark" ? "bg-green-500/10 text-green-400" : "bg-green-50 text-green-600"}`}>
+                        <div className="h-4 w-4 flex items-center justify-center font-bold text-[10px] leading-none">TO</div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Dropoff Location</p>
+                        <p className={`text-sm font-bold truncate ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>{formData.dropoff}</p>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-white border border-gray-100 text-gray-500"}`}>{formData.dropoffType}</span>
+                           {formData.dropoffGateNumber && <span className="text-[10px] text-gray-500">Gate: {formData.dropoffGateNumber}</span>}
+                           {formData.dropoffRoomNumber && <span className="text-[10px] text-gray-500">Room: {formData.dropoffRoomNumber}</span>}
+                           {formData.dropoffFloor && <span className="text-[10px] text-gray-500">Floor: {formData.dropoffFloor}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className={`mt-1 rounded-full p-2.5 ${theme === "dark" ? "bg-green-500/10 text-green-400" : "bg-green-50 text-green-600"}`}>
+                        <User className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Receiver Details</p>
+                        <p className={`text-sm font-bold ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>{formData.receiverName}</p>
+                        <p className="text-xs text-gray-500">{formData.receiverPhone}</p>
+                      </div>
+                    </div>
+
+                    {formData.instructions && (
+                      <div className="flex items-start gap-4">
+                        <div className={`mt-1 rounded-full p-2.5 ${theme === "dark" ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-600"}`}>
+                          <Info className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Delivery Comment</p>
+                          <p className={`text-sm leading-relaxed ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{formData.instructions}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payment Breakdown Card */}
+                  <div className={`rounded-2xl p-5 ${theme === "dark" ? "bg-gray-900/40 border border-gray-700" : "bg-green-600 text-white shadow-xl shadow-green-500/20"}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                         <p className={`text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-green-500" : "text-green-200/80"}`}>Amount To Pay</p>
+                         <p className="text-2xl font-black">{formatCurrency(formData.calculatedFee)}</p>
+                      </div>
+                      <div className={`rounded-xl p-3 ${theme === "dark" ? "bg-green-500/10 text-green-500" : "bg-white/20 text-white"}`}>
+                         <CreditCard className="h-6 w-6" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Selection Dropdown */}
+                  <div className="space-y-3">
+                    <label className={`block text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>Select Payment Method</label>
+                    <div className="relative group">
+                       <select 
+                         value={selectedPaymentValue || ""}
+                         onChange={(e) => setSelectedPaymentValue(e.target.value)}
+                         className={`w-full appearance-none rounded-2xl border-2 p-5 text-sm font-bold transition-all outline-none pr-12 ${
+                           theme === "dark" 
+                             ? "bg-gray-900/60 border-gray-700 text-white focus:border-green-600 hover:bg-gray-900/80" 
+                             : "bg-white border-gray-100 text-gray-900 focus:border-green-300 hover:border-gray-200"
+                         }`}
+                       >
+                         <option value="" disabled>Choose a payment method...</option>
+                         <option value="wallet">Personal Wallet (Balance: {formatCurrency(walletBalance)})</option>
+                         {savedPaymentMethods.map((method) => (
+                           <option key={method.id} value={method.id}>
+                             {method.method} - {method.number}{method.is_default ? " (Default)" : ""}
+                           </option>
+                         ))}
+                         <option value="other">Other MTN Number</option>
+                       </select>
+                       <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform group-hover:translate-y-[-40%]">
+                         <svg className={`h-5 w-5 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* One-time Phone Input */}
+                  {selectedPaymentValue === "other" && (
+                    <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                       <label className={`block text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>MTN Phone Number</label>
+                       <input 
+                         type="tel"
+                         className={inputStyle}
+                         placeholder="Enter MoMo number (e.g., 078...)"
+                         value={oneTimePhoneNumber}
+                         onChange={(e) => setOneTimePhoneNumber(e.target.value)}
+                       />
+                    </div>
+                  )}
+
+                  {/* Security Badge */}
+                  <div className={`flex items-center gap-3 rounded-2xl p-4 transition-all ${theme === "dark" ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-700"} animate-in fade-in slide-in-from-top-2 duration-500`}>
+                    <ShieldCheck className="h-5 w-5 shrink-0" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                      Secure Delivery • Use Code <span className="underline">{formData.deliveryId}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -1055,38 +1358,38 @@ export default function PackageDeliveryModal({
               Cancel
             </button>
           ) : (
-             <button
+            <button
               onClick={prevStep}
-              className={`flex items-center justify-center gap-2 rounded-xl px-8 py-3.5 text-sm font-medium transition-all ${
-                theme === "dark" ? "text-green-400 hover:bg-gray-700/50" : "text-green-600 hover:bg-green-50"
+              className={`flex-1 rounded-xl py-4 text-sm font-bold transition-all active:scale-95 ${
+                theme === "dark" ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 19l-7-7 7-7" strokeWidth={2}/></svg>
               Back
             </button>
           )}
 
           <button
-            onClick={step === 4 ? handleClose : nextStep}
-            className={`flex items-center justify-center rounded-xl px-10 py-3.5 text-sm font-bold text-white transition-all active:scale-95 ${colors.button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+            onClick={step === 5 ? handleSubmit : nextStep}
+            disabled={isSubmitting || (step === 1 && (!formData.pickup || !formData.dropoff)) || (step === 2 && (!formData.receiverName || !formData.receiverPhone)) || (step === 5 && !selectedPaymentValue)}
+            className={`flex-[2] rounded-xl py-4 text-sm font-black uppercase tracking-wider text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${colors.button}`}
           >
-            {step === 4 ? (
-              <>
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Confirm & Send
-              </>
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Processing...</span>
+              </div>
+            ) : step === 5 ? (
+              "Confirm & Pay"
             ) : (
-              <>
-                Next Step
-                <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeWidth={2}/></svg>
-              </>
+              "Continue"
             )}
           </button>
         </div>
       </div>
     </div>
+    {processingStep !== "idle" && (
+      <PaymentProcessingOverlay processingStep={processingStep === "success" ? "success" : processingStep as any} />
+    )}
     </>
   );
 }

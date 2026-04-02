@@ -25,6 +25,7 @@ const INSERT_PACKAGE_DELIVERY = gql`
     $receiverPhone: String = "", 
     $status: String = "", 
     $timeAndDate: json = "", 
+    $scheduled: Boolean = false,
     $user_id: uuid = ""
   ) {
     insert_package_delivery(objects: {
@@ -45,9 +46,10 @@ const INSERT_PACKAGE_DELIVERY = gql`
       pickup_longitude: $pickup_longitude, 
       receiverName: $receiverName, 
       receiverPhone: $receiverPhone, 
-      scheduled: false, 
+      scheduled: $scheduled, 
       status: $status, 
       timeAndDate: $timeAndDate, 
+      shopper_id: null,
       user_id: $user_id
     }) {
       affected_rows
@@ -94,6 +96,7 @@ export default async function handler(
     receiverPhone,
     status,
     timeAndDate,
+    scheduled,
   } = req.body;
 
   try {
@@ -101,6 +104,7 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
+    // Perform insertion
     const result = await hasuraClient.request(INSERT_PACKAGE_DELIVERY, {
       DeliveryCode,
       comment,
@@ -121,6 +125,7 @@ export default async function handler(
       receiverPhone,
       status: status || "PENDING",
       timeAndDate,
+      scheduled: !!scheduled,
       user_id,
     });
 

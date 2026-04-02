@@ -169,6 +169,7 @@ export default async function handler(
     payeeNote = "Thank you for your order",
     walletId,
     orderId,
+    packageId,
     businessOrderId,
     restaurantOrderId,
     reelOrderId,
@@ -206,7 +207,8 @@ export default async function handler(
     orderId ||
     restaurantOrderId ||
     businessOrderId ||
-    reelOrderId
+    reelOrderId ||
+    packageId
   );
 
   try {
@@ -295,6 +297,7 @@ export default async function handler(
             object: {
               wallet_id: walletId || null,
               order_id: orderId || null,
+              package_id: packageId || null,
               business_order_id: businessOrderId || businessId || null,
               restaurant_order_id:
                 restaurantOrderId ||
