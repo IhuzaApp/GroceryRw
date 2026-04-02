@@ -712,7 +712,7 @@ export default function PackageDeliveryModal({
             </div>
             <div>
               <h2 className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                Send Item Delivery
+                Express Parcel Delivery
               </h2>
               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                 Step {step} of 5: {
@@ -727,7 +727,7 @@ export default function PackageDeliveryModal({
           </div>
           <button
             onClick={handleClose}
-            className={`rounded-xl p-2 transition-all hover:scale-105 active:scale-95 ${
+            className={`hidden sm:flex rounded-xl p-2 transition-all hover:scale-105 active:scale-95 ${
               theme === "dark" ? "text-gray-400 hover:bg-gray-700/50 hover:text-white" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             }`}
           >
@@ -852,9 +852,6 @@ export default function PackageDeliveryModal({
                           </div>
                         </div>
                       )}
-                      <div className="flex justify-center -my-2 py-1">
-                        <div className={`h-8 w-px ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`} />
-                      </div>
                       <div className="relative">
                         <input 
                           ref={dropoffInputRef}
@@ -1351,7 +1348,7 @@ export default function PackageDeliveryModal({
           {step === 1 ? (
              <button
               onClick={handleClose}
-              className={`rounded-xl px-8 py-3.5 text-sm font-medium transition-all ${
+              className={`hidden sm:inline-block rounded-xl px-8 py-3.5 text-sm font-medium transition-all ${
                 theme === "dark" ? "text-gray-300 hover:bg-gray-700/50 hover:text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
