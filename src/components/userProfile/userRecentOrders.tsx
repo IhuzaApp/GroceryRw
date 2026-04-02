@@ -589,7 +589,7 @@ export default function UserRecentOrders({
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-bold transition-all duration-300 ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-medium transition-all duration-300 ${
                     currentPage === page
                       ? "bg-gradient-to-br from-green-500 to-green-600 border-transparent !text-white shadow-lg shadow-green-500/30 scale-110"
                       : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"

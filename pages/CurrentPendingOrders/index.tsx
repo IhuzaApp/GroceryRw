@@ -368,7 +368,7 @@ function CurrentOrdersPage() {
               <div className="flex w-full overflow-x-auto no-scrollbar rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
                 <button
                   onClick={() => setFilter("pending")}
-                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all duration-300 md:min-w-0 md:flex-initial ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "pending"
                       ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
@@ -405,7 +405,7 @@ function CurrentOrdersPage() {
 
                 <button
                   onClick={() => setFilter("done")}
-                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all duration-300 md:min-w-0 md:flex-initial ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "done"
                       ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
@@ -442,7 +442,7 @@ function CurrentOrdersPage() {
 
                 <button
                   onClick={() => setFilter("packages")}
-                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all duration-300 md:min-w-0 md:flex-initial ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "packages"
                       ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
