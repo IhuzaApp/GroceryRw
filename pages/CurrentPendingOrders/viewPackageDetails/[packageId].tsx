@@ -6,6 +6,8 @@ import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
 import { useTheme } from "../../../src/context/ThemeContext";
 import Image from "next/image";
+import ContactSupportModal from "@components/UserCarts/orders/ContactSupportModal";
+import FeedbackModal from "@components/UserCarts/orders/FeedbackModal";
 import { 
   Package, 
   MapPin, 
@@ -16,7 +18,16 @@ import {
   Calendar,
   Navigation,
   Info,
-  CreditCard
+  CreditCard,
+  Copy,
+  Check,
+  MessageSquare,
+  Star,
+  LifeBuoy,
+  Bike,
+  Truck,
+  Footprints,
+  Car
 } from "lucide-react";
 
 // Helper to display timestamps as relative time ago
@@ -35,6 +46,23 @@ function timeAgo(timestamp: string): string {
     return new Date().toLocaleDateString();
   }
 }
+
+// Delivery Method Configuration
+const getDeliveryMethodInfo = (method: string) => {
+  const m = method?.toLowerCase() || "car";
+  switch (m) {
+    case "foot":
+      return { label: "On Foot", icon: <Footprints className="h-4 w-4" /> };
+    case "bicycle":
+      return { label: "Bicycle", icon: <Bike className="h-4 w-4" /> };
+    case "motorbike":
+      return { label: "Motorbike", icon: <Bike className="h-4 w-4" /> };
+    case "car":
+      return { label: "Car", icon: <Car className="h-4 w-4" /> };
+    default:
+      return { label: method || "Standard", icon: <Truck className="h-4 w-4" /> };
+  }
+};
 
 // Package Status Configuration
 const getPackageStatusInfo = (status: string) => {
@@ -115,6 +143,60 @@ function PackageDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { theme } = useTheme();
+
+  const [copied, setCopied] = useState(false);
+  const [feedbackModal, setFeedbackModal] = useState(false);
+  const [supportModal, setSupportModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [hasExistingRating, setHasExistingRating] = useState(false);
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleFeedbackSubmit = async (
+    ratings: {
+      rating: number;
+      packaging_quality: number;
+      delivery_experience: number;
+      professionalism: number;
+    },
+    comment: string
+  ) => {
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch("/api/ratings/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: pkg?.id,
+          shopper_id: pkg?.shopper?.id || pkg?.shopper_id,
+          rating: ratings.rating.toString(),
+          review: comment,
+          delivery_experience: ratings.delivery_experience.toString(),
+          packaging_quality: ratings.packaging_quality.toString(),
+          professionalism: ratings.professionalism.toString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to submit feedback");
+      }
+
+      setFeedbackModal(false);
+      setHasExistingRating(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Feedback failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!packageId || !router.isReady) return;
@@ -225,9 +307,24 @@ function PackageDetailsPage() {
                   </div>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-2">
-                  <div className="inline-flex items-center rounded-2xl bg-white/10 px-3 py-1.5 text-sm font-bold tracking-widest !text-white shadow-2xl backdrop-blur-xl ring-1 ring-white/30 md:px-6 md:py-3 md:text-xl md:font-black transform transition-transform hover:scale-105 active:scale-95">
+                  <button
+                    onClick={() => handleCopyCode(pkg.DeliveryCode || pkg.id.slice(0, 8).toUpperCase())}
+                    className="group relative inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-1.5 text-sm font-bold tracking-widest !text-white shadow-2xl backdrop-blur-xl ring-1 ring-white/30 md:px-6 md:py-3 md:text-xl transform transition-all hover:scale-105 active:scale-95"
+                  >
                     {pkg.DeliveryCode || pkg.id.slice(0, 8).toUpperCase()}
-                  </div>
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-400" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
+                    )}
+                    
+                    {/* Tooltip */}
+                    {copied && (
+                      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 rounded-lg bg-green-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg animate-in fade-in slide-in-from-top-1">
+                        COPIED
+                      </div>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
@@ -239,8 +336,40 @@ function PackageDetailsPage() {
               {/* Left Column: Status & Route */}
               <div className="space-y-6 lg:col-span-2">
                 
-                {/* Status Card */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                {/* Action Row: Support / Feedback / Message */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {pkg.status === "delivered" ? (
+                    <Button
+                      appearance="primary"
+                      className="!bg-green-500 !text-white !rounded-xl !px-6 !py-3 font-black transition-all hover:!bg-green-600 hover:shadow-lg active:scale-95 flex items-center gap-2"
+                      onClick={() => setFeedbackModal(true)}
+                    >
+                      <Star className="h-4 w-4" />
+                      Rate Service & Feedback
+                    </Button>
+                  ) : (
+                    <Button
+                      appearance="primary"
+                      className="!bg-indigo-500 !text-white !rounded-xl !px-6 !py-3 font-black transition-all hover:!bg-indigo-600 hover:shadow-lg active:scale-95 flex items-center gap-2"
+                      onClick={() => setSupportModal(true)}
+                    >
+                      <LifeBuoy className="h-4 w-4" />
+                      Contact Support
+                    </Button>
+                  )}
+
+                  {pkg.shopper && (
+                    <Link
+                      href={`/Messages?orderId=${pkg.id}`}
+                      className="flex items-center gap-2 rounded-xl border-2 border-indigo-500/20 bg-indigo-500/5 px-6 py-2.5 text-sm font-black text-indigo-600 transition-all hover:bg-indigo-500/10 hover:shadow-md active:scale-95 dark:border-indigo-400/30 dark:bg-indigo-400/10 dark:text-indigo-400"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Message Plaser
+                    </Link>
+                  )}
+                </div>
+
+                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold">Delivery Status</h3>
                     <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold ${statusInfo.color}`}>
@@ -288,13 +417,25 @@ function PackageDetailsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-8 flex items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
-                      <Navigation className="h-5 w-5 text-green-600" />
+                   <div className="mt-8 flex flex-wrap gap-4">
+                    <div className="flex flex-1 items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
+                        <Navigation className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Estimated Distance</p>
+                        <p className="font-bold">{pkg.distance ? `${pkg.distance} km` : "Calculating..."}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Estimated Distance</p>
-                      <p className="font-bold">{pkg.distance ? `${pkg.distance} km` : "Calculating..."}</p>
+
+                    <div className="flex flex-1 items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
+                        {getDeliveryMethodInfo(pkg.deliveryMethod).icon}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Delivery Method</p>
+                        <p className="font-bold">{getDeliveryMethodInfo(pkg.deliveryMethod).label}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -408,6 +549,21 @@ function PackageDetailsPage() {
             </div>
           </div>
         </div>
+
+        {/* Modals */}
+        <FeedbackModal 
+          isOpen={feedbackModal}
+          onClose={() => setFeedbackModal(false)}
+          onSubmit={handleFeedbackSubmit}
+          submitting={submitting}
+          submitError={submitError}
+        />
+
+        <ContactSupportModal
+          isOpen={supportModal}
+          onClose={() => setSupportModal(false)}
+          orderId={pkg.id}
+        />
       </RootLayout>
     </AuthGuard>
   );
