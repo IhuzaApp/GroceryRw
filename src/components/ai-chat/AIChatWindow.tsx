@@ -354,10 +354,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                       // Convert markdown asterisk bullet point to a proper dot bullet point
                       .replace(/(^|\n)\*\s/g, '$1• ')
-                      // Convert markdown images
-                      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />')
-                      // Make sure links are clickable (if model passes them)
-                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-[#115e59] underline hover:text-green-700">$1</a>')
+                      // Recipe thumbnails (![Thumb](url)) — large card style. Handles both http URLs and data: URIs
+                      .replace(/!\[Thumb\]\(([^)]*)\)/g, '<img src="$1" alt="Recipe" style="display:block; width:100%; max-width:280px; height:160px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
+                      // Standalone base64 images (no markdown wrapper) — render as large card
+                      .replace(/(data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)/g, '<img src="$1" alt="Image" style="display:block; width:100%; max-width:280px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
+                      // Store/restaurant logos (![Logo](url)) — small circular icon. [^)]* handles base64 data URIs too
+                      .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '<img src="$2" alt="$1" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />')
+                      // Make clickable links
+                      .replace(/\[([^\]]*)\]\(([^)]*)\)/g, '<a href="$2" class="text-[#115e59] underline hover:text-green-700">$1</a>')
                   }}
                 />
                 <span
