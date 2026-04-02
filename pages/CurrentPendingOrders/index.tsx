@@ -353,18 +353,6 @@ function CurrentOrdersPage() {
                     </p>
                   </div>
                 </div>
-                {session?.user?.name && (
-                  <div className="hidden items-center gap-3 md:flex">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {session.user.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Welcome back
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -454,11 +442,6 @@ function CurrentOrdersPage() {
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
-                  <Package
-                    className={`h-4.5 w-4.5 transition-transform duration-300 ${
-                      filter === "packages" ? "scale-110 !text-white" : ""
-                    }`}
-                  />
                   <span className={filter === "packages" ? "!text-white" : ""}>Deliveries</span>
                   {packagesCount > 0 && (
                     <span
