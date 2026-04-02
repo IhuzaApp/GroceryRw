@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { getGenerativeModel } from "firebase/ai";
+import { ai } from "../../lib/firebase";
 
 interface Message {
   id: string;
@@ -66,17 +68,73 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response (placeholder for future AI integration)
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "Thank you for your message! This is a placeholder response. Real AI integration will be added soon to help you with orders, food recommendations, and more.",
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
+    // Call Gemini AI
+    try {
+      if (!ai) {
+        throw new Error("AI is not initialized");
+      }
+
+      const model = getGenerativeModel(ai, { 
+        model: "gemini-3-flash-preview",
+      });
+
+      // Prepare chat history (exclude initial greeting to keep context clean, or map it)
+      const history = messages
+        .filter(m => m.id !== "1") // Optional: filter out system greeting
+        .map(m => ({
+          role: (m.sender === "user" ? "user" : "model") as "user" | "model",
+          parts: [{ text: m.text }]
+        }));
+
+      const chat = model.startChat({
+        history,
+        systemInstruction: {
+          role: "system",
+          parts: [{ text: "You are Plas Agent, a helpful, friendly AI assistant for a grocery and food delivery app called Plas. Provide concise, helpful answers about food recommendations, orders, and delivery." }]
+        },
+      });
+
+      const responseId = (Date.now() + 1).toString();
+      let isFirstChunk = true;
+
+      const result = await chat.sendMessageStream(inputValue);
+
+      let fullText = "";
+      for await (const chunk of result.stream) {
+        if (isFirstChunk) {
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            id: responseId,
+            text: "",
+            sender: "ai",
+            timestamp: new Date(),
+          }]);
+          isFirstChunk = false;
+        }
+        
+        fullText += chunk.text();
+        setMessages(prev => prev.map(m => 
+          m.id === responseId ? { ...m, text: fullText } : m
+        ));
+      }
+      
+      if (isFirstChunk) { // Fallback if stream was empty
+        setIsTyping(false);
+      }
+
+    } catch (error) {
+      console.error("AI Error:", error);
       setIsTyping(false);
-    }, 1000);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          text: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+          sender: "ai",
+          timestamp: new Date(),
+        },
+      ]);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -224,7 +282,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             </button>
           </div>
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            AI integration coming soon. This is a preview interface.
+            Powered by Firebase AI Logic
           </p>
         </div>
       </div>
