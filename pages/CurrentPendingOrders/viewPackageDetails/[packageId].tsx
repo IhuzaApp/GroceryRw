@@ -121,14 +121,13 @@ const formatLocationDetails = (details: any) => {
   if (typeof details === "string" && details.startsWith("{")) {
     try {
       data = JSON.parse(details);
-    } catch {
+    } catch (e) {
       return details;
     }
   }
 
   if (typeof data === "object" && data !== null) {
     const parts = [];
-    if (data.type) parts.push(data.type);
     if (data.gateNumber) parts.push(`Gate ${data.gateNumber}`);
     if (data.gateColor) parts.push(`${data.gateColor} gate`);
     return parts.length > 0 ? parts.join(", ") : null;
@@ -136,6 +135,128 @@ const formatLocationDetails = (details: any) => {
 
   return typeof data === "string" ? data : null;
 };
+
+// --- Skeleton Loader Components ---
+
+const Skeleton = ({
+  className = "",
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={`animate-pulse rounded-md bg-slate-200 dark:bg-slate-700 ${className}`}
+    {...props}
+  />
+);
+
+const PackageDetailsSkeleton = () => (
+  <div className="min-h-screen pb-20 md:pb-10 bg-gray-50 dark:bg-black">
+    {/* Header Skeleton - Full Bleed */}
+    <div className="relative h-52 w-full md:h-80 bg-slate-200 dark:bg-slate-800 animate-pulse overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+      
+      {/* Back Button Skeleton */}
+      <div className="absolute left-6 top-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
+        <div className="h-5 w-5 rounded-full bg-white/30" />
+      </div>
+
+      {/* Floating Pill Skeleton */}
+      <div className="absolute left-1/2 top-10 -translate-x-1/2">
+        <Skeleton className="h-10 w-40 rounded-full bg-white/20 backdrop-blur-md" />
+      </div>
+
+      {/* Title & Badge Skeleton */}
+      <div className="absolute bottom-10 left-6 right-6">
+        <div className="flex items-end justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-48 bg-white/30" />
+            <Skeleton className="h-4 w-32 bg-white/20" />
+          </div>
+          <Skeleton className="h-12 w-24 rounded-2xl bg-white/20 md:h-16 md:w-40" />
+        </div>
+      </div>
+    </div>
+
+    {/* Content Skeleton */}
+    <div className="container mx-auto relative z-20 mt-6 px-4 md:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        
+        {/* Left Column */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Action Row */}
+          <div className="flex gap-3">
+            <Skeleton className="h-12 w-48 rounded-xl" />
+            <Skeleton className="h-12 w-48 rounded-xl" />
+          </div>
+
+          {/* Status Card */}
+          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
+            <Skeleton className="mt-4 h-4 w-full" />
+          </div>
+
+          {/* Trip Details Card */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <Skeleton className="h-6 w-32 mb-6" />
+            <div className="space-y-8">
+              <div className="flex gap-4">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-full" />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-full" />
+                </div>
+              </div>
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-4">
+              <Skeleton className="h-20 rounded-xl" />
+              <Skeleton className="h-20 rounded-xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-14 w-14 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <Skeleton className="h-6 w-32 mb-6" />
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+              <div className="border-t pt-4">
+                <div className="flex justify-between">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 function PackageDetailsPage() {
   const router = useRouter();
@@ -222,13 +343,7 @@ function PackageDetailsPage() {
   }, [packageId, router.isReady]);
 
   if (loading) {
-    return (
-      <RootLayout>
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader size="lg" content="Loading parcel details..." vertical />
-        </div>
-      </RootLayout>
-    );
+    return <PackageDetailsSkeleton />;
   }
 
   if (error || !pkg) {
