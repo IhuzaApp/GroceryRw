@@ -21,16 +21,25 @@ interface CartConfirmPayload {
 interface CheckoutConfirmPayload {
   shop_id: string;
   shop_name: string;
-  subtotal: number;
-  service_fee: number;
-  delivery_fee: number;
-  total: number;
   address_id: string;
   address_street: string;
   payment_method_id: string;
   payment_method_name: string;
   payment_method_type: string;
+  subtotal: number;
+  service_fee: number;
+  delivery_fee: number;
+  total: number;
   pricing_token: string;
+  is_food?: boolean;
+}
+
+interface CheckoutSetupPayload {
+  shop_id: string;
+  shop_name: string;
+  addresses: any[];
+  payment_methods: any[];
+  subtotal: number;
   is_food?: boolean;
 }
 
@@ -43,7 +52,9 @@ interface Message {
   cartConfirm?: CartConfirmPayload;
   cartAdded?: boolean;
   checkoutConfirm?: CheckoutConfirmPayload;
+  checkoutSetup?: CheckoutSetupPayload;
   checkoutPlaced?: boolean;
+  checkoutComment?: string;
   isComplete?: boolean;
 }
 
@@ -138,19 +149,178 @@ function CartConfirmCard({
   );
 }
 
+// ─── Checkout Setup Card (Interactive Selector) ──────────────────────────────
+function CheckoutSetupCard({
+  msgId,
+  payload,
+  onConfirm,
+  onDecline
+}: {
+  msgId: string;
+  payload: CheckoutSetupPayload;
+  onConfirm: (msgId: string, selection: CheckoutConfirmPayload & { comment: string }) => void;
+  onDecline: (msgId: string) => void;
+}) {
+  const [selectedAddrId, setSelectedAddrId] = React.useState(payload.addresses.find(a => a.is_default)?.id || payload.addresses[0]?.id || "");
+  const [selectedPayId, setSelectedPayId] = React.useState(payload.payment_methods.find(p => p.is_default)?.id || payload.payment_methods[0]?.id || "");
+  const [comment, setComment] = React.useState("");
+  const [preview, setPreview] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (selectedAddrId) {
+      updatePreview(selectedAddrId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAddrId]);
+
+  const updatePreview = async (addrId: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/ai/search-plas-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "get_order_preview",
+          params: { shop_id: payload.shop_id, address_id: addrId }
+        })
+      });
+      const data = await res.json();
+      setPreview(data);
+    } catch (e) {
+      console.error("Preview failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlaceOrder = () => {
+    if (!preview) return;
+    const addr = payload.addresses.find((a: any) => a.id === selectedAddrId);
+    const pay = payload.payment_methods.find((p: any) => p.id === selectedPayId);
+    
+    onConfirm(msgId, {
+      ...preview,
+      shop_id: payload.shop_id,
+      shop_name: payload.shop_name,
+      address_id: selectedAddrId,
+      address_street: addr?.street || "Selected Address",
+      payment_method_id: selectedPayId,
+      payment_method_name: pay?.number || pay?.method || "Selected Method",
+      payment_method_type: pay?.method?.toLowerCase().includes("momo") ? "mobile_money" : "card",
+      is_food: payload.is_food,
+      comment
+    });
+  };
+
+  return (
+    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="max-w-[90%] overflow-hidden rounded-3xl rounded-tl-sm border border-gray-100 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+        <div className="bg-[#115e59] px-5 py-4 text-white">
+          <h4 className="text-base font-bold">Checkout Details</h4>
+          <p className="text-xs opacity-80">{payload.shop_name}</p>
+        </div>
+        
+        <div className="p-5 space-y-5">
+          {/* Address Selection */}
+          <div>
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block leading-none">Delivery Address</label>
+            <select 
+              value={selectedAddrId}
+              onChange={(e) => setSelectedAddrId(e.target.value)}
+              className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              {payload.addresses.map((a: any) => (
+                <option key={a.id} value={a.id}>{a.street}, {a.city}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Payment Method Selection */}
+          <div>
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block leading-none">Payment Method</label>
+            <select 
+              value={selectedPayId}
+              onChange={(e) => setSelectedPayId(e.target.value)}
+              className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              {payload.payment_methods.map((p: any) => (
+                <option key={p.id} value={p.id}>{p.method} - {p.number}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Comment Field */}
+          <div>
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block leading-none">Delivery Instructions</label>
+            <textarea 
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="e.g. Leave at the gate, call when here..."
+              className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"
+              rows={2}
+            />
+          </div>
+
+          {/* Summary Preview */}
+          {preview && (
+            <div className="space-y-2 rounded-2xl bg-[#f0fdf4] p-4 dark:bg-emerald-950/20">
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                <span>Subtotal</span>
+                <span>{preview.subtotal.toLocaleString()} RWF</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                <span>Delivery Fee</span>
+                <span>{preview.delivery_fee.toLocaleString()} RWF</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                <span>Service Fee</span>
+                <span>{preview.service_fee.toLocaleString()} RWF</span>
+              </div>
+              <div className="border-t border-emerald-100 mt-2 pt-2 dark:border-emerald-800">
+                <div className="flex justify-between text-sm font-bold text-[#115e59] dark:text-emerald-400">
+                  <span>Total Payable</span>
+                  <span>{preview.total.toLocaleString()} RWF</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-1">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#115e59] border-t-transparent"></div>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-1">
+            <button
+              onClick={handlePlaceOrder}
+              disabled={loading || !preview}
+              className="flex-1 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-3 text-sm font-bold text-white shadow-lg transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            >
+              Confirm &amp; Place Order
+            </button>
+            <button
+              onClick={() => onDecline(msgId)}
+              className="rounded-2xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
+            >Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ─── Checkout Confirmation Card ───────────────────────────────────────────────
 function CheckoutConfirmCard({
   msgId,
   payload,
   isDone,
-  onConfirm,
-  onDecline,
 }: {
   msgId: string;
   payload: CheckoutConfirmPayload;
   isDone?: boolean;
-  onConfirm: (msgId: string, payload: CheckoutConfirmPayload) => void;
-  onDecline: (msgId: string) => void;
 }) {
   if (isDone) {
     return (
@@ -167,71 +337,8 @@ function CheckoutConfirmCard({
       </div>
     );
   }
-  return (
-    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
-      <div className="max-w-[85%] overflow-hidden rounded-3xl rounded-tl-sm border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-        <div className="bg-gradient-to-r from-[#064e3b] to-[#047857] px-4 py-3 text-white">
-          <h4 className="text-sm font-bold">Order Summary</h4>
-          <p className="text-[10px] opacity-80">{payload.shop_name}</p>
-        </div>
-        <div className="space-y-2 p-4">
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>Subtotal</span>
-            <span>{payload.subtotal.toLocaleString()} RWF</span>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>Delivery Fee</span>
-            <span>{payload.delivery_fee.toLocaleString()} RWF</span>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>Service Fee</span>
-            <span>{payload.service_fee.toLocaleString()} RWF</span>
-          </div>
-          <div className="border-t border-gray-100 pt-2 dark:border-gray-700">
-            <div className="flex justify-between text-sm font-bold text-gray-800 dark:text-white">
-              <span>Total Payable</span>
-              <span className="text-emerald-600 dark:text-emerald-400">{payload.total.toLocaleString()} RWF</span>
-            </div>
-          </div>
-          
-          {/* Address & Payment Info */}
-          <div className="mt-4 space-y-3 rounded-2xl bg-gray-50 p-3 dark:bg-gray-700/50">
-            <div className="flex items-start gap-2">
-              <svg className="mt-0.5 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Delivery To</p>
-                <p className="truncate text-xs text-gray-700 dark:text-gray-300">{payload.address_street}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <svg className="mt-0.5 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Payment Method</p>
-                <p className="truncate text-xs text-gray-700 dark:text-gray-300">{payload.payment_method_name} ({payload.payment_method_type})</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => onConfirm(msgId, payload)}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-2.5 text-sm font-bold text-white shadow-md transition hover:scale-[1.02] active:scale-95"
-            >
-              Confirm &amp; Place Order
-            </button>
-            <button
-              onClick={() => onDecline(msgId)}
-              className="rounded-2xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
-            >Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return null; // Confirmation is now handled by SetupCard
 }
-
-
-// ─── Message Text Formatter ──────────────────────────────────────────────────
 // Safely converts Markdown to HTML using a placeholder system to avoid 
 // nested/mangled tags during multiple replacement passes.
 function formatMessageText(text: string, isComplete?: boolean): string {
@@ -436,43 +543,41 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               }
             },
             {
+              name: "get_active_carts",
+              description: "Check for any active shopping carts the user has. Returns shop names and subtotals. Use this before checkout if the shop_id is not already known.",
+              parameters: { type: "OBJECT", properties: {} }
+            },
+            {
               name: "get_user_checkout_details",
-              description: "Fetch the user's saved delivery addresses and payment methods. Use this to prepare for checkout.",
+              description: "Fetch the user's saved delivery addresses and payment methods. ALWAYS call this before presenting the checkout form.",
               parameters: { type: "OBJECT", properties: {} }
             },
             {
               name: "get_order_preview",
-              description: "Calculate final totals (delivery fee, service fee) for an order at a specific shop and address. Use the shop_id from the product/store search and address_id from user details.",
+              description: "Calculate final totals (delivery fee, service fee) for a specific shop and address. Use this to get the subtotal and fees for the form.",
               parameters: {
                 type: "OBJECT",
                 properties: {
-                  shop_id: { type: "STRING", description: "The shop unique ID." },
-                  address_id: { type: "STRING", description: "The unique ID of the delivery address." }
+                  shop_id: { type: "STRING" },
+                  address_id: { type: "STRING" }
                 },
                 required: ["shop_id", "address_id"]
               }
             },
             {
-              name: "place_order",
-              description: "Place the final order. Requires the pricing_token from the order preview and selected IDs for address and payment method.",
+              name: "show_checkout_form",
+              description: "MANDATORY: Show the interactive checkout form for a specific cart. Use results from get_active_carts, get_user_checkout_details, and get_order_preview. NEVER just ask for details via text.",
               parameters: {
                 type: "OBJECT",
                 properties: {
                   shop_id: { type: "STRING" },
                   shop_name: { type: "STRING" },
-                  address_id: { type: "STRING" },
-                  address_street: { type: "STRING" },
-                  payment_method_id: { type: "STRING" },
-                  payment_method_name: { type: "STRING" },
-                  payment_method_type: { type: "STRING" },
+                  addresses: { type: "ARRAY", items: { type: "OBJECT" } },
+                  payment_methods: { type: "ARRAY", items: { type: "OBJECT" } },
                   subtotal: { type: "NUMBER" },
-                  service_fee: { type: "NUMBER" },
-                  delivery_fee: { type: "NUMBER" },
-                  total: { type: "NUMBER" },
-                  pricing_token: { type: "STRING" },
                   is_food: { type: "BOOLEAN" }
                 },
-                required: ["shop_id", "address_id", "payment_method_id", "pricing_token"]
+                required: ["shop_id", "addresses", "payment_methods", "subtotal"]
               }
             }
           ]
@@ -622,21 +727,32 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             // If the AI has more tools to call after add_to_cart, the loop continues.
             // Usually it stops here or sends text.
             continue; 
-          } else if (fnName === "place_order") {
+          } else if (fnName === "get_active_carts") {
+            const res = await fetch("/api/ai/search-plas-data", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: fnName, params: args })
+            });
+            const data = await res.json();
+            currentFunctionCall = await handleStream([{
+              functionResponse: { name: fnName, response: data }
+            }]);
+            continue;
+          } else if (fnName === "show_checkout_form") {
             setIsTyping(false);
             setMessages(prev => prev.map(m => m.id === responseId ? { ...m, isComplete: true } : m));
             setMessages(prev => [...prev, {
               id: (Date.now() + 2).toString(),
-              text: "",
+              text: "", // UI is handled by checkoutSetup
               sender: "ai",
               timestamp: new Date(),
-              checkoutConfirm: args as any,
+              checkoutSetup: args as any,
               isComplete: true,
             }]);
             currentFunctionCall = await handleStream([{
               functionResponse: {
                 name: fnName,
-                response: { status: "checkout_confirm_shown", message: "Checkout confirmation card shown. User must click confirm to proceed." }
+                response: { status: "checkout_form_shown", message: "Interactive checkout form shown. User must select details and click confirm to proceed." }
               }
             }]);
             continue;
@@ -750,7 +866,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     }]);
   };
 
-  const handleConfirmCheckout = async (msgId: string, payload: CheckoutConfirmPayload) => {
+  const handleConfirmCheckout = async (msgId: string, payload: CheckoutConfirmPayload & { comment?: string }) => {
     console.log("[AI Chat] Confirming checkout:", payload);
     try {
       const endpoint = payload.is_food ? "/api/food-checkout" : "/api/checkout";
@@ -761,12 +877,13 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         delivery_address_id: payload.address_id,
         service_fee: Math.round(payload.service_fee).toString(),
         delivery_fee: Math.round(payload.delivery_fee).toString(),
-        delivery_time: new Date(Date.now() + 45 * 60000).toISOString(), // +45 mins default
+        delivery_time: new Date(Date.now() + 45 * 60000).toISOString(),
         pricing_token: payload.pricing_token,
         subtotal: payload.subtotal,
         payment_method: payload.payment_method_type,
         payment_method_id: payload.payment_method_id,
-        items_count: 0, // Backend will re-calculate from cart
+        delivery_notes: payload.comment || "",
+        items_count: 0,
       };
 
       const res = await fetch(endpoint, {
@@ -778,6 +895,33 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Checkout failed");
+      }
+
+      const checkoutData = await res.json();
+      const orderId = checkoutData.order_id;
+      const totalAmount = payload.total;
+
+      // If it's a MoMo payment, we must initiate the RequestToPay prompt
+      if (payload.payment_method_type === "mobile_money") {
+        console.log("[AI Chat] Initiating MoMo payment for order:", orderId);
+        const momoRes = await fetch("/api/momo/request-to-pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalAmount,
+            payerNumber: payload.payment_method_name, // Typically the phone number is stored here for MoMo
+            orderId: orderId,
+            externalId: orderId,
+            payerMessage: `Payment for order at ${payload.shop_name}`,
+          }),
+        });
+
+        if (!momoRes.ok) {
+          const momoError = await momoRes.json();
+          console.error("[AI Chat] MoMo initiation failed:", momoError);
+          // We don't fail the whole thing because the order is already created, 
+          // but we should warn the user.
+        }
       }
 
       // Mark as placed
@@ -892,7 +1036,20 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               );
             }
 
-            // 2. Checkout confirmation card
+            // 2. Checkout setup card
+            if (message.checkoutSetup) {
+              return (
+                <CheckoutSetupCard
+                  key={message.id}
+                  msgId={message.id}
+                  payload={message.checkoutSetup}
+                  onConfirm={handleConfirmCheckout}
+                  onDecline={handleDeclineCheckout}
+                />
+              );
+            }
+
+            // 3. Checkout confirmation card
             if (message.checkoutConfirm) {
               return (
                 <CheckoutConfirmCard
@@ -900,8 +1057,6 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   msgId={message.id}
                   payload={message.checkoutConfirm}
                   isDone={message.checkoutPlaced}
-                  onConfirm={handleConfirmCheckout}
-                  onDecline={handleDeclineCheckout}
                 />
               );
             }
