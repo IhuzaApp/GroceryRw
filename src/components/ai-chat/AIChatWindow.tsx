@@ -55,7 +55,10 @@ interface Message {
   checkoutSetup?: CheckoutSetupPayload;
   checkoutPlaced?: boolean;
   checkoutComment?: string;
+  isProcessing?: boolean;
   isComplete?: boolean;
+  paymentStatus?: "pending" | "success" | "failed";
+  referenceId?: string;
 }
 
 interface AIChatWindowProps {
@@ -153,11 +156,15 @@ function CartConfirmCard({
 function CheckoutSetupCard({
   msgId,
   payload,
+  isProcessing,
+  isPlaced,
   onConfirm,
   onDecline
 }: {
   msgId: string;
   payload: CheckoutSetupPayload;
+  isProcessing?: boolean;
+  isPlaced?: boolean;
   onConfirm: (msgId: string, selection: CheckoutConfirmPayload & { comment: string }) => void;
   onDecline: (msgId: string) => void;
 }) {
@@ -166,13 +173,14 @@ function CheckoutSetupCard({
   const [comment, setComment] = React.useState("");
   const [preview, setPreview] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
-    if (selectedAddrId) {
+    if (selectedAddrId && !preview) {
       updatePreview(selectedAddrId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAddrId]);
+  }, []); 
 
   const updatePreview = async (addrId: string) => {
     setLoading(true);
@@ -194,23 +202,28 @@ function CheckoutSetupCard({
     }
   };
 
-  const handlePlaceOrder = () => {
-    if (!preview) return;
+  const handlePlaceOrder = async () => {
+    if (!preview || isSubmitting || isProcessing || isPlaced) return;
+    setIsSubmitting(true);
     const addr = payload.addresses.find((a: any) => a.id === selectedAddrId);
     const pay = payload.payment_methods.find((p: any) => p.id === selectedPayId);
     
-    onConfirm(msgId, {
-      ...preview,
-      shop_id: payload.shop_id,
-      shop_name: payload.shop_name,
-      address_id: selectedAddrId,
-      address_street: addr?.street || "Selected Address",
-      payment_method_id: selectedPayId,
-      payment_method_name: pay?.number || pay?.method || "Selected Method",
-      payment_method_type: pay?.method?.toLowerCase().includes("momo") ? "mobile_money" : "card",
-      is_food: payload.is_food,
-      comment
-    });
+    try {
+      await onConfirm(msgId, {
+        ...preview,
+        shop_id: payload.shop_id,
+        shop_name: payload.shop_name,
+        address_id: selectedAddrId,
+        address_street: addr?.street || "Selected Address",
+        payment_method_id: selectedPayId,
+        payment_method_name: pay?.number || pay?.method || "Selected Method",
+        payment_method_type: pay?.method?.toLowerCase().includes("momo") ? "mobile_money" : "card",
+        is_food: payload.is_food,
+        comment
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -227,8 +240,14 @@ function CheckoutSetupCard({
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block leading-none">Delivery Address</label>
             <select 
               value={selectedAddrId}
-              onChange={(e) => setSelectedAddrId(e.target.value)}
-              className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              disabled={isProcessing || isPlaced}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedAddrId(newId);
+                setPreview(null); // Clear preview immediately for feedback
+                updatePreview(newId);
+              }}
+              className={`w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white ${(isProcessing || isPlaced) ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {payload.addresses.map((a: any) => (
                 <option key={a.id} value={a.id}>{a.street}, {a.city}</option>
@@ -241,8 +260,9 @@ function CheckoutSetupCard({
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block leading-none">Payment Method</label>
             <select 
               value={selectedPayId}
+              disabled={isProcessing || isPlaced}
               onChange={(e) => setSelectedPayId(e.target.value)}
-              className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className={`w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white ${(isProcessing || isPlaced) ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {payload.payment_methods.map((p: any) => (
                 <option key={p.id} value={p.id}>{p.method} - {p.number}</option>
@@ -255,16 +275,17 @@ function CheckoutSetupCard({
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block leading-none">Delivery Instructions</label>
             <textarea 
               value={comment}
+              disabled={isProcessing || isPlaced}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="e.g. Leave at the gate, call when here..."
-              className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"
+              placeholder="E.g. Ring the bell, deliver to gate..."
+              className={`w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2 text-sm focus:border-[#84cc16] focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white ${(isProcessing || isPlaced) ? "opacity-50 cursor-not-allowed" : ""}`}
               rows={2}
             />
           </div>
 
           {/* Summary Preview */}
-          {preview && (
-            <div className="space-y-2 rounded-2xl bg-[#f0fdf4] p-4 dark:bg-emerald-950/20">
+          {preview ? (
+            <div className="space-y-2 rounded-2xl bg-[#f0fdf4] p-4 dark:bg-emerald-950/20 animate-in fade-in duration-300">
               <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                 <span>Subtotal</span>
                 <span>{preview.subtotal.toLocaleString()} RWF</span>
@@ -283,6 +304,11 @@ function CheckoutSetupCard({
                   <span>{preview.total.toLocaleString()} RWF</span>
                 </div>
               </div>
+            </div>
+          ) : (
+            <div className="h-[120px] rounded-2xl bg-gray-50 flex flex-col items-center justify-center gap-2 border border-dashed border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Calculating delivery...</p>
             </div>
           )}
 
@@ -314,31 +340,93 @@ function CheckoutSetupCard({
 
 // ─── Checkout Confirmation Card ───────────────────────────────────────────────
 function CheckoutConfirmCard({
-  msgId,
   payload,
   isDone,
+  paymentStatus,
 }: {
   msgId: string;
   payload: CheckoutConfirmPayload;
   isDone?: boolean;
+  paymentStatus?: "pending" | "success" | "failed";
 }) {
-  if (isDone) {
-    return (
-      <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
-        <div className="max-w-[85%] rounded-3xl rounded-tl-sm border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/30">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white text-lg">✓</div>
-            <div>
-              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Order Placed!</p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400">Total: {payload.total.toLocaleString()} RWF</p>
-            </div>
+  if (!isDone) return null;
+  
+  const isPending = paymentStatus === "pending";
+  const isFailed = paymentStatus === "failed";
+  const isSuccess = paymentStatus === "success";
+
+  return (
+    <div className="flex justify-start animate-in fade-in slide-in-from-left-3 duration-500">
+      <div className="max-w-[90%] overflow-hidden rounded-3xl rounded-tl-sm border border-emerald-100 bg-white shadow-xl dark:border-emerald-900/30 dark:bg-gray-800">
+        <div className={`px-5 py-4 text-white flex items-center gap-3 transition-colors duration-500 ${
+          isSuccess ? "bg-emerald-600" : isFailed ? "bg-red-600" : "bg-blue-600"
+        }`}>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ${isPending ? "animate-pulse" : ""}`}>
+            {isSuccess ? "✓" : isFailed ? "!" : "..."}
+          </div>
+          <div>
+            <h4 className="text-sm font-bold">
+              {isSuccess ? "Order Confirmed!" : isFailed ? "Payment Failed" : "Awaiting Approval..."}
+            </h4>
+            <p className="text-[10px] opacity-90">
+              {isSuccess ? payload.shop_name : isFailed ? "Please try again" : "Check your phone for MoMo prompt"}
+            </p>
           </div>
         </div>
+        
+        <div className="p-5 space-y-4">
+          <div className="space-y-2.5">
+            <div className="flex items-start gap-3">
+              <div className={`mt-0.5 ${isSuccess ? "text-emerald-500" : isFailed ? "text-red-500" : "text-blue-500"}`}>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Delivering To</p>
+                <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300">{payload.address_street}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className={`mt-0.5 ${isSuccess ? "text-emerald-500" : isFailed ? "text-red-500" : "text-blue-500"}`}>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Payment Method</p>
+                <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300">{payload.payment_method_name} ({payload.payment_method_type === "mobile_money" ? "MoMo" : "Card"})</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`rounded-2xl p-4 ${isSuccess ? "bg-emerald-50/50 dark:bg-emerald-950/20" : isFailed ? "bg-red-50/50 dark:bg-red-950/20" : "bg-blue-50/50 dark:bg-blue-950/20"}`}>
+            <div className={`flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2 ${isSuccess ? "text-[#115e59]" : isFailed ? "text-red-700" : "text-blue-700"}`}>
+              <span>Receipt Summary</span>
+              <span>RWF</span>
+            </div>
+            <div className={`space-y-1.5 border-t pt-2 ${isSuccess ? "border-emerald-100/50 dark:border-emerald-800/50" : isFailed ? "border-red-100/50 dark:border-red-800/50" : "border-blue-100/50 dark:border-blue-800/50"}`}>
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                <span>Items Subtotal</span>
+                <span>{payload.subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                <span>Fees & Delivery</span>
+                <span>{(payload.delivery_fee + payload.service_fee).toLocaleString()}</span>
+              </div>
+              <div className={`flex justify-between text-sm font-black mt-2 ${isSuccess ? "text-emerald-700 dark:text-emerald-400" : isFailed ? "text-red-700" : "text-blue-700"}`}>
+                <span>Total Amount</span>
+                <span>{payload.total.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-[10px] text-center text-gray-400 italic">
+            {isSuccess ? "You can track your order status in the orders page." : isFailed ? "Please verify your balance and try again." : "We'll notify you as soon as payment is confirmed."}
+          </p>
+        </div>
       </div>
-    );
-  }
-  return null; // Confirmation is now handled by SetupCard
+    </div>
+  );
 }
+
 // Safely converts Markdown to HTML using a placeholder system to avoid 
 // nested/mangled tags during multiple replacement passes.
 function formatMessageText(text: string, isComplete?: boolean): string {
@@ -424,6 +512,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const pollIntervals = useRef<{ [msgId: string]: NodeJS.Timeout }>({});
+
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(pollIntervals.current).forEach(clearInterval);
+    };
+  }, []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -447,7 +543,11 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       scrollToBottom();
       inputRef.current?.focus();
     }
-  }, [isOpen, messages]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Hook dedicated ONLY to resetting the chat state when closing
   useEffect(() => {
@@ -875,6 +975,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
   const handleConfirmCheckout = async (msgId: string, payload: CheckoutConfirmPayload & { comment?: string }) => {
     console.log("[AI Chat] Confirming checkout:", payload);
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: true } : m));
     try {
       const endpoint = payload.is_food ? "/api/food-checkout" : "/api/checkout";
       
@@ -916,35 +1017,90 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: totalAmount,
-            payerNumber: payload.payment_method_name, // Typically the phone number is stored here for MoMo
+            payerNumber: payload.payment_method_name, 
             orderId: orderId,
             externalId: orderId,
             payerMessage: `Payment for order at ${payload.shop_name}`,
           }),
         });
 
-        if (!momoRes.ok) {
-          const momoError = await momoRes.json();
-          console.error("[AI Chat] MoMo initiation failed:", momoError);
-          // We don't fail the whole thing because the order is already created, 
-          // but we should warn the user.
+        const momoData = await momoRes.json();
+        if (momoRes.ok && momoData.referenceId) {
+          const refId = momoData.referenceId;
+          // Mark message with referenceId and start polling
+          setMessages(prev => prev.map(m => m.id === msgId ? { 
+            ...m, 
+            referenceId: refId, 
+            paymentStatus: "pending",
+            checkoutPlaced: true,
+            isProcessing: false 
+          } : m));
+
+          // Start Polling
+          if (pollIntervals.current[msgId]) clearInterval(pollIntervals.current[msgId]);
+          pollIntervals.current[msgId] = setInterval(async () => {
+            try {
+              const statusRes = await fetch(`/api/momo/request-to-pay-status?referenceId=${refId}`);
+              const statusData = await statusRes.json();
+              
+              if (statusData.status === "SUCCESSFUL") {
+                clearInterval(pollIntervals.current[msgId]);
+                delete pollIntervals.current[msgId];
+                
+                setMessages(prev => prev.map(m => m.id === msgId ? { ...m, paymentStatus: "success" } : m));
+                
+                // Final Success Message
+                setMessages(prev => [...prev, {
+                  id: (Date.now() + 5).toString(),
+                  text: `✅ **Payment Received!** Your order for **${payload.shop_name}** is now being prepared. You can track it in your orders.`,
+                  sender: "ai",
+                  timestamp: new Date(),
+                }]);
+
+                // Clear Carts
+                if (payload.is_food) {
+                  foodCart.clearRestaurant(payload.shop_id);
+                } else {
+                  // Grocery carts are managed on backend, we just notify to refresh
+                  window.dispatchEvent(new CustomEvent("cartChanged", { 
+                    detail: { refetch: true, shop_id: payload.shop_id } 
+                  }));
+                }
+              } else if (statusData.status === "FAILED") {
+                clearInterval(pollIntervals.current[msgId]);
+                delete pollIntervals.current[msgId];
+                setMessages(prev => prev.map(m => m.id === msgId ? { ...m, paymentStatus: "failed" } : m));
+              }
+            } catch (e) {
+              console.error("Polling error", e);
+            }
+          }, 3000);
+        } else {
+          console.error("[AI Chat] MoMo initiation failed:", momoData);
+          throw new Error(momoData.error || "Failed to initiate MoMo payment");
         }
+      } else {
+        // Not MoMo (e.g. Wallet/Card - assuming immediate success for now)
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, checkoutPlaced: true, isProcessing: false, paymentStatus: "success" } : m));
       }
 
-      // Mark as placed
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, checkoutPlaced: true } : m));
+      // Dispatch event to refresh carts globally
+      const detail = payload.is_food ? { refetch: true } : { shop_id: payload.shop_id, refetch: true };
+      window.dispatchEvent(new CustomEvent("cartChanged", { detail }));
 
       setMessages(prev => [...prev, {
         id: (Date.now() + 4).toString(),
         text: `🎉 **Success!** Your order for **${payload.shop_name}** has been placed! \n\n${payload.payment_method_type === "mobile_money" ? "Please **check your phone** for the MoMo payment prompt to complete the order." : "Your delivery is being prepared."}`,
         sender: "ai",
         timestamp: new Date(),
+        checkoutConfirm: payload, // This will trigger CheckoutConfirmCard
       }]);
     } catch (err: any) {
       console.error("[AI Chat] Checkout error:", err);
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false } : m));
       setMessages(prev => [...prev, {
         id: (Date.now() + 4).toString(),
-        text: `❌ **Checkout Failed**: ${err.message || "Something went wrong while placing your order."}`,
+        text: `❌ **Checkout Failed:** ${err.message || "An unexpected error occurred."}`,
         sender: "ai",
         timestamp: new Date(),
       }]);
@@ -1050,6 +1206,8 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   key={message.id}
                   msgId={message.id}
                   payload={message.checkoutSetup}
+                  isProcessing={message.isProcessing}
+                  isPlaced={message.checkoutPlaced}
                   onConfirm={handleConfirmCheckout}
                   onDecline={handleDeclineCheckout}
                 />
