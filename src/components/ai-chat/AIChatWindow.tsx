@@ -71,14 +71,16 @@ function CartConfirmCard({
   msgId,
   payload,
   isDone,
+  isProcessing,
   onConfirm,
   onDecline,
 }: {
   msgId: string;
   payload: CartConfirmPayload;
   isDone?: boolean;
-  onConfirm: (msgId: string, payload: CartConfirmPayload, qty: number) => void;
-  onDecline: (msgId: string) => void;
+  isProcessing?: boolean;
+  onConfirm: (msgId: string, payload: CartConfirmPayload, qty: number) => void | Promise<void>;
+  onDecline: (msgId: string) => void | Promise<void>;
 }) {
   const [qty, setQty] = React.useState(payload.quantity || 1);
   if (isDone) {
@@ -132,10 +134,11 @@ function CartConfirmCard({
             {/* Icon-only Add to Cart button */}
             <button
               onClick={() => onConfirm(msgId, payload, qty)}
+              disabled={isProcessing}
               title="Add to cart"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-2.5 text-white shadow-sm transition hover:opacity-90 active:scale-95"
+              className={`flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-2.5 text-white shadow-sm transition hover:opacity-90 active:scale-95 ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isProcessing ? "animate-pulse" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                 <line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/>
@@ -165,8 +168,8 @@ function CheckoutSetupCard({
   payload: CheckoutSetupPayload;
   isProcessing?: boolean;
   isPlaced?: boolean;
-  onConfirm: (msgId: string, selection: CheckoutConfirmPayload & { comment: string }) => void;
-  onDecline: (msgId: string) => void;
+  onConfirm: (msgId: string, selection: CheckoutConfirmPayload & { comment: string }) => void | Promise<void>;
+  onDecline: (msgId: string) => void | Promise<void>;
 }) {
   const [selectedAddrId, setSelectedAddrId] = React.useState(payload.addresses.find(a => a.is_default)?.id || payload.addresses[0]?.id || "");
   const [selectedPayId, setSelectedPayId] = React.useState(payload.payment_methods.find(p => p.is_default)?.id || payload.payment_methods[0]?.id || "");
@@ -538,6 +541,22 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const reportError = async (where: string, error: any, extra?: any) => {
+    try {
+      await fetch("/api/support/slack-logger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          where, 
+          error: error?.message || String(error), 
+          extra 
+        })
+      });
+    } catch (e) {
+      console.error("Failed to report error to Slack proxy", e);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
@@ -560,21 +579,21 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   }, [isOpen]);
 
   const handleSend = async () => {
-    if (!inputValue.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-    setIsTyping(true);
-
-    // Call Gemini AI
     try {
+      if (!inputValue.trim() || !session) return;
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        text: inputValue,
+        sender: "user",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setInputValue("");
+      setIsTyping(true);
+
+      // Call Gemini AI
       if (!ai) {
         throw new Error("AI is not initialized");
       }
@@ -771,7 +790,6 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
           let apiUrl = "/api/ai/search-plas-data";
           let body: any = { action: fnName, params: args };
-          let isDirectResponse = false;
 
           if (fnName === "search_recipes") {
             apiUrl = "/api/ai/search-recipes";
@@ -884,6 +902,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           
         } catch (fnErr) {
           console.error("Function call error:", fnErr);
+          reportError(`Tool:${currentFunctionCall?.name}`, fnErr, { args: currentFunctionCall?.args });
           currentFunctionCall = await handleStream([{
             functionResponse: {
               name: currentFunctionCall?.name || "unknown",
@@ -902,6 +921,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
     } catch (error) {
       console.error("AI Error:", error);
+      reportError("AIChat:handleSend", error);
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
@@ -925,8 +945,8 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
   // Handle cart confirmation — called when user clicks "Yes, add it!" on the inline card
   const handleConfirmCart = async (msgId: string, payload: CartConfirmPayload, qty: number) => {
-    console.log("[AI Chat] Confirming cart item:", { payload, qty });
     try {
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: true } : m));
       if (payload.item_source === "Restaurant") {
         if (!foodCart) throw new Error("Food cart context not available");
         foodCart.addItem(payload.restaurant_payload, payload.dish_payload, qty);
@@ -944,7 +964,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       }
 
       // Mark the card as "added"
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, cartAdded: true } : m));
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, cartAdded: true, isProcessing: false } : m));
 
       // Add a follow-up AI message
       setMessages(prev => [...prev, {
@@ -954,6 +974,9 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         timestamp: new Date(),
       }]);
     } catch (err) {
+      console.error("Cart add error:", err);
+      reportError("AIChat:handleConfirmCart", err, { payload, qty });
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false } : m));
       setMessages(prev => [...prev, {
         id: (Date.now() + 3).toString(),
         text: `❌ Oops! I couldn't add that to your cart right now. Please try adding it manually from the shop page.`,
@@ -1097,6 +1120,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       }]);
     } catch (err: any) {
       console.error("[AI Chat] Checkout error:", err);
+      reportError("AIChat:handleConfirmCheckout", err, { payload });
       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isProcessing: false } : m));
       setMessages(prev => [...prev, {
         id: (Date.now() + 4).toString(),
@@ -1193,6 +1217,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   msgId={message.id}
                   payload={message.cartConfirm}
                   isDone={message.cartAdded}
+                  isProcessing={message.isProcessing}
                   onConfirm={handleConfirmCart}
                   onDecline={handleDeclineCart}
                 />
@@ -1222,6 +1247,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   msgId={message.id}
                   payload={message.checkoutConfirm}
                   isDone={message.checkoutPlaced}
+                  paymentStatus={message.paymentStatus}
                 />
               );
             }

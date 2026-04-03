@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { logErrorToSlack } from "../../src/lib/slackErrorReporter";
 
 export default async function handler(
   req: NextApiRequest,
@@ -50,6 +51,9 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("AI Web Search Error:", error);
+    await logErrorToSlack("AI Web Search API", error, { 
+      query: req.body?.query 
+    });
     return res.status(500).json({ error: "Failed to fetch web data" });
   }
 }

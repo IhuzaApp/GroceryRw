@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { logErrorToSlack } from "../../src/lib/slackErrorReporter";
 
 export default async function handler(
   req: NextApiRequest,
@@ -47,6 +48,10 @@ export default async function handler(
     return res.status(200).json({ results });
   } catch (error: any) {
     console.error("AI Recipes Search Error:", error);
+    await logErrorToSlack("AI Recipes API", error, { 
+      keyword: req.body?.keyword,
+      category: req.body?.category 
+    });
     return res.status(500).json({ error: "Failed to fetch recipes" });
   }
 }

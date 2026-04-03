@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
@@ -667,6 +668,11 @@ export default async function handler(
 
   } catch (error: any) {
     console.error("AI Search Error:", error);
+    await logErrorToSlack("AI Search API", error, { 
+      action: req.body?.action,
+      params: req.body?.params,
+      user_id: (session?.user as any)?.id 
+    });
     return res.status(500).json({ error: "Failed to search data" });
   }
 }
