@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getGenerativeModel } from "firebase/ai";
 import { ai } from "../../lib/firebase";
+import { useCart } from "../../context/CartContext";
+import { useFoodCart } from "../../context/FoodCartContext";
 
 interface CartConfirmPayload {
   product_id: string;
@@ -10,6 +12,10 @@ interface CartConfirmPayload {
   price: number | string;
   quantity: number;
   image?: string;
+  item_source?: "Shop" | "Restaurant" | "BusinessStore";
+  cart_payload?: any;
+  restaurant_payload?: any;
+  dish_payload?: any;
 }
 
 interface Message {
@@ -20,6 +26,7 @@ interface Message {
   // Optional: cart confirmation action card
   cartConfirm?: CartConfirmPayload;
   cartAdded?: boolean; // true after successful add
+  isComplete?: boolean; // true after streaming finishes
 }
 
 interface AIChatWindowProps {
@@ -53,7 +60,10 @@ function CartConfirmCard({
               <p className="text-xs text-emerald-600 dark:text-emerald-400">{payload.product_name} ×{qty}</p>
             </div>
           </div>
-          <a href="/Cart" className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
+          <a 
+            href={payload.item_source === "Restaurant" ? "/Cart/FoodCart" : "/Cart"} 
+            className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+          >
             🛒 Go to Cart &amp; Checkout →
           </a>
         </div>
@@ -111,9 +121,81 @@ function CartConfirmCard({
 }
 
 
+// ─── Message Text Formatter ──────────────────────────────────────────────────
+// Safely converts Markdown to HTML using a placeholder system to avoid 
+// nested/mangled tags during multiple replacement passes.
+function formatMessageText(text: string, isComplete?: boolean): string {
+  const imagePlaceholders: string[] = [];
+  const linkPlaceholders: string[] = [];
+
+  // 1. Collect Images: ![alt](url)
+  // We do this first so images don't get matched by the link regex.
+  let processed = text.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (match, alt, url) => {
+    const idx = imagePlaceholders.length;
+    // Remove all whitespace (crucial for long Base64 strings with newlines)
+    const sanitizedUrl = url.replace(/\s+/g, "");
+    
+    // SAFETY: If it's a huge data URL and the message isn't complete yet, 
+    // we don't render it to avoid "appearing/disappearing" and chrome errors.
+    if (sanitizedUrl.startsWith("data:") && !isComplete) {
+      return `[AI is sending an image...]`;
+    }
+
+    if (alt === "Thumb") {
+      imagePlaceholders.push(
+        `<img src="${sanitizedUrl}" alt="Recipe" onerror="this.onerror=null; this.src='/images/groceryPlaceholder.png';" style="display:block; width:100%; max-width:280px; height:160px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />`
+      );
+    } else {
+      imagePlaceholders.push(
+        `<img src="${sanitizedUrl}" alt="${alt}" onerror="this.onerror=null; this.src='/images/groceryPlaceholder.png';" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />`
+      );
+    }
+    return `__IMG_${idx}__`;
+  });
+
+  // 2. Collect Links: [label](url)
+  processed = processed.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (match, label, url) => {
+    const idx = linkPlaceholders.length;
+    const sanitizedUrl = url.trim();
+    linkPlaceholders.push(
+      `<a href="${sanitizedUrl}" class="text-[#115e59] underline hover:text-green-700 font-medium">${label}</a>`
+    );
+    return `__LINK_${idx}__`;
+  });
+
+  // 3. Simple Formatting (Bold & Bullets)
+  processed = processed
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|\n)\*\s/g, "$1• ");
+
+  // 4. Standalone Image URLs (Base64) - only render if complete
+  // IMPORTANT: We remove \s from the set to prevent greedy matching across 
+  // lines which was corrupting the rest of the AI message.
+  processed = processed.replace(/(data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)/g, (match) => {
+    if (!isComplete) return `[AI is sending an image...]`;
+
+    const idx = imagePlaceholders.length;
+    const sanitizedBase64 = match.replace(/\s+/g, "");
+    imagePlaceholders.push(
+      `<img src="${sanitizedBase64}" alt="Image" onerror="this.onerror=null; this.src='/images/groceryPlaceholder.png';" style="display:block; width:100%; max-width:280px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />`
+    );
+    return `__IMG_${idx}__`;
+  });
+
+  // 5. Restore Placeholders (Links first, then Images)
+  processed = processed.replace(/__LINK_(\d+)__/g, (_, i) => linkPlaceholders[parseInt(i)]);
+  processed = processed.replace(/__IMG_(\d+)__/g, (_, i) => imagePlaceholders[parseInt(i)]);
+
+  return processed;
+}
+
 export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const { data: session } = useSession();
   const userName = session?.user?.name || "there";
+  
+  // Cart Contexts
+  const shopCart = useCart();
+  const foodCart = useFoodCart();
 
   const getInitialMessage = () => ({
     id: "1",
@@ -230,37 +312,46 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             },
             {
               name: "add_to_cart",
-              description: "Add a specific shop product to the user's cart. ONLY use this AFTER the user explicitly confirms they want to add an item. The product_id and shop_id must come from a prior search_products result.",
+              description: "Add an item to the user's cart. Use the 'ordering_payload' provided in the search results.",
               parameters: {
                 type: "OBJECT",
                 properties: {
-                  product_id: { type: "STRING", description: "The exact UUID of the product from the search_products result." },
-                  shop_id: { type: "STRING", description: "The exact UUID of the shop from the search_products result." },
-                  product_name: { type: "STRING", description: "Human-readable product name to display in the confirmation card." },
-                  price: { type: "NUMBER", description: "The product price in RWF." },
-                  quantity: { type: "NUMBER", description: "How many units to add, default 1." },
-                  image: { type: "STRING", description: "Optional image URL of the product or its store logo." }
+                  product_name: { type: "STRING", description: "Name of the item." },
+                  price: { type: "NUMBER", description: "Price in RWF." },
+                  quantity: { type: "NUMBER", description: "Quantity to add." },
+                  image: { type: "STRING", description: "Product image URL." },
+                  ordering_payload: { type: "STRING", description: "The EXACT ordering_payload string from the search result. Do not modify it." }
                 },
-                required: ["product_id", "shop_id", "product_name", "price"]
+                required: ["product_name", "price", "ordering_payload"]
               }
             }
           ]
         } as any]
       });
 
-      // Prepare chat history (exclude initial greeting to keep context clean, or map it)
-      const history = messages
-        .filter(m => m.id !== "1") // Optional: filter out system greeting
-        .map(m => ({
-          role: (m.sender === "user" ? "user" : "model") as "user" | "model",
-          parts: [{ text: m.text }]
-        }));
+      // Prepare chat history (exclude initial greeting and merge consecutive turns to satisfy Gemini API requirements)
+      const history: any[] = [];
+      messages
+        .filter(m => m.id !== "1" && m.text.trim() !== "")
+        .forEach(m => {
+          const role = (m.sender === "user" ? "user" : "model") as "user" | "model";
+          const last = history[history.length - 1];
+          if (last && last.role === role) {
+            // Append text to the previous entry of the same role
+            last.parts[0].text += "\n\n" + m.text;
+          } else {
+            history.push({
+              role,
+              parts: [{ text: m.text }]
+            });
+          }
+        });
 
       const chat = model.startChat({
         history,
         systemInstruction: {
           role: "system",
-          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app. You can help with shopping, orders, food recommendations, store locations, recipes, and food-related topics!\n\nYou have access to FIVE tools:\n1. search_products — searches real-time grocery inventory from shops (with prices, product_id, shop_id).\n2. search_stores — searches shops, restaurants, and businesses (with coordinates, operating hours, reviews).\n3. search_recipes — searches TheMealDB for step-by-step cooking instructions.\n4. search_web — searches the web for food/recipe topics NOT in the recipe database.\n5. add_to_cart — adds a shop product to the user's cart. ONLY call this AFTER the user explicitly says YES/confirm. DO NOT call add_to_cart unprompted — always ask first: "Would you like me to add [item] to your cart?".\n\nWhen the user asks to order something or you suggest a product: first show it with search_products, then ASK: "Would you like me to add [product name] to your cart?" — wait for confirmation before calling add_to_cart.\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. Use this to determine if a store is currently open.\n\nFormatting rules:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Store Name**\n- Restaurants: [![Logo](image_url)](/restaurant/id) **Restaurant Name**\n- Businesses: [![Logo](image_url)](/plasBusiness/store/id) **Business Name**\n- Recipes: [![Thumb](image_url)](/Recipes/recipe_id) **Recipe Name**, then full instructions.\n- Never share raw Google or DuckDuckGo URLs.\n- Use • bullets or numbered steps. Keep responses concise and scannable.` }]
+          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app. You can help with shopping, orders, food recommendations, store locations, recipes, and food-related topics!\n\nYou have access to FIVE tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches TheMealDB for cooking instructions.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n\nCRITICAL RULES:\n- NEVER hallucinate or make up products, prices, or images. Only use what the tools return.\n- When you search for products, results include an 'ordering_payload' string for each item. NEVER make up your own IDs or payloads. If results are empty, tell the user you couldn't find anything.\n- To add an item, you MUST call "add_to_cart" and pass the EXACT 'ordering_payload' string found in the search result for that specific item.\n- ALWAYS ask for explicit confirmation before adding an item.\n- IMAGES: Tool results may contain huge Base64 strings. ALWAYS output them exactly as provided in markdown format, e.g., ![Logo](image_string). If the string looks truncated in the tool output, still use it; our system will handle the fallback.\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. \n\nFormatting rules:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Store Name**\n- Restaurants: [![Logo](image_url)](/restaurant/id) **Restaurant Name**\n- Businesses: [![Logo](image_url)](/plasBusiness/store/id) **Business Name**\n- Recipes: [![Thumb](image_url)](/Recipes/recipe_id) **Recipe Name**\n- Use • bullets. Keep responses concise.` }]
         },
       });
 
@@ -305,20 +396,21 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         return functionCallToHandle;
       };
 
-      let pendingFunctionCall = await handleStream(inputValue);
+      let currentFunctionCall = await handleStream(inputValue);
 
-      if (pendingFunctionCall) {
-        // Show typing again while we fetch
-        if (isFirstChunk) setIsTyping(true);
+      while (currentFunctionCall) {
+        // Show typing while we process each step
+        setIsTyping(true);
         
         try {
-          const fnName = pendingFunctionCall.name;
-          const args = pendingFunctionCall.args || pendingFunctionCall.arguments || {};
+          const fnName = currentFunctionCall.name;
+          const args = currentFunctionCall.args || currentFunctionCall.arguments || {};
+          console.log(`[AI Chat] Handling function call: ${fnName}`, args);
 
           let apiUrl = "/api/ai/search-plas-data";
           let body: any = { action: fnName, params: args };
+          let isDirectResponse = false;
 
-          // Route recipes calls to a separate lightweight endpoint
           if (fnName === "search_recipes") {
             apiUrl = "/api/ai/search-recipes";
             body = { keyword: args.keyword || "", category: args.category || "" };
@@ -326,57 +418,92 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             apiUrl = "/api/ai/search-web";
             body = { query: args.query || "" };
           } else if (fnName === "add_to_cart") {
-            // Show an inline confirmation card in the chat instead of calling the API immediately
-            const confirmPayload: CartConfirmPayload = {
-              product_id: args.product_id,
-              shop_id: args.shop_id,
-              product_name: args.product_name || "Item",
-              price: args.price || 0,
-              quantity: Number(args.quantity) || 1,
-              image: args.image,
+            const parsePayload = (val: any) => {
+              if (!val) return null;
+              if (typeof val === "object") return val;
+              try { return JSON.parse(val); } catch (e) { return null; }
             };
+
+            const ord_p = parsePayload(args.ordering_payload);
+            if (!ord_p) {
+               console.warn("[AI Chat] Missing or invalid ordering_payload from tool call. Args:", args);
+            }
+
+            const confirmPayload: CartConfirmPayload = {
+              product_id: ord_p?.productId || ord_p?.dish_payload?.id || args.product_id || "",
+              shop_id: ord_p?.shopId || ord_p?.restaurant_payload?.id || args.shop_id || "",
+              product_name: args.product_name || ord_p?.dish_payload?.name || "Item",
+              price: args.price || ord_p?.dish_payload?.price || 0,
+              quantity: Number(args.quantity) || 1,
+              image: args.image || ord_p?.dish_payload?.image,
+              item_source: ord_p?.item_source as any,
+              cart_payload: ord_p?.item_source === "Shop" ? ord_p : null,
+              restaurant_payload: ord_p?.restaurant_payload || null,
+              dish_payload: ord_p?.dish_payload || null,
+            };
+            
+            console.log("[AI Chat] Cart confirm payload generated:", { 
+              source: confirmPayload.item_source,
+              productId: confirmPayload.product_id,
+              shopId: confirmPayload.shop_id,
+              parsedPayload: ord_p 
+            });
             setIsTyping(false);
+            
+            // Mark previous search result as complete before showing the cart card
+            setMessages(prev => prev.map(m => m.id === responseId ? { ...m, isComplete: true } : m));
+
             setMessages(prev => [...prev, {
               id: (Date.now() + 2).toString(),
               text: "",
               sender: "ai",
               timestamp: new Date(),
               cartConfirm: confirmPayload,
+              isComplete: true,
             }]);
-            // Tell AI the card was shown so it can send a follow-up message
-            await handleStream([{
+            
+            // Feed back to AI that we showed the card
+            currentFunctionCall = await handleStream([{
               functionResponse: {
                 name: fnName,
-                response: { status: "confirmation_card_shown", message: "A confirmation card was displayed to the user. Wait for user to click 'Yes, add it!' or 'No thanks'." }
+                response: { status: "confirmation_card_shown", message: "A confirmation card was displayed. User must confirm." }
               }
             }]);
-            return; // Don't proceed with normal API call
+            // If the AI has more tools to call after add_to_cart, the loop continues.
+            // Usually it stops here or sends text.
+            continue; 
           }
 
+          // Default API call flow (for search tools)
           const response = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
           });
           const data = await response.json();
+          console.log(`[AI Chat] Tool Response for ${fnName}:`, data);
 
-          // Pass the database results back to the AI
-          await handleStream([{
+          // Give results back to AI and get NEXT action
+          currentFunctionCall = await handleStream([{
             functionResponse: {
               name: fnName,
               response: { results: data.results || [] }
             }
           }]);
+          
         } catch (fnErr) {
           console.error("Function call error:", fnErr);
-          await handleStream([{
+          currentFunctionCall = await handleStream([{
             functionResponse: {
-              name: pendingFunctionCall.name,
+              name: currentFunctionCall?.name || "unknown",
               response: { error: "Error contacting internal database API." }
             }
           }]);
         }
       }
+
+      // Mark the final AI response as complete
+      setMessages(prev => prev.map(m => m.id === responseId ? { ...m, isComplete: true } : m));
 
       if (isFirstChunk) { // Fallback if stream was empty
         setIsTyping(false);
@@ -392,6 +519,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           text: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
           sender: "ai",
           timestamp: new Date(),
+          isComplete: true,
         },
       ]);
     }
@@ -406,17 +534,23 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
   // Handle cart confirmation — called when user clicks "Yes, add it!" on the inline card
   const handleConfirmCart = async (msgId: string, payload: CartConfirmPayload, qty: number) => {
+    console.log("[AI Chat] Confirming cart item:", { payload, qty });
     try {
-      const res = await fetch("/api/ai/search-plas-data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "add_to_cart",
-          params: { product_id: payload.product_id, shop_id: payload.shop_id, quantity: qty },
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
+      if (payload.item_source === "Restaurant") {
+        if (!foodCart) throw new Error("Food cart context not available");
+        foodCart.addItem(payload.restaurant_payload, payload.dish_payload, qty);
+      } else {
+        // Default to Shop flow
+        if (!shopCart) throw new Error("Shop cart context not available");
+        const shopId = payload.cart_payload?.shopId || payload.shop_id;
+        const productId = payload.cart_payload?.productId || payload.product_id;
+        
+        if (!shopId || !productId) {
+          throw new Error("Missing shop_id or product_id for order");
+        }
+
+        await shopCart.addItem(shopId, productId, qty);
+      }
 
       // Mark the card as "added"
       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, cartAdded: true } : m));
@@ -548,19 +682,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 <div 
                   className="text-sm leading-relaxed whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{
-                    __html: message.text
-                      // Convert markdown bold to HTML bold
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      // Convert markdown asterisk bullet point to a proper dot bullet point
-                      .replace(/(^|\n)\*\s/g, '$1• ')
-                      // Recipe thumbnails (![Thumb](url)) — large card style. Handles both http URLs and data: URIs
-                      .replace(/!\[Thumb\]\(([^)]*)\)/g, '<img src="$1" alt="Recipe" onerror="this.onerror=null; this.src=\'/images/groceryPlaceholder.png\';" style="display:block; width:100%; max-width:280px; height:160px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
-                      // Standalone base64 images (no markdown wrapper) — render as large card
-                      .replace(/(data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+)/g, '<img src="$1" alt="Image" onerror="this.onerror=null; this.src=\'/images/groceryPlaceholder.png\';" style="display:block; width:100%; max-width:280px; border-radius:16px; object-fit:cover; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />')
-                      // Store/restaurant logos (![Logo](url)) — small circular icon. [^)]* handles base64 data URIs too
-                      .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '<img src="$2" alt="$1" onerror="this.onerror=null; this.src=\'/images/groceryPlaceholder.png\';" style="display:inline-block; height:24px; width:24px; border-radius:9999px; object-fit:cover; vertical-align:middle; margin-right:4px;" />')
-                      // Make clickable links
-                      .replace(/\[([^\]]*)\]\(([^)]*)\)/g, '<a href="$2" class="text-[#115e59] underline hover:text-green-700">$1</a>')
+                    __html: formatMessageText(message.text, message.isComplete)
                   }}
                 />
                 <span

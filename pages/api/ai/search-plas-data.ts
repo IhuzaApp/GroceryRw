@@ -91,6 +91,7 @@ const SEARCH_ALL_PRODUCTS = gql`
     latitude
     longitude
     PlasBusinessProductsOrSerives(where: {_or: [{status: {_ilike: "%active%"}}, {status: {_is_null: true}}], name: {_ilike: $keyword}}) {
+      id
       name
       price
       Description
@@ -267,17 +268,18 @@ export default async function handler(
       (result.Products || []).forEach((p: any) => {
         formattedProducts.push({
           source: "Shop",
-          product_id: p.id,           // UUID for add_to_cart
-          shop_id: p.shop_id,         // UUID for add_to_cart
-          id: p.Shop?.id,
-          image: p.Shop?.image || p.Shop?.logo,
-          store_name: p.Shop?.name || "Unknown Shop",
-          latitude: p.Shop?.latitude,
-          longitude: p.Shop?.longitude,
           name: p.ProductName?.name || "Unknown Product",
-          description: p.ProductName?.description || "",
           price: p.final_price,
-          category: p.category
+          description: p.ProductName?.description || "",
+          store_name: p.Shop?.name || "Unknown Shop",
+          image: p.Shop?.image || p.Shop?.logo,
+          category: p.category,
+          // Opaque payload for add_to_cart - AI must pass this EXACTLY
+          ordering_payload: JSON.stringify({
+            item_source: "Shop",
+            shopId: p.shop_id,
+            productId: p.id
+          })
         });
       });
 
@@ -285,15 +287,36 @@ export default async function handler(
       (result.restaurant_menu || []).forEach((m: any) => {
         formattedProducts.push({
           source: "Restaurant",
-          id: m.Restaurants?.id,
-          image: m.image || m.Restaurants?.logo,
-          store_name: m.Restaurants?.name || "Unknown Restaurant",
-          latitude: m.Restaurants?.lat,
-          longitude: m.Restaurants?.long,
           name: m.dishes?.name || "Unknown Dish",
-          description: m.dishes?.description || "",
           price: m.price,
-          category: m.dishes?.category
+          description: m.dishes?.description || "",
+          store_name: m.Restaurants?.name || "Unknown Restaurant",
+          image: m.image || m.Restaurants?.logo,
+          category: m.dishes?.category,
+          // Opaque payload for add_to_cart - AI must pass this EXACTLY
+          ordering_payload: JSON.stringify({
+            item_source: "Restaurant",
+            restaurant_payload: {
+              id: m.Restaurants?.id,
+              name: m.Restaurants?.name,
+              profile: m.Restaurants?.profile || m.Restaurants?.logo,
+              lat: m.Restaurants?.lat,
+              long: m.Restaurants?.long
+            },
+            dish_payload: {
+              id: m.product_id,
+              name: m.dishes?.name,
+              description: m.dishes?.description,
+              price: m.price,
+              image: m.image,
+              category: m.dishes?.category,
+              promo: m.promo,
+              promo_type: m.promo_type,
+              discount: m.discount,
+              ingredients: m.dishes?.ingredients,
+              preparingTime: m.preparingTime
+            }
+          })
         });
       });
 
@@ -302,15 +325,18 @@ export default async function handler(
         (store.PlasBusinessProductsOrSerives || []).forEach((s: any) => {
           formattedProducts.push({
             source: "BusinessStore",
-            id: store.id,
-            image: s.Image || store.Category?.image,
-            store_name: store.name || "Unknown Store",
-            latitude: store.latitude,
-            longitude: store.longitude,
             name: s.name,
-            description: s.Description || "",
             price: s.price,
-            category: s.category
+            description: s.Description || "",
+            store_name: store.name || "Unknown Store",
+            image: s.Image || store.Category?.image,
+            category: s.category,
+            // Opaque payload for add_to_cart - AI must pass this EXACTLY
+            ordering_payload: JSON.stringify({
+              item_source: "Shop",
+              shopId: store.id,
+              productId: s.id
+            })
           });
         });
       });
@@ -326,10 +352,37 @@ export default async function handler(
         console.log(`[AI Search API] After budget filter (<= ${maxPrice}): ${formattedProducts.length}`);
       }
 
-      // Shuffle or just return top 15 logically
-      const finalResults = formattedProducts.slice(0, 15);
-      console.log(`[AI Search API] Returning ${finalResults.length} items to AI`);
+      // FINAL SANITATION: Truncate large Base64 and flatten objects to prevent AI context bloat
+      const sanitize = (list: any[]) => list.map(item => {
+        const out: any = {};
+        for (const k in item) {
+          let v = item[k];
+          if (v === null || v === undefined) { out[k] = ""; continue; }
+          
+          // Don't touch ordering_payload - it must be passed exactly
+          if (k === "ordering_payload") {
+            out[k] = v;
+            continue;
+          }
 
+          if (typeof v === "object") { try { v = JSON.stringify(v); } catch(e) { v = "[Object]"; } }
+          
+          if (typeof v === "string" && v.length > 2000) {
+            // Only replace with image placeholder if it's likely an image field
+            if (k.toLowerCase().includes("image") || k.toLowerCase().includes("logo") || k.toLowerCase().includes("profile")) {
+              v = "/images/groceryPlaceholder.png";
+            } else {
+              // Otherwise just truncate
+              v = v.substring(0, 1000) + "... (truncated)";
+            }
+          }
+          out[k] = v;
+        }
+        return out;
+      });
+
+      const finalResults = sanitize(formattedProducts.slice(0, 15));
+      console.log(`[AI Search API] Returning ${finalResults.length} sanitized items to AI`);
       return res.status(200).json({ results: finalResults });
 
     } else if (action === "search_stores") {
@@ -376,30 +429,30 @@ export default async function handler(
 
       (result.Restaurants || []).forEach((r: any) => allStores.push({ type: "Restaurant", id: r.id, name: r.name, location: r.location, description: r.profile, phone: r.phone, email: r.email, latitude: r.lat, longitude: r.long, image: r.logo }));
       (result.business_stores || []).forEach((bs: any) => allStores.push({ type: "Business", id: bs.id, name: bs.name, description: bs.description, address: bs.address, category: bs.Category?.name, operating_hours: bs.operating_hours, latitude: bs.latitude, longitude: bs.longitude, image: bs.Category?.image }));
-      console.log(`[AI Search API] All Stores matched: ${allStores.length}`);
-      return res.status(200).json({ results: allStores });
-
-    } else if (action === "add_to_cart") {
-      const { product_id, shop_id, quantity = 1 } = params;
-      if (!product_id || !shop_id) {
-        return res.status(400).json({ error: "Missing product_id or shop_id" });
-      }
-      console.log(`[AI Cart] Adding product ${product_id} from shop ${shop_id} x${quantity}`);
-
-      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3000}`;
-      const cartRes = await fetch(`${baseUrl}/api/cart-items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: req.headers.cookie || "",
-        },
-        body: JSON.stringify({ shop_id, product_id, quantity: Number(quantity) }),
+      // Sanitation for store results too
+      const sanitize = (list: any[]) => list.map(item => {
+        const out: any = {};
+        for (const k in item) {
+          let v = item[k];
+          if (v === null || v === undefined) { out[k] = ""; continue; }
+          if (typeof v === "object") { try { v = JSON.stringify(v); } catch(e) { v = "[Object]"; } }
+          
+          if (typeof v === "string" && v.length > 2000) {
+            if (k.toLowerCase().includes("image") || k.toLowerCase().includes("logo") || k.toLowerCase().includes("profile")) {
+              v = "/images/groceryPlaceholder.png";
+            } else {
+              v = v.substring(0, 1000) + "... (truncated)";
+            }
+          }
+          out[k] = v;
+        }
+        return out;
       });
-      const cartData = await cartRes.json();
-      if (!cartRes.ok) {
-        return res.status(cartRes.status).json({ error: cartData.error || "Failed to add to cart" });
-      }
-      return res.status(200).json({ success: true, cart: cartData });
+
+      const sanitizedStores = sanitize(allStores);
+      console.log(`[AI Search API] All Stores matched: ${sanitizedStores.length}`);
+      return res.status(200).json({ results: sanitizedStores });
+
     }
 
     return res.status(400).json({ error: "Unknown action" });
