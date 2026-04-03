@@ -18,15 +18,33 @@ interface CartConfirmPayload {
   dish_payload?: any;
 }
 
+interface CheckoutConfirmPayload {
+  shop_id: string;
+  shop_name: string;
+  subtotal: number;
+  service_fee: number;
+  delivery_fee: number;
+  total: number;
+  address_id: string;
+  address_street: string;
+  payment_method_id: string;
+  payment_method_name: string;
+  payment_method_type: string;
+  pricing_token: string;
+  is_food?: boolean;
+}
+
 interface Message {
   id: string;
   text: string;
   sender: "user" | "ai";
   timestamp: Date;
-  // Optional: cart confirmation action card
+  // Optional: action cards
   cartConfirm?: CartConfirmPayload;
-  cartAdded?: boolean; // true after successful add
-  isComplete?: boolean; // true after streaming finishes
+  cartAdded?: boolean;
+  checkoutConfirm?: CheckoutConfirmPayload;
+  checkoutPlaced?: boolean;
+  isComplete?: boolean;
 }
 
 interface AIChatWindowProps {
@@ -113,6 +131,98 @@ function CartConfirmCard({
               onClick={() => onDecline(msgId)}
               className="flex-1 rounded-2xl border border-gray-200 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
             >No thanks</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Checkout Confirmation Card ───────────────────────────────────────────────
+function CheckoutConfirmCard({
+  msgId,
+  payload,
+  isDone,
+  onConfirm,
+  onDecline,
+}: {
+  msgId: string;
+  payload: CheckoutConfirmPayload;
+  isDone?: boolean;
+  onConfirm: (msgId: string, payload: CheckoutConfirmPayload) => void;
+  onDecline: (msgId: string) => void;
+}) {
+  if (isDone) {
+    return (
+      <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
+        <div className="max-w-[85%] rounded-3xl rounded-tl-sm border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/30">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white text-lg">✓</div>
+            <div>
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Order Placed!</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">Total: {payload.total.toLocaleString()} RWF</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="max-w-[85%] overflow-hidden rounded-3xl rounded-tl-sm border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="bg-gradient-to-r from-[#064e3b] to-[#047857] px-4 py-3 text-white">
+          <h4 className="text-sm font-bold">Order Summary</h4>
+          <p className="text-[10px] opacity-80">{payload.shop_name}</p>
+        </div>
+        <div className="space-y-2 p-4">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>Subtotal</span>
+            <span>{payload.subtotal.toLocaleString()} RWF</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>Delivery Fee</span>
+            <span>{payload.delivery_fee.toLocaleString()} RWF</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>Service Fee</span>
+            <span>{payload.service_fee.toLocaleString()} RWF</span>
+          </div>
+          <div className="border-t border-gray-100 pt-2 dark:border-gray-700">
+            <div className="flex justify-between text-sm font-bold text-gray-800 dark:text-white">
+              <span>Total Payable</span>
+              <span className="text-emerald-600 dark:text-emerald-400">{payload.total.toLocaleString()} RWF</span>
+            </div>
+          </div>
+          
+          {/* Address & Payment Info */}
+          <div className="mt-4 space-y-3 rounded-2xl bg-gray-50 p-3 dark:bg-gray-700/50">
+            <div className="flex items-start gap-2">
+              <svg className="mt-0.5 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Delivery To</p>
+                <p className="truncate text-xs text-gray-700 dark:text-gray-300">{payload.address_street}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <svg className="mt-0.5 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Payment Method</p>
+                <p className="truncate text-xs text-gray-700 dark:text-gray-300">{payload.payment_method_name} ({payload.payment_method_type})</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => onConfirm(msgId, payload)}
+              className="flex-1 rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-2.5 text-sm font-bold text-white shadow-md transition hover:scale-[1.02] active:scale-95"
+            >
+              Confirm &amp; Place Order
+            </button>
+            <button
+              onClick={() => onDecline(msgId)}
+              className="rounded-2xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
+            >Cancel</button>
           </div>
         </div>
       </div>
@@ -324,6 +434,46 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 },
                 required: ["product_name", "price", "ordering_payload"]
               }
+            },
+            {
+              name: "get_user_checkout_details",
+              description: "Fetch the user's saved delivery addresses and payment methods. Use this to prepare for checkout.",
+              parameters: { type: "OBJECT", properties: {} }
+            },
+            {
+              name: "get_order_preview",
+              description: "Calculate final totals (delivery fee, service fee) for an order at a specific shop and address. Use the shop_id from the product/store search and address_id from user details.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  shop_id: { type: "STRING", description: "The shop unique ID." },
+                  address_id: { type: "STRING", description: "The unique ID of the delivery address." }
+                },
+                required: ["shop_id", "address_id"]
+              }
+            },
+            {
+              name: "place_order",
+              description: "Place the final order. Requires the pricing_token from the order preview and selected IDs for address and payment method.",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  shop_id: { type: "STRING" },
+                  shop_name: { type: "STRING" },
+                  address_id: { type: "STRING" },
+                  address_street: { type: "STRING" },
+                  payment_method_id: { type: "STRING" },
+                  payment_method_name: { type: "STRING" },
+                  payment_method_type: { type: "STRING" },
+                  subtotal: { type: "NUMBER" },
+                  service_fee: { type: "NUMBER" },
+                  delivery_fee: { type: "NUMBER" },
+                  total: { type: "NUMBER" },
+                  pricing_token: { type: "STRING" },
+                  is_food: { type: "BOOLEAN" }
+                },
+                required: ["shop_id", "address_id", "payment_method_id", "pricing_token"]
+              }
             }
           ]
         } as any]
@@ -351,7 +501,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         history,
         systemInstruction: {
           role: "system",
-          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app. You can help with shopping, orders, food recommendations, store locations, recipes, and food-related topics!\n\nYou have access to FIVE tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches TheMealDB for cooking instructions.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n\nCRITICAL RULES:\n- NEVER hallucinate or make up products, prices, or images. Only use what the tools return.\n- When you search for products, results include an 'ordering_payload' string for each item. NEVER make up your own IDs or payloads. If results are empty, tell the user you couldn't find anything.\n- To add an item, you MUST call "add_to_cart" and pass the EXACT 'ordering_payload' string found in the search result for that specific item.\n- ALWAYS ask for explicit confirmation before adding an item.\n- IMAGES: Tool results may contain huge Base64 strings. ALWAYS output them exactly as provided in markdown format, e.g., ![Logo](image_string). If the string looks truncated in the tool output, still use it; our system will handle the fallback.\n\nThe current date and time is ${new Date().toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}. \n\nFormatting rules:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Store Name**\n- Restaurants: [![Logo](image_url)](/restaurant/id) **Restaurant Name**\n- Businesses: [![Logo](image_url)](/plasBusiness/store/id) **Business Name**\n- Recipes: [![Thumb](image_url)](/Recipes/recipe_id) **Recipe Name**\n- Use • bullets. Keep responses concise.` }]
+          parts: [{ text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.` }]
         },
       });
 
@@ -472,6 +622,24 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             // If the AI has more tools to call after add_to_cart, the loop continues.
             // Usually it stops here or sends text.
             continue; 
+          } else if (fnName === "place_order") {
+            setIsTyping(false);
+            setMessages(prev => prev.map(m => m.id === responseId ? { ...m, isComplete: true } : m));
+            setMessages(prev => [...prev, {
+              id: (Date.now() + 2).toString(),
+              text: "",
+              sender: "ai",
+              timestamp: new Date(),
+              checkoutConfirm: args as any,
+              isComplete: true,
+            }]);
+            currentFunctionCall = await handleStream([{
+              functionResponse: {
+                name: fnName,
+                response: { status: "checkout_confirm_shown", message: "Checkout confirmation card shown. User must click confirm to proceed." }
+              }
+            }]);
+            continue;
           }
 
           // Default API call flow (for search tools)
@@ -487,7 +655,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           currentFunctionCall = await handleStream([{
             functionResponse: {
               name: fnName,
-              response: { results: data.results || [] }
+              response: data.results ? { results: data.results } : data
             }
           }]);
           
@@ -582,6 +750,66 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     }]);
   };
 
+  const handleConfirmCheckout = async (msgId: string, payload: CheckoutConfirmPayload) => {
+    console.log("[AI Chat] Confirming checkout:", payload);
+    try {
+      const endpoint = payload.is_food ? "/api/food-checkout" : "/api/checkout";
+      
+      // Prepare payload for backend API
+      const checkoutBody: any = {
+        shop_id: payload.shop_id,
+        delivery_address_id: payload.address_id,
+        service_fee: Math.round(payload.service_fee).toString(),
+        delivery_fee: Math.round(payload.delivery_fee).toString(),
+        delivery_time: new Date(Date.now() + 45 * 60000).toISOString(), // +45 mins default
+        pricing_token: payload.pricing_token,
+        subtotal: payload.subtotal,
+        payment_method: payload.payment_method_type,
+        payment_method_id: payload.payment_method_id,
+        items_count: 0, // Backend will re-calculate from cart
+      };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(checkoutBody)
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Checkout failed");
+      }
+
+      // Mark as placed
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, checkoutPlaced: true } : m));
+
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 4).toString(),
+        text: `🎉 **Success!** Your order for **${payload.shop_name}** has been placed! \n\n${payload.payment_method_type === "mobile_money" ? "Please **check your phone** for the MoMo payment prompt to complete the order." : "Your delivery is being prepared."}`,
+        sender: "ai",
+        timestamp: new Date(),
+      }]);
+    } catch (err: any) {
+      console.error("[AI Chat] Checkout error:", err);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 4).toString(),
+        text: `❌ **Checkout Failed**: ${err.message || "Something went wrong while placing your order."}`,
+        sender: "ai",
+        timestamp: new Date(),
+      }]);
+    }
+  };
+
+  const handleDeclineCheckout = (msgId: string) => {
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, checkoutPlaced: false, checkoutConfirm: undefined } : m));
+    setMessages(prev => [...prev, {
+      id: (Date.now() + 4).toString(),
+      text: `Order cancelled. I'm still here if you'd like to try something else!`,
+      sender: "ai",
+      timestamp: new Date(),
+    }]);
+  };
+
 
   if (!isOpen) return null;
 
@@ -650,7 +878,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         {/* Messages */}
         <div className="flex-1 space-y-5 overflow-y-auto p-5 pb-6">
           {messages.map((message) => {
-            // Cart confirmation card — special render
+            // 1. Cart confirmation card
             if (message.cartConfirm && message.cartConfirm.quantity !== -1) {
               return (
                 <CartConfirmCard
@@ -664,41 +892,55 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               );
             }
 
-            // Standard message bubble
-            return (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              } animate-in fade-in slide-in-from-bottom-3 duration-300`}
-            >
-              <div
-                className={`max-w-[85%] rounded-3xl px-5 py-3.5 shadow-sm ${
-                  message.sender === "user"
-                    ? "rounded-tr-sm bg-gradient-to-br from-[#115e59] to-[#047857] text-white shadow-[#115e59]/20"
-                    : "rounded-tl-sm bg-white border border-gray-100 text-gray-800 shadow-gray-200/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:shadow-none"
-                }`}
-              >
-                <div 
-                  className="text-sm leading-relaxed whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessageText(message.text, message.isComplete)
-                  }}
+            // 2. Checkout confirmation card
+            if (message.checkoutConfirm) {
+              return (
+                <CheckoutConfirmCard
+                  key={message.id}
+                  msgId={message.id}
+                  payload={message.checkoutConfirm}
+                  isDone={message.checkoutPlaced}
+                  onConfirm={handleConfirmCheckout}
+                  onDecline={handleDeclineCheckout}
                 />
-                <span
-                  className={`mt-2 block text-[10px] font-medium tracking-wider uppercase ${
+              );
+            }
+
+            // 3. Standard message bubble
+            return (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
+                } animate-in fade-in slide-in-from-bottom-3 duration-300`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-3xl px-5 py-3.5 shadow-sm ${
                     message.sender === "user"
-                      ? "text-white/60"
-                      : "text-gray-400 dark:text-gray-500"
+                      ? "rounded-tr-sm bg-gradient-to-br from-[#115e59] to-[#047857] text-white shadow-[#115e59]/20"
+                      : "rounded-tl-sm bg-white border border-gray-100 text-gray-800 shadow-gray-200/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:shadow-none"
                   }`}
                 >
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+                  <div 
+                    className="text-sm leading-relaxed whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: formatMessageText(message.text, message.isComplete)
+                    }}
+                  />
+                  <span
+                    className={`mt-2 block text-[10px] font-medium tracking-wider uppercase ${
+                      message.sender === "user"
+                        ? "text-white/60"
+                        : "text-gray-400 dark:text-gray-500"
+                    }`}
+                  >
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
               </div>
-            </div>
             );
           })}
 

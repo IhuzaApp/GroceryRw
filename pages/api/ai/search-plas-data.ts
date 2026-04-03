@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 
 const SEARCH_ALL_PRODUCTS = gql`
  query SearchAllProducts($keyword: String!, $shopKeyword: String!) {
@@ -237,6 +239,86 @@ const SEARCH_ALL_STORES = gql`
 
 `;
 
+const GET_ADDRESSES = gql`
+  query GetAddresses($user_id: uuid!) {
+    Addresses(where: { user_id: { _eq: $user_id } }) {
+      id
+      street
+      city
+      postal_code
+      is_default
+      latitude
+      longitude
+    }
+  }
+`;
+
+const GET_PAYMENT_METHODS = gql`
+  query GetPaymentMethods($user_id: uuid!) {
+    Payment_Methods(where: { user_id: { _eq: $user_id } }) {
+      id
+      method
+      names
+      number
+      is_default
+    }
+    personalWallet(where: { user_id: { _eq: $user_id } }) {
+      balance
+    }
+    Refunds(where: { user_id: { _eq: $user_id }, paid: { _eq: false } }) {
+      id
+      amount
+    }
+  }
+`;
+
+const GET_SYSTEM_CONFIG = gql`
+  query GetSystemConfig {
+    system_configuration {
+      baseDeliveryFee
+      serviceFee
+      shoppingTime
+      unitsSurcharge
+      extraUnits
+      cappedDistanceFee
+      distanceSurcharge
+      currency
+    }
+  }
+`;
+
+const GET_CART_WITH_ITEMS = gql`
+  query GetCartWithItems($user_id: uuid!, $shop_id: uuid!) {
+    Carts(where: {user_id: {_eq: $user_id}, shop_id: {_eq: $shop_id}, is_active: {_eq: true}}, limit: 1) {
+      id
+      Cart_Items {
+        product_id
+        quantity
+        price
+        Product {
+          price
+          final_price
+        }
+      }
+      Shop {
+        id
+        name
+        latitude
+        longitude
+      }
+    }
+  }
+`;
+
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -449,10 +531,91 @@ export default async function handler(
         return out;
       });
 
-      const sanitizedStores = sanitize(allStores);
       console.log(`[AI Search API] All Stores matched: ${sanitizedStores.length}`);
       return res.status(200).json({ results: sanitizedStores });
 
+    } else if (action === "get_user_checkout_details") {
+      const session = await getServerSession(req, res, authOptions as any) as any;
+      if (!session?.user?.id) return res.status(401).json({ error: "Unauthorized" });
+      const user_id = session.user.id;
+
+      const [addrRes, payRes] = await Promise.all([
+        hasuraClient.request<any>(GET_ADDRESSES, { user_id }),
+        hasuraClient.request<any>(GET_PAYMENT_METHODS, { user_id })
+      ]);
+
+      const wallet = payRes.personalWallet?.[0];
+      const refunds = payRes.Refunds || [];
+      const totalRefund = refunds.reduce((sum: number, r: any) => sum + parseFloat(r.amount || "0"), 0);
+
+      return res.status(200).json({
+        addresses: addrRes.Addresses,
+        payment_methods: payRes.Payment_Methods,
+        wallet_balance: wallet?.balance || "0",
+        refund_balance: totalRefund.toString()
+      });
+
+    } else if (action === "get_order_preview") {
+      const { shop_id, address_id } = params;
+      const session = await getServerSession(req, res, authOptions as any) as any;
+      if (!session?.user?.id) return res.status(401).json({ error: "Unauthorized" });
+      const user_id = session.user.id;
+
+      const [cartData, configData] = await Promise.all([
+        hasuraClient.request<any>(GET_CART_WITH_ITEMS, { user_id, shop_id: shop_id || params.shopId }),
+        hasuraClient.request<any>(GET_SYSTEM_CONFIG)
+      ]);
+
+      const cart = cartData.Carts?.[0];
+      if (!cart) return res.status(400).json({ error: "No active cart found" });
+      const config = configData.system_configuration?.[0];
+
+      // Use the provided address or default from DB
+      let selectedAddr = null;
+      if (address_id) {
+         const addrRes = await hasuraClient.request<any>(gql`query($id: uuid!) { Addresses_by_pk(id: $id) { id latitude longitude street } }`, { id: address_id });
+         selectedAddr = addrRes.Addresses_by_pk;
+      } else {
+         const addrRes = await hasuraClient.request<any>(GET_ADDRESSES, { user_id });
+         selectedAddr = addrRes.Addresses.find((a: any) => a.is_default) || addrRes.Addresses[0];
+      }
+
+      if (!selectedAddr) return res.status(400).json({ error: "No delivery address found" });
+
+      // Calculate Subtotal
+      const subtotal = cart.Cart_Items.reduce((sum: number, item: any) => sum + (parseFloat(item.price) * item.quantity), 0);
+      const units = cart.Cart_Items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+
+      // Fee Logic (simplified from checkoutCard.tsx)
+      const serviceFee = config ? parseInt(config.serviceFee) : 0;
+      const baseDeliveryFee = config ? parseInt(config.baseDeliveryFee) : 0;
+      const extraUnits = Math.max(0, units - (config ? parseInt(config.extraUnits) : 0));
+      const unitsSurcharge = extraUnits * (config ? parseInt(config.unitsSurcharge) : 0);
+
+      let distanceKm = 0;
+      if (cart.Shop?.latitude && selectedAddr.latitude) {
+        distanceKm = getDistanceFromLatLonInKm(
+          parseFloat(cart.Shop.latitude), parseFloat(cart.Shop.longitude),
+          parseFloat(selectedAddr.latitude), parseFloat(selectedAddr.longitude)
+        );
+      }
+      const distanceSurcharge = Math.ceil(Math.max(0, distanceKm - 3)) * (config ? parseInt(config.distanceSurcharge) : 0);
+      const deliveryFee = Math.min(config ? parseInt(config.cappedDistanceFee) : 2500, baseDeliveryFee + distanceSurcharge) + unitsSurcharge;
+
+      // Pricing Token (simplified version of backend logic)
+      const pricing_token = require("crypto").createHash("sha256").update(JSON.stringify({
+        cart_id: cart.id, items: units, subtotal: subtotal, total_discount: 0, timestamp: Math.floor(Date.now() / 60000)
+      })).digest("hex");
+
+      return res.status(200).json({
+        subtotal,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        total: subtotal + serviceFee + deliveryFee,
+        address: selectedAddr,
+        pricing_token,
+        shop_name: cart.Shop?.name
+      });
     }
 
     return res.status(400).json({ error: "Unknown action" });
