@@ -481,6 +481,13 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
       const model = getGenerativeModel(ai, { 
         model: "gemini-2.5-flash",
+        systemInstruction: "You are Plas Agent, a helpful grocery and dining assistant. " +
+          "When a user wants to checkout or make a payment, you MUST: " +
+          "1. Call 'get_active_carts' to find their cart. " +
+          "2. Call 'get_user_checkout_details' to get their delivery and payment options. " +
+          "3. Call 'get_order_preview' to calculate the final amount. " +
+          "4. MANDATORY: Call 'show_checkout_form' with the results. " +
+          "NEVER just summarize the details in text. You MUST present the interactive form so the user can finalize the order.",
         tools: [{
           functionDeclarations: [
             {
