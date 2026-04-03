@@ -66,6 +66,13 @@ interface AIChatWindowProps {
   onClose: () => void;
 }
 
+interface AIUsageStatus {
+  usageCount: number;
+  limit: number;
+  isSubscribed: boolean;
+  isBlocked: boolean;
+}
+
 // ─── Cart Confirmation Card ────────────────────────────────────────────────────
 function CartConfirmCard({
   msgId,
@@ -515,7 +522,61 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [usageStatus, setUsageStatus] = useState<AIUsageStatus | null>(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribePhone, setSubscribePhone] = useState("");
+  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
+  
   const pollIntervals = useRef<{ [msgId: string]: NodeJS.Timeout }>({});
+
+  const getPushSubscriptionDetails = async () => {
+    try {
+      if (!("serviceWorker" in navigator)) return null;
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (!subscription) return null;
+      
+      const json = subscription.toJSON();
+      return {
+        endpoint: json.endpoint,
+        p256dh: json.keys?.p256dh,
+        auth: json.keys?.auth
+      };
+    } catch (e) {
+      console.error("Failed to get push subscription", e);
+      return null;
+    }
+  };
+
+  const fetchUsageStatus = async () => {
+    try {
+      const device = await getPushSubscriptionDetails();
+      const res = await fetch("/api/ai/usage-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ p256dh: device?.p256dh || "" })
+      });
+      const data = await res.json();
+      setUsageStatus(data);
+    } catch (e) {
+      console.error("Failed to fetch usage status", e);
+    }
+  };
+
+  const incrementUsage = async () => {
+    try {
+      await fetch("/api/ai/increment-usage", { method: "POST" });
+      fetchUsageStatus(); // Refresh locally
+    } catch (e) {
+      console.error("Failed to increment usage", e);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsageStatus();
+    }
+  }, [isOpen]);
 
   // Cleanup intervals on unmount
   useEffect(() => {
@@ -523,6 +584,31 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       Object.values(pollIntervals.current).forEach(clearInterval);
     };
   }, []);
+
+  const handleSubscribe = async () => {
+    if (!subscribePhone || isSubscribing) return;
+    setIsSubscribing(true);
+    try {
+      const res = await fetch("/api/ai/create-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: subscribePhone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Please check your phone for the MoMo payment prompt.");
+        setShowSubscriptionPrompt(false);
+      } else {
+        alert(data.error || "Subscription failed");
+      }
+    } catch (e) {
+      // @ts-ignore
+      reportError("AIChat:handleSubscribe", e);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -914,6 +1000,9 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
       // Mark the final AI response as complete
       setMessages(prev => prev.map(m => m.id === responseId ? { ...m, isComplete: true } : m));
+      
+      // Increment usage count
+      incrementUsage();
 
       if (isFirstChunk) { // Fallback if stream was empty
         setIsTyping(false);
@@ -1154,6 +1243,64 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
       {/* Chat Window */}
       <div className="fixed inset-0 z-[10000] flex flex-col overflow-hidden bg-white/95 backdrop-blur-2xl transition-all duration-300 dark:bg-gray-900/95 md:inset-auto md:bottom-24 md:right-6 md:h-[600px] md:w-full md:max-w-md md:rounded-3xl md:border md:border-white/20 md:shadow-[0_20px_50px_-12px_rgba(17,94,89,0.3)] dark:md:border-gray-700/50">
+        
+        {/* Usage Overlay */}
+        {usageStatus?.isBlocked && (
+          <div className="absolute inset-0 z-[10001] flex flex-col items-center justify-center bg-white/90 p-8 text-center backdrop-blur-md dark:bg-gray-900/90">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v3m0-3h3m-3 0H9m12-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-xl font-bold">Free Trial Limit Reached</h3>
+            <p className="mb-8 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              You've used all 20 free AI requests for this month. 
+              Upgrade to <strong className="text-gray-800 dark:text-gray-200">AI Assistant Plus</strong> for 100 requests per month!
+            </p>
+            
+            {!showSubscriptionPrompt ? (
+              <button 
+                onClick={() => setShowSubscriptionPrompt(true)}
+                className="w-full rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#115e59]/20 transition hover:scale-[1.02] active:scale-95"
+              >
+                Upgrade for 1,000 RWF / month
+              </button>
+            ) : (
+              <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                <input 
+                  type="text"
+                  placeholder="Enter MoMo Number (e.g. 078...)"
+                  value={subscribePhone}
+                  onChange={(e) => setSubscribePhone(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-[#115e59] focus:outline-none focus:ring-2 focus:ring-[#115e59]/20 dark:border-gray-700 dark:bg-gray-800"
+                />
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setShowSubscriptionPrompt(false)}
+                    className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSubscribe}
+                    disabled={isSubscribing || !subscribePhone}
+                    className="flex-[2] rounded-xl bg-gradient-to-r from-[#115e59] to-[#047857] py-2.5 text-xs font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isSubscribing ? "Processing..." : "Pay with MoMo"}
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <button 
+              onClick={onClose}
+              className="mt-6 text-xs font-semibold text-gray-400 underline-offset-4 transition hover:text-gray-600 hover:underline dark:hover:text-gray-200"
+            >
+              I'll do it later
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="relative flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#064e3b] via-[#115e59] to-[#047857] px-6 py-4 shadow-md">
           {/* Subtle lime accent line */}
@@ -1315,11 +1462,12 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask anything..."
-              className="flex-1 rounded-full border border-gray-200 bg-gray-50/50 px-5 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 shadow-inner focus:border-[#84cc16] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#84cc16]/10 transition-all dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-100 dark:focus:bg-gray-800"
+              disabled={!usageStatus || usageStatus.isBlocked}
+              className="flex-1 rounded-full border border-gray-200 bg-gray-50/50 px-5 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 shadow-inner focus:border-[#84cc16] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#84cc16]/10 transition-all dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-100 dark:focus:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping}
+              disabled={!inputValue.trim() || isTyping || !usageStatus || usageStatus.isBlocked}
               className="group flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#115e59] to-[#047857] text-white shadow-md shadow-[#115e59]/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#115e59]/40 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
               aria-label="Send message"
             >
