@@ -1155,8 +1155,23 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   },
                   required: ["pin", "order_source", "description", "issue_type"],
                 },
+              },
+              {
+                name: "follow_up_issue",
+                description:
+                  "Follow up on an existing delivery issue or support ticket. Ask the user for the tracking code, their urgency (low, medium, high), and any additional message they have.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    tracking_code: { type: "STRING", description: "The integer tracking code." },
+                    urgency: { type: "STRING", description: "low, medium, or high" },
+                    message: { type: "STRING", description: "The follow up message." }
+                  },
+                  required: ["tracking_code", "urgency", "message"],
+                },
               }
             ],
+
           } as any,
         ],
       });
@@ -1187,7 +1202,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           role: "system",
           parts: [
             {
-              text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nSUPPORT & DELIVERY ISSUES:\n- For general account/app issues, call 'create_support_ticket'.\n- For delivery issues (broken items, wrong orders, shopper complaints), ask for the order PIN and where they ordered from (shop, restaurant, reel, business, package), then call 'report_delivery_issue'.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.`,
+              text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nSUPPORT & DELIVERY ISSUES:\n- For general account/app issues, call 'create_support_ticket'.\n- For delivery issues, you MUST collect info by asking ONE question at a time:\n  1) What is the order PIN or delivery code?\n  2) Where did you order from (e.g., shop, restaurant, reel, store, or plas package)?\n  3) Please describe the issue in detail.\n  4) What type of issue is it?\n- When you have all the information, tell the user "Allow me to process this..." and call 'report_delivery_issue'. Remember to map "store" -> "business" and "plas package" -> "package" in the tool parameters.\n- For BOTH support tickets and delivery issues, the system will return a 'code' (e.g. 129). You MUST share this generated tracking code exactly with the user and state they can use it to follow up. Let them know an agent will contact them in 10-20 mins.\n- If a user wants to follow up on an issue, you MUST ask for their tracking code if not provided, how urgent it is (low/medium/high), and their message. Then call 'follow_up_issue'.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.`,
             },
           ],
         },
@@ -1409,6 +1424,19 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             continue;
           } else if (fnName === "report_delivery_issue") {
             const res = await fetch("/api/queries/delivery-issues", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(args),
+            });
+            const data = await res.json();
+            currentFunctionCall = await handleStream([
+              {
+                functionResponse: { name: fnName, response: data },
+              },
+            ]);
+            continue;
+          } else if (fnName === "follow_up_issue") {
+            const res = await fetch("/api/ai/follow-up-issue", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(args),
@@ -1796,11 +1824,12 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         image = await getDownloadURL(snapshot.ref);
       }
 
-      await fetch("/api/queries/delivery-issues", {
+      const res = await fetch("/api/queries/delivery-issues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload, image }),
       });
+      const data = await res.json();
 
       setMessages((prev) => [
         ...prev.map((m) =>
@@ -1808,7 +1837,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         ),
         {
           id: (Date.now() + 1).toString(),
-          text: "I have completed reporting your issue. The Agent will contact you in 10 to 20 minutes, but also expect it to be resolved below that time.",
+          text: `I have completed reporting your issue.\n\n**Tracking Code:** #${data.code || "PENDING"}\n\nThe Agent will contact you in 10 to 20 minutes, but also expect it to be resolved below that time. You can use this tracking code to follow up!`,
           sender: "ai",
           timestamp: new Date(),
           isComplete: true,

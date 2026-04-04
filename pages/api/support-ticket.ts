@@ -134,7 +134,7 @@ export default async function handler(
         userPhone: session.user?.phone ?? undefined,
         ticketNum,
       });
-      return res.status(200).json({ success: true });
+      return res.status(200).json({ success: true, code: ticketNum });
     }
 
     if (!("orderId" in body) || !("orderType" in body)) {
@@ -188,7 +188,7 @@ export default async function handler(
     };
     await sendSupportTicketToSlack(slackPayload);
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, code: ticketNum });
   } catch (err) {
     console.error("Support ticket error:", err);
     const body = req.body as Body | undefined;

@@ -34,6 +34,9 @@ const ADD_DELIVERY_ISSUE = gql`
   mutation AddDeliveryIssue($description: String = "", $issue_type: String = "", $order_id: uuid, $priority: String = "", $status: String = "", $user_id: uuid, $updated_at: timestamptz, $package_id: uuid, $business_order_id: uuid, $reel_order_id: uuid, $shopper_id: uuid, $image: String) {
     insert_Delivery_Issues(objects: {description: $description, issue_type: $issue_type, order_id: $order_id, priority: $priority, status: $status, user_id: $user_id, updated_at: $updated_at, package_id: $package_id, business_order_id: $business_order_id, reel_order_id: $reel_order_id, shopper_id: $shopper_id, image: $image}) {
       affected_rows
+      returning {
+        code
+      }
     }
   }
 `;
@@ -124,7 +127,9 @@ export default async function handler(
         console.error("Slack notification failed for delivery issue:", err);
       }
 
-      return res.status(200).json({ success: true, affected_rows: mutRes?.insert_Delivery_Issues?.affected_rows });
+      const code = mutRes?.insert_Delivery_Issues?.returning?.[0]?.code;
+
+      return res.status(200).json({ success: true, affected_rows: mutRes?.insert_Delivery_Issues?.affected_rows, code });
     }
 
     const data = await hasuraClient.request<DeliveryIssuesResponse>(
