@@ -968,7 +968,8 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           "2. Call 'get_user_checkout_details' to get their delivery and payment options. " +
           "3. Call 'get_order_preview' to calculate the final amount. " +
           "4. MANDATORY: Call 'show_checkout_form' with the results. " +
-          "NEVER just summarize the details in text. You MUST present the interactive form so the user can finalize the order.",
+          "NEVER just summarize the details in text. You MUST present the interactive form so the user can finalize the order.\n" +
+          "SUPPORT & DELIVERY: For general issues use 'create_support_ticket'. For delivery issues (broken, missing), ask for PIN and source (shop, restaurant, reel, business, package) then call 'report_delivery_issue'.",
         tools: [
           {
             functionDeclarations: [
@@ -1127,6 +1128,34 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   ],
                 },
               },
+              {
+                name: "create_support_ticket",
+                description:
+                  "Create a support ticket for general issues (like account problems, app errors, wallet balances) or general questions about orders that are NOT delivery issues.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    requestType: { type: "STRING", description: "Must be 'general'" },
+                    message: { type: "STRING", description: "Detailed explanation of the issue." }
+                  },
+                  required: ["requestType", "message"],
+                },
+              },
+              {
+                name: "report_delivery_issue",
+                description:
+                  "Report a delivery issue (e.g. broken items, wrong delivery, complaints about the shopper). MUST ask the user for their order PIN and order source (shop, restaurant, reel, business, package) before calling this.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    pin: { type: "STRING", description: "The order PIN/DeliveryCode from the user." },
+                    order_source: { type: "STRING", description: "Source of the order: 'shop', 'restaurant', 'reel', 'business', or 'package'." },
+                    description: { type: "STRING", description: "Details about what went wrong with the delivery." },
+                    issue_type: { type: "STRING", description: "Type of issue, e.g., 'Broken Item', 'Wrong Item', 'Shopper Complaint'." }
+                  },
+                  required: ["pin", "order_source", "description", "issue_type"],
+                },
+              }
             ],
           } as any,
         ],
@@ -1158,7 +1187,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           role: "system",
           parts: [
             {
-              text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.`,
+              text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nSUPPORT & DELIVERY ISSUES:\n- For general account/app issues, call 'create_support_ticket'.\n- For delivery issues (broken items, wrong orders, shopper complaints), ask for the order PIN and where they ordered from (shop, restaurant, reel, business, package), then call 'report_delivery_issue'.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.`,
             },
           ],
         },
@@ -1362,6 +1391,32 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                       "Interactive checkout form shown. User must select details and click confirm to proceed.",
                   },
                 },
+              },
+            ]);
+            continue;
+          } else if (fnName === "create_support_ticket") {
+            const res = await fetch("/api/support-ticket", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(args),
+            });
+            const data = await res.json();
+            currentFunctionCall = await handleStream([
+              {
+                functionResponse: { name: fnName, response: data },
+              },
+            ]);
+            continue;
+          } else if (fnName === "report_delivery_issue") {
+            const res = await fetch("/api/queries/delivery-issues", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(args),
+            });
+            const data = await res.json();
+            currentFunctionCall = await handleStream([
+              {
+                functionResponse: { name: fnName, response: data },
               },
             ]);
             continue;
