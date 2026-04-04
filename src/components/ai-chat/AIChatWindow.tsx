@@ -1818,18 +1818,10 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                       (paymentError || "Please try again.")}
                   </p>
                 </div>
-                {(paymentStep === "error" ||
-                  paymentStep === "awaiting_approval" ||
-                  paymentStep === "success") && (
+                {(paymentStep === "error" || paymentStep === "success") && (
                   <button
                     onClick={() => {
                       if (paymentStep === "success") {
-                        fetchUsageStatus();
-                        onClose();
-                        setShowSubscriptionPrompt(false);
-                      }
-                      // If they click "I've Approved It", just reset UI locally, the cron/webhook handles DB
-                      else if (paymentStep === "awaiting_approval") {
                         fetchUsageStatus();
                         onClose();
                         setShowSubscriptionPrompt(false);
@@ -1840,8 +1832,6 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                   >
                     {paymentStep === "success"
                       ? "Continue Chatting"
-                      : paymentStep === "awaiting_approval"
-                      ? "I've Approved It"
                       : "Try Again"}
                   </button>
                 )}
