@@ -726,17 +726,28 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const shopCart = useCart();
   const foodCart = useFoodCart();
 
-  const getInitialMessage = () => ({
+  const AGENT_NAMES = ["Alice", "Alex", "Jon", "Sarah", "Michael", "Emma", "David", "Sophia", "Daniel", "Olivia"];
+  const [agentName, setAgentName] = useState("Plas Agent");
+
+  useEffect(() => {
+    if (isOpen) {
+      setAgentName(AGENT_NAMES[Math.floor(Math.random() * AGENT_NAMES.length)]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  const getInitialMessage = (name: string) => ({
     id: "1",
-    text: `Hey there, ${userName}! 👋 I'm Plas Agent, your personal grocery & dining assistant! Whether you're craving a quick bite, hunting for the best deals, or planning your weekly shopping, I'm here to help. What's on your mind today? 🍔🛒`,
+    text: `Hey there, ${userName}! 👋 I'm ${name}, your personal grocery & dining assistant! Whether you're craving a quick bite, hunting for the best deals, or planning your weekly shopping, I'm here to help. What's on your mind today? 🍔🛒`,
     sender: "ai" as const,
     timestamp: new Date(),
   });
 
-  const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage("Plas Agent")]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [usageStatus, setUsageStatus] = useState<AIUsageStatus | null>(null);
+  const [isLoadingUsage, setIsLoadingUsage] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscribePhone, setSubscribePhone] = useState("");
   const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
@@ -802,6 +813,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
   const fetchUsageStatus = async () => {
     try {
+      setIsLoadingUsage(true);
       const device = await getPushSubscriptionDetails();
       const res = await fetch("/api/ai/usage-status", {
         method: "POST",
@@ -819,6 +831,8 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         isSubscribed: false,
         isBlocked: false,
       });
+    } finally {
+      setIsLoadingUsage(false);
     }
   };
 
@@ -877,16 +891,16 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update initial message when user name changes (only if it's still the initial message)
+  // Update initial message when user name or agent name changes (only if it's still the initial message)
   useEffect(() => {
     if (messages.length === 1 && messages[0].id === "1") {
-      const newInitialMessage = getInitialMessage();
+      const newInitialMessage = getInitialMessage(agentName);
       if (messages[0].text !== newInitialMessage.text) {
         setMessages([newInitialMessage]);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userName]);
+  }, [userName, agentName]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -922,12 +936,12 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   // Hook dedicated ONLY to resetting the chat state when closing
   useEffect(() => {
     if (!isOpen) {
-      setMessages([getInitialMessage()]);
+      setMessages([getInitialMessage(agentName)]);
       setInputValue("");
       setIsTyping(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, agentName]);
 
   const handleSend = async () => {
     try {
@@ -962,7 +976,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       const model = getGenerativeModel(ai, {
         model: "gemini-2.5-flash",
         systemInstruction:
-          "You are Plas Agent, a helpful grocery and dining assistant. " +
+          `You are ${agentName}, a helpful grocery and dining assistant. ` +
           "When a user wants to checkout or make a payment, you MUST: " +
           "1. Call 'get_active_carts' to find their cart. " +
           "2. Call 'get_user_checkout_details' to get their delivery and payment options. " +
@@ -1202,7 +1216,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           role: "system",
           parts: [
             {
-              text: `You are Plas Agent, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nSUPPORT & DELIVERY ISSUES:\n- For general account/app issues, call 'create_support_ticket'.\n- For delivery issues, you MUST collect info by asking ONE question at a time:\n  1) What is the order PIN or delivery code?\n  2) Where did you order from (e.g., shop, restaurant, reel, store, or plas package)?\n  3) Please describe the issue in detail.\n  4) What type of issue is it?\n- When you have all the information, tell the user "Allow me to process this..." and call 'report_delivery_issue'. Remember to map "store" -> "business" and "plas package" -> "package" in the tool parameters.\n- For BOTH support tickets and delivery issues, the system will return a 'code' (e.g. 129). You MUST share this generated tracking code exactly with the user and state they can use it to follow up. Let them know an agent will contact them in 10-20 mins.\n- If a user wants to follow up on an issue, you MUST ask for their tracking code if not provided, how urgent it is (low/medium/high), and their message. Then call 'follow_up_issue'.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.`,
+              text: `You are ${agentName}, a helpful, friendly AI assistant for the Plas grocery & dining app.\n\nYou have access to several tools:\n1. search_products — searches real-time grocery inventory and restaurant dishes.\n2. search_stores — searches shops, restaurants, and businesses.\n3. search_recipes — searches recipes.\n4. search_web — searches the web for food/cooking topics.\n5. add_to_cart — adds an item to the user's cart.\n6. get_user_checkout_details — gets delivery addresses and payment methods.\n7. get_order_preview — calculates final totals and fees.\n8. place_order — initiates the final checkout.\n\nCHECKOUT FLOW:\n- When a user wants to checkout or place an order:\n  1. Call get_user_checkout_details to see their options.\n  2. If they have a default address, call get_order_preview with the shop_id and address_id.\n  3. Present the total and details to the user and call place_order to show the confirmation card.\n- MOMO PAYMENTS: Tell the user to check their phone for the payment prompt after placing the order.\n\nSUPPORT & DELIVERY ISSUES:\n- For general account/app issues, call 'create_support_ticket'.\n- For delivery issues, you MUST collect info by asking ONE question at a time:\n  1) What is the order PIN or delivery code?\n  2) Where did you order from (e.g., shop, restaurant, reel, store, or plas package)?\n  3) Please describe the issue in detail.\n  4) What type of issue is it?\n- When you have all the information, tell the user "Allow me to process this..." and call 'report_delivery_issue'. Remember to map "store" -> "business" and "plas package" -> "package" in the tool parameters.\n- For BOTH support tickets and delivery issues, the system will return a 'code' (e.g. 129). You MUST share this generated tracking code exactly with the user and state they can use it to follow up. Let them know an agent will contact them in 10-20 mins.\n- If a user wants to follow up on an issue, you MUST ask for their tracking code if not provided, how urgent it is (low/medium/high), and their message. Then call 'follow_up_issue'.\n\nCRITICAL RULES:\n- NEVER hallucinate IDs or prices. Only use tool-returned values.\n- Use the 'ordering_payload' exactly as provided.\n- Ask for confirmation before adding items or placing orders.\n\nFormatting:\n- Stores: [![Logo](image_url)](/shops/shop_id) **Name**\n- Recipes: [![Thumb](image_url)](/Recipes/id) **Name**\n- Keep responses concise.`,
             },
           ],
         },
@@ -1871,7 +1885,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       {/* Chat Window */}
       <div className="fixed inset-0 z-[10000] flex flex-col overflow-hidden bg-white/95 backdrop-blur-2xl transition-all duration-300 dark:bg-gray-900/95 md:inset-auto md:bottom-24 md:right-6 md:h-[600px] md:w-full md:max-w-md md:rounded-3xl md:border md:border-white/20 md:shadow-[0_20px_50px_-12px_rgba(17,94,89,0.3)] dark:md:border-gray-700/50">
         {/* Usage Overlay */}
-        {(!usageStatus || usageStatus?.isBlocked) && (
+        {isLoadingUsage ? (
+          <div className="absolute bottom-0 left-0 right-0 z-[10001] flex h-48 flex-col items-center justify-center rounded-b-3xl border-t border-gray-200 bg-white/95 px-6 py-6 text-center shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all duration-500 animate-in slide-in-from-bottom dark:bg-gray-900/95">
+            <Loader2 className="mb-3 h-8 w-8 animate-spin text-[#115e59] dark:text-[#84cc16]" />
+            <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+              Give me some time to find you an AI agent available...
+            </p>
+          </div>
+        ) : (!usageStatus || usageStatus?.isBlocked) && (
           <div className="absolute bottom-0 left-0 right-0 z-[10001] flex transform flex-col items-center justify-center rounded-b-3xl border-t border-gray-200 bg-white/95 px-6 py-6 text-center shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all duration-500 animate-in slide-in-from-bottom dark:bg-gray-900/95">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 shadow-inner dark:bg-amber-900/30 dark:text-amber-400">
               <svg
@@ -2030,7 +2051,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             </div>
             <div>
               <h3 className="text-lg font-bold tracking-tight text-white drop-shadow-sm">
-                Plas Agent
+                {agentName === "Plas Agent" ? "Plas Agent" : `${agentName} - Plas Agent`}
               </h3>
               <p className="text-xs font-medium text-[#84cc16]">
                 Online & Ready
