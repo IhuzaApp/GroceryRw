@@ -66,7 +66,7 @@ export default function AIChatButton({
   return (
     <button
       onClick={onClick}
-      className={`group fixed bottom-40 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-[#197a74] hover:shadow-xl active:scale-95 md:bottom-24 md:right-4 ${
+      className={`group fixed bottom-40 right-4 z-[100000] flex h-14 w-14 items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-[#197a74] hover:shadow-xl active:scale-95 md:bottom-24 md:right-4 ${
         hideOnMobile ? "hidden md:flex" : ""
       }`}
       aria-label="Open Plas Agent"

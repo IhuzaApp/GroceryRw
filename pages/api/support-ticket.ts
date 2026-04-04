@@ -15,8 +15,8 @@ const ADD_TICKET_REQUEST = gql`
     $priority: String = ""
     $status: String = ""
     $subject: String = ""
-    $user_id: uuid = ""
     $category: String = ""
+    $description: String = ""
   ) {
     insert_tickets(
       objects: {
@@ -25,6 +25,7 @@ const ADD_TICKET_REQUEST = gql`
         subject: $subject
         user_id: $user_id
         category: $category
+        description: $description
       }
     ) {
       affected_rows
@@ -119,6 +120,7 @@ export default async function handler(
           subject: "General Support Request",
           user_id: session.user?.id ?? "",
           category: "Customer",
+          description: message.trim(),
         });
         ticketNum = result?.insert_tickets?.returning?.[0]?.ticket_num;
       }
@@ -169,6 +171,7 @@ export default async function handler(
         subject,
         user_id: session.user?.id ?? "",
         category: "Customer",
+        description: message.trim(),
       });
       ticketNum = result?.insert_tickets?.returning?.[0]?.ticket_num;
     }

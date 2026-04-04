@@ -27,6 +27,7 @@ export default function ContactSupportModal({
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successCode, setSuccessCode] = useState<number | null>(null);
 
   const storeName =
     order?.shop?.name ??
@@ -64,9 +65,15 @@ export default function ContactSupportModal({
         setError(data.error ?? "Failed to submit. Please try again.");
         return;
       }
-      setMessage("");
-      onSuccess?.();
-      onClose();
+      
+      if (data.code) {
+        setSuccessCode(data.code);
+        onSuccess?.();
+      } else {
+        setMessage("");
+        onSuccess?.();
+        onClose();
+      }
     } catch (e) {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -78,6 +85,7 @@ export default function ContactSupportModal({
     if (!submitting) {
       setMessage("");
       setError(null);
+      setSuccessCode(null);
       onClose();
     }
   };
@@ -154,13 +162,33 @@ export default function ContactSupportModal({
           </button>
         </div>
 
-        {/* Body */}
         <div
           className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
             theme === "dark" ? "bg-gray-800" : "bg-white"
           }`}
         >
-          {error && (
+          {successCode ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center duration-300 animate-in fade-in zoom-in-95">
+              <div className="mb-5 rounded-full bg-emerald-100 p-4 shadow-inner dark:bg-emerald-900/40">
+                <svg className="h-12 w-12 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className={`mb-2 text-2xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                Ticket Created!
+              </h3>
+              <p className={`mb-6 text-base ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                Your tracking code is <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">#{successCode}</span>
+              </p>
+              <div className={`rounded-xl border p-4 text-sm ${theme === "dark" ? "border-gray-700 bg-gray-900/50" : "border-gray-200 bg-gray-50"}`}>
+                <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
+                  Save this code! You can provide it to our AI assistant later to follow up on your issue.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {error && (
             <div className="mb-6 flex items-start gap-3 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
               <svg
                 className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
@@ -255,6 +283,8 @@ export default function ContactSupportModal({
               } focus:ring-2 focus:ring-offset-0`}
             />
           </div>
+            </>
+          )}
         </div>
 
         {/* Footer */}
@@ -272,8 +302,9 @@ export default function ContactSupportModal({
             style={{ color: "white" }}
             type="button"
           >
-            <span className="!text-white">Cancel</span>
+            <span className="!text-white">{successCode ? "Close" : "Cancel"}</span>
           </button>
+          {!successCode && (
           <button
             onClick={handleSubmit}
             disabled={submitting}
@@ -323,6 +354,7 @@ export default function ContactSupportModal({
               </span>
             )}
           </button>
+          )}
         </div>
       </div>
     </div>
