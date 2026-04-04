@@ -146,7 +146,7 @@ export function SubmittedQuoteDetails({
         window.open(attachment, "_blank");
         return;
       }
-      
+
       const [mimeType, base64Data] = attachment.split(",");
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);

@@ -63,7 +63,7 @@ export default function HeaderLayout() {
         } else {
           setDefaultAddress(parsedAddress);
         }
-      } catch { }
+      } catch {}
     } else if (tempAddress) {
       // For guest users with temp address, create address object
       const lat = Cookies.get("user_latitude");
@@ -126,7 +126,7 @@ export default function HeaderLayout() {
           } else {
             setDefaultAddress(parsedAddress);
           }
-        } catch { }
+        } catch {}
       } else if (tempAddr) {
         // For guest users with temp address
         const lat = Cookies.get("user_latitude");
@@ -208,20 +208,22 @@ export default function HeaderLayout() {
         className="
           sticky top-0 z-40 mx-auto hidden
           w-full
-          border-b border-white/20 dark:border-white/10
-          bg-white/80 dark:bg-gray-900/80
-          backdrop-blur-xl
-          shadow-[0_2px_24px_0_rgba(0,0,0,0.08)] dark:shadow-[0_2px_24px_0_rgba(0,0,0,0.4)]
-          md:block
-          transition-all duration-300
+          border-b border-white/20 bg-white/80
+          shadow-[0_2px_24px_0_rgba(0,0,0,0.08)] backdrop-blur-xl
+          transition-all
+          duration-300 dark:border-white/10
+          dark:bg-gray-900/80
+          dark:shadow-[0_2px_24px_0_rgba(0,0,0,0.4)] md:block
         "
       >
         <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-6 px-6 py-2.5">
-
           {/* ── Left: Logo + Address ── */}
           <div className="flex shrink-0 items-center gap-3">
             {/* Logo */}
-            <Link href="/" className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95">
+            <Link
+              href="/"
+              className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
+            >
               <Image
                 src="/assets/logos/PlasIcon.png"
                 alt="Plas Logo"
@@ -238,8 +240,16 @@ export default function HeaderLayout() {
             >
               <div className="flex items-center gap-1.5">
                 {/* Location pin */}
-                <svg className="h-3.5 w-3.5 shrink-0 text-green-500 dark:text-green-400" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.003 3.5-4.697 3.5-8.327a8 8 0 10-16 0c0 3.63 1.556 6.326 3.5 8.327a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                <svg
+                  className="h-3.5 w-3.5 shrink-0 text-green-500 dark:text-green-400"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.003 3.5-4.697 3.5-8.327a8 8 0 10-16 0c0 3.63 1.556 6.326 3.5 8.327a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-green-600 dark:text-green-400">
                   Deliver to
@@ -250,15 +260,15 @@ export default function HeaderLayout() {
                   ? defaultAddress.street && defaultAddress.city
                     ? `${defaultAddress.street}, ${defaultAddress.city}`
                     : defaultAddress.latitude && defaultAddress.longitude
-                      ? "Current Location"
-                      : "Set address"
+                    ? "Current Location"
+                    : "Set address"
                   : "Set address"}
               </span>
             </button>
           </div>
 
           {/* ── Center: Search ── */}
-          <div className="min-w-0 flex-1 max-w-xl">
+          <div className="min-w-0 max-w-xl flex-1">
             <SearchBar />
           </div>
 
@@ -270,14 +280,14 @@ export default function HeaderLayout() {
               title="Send a Package"
               className="
                 group relative flex h-9 w-9 items-center justify-center rounded-xl
-                text-gray-600 dark:text-gray-300
-                transition-all duration-200
-                hover:bg-green-50 hover:text-green-600
-                dark:hover:bg-green-900/20 dark:hover:text-green-400
-                active:scale-90
+                text-gray-600 transition-all
+                duration-200 hover:bg-green-50
+                hover:text-green-600 active:scale-90
+                dark:text-gray-300 dark:hover:bg-green-900/20
+                dark:hover:text-green-400
               "
             >
-               <svg
+              <svg
                 width="24px"
                 height="24px"
                 viewBox="0 0 24 24"
@@ -313,12 +323,26 @@ export default function HeaderLayout() {
                 "
               >
                 {/* Person outline */}
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
                 </svg>
                 Guest
                 {/* Sparkle/upgrade indicator */}
-                <svg className="h-3.5 w-3.5 opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-3.5 w-3.5 opacity-80"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" />
                 </svg>
               </button>
@@ -330,25 +354,45 @@ export default function HeaderLayout() {
             {/* Theme Toggle */}
             <button
               onClick={handleThemeToggle}
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={
+                theme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
               className="
                 group relative flex h-9 w-9 items-center justify-center rounded-xl
-                text-gray-500 dark:text-gray-400
-                transition-all duration-200
-                hover:bg-amber-50 hover:text-amber-500
-                dark:hover:bg-amber-900/20 dark:hover:text-amber-400
-                active:scale-90
+                text-gray-500 transition-all
+                duration-200 hover:bg-amber-50
+                hover:text-amber-500 active:scale-90
+                dark:text-gray-400 dark:hover:bg-amber-900/20
+                dark:hover:text-amber-400
               "
             >
               {theme === "dark" ? (
                 /* Sun icon */
-                <svg className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <circle cx="12" cy="12" r="4" />
                   <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
                 </svg>
               ) : (
                 /* Moon icon */
-                <svg className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
                 </svg>
               )}
@@ -359,15 +403,23 @@ export default function HeaderLayout() {
               <div
                 className="
                   group relative flex h-9 w-9 items-center justify-center rounded-xl
-                  text-gray-600 dark:text-gray-300
-                  transition-all duration-200
-                  hover:bg-green-50 hover:text-green-600
-                  dark:hover:bg-green-900/20 dark:hover:text-green-400
-                  active:scale-90
+                  text-gray-600 transition-all
+                  duration-200 hover:bg-green-50
+                  hover:text-green-600 active:scale-90
+                  dark:text-gray-300 dark:hover:bg-green-900/20
+                  dark:hover:text-green-400
                 "
               >
                 {/* Shopping bag icon */}
-                <svg className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 01-8 0" />
@@ -375,16 +427,18 @@ export default function HeaderLayout() {
 
                 {/* Badge bubble */}
                 {count > 0 && (
-                  <span className="
+                  <span
+                    className="
                     absolute -right-1.5 -top-1.5
                     flex h-5 w-5 items-center justify-center
                     rounded-full
                     bg-gradient-to-br from-green-400 to-emerald-600
                     text-[10px] font-bold text-white
                     shadow-md shadow-green-500/40
-                    ring-2 ring-white dark:ring-gray-900
-                    transition-transform duration-200 group-hover:scale-110
-                  ">
+                    ring-2 ring-white transition-transform
+                    duration-200 group-hover:scale-110 dark:ring-gray-900
+                  "
+                  >
                     {count > 99 ? "99+" : count}
                   </span>
                 )}

@@ -36,7 +36,11 @@ export default async function handler(
   }
 
   try {
-    const session = (await getServerSession(req, res, authOptions as any)) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }

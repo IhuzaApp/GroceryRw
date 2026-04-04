@@ -8,7 +8,7 @@ import { logger } from "../../../src/utils/logger";
 
 const GET_PACKAGE_DETAILS = gql`
   query GetPackageDetails($id: uuid!) {
-    package_delivery(where: {id: {_eq: $id}}) {
+    package_delivery(where: { id: { _eq: $id } }) {
       id
       DeliveryCode
       pickupLocation
@@ -94,8 +94,8 @@ export default async function handler(
       return res.status(403).json({ error: "Unauthorized access to package" });
     }
 
-    return res.status(200).json({ 
-      package: pkg 
+    return res.status(200).json({
+      package: pkg,
     });
   } catch (error: any) {
     logger.error("Error fetching package details", "PackageDetailsAPI", error);

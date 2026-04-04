@@ -406,13 +406,17 @@ export function ContractDetailDrawer({
       setAccepting(true);
 
       const timestamp = Date.now();
-      const businessNameSlug = businessAccount?.businessName
-        ?.toLowerCase()
-        .replace(/[^a-z0-9]/g, "_") || "unknown_business";
+      const businessNameSlug =
+        businessAccount?.businessName
+          ?.toLowerCase()
+          .replace(/[^a-z0-9]/g, "_") || "unknown_business";
 
       // Upload signature
       const signaturePath = `plasbusiness/${businessNameSlug}/contracts/${contractId}/signatures/signature_${timestamp}.png`;
-      const signatureUrl = await uploadToFirebase(supplierSignature, signaturePath);
+      const signatureUrl = await uploadToFirebase(
+        supplierSignature,
+        signaturePath
+      );
 
       // Upload photo
       const photoPath = `plasbusiness/${businessNameSlug}/contracts/${contractId}/signatures/photo_${timestamp}.jpg`;

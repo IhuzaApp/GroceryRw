@@ -435,9 +435,15 @@ export function CreateStoreForm({
 
       // Image: base64 (upload) or URL string
       let imageValue = "";
-      if (formData.imageSource === "upload" && imagePreview && imagePreview.startsWith("data:")) {
+      if (
+        formData.imageSource === "upload" &&
+        imagePreview &&
+        imagePreview.startsWith("data:")
+      ) {
         try {
-          const businessNameSlug = (businessAccount?.businessName || "anonymous")
+          const businessNameSlug = (
+            businessAccount?.businessName || "anonymous"
+          )
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-+|-+$/g, "");
@@ -454,7 +460,10 @@ export function CreateStoreForm({
           await uploadString(storageRef, imagePreview, "data_url");
           imageValue = await getDownloadURL(storageRef);
         } catch (uploadError) {
-          console.error("Error uploading store image to Firebase:", uploadError);
+          console.error(
+            "Error uploading store image to Firebase:",
+            uploadError
+          );
           toast.error("Failed to upload image. Please try again.");
           setIsSubmitting(false);
           return;

@@ -33,6 +33,7 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ### 13. Promotions & Checkout System
 
 ### 14. User Dashboard & Store System
+
 ### 15. **AI Assistant & Interactive Checkout System** ⭐ NEW
 
 ---
@@ -13765,16 +13766,19 @@ The AI Assistant (Plas Agent) is a Gemini-powered interactive companion that han
 ## Key Features
 
 ### 1. Interactive Checkout Flow
+
 - **Guided Checkout**: The AI guides users through address and payment selection using the `show_checkout_form` tool.
 - **Dynamic Preview**: Real-time delivery fee and total calculation via `/api/ai/search-plas-data`.
 - **Stateless Tooling**: The AI does not store cart state; it fetches "Active Carts" and "User Checkout Details" dynamically.
 
 ### 2. Real-Time Payment Polling
+
 - **MoMo Integration**: After order placement, the UI enters an **Awaiting Approval** state.
 - **Polling Loop**: The client polls `/api/momo/request-to-pay-status` to track the user's phone prompt approval.
 - **Immediate Receipt**: Upon success, a premium receipt UI is rendered, and carts are automatically cleared/refreshed.
 
 ### 3. Integrated Toolset (Gemini 2.5)
+
 - `search_products`: Real-time inventory and restaurant dish search.
 - `search_stores`: Discover shops and restaurants by name or category.
 - `search_recipes`: Global recipe database integration.
@@ -13785,6 +13789,7 @@ The AI Assistant (Plas Agent) is a Gemini-powered interactive companion that han
 - `show_checkout_form`: Mandatory interactive form for finalizing orders.
 
 ### 4. Proactive Error Reporting
+
 - **Slack Integration**: Serverside errors in AI APIs are reported to Slack via `logErrorToSlack`.
 - **Client Proxy**: A secure `/api/support/slack-logger` endpoint allows the frontend to report streaming and tool-execution failures without exposing webhooks.
 
@@ -13801,7 +13806,7 @@ graph TD
     F --> B
     C -- No --> G[Streaming Response]
     G --> A
-    
+
     subgraph Error Reporting
       H[AIChatWindow] --> I[/api/support/slack-logger]
       I --> J[Slack Webhook]
@@ -13812,10 +13817,12 @@ graph TD
 ## Setup & Environment
 
 Requires the following environment variables:
+
 - `FIREBASE_API_KEY`: For Gemini access.
 - `SLACK_ERRORS_WEBHOOK`: For error reporting.
 
 ## Best Practices for AI
-1. **Mandatory Forms**: The AI is instructed to *never* summarize price totals in text; it must always use the interactive form to ensure consistency.
+
+1. **Mandatory Forms**: The AI is instructed to _never_ summarize price totals in text; it must always use the interactive form to ensure consistency.
 2. **Cart Sync**: Always dispatch `cartChanged` events after AI actions to keep the header and cart modals updated.
 3. **Error Catching**: Every tool execution and fetch in `AIChatWindow.tsx` should be wrapped in a `try/catch` with a `reportError` call.

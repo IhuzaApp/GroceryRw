@@ -6,52 +6,54 @@ import { gql } from "graphql-request";
 
 const INSERT_PACKAGE_DELIVERY = gql`
   mutation InsertPackageDelivery(
-    $DeliveryCode: String = "", 
-    $comment: String = "", 
-    $deliveryMethod: String = "", 
-    $delivery_fee: String = "", 
-    $distance: String = "", 
-    $dropoffDetails: jsonb = "", 
-    $dropoffLocation: String = "", 
-    $dropoff_latitude: String = "", 
-    $dropoff_longitude: String = "", 
-    $package_image: String = "", 
-    $payment_method: String = "", 
-    $pickupDetials: jsonb = "", 
-    $pickupLocation: String = "", 
-    $pickup_latitude: String = "", 
-    $pickup_longitude: String = "", 
-    $receiverName: String = "", 
-    $receiverPhone: String = "", 
-    $status: String = "", 
-    $timeAndDate: json = "", 
-    $scheduled: Boolean = false,
+    $DeliveryCode: String = ""
+    $comment: String = ""
+    $deliveryMethod: String = ""
+    $delivery_fee: String = ""
+    $distance: String = ""
+    $dropoffDetails: jsonb = ""
+    $dropoffLocation: String = ""
+    $dropoff_latitude: String = ""
+    $dropoff_longitude: String = ""
+    $package_image: String = ""
+    $payment_method: String = ""
+    $pickupDetials: jsonb = ""
+    $pickupLocation: String = ""
+    $pickup_latitude: String = ""
+    $pickup_longitude: String = ""
+    $receiverName: String = ""
+    $receiverPhone: String = ""
+    $status: String = ""
+    $timeAndDate: json = ""
+    $scheduled: Boolean = false
     $user_id: uuid = ""
   ) {
-    insert_package_delivery(objects: {
-      DeliveryCode: $DeliveryCode, 
-      comment: $comment, 
-      deliveryMethod: $deliveryMethod, 
-      delivery_fee: $delivery_fee, 
-      distance: $distance, 
-      dropoffDetails: $dropoffDetails, 
-      dropoffLocation: $dropoffLocation, 
-      dropoff_latitude: $dropoff_latitude, 
-      dropoff_longitude: $dropoff_longitude, 
-      package_image: $package_image, 
-      payment_method: $payment_method, 
-      pickupDetials: $pickupDetials, 
-      pickupLocation: $pickupLocation, 
-      pickup_latitude: $pickup_latitude, 
-      pickup_longitude: $pickup_longitude, 
-      receiverName: $receiverName, 
-      receiverPhone: $receiverPhone, 
-      scheduled: $scheduled, 
-      status: $status, 
-      timeAndDate: $timeAndDate, 
-      shopper_id: null,
-      user_id: $user_id
-    }) {
+    insert_package_delivery(
+      objects: {
+        DeliveryCode: $DeliveryCode
+        comment: $comment
+        deliveryMethod: $deliveryMethod
+        delivery_fee: $delivery_fee
+        distance: $distance
+        dropoffDetails: $dropoffDetails
+        dropoffLocation: $dropoffLocation
+        dropoff_latitude: $dropoff_latitude
+        dropoff_longitude: $dropoff_longitude
+        package_image: $package_image
+        payment_method: $payment_method
+        pickupDetials: $pickupDetials
+        pickupLocation: $pickupLocation
+        pickup_latitude: $pickup_latitude
+        pickup_longitude: $pickup_longitude
+        receiverName: $receiverName
+        receiverPhone: $receiverPhone
+        scheduled: $scheduled
+        status: $status
+        timeAndDate: $timeAndDate
+        shopper_id: null
+        user_id: $user_id
+      }
+    ) {
       affected_rows
       returning {
         id
@@ -137,6 +139,8 @@ export default async function handler(
     });
   } catch (err: any) {
     console.error("❌ Error inserting package delivery:", err);
-    return res.status(500).json({ error: err.message || "Failed to create package delivery" });
+    return res
+      .status(500)
+      .json({ error: err.message || "Failed to create package delivery" });
   }
 }

@@ -357,14 +357,14 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Filter Tabs - Premium Segmented Control */}
-            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 mb-2 -mx-3 px-3 py-2 animate-in fade-in slide-in-from-top-4 duration-500 md:relative md:top-0 md:m-0 md:mb-12 md:p-0 md:bg-transparent md:flex md:justify-center">
+            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-3 mb-2 px-3 py-2 duration-500 animate-in fade-in slide-in-from-top-4 md:relative md:top-0 md:m-0 md:mb-12 md:flex md:justify-center md:bg-transparent md:p-0">
               {/* Glassmorphic Container */}
-              <div className="flex w-full overflow-x-auto no-scrollbar rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
+              <div className="no-scrollbar flex w-full overflow-x-auto rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
                 <button
                   onClick={() => setFilter("pending")}
                   className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "pending"
-                      ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
+                      ? "scale-[1.02] bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
@@ -383,7 +383,9 @@ function CurrentOrdersPage() {
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className={filter === "pending" ? "!text-white" : ""}>Ongoing</span>
+                  <span className={filter === "pending" ? "!text-white" : ""}>
+                    Ongoing
+                  </span>
                   {pendingCount > 0 && (
                     <span
                       className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
@@ -401,7 +403,7 @@ function CurrentOrdersPage() {
                   onClick={() => setFilter("done")}
                   className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "done"
-                      ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
+                      ? "scale-[1.02] bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
@@ -420,7 +422,9 @@ function CurrentOrdersPage() {
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className={filter === "done" ? "!text-white" : ""}>Completed</span>
+                  <span className={filter === "done" ? "!text-white" : ""}>
+                    Completed
+                  </span>
                   {completedCount > 0 && (
                     <span
                       className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
@@ -438,11 +442,13 @@ function CurrentOrdersPage() {
                   onClick={() => setFilter("packages")}
                   className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "packages"
-                      ? "bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30 scale-[1.02]"
+                      ? "scale-[1.02] bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
                       : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
-                  <span className={filter === "packages" ? "!text-white" : ""}>Deliveries</span>
+                  <span className={filter === "packages" ? "!text-white" : ""}>
+                    Deliveries
+                  </span>
                   {packagesCount > 0 && (
                     <span
                       className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
@@ -462,9 +468,9 @@ function CurrentOrdersPage() {
             <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-10 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
               <div className="px-3 py-4 md:p-6">
                 {filter === "packages" ? (
-                  <UserRecentPackages 
-                    packages={packages} 
-                    loading={loadingPackages} 
+                  <UserRecentPackages
+                    packages={packages}
+                    loading={loadingPackages}
                     onRefresh={fetchPackages}
                   />
                 ) : (

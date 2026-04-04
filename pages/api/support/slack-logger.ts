@@ -16,7 +16,9 @@ export default async function handler(
     const session = await getServerSession(req, res, authOptions);
 
     if (!where || !error) {
-      return res.status(400).json({ error: "Missing required fields: where, error" });
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: where, error" });
     }
 
     // Forward to Slack

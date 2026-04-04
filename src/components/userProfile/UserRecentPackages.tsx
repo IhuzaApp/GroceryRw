@@ -74,7 +74,10 @@ export default function UserRecentPackages({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/50">
+          <div
+            key={i}
+            className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/50"
+          >
             <div className="flex gap-4">
               <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700" />
               <div className="flex-1 space-y-2">
@@ -94,8 +97,12 @@ export default function UserRecentPackages({
         <div className="mb-4 rounded-full bg-gray-50 p-4 dark:bg-gray-800">
           <Package className="h-8 w-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">No deliveries yet</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Your Plas Package history will appear here.</p>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          No deliveries yet
+        </h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Your Plas Package history will appear here.
+        </p>
       </div>
     );
   }
@@ -104,9 +111,9 @@ export default function UserRecentPackages({
     <div className="space-y-4">
       {/* Premium Search & Actions Header */}
       <div className="mb-6 flex items-center gap-2.5">
-        <div className="relative flex-1 group">
+        <div className="group relative flex-1">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-            <Package className="h-4.5 w-4.5 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200" />
+            <Package className="h-4.5 w-4.5 text-gray-400 transition-colors duration-200 group-focus-within:text-green-500" />
           </div>
           <input
             type="text"
@@ -118,10 +125,20 @@ export default function UserRecentPackages({
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-green-500 transition-colors"
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 transition-colors hover:text-green-500"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -132,7 +149,11 @@ export default function UserRecentPackages({
             onClick={onRefresh}
             className="group flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-gray-200 bg-white/50 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-green-200 hover:bg-white hover:text-green-600 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-green-400"
           >
-            <Clock className={`h-5 w-5 transition-transform duration-700 ${loading ? "animate-spin" : "group-hover:rotate-180"}`} />
+            <Clock
+              className={`h-5 w-5 transition-transform duration-700 ${
+                loading ? "animate-spin" : "group-hover:rotate-180"
+              }`}
+            />
           </button>
         )}
       </div>
@@ -159,11 +180,17 @@ export default function UserRecentPackages({
                   </div>
                 )}
                 <div className="absolute -bottom-1 -right-1 rounded-full bg-white p-1 shadow-sm dark:bg-gray-800">
-                  <div className={`h-2.5 w-2.5 rounded-full ${
-                    pkg.status === "AWAITING_PAYMENT" ? "bg-amber-400" :
-                    pkg.status === "PENDING" ? "bg-blue-400" :
-                    pkg.status === "DELIVERED" ? "bg-green-500" : "bg-gray-400"
-                  }`} />
+                  <div
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      pkg.status === "AWAITING_PAYMENT"
+                        ? "bg-amber-400"
+                        : pkg.status === "PENDING"
+                        ? "bg-blue-400"
+                        : pkg.status === "DELIVERED"
+                        ? "bg-green-500"
+                        : "bg-gray-400"
+                    }`}
+                  />
                 </div>
               </div>
 
@@ -182,13 +209,21 @@ export default function UserRecentPackages({
                   <div className="flex items-start gap-2">
                     <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-gray-400" />
                     <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
-                      From: <span className="font-normal text-gray-500 dark:text-gray-400">{pkg.pickupLocation}</span>
+                      From:{" "}
+                      <span className="font-normal text-gray-500 dark:text-gray-400">
+                        {pkg.pickupLocation}
+                      </span>
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <div className="mt-0.5 h-3 w-3 shrink-0 flex items-center justify-center font-black text-[8px] border border-gray-400 text-gray-400 rounded-sm">TO</div>
+                    <div className="mt-0.5 flex h-3 w-3 shrink-0 items-center justify-center rounded-sm border border-gray-400 text-[8px] font-black text-gray-400">
+                      TO
+                    </div>
                     <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
-                      To: <span className="font-normal text-gray-500 dark:text-gray-400">{pkg.dropoffLocation}</span>
+                      To:{" "}
+                      <span className="font-normal text-gray-500 dark:text-gray-400">
+                        {pkg.dropoffLocation}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -246,7 +281,7 @@ export default function UserRecentPackages({
                     onClick={() => setCurrentPage(page)}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-medium transition-all duration-300 ${
                       currentPage === page
-                        ? "bg-gradient-to-br from-green-500 to-green-600 border-transparent !text-white shadow-lg shadow-green-500/30 scale-110"
+                        ? "scale-110 border-transparent bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
                         : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                     }`}
                   >
@@ -255,7 +290,9 @@ export default function UserRecentPackages({
                 );
               } else if (page === currentPage - 2 || page === currentPage + 2) {
                 return (
-                  <span key={page} className="text-gray-400">...</span>
+                  <span key={page} className="text-gray-400">
+                    ...
+                  </span>
                 );
               }
               return null;
@@ -263,7 +300,9 @@ export default function UserRecentPackages({
           </div>
 
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
             disabled={currentPage === totalPages}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
           >

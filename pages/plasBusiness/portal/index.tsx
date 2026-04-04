@@ -171,7 +171,9 @@ function BuyerDashboardContent({
   setIsChatDrawerOpen: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(
+    null
+  );
   const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
   const isPersonalAccount = businessAccount?.accountType === "personal";
   const isBusinessAccount = businessAccount?.accountType === "business";
@@ -370,7 +372,9 @@ function BuyerDashboardContent({
 
         {isServiceProvider &&
           isBusinessAccount &&
-          activeTab === "products-bids" && <ProductsBidsSection businessAccount={businessAccount} />}
+          activeTab === "products-bids" && (
+            <ProductsBidsSection businessAccount={businessAccount} />
+          )}
 
         {isServiceProvider &&
           isBusinessAccount &&

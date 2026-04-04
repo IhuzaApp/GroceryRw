@@ -944,8 +944,13 @@ export function RFQResponsesView({
                               </p>
                             </div>
                           </div>
-                          <button 
-                            onClick={() => downloadAttachment(attachment.url, attachment.name)}
+                          <button
+                            onClick={() =>
+                              downloadAttachment(
+                                attachment.url,
+                                attachment.name
+                              )
+                            }
                             className="text-blue-600 hover:text-blue-700 dark:hover:text-blue-400"
                           >
                             <Download className="h-4 w-4" />

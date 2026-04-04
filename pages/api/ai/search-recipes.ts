@@ -11,16 +11,22 @@ export default async function handler(
 
   try {
     const { keyword, category } = req.body;
-    console.log(`[AI Recipes API] Searching recipes: keyword="${keyword}", category="${category}"`);
+    console.log(
+      `[AI Recipes API] Searching recipes: keyword="${keyword}", category="${category}"`
+    );
 
     let url = "";
 
     if (category) {
       // Filter by category (e.g. "Seafood", "Chicken", "Vegan")
-      url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(category)}`;
+      url = `https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(
+        category
+      )}`;
     } else if (keyword) {
       // Search by name
-      url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(keyword)}`;
+      url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(
+        keyword
+      )}`;
     } else {
       // Return random recipe if nothing specified
       url = `https://www.themealdb.com/api/json/v1/1/search.php?s=`;
@@ -48,9 +54,9 @@ export default async function handler(
     return res.status(200).json({ results });
   } catch (error: any) {
     console.error("AI Recipes Search Error:", error);
-    await logErrorToSlack("AI Recipes API", error, { 
+    await logErrorToSlack("AI Recipes API", error, {
       keyword: req.body?.keyword,
-      category: req.body?.category 
+      category: req.body?.category,
     });
     return res.status(500).json({ error: "Failed to fetch recipes" });
   }

@@ -255,7 +255,6 @@ export function ProductsBidsSection({
     setIsCreateServiceOpen(true);
   };
 
-
   const handleServiceSubmit = async (serviceData: any) => {
     try {
       // Generate query ID first (only for new services)
@@ -289,14 +288,15 @@ export function ProductsBidsSection({
       let imageUrl = "";
       if (serviceData.image && serviceData.image instanceof File) {
         const timestamp = Date.now();
-        const businessNameSlug = businessAccount?.businessName
-          ?.toLowerCase()
-          .replace(/[^a-z0-9]/g, "_") || "unknown_business";
-        const serviceNameSlug = serviceData.name
-          ?.toLowerCase()
-          .replace(/[^a-z0-9]/g, "_") || "service";
-        
-        const extension = serviceData.image.name.split('.').pop() || 'jpg';
+        const businessNameSlug =
+          businessAccount?.businessName
+            ?.toLowerCase()
+            .replace(/[^a-z0-9]/g, "_") || "unknown_business";
+        const serviceNameSlug =
+          serviceData.name?.toLowerCase().replace(/[^a-z0-9]/g, "_") ||
+          "service";
+
+        const extension = serviceData.image.name.split(".").pop() || "jpg";
         const imagePath = `plasbusiness/${businessNameSlug}/services/${serviceNameSlug}_${timestamp}.${extension}`;
         imageUrl = await uploadToFirebase(serviceData.image, imagePath);
       } else if (
@@ -304,13 +304,14 @@ export function ProductsBidsSection({
         serviceData.image.startsWith("data:")
       ) {
         const timestamp = Date.now();
-        const businessNameSlug = businessAccount?.businessName
-          ?.toLowerCase()
-          .replace(/[^a-z0-9]/g, "_") || "unknown_business";
-        const serviceNameSlug = serviceData.name
-          ?.toLowerCase()
-          .replace(/[^a-z0-9]/g, "_") || "service";
-        
+        const businessNameSlug =
+          businessAccount?.businessName
+            ?.toLowerCase()
+            .replace(/[^a-z0-9]/g, "_") || "unknown_business";
+        const serviceNameSlug =
+          serviceData.name?.toLowerCase().replace(/[^a-z0-9]/g, "_") ||
+          "service";
+
         const imagePath = `plasbusiness/${businessNameSlug}/services/${serviceNameSlug}_${timestamp}.png`;
         imageUrl = await uploadToFirebase(serviceData.image, imagePath);
       } else if (editingService?.Image) {

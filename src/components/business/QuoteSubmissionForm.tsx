@@ -302,8 +302,12 @@ export function QuoteSubmissionForm({
       const uploadedUrls: string[] = [];
       const businessName = businessAccount?.businessName || "anonymous";
       const timestamp = Date.now();
-      
-      const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+      const slugify = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
       const bNameSlug = slugify(businessName);
 
       if (attachments.length > 0) {

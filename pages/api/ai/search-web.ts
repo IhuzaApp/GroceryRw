@@ -16,7 +16,9 @@ export default async function handler(
     console.log(`[AI Web Search] Querying DDG for: "${query}"`);
 
     // Use DuckDuckGo Instant Answer API — no API key required
-    const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+    const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(
+      query
+    )}&format=json&no_html=1&skip_disambig=1`;
     const ddgRes = await fetch(ddgUrl, {
       headers: { "Accept-Encoding": "gzip" },
     });
@@ -51,8 +53,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("AI Web Search Error:", error);
-    await logErrorToSlack("AI Web Search API", error, { 
-      query: req.body?.query 
+    await logErrorToSlack("AI Web Search API", error, {
+      query: req.body?.query,
     });
     return res.status(500).json({ error: "Failed to fetch web data" });
   }

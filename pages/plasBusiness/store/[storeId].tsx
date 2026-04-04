@@ -521,7 +521,10 @@ export default function StoreDetailsPage() {
           await uploadString(storageRef, productImage, "data_url");
           finalImageUrl = await getDownloadURL(storageRef);
         } catch (uploadError: any) {
-          console.error("Error uploading product image to Firebase:", uploadError);
+          console.error(
+            "Error uploading product image to Firebase:",
+            uploadError
+          );
           toast.error("Failed to upload image. Please try again.");
           setIsCreatingProduct(false);
           return;

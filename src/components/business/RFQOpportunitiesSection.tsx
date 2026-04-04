@@ -935,20 +935,24 @@ export function RFQOpportunitiesSection({
                       If applicable, please include any relevant documentation:
                     </p>
                     <div className="space-y-2 text-sm">
-                      {selectedRFQ.attachment.split(",").map((att: string, index: number) => {
-                        const trimmedAtt = att.trim();
-                        if (!trimmedAtt) return null;
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => handleDownloadAttachment(trimmedAtt, index)}
-                            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            <Download className="h-4 w-4" />
-                            <span>Attachment {index + 1}</span>
-                          </button>
-                        );
-                      })}
+                      {selectedRFQ.attachment
+                        .split(",")
+                        .map((att: string, index: number) => {
+                          const trimmedAtt = att.trim();
+                          if (!trimmedAtt) return null;
+                          return (
+                            <button
+                              key={index}
+                              onClick={() =>
+                                handleDownloadAttachment(trimmedAtt, index)
+                              }
+                              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              <Download className="h-4 w-4" />
+                              <span>Attachment {index + 1}</span>
+                            </button>
+                          );
+                        })}
                     </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       (Feel free to attach your product catalog, pricing list,

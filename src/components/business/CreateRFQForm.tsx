@@ -212,9 +212,13 @@ export function CreateRFQForm({
       const uploadedUrls: string[] = [];
       const businessName = businessAccount?.businessName || "anonymous";
       const timestamp = Date.now();
-      
+
       // Slugify business name and rfq title for a clean path
-      const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const slugify = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
       const bNameSlug = slugify(businessName);
       const rfqTitleSlug = slugify(formData.title || "untitled-rfq");
 

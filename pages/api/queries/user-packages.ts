@@ -62,8 +62,8 @@ export default async function handler(
       user_id: userId,
     });
 
-    return res.status(200).json({ 
-      packages: data.package_delivery || [] 
+    return res.status(200).json({
+      packages: data.package_delivery || [],
     });
   } catch (error) {
     logger.error("Error fetching user packages", "UserPackagesAPI", error);

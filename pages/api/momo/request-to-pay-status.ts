@@ -815,12 +815,10 @@ export default async function handler(
     return res.status(200).json(data);
   } catch (error: any) {
     console.error("💥 [MoMo Status] Exception:", error);
-    return res
-      .status(500)
-      .json({
-        error: "Status check failed",
-        details: error.message,
-        referenceId,
-      });
+    return res.status(500).json({
+      error: "Status check failed",
+      details: error.message,
+      referenceId,
+    });
   }
 }
