@@ -1783,6 +1783,52 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     ]);
   };
 
+  const handleConfirmDeliveryIssue = async (msgId: string, payload: DeliveryIssueSetupPayload, file: File | null) => {
+    try {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, isProcessing: true } : m))
+      );
+
+      let image = null;
+      if (file && storage) {
+        const storageRef = ref(storage, `delivery_issues/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        image = await getDownloadURL(snapshot.ref);
+      }
+
+      await fetch("/api/queries/delivery-issues", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, image }),
+      });
+
+      setMessages((prev) => [
+        ...prev.map((m) =>
+          m.id === msgId ? { ...m, isProcessing: false, deliveryIssuePlaced: true, isComplete: true } : m
+        ),
+        {
+          id: (Date.now() + 1).toString(),
+          text: "I have completed reporting your issue. The Agent will contact you in 10 to 20 minutes, but also expect it to be resolved below that time.",
+          sender: "ai",
+          timestamp: new Date(),
+          isComplete: true,
+        }
+      ]);
+    } catch (error) {
+      console.error(error);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, isProcessing: false } : m))
+      );
+    }
+  };
+
+  const handleDeclineDeliveryIssue = (msgId: string) => {
+    const msg = messages.find((m) => m.id === msgId);
+    if (msg && msg.deliveryIssueSetup) {
+      handleConfirmDeliveryIssue(msgId, msg.deliveryIssueSetup, null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
