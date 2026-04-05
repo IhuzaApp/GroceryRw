@@ -155,10 +155,12 @@ interface Conversation {
   customerId?: string;
   shopperId?: string;
   businessId?: string;
+  rfqId?: string;
   counterpartId?: string;
   type?: "order" | "business";
   title?: string;
   counterpartName?: string;
+  counterpartAvatar?: string;
   lastMessage: string;
   lastMessageTime: any;
   unreadCount: number;
@@ -585,7 +587,7 @@ export default function DesktopMessagePage({
                 : fullName;
                 
               const contactAvatar = isBusinessChat
-                ? "/images/BusinessPlaceholder.png"
+                ? conversation.counterpartAvatar || "/images/BusinessPlaceholder.png"
                 : order?.assignedTo?.shopper?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
                   "/images/ProfileImage.png";

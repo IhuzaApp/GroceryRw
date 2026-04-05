@@ -189,6 +189,46 @@ function MessagesPage() {
     return () => { cancelled = true; };
   }, [status, session?.user?.id]);
 
+  // Fetch counterpart details for business conversations
+  useEffect(() => {
+    const businessConversationsToFetch = conversations
+      .filter(c => c.collectionPath === "business_conversations" && c.counterpartId && !c.counterpartName)
+      .map(c => c.counterpartId!);
+      
+    if (businessConversationsToFetch.length === 0) return;
+
+    let cancelled = false;
+    const fetchCounterparts = async () => {
+      const uniqueIds = Array.from(new Set(businessConversationsToFetch));
+      const promises = uniqueIds.map(async (uid) => {
+        try {
+          const userRef = doc(db!, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            return { id: uid, name: userSnap.data().name || userSnap.data().full_name, avatar: userSnap.data().profile_picture || userSnap.data().profile_photo };
+          }
+          return { id: uid, name: "Unknown User" };
+        } catch (error) {
+          return { id: uid, name: "Error Loading" };
+        }
+      });
+
+      const results = await Promise.all(promises);
+      if (cancelled) return;
+
+      setBusinessConversations(prev => prev.map(conv => {
+        const result = results.find(r => r.id === conv.counterpartId);
+        if (result && !conv.counterpartName) {
+          return { ...conv, counterpartName: result.name, counterpartAvatar: result.avatar };
+        }
+        return conv;
+      }));
+    };
+
+    fetchCounterparts();
+    return () => { cancelled = true; };
+  }, [conversations]);
+
   // Fetch order details for order-type conversations
   useEffect(() => {
     const orderIds = conversations
@@ -248,6 +288,7 @@ function MessagesPage() {
         // Match by title (for business chats)
         if (conversation.title?.toLowerCase().includes(searchLower)) return true;
         if (conversation.counterpartName?.toLowerCase().includes(searchLower)) return true;
+        if (conversation.counterpartId?.toLowerCase().includes(searchLower)) return true;
         
         // Match by order details
         if (conversation.orderId) {

@@ -75,9 +75,6 @@ export const createConversation = async (
 
     // Create new conversation
     const conversationData: any = {
-      orderId: orderId || null,
-      customerId: customerId || null,
-      shopperId: shopperId || null,
       type,
       createdAt: serverTimestamp(),
       lastMessage: "",
@@ -85,6 +82,11 @@ export const createConversation = async (
       unreadCount: 0,
       ...metadata,
     };
+
+    // Only populate customer/shopper IDs if they are explicitly provided or relevant
+    if (customerId) conversationData.customerId = customerId;
+    if (shopperId) conversationData.shopperId = shopperId;
+    if (orderId) conversationData.orderId = orderId;
 
     const docRef = await addDoc(
       collection(db!, customCollection),
@@ -130,7 +132,7 @@ export const getOrCreateBusinessConversation = async (
     }
 
     // Create new business conversation in business_conversations collection
-    return await createConversation(null, businessId, counterpartId, "business", {
+    return await createConversation(null, "", "", "business", {
       businessId,
       counterpartId,
       rfqId,
