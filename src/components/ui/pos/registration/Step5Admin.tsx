@@ -1,4 +1,4 @@
-import { User, Mail, Phone, Lock, Briefcase } from "lucide-react";
+import { User, Mail, Phone, Lock, Briefcase, ShieldCheck } from "lucide-react";
 
 interface Step5AdminProps {
   formData: any;
@@ -92,7 +92,7 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
             </div>
           </div>
 
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2">
             <label className="text-sm font-bold text-gray-600">
               Secure Password
             </label>
@@ -103,6 +103,24 @@ export default function Step5Admin({ formData, onChange }: Step5AdminProps) {
                 type="password"
                 name="password"
                 value={formData.password}
+                onChange={onChange}
+                className="h-14 w-full rounded-xl border-2 border-gray-100 bg-gray-50 pl-12 pr-4 text-black outline-none focus:border-[#022C22] focus:bg-white"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-600">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <ShieldCheck className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                required
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
                 onChange={onChange}
                 className="h-14 w-full rounded-xl border-2 border-gray-100 bg-gray-50 pl-12 pr-4 text-black outline-none focus:border-[#022C22] focus:bg-white"
                 placeholder="••••••••"

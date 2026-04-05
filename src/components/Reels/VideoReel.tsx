@@ -43,6 +43,7 @@ export default function VideoReel({
   const [lastTap, setLastTap] = useState(0);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prevIsLikedRef = useRef<boolean>(post.isLiked);
 
   // Track component mount state
   useEffect(() => {
@@ -76,11 +77,11 @@ export default function VideoReel({
   useEffect(() => {
     if (!mountedRef.current) return;
 
-    if (
-      videoRef.current &&
-      !isYouTubeUrl(post.content.video) &&
-      !isImageUrl(post.content.video)
-    ) {
+    const isYT = isYouTubeUrl(post.content.video);
+    const isImg = isImageUrl(post.content.video);
+
+    if (videoRef.current && !isYT && !isImg) {
+      // Standard Video logic
       if (isVisible) {
         const playVideo = async () => {
           try {
@@ -88,9 +89,15 @@ export default function VideoReel({
             await videoRef.current.play();
             if (mountedRef.current) setIsPlaying(true);
           } catch (error) {
-            if (mountedRef.current && (error as Error).name !== "AbortError") {
+            const errorName = (error as Error).name;
+            if (
+              mountedRef.current &&
+              errorName !== "AbortError" &&
+              errorName !== "NotAllowedError"
+            ) {
               setVideoError(true);
             }
+            if (mountedRef.current) setIsPlaying(false);
           }
         };
         playVideo();
@@ -100,8 +107,26 @@ export default function VideoReel({
           setIsPlaying(false);
         }
       }
+    } else if (isVisible && (isYT || isImg)) {
+      // YouTube or Image logic: Automatically "play" to hide pause icon
+      if (mountedRef.current) setIsPlaying(true);
+    } else if (!isVisible && (isYT || isImg)) {
+      if (mountedRef.current) setIsPlaying(false);
     }
-  }, [isVisible, post.id, isMobile]);
+  }, [isVisible, post.id, isMobile, post.content.video]);
+
+  // Trigger like animation ONLY on state TRANSITION (false -> true)
+  // to avoid pop on initial load or background refresh
+  useEffect(() => {
+    // Only trigger if we transition from false to true AND it's not the first mount check
+    if (post.isLiked && !prevIsLikedRef.current && !showLikeAnimation) {
+      setShowLikeAnimation(true);
+      const timer = setTimeout(() => setShowLikeAnimation(false), 800);
+      return () => clearTimeout(timer);
+    }
+    // Sync the ref with the current state for the next check
+    prevIsLikedRef.current = post.isLiked;
+  }, [post.isLiked]);
 
   // Handle background audio for images
   useEffect(() => {
@@ -112,9 +137,9 @@ export default function VideoReel({
         audioRef.current.load();
         audioRef.current.play().catch((err) => {
           if (err.name !== "AbortError") {
-            console.log(`Audio playback failed for ${audioSource}:`, err);
-            if (!audioSource.includes("newMessage.mp3")) {
-              setAudioSource("/assets/sounds/newMessage.mp3");
+            // console.log(`Audio playback failed for ${audioSource}:`, err);
+            if (!audioSource.includes("reel-background.mp3")) {
+              setAudioSource("/assets/sounds/reel-background.mp3");
             }
           }
         });
@@ -149,8 +174,15 @@ export default function VideoReel({
         try {
           if (!mountedRef.current || !videoRef.current) return;
           await videoRef.current.play();
+          if (mountedRef.current) setIsPlaying(true);
         } catch (error) {
-          if (mountedRef.current && (error as Error).name !== "AbortError") {
+          const errorName = (error as Error).name;
+          // Silence autoplay block errors as it's standard browser behavior
+          if (
+            mountedRef.current &&
+            errorName !== "AbortError" &&
+            errorName !== "NotAllowedError"
+          ) {
             toaster.push(
               <Message type="error" closable>
                 {`Failed to play video: ${
@@ -160,6 +192,7 @@ export default function VideoReel({
               { placement: "topEnd" }
             );
           }
+          if (mountedRef.current) setIsPlaying(false);
         }
       };
       playVideo();
@@ -212,11 +245,9 @@ export default function VideoReel({
       onAuthRequired();
       return;
     }
-    if (!post.isLiked) {
-      onLike(post.id);
-    }
-    setShowLikeAnimation(true);
-    setTimeout(() => setShowLikeAnimation(false), 1000);
+    // Toggle Like (Like if unliked, Unlike if already liked)
+    onLike(post.id);
+    // Note: showLikeAnimation is handled by useEffect watching post.isLiked
   };
 
   return (
@@ -252,7 +283,7 @@ export default function VideoReel({
           setVideoError={setVideoError}
         />
 
-        {/* Gradient overlay */}
+        {/* Gradient overlays for cinematic feel */}
         <div
           style={{
             position: "absolute",
@@ -264,7 +295,7 @@ export default function VideoReel({
             height: "100%",
             minHeight: "100%",
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+              "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 20%, rgba(0,0,0,0.15) 35%, transparent 50%, rgba(0,0,0,0.05) 75%, rgba(0,0,0,0.4) 100%)",
             zIndex: 2,
             pointerEvents: "none", // Let clicks pass through to the main container
           }}

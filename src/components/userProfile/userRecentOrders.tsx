@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { useRouter } from "next/router";
+import { Modal } from "rsuite";
+import CompletePaymentModal from "../UserCarts/orders/CompletePaymentModal";
 
 // Define the shape of an order including assignment status and external OrderID
 type Order = {
@@ -266,15 +268,21 @@ export default function UserRecentOrders({
   const ordersPerPage = 4;
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Payment state
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPaymentOrder, setSelectedPaymentOrder] =
+    useState<Order | null>(null);
+
   // Apply filter and search
   const filteredOrders = orders.filter((order: Order) => {
     // Apply status filter
     // For "Ongoing" (pending filter): show all orders that are not delivered (includes unassigned)
     // For "Completed" (done filter): show only delivered orders
+    const status = (order.status || "").toLowerCase();
     const matchesFilter =
       filter === "pending"
-        ? order.status !== "delivered"
-        : order.status === "delivered";
+        ? status !== "delivered" && status !== "cancelled"
+        : status === "delivered" || status === "cancelled";
 
     // Apply search filter
     if (!searchQuery.trim()) return matchesFilter;
@@ -326,40 +334,12 @@ export default function UserRecentOrders({
 
   return (
     <>
-      <div className="mb-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white md:text-lg">
-            Orders
-          </h3>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <svg
-                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+      {/* Premium Search & Actions Header */}
+      <div className="mb-6 flex items-center gap-2.5">
+        <div className="group relative flex-1">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
             <svg
-              className="h-4 w-4 text-gray-400"
+              className="h-4.5 w-4.5 text-gray-400 transition-colors duration-200 group-focus-within:text-green-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -367,7 +347,7 @@ export default function UserRecentOrders({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
@@ -376,13 +356,13 @@ export default function UserRecentOrders({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search orders by ID, shop name, or amount..."
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm shadow-sm transition-all duration-200 placeholder:text-gray-400 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-green-400 dark:focus:ring-green-400/20"
+            placeholder="Search orders (ID, shop, price)..."
+            className="w-full rounded-2xl border border-gray-200 bg-white/50 py-3 pl-11 pr-10 text-sm shadow-sm backdrop-blur-md transition-all duration-300 placeholder:text-gray-400 focus:border-green-500/50 focus:bg-white focus:ring-4 focus:ring-green-500/5 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/10"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 transition-colors hover:text-green-500"
             >
               <svg
                 className="h-4 w-4"
@@ -393,13 +373,37 @@ export default function UserRecentOrders({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
           )}
         </div>
+
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            className="group flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-gray-200 bg-white/50 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-green-200 hover:bg-white hover:text-green-600 disabled:opacity-50 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-green-400"
+          >
+            <svg
+              className={`h-5 w-5 transition-transform duration-700 ${
+                loading ? "animate-spin" : "group-hover:rotate-180"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </button>
+        )}
       </div>
       {loading ? (
         <div className="space-y-4">
@@ -428,8 +432,12 @@ export default function UserRecentOrders({
                   href={`/CurrentPendingOrders/viewOrderDetails/${order.id}${
                     order.orderType ? `?type=${order.orderType}` : ""
                   }`}
-                  className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
+                  className={`group block overflow-hidden rounded-xl border bg-white p-4 shadow-md transition-all duration-300 hover:shadow-xl dark:bg-gray-800 dark:shadow-md dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
                     isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
+                  } ${
+                    order.status === "cancelled"
+                      ? "border-red-500/50 hover:border-red-500 dark:border-red-900/50 dark:hover:border-red-500"
+                      : "border-gray-200 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-500"
                   }`}
                 >
                   <div className="flex items-center gap-3 md:gap-4">
@@ -553,8 +561,27 @@ export default function UserRecentOrders({
                     </div>
                   </div>
 
-                  {/* Delivery Time */}
-                  {order?.delivery_time && (
+                  {/* Delivery Time / Cancelled sticker */}
+                  {String(order.status).toLowerCase() === "cancelled" ? (
+                    <div className="mt-3 flex items-center justify-between border-t border-red-100 pt-2 dark:border-red-900/30">
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
+                        Status:
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          className="h-3.5 w-3.5"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path strokeLinecap="round" d="M15 9l-6 6M9 9l6 6" />
+                        </svg>
+                        Order Cancelled
+                      </span>
+                    </div>
+                  ) : order?.delivery_time ? (
                     <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
                       <span className="text-[10px] text-gray-600 dark:text-gray-400 md:text-xs">
                         Expected Delivery:
@@ -565,6 +592,24 @@ export default function UserRecentOrders({
                         orderId={order.id}
                         orderType={order.orderType}
                       />
+                    </div>
+                  ) : null}
+
+                  {/* Payment Button */}
+                  {String(order.status).toUpperCase() ===
+                    "AWAITING_PAYMENT" && (
+                    <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedPaymentOrder(order);
+                          setPaymentModalOpen(true);
+                        }}
+                        className="w-full rounded-xl bg-gradient-to-r from-orange-400 to-orange-500 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.02] hover:shadow-orange-500/40 active:scale-[0.98]"
+                      >
+                        Complete Payment
+                      </button>
                     </div>
                   )}
                 </Link>
@@ -577,10 +622,10 @@ export default function UserRecentOrders({
           <button
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
           >
             <svg
-              className="h-4 w-4"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -588,7 +633,7 @@ export default function UserRecentOrders({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M15 19l-7-7 7-7"
               />
             </svg>
@@ -605,10 +650,10 @@ export default function UserRecentOrders({
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-medium transition-all duration-300 ${
                     currentPage === page
-                      ? "border-green-500 bg-green-500 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      ? "scale-110 border-transparent bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
+                      : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
                   {page}
@@ -632,10 +677,10 @@ export default function UserRecentOrders({
               setCurrentPage((prev) => Math.min(totalPages, prev + 1))
             }
             disabled={currentPage === totalPages}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 transition-all duration-300 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700/50"
           >
             <svg
-              className="h-4 w-4"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -643,12 +688,30 @@ export default function UserRecentOrders({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M9 5l7 7-7 7"
               />
             </svg>
           </button>
         </div>
+      )}
+
+      {/* Payment Modal */}
+      {/* Payment Modal */}
+      {paymentModalOpen && selectedPaymentOrder && (
+        <CompletePaymentModal
+          open={paymentModalOpen}
+          order={selectedPaymentOrder}
+          orderType={selectedPaymentOrder.orderType || "regular"}
+          onClose={() => {
+            setPaymentModalOpen(false);
+            setSelectedPaymentOrder(null);
+          }}
+          onSuccess={() => {
+            setPaymentModalOpen(false);
+            if (onRefresh) onRefresh();
+          }}
+        />
       )}
     </>
   );

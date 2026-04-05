@@ -409,18 +409,232 @@ export default async function handler(
   }
 }
 
-async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
+export async function getReelsData(params: {
+  user_id?: string;
+  restaurant_id?: string;
+  type?: string;
+  limit?: string;
+  offset?: string;
+  id?: string;
+  currentUserId?: string | null;
+}) {
   if (!hasuraClient) {
-    return res.status(500).json({ error: "Hasura client not initialized" });
+    throw new Error("Hasura client not initialized");
   }
-  const { user_id, restaurant_id, type, limit, offset } = req.query;
 
-  // Default limit to 100 reels to prevent 4MB limit
+  const { user_id, restaurant_id, type, limit, offset, id, currentUserId } =
+    params;
+
+  // 2. Fetch the data (either by ID or batch)
   const limitValue = limit ? parseInt(limit as string) : 100;
   const offsetValue = offset ? parseInt(offset as string) : 0;
 
+  let data: ReelsResponse;
+
+  if (id) {
+    console.log(`[Reels API] Fetching single reel with ID: ${id}`);
+    const reelData = await hasuraClient.request<{ Reels: Reel[] }>(
+      GET_REEL_BY_ID,
+      { id: id as string }
+    );
+
+    if (reelData.Reels.length === 0) {
+      return null;
+    }
+
+    data = { Reels: reelData.Reels };
+  } else if (user_id) {
+    data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_USER, {
+      user_id: user_id as string,
+      limit: limitValue,
+      offset: offsetValue,
+    });
+  } else if (restaurant_id) {
+    data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_RESTAURANT, {
+      restaurant_id: restaurant_id as string,
+      limit: limitValue,
+      offset: offsetValue,
+    });
+  } else {
+    data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS, {
+      limit: limitValue,
+      offset: offsetValue,
+    });
+  }
+
+  // 3. Post-processing (Filtering and Enrichment)
+  let reels = data.Reels;
+
+  // Filter by type if requested
+  if (type) {
+    reels = reels.filter((reel) => reel.type === type);
+  }
+
+  // MANDATORY: Enrich with actual isLiked status for this user
+  if (currentUserId && reels.length > 0) {
+    const reelIds = reels.map((reel) => reel.id);
+    const userLikes = await hasuraClient.request<{
+      reel_likes: Array<{ reel_id: string }>;
+    }>(
+      gql`
+        query GetUserLikes($user_id: uuid!, $reel_ids: [uuid!]!) {
+          reel_likes(
+            where: { user_id: { _eq: $user_id }, reel_id: { _in: $reel_ids } }
+          ) {
+            reel_id
+          }
+        }
+      `,
+      { user_id: currentUserId, reel_ids: reelIds }
+    );
+
+    const likedReelIds = new Set(
+      userLikes.reel_likes.map((like) => like.reel_id)
+    );
+
+    // Update isLiked field for each reel
+    reels = reels.map((reel) => ({
+      ...reel,
+      isLiked: likedReelIds.has(reel.id),
+    }));
+  } else {
+    // If not logged in, set all isLiked to false
+    reels = reels.map((reel) => ({
+      ...reel,
+      isLiked: false,
+    }));
+  }
+
+  // Fetch user preferences history if logged in
+  let userLikeHistory: { [reelId: string]: { type: string } } = {};
+  if (currentUserId) {
+    try {
+      const allUserLikes = await hasuraClient.request<{
+        reel_likes: Array<{
+          reel_id: string;
+          Reels: { type: string } | null;
+        }>;
+      }>(
+        gql`
+          query GetUserLikeHistory($user_id: uuid!) {
+            reel_likes(
+              where: { user_id: { _eq: $user_id } }
+              limit: 100
+              order_by: { created_at: desc }
+            ) {
+              reel_id
+              Reels {
+                type
+              }
+            }
+          }
+        `,
+        { user_id: currentUserId }
+      );
+
+      allUserLikes.reel_likes.forEach((like) => {
+        if (like.Reels?.type) {
+          userLikeHistory[like.reel_id] = { type: like.Reels.type };
+        }
+      });
+    } catch (error) {
+      logger.error("Error fetching user like history", "ReelsAPI", error);
+    }
+  }
+
+  // Calculate preference scores
+  const typeCounts: { [type: string]: number } = {};
+  let totalLikes = 0;
+
+  Object.values(userLikeHistory).forEach((like) => {
+    const type = like.type;
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+    totalLikes++;
+  });
+
+  const preferences: { [type: string]: number } = {};
+  if (totalLikes > 0) {
+    Object.keys(typeCounts).forEach((type) => {
+      preferences[type] = typeCounts[type] / totalLikes;
+    });
+  }
+
+  return {
+    reels,
+    hasMore: !id && reels.length === limitValue,
+    userPreferences: preferences,
+  };
+}
+
+const GET_REEL_BY_ID = gql`
+  query GetReelByID($id: uuid!) {
+    Reels(where: { id: { _eq: $id } }) {
+      id
+      category
+      created_on
+      description
+      isLiked
+      likes
+      restaurant_id
+      title
+      type
+      user_id
+      video_url
+      delivery_time
+      Price
+      Product
+      shop_id
+      Shops {
+        name
+        id
+        image
+        description
+        address
+        latitude
+        longitude
+      }
+      User {
+        id
+        name
+        profile_picture
+        role
+      }
+      Restaurant {
+        id
+        lat
+        location
+        long
+        name
+        profile
+        verified
+      }
+      reel_likes_aggregate {
+        aggregate {
+          count
+        }
+      }
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
+        user_id
+        text
+        reel_id
+        likes
+        isLiked
+        id
+        created_on
+        User {
+          id
+          name
+          profile_picture
+          role
+        }
+      }
+    }
+  }
+`;
+
+async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Get current user session to determine if reels are liked
+    // 1. Get current user session FIRST
     const session = (await getServerSession(
       req,
       res,
@@ -428,135 +642,23 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
     )) as Session | null;
     const currentUserId = session?.user ? (session.user as any).id : null;
 
-    let data: ReelsResponse;
-
-    if (user_id) {
-      data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_USER, {
-        user_id: user_id as string,
-        limit: limitValue,
-        offset: offsetValue,
-      });
-    } else if (restaurant_id) {
-      data = await hasuraClient.request<ReelsResponse>(
-        GET_REELS_BY_RESTAURANT,
-        {
-          restaurant_id: restaurant_id as string,
-          limit: limitValue,
-          offset: offsetValue,
-        }
-      );
-    } else {
-      data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS, {
-        limit: limitValue,
-        offset: offsetValue,
-      });
-    }
-
-    let reels = data.Reels;
-    if (type) {
-      reels = reels.filter((reel) => reel.type === type);
-    }
-
-    // If user is logged in, check which reels they've liked and update isLiked field
-    if (currentUserId && reels.length > 0) {
-      const reelIds = reels.map((reel) => reel.id);
-      const userLikes = await hasuraClient.request<{
-        reel_likes: Array<{ reel_id: string }>;
-      }>(
-        gql`
-          query GetUserLikes($user_id: uuid!, $reel_ids: [uuid!]!) {
-            reel_likes(
-              where: { user_id: { _eq: $user_id }, reel_id: { _in: $reel_ids } }
-            ) {
-              reel_id
-            }
-          }
-        `,
-        { user_id: currentUserId, reel_ids: reelIds }
-      );
-
-      const likedReelIds = new Set(
-        userLikes.reel_likes.map((like) => like.reel_id)
-      );
-
-      // Update isLiked field for each reel
-      reels = reels.map((reel) => ({
-        ...reel,
-        isLiked: likedReelIds.has(reel.id),
-      }));
-    } else {
-      // If not logged in, set all isLiked to false
-      reels = reels.map((reel) => ({
-        ...reel,
-        isLiked: false,
-      }));
-    }
-
-    // Also fetch user's overall like history to calculate preferences
-    // This helps with better personalization even for reels not in current batch
-    let userLikeHistory: { [reelId: string]: { type: string } } = {};
-    if (currentUserId) {
-      try {
-        const allUserLikes = await hasuraClient.request<{
-          reel_likes: Array<{
-            reel_id: string;
-            Reels: { type: string } | null;
-          }>;
-        }>(
-          gql`
-            query GetUserLikeHistory($user_id: uuid!) {
-              reel_likes(
-                where: { user_id: { _eq: $user_id } }
-                limit: 100
-                order_by: { created_at: desc }
-              ) {
-                reel_id
-                Reels {
-                  type
-                }
-              }
-            }
-          `,
-          { user_id: currentUserId }
-        );
-
-        allUserLikes.reel_likes.forEach((like) => {
-          if (like.Reels?.type) {
-            userLikeHistory[like.reel_id] = { type: like.Reels.type };
-          }
-        });
-      } catch (error) {
-        logger.error("Error fetching user like history", "ReelsAPI", error);
-        // Continue without preference data if this fails
-      }
-    }
-
-    logger.info(`Found ${reels.length} reels`, "ReelsAPI");
-
-    // Calculate user preferences based on their like history
-    const typeCounts: { [type: string]: number } = {};
-    let totalLikes = 0;
-
-    Object.values(userLikeHistory).forEach((like) => {
-      const type = like.type;
-      typeCounts[type] = (typeCounts[type] || 0) + 1;
-      totalLikes++;
+    // 2. Fetch data using the shared logic
+    const result = await getReelsData({
+      ...(req.query as any),
+      currentUserId,
     });
 
-    const preferences: { [type: string]: number } = {};
-    if (totalLikes > 0) {
-      Object.keys(typeCounts).forEach((type) => {
-        preferences[type] = typeCounts[type] / totalLikes;
-      });
+    if (!result) {
+      return res.status(404).json({ error: "Reel not found" });
     }
 
+    // 3. Respond
     res.status(200).json({
-      reels,
-      hasMore: reels.length === limitValue,
-      userPreferences: preferences, // Include preferences for frontend
+      ...result,
+      success: true,
     });
   } catch (error) {
-    logger.error("Error fetching reels", "ReelsAPI", error);
+    logger.error("Error in handleGetReels", "ReelsAPI", error);
     res.status(500).json({ error: "Failed to fetch reels" });
   }
 }

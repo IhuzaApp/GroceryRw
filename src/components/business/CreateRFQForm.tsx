@@ -14,11 +14,14 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import rfqTermsOptions from "../../lib/rfqTermsOptions.json";
+import { storage } from "../../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface CreateRFQFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (rfqData: any) => void;
+  businessAccount?: any;
 }
 
 interface RFQFormData {
@@ -72,6 +75,7 @@ export function CreateRFQForm({
   isOpen,
   onClose,
   onSubmit,
+  businessAccount,
 }: CreateRFQFormProps) {
   const [formData, setFormData] = useState<RFQFormData>({
     title: "",
@@ -204,13 +208,33 @@ export function CreateRFQForm({
     setIsSubmitting(true);
 
     try {
-      // Convert attachments to base64 (for now, we'll use the first attachment)
-      let attachmentBase64 = "";
+      // 0. Upload attachments to Firebase Storage if they exist
+      const uploadedUrls: string[] = [];
+      const businessName = businessAccount?.businessName || "anonymous";
+      const timestamp = Date.now();
+
+      // Slugify business name and rfq title for a clean path
+      const slugify = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      const bNameSlug = slugify(businessName);
+      const rfqTitleSlug = slugify(formData.title || "untitled-rfq");
+
       if (formData.attachments.length > 0) {
-        try {
-          attachmentBase64 = await convertFileToBase64(formData.attachments[0]);
-        } catch (error) {
-          console.error("Error converting file to base64:", error);
+        for (const file of formData.attachments) {
+          try {
+            const fileName = `${timestamp}_${file.name}`;
+            const storagePath = `plasbusiness/${bNameSlug}/rfqs/${rfqTitleSlug}/${fileName}`;
+            const storageRef = ref(storage!, storagePath);
+            await uploadBytes(storageRef, file);
+            const downloadUrl = await getDownloadURL(storageRef);
+            uploadedUrls.push(downloadUrl);
+          } catch (uploadError) {
+            console.error(`Error uploading ${file.name}:`, uploadError);
+            toast.error(`Failed to upload ${file.name}`);
+          }
         }
       }
 
@@ -266,7 +290,7 @@ export function CreateRFQForm({
           contact_name: formData.contactInfo.name,
           email: formData.contactInfo.email,
           phone: formData.contactInfo.phone || "",
-          attachment: attachmentBase64,
+          attachment: uploadedUrls.join(", "), // Send comma-separated URLs
         }),
       });
 

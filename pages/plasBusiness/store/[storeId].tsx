@@ -35,6 +35,8 @@ import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
 import { CreateStoreForm } from "../../../src/components/business/CreateStoreForm";
 import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
 import { CategorySelect } from "../../../src/components/ui/CategorySelect";
+import { storage } from "../../../src/lib/firebase";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 /** Clothes: garment sizes. Item: general / product sizes (phones, etc.). */
 const CLOTHES_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -146,6 +148,7 @@ export default function StoreDetailsPage() {
   const [businessAccountId, setBusinessAccountId] = useState<string | null>(
     null
   );
+  const [businessName, setBusinessName] = useState<string>("");
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusTab, setStatusTab] = useState<"active" | "pending_disabled">(
@@ -273,6 +276,7 @@ export default function StoreDetailsPage() {
         const data = await response.json();
         if (data.hasAccount && data.account) {
           setBusinessAccountId(data.account.id);
+          setBusinessName(data.account.businessName || "");
         }
       }
     } catch (error) {
@@ -496,10 +500,41 @@ export default function StoreDetailsPage() {
         opts.push({ key: "size", label: "Size", values: selectedSizes });
       if (selectedColors.length > 0)
         opts.push({ key: "color", label: "Color", values: selectedColors });
+      // 1. Upload image to Firebase if it's a new or changed base64 image
+      let finalImageUrl = productImage;
+      if (productImage && productImage.startsWith("data:")) {
+        try {
+          const businessNameSlug = (businessName || "anonymous")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          const productNameSlug = newProduct.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          const timestamp = Date.now();
+          const fileName = `${productNameSlug}_${timestamp}`;
+          const storagePath = `plasbusiness/${businessNameSlug}/stores/${storeId}/products/${fileName}`;
+          const storageRef = ref(storage!, storagePath);
+
+          // Upload data_url
+          await uploadString(storageRef, productImage, "data_url");
+          finalImageUrl = await getDownloadURL(storageRef);
+        } catch (uploadError: any) {
+          console.error(
+            "Error uploading product image to Firebase:",
+            uploadError
+          );
+          toast.error("Failed to upload image. Please try again.");
+          setIsCreatingProduct(false);
+          return;
+        }
+      }
+
       const body: any = {
         name: newProduct.name,
         description: newProduct.description,
-        image: productImage,
+        image: finalImageUrl,
         price: newProduct.price,
         unit: newProduct.unit,
         category: newProduct.category || "",
@@ -2238,6 +2273,7 @@ export default function StoreDetailsPage() {
           setShowEditStoreModal(false);
         }}
         editingStore={store}
+        businessAccount={{ id: businessAccountId, businessName }}
       />
     </RootLayout>
   );

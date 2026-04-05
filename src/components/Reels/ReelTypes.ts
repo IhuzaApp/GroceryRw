@@ -4,6 +4,7 @@ export type PostType = "restaurant" | "supermarket" | "chef" | "business";
 
 export interface Comment {
   id: string;
+  user_id?: string; // Add this to identify ownership
   user: {
     name: string;
     avatar: string;
@@ -28,6 +29,7 @@ export interface BasePost {
     title: string;
     description: string;
     video: string;
+    thumbnail?: string;
     category: string;
   };
   stats: {
@@ -65,6 +67,7 @@ export interface SupermarketPost extends BasePost {
     store: string;
     inStock: boolean;
     discount?: number;
+    image?: string;
   };
 }
 
@@ -123,7 +126,12 @@ export const isImageUrl = (url: string) => {
 };
 
 export const isValidMediaUrl = (url: string) => {
-  if (!url) return false;
+  if (!url || typeof url !== "string") return false;
+
+  // Stricter check: URLs shouldn't have spaces (sentences) and must start correctly.
+  // This prevents description text (like the Starbucks example) from being used as a media source.
+  if (url.trim().includes(" ")) return false;
+
   const validStarts = ["http://", "https://", "/", "blob:", "data:"];
   return validStarts.some((start) => url.startsWith(start));
 };

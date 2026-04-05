@@ -2,6 +2,7 @@ import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
+import { getAI, GoogleAIBackend } from "firebase/ai";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -24,13 +25,17 @@ try {
 }
 
 // Initialize Firestore
-export const db = app ? getFirestore(app) : null;
+const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || "(default)";
+export const db = app ? getFirestore(app, databaseId) : null;
 
 // Initialize Storage
 export const storage = app ? getStorage(app) : null;
 
 // Initialize Firebase Auth
 export const auth = app ? getAuth(app) : null;
+
+// Initialize Gemini Developer AI backend
+export const ai = app ? getAI(app, { backend: new GoogleAIBackend() }) : null;
 
 // Function to authenticate with Firebase using a custom token
 export const authenticateWithFirebase = async (customToken: string) => {

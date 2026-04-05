@@ -178,17 +178,6 @@ export default function Step2Identity({
                 </div>
               )}
             </div>
-            {!formData.rdb_cert_url && (
-              <div className="relative">
-                <input
-                  name="rdb_cert"
-                  value={formData.rdb_cert}
-                  onChange={onChange}
-                  className="h-14 w-full rounded-xl border-2 border-gray-100 bg-gray-50 px-4 text-black outline-none focus:border-[#022C22] focus:bg-white"
-                  placeholder="Or enter certificate number manually"
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>

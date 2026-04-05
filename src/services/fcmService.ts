@@ -7,8 +7,8 @@ import { formatCurrency } from "../lib/formatCurrency";
 const hasFirebaseCredentials = () => {
   return !!(
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-    process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL &&
-    process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY
+    process.env.FIREBASE_CLIENT_EMAIL &&
+    process.env.FIREBASE_PRIVATE_KEY
   );
 };
 
@@ -19,23 +19,42 @@ let db: any = null;
 if (hasFirebaseCredentials()) {
   try {
     if (!getApps().length) {
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+      if (privateKey) {
+        // Remove surrounding quotes and trim
+        privateKey = privateKey.trim();
+        privateKey = privateKey.replace(/^['"]+|['"]+$/g, "");
+        // Replace literal \n with newlines
+        privateKey = privateKey.replace(/\\n/g, "\n");
+
+        // Ensure it starts and ends correctly (PKCS#8 format)
+        if (!privateKey.startsWith("-----BEGIN PRIVATE KEY-----")) {
+          privateKey = "-----BEGIN PRIVATE KEY-----\n" + privateKey;
+        }
+        if (!privateKey.includes("-----END PRIVATE KEY-----")) {
+          privateKey = privateKey.trim() + "\n-----END PRIVATE KEY-----\n";
+        }
+      }
+
       initializeApp({
         credential: cert({
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          clientEmail: process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY?.replace(
-            /\\n/g,
-            "\n"
-          ),
+          projectId,
+          clientEmail,
+          privateKey,
         }),
+        projectId,
       });
     }
     messaging = getMessaging();
     db = getFirestore();
-    console.log("✅ [FCM Service] Firebase Admin SDK initialized successfully");
+
+    // console.log(`✅ [FCM Service] Firebase Admin SDK initialized successfully (Project: ${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID})`);
   } catch (error) {
-    console.warn(
-      "⚠️ [FCM Service] Failed to initialize Firebase Admin SDK:",
+    console.error(
+      "❌ [FCM Service] Failed to initialize Firebase Admin SDK:",
       error
     );
   }
@@ -114,9 +133,19 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
     });
 
     return tokens;
-  } catch (error) {
+  } catch (error: any) {
+    // gRPC code 5 = NOT_FOUND: Firestore database doesn't exist yet or hasn't been provisioned.
+    // Return empty tokens gracefully so FCM just no-ops rather than crashing callers.
+    if (error?.code === 5 || error?.message?.includes("NOT_FOUND")) {
+      console.warn(
+        "Please enable Firestore in the Firebase console for project: " +
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID +
+          ". Returning empty tokens."
+      );
+      return [];
+    }
     console.error("❌ [FCM Service] Error getting tokens:", error);
-    throw error;
+    return [];
   }
 };
 
@@ -167,46 +196,27 @@ export const sendNotificationToUser = async (
         title: payload.title,
         body: payload.body,
         ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-        ...(payload.data?.click_action && {
-          click_action: payload.data.click_action,
-        }),
       },
       data: payload.data || {},
       tokens: fcmTokens,
     };
 
-    // Send to each token individually since sendMulticast might not be available
-    let successCount = 0;
-    let failureCount = 0;
+    // Use sendEachForMulticast for better performance and reliability
+    const response = await messaging.sendEachForMulticast(message);
+
     const invalidTokens: string[] = [];
 
-    for (const token of fcmTokens) {
-      try {
-        const singleMessage = {
-          notification: {
-            ...message.notification,
-            ...(payload.data?.click_action && {
-              click_action: payload.data.click_action,
-            }),
-          },
-          data: message.data,
-          token: token,
-        };
-
-        await messaging.send(singleMessage);
-        successCount++;
-      } catch (error: any) {
-        failureCount++;
-
-        // Check if token is invalid
+    response.responses.forEach((resp: any, idx: number) => {
+      if (!resp.success) {
+        const error = resp.error;
         if (
-          error.code === "messaging/invalid-registration-token" ||
-          error.code === "messaging/registration-token-not-registered"
+          error?.code === "messaging/invalid-registration-token" ||
+          error?.code === "messaging/registration-token-not-registered"
         ) {
-          invalidTokens.push(token);
+          invalidTokens.push(fcmTokens[idx]);
         }
       }
-    }
+    });
 
     // Remove invalid tokens
     if (invalidTokens.length > 0) {
@@ -215,8 +225,8 @@ export const sendNotificationToUser = async (
       }
     }
   } catch (error) {
+    // Silent fail - don't propagate so callers aren't disrupted by FCM issues
     console.error("❌ [FCM Service] Error sending notification:", error);
-    throw error;
   }
 };
 
@@ -235,12 +245,12 @@ export const sendNotificationToUsers = async (
       return;
     }
 
-    const allTokens: string[] = [];
+    // Fetch tokens in parallel for better performance
+    const tokenResults = await Promise.all(
+      userIds.map((userId) => getFCMTokens(userId))
+    );
 
-    for (const userId of userIds) {
-      const tokens = await getFCMTokens(userId);
-      allTokens.push(...tokens.map((token) => token.token));
-    }
+    const allTokens = tokenResults.flat().map((t) => t.token);
 
     if (allTokens.length === 0) {
       return;
@@ -256,7 +266,7 @@ export const sendNotificationToUsers = async (
       tokens: allTokens,
     };
 
-    const response = await messaging.sendMulticast(message);
+    const response = await messaging.sendEachForMulticast(message);
 
     console.log("✅ [FCM Service] Notification sent:", {
       successCount: response.successCount,

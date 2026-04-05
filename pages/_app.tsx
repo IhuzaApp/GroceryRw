@@ -26,6 +26,7 @@ import {
 import { ThemeProvider } from "../src/context/ThemeContext";
 import { LanguageProvider } from "../src/context/LanguageContext";
 import InstallPrompt from "../src/components/ui/InstallPrompt";
+import LoadingOverlay from "../src/components/ui/LoadingOverlay";
 import Head from "next/head";
 
 // Configure NProgress
@@ -189,18 +190,22 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
       // Force reload the page to ensure we have the latest session data
       window.location.reload();
     }
-  }, [status]);
+
+    // New profile completion guard
+    if (
+      status === "authenticated" &&
+      session?.user &&
+      !(session.user as any).isProfileComplete &&
+      window.location.pathname !== "/Auth/CompleteProfile" &&
+      !window.location.pathname.startsWith("/api/")
+    ) {
+      window.location.href = "/Auth/CompleteProfile";
+    }
+  }, [status, session]);
 
   // Show loading state while session is being determined
   if (status === "loading") {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white transition-colors duration-200 dark:bg-gray-900">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingOverlay />;
   }
 
   return <>{children}</>;

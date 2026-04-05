@@ -252,8 +252,7 @@ export const getFCMToken = async (): Promise<string | null> => {
     }
 
     const token = await getToken(messaging, {
-      vapidKey:
-        "BHlNUbElLjZwdCrqi9LxcPStpMhVtwpf1HRRUJA-iP1eqiXERJWSibJCiPwLJuOBOjRPT70RJL5n64EZxJgQfr4",
+      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
     });
 
     if (!token) {
@@ -348,7 +347,7 @@ export const setupFCMListener = (
             silent: false,
             vibrate: [200, 100, 200],
             data: payload.data,
-          });
+          } as any);
 
           directNotif.onclick = () => {
             window.focus();
@@ -383,7 +382,7 @@ export const setupFCMListener = (
                   { action: "view", title: "View" },
                   { action: "close", title: "Close" },
                 ],
-              };
+              } as any;
 
               return registration.showNotification(
                 notificationTitle,

@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
-export const CREATE_RESTAURANT_ACCOUNT = gql`
-  mutation createRestaurantaccount(
+export const CREATE_RESTAURANT = gql`
+  mutation CreateRestaurant(
     $email: String = ""
     $lat: String = ""
     $location: String = ""
@@ -14,60 +14,11 @@ export const CREATE_RESTAURANT_ACCOUNT = gql`
     $ussd: String = ""
     $rdb_cert: String = ""
     $restaurant_id: uuid = ""
-    $request_count: Int = 10
-    $month: String = ""
-    $year: String = ""
-    $shop_id: uuid = ""
-    $balance: String = ""
-    $restaurant_id1: uuid = ""
-    $shop_id1: uuid = ""
-    $billing_cycle: String = ""
-    $business_id: uuid = ""
-    $restaurant_id2: uuid = ""
-    $shop_id2: uuid = ""
-    $start_date: timestamptz = ""
-    $status: String = ""
-    $updated_at: timestamptz = ""
-    $end_date: timestamptz = ""
-    $plan_id: uuid = ""
-    $aiUsage_id: uuid = ""
-    $currency: String = ""
-    $discount_amount: String = ""
-    $due_date: timestamptz = ""
-    $invoice_number: String = ""
-    $issued_at: timestamptz = ""
-    $paid_at: timestamptz = ""
-    $payment_method: String = ""
-    $plan_name: String = ""
-    $plan_price: String = ""
-    $reelUsage_id: uuid = ""
-    $shopSubscription_id: uuid = ""
-    $status1: String = ""
-    $subtotal_amount: String = ""
-    $tax_amount: String = ""
-    $Address: String = ""
-    $Position: String = ""
-    $dob: String = ""
-    $email1: String = ""
-    $employeeID: Int = 10
-    $fullnames: String = ""
-    $gender: String = ""
-    $last_login: String = ""
-    $password: String = ""
-    $phone1: String = ""
-    $restaurant_id3: uuid = ""
-    $roleType: String = ""
-    $shop_id3: uuid = ""
-    $twoFactorSecrets: String = ""
-    $business_id1: uuid = ""
-    $shop_id4: uuid = ""
-    $restaurant_id4: uuid = ""
-    $month1: String = ""
-    $upload_count: Int = 10
-    $year1: String = ""
+    $relatedTo: String = null
   ) {
     insert_Restaurants(
       objects: {
+        id: $restaurant_id
         email: $email
         is_active: false
         lat: $lat
@@ -80,88 +31,8 @@ export const CREATE_RESTAURANT_ACCOUNT = gql`
         tin: $tin
         ussd: $ussd
         verified: false
-        ai_usages: {
-          data: {
-            restaurant_id: $restaurant_id
-            request_count: $request_count
-            month: $month
-            year: $year
-            shop_id: $shop_id
-            subscription_invoices: {
-              data: {
-                aiUsage_id: $aiUsage_id
-                currency: $currency
-                deleted: false
-                discount_amount: $discount_amount
-                due_date: $due_date
-                invoice_number: $invoice_number
-                is_overdue: false
-                issued_at: $issued_at
-                paid_at: $paid_at
-                payment_method: $payment_method
-                plan_name: $plan_name
-                plan_price: $plan_price
-                reelUsage_id: $reelUsage_id
-                shopSubscription_id: $shopSubscription_id
-                status: $status1
-                subtotal_amount: $subtotal_amount
-                tax_amount: $tax_amount
-              }
-            }
-          }
-        }
-        merchant_wallets: {
-          data: {
-            active: false
-            balance: $balance
-            restaurant_id: $restaurant_id1
-            shop_id: $shop_id1
-          }
-        }
-        shop_subscription: {
-          data: {
-            billing_cycle: $billing_cycle
-            restaurant_id: $restaurant_id2
-            shop_id: $shop_id2
-            start_date: $start_date
-            status: $status
-            updated_at: $updated_at
-            end_date: $end_date
-            plan_id: $plan_id
-          }
-        }
-        orgEmployees: {
-          data: {
-            Address: $Address
-            Position: $Position
-            active: true
-            dob: $dob
-            email: $email1
-            employeeID: $employeeID
-            fullnames: $fullnames
-            gender: $gender
-            generatePassword: false
-            last_login: $last_login
-            multAuthEnabled: false
-            online: false
-            password: $password
-            phone: $phone1
-            restaurant_id: $restaurant_id3
-            roleType: $roleType
-            shop_id: $shop_id3
-            twoFactorSecrets: $twoFactorSecrets
-          }
-        }
         rdb_cert: $rdb_cert
-        reel_usages: {
-          data: {
-            shop_id: $shop_id4
-            restaurant_id: $restaurant_id4
-            month: $month1
-            upload_count: $upload_count
-            year: $year1
-          }
-        }
+        relatedTo: $relatedTo
       }
     ) {
       affected_rows
@@ -169,12 +40,13 @@ export const CREATE_RESTAURANT_ACCOUNT = gql`
   }
 `;
 
-export const CREATE_SHOP_ACCOUNT = gql`
-  mutation CreareSHopAccount(
+export const CREATE_SHOP = gql`
+  mutation CreateShop(
     $address: String = ""
     $category_id: uuid = ""
     $description: String = ""
     $image: String = ""
+    $is_active: Boolean = false
     $latitude: String = ""
     $logo: String = ""
     $longitude: String = ""
@@ -185,21 +57,144 @@ export const CREATE_SHOP_ACCOUNT = gql`
     $ssd: String = ""
     $tin: String = ""
     $shop_id: uuid = ""
-    $upload_count: Int = 10
-    $year: String = ""
-    $billing_cycle: String = ""
-    $business_id: uuid = ""
-    $end_date: timestamptz = ""
-    $plan_id: uuid = ""
-    $shop_id1: uuid = ""
-    $restaurant_id: uuid = ""
-    $start_date: timestamptz = ""
-    $status: String = ""
+  ) {
+    insert_Shops(
+      objects: {
+        id: $shop_id
+        address: $address
+        category_id: $category_id
+        description: $description
+        image: $image
+        is_active: $is_active
+        latitude: $latitude
+        logo: $logo
+        longitude: $longitude
+        name: $name
+        operating_hours: $operating_hours
+        phone: $phone
+        relatedTo: $relatedTo
+        ssd: $ssd
+        tin: $tin
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const CREATE_WALLET = gql`
+  mutation CreateWallet(
+    $active: Boolean = false
+    $balance: String = "0"
+    $restaurant_id: uuid = null
+    $shop_id: uuid = null
+  ) {
+    insert_merchant_wallets(
+      objects: {
+        active: $active
+        balance: $balance
+        restaurant_id: $restaurant_id
+        shop_id: $shop_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const CREATE_AI_USAGE = gql`
+  mutation CreateAiUsage(
+    $id: uuid!
+    $restaurant_id: uuid
+    $shop_id: uuid
+    $request_count: Int
+    $month: String
+    $year: String
+    $business_id: uuid
+    $user_id: uuid = null
+  ) {
+    insert_ai_usage(
+      objects: {
+        id: $id
+        restaurant_id: $restaurant_id
+        shop_id: $shop_id
+        request_count: $request_count
+        month: $month
+        year: $year
+        business_id: $business_id
+        user_id: $user_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const CREATE_REEL_USAGE = gql`
+  mutation CreateReelUsage(
+    $id: uuid!
+    $restaurant_id: uuid
+    $shop_id: uuid
+    $month: String
+    $upload_count: Int
+    $year: String
+    $business_id: uuid
+  ) {
+    insert_reel_usage(
+      objects: {
+        id: $id
+        restaurant_id: $restaurant_id
+        shop_id: $shop_id
+        month: $month
+        upload_count: $upload_count
+        year: $year
+        business_id: $business_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const CREATE_SUBSCRIPTION = gql`
+  mutation CreateSubscription(
+    $id: uuid!
+    $billing_cycle: String
+    $restaurant_id: uuid
+    $shop_id: uuid
+    $business_id: uuid
+    $start_date: timestamptz
+    $status: String
+    $updated_at: timestamptz
+    $end_date: timestamptz
+    $plan_id: uuid
+  ) {
+    insert_shop_subscriptions(
+      objects: {
+        id: $id
+        billing_cycle: $billing_cycle
+        restaurant_id: $restaurant_id
+        shop_id: $shop_id
+        business_id: $business_id
+        start_date: $start_date
+        status: $status
+        updated_at: $updated_at
+        end_date: $end_date
+        plan_id: $plan_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const CREATE_INVOICE = gql`
+  mutation CreateInvoice(
     $aiUsage_id: uuid = ""
     $currency: String = ""
     $discount_amount: String = ""
-    $invoice_number: String = ""
     $due_date: timestamptz = ""
+    $invoice_number: String = ""
     $issued_at: timestamptz = ""
     $paid_at: timestamptz = ""
     $payment_method: String = ""
@@ -207,114 +202,83 @@ export const CREATE_SHOP_ACCOUNT = gql`
     $plan_price: String = ""
     $reelUsage_id: uuid = ""
     $shopSubscription_id: uuid = ""
-    $status1: String = ""
+    $status: String = ""
     $subtotal_amount: String = ""
     $tax_amount: String = ""
-    $balance: String = ""
-    $shop_id2: uuid = ""
-    $restaurant_id1: uuid = ""
+    $updated_at: timestamptz = ""
+  ) {
+    insert_subscription_invoices(
+      objects: {
+        aiUsage_id: $aiUsage_id
+        currency: $currency
+        discount_amount: $discount_amount
+        due_date: $due_date
+        invoice_number: $invoice_number
+        is_overdue: false
+        issued_at: $issued_at
+        paid_at: $paid_at
+        payment_method: $payment_method
+        plan_name: $plan_name
+        plan_price: $plan_price
+        reelUsage_id: $reelUsage_id
+        shopSubscription_id: $shopSubscription_id
+        status: $status
+        subtotal_amount: $subtotal_amount
+        tax_amount: $tax_amount
+        updated_at: $updated_at
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const CREATE_EMPLOYEE = gql`
+  mutation CreateEmployee(
     $Address: String = ""
     $Position: String = ""
+    $active: Boolean = false
     $dob: String = ""
     $email: String = ""
-    $employeeID: Int = 10
+    $employeeID: Int = 0
     $fullnames: String = ""
     $gender: String = ""
+    $last_login: String = ""
     $password: String = ""
-    $phone1: String = ""
-    $restaurant_id2: uuid = ""
+    $phone: String = ""
+    $restaurant_id: uuid = null
+    $shop_id: uuid = null
     $roleType: String = ""
-    $shop_id3: uuid = ""
-    $twoFactorSecrets: String = ""
-    $orgEmployeeID: uuid = ""
+    $orgEmployeeID: uuid!
     $privillages: jsonb = ""
     $update_on: timestamptz = ""
+    $generatePassword: Boolean = false
+    $multAuthEnabled: Boolean = false
+    $online: Boolean = false
+    $twoFactorSecrets: String = ""
   ) {
-    insert_Shops(
+    insert_orgEmployees(
       objects: {
-        address: $address
-        category_id: $category_id
-        description: $description
-        image: $image
-        is_active: false
-        latitude: $latitude
-        logo: $logo
-        longitude: $longitude
-        name: $name
-        operating_hours: $operating_hours
+        Address: $Address
+        Position: $Position
+        active: $active
+        dob: $dob
+        email: $email
+        employeeID: $employeeID
+        fullnames: $fullnames
+        gender: $gender
+        last_login: $last_login
+        password: $password
         phone: $phone
-        ssd: $ssd
-        tin: $tin
-        reel_usages: {
-          data: { shop_id: $shop_id, upload_count: $upload_count, year: $year }
-        }
-        shop_subscription: {
-          data: {
-            billing_cycle: $billing_cycle
-            end_date: $end_date
-            plan_id: $plan_id
-            shop_id: $shop_id1
-            restaurant_id: $restaurant_id
-            start_date: $start_date
-            status: $status
-            subscription_invoices: {
-              data: {
-                aiUsage_id: $aiUsage_id
-                currency: $currency
-                deleted: false
-                discount_amount: $discount_amount
-                due_date: $due_date
-                invoice_number: $invoice_number
-                is_overdue: false
-                issued_at: $issued_at
-                paid_at: $paid_at
-                payment_method: $payment_method
-                plan_name: $plan_name
-                plan_price: $plan_price
-                reelUsage_id: $reelUsage_id
-                shopSubscription_id: $shopSubscription_id
-                status: $status1
-                subtotal_amount: $subtotal_amount
-                tax_amount: $tax_amount
-              }
-            }
-          }
-        }
-        merchant_wallet: {
-          data: {
-            active: false
-            balance: $balance
-            shop_id: $shop_id2
-            restaurant_id: $restaurant_id1
-          }
-        }
-        orgEmployees: {
-          data: {
-            Address: $Address
-            Position: $Position
-            active: true
-            dob: $dob
-            email: $email
-            fullnames: $fullnames
-            gender: $gender
-            generatePassword: false
-            multAuthEnabled: false
-            online: false
-            password: $password
-            phone: $phone1
-            restaurant_id: $restaurant_id2
-            roleType: $roleType
-            shop_id: $shop_id3
-            twoFactorSecrets: $twoFactorSecrets
-            orgEmployeeRoles: {
-              data: {
-                orgEmployeeID: $orgEmployeeID
-                privillages: $privillages
-                update_on: $update_on
-              }
-            }
-          }
-        }
+        restaurant_id: $restaurant_id
+        shop_id: $shop_id
+        roleType: $roleType
+        id: $orgEmployeeID
+        generatePassword: $generatePassword
+        multAuthEnabled: $multAuthEnabled
+        online: $online
+        twoFactorSecrets: $twoFactorSecrets
+        orgEmployeeRoles: { data: { privillages: $privillages } }
       }
     ) {
       affected_rows

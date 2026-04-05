@@ -41,12 +41,12 @@ export default function AboutFooter() {
             {/* Links */}
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/careers"
                   className="text-gray-300 transition-colors hover:text-white"
                 >
                   Careers
-                </a>
+                </Link>
               </li>
               <li>
                 <Link
@@ -104,12 +104,12 @@ export default function AboutFooter() {
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/contact"
                   className="text-gray-300 transition-colors hover:text-white"
                 >
                   Contact us
-                </a>
+                </Link>
               </li>
               <li>
                 <a

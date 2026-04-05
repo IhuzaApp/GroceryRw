@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "rsuite";
+import { Badge, Avatar } from "rsuite";
 import { useRouter } from "next/router";
 import {
   FoodPost,
@@ -7,6 +7,7 @@ import {
   SupermarketPost,
   ChefPost,
   BusinessPost,
+  isValidMediaUrl,
 } from "./ReelTypes";
 import {
   UtensilsIcon,
@@ -102,20 +103,31 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 width: "100%",
                 padding: "12px",
                 borderRadius: "25px",
-                fontWeight: "bold",
-                fontSize: "16px",
-                backgroundColor: "#166534",
-                borderColor: "#166534",
-                color: "white",
-                border: "none",
+                fontWeight: "700",
+                fontSize: "15px",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                color: "#fff",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transition: "background-color 0.2s ease, transform 0.1s ease",
                 opacity: 1,
               }}
-              onClick={
-                isAuthenticated ? () => setShowOrderModal(true) : onAuthRequired
+              onClick={(e) => {
+                e.stopPropagation();
+                isAuthenticated ? setShowOrderModal(true) : onAuthRequired();
+              }}
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.97)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
               }
               disabled={false}
             >
@@ -191,33 +203,53 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 {supermarketPost.product.inStock ? "In Stock" : "Out of Stock"}
               </Badge>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 10 }}>
               <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
-                  fontWeight: "bold",
-                  backgroundColor: "#2563eb",
-                  borderColor: "#2563eb",
-                  color: "white",
-                  border: "none",
+                  fontWeight: "700",
+                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  color: "#fff",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
                   cursor: post.shop_id ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: post.shop_id ? 1 : 0.5,
+                  transition: "transform 0.1s ease",
+                  opacity: post.shop_id ? 1 : 0.6,
                 }}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (!isAuthenticated) return onAuthRequired();
                   if (post.shop_id) {
                     router.push(`/shops/${post.shop_id}`);
                   }
                 }}
+                onMouseDown={(e) => {
+                  if (post.shop_id)
+                    e.currentTarget.style.transform = "scale(0.97)";
+                }}
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={!post.shop_id}
               >
                 <StoreIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  }}
+                >
                   Visit Store
                 </span>
               </button>
@@ -226,23 +258,35 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
-                  fontWeight: "bold",
-                  backgroundColor: "#166534",
-                  borderColor: "#166534",
-                  color: "white",
-                  border: "none",
+                  fontWeight: "700",
+                  backgroundColor: "rgba(255, 255, 255, 0.25)",
+                  color: "#fff",
+                  border: "1px solid rgba(255, 255, 255, 0.4)",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
                   cursor: supermarketPost.product.inStock
                     ? "pointer"
                     : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: supermarketPost.product.inStock ? 1 : 0.5,
+                  transition: "transform 0.1s ease",
+                  opacity: supermarketPost.product.inStock ? 1 : 0.6,
                 }}
-                onClick={
-                  isAuthenticated
-                    ? () => setShowOrderModal(true)
-                    : onAuthRequired
+                onClick={(e) => {
+                  e.stopPropagation();
+                  isAuthenticated ? setShowOrderModal(true) : onAuthRequired();
+                }}
+                onMouseDown={(e) => {
+                  if (supermarketPost.product.inStock)
+                    e.currentTarget.style.transform = "scale(0.97)";
+                }}
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
                 }
                 disabled={!supermarketPost.product.inStock}
               >
@@ -300,28 +344,49 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 ({chefPost.recipe.subscribers})
               </span>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 10 }}>
               <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
-                  fontWeight: "bold",
-                  backgroundColor: "#dc2626",
-                  borderColor: "#dc2626",
-                  color: "white",
-                  border: "none",
+                  fontWeight: "700",
+                  backgroundColor: "rgba(220, 38, 38, 0.4)",
+                  color: "#fff",
+                  border: "1px solid rgba(220, 38, 38, 0.5)",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  transition: "transform 0.1s ease",
                   opacity: 1,
                 }}
-                onClick={isAuthenticated ? undefined : onAuthRequired}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  isAuthenticated ? undefined : onAuthRequired();
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.97)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={false}
               >
                 <YoutubeIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  }}
+                >
                   YouTube
                 </span>
               </button>
@@ -330,22 +395,43 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
-                  fontWeight: "bold",
-                  backgroundColor: "#7c3aed",
-                  borderColor: "#7c3aed",
-                  color: "white",
-                  border: "none",
+                  fontWeight: "700",
+                  backgroundColor: "rgba(124, 58, 237, 0.4)",
+                  color: "#fff",
+                  border: "1px solid rgba(124, 58, 237, 0.5)",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  transition: "transform 0.1s ease",
                   opacity: 1,
                 }}
-                onClick={isAuthenticated ? undefined : onAuthRequired}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  isAuthenticated ? undefined : onAuthRequired();
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.97)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={false}
               >
                 <BookOpenIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    whiteSpace: "nowrap",
+                    fontSize: "14px",
+                  }}
+                >
                   Get Recipe
                 </span>
               </button>
@@ -375,29 +461,42 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 </span>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 10 }}>
               <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
-                  fontWeight: "bold",
-                  backgroundColor: "#2563eb",
-                  borderColor: "#2563eb",
-                  color: "white",
-                  border: "none",
+                  fontWeight: "700",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  color: "#fff",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  transition: "transform 0.1s ease",
                   opacity: 1,
                 }}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (!isAuthenticated) return onAuthRequired();
                   if (businessPost.business?.phone) {
                     window.location.href = `tel:${businessPost.business.phone}`;
                   }
                 }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.97)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
                 disabled={false}
               >
                 <span style={{ whiteSpace: "nowrap" }}>Contact Business</span>
@@ -419,20 +518,78 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
         left: 0,
         right: 0,
         padding: "20px 16px 20px 16px",
-        paddingRight: "80px", // Space for right side buttons
+        paddingRight: "72px", // Give space for right side buttons
         zIndex: 10,
-        background:
-          "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)",
+        pointerEvents: "auto",
+        transition: "all 0.3s ease",
       }}
     >
+      {/* Creator Info */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 12,
+        }}
+      >
+        <Avatar
+          circle
+          size="sm"
+          src={
+            post.creator.avatar && isValidMediaUrl(post.creator.avatar)
+              ? post.creator.avatar
+              : "/placeholder.svg"
+          }
+          alt={post.creator.name}
+          style={{
+            border: "1.5px solid rgba(255,255,255,0.9)",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+          }}
+        />
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span
+            style={{
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "15px",
+              textShadow: "0 1px 3px rgba(0,0,0,0.8)",
+            }}
+          >
+            {post.creator.name}
+          </span>
+          {post.creator.verified && (
+            <div
+              style={{
+                width: 14,
+                height: 14,
+                backgroundColor: "#3b82f6",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
+              }}
+            >
+              <span
+                style={{ color: "#fff", fontSize: "10px", fontWeight: "bold" }}
+              >
+                ✓
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Title and Description */}
       <div style={{ marginBottom: 16 }}>
         <h2
           style={{
             color: "#fff",
-            fontSize: "20px",
-            fontWeight: "bold",
-            marginBottom: 8,
+            fontSize: "17px",
+            fontWeight: "700",
+            marginBottom: 6,
+            textShadow: "0 1px 3px rgba(0,0,0,0.8)",
           }}
         >
           {post.content.title}

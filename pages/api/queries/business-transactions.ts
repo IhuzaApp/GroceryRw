@@ -26,6 +26,11 @@ const GET_TRANSACTIONS_BY_WALLET = gql`
       status
       description
       created_at
+      wallet_id
+      mtn_response
+      phone
+      reference_id
+      updated_at
     }
   }
 `;

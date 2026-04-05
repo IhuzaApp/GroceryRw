@@ -6,3 +6,6 @@ export { default as Step5Admin } from "./Step5Admin";
 export { default as Step6Review } from "./Step6Review";
 export { default as PaymentModal } from "./PaymentModal";
 export { default as SuccessState } from "./SuccessState";
+export { default as RegistrationProgress } from "./RegistrationProgress";
+export { default as RegistrationNavigator } from "./RegistrationNavigator";
+export { default as PaymentProcessingOverlay } from "./PaymentProcessingOverlay";

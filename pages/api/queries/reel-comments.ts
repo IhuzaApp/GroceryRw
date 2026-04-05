@@ -47,7 +47,7 @@ const ADD_REEL_COMMENT = gql`
 // Get all comments
 const GET_ALL_COMMENTS = gql`
   query GetComments {
-    Reels_comments(order_by: { created_on: desc }) {
+    Reels_comments(order_by: { created_on: asc }) {
       user_id
       text
       reel_id
@@ -79,7 +79,7 @@ const GET_COMMENTS_BY_REEL = gql`
   query GetCommentsWhereReelID($reel_id: uuid = "") {
     Reels_comments(
       where: { reel_id: { _eq: $reel_id } }
-      order_by: { created_on: desc }
+      order_by: { created_on: asc }
     ) {
       user_id
       text
@@ -215,6 +215,7 @@ export default async function handler(
 
 async function handleGetComments(req: NextApiRequest, res: NextApiResponse) {
   const { reel_id } = req.query;
+  if (!hasuraClient) throw new Error("Hasura client is not initialized");
 
   try {
     let data: CommentResponse;
@@ -252,10 +253,15 @@ async function handleAddComment(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    if (!hasuraClient) throw new Error("Hasura client is not initialized");
     const userId = (session.user as any).id;
     if (!userId) {
+      console.warn(
+        `[Backend API] handleAddComment: Missing user ID in session`
+      );
       return res.status(400).json({ error: "Missing user ID in session" });
     }
+    console.log(`[Backend API] handleAddComment: userId: ${userId}`);
 
     const { reel_id, text } = req.body;
 
@@ -325,6 +331,7 @@ async function handleToggleCommentLike(
   res: NextApiResponse,
   commentId: string
 ) {
+  if (!hasuraClient) throw new Error("Hasura client is not initialized");
   try {
     const session = (await getServerSession(
       req,
@@ -388,12 +395,16 @@ async function handleDeleteComment(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    if (!hasuraClient) throw new Error("Hasura client is not initialized");
     const userId = (session.user as any).id;
     const { comment_id } = req.body;
-
     if (!comment_id) {
+      console.warn(`[Backend API] handleDeleteComment: Missing comment ID`);
       return res.status(400).json({ error: "Missing comment ID" });
     }
+    console.log(
+      `[Backend API] handleDeleteComment: userId: ${userId}, commentId: ${comment_id}`
+    );
 
     // Verify the comment belongs to the user or user has admin rights
     const commentData = await hasuraClient.request<CommentResponse>(
@@ -429,7 +440,11 @@ async function handleDeleteComment(req: NextApiRequest, res: NextApiResponse) {
 
     logger.info("Deleted comment", "ReelCommentsAPI", {
       commentId: comment_id,
+      userId,
     });
+    console.log(
+      `[Backend API] handleDeleteComment: Success for commentId: ${comment_id}`
+    );
     res
       .status(200)
       .json({ success: true, message: "Comment deleted successfully" });

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { Input, InputGroup, Modal } from "rsuite";
 import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
@@ -21,6 +20,7 @@ import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { useAuth } from "../../../hooks/useAuth";
 import GuestUpgradeModal from "../GuestUpgradeModal";
 import NotificationCenter from "../../shopper/NotificationCenter";
+import PackageDeliveryModal from "./PackageDeliveryModal";
 
 export default function HeaderLayout() {
   const router = useRouter();
@@ -39,6 +39,7 @@ export default function HeaderLayout() {
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPackageModal, setShowPackageModal] = useState(false);
 
   useEffect(() => {
     // Try loading the delivery address from cookie first (works for both logged in and guest users)
@@ -202,240 +203,243 @@ export default function HeaderLayout() {
 
   return (
     <>
-      {/* Desktop Header with Notification Bell */}
-      <header className="container sticky top-0 z-40 mx-auto hidden rounded-full border-b border-gray-200 bg-white p-2 shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 md:block">
-        <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
-          {/* Left section (address + icon) - Desktop only */}
-          <div className="flex items-center gap-3">
-            {!session?.user ? (
-              <Link
-                href="/"
-                className="flex h-8 w-8 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-              >
-                <Image
-                  src="/assets/logos/PlasIcon.png"
-                  alt="Plas Logo"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
-                />
-              </Link>
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center">
-                <Image
-                  src="/assets/logos/PlasIcon.png"
-                  alt="Plas Logo"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
-                />
+      {/* ── Desktop Header ── */}
+      <header
+        className="
+          sticky top-0 z-40 mx-auto hidden
+          w-full
+          border-b border-white/20 bg-white/80
+          shadow-[0_2px_24px_0_rgba(0,0,0,0.08)] backdrop-blur-xl
+          transition-all
+          duration-300 dark:border-white/10
+          dark:bg-gray-900/80
+          dark:shadow-[0_2px_24px_0_rgba(0,0,0,0.4)] md:block
+        "
+      >
+        <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-6 px-6 py-2.5">
+          {/* ── Left: Logo + Address ── */}
+          <div className="flex shrink-0 items-center gap-3">
+            {/* Logo */}
+            <Link
+              href="/"
+              className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
+            >
+              <Image
+                src="/assets/logos/PlasIcon.png"
+                alt="Plas Logo"
+                width={28}
+                height={28}
+                className="h-7 w-7 drop-shadow-sm"
+              />
+            </Link>
+
+            {/* Address block */}
+            <button
+              onClick={() => setShowAddressModal(true)}
+              className="group flex flex-col items-start gap-0 rounded-xl px-3 py-2 transition-colors duration-200 hover:bg-green-50 dark:hover:bg-green-900/20"
+            >
+              <div className="flex items-center gap-1.5">
+                {/* Location pin */}
+                <svg
+                  className="h-3.5 w-3.5 shrink-0 text-green-500 dark:text-green-400"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.003 3.5-4.697 3.5-8.327a8 8 0 10-16 0c0 3.63 1.556 6.326 3.5 8.327a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-green-600 dark:text-green-400">
+                  Deliver to
+                </span>
               </div>
-            )}
-            <div>
-              <h6 className="font-medium text-inherit">
+              <span className="max-w-[160px] truncate text-sm font-semibold text-gray-800 dark:text-gray-100">
                 {defaultAddress
                   ? defaultAddress.street && defaultAddress.city
                     ? `${defaultAddress.street}, ${defaultAddress.city}`
                     : defaultAddress.latitude && defaultAddress.longitude
                     ? "Current Location"
-                    : "No address set"
-                  : "No address set"}
-              </h6>
-              <p className="text-xs text-gray-500 dark:text-gray-300">
-                <button
-                  className="text-green-500 hover:underline dark:text-green-400"
-                  onClick={() => setShowAddressModal(true)}
-                >
-                  Change Address
-                </button>
-              </p>
-            </div>
+                    : "Set address"
+                  : "Set address"}
+              </span>
+            </button>
           </div>
 
-          {/* Center search - Desktop only */}
-          <div className="mx-2 mx-4 max-w-md flex-1">
+          {/* ── Center: Search ── */}
+          <div className="min-w-0 max-w-xl flex-1">
             <SearchBar />
           </div>
 
-          {/* Right actions - Desktop only */}
-          <div className="flex items-center gap-4">
-            {/* Notifications Bell (FCM-backed) */}
+          {/* ── Right: Actions ── */}
+          <div className="flex shrink-0 items-center gap-1">
+            {/* Send Package Icon */}
+            <button
+              onClick={() => setShowPackageModal(true)}
+              title="Send a Package"
+              className="
+                group relative flex h-9 w-9 items-center justify-center rounded-xl
+                text-gray-600 transition-all
+                duration-200 hover:bg-green-50
+                hover:text-green-600 active:scale-90
+                dark:text-gray-300 dark:hover:bg-green-900/20
+                dark:hover:text-green-400
+              "
+            >
+              <svg
+                width="24px"
+                height="24px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5.5 w-5.5 transition-transform duration-200 group-hover:-translate-y-0.5"
+              >
+                <path
+                  d="M20.5 7.27783L12 12.0001M12 12.0001L3.49997 7.27783M12 12.0001L12 21.5001M14 20.889L12.777 21.5684C12.4934 21.726 12.3516 21.8047 12.2015 21.8356C12.0685 21.863 11.9315 21.863 11.7986 21.8356C11.6484 21.8047 11.5066 21.726 11.223 21.5684L3.82297 17.4573C3.52346 17.2909 3.37368 17.2077 3.26463 17.0893C3.16816 16.9847 3.09515 16.8606 3.05048 16.7254C3 16.5726 3 16.4013 3 16.0586V7.94153C3 7.59889 3 7.42757 3.05048 7.27477C3.09515 7.13959 3.16816 7.01551 3.26463 6.91082C3.37368 6.79248 3.52345 6.70928 3.82297 6.54288L11.223 2.43177C11.5066 2.27421 11.6484 2.19543 11.7986 2.16454C11.9315 2.13721 12.0685 2.13721 12.2015 2.16454C12.3516 2.19543 12.4934 2.27421 12.777 2.43177L20.177 6.54288C20.4766 6.70928 20.6263 6.79248 20.7354 6.91082C20.8318 7.01551 20.9049 7.13959 20.9495 7.27477C21 7.42757 21 7.59889 21 7.94153L21 12.5001M7.5 4.50008L16.5 9.50008M19 21.0001V15.0001M16 18.0001H22"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Notifications Bell */}
             <NotificationCenter />
 
             {/* Guest Badge */}
             {isGuest && (
               <button
                 onClick={() => setShowUpgradeModal(true)}
-                className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:from-orange-900/30 dark:to-yellow-900/30"
                 title="Upgrade to full member"
+                className="
+                  ml-1 flex items-center gap-1.5 rounded-full
+                  bg-gradient-to-r from-amber-400 to-orange-500
+                  px-3 py-1.5 text-sm font-semibold text-white
+                  shadow-md shadow-orange-400/30
+                  transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-orange-400/40
+                  active:scale-95
+                "
               >
+                {/* Person outline */}
                 <svg
-                  className="h-4 w-4 text-orange-600 dark:text-orange-400"
+                  className="h-4 w-4"
                   fill="none"
                   viewBox="0 0 24 24"
+                  strokeWidth={2}
                   stroke="currentColor"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                   />
                 </svg>
-                <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
-                  Guest
-                </span>
+                Guest
+                {/* Sparkle/upgrade indicator */}
                 <svg
-                  className="h-3 w-3 text-orange-600 dark:text-orange-400"
-                  fill="none"
+                  className="h-3.5 w-3.5 opacity-80"
+                  fill="currentColor"
                   viewBox="0 0 24 24"
-                  stroke="currentColor"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" />
                 </svg>
               </button>
             )}
 
-            {/* Theme Switch */}
+            {/* Divider */}
+            <span className="mx-2 h-6 w-px rounded-full bg-gray-200 dark:bg-gray-700" />
+
+            {/* Theme Toggle */}
             <button
               onClick={handleThemeToggle}
-              className="flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900"
               aria-label={
                 theme === "dark"
                   ? "Switch to light mode"
                   : "Switch to dark mode"
               }
+              className="
+                group relative flex h-9 w-9 items-center justify-center rounded-xl
+                text-gray-500 transition-all
+                duration-200 hover:bg-amber-50
+                hover:text-amber-500 active:scale-90
+                dark:text-gray-400 dark:hover:bg-amber-900/20
+                dark:hover:text-amber-400
+              "
             >
               {theme === "dark" ? (
+                /* Sun icon */
                 <svg
-                  width="24px"
-                  height="24px"
+                  className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12"
                   viewBox="0 0 24 24"
                   fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path
-                    d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 2V4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 20V22"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M4.93 4.93L6.34 6.34"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M17.66 17.66L19.07 19.07"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M2 12H4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20 12H22"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M6.34 17.66L4.93 19.07"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M19.07 4.93L17.66 6.34"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
                 </svg>
               ) : (
+                /* Moon icon */
                 <svg
-                  width="24px"
-                  height="24px"
+                  className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-12"
                   viewBox="0 0 24 24"
                   fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path
-                    d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
                 </svg>
               )}
             </button>
 
-            {/* Cart Icon */}
+            {/* Cart */}
             <Link href="/Cart" passHref>
-              <div className="flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer">
-                <div className="text-gray-900 dark:text-white">
-                  <svg
-                    width="24px"
-                    height="24px"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="stroke-current"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <path
-                        d="M6.29977 5H21L19 12H7.37671M20 16H8L6 3H3M9 20C9 20.5523 8.55228 21 8 21C7.44772 21 7 20.5523 7 20C7 19.4477 7.44772 19 8 19C8.55228 19 9 19.4477 9 20ZM20 20C20 20.5523 19.5523 21 19 21C18.4477 21 18 20.5523 18 20C18 19.4477 18.4477 19 19 19C19.5523 19 20 19.4477 20 20Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </g>
-                  </svg>
-                </div>
+              <div
+                className="
+                  group relative flex h-9 w-9 items-center justify-center rounded-xl
+                  text-gray-600 transition-all
+                  duration-200 hover:bg-green-50
+                  hover:text-green-600 active:scale-90
+                  dark:text-gray-300 dark:hover:bg-green-900/20
+                  dark:hover:text-green-400
+                "
+              >
+                {/* Shopping bag icon */}
+                <svg
+                  className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 01-8 0" />
+                </svg>
+
+                {/* Badge bubble */}
                 {count > 0 && (
-                  <span className="text-xl font-bold text-green-500 dark:text-green-400">
-                    {count}
+                  <span
+                    className="
+                    absolute -right-1.5 -top-1.5
+                    flex h-5 w-5 items-center justify-center
+                    rounded-full
+                    bg-gradient-to-br from-green-400 to-emerald-600
+                    text-[10px] font-bold text-white
+                    shadow-md shadow-green-500/40
+                    ring-2 ring-white transition-transform
+                    duration-200 group-hover:scale-110 dark:ring-gray-900
+                  "
+                  >
+                    {count > 99 ? "99+" : count}
                   </span>
                 )}
               </div>
@@ -459,6 +463,12 @@ export default function HeaderLayout() {
       <GuestUpgradeModal
         open={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
+      />
+
+      {/* Package Delivery Modal */}
+      <PackageDeliveryModal
+        open={showPackageModal}
+        onClose={() => setShowPackageModal(false)}
       />
     </>
   );

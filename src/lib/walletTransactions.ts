@@ -19,6 +19,14 @@ const CREATE_WALLET_TRANSACTIONS = gql`
         created_at
         wallet_id
         related_order_id
+        related_restaurant_order_id
+        related_reel_orderId
+        relate_business_order_id
+        reference_id
+        phone
+        mtn_response
+        description
+        currency
       }
       affected_rows
     }
@@ -79,6 +87,99 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
           price
           measurement_unit
         }
+      }
+    }
+  }
+`;
+
+// GraphQL queries for transaction history
+export const GET_ORDER_TRANSACTIONS = gql`
+  query GetOrderTransactions {
+    order_transactions {
+      amount
+      business_order_id
+      created_at
+      currency
+      id
+      mtn_response
+      order_id
+      package_id
+      phone
+      reel_order_id
+      reference_id
+      restaurant_order_id
+      status
+      type
+      updated_at
+      user_id
+      wallet_id
+    }
+  }
+`;
+
+export const GET_PERSONAL_WALLET_TRANSACTIONS = gql`
+  query GetPersonalWalletTransactions {
+    personalWalletTransactions {
+      action
+      amount
+      created_at
+      currency
+      doneBy
+      id
+      mtn_response
+      phone
+      received_wallet
+      reference_id
+      status
+      update_at
+      wallet_id
+    }
+  }
+`;
+
+export const GET_BUSINESS_TRANSACTIONS = gql`
+  query GetBusinessTransactions {
+    businessTransactions {
+      phone
+      reference_id
+      related_order
+      status
+      type
+      updated_at
+      wallet_id
+      id
+      description
+      created_at
+      amount
+      action
+    }
+  }
+`;
+
+export const GET_SHOPPER_WALLET_TRANSACTIONS = gql`
+  query GetShopperWalletTransactions {
+    Wallet_Transactions {
+      wallet_id
+      type
+      status
+      related_reel_orderId
+      related_restaurant_order_id
+      related_order_id
+      relate_business_order_id
+      reference_id
+      phone
+      mtn_response
+      id
+      description
+      currency
+      created_at
+      amount
+      Wallet {
+        shopper_id
+        reserved_balance
+        last_updated
+        id
+        available_balance
       }
     }
   }
@@ -196,11 +297,13 @@ export const recordPaymentTransactions = async (
       {
         wallet_id: walletId,
         amount: formattedOrderAmount.toFixed(2),
+        currency: "RWF", // Default to RWF if not specified
         type: "payment",
-        status: "completed",
+        status: momoSuccess ? "SUCCESSFUL" : "PENDING",
         related_order_id: orderId,
         related_reel_orderId: null,
         related_restaurant_order_id: null,
+        reference_id: momoReferenceId || null,
         description: description,
       },
     ];

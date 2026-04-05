@@ -5,34 +5,52 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 const GET_SYSTEM_CONFIG = gql`
   query getSystemConfiguration {
     System_configuratioins {
+      allowScheduledDeliveries
       baseDeliveryFee
+      cappedDistanceFee
+      currency
+      deliveryCommissionPercentage
+      discounts
+      distanceSurcharge
+      enableRush
+      extraUnits
+      id
+      productCommissionPercentage
+      rushHourSurcharge
+      rushHours
       serviceFee
       shoppingTime
+      suggestedMinimumTip
+      tax
       unitsSurcharge
-      extraUnits
-      cappedDistanceFee
-      distanceSurcharge
-      currency
-      discounts
-      deliveryCommissionPercentage
-      productCommissionPercentage
+      withDrawCharges
+      deliveryModes
     }
   }
 `;
 
 interface SystemConfigResponse {
   System_configuratioins: Array<{
+    allowScheduledDeliveries: boolean;
     baseDeliveryFee: string;
+    cappedDistanceFee: string;
+    currency: string;
+    deliveryCommissionPercentage: string;
+    discounts: any;
+    distanceSurcharge: string;
+    enableRush: boolean;
+    extraUnits: string;
+    id: string;
+    productCommissionPercentage: string;
+    rushHourSurcharge: string;
+    rushHours: any;
     serviceFee: string;
     shoppingTime: string;
+    suggestedMinimumTip: string;
+    tax: string;
     unitsSurcharge: string;
-    extraUnits: string;
-    cappedDistanceFee: string;
-    distanceSurcharge: string;
-    currency: string;
-    discounts: any;
-    deliveryCommissionPercentage: string;
-    productCommissionPercentage: string;
+    withDrawCharges: string;
+    deliveryModes: any;
   }>;
 }
 

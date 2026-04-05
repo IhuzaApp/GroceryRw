@@ -30,6 +30,16 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 12. **Order Offers & Nearby Assignment System** ⭐ NEW
 
+### 13. Promotions & Checkout System
+
+### 14. User Dashboard & Store System
+
+### 15. **AI Assistant & Interactive Checkout System** ⭐ NEW
+
+### 16. **Order Cancellation & Refund System** ⭐ NEW
+
+### 17. **Modern Payment Modal & Flow (React Portals)** ⭐ NEW
+
 ---
 
 # 🚀 Order Offers & Nearby Assignment System
@@ -13112,3 +13122,774 @@ When status changes to "delivered":
 ## Conclusion
 
 The Combined Order System provides a seamless multi-store shopping experience that benefits customers, the platform, and shoppers. By grouping orders with a shared Combined Order ID and PIN, the system maintains simplicity while enabling powerful cross-store functionality. The architecture is designed for scalability and can be enhanced with additional features like transaction safety, parallel processing, and intelligent order optimization.
+
+---
+
+# Map Components
+
+This directory contains modularized components for the MapSection, broken down to improve performance and maintainability.
+
+## 📁 File Structure
+
+```
+map/
+├── index.ts              # Main exports
+├── mapTypes.ts           # TypeScript interfaces and types
+├── mapUtils.ts           # Utility functions (distance, cookies, etc.)
+├── MapPopups.tsx         # Popup HTML creation
+├── RouteDrawer.tsx       # Route drawing with OSRM API
+├── LocationSyncer.tsx    # Location syncing logic
+└── README.md             # This file
+```
+
+## 🎯 Purpose
+
+The original `MapSection.tsx` was **3,582 lines** - too large and causing loading issues. This refactoring splits it into focused, reusable modules.
+
+## 📦 Components & Utilities
+
+### mapTypes.ts
+
+All TypeScript interfaces and types:
+
+- `Shop`, `Restaurant`, `PendingOrder`
+- `Location`, `LocationHistoryEntry`
+- `MapRefs`, `MapState`
+- `NotifiedOrder`, `MapSectionProps`
+- Constants: `MAP_STYLES`, `DEFAULT_MAP_CENTER`, etc.
+
+### mapUtils.ts
+
+Helper functions:
+
+- `calculateDistanceKm()` - Haversine distance calculation
+- `isMapReady()` - Check if map is initialized
+- `safeAddMarker()` - Safely add markers to map
+- `getCookies()` / `saveLocationToCookies()` - Cookie management
+- `getSingleLocation()` - Get browser geolocation
+- `createCustomDivIcon()` - Create Leaflet icons
+- `createUserMarkerIcon()` / `createDeliveryMarkerIcon()` - Icon HTML
+- `fitMapBounds()` - Fit map to bounds
+
+### MapPopups.tsx
+
+Popup HTML creation:
+
+- `createPopupHTML()` - Main popup for orders
+- `createShopPopupContent()` - Shop marker popups
+- `createOrderPopupContent()` - Order marker popups
+
+### RouteDrawer.tsx
+
+Route drawing logic:
+
+- `useRouteDrawer()` - Custom hook for drawing routes
+- Uses OSRM API for road-based routing
+- Fallback to straight lines if API fails
+- Real-time updates when location/order changes
+
+### LocationSyncer.tsx
+
+Location syncing:
+
+- `useLocationSyncer()` - Sync shopperLocation prop to user marker
+- `getInitialLocation()` - Get initial location from props or cookies
+- `initializeUserMarkerPosition()` - Set initial marker position
+
+## 🔧 Usage Example
+
+```typescript
+import {
+  // Types
+  Location,
+  NotifiedOrder,
+  MapSectionProps,
+
+  // Utils
+  calculateDistanceKm,
+  saveLocationToCookies,
+  getCookies,
+
+  // Popups
+  createPopupHTML,
+
+  // Hooks
+  useRouteDrawer,
+  useLocationSyncer,
+  getInitialLocation,
+} from "./map";
+
+// In your component
+function MapSection({ shopperLocation, notifiedOrder }: MapSectionProps) {
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+  const [routePolyline, setRoutePolyline] = useState<L.Polyline | null>(null);
+  const [routeEndMarker, setRouteEndMarker] = useState<L.Marker | null>(null);
+
+  // Sync location to map
+  useLocationSyncer({
+    shopperLocation,
+    userMarkerRef,
+    mapInstanceRef,
+    setCurrentLocation,
+  });
+
+  // Draw routes
+  useRouteDrawer({
+    mapInstance,
+    mapInstanceRef,
+    shopperLocation,
+    currentLocation,
+    notifiedOrder,
+    routePolyline,
+    setRoutePolyline,
+    routeEndMarker,
+    setRouteEndMarker,
+  });
+
+  // ... rest of component
+}
+```
+
+## ✅ Benefits
+
+1. **Better Performance**: Smaller files load faster
+2. **Code Reusability**: Functions can be used elsewhere
+3. **Easier Testing**: Each module can be tested independently
+4. **Better Maintainability**: Changes are isolated to specific files
+5. **Clearer Organization**: Related code is grouped together
+
+## 🚀 Next Steps
+
+To complete the refactoring:
+
+1. Update `MapSection.tsx` to import from `./map`
+2. Replace inline functions with imported utilities
+3. Extract marker management logic
+4. Extract map controls/UI components
+5. Test thoroughly to ensure no regressions
+
+# Grocery App: Promotions & Checkout System (Developer Reference)
+
+### 🛠 Database Migration Requirements
+
+To support the promotions and discount breakdown, the `Orders` table must have the following columns. If you see errors like `field 'applied_promotions' not found in type: 'Orders_insert_input'`, run this SQL in your **Hasura Console (Data -> SQL)** or Postgres editor:
+
+```sql
+-- Ensure Orders table has all promotion-related fields
+ALTER TABLE "Orders"
+ADD COLUMN IF NOT EXISTS "discount" text DEFAULT '0',
+ADD COLUMN IF NOT EXISTS "voucher_code" text,
+ADD COLUMN IF NOT EXISTS "applied_promotions" jsonb DEFAULT '[]',
+ADD COLUMN IF NOT EXISTS "discount_breakdown" jsonb DEFAULT '{"subtotal": 0, "service_fee": 0, "delivery_fee": 0}';
+```
+
+**Next Steps in Hasura:**
+
+1.  **Track Columns**: Go to Data -> Public -> Orders and click **Track All** (or track these 4 columns).
+2.  **Permissions**: Update the `insert` and `select` permissions for the `user` role to allow access to these new fields.
+
+### 🧩 Core Architecture
+
+**Single Source of Truth:**
+All pricing, discounts, and validations happen on the backend. The frontend (`checkoutCard.tsx`) never calculates final totals locally.
+
+**Pricing Token:**
+
+- Every validation response includes a `pricing_token` (SHA256).
+- Required for order creation to ensure the order total matches backend calculations.
+
+**Atomic Validation:**
+Promotions are validated against a full cart snapshot including:
+
+- Items
+- Quantities
+- User location
+
+**Discount Types Supported:**
+
+- Percentage (e.g., 5% off)
+- Fixed (e.g., $500 off)
+- BOGO (Buy-One-Get-One on specific items)
+
+### 🔄 End-to-End Checkout Flow
+
+**1. Auto-Apply Promotions**
+On load, the system checks store-wide or flash sales via:
+`GET /api/promotions/auto-apply`
+_Note: Skip auto-apply if appliedCode exists to prevent overwriting manual codes._
+
+**2. Manual Apply**
+User enters a code, validated via:
+`POST /api/promotions/validate`
+
+Returns:
+
+```json
+{
+  "valid": true,
+  "message": "Promotion applied successfully!",
+  "pricing_token": "bb0ce198...",
+  "final_total": 5900,
+  "discounts": {
+    "subtotal_discount": 1000,
+    "service_fee_discount": 0,
+    "delivery_fee_discount": 0,
+    "total_discount": 1000,
+    "discount_breakdown": {...}
+  },
+  "promotions_applied": [...]
+}
+```
+
+**3. Sync Loop**
+
+- Any cart change (quantity, address, item removal) triggers a re-validation.
+- Ensures promotions remain valid.
+- Manually applied codes are never overwritten by auto-sync.
+
+**4. Final Lock**
+On “Proceed to Checkout”, call:
+`POST /api/promotions/validate-final`
+Issues the definitive `pricing_token` for the order.
+
+Payload must include:
+
+```json
+{
+  "cart_ids": [...],
+  "pricing_token": "...",
+  "applied_promotions": [...],
+  "discount_breakdown": {...}
+}
+```
+
+**5. Checkout**
+
+- Order creation API uses the pricing token and discount breakdown.
+- Orders without a valid `pricing_token` are rejected.
+
+### 👥 Referral System
+
+- Referral codes (e.g., `REF-123`) are validated through the same backend pipeline.
+- Stacking type is typically `with_referral`, allowing combination with certain store promotions.
+- Successful usage is logged in the backend for payout and analytics.
+
+### 🛡️ Stacking Rules
+
+- **Exclusive**: Only one exclusive promotion can apply. UI disables manual code entry when active.
+- **With Referral**: Can coexist with certain other promotions.
+- **Stackable**: Multiple non-exclusive promotions can stack if backend permits.
+  _Backend enforces these rules; frontend only reflects restrictions._
+
+### 💸 Discounts & Payload
+
+- Backend calculates all discount types: percentage, fixed, BOGO.
+- Checkout payload always includes:
+  - `cart_ids`
+  - `pricing_token`
+  - `applied_promotions` (can be [])
+  - `discount_breakdown` (all amounts, even if zero)
+- Frontend never modifies totals; only displays backend values.
+
+**Example Backend Discounts Response:**
+
+```json
+{
+  "discounts": {
+    "subtotal_discount": 1000,
+    "service_fee_discount": 0,
+    "delivery_fee_discount": 0,
+    "total_discount": 1000,
+    "discount_breakdown": {
+      "subtotal": 1000,
+      "service_fee": 0,
+      "delivery_fee": 0
+    }
+  },
+  "final_total": 5900,
+  "pricing_token": "bb0ce198...",
+  "promotions_applied": [
+    {
+      "code": "38TSOQ9L",
+      "calculation_trace": "BOGO: Applied on cheapest item (1000)",
+      "funded_by": "platform",
+      "stacking_type": "with_referral"
+    }
+  ]
+}
+```
+
+### ⚡ Promotion Sync Rules
+
+1. **Preserve Manual Codes**: Codes entered by the user remain applied during cart updates.
+2. **Auto-Apply Guard**: Auto-sync skips execution if `appliedCode` exists.
+3. **Always Include Codes in Payloads**: Both auto-apply and `validate-final` must include `applied_codes`.
+4. **Merge Discounts**: `setDiscounts` must merge new discounts with existing `promotions_applied` to avoid zeroing out.
+
+### 📝 Notes & Best Practices
+
+- **Logging**: Console logs use emojis for quick filtering (🗺️, ✅, ❌, ⚠️).
+- **Error Handling**: Centralized in utility functions.
+- **Location Sync**: Real-time via `useLocationSyncer`.
+- **UI Redraws**: Routes automatically redraw when location or order changes.
+- **No Promo Flow**: Users can complete checkout without entering a promo code; backend still calculates fees and issues a pricing token.
+
+### 🔧 Verification
+
+**Automated Tests:**
+
+- Combined cart checkout with valid `pricing_token`.
+- Promotion usage recorded in database.
+- UI lock when exclusive promotion is applied.
+
+**Manual Tests:**
+
+- Single shop checkout with promotion.
+- Combined shop checkout with promotion.
+- Food order checkout with promotion.
+- Checkout without any promo code (full payment).
+
+---
+
+# User Dashboard Components
+
+This directory contains the responsive user dashboard components for the grocery app.
+
+## Structure
+
+### Components
+
+- **`ResponsiveUserDashboard.tsx`** - Main wrapper component that detects screen size and renders the appropriate dashboard
+- **`MobileUserDashboard.tsx`** - Mobile-optimized dashboard with touch-friendly UI
+- **`DesktopUserDashboard.tsx`** - Desktop-optimized dashboard with detailed layouts
+- **`UserDashboard.tsx`** - Original component (kept for reference, can be removed later)
+
+### Shared Components
+
+- **`shared/UserDashboardLogic.tsx`** - Custom hook containing all business logic shared between mobile and desktop
+- **`shared/SharedComponents.tsx`** - Reusable UI components and helper functions
+
+## Features
+
+### Mobile Dashboard
+
+- Touch-friendly category dropdown
+- Compact 2-column grid layout
+- Simplified navigation
+- Optimized for small screens
+
+### Desktop Dashboard
+
+- Full category grid with icons
+- 6-column shop grid layout
+- Refresh button
+- More detailed information display
+- Sidebar integration
+
+## Usage
+
+```tsx
+import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
+
+// In your page component
+<ResponsiveUserDashboard initialData={data} />;
+```
+
+## Benefits
+
+1. **Performance** - Only loads components needed for current device
+2. **UX** - Tailored experience for each platform
+3. **Maintainability** - Separate concerns for mobile vs desktop
+4. **Scalability** - Easy to add platform-specific features
+
+## Breakpoints
+
+- Mobile: < 768px (md breakpoint)
+- Desktop: ≥ 768px
+
+The responsive wrapper automatically detects screen size and renders the appropriate component.
+
+## Store Integration
+
+### Overview
+
+Stores are business entities that sell products directly to customers through the platform. They are integrated into the dashboard alongside shops and restaurants, providing a unified browsing experience. Stores have a distinct product-based ordering system with a dedicated checkout flow.
+
+### Store Data Structure
+
+Stores are fetched from the `business_stores` table with the following key fields:
+
+- `id`: Unique store identifier
+- `name`: Store name
+- `description`: Store description
+- `image`: Store image/logo
+- `category_id`: Store category
+- `latitude` / `longitude`: Store location coordinates
+- `operating_hours`: JSON object containing operating hours by day
+- `is_active`: Boolean indicating if store is active
+- `business_id`: Reference to business account
+- `business_account`: Nested relationship containing:
+  - `account_type`: "personal" or "business"
+  - `business_name`: Business name (if applicable)
+  - `Users`: Owner information (for personal businesses)
+
+### Store Data Fetching
+
+1. **Initial Fetch (`pages/index.tsx`)**
+
+   - Stores are fetched via `/api/queries/all-stores`
+   - Only active stores (`is_active: true`) are retrieved
+   - Stores are added to the `Data` interface as `stores: []`
+
+2. **Data Transformation (`UserDashboardLogic.tsx`)**
+
+   - Stores are transformed into a shop-like format for consistent rendering:
+     ```typescript
+     const storesAsShops = stores.map((store) => ({
+       ...store,
+       id: store.id,
+       name: store.name,
+       description: store.description || "Store",
+       image: store.image,
+       category_id: store.category_id || "store-category",
+       latitude: store.latitude,
+       longitude: store.longitude,
+       operating_hours: store.operating_hours,
+       is_store: true, // Identifier flag
+       address: null,
+       logo: store.image,
+     }));
+     ```
+
+3. **Category Filtering**
+
+   - Stores can be filtered by category like shops
+   - Special "store-category" exists for store-only filtering
+   - When a category is selected, stores matching that category are included
+   - When "store-category" is selected, only stores are shown
+
+4. **Distance Calculation**
+   - Stores are included in the `shopsWithoutDynamics` array
+   - Distance is calculated using Haversine formula between user location and store coordinates
+   - Stores support "Nearby" filtering functionality
+   - Transportation fees and delivery times are calculated based on distance
+
+### Store Display in Dashboard
+
+1. **ShopCard Component (`ShopCard.tsx`)**
+
+   - Stores are rendered using the same `ShopCard` component as shops
+   - Stores are identified by the `is_store: true` flag
+   - Stores display with a "Store" badge to differentiate from shops
+   - Navigation: Clicking a store navigates to `/stores/[id]` (not `/shops/[id]`)
+   - Stores use a default placeholder image if no image is provided
+
+2. **Search Integration (`SearchBar.tsx`)**
+
+   - Stores are included in the main navbar search
+   - Search query searches store names via `business_stores` table
+   - Search results show stores with a "Store" badge
+   - Clicking a store in search results navigates to `/stores/[id]`
+
+3. **Sorting and Filtering**
+   - Stores participate in all sorting options (name, distance, etc.)
+   - Stores are included in category-based filtering
+   - Stores work with the "Nearby" functionality
+   - Stores respect all dashboard filters and sorting preferences
+
+### Store Page (`/stores/[id]`)
+
+The store page provides a dedicated product browsing and ordering experience:
+
+1. **Page Structure (`pages/stores/[id].tsx`)**
+
+   - Server-side rendered with `getServerSideProps`
+   - Fetches store details including business account and owner info
+   - Fetches all active products for the store from `PlasBusinessProductsOrSerive`
+   - Passes data to `StorePage` component
+
+2. **StorePage Component (`src/components/items/StorePage.tsx`)**
+
+   - **Mobile Banner**: Full-width cover image with circular logo, store info, and status badge
+   - **Desktop Header**: Traditional header with store name, description, and details
+   - **Store Information Display**:
+     - Store name, description, and image
+     - Operating hours with open/closed status
+     - Distance from user location
+     - Owner information (for personal businesses)
+     - Product count
+   - **Product Grid**:
+     - Responsive grid layout (up to 6 columns on desktop, 2 on mobile)
+     - Product cards with images, names, prices, and units
+     - "Add" button opens quantity selection modal
+   - **Selected Products Sidebar** (desktop):
+     - Shows all selected products
+     - Displays total quantity and total price
+     - "Continue to Checkout" button
+   - **Mobile Cart Card** (bottom of screen):
+     - Expandable/collapsible card
+     - Shows selected items count and total
+     - Quick access to checkout
+   - **Product Search**: Filter products by name
+   - **Category Filtering**: Filter products by category
+
+3. **Product Selection Flow**
+   - User clicks "Add" button on product card
+   - Modal opens for quantity selection
+   - Selected products are added to local state
+   - Products appear in sidebar (desktop) or cart card (mobile)
+   - User can modify quantities or remove products
+
+### Store Checkout Flow (`/stores/[id]/checkout`)
+
+The checkout process handles order creation with delivery and payment:
+
+1. **Checkout Data Storage**
+
+   - Selected products are stored in `localStorage` as `storeCheckoutData`
+   - Data structure:
+     ```typescript
+     {
+       storeId: string;
+       storeName: string;
+       products: SelectedProduct[]; // with quantities
+       total: number; // subtotal
+       transportationFee: number;
+       serviceFee: number;
+     }
+     ```
+
+2. **Checkout Page Features**
+
+   - **Mobile Banner**: Matches store page design with circular logo
+   - **Products Display** (mobile): Shows order items above expandable card
+   - **Desktop Layout**: Two-column layout with order summary and payment summary
+   - **Delivery Calculation**:
+     - Distance-based delivery time: Minimum 1 hour + 1 minute per km
+     - Transportation fee: 1000 RWF for first 3km, then 300 RWF per additional km
+     - Service fee: 5% of subtotal
+   - **Address Management**: Users can select or change delivery address
+   - **Payment Method Selection**:
+     - Integration with `PaymentMethodSelector` component
+     - Supports wallet balance (refund balance)
+     - Supports saved payment methods (cards, MTN MoMo)
+   - **Order Comment**: Optional text field for special instructions
+
+3. **Mobile Expandable Card**
+
+   - Fixed at bottom of screen (above navbar)
+   - Expandable/collapsible functionality
+   - Shows cost breakdown, delivery details, payment method, and comment
+   - Does NOT show products (products are in main content area above)
+   - "Place Order" button with validation
+
+4. **Order Creation (`/api/mutations/create-business-product-order`)**
+   - Creates order in `businessProductOrders` table
+   - Product details stored as JSONB:
+     ```json
+     {
+       "name": "Product Name",
+       "id": "product-id",
+       "price": "1000",
+       "quantity": 2,
+       "unit": "kg",
+       "measurement_type": "weight"
+     }
+     ```
+   - Order includes:
+     - `store_id`: Reference to store
+     - `allProducts`: JSONB array of product details
+     - `total`: Total amount including all fees
+     - `transportation_fee`: Calculated delivery fee
+     - `service_fee`: 5% service fee
+     - `units`: Total units ordered
+     - `latitude` / `longitude`: Delivery location
+     - `deliveryAddress`: Formatted address string
+     - `comment`: Optional order comment
+     - `delivered_time`: Estimated delivery time
+     - `timeRange`: Delivery time range
+     - `payment_method`: Payment method type
+     - `payment_method_id`: Payment method ID (if applicable)
+
+### Store vs Shop Differences
+
+| Feature             | Stores                                         | Shops                                  |
+| ------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Navigation**      | `/stores/[id]`                                 | `/shops/[id]`                          |
+| **Product Display** | Dedicated product grid with quantity selection | Menu items (restaurants) or services   |
+| **Order Type**      | Product-based orders with quantities           | Service requests or restaurant orders  |
+| **Checkout Flow**   | Custom checkout with product details in JSONB  | Different order structure              |
+| **Badge**           | "Store" badge in dashboard                     | "Shop" or "Restaurant" badge           |
+| **Order Table**     | `businessProductOrders`                        | Various order tables depending on type |
+
+### Key API Endpoints
+
+- **`/api/queries/all-stores`**: Fetches all active stores (public)
+- **`/api/queries/store-details`**: Fetches store details with products (public)
+- **`/api/queries/search`**: Includes stores in search results (public)
+- **`/api/mutations/create-business-product-order`**: Creates store order (authenticated)
+
+### Store Order Data Model
+
+Orders are stored in `businessProductOrders` table with:
+
+- `id`: UUID primary key
+- `store_id`: Foreign key to business_stores
+- `allProducts`: JSONB containing array of product objects
+- `total`: Total order amount (including fees)
+- `transportation_fee`: Delivery fee
+- `service_fee`: Service fee (5% of subtotal)
+- `units`: Total units ordered across all products
+- `latitude` / `longitude`: Delivery coordinates
+- `deliveryAddress`: Formatted address
+- `comment`: Optional customer comments
+- `delivered_time`: Estimated delivery time
+- `timeRange`: Delivery time window
+- `payment_method`: Payment method string
+- `payment_method_id`: Payment method ID if applicable
+- `created_at`: Order timestamp
+
+### Best Practices
+
+1. **Store Identification**: Always check `is_store: true` flag when handling stores
+2. **Navigation**: Use `/stores/[id]` for store pages, never `/shops/[id]`
+3. **Product Handling**: Store product quantities and details properly in checkout data
+4. **Distance Calculation**: Include stores in `shopsWithoutDynamics` for accurate distance/time calculations
+5. **Mobile UX**: Provide expandable cards for better mobile checkout experience
+6. **Payment Integration**: Always use `PaymentMethodSelector` for consistent payment handling
+
+---
+
+# 🤖 AI Assistant & Interactive Checkout System
+
+## Overview
+
+The AI Assistant (Plas Agent) is a Gemini-powered interactive companion that handles product discovery, recipe searching, and a fully interactive checkout flow directly within the chat interface. It leverages real-time tool calls to sync with the project's inventory, carts, and payment systems.
+
+## Key Features
+
+### 1. Interactive Checkout Flow
+
+- **Guided Checkout**: The AI guides users through address and payment selection using the `show_checkout_form` tool.
+- **Dynamic Preview**: Real-time delivery fee and total calculation via `/api/ai/search-plas-data`.
+- **Stateless Tooling**: The AI does not store cart state; it fetches "Active Carts" and "User Checkout Details" dynamically.
+
+### 2. Real-Time Payment Polling
+
+- **MoMo Integration**: After order placement, the UI enters an **Awaiting Approval** state.
+- **Polling Loop**: The client polls `/api/momo/request-to-pay-status` to track the user's phone prompt approval.
+- **Immediate Receipt**: Upon success, a premium receipt UI is rendered, and carts are automatically cleared/refreshed.
+
+### 3. Integrated Toolset (Gemini 2.5)
+
+- `search_products`: Real-time inventory and restaurant dish search.
+- `search_stores`: Discover shops and restaurants by name or category.
+- `search_recipes`: Global recipe database integration.
+- `search_web`: DuckDuckGo integration for food-related queries.
+- `get_active_carts`: Fetches the current items awaiting checkout.
+- `get_user_checkout_details`: Retrieves saved addresses and payment methods.
+- `get_order_preview`: Calculates final totals, fees, and generating pricing tokens.
+- `show_checkout_form`: Mandatory interactive form for finalizing orders.
+- `create_support_ticket`: Registers general account queries and generates an issue tracking code.
+- `report_delivery_issue`: Files specific order complaints (broken items, wrong deliveries) requiring an order PIN, returning a trackable issue code.
+- `follow_up_issue`: Looks up existing tracking codes, assesses user urgency, escalates database priority, and instantly alerts support agents on Slack.
+
+### 4. Dynamic AI Persona
+
+- **Randomized Identity**: The AI is assigned a random name (e.g. Alice, Jon, Emma) on each chat session to create a friendly, personalized experience while keeping its core "Plas Agent" instructions intact.
+- **Premium UI Visibility**: The AI entry button features a floating sparkle SVG layout with a hovering "Need help? Ask AI" notification tool-tip to boost user engagement.
+
+### 5. Proactive Error Reporting
+
+- **Feedback Escalation**: The `follow_up_issue` tool triggers dynamic dual-Slack alerts to `#system_logs` and `#support`, ensuring high-priority user issues are visible.
+- **Slack Integration**: Serverside errors in AI APIs are reported to Slack via `logErrorToSlack`.
+- **Client Proxy**: A secure `/api/support/slack-logger` endpoint allows the frontend to report streaming and tool-execution failures without exposing webhooks.
+
+## Architecture
+
+```mermaid
+graph TD
+    A[User Chat] --> B[Gemini AI]
+    B --> C{Tool Required?}
+    C -- Yes --> D[API Routes /api/ai/*]
+    D --> E[Hasura/External APIs]
+    E --> D
+    D --> F[Tool Response]
+    F --> B
+    C -- No --> G[Streaming Response]
+    G --> A
+
+    subgraph Error Reporting
+      H[AIChatWindow] --> I[/api/support/slack-logger]
+      I --> J[Slack Webhook]
+      D --> J
+    end
+```
+
+---
+
+# 🛡️ Order Cancellation & Refund System
+
+## Overview
+
+A robust, multi-stage cancellation system that handles refunds, shopper compensation, and order state transition across all order types (Grocery, Reels, Restaurant, Packages, Business).
+
+### Key Features
+
+1.  **Multi-Order Type Support**: Dynamically routes logic based on `orderType`.
+2.  **Idempotency Locked**: Order status is set to `cancelled` **before** any financial transactions. This prevents double-refunds if a request is retried after a partial failure.
+3.  **Shopper Compensation**: Automatically calculates and pays out 30% of service/delivery fees to shoppers for `ACCEPTED` orders to compensate for their time.
+4.  **Wallet Integration**: Integrated with the Personal Wallet system for instant user refunds.
+5.  **Audit Trail**: Every cancellation generates comprehensive logs in `Refunds`, `personalWalletTransactions`, and `order_transactions`.
+
+### Technical Implementation
+
+- **API Route**: `pages/api/orders/cancel.ts`
+- **Security**: Verifies session `user.id` against the order's `user_id`.
+- **Status Gating**: Only allows cancellation for `PENDING` or `ACCEPTED` orders.
+
+---
+
+# 💳 Modern Payment Modal & Flow
+
+## Architecture
+
+The payment flow has been modernized using a **React Portal** architecture to ensure the modal renders above all other UI elements without Z-index conflicts.
+
+### Key Components
+
+1.  **`CompletePaymentModal.tsx`**:
+
+    - **Portal-Based**: Uses `createPortal` to render into `document.body`.
+    - **Theme-Aware**: Fully integrated with `ThemeContext` (Dark/Light mode support).
+    - **Responsive Design**: Glassmorphic "Fly-out" drawer on mobile, centered modal on desktop.
+    - **Real-time Verification**: Checks `/api/orders/transaction-status` on load to prevent duplicate payments for already-processed transactions.
+
+2.  **Payment Methods**:
+    - **Personal Wallet**: Instant deduction with balance verification.
+    - **MTN Mobile Money**:
+      - **Saved Numbers**: Dynamic fetching of user's previous MoMo numbers.
+      - **New Number Entry**: Manual input with validation.
+      - **Async Status Polling**: Automatic status check every 3 seconds after initiation.
+
+### Technical Flow
+
+- **Initiation**: Calls `/api/momo/request-to-pay` or `pay-with-wallet.ts`.
+- **Delivery Recalculation**: On payment success, the system calculates the time delta (Payment Time - Creation Time) and shifts the `delivery_time` forward to ensure delivery estimates remain accurate.
+- **Success UI**: Interactive success state with automatic modal closing and data refresh.
+
+---
+
+## Setup & Environment
+
+Requires the following environment variables:
+
+- `FIREBASE_API_KEY`: For Gemini access.
+- `SLACK_ERRORS_WEBHOOK`: For error reporting.
+
+## Best Practices for AI
+
+1. **Mandatory Forms**: The AI is instructed to _never_ summarize price totals in text; it must always use the interactive form to ensure consistency.
+2. **Cart Sync**: Always dispatch `cartChanged` events after AI actions to keep the header and cart modals updated.
+3. **Error Catching**: Every tool execution and fetch in `AIChatWindow.tsx` should be wrapped in a `try/catch` with a `reportError` call.

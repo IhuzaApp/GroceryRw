@@ -117,6 +117,19 @@ const CREATE_WALLET_TRANSACTIONS = gql`
     $transactions: [Wallet_Transactions_insert_input!]!
   ) {
     insert_Wallet_Transactions(objects: $transactions) {
+      returning {
+        id
+        amount
+        type
+        status
+        created_at
+        wallet_id
+        related_order_id
+        relate_business_order_id
+        reference_id
+        phone
+        currency
+      }
       affected_rows
     }
   }
@@ -159,6 +172,7 @@ export async function handleShoppingOperation(
       {
         wallet_id: wallet.id,
         amount: orderTotal.toFixed(2),
+        currency: "RWF",
         type: "reserve",
         status: "completed",
         related_order_id: orderId,
@@ -288,6 +302,7 @@ export async function handleDeliveredOperation(
       {
         wallet_id: wallet.id,
         amount: remainingEarnings.toFixed(2),
+        currency: "RWF",
         type: "earnings",
         status: "completed",
         related_order_id: null,
@@ -306,6 +321,7 @@ export async function handleDeliveredOperation(
       {
         wallet_id: wallet.id,
         amount: remainingEarnings.toFixed(2),
+        currency: "RWF",
         type: "earnings",
         status: "completed",
         related_order_id: orderId,
@@ -324,6 +340,7 @@ export async function handleDeliveredOperation(
       {
         wallet_id: wallet.id,
         amount: remainingEarnings.toFixed(2),
+        currency: "RWF",
         type: "earnings",
         status: "completed",
         related_order_id: null,
@@ -342,6 +359,7 @@ export async function handleDeliveredOperation(
       {
         wallet_id: wallet.id,
         amount: remainingEarnings.toFixed(2),
+        currency: "RWF",
         type: "earnings",
         status: "completed",
         related_order_id: null,
@@ -454,6 +472,7 @@ export async function handleCancelledOperation(
       {
         wallet_id: wallet.id,
         amount: orderTotal.toFixed(2),
+        currency: "RWF",
         type: "refund",
         status: "completed",
         related_order_id: orderId,

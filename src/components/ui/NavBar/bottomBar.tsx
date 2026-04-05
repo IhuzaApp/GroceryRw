@@ -11,6 +11,7 @@ import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { Briefcase } from "lucide-react";
 import GuestUpgradeModal from "../GuestUpgradeModal";
+import PackageDeliveryModal from "./PackageDeliveryModal";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 
@@ -158,6 +159,7 @@ export default function BottomBar() {
     useState(0);
   const [messageUnreadCount, setMessageUnreadCount] = useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPackageModal, setShowPackageModal] = useState(false);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -667,52 +669,40 @@ export default function BottomBar() {
           {/* Business - Only show for non-guest logged-in users - Second icon */}
           {session?.user && !isGuest && (
             <NavItem
-              href="/plasBusiness"
+              href="/plasBusiness/portal"
               icon={
                 <div className="relative inline-block">
                   <svg
+                    version="1.1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 290.625 290.625"
                     width="30px"
                     height="30px"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-gray-600 transition-colors duration-200 dark:text-white"
+                    className="transition-all duration-300 hover:scale-110"
                   >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
+                    <g>
+                      <polygon
+                        style={{ fill: "#2aea63" }}
+                        points="39.511,192.188 147.323,192.188 137.948,239.063 53.573,239.063"
+                      />
+                      <rect
+                        x="58.261"
+                        y="187.5"
+                        style={{ fill: "currentColor" }}
+                        width="70.313"
+                        height="9.375"
+                      />
+                      <rect
+                        x="62.948"
+                        y="210.938"
+                        style={{ fill: "currentColor" }}
+                        width="60.938"
+                        height="9.375"
+                      />
                       <path
-                        d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></path>
-                      <path
-                        d="M3 7L5 7H19L21 7V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V7Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></path>
-                      <path
-                        d="M8 11H16"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></path>
-                      <path
-                        d="M8 15H12"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></path>
+                        style={{ fill: "currentColor" }}
+                        d="M278.573,267.923l-84.722-55.069l-7.252-50.742l14.813-3.173l28.181-32.878l46.514-11.63 l-6.675,20.02l8.892,2.967l10.289-30.872l-20.798-20.798l-6.628,6.628l12.895,12.895l-49.669,12.417l-28.069,32.747l-11.086,2.377 l-5.592-39.155l-48.22-16.073l-47.475,66.478H64.669l29.658-93.211l92.841,13.927l44.072-70.519l5.639,11.273l8.386-4.195 L234.595,0h-26.334v9.375h14.981L182.48,74.597L87.82,60.398L54.834,164.063h-5.948v9.375h97.406l-12.188,60.938H52.645 L33.895,150H2.011v9.375h24.366l16.927,76.167c-4.983,2.17-8.48,7.125-8.48,12.895c0,5.62,3.338,10.444,8.114,12.694 c-2.142,3.052-3.427,6.741-3.427,10.744c0,10.341,8.409,18.75,18.75,18.75s18.75-8.409,18.75-18.75 c0-3.431-0.994-6.605-2.606-9.375h47.405c-1.617,2.77-2.611,5.944-2.611,9.375c0,10.341,8.409,18.75,18.75,18.75 s18.75-8.409,18.75-18.75s-8.409-18.75-18.75-18.75H48.886c-2.583,0-4.688-2.105-4.688-4.688s2.105-4.688,4.688-4.688h92.906 l15.052-75.258l20.569-4.406l7.758,54.309l87.956,57.173l-15.047,6.019l3.483,8.705l26.386-10.556v-31.298h-9.375L278.573,267.923 L278.573,267.923z M67.636,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375s4.205-9.375,9.375-9.375 S67.636,266.705,67.636,271.875z M147.323,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375 s4.205-9.375,9.375-9.375S147.323,266.705,147.323,271.875z M132.759,164.063H95.494l39.567-55.397l36.155,12.052l4.866,34.059 L132.759,164.063z"
+                      />
                     </g>
                   </svg>
                   {marketplaceNotificationCount > 0 && (
@@ -875,326 +865,69 @@ export default function BottomBar() {
 
             {/* More Dropdown Menu */}
             {moreOpen && (
-              <div
-                className="fixed bottom-20 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-xl border border-gray-200 bg-white py-2 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
-                ref={moreRef}
-              >
-                {/* Guest Badge - Show for guest users */}
-                {isGuest && (
-                  <div className="mx-3 mb-3 mt-2">
-                    <button
-                      onClick={() => {
-                        setMoreOpen(false);
-                        setShowUpgradeModal(true);
-                      }}
-                      className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
-                        <svg
-                          className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                        <div className="flex min-w-0 flex-1 flex-col text-left">
-                          <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
-                            Guest User
-                          </span>
-                          <span className="text-xs text-orange-600/90 dark:text-orange-400/90">
-                            Tap to become a Plas member
-                          </span>
-                        </div>
-                        <svg
-                          className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
-                )}
-
-                {/* Profile - Only show for non-guest users */}
-                {session?.user && !isGuest && (
-                  <MoreMenuItem
-                    icon={
-                      <svg
-                        width="20px"
-                        height="20px"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-gray-600 dark:text-gray-300"
-                      >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                          id="SVGRepo_tracerCarrier"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <circle
-                            cx="12"
-                            cy="6"
-                            r="4"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                          />
-                          <path
-                            d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </g>
-                      </svg>
-                    }
-                    label="Profile"
-                    href="/Myprofile"
-                    onClick={() => setMoreOpen(false)}
-                  />
-                )}
-
-                {/* Recipes - Only show for non-guest logged-in users */}
-                {session?.user && !isGuest && (
-                  <MoreMenuItem
-                    icon={
-                      <svg
-                        fill="currentColor"
-                        height="20px"
-                        width="20px"
-                        version="1.1"
-                        id="Layer_1"
-                        xmlns="http://www.w3.org/2000/svg"
-                        xmlnsXlink="http://www.w3.org/1999/xlink"
-                        viewBox="0 0 511.999 511.999"
-                        xmlSpace="preserve"
-                      >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                          id="SVGRepo_tracerCarrier"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <g>
-                            <g>
-                              <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
-                            </g>
-                          </g>
-                          <g>
-                            <g>
-                              <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
-                            </g>
-                          </g>
-                          <g>
-                            <g>
-                              <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
-                            </g>
-                          </g>
-                        </g>
-                      </svg>
-                    }
-                    label="Recipes"
-                    href="/Recipes"
-                    onClick={() => setMoreOpen(false)}
-                  />
-                )}
-
-                {/* Messages - Only show for non-guest users */}
-                {session?.user && !isGuest && (
-                  <MoreMenuItem
-                    icon={
-                      <svg
-                        width="20px"
-                        height="20px"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-gray-600 dark:text-gray-300"
-                      >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                          id="SVGRepo_tracerCarrier"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <path
-                            d="M8 10.5H16"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                          <path
-                            d="M8 14H13.5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                          <path
-                            d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </g>
-                      </svg>
-                    }
-                    label="Messages"
-                    href="/Messages"
-                    onClick={() => setMoreOpen(false)}
-                    badgeCount={messageUnreadCount}
-                  />
-                )}
-
-                <div className="mx-2 my-2 border-t border-gray-200 dark:border-gray-700"></div>
-
-                {!session?.user && (
-                  <MoreMenuItem
-                    icon={
-                      <svg
-                        width="20px"
-                        height="20px"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-green-600"
-                      >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                          id="SVGRepo_tracerCarrier"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <path
-                            d="M15 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H15"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M10 17L15 12L10 7"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M15 12H3"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </g>
-                      </svg>
-                    }
-                    label="Login"
-                    href="/Auth/Login"
-                    onClick={() => setMoreOpen(false)}
-                  />
-                )}
-
-                <button
-                  onClick={() => {
-                    handleThemeToggle();
-                    setMoreOpen(false);
-                  }}
-                  className="mx-2 flex w-auto items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700"
+              <>
+                {/* Backdrop Overlay to hide what's behind */}
+                <div
+                  className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 animate-in fade-in"
+                  onClick={() => setMoreOpen(false)}
+                />
+                <div
+                  className="fixed bottom-24 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-2xl border border-gray-200/50 bg-white/95 p-2 shadow-2xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/95"
+                  ref={moreRef}
                 >
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
-                    {theme === "dark" ? (
-                      <svg
-                        width="20px"
-                        height="20px"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-yellow-500"
+                  {/* Guest Badge - Show for guest users */}
+                  {isGuest && (
+                    <div className="mx-3 mb-3 mt-2">
+                      <button
+                        onClick={() => {
+                          setMoreOpen(false);
+                          setShowUpgradeModal(true);
+                        }}
+                        className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                       >
-                        <path
-                          d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M12 2V4"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M12 20V22"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M4.93 4.93L6.34 6.34"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M17.66 17.66L19.07 19.07"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M2 12H4"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M20 12H22"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M6.34 17.66L4.93 19.07"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M19.07 4.93L17.66 6.34"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : (
+                        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
+                          <svg
+                            className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          <div className="flex min-w-0 flex-1 flex-col text-left">
+                            <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                              Guest User
+                            </span>
+                            <span className="text-xs text-orange-600/90 dark:text-orange-400/90">
+                              Tap to become a Plas member
+                            </span>
+                          </div>
+                          <svg
+                            className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Plas Package */}
+                  <MoreMenuItem
+                    icon={
                       <svg
                         width="20px"
                         height="20px"
@@ -1204,20 +937,312 @@ export default function BottomBar() {
                         className="text-gray-600 dark:text-gray-300"
                       >
                         <path
-                          d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
+                          d="M20.5 7.27783L12 12.0001M12 12.0001L3.49997 7.27783M12 12.0001L12 21.5001M14 20.889L12.777 21.5684C12.4934 21.726 12.3516 21.8047 12.2015 21.8356C12.0685 21.863 11.9315 21.863 11.7986 21.8356C11.6484 21.8047 11.5066 21.726 11.223 21.5684L3.82297 17.4573C3.52346 17.2909 3.37368 17.2077 3.26463 17.0893C3.16816 16.9847 3.09515 16.8606 3.05048 16.7254C3 16.5726 3 16.4013 3 16.0586V7.94153C3 7.59889 3 7.42757 3.05048 7.27477C3.09515 7.13959 3.16816 7.01551 3.26463 6.91082C3.37368 6.79248 3.52345 6.70928 3.82297 6.54288L11.223 2.43177C11.5066 2.27421 11.6484 2.19543 11.7986 2.16454C11.9315 2.13721 12.0685 2.13721 12.2015 2.16454C12.3516 2.19543 12.4934 2.27421 12.777 2.43177L20.177 6.54288C20.4766 6.70928 20.6263 6.79248 20.7354 6.91082C20.8318 7.01551 20.9049 7.13959 20.9495 7.27477C21 7.42757 21 7.59889 21 7.94153L21 12.5001M7.5 4.50008L16.5 9.50008M19 21.0001V15.0001M16 18.0001H22"
                           stroke="currentColor"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       </svg>
-                    )}
-                  </span>
-                  <span className="flex-1">
-                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                  </span>
-                </button>
-              </div>
+                    }
+                    label="Plas Package"
+                    href="#"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setShowPackageModal(true);
+                    }}
+                  />
+
+                  {/* Profile - Only show for non-guest users */}
+                  {session?.user && !isGuest && (
+                    <MoreMenuItem
+                      icon={
+                        <svg
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-gray-600 dark:text-gray-300"
+                        >
+                          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                          <g
+                            id="SVGRepo_tracerCarrier"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          ></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <circle
+                              cx="12"
+                              cy="6"
+                              r="4"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            />
+                            <path
+                              d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </g>
+                        </svg>
+                      }
+                      label="Profile"
+                      href="/Myprofile"
+                      onClick={() => setMoreOpen(false)}
+                    />
+                  )}
+
+                  {/* Recipes - Only show for non-guest logged-in users */}
+                  {session?.user && !isGuest && (
+                    <MoreMenuItem
+                      icon={
+                        <svg
+                          fill="currentColor"
+                          height="20px"
+                          width="20px"
+                          version="1.1"
+                          id="Layer_1"
+                          xmlns="http://www.w3.org/2000/svg"
+                          xmlnsXlink="http://www.w3.org/1999/xlink"
+                          viewBox="0 0 511.999 511.999"
+                          xmlSpace="preserve"
+                        >
+                          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                          <g
+                            id="SVGRepo_tracerCarrier"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          ></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <g>
+                              <g>
+                                <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                              </g>
+                            </g>
+                            <g>
+                              <g>
+                                <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
+                              </g>
+                            </g>
+                            <g>
+                              <g>
+                                <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
+                              </g>
+                            </g>
+                          </g>
+                        </svg>
+                      }
+                      label="Recipes"
+                      href="/Recipes"
+                      onClick={() => setMoreOpen(false)}
+                    />
+                  )}
+
+                  {/* Messages - Only show for non-guest users */}
+                  {session?.user && !isGuest && (
+                    <MoreMenuItem
+                      icon={
+                        <svg
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-gray-600 dark:text-gray-300"
+                        >
+                          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                          <g
+                            id="SVGRepo_tracerCarrier"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          ></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <path
+                              d="M8 10.5H16"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M8 14H13.5"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </g>
+                        </svg>
+                      }
+                      label="Messages"
+                      href="/Messages"
+                      onClick={() => setMoreOpen(false)}
+                      badgeCount={messageUnreadCount}
+                    />
+                  )}
+
+                  <div className="mx-2 my-2 border-t border-gray-200 dark:border-gray-700"></div>
+
+                  {!session?.user && (
+                    <MoreMenuItem
+                      icon={
+                        <svg
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-green-600"
+                        >
+                          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                          <g
+                            id="SVGRepo_tracerCarrier"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          ></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <path
+                              d="M15 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H15"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M10 17L15 12L10 7"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M15 12H3"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </g>
+                        </svg>
+                      }
+                      label="Login"
+                      href="/Auth/Login"
+                      onClick={() => setMoreOpen(false)}
+                    />
+                  )}
+
+                  <button
+                    onClick={() => {
+                      handleThemeToggle();
+                      setMoreOpen(false);
+                    }}
+                    className="mx-2 flex w-auto items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
+                      {theme === "dark" ? (
+                        <svg
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-yellow-500"
+                        >
+                          <path
+                            d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M12 2V4"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M12 20V22"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M4.93 4.93L6.34 6.34"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M17.66 17.66L19.07 19.07"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M2 12H4"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M20 12H22"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M6.34 17.66L4.93 19.07"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M19.07 4.93L17.66 6.34"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="20px"
+                          height="20px"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-gray-600 dark:text-gray-300"
+                        >
+                          <path
+                            d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="flex-1">
+                      {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    </span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </nav>
@@ -1227,6 +1252,11 @@ export default function BottomBar() {
       <GuestUpgradeModal
         open={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
+      />
+      {/* Package Delivery Modal */}
+      <PackageDeliveryModal
+        open={showPackageModal}
+        onClose={() => setShowPackageModal(false)}
       />
     </>
   );

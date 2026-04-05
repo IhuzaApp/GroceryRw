@@ -15,8 +15,8 @@ const ADD_TICKET_REQUEST = gql`
     $priority: String = ""
     $status: String = ""
     $subject: String = ""
-    $user_id: uuid = ""
     $category: String = ""
+    $description: String = ""
   ) {
     insert_tickets(
       objects: {
@@ -25,6 +25,7 @@ const ADD_TICKET_REQUEST = gql`
         subject: $subject
         user_id: $user_id
         category: $category
+        description: $description
       }
     ) {
       affected_rows
@@ -40,7 +41,7 @@ type Body =
       requestType?: "order";
       orderId: string;
       orderDisplayId?: string;
-      orderType: "regular" | "reel" | "restaurant" | "business";
+      orderType: "regular" | "reel" | "restaurant" | "business" | "package";
       storeName?: string;
       status?: string;
       message: string;
@@ -51,6 +52,10 @@ type Body =
       storeName: string;
       message?: string;
       businessAccountId?: string;
+    }
+  | {
+      requestType: "general";
+      message: string;
     };
 
 export default async function handler(
@@ -98,6 +103,47 @@ export default async function handler(
       return res.status(200).json({ success: true });
     }
 
+    // Handle generic requests (account, wallet, etc.)
+    if (body.requestType === "general") {
+      const { message } = body;
+      if (!message || typeof message !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Missing required field: message" });
+      }
+
+      let ticketNum: number | undefined;
+      if (hasuraClient) {
+        const result = await hasuraClient.request<{
+          insert_tickets: {
+            affected_rows: number;
+            returning: Array<{ ticket_num: number }>;
+          };
+        }>(ADD_TICKET_REQUEST, {
+          priority: "normal",
+          status: "open",
+          subject: "General Support Request",
+          user_id: session.user?.id ?? "",
+          category: "Customer",
+          description: message.trim(),
+        });
+        ticketNum = result?.insert_tickets?.returning?.[0]?.ticket_num;
+      }
+
+      await sendSupportTicketToSlack({
+        orderId: "N/A",
+        orderDisplayId: "General",
+        orderType: "general" as any,
+        storeName: "System",
+        message: message.trim().slice(0, 2000),
+        userEmail: session.user?.email ?? undefined,
+        userName: session.user?.name ?? undefined,
+        userPhone: session.user?.phone ?? undefined,
+        ticketNum,
+      });
+      return res.status(200).json({ success: true, code: ticketNum });
+    }
+
     if (!("orderId" in body) || !("orderType" in body)) {
       return res.status(400).json({
         error: "Missing required fields: orderId, orderType, message",
@@ -105,7 +151,7 @@ export default async function handler(
     }
 
     const { orderId, orderDisplayId, orderType, storeName, status, message } =
-      body;
+      body as any;
 
     if (!orderId || !orderType || typeof message !== "string") {
       return res.status(400).json({
@@ -130,6 +176,7 @@ export default async function handler(
         subject,
         user_id: session.user?.id ?? "",
         category: "Customer",
+        description: message.trim(),
       });
       ticketNum = result?.insert_tickets?.returning?.[0]?.ticket_num;
     }
@@ -149,7 +196,7 @@ export default async function handler(
     };
     await sendSupportTicketToSlack(slackPayload);
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, code: ticketNum });
   } catch (err) {
     console.error("Support ticket error:", err);
     const body = req.body as Body | undefined;

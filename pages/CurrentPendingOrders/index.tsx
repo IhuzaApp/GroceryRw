@@ -1,5 +1,7 @@
 import RootLayout from "@components/ui/layout";
 import UserRecentOrders from "@components/userProfile/userRecentOrders";
+import UserRecentPackages from "@components/userProfile/UserRecentPackages";
+import { Package } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -121,6 +123,8 @@ function CurrentOrdersPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
   const initialMountDone = useRef(false);
   const { data: session } = useSession();
 
@@ -167,6 +171,19 @@ function CurrentOrdersPage() {
     }
   }, []);
 
+  const fetchPackages = useCallback(async () => {
+    setLoadingPackages(true);
+    try {
+      const res = await authenticatedFetch("/api/queries/user-packages");
+      const data = await res.json();
+      setPackages(data.packages || []);
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+    } finally {
+      setLoadingPackages(false);
+    }
+  }, []);
+
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       fetchOrders(page + 1, true);
@@ -184,10 +201,17 @@ function CurrentOrdersPage() {
       setHasMore(cached.hasMore);
       setPage(cached.page);
       setLoading(false);
-      return;
+    } else {
+      fetchOrders(1, false);
     }
-    fetchOrders(1, false);
   }, [fetchOrders]);
+
+  // Fetch packages whenever session is ready (distinct from orders cache)
+  useEffect(() => {
+    if (session?.user) {
+      fetchPackages();
+    }
+  }, [session, fetchPackages]);
 
   if (!session) {
     return (
@@ -246,9 +270,14 @@ function CurrentOrdersPage() {
 
   // Count all orders that are not delivered for "Ongoing" (includes unassigned orders)
   const pendingCount = orders.filter((o) => {
-    return o.status !== "delivered";
+    const status = (o.status || "").toLowerCase();
+    return status !== "delivered" && status !== "cancelled";
   }).length;
-  const completedCount = orders.filter((o) => o.status === "delivered").length;
+  const completedCount = orders.filter((o) => {
+    const status = (o.status || "").toLowerCase();
+    return status === "delivered" || status === "cancelled";
+  }).length;
+  const packagesCount = packages.length;
 
   return (
     <AuthGuard requireAuth={true}>
@@ -328,35 +357,24 @@ function CurrentOrdersPage() {
                     </p>
                   </div>
                 </div>
-                {session?.user?.name && (
-                  <div className="hidden items-center gap-3 md:flex">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {session.user.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Welcome back
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Filter Tabs - Modern Design */}
-            <div className="mb-4 px-3 md:mb-6 md:px-8">
-              <div className="inline-flex w-full rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:w-auto">
+            {/* Filter Tabs - Premium Segmented Control */}
+            <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-3 mb-2 px-3 py-2 duration-500 animate-in fade-in slide-in-from-top-4 md:relative md:top-0 md:m-0 md:mb-12 md:flex md:justify-center md:bg-transparent md:p-0">
+              {/* Glassmorphic Container */}
+              <div className="no-scrollbar flex w-full overflow-x-auto rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
                 <button
                   onClick={() => setFilter("pending")}
-                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "pending"
-                      ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
-                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                      ? "scale-[1.02] bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
+                      : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
                   <svg
-                    className={`h-4 w-4 ${
-                      filter === "pending" ? "!text-white" : "text-gray-500"
+                    className={`h-4.5 w-4.5 transition-transform duration-300 ${
+                      filter === "pending" ? "scale-110 !text-white" : ""
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -374,27 +392,28 @@ function CurrentOrdersPage() {
                   </span>
                   {pendingCount > 0 && (
                     <span
-                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
                         filter === "pending"
                           ? "bg-white/20 !text-white"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
                       }`}
                     >
                       {pendingCount}
                     </span>
                   )}
                 </button>
+
                 <button
                   onClick={() => setFilter("done")}
-                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
                     filter === "done"
-                      ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
-                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                      ? "scale-[1.02] bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
+                      : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
                   }`}
                 >
                   <svg
-                    className={`h-4 w-4 ${
-                      filter === "done" ? "!text-white" : "text-gray-500"
+                    className={`h-4.5 w-4.5 transition-transform duration-300 ${
+                      filter === "done" ? "scale-110 !text-white" : ""
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -412,13 +431,37 @@ function CurrentOrdersPage() {
                   </span>
                   {completedCount > 0 && (
                     <span
-                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                      className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
                         filter === "done"
                           ? "bg-white/20 !text-white"
-                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
                       }`}
                     >
                       {completedCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setFilter("packages")}
+                  className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
+                    filter === "packages"
+                      ? "scale-[1.02] bg-gradient-to-br from-green-500 to-green-600 !text-white shadow-lg shadow-green-500/30"
+                      : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <span className={filter === "packages" ? "!text-white" : ""}>
+                    Deliveries
+                  </span>
+                  {packagesCount > 0 && (
+                    <span
+                      className={`flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-tighter transition-colors ${
+                        filter === "packages"
+                          ? "bg-white/20 !text-white"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                      }`}
+                    >
+                      {packagesCount}
                     </span>
                   )}
                 </button>
@@ -426,67 +469,24 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Orders List */}
-            <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-20 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
+            <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-10 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
               <div className="px-3 py-4 md:p-6">
-                <UserRecentOrders
-                  filter={filter}
-                  orders={orders}
-                  loading={loading}
-                  onRefresh={() => fetchOrders(1, false)}
-                />
-
-                {/* Load More Button */}
-                {!loading && hasMore && orders.length > 0 && (
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={loadMore}
-                      disabled={loadingMore}
-                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
-                    >
-                      {loadingMore ? (
-                        <>
-                          <svg
-                            className="h-4 w-4 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                          Load More Orders
-                        </>
-                      )}
-                    </button>
-                  </div>
+                {filter === "packages" ? (
+                  <UserRecentPackages
+                    packages={packages}
+                    loading={loadingPackages}
+                    onRefresh={fetchPackages}
+                  />
+                ) : (
+                  <UserRecentOrders
+                    filter={filter}
+                    orders={orders}
+                    loading={loading}
+                    onRefresh={() => fetchOrders(1, false)}
+                  />
                 )}
+
+                {/* Load More Button removed in favor of component-level pagination */}
               </div>
             </div>
           </div>

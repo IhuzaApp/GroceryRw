@@ -125,28 +125,18 @@ export default async function handler(
   }
   const user_id = session.user.id;
 
-  if (req.method === "GET") {
-    try {
-      if (!hasuraClient) {
-        throw new Error("Hasura client is not initialized");
-      }
-
-      const data = await hasuraClient.request<{
-        Payment_Methods: PaymentMethod[];
-      }>(GET_PAYMENT_METHODS, { user_id });
-      return res.status(200).json({ paymentMethods: data.Payment_Methods });
-    } catch (err) {
-      console.error("Error fetching payment methods:", err);
-      return res.status(500).json({ error: "Failed to fetch payment methods" });
-    }
-  }
-
   if (req.method === "POST") {
     const { method, names, number, CCV, validity, is_default } = req.body;
     if (!method || !names || !number || typeof is_default !== "boolean") {
       return res.status(400).json({ error: "Missing or invalid fields" });
     }
-    if (method.toLowerCase() !== "mtn momo" && (!CCV || !validity)) {
+    const lowerMethod = method.toLowerCase();
+    const isMobileMoney =
+      lowerMethod === "mtn momo" ||
+      lowerMethod === "airtel" ||
+      lowerMethod === "airtel money";
+
+    if (!isMobileMoney && (!CCV || !validity)) {
       return res
         .status(400)
         .json({ error: "Missing CCV or validity for card payments" });
@@ -166,8 +156,8 @@ export default async function handler(
         method,
         names,
         number,
-        CCV,
-        validity,
+        CCV: CCV || "",
+        validity: validity || "",
         is_default,
       });
       return res
@@ -176,6 +166,22 @@ export default async function handler(
     } catch (err) {
       console.error("Error saving payment method:", err);
       return res.status(500).json({ error: "Failed to save payment method" });
+    }
+  }
+
+  if (req.method === "GET") {
+    try {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+
+      const data = await hasuraClient.request<{
+        Payment_Methods: PaymentMethod[];
+      }>(GET_PAYMENT_METHODS, { user_id });
+      return res.status(200).json({ paymentMethods: data.Payment_Methods });
+    } catch (err) {
+      console.error("Error fetching payment methods:", err);
+      return res.status(500).json({ error: "Failed to fetch payment methods" });
     }
   }
 
@@ -220,6 +226,6 @@ export default async function handler(
     }
   }
 
-  res.setHeader("Allow", ["GET", "POST", "PUT"]);
+  res.setHeader("Allow", ["GET", "PUT", "POST"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

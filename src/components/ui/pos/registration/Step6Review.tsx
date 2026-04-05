@@ -6,6 +6,7 @@ import {
   User,
   CreditCard,
   ShieldCheck,
+  Clock,
 } from "lucide-react";
 
 interface Step6ReviewProps {
@@ -26,16 +27,26 @@ export default function Step6Review({
       <div className="rounded-xl bg-white p-3 text-[#022C22] shadow-sm">
         <Icon className="h-6 w-6" />
       </div>
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
           {label}
         </p>
-        <p className="text-lg font-bold text-[#1A1A1A]">
+        <p className="truncate text-lg font-bold text-[#1A1A1A]">
           {value || "Not provided"}
         </p>
       </div>
     </div>
   );
+
+  const days = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
 
   return (
     <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-right-4">
@@ -73,6 +84,34 @@ export default function Step6Review({
           value={`${plan?.name} (${cycle})`}
           icon={CreditCard}
         />
+      </div>
+
+      <div className="rounded-2xl border-2 border-gray-100 bg-gray-50 p-8">
+        <div className="mb-6 flex items-center gap-2 text-sm font-bold text-[#022C22]">
+          <Clock className="h-4 w-4" />
+          Operating Hours
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {days.map((day) => (
+            <div
+              key={day}
+              className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-3 shadow-sm"
+            >
+              <span className="text-xs font-bold uppercase capitalize text-gray-400">
+                {day.slice(0, 3)}
+              </span>
+              <span
+                className={`text-xs font-bold ${
+                  formData.operating_hours[day] === "Closed"
+                    ? "text-red-500"
+                    : "text-emerald-600"
+                }`}
+              >
+                {formData.operating_hours[day]}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-2xl border-2 border-[#022C22]/10 bg-emerald-50/30 p-8">

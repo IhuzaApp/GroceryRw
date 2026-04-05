@@ -133,7 +133,17 @@ const CREATE_WALLET_TRANSACTIONS = gql`
     insert_Wallet_Transactions(objects: $transactions) {
       returning {
         id
+        amount
+        type
+        status
+        created_at
+        wallet_id
+        related_order_id
+        reference_id
+        phone
+        currency
       }
+      affected_rows
     }
   }
 `;
@@ -671,6 +681,9 @@ export default async function handler(
           transactions.push({
             wallet_id: walletId,
             amount: formattedOrderAmount.toFixed(2),
+            currency: "RWF",
+            reference_id: momoReferenceId || null,
+            phone: momoCode || null,
             type: "payment",
             status: "completed",
             related_order_id: orderId, // Primary order ID for the batch
@@ -683,6 +696,9 @@ export default async function handler(
           transactions.push({
             wallet_id: walletId,
             amount: formattedOrderAmount.toFixed(2),
+            currency: "RWF",
+            reference_id: momoReferenceId || null,
+            phone: momoCode || null,
             type: "payment",
             status: "completed",
             related_order_id: orderId,
@@ -696,6 +712,9 @@ export default async function handler(
         transactions.push({
           wallet_id: walletId,
           amount: formattedOrderAmount.toFixed(2),
+          currency: "RWF",
+          reference_id: momoReferenceId || null,
+          phone: momoCode || null,
           type: "payment",
           status: "completed",
           related_order_id: orderId,
@@ -713,6 +732,7 @@ export default async function handler(
           transactions.push({
             wallet_id: walletId,
             amount: refund.amount,
+            currency: "RWF",
             type: "refund",
             status: "completed",
             related_order_id: refund.order_id,
@@ -739,6 +759,7 @@ export default async function handler(
         const refundTransactions = createdRefunds.map((refund) => ({
           wallet_id: walletId,
           amount: refund.amount,
+          currency: "RWF",
           type: "refund",
           status: "completed",
           related_order_id: refund.order_id,

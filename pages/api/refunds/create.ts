@@ -15,6 +15,13 @@ const CREATE_REFUND = gql`
       reason
       generated_by
       created_at
+      package_id
+      paid
+      reel_order_id
+      restaurant_order_id
+      update_on
+      user_id
+      business_order_id
     }
   }
 `;
@@ -31,18 +38,40 @@ const GET_ORDER_DETAILS = gql`
       Shop {
         id
         name
+        ssd
+        tin
+        updated_at
+        phone
+        operating_hours
+        logo
+        longitude
+        latitude
+        description
+        created_at
+        address
       }
       Order_Items {
         id
         product_id
         quantity
         price
-        found
-        foundQuantity
-        Product {
-          name
-        }
+        order_id
+        created_at
       }
+      pin
+      service_fee
+      shop_id
+      status
+      assigned_at
+      combined_order_id
+      created_at
+      delivery_fee
+      delivery_address_id
+      discount
+      voucher_code
+      updated_at
+      delivery_notes
+      applied_promotions
     }
   }
 `;

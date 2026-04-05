@@ -16,6 +16,16 @@ const GET_REFUNDS = gql`
       amount
       status
       created_at
+      order_id
+      package_id
+      paid
+      reason
+      reel_order_id
+      restaurant_order_id
+      update_on
+      user_id
+      generated_by
+      business_order_id
     }
   }
 `;

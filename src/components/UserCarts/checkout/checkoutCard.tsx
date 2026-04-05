@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Panel, toaster, Notification } from "rsuite";
-import Link from "next/link";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useTheme } from "../../../context/ThemeContext";
-import { useAuth } from "../../../context/AuthContext";
 import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import {
   useFoodCart,
@@ -13,6 +11,7 @@ import {
 } from "../../../context/FoodCartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
 import CombineCartsModal from "./CombineCartsModal";
+import PaymentProcessingOverlay from "../../ui/pos/registration/PaymentProcessingOverlay";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -54,6 +53,7 @@ interface CheckoutItemsProps {
   shopId: string;
   isFoodCart?: boolean;
   restaurant?: FoodCartRestaurant;
+  successRedirectPath?: string; // e.g. "/shops/", "/stores/", "/restaurant/"
 }
 
 // System configuration interface
@@ -101,6 +101,7 @@ export default function CheckoutItems({
   shopId,
   isFoodCart = false,
   restaurant,
+  successRedirectPath,
 }: CheckoutItemsProps) {
   const { theme } = useTheme();
   const router = useRouter();
@@ -121,6 +122,14 @@ export default function CheckoutItems({
   const [showAddressModal, setShowAddressModal] = useState(false);
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  // MoMo payment state
+  const [processingStep, setProcessingStep] = useState<
+    "idle" | "initiating_payment" | "awaiting_approval" | "success"
+  >("idle");
+  const [paymentStatus, setPaymentStatus] = useState<
+    "idle" | "pending" | "success" | "failed"
+  >("idle");
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to fetch fresh discounts from server (always called, never cached)
   const fetchFreshDiscounts = useCallback(async () => {
@@ -302,20 +311,44 @@ export default function CheckoutItems({
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
     window.addEventListener("addressChanged", handleAddressChange);
-    return () =>
+    return () => {
       window.removeEventListener("addressChanged", handleAddressChange);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
   }, []);
 
   // No router event listeners needed since we're not redirecting
 
   const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
-  const [codeType, setCodeType] = useState<"promo" | "referral" | null>(null);
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [serviceFeeDiscount, setServiceFeeDiscount] = useState(0);
   const [deliveryFeeDiscount, setDeliveryFeeDiscount] = useState(0);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [codeType, setCodeType] = useState<"promo" | "referral" | null>(null);
+  const [discounts, setDiscounts] = useState<{
+    subtotal_discount: number;
+    service_fee_discount: number;
+    delivery_fee_discount: number;
+    final_delivery_fee?: number;
+    final_service_fee?: number;
+    final_subtotal?: number;
+    final_total?: number;
+    free_delivery: boolean;
+    promotions_applied: any[];
+    rejected_promotions?: any[];
+    pricing_token?: string;
+  }>({
+    subtotal_discount: 0,
+    service_fee_discount: 0,
+    delivery_fee_discount: 0,
+    free_delivery: false,
+    promotions_applied: [],
+    rejected_promotions: [],
+  });
+
   const [validatingCode, setValidatingCode] = useState(false);
+  const [autoApplying, setAutoApplying] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
@@ -357,6 +390,8 @@ export default function CheckoutItems({
       deliveryTime: string;
       shopLat: number;
       shopLng: number;
+      items: any[];
+      subtotal: number;
     };
   }>({});
 
@@ -553,6 +588,12 @@ export default function CheckoutItems({
               deliveryTime: deliveryTimeText,
               shopLat: shopLatitude ? parseFloat(shopLatitude.toString()) : 0,
               shopLng: shopLongitude ? parseFloat(shopLongitude.toString()) : 0,
+              items: items.map((item: any) => ({
+                product_id: item.id,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+              subtotal: cartTotal,
             },
           }));
         } catch (error) {
@@ -755,13 +796,21 @@ export default function CheckoutItems({
           );
           const walletData = await walletResponse.json();
           if (walletData.wallet) {
-            setWalletBalance(parseFloat(walletData.wallet.balance || "0"));
+            const balance = parseFloat(walletData.wallet.balance || "0");
+            setWalletBalance(balance);
+            setHasWallet(true);
+
+            // Set wallet as default payment method (per user request)
+            setSelectedPaymentValue("wallet");
+            setSelectedPaymentMethod({ type: "wallet" });
           } else {
             setWalletBalance(0);
+            setHasWallet(false);
           }
         } catch (walletError) {
           console.error("Error fetching wallet balance:", walletError);
           setWalletBalance(0);
+          setHasWallet(false);
         }
       } catch (error) {
         console.error("Error fetching payment data:", error);
@@ -896,8 +945,29 @@ export default function CheckoutItems({
     : 0;
   const finalDistanceFee =
     rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
-  // Final delivery fee includes unit surcharge
-  const deliveryFee = finalDistanceFee + unitsSurcharge;
+  // Local fallback calculations (Normal calculations we had)
+  const localDeliveryFee = finalDistanceFee + unitsSurcharge;
+  const localServiceFee = serviceFee;
+
+  // Use server values ONLY if a promotion/influencer/referral is actively applied
+  // This satisfies the requirement: "do the sync once the user add the promotopn code ... before that just show normal calculations"
+  const hasActiveDiscount =
+    (discounts.promotions_applied && discounts.promotions_applied.length > 0) ||
+    appliedCode !== null;
+
+  const deliveryFee =
+    hasActiveDiscount && discounts.final_delivery_fee !== undefined
+      ? discounts.final_delivery_fee
+      : localDeliveryFee;
+
+  const finalServiceFee =
+    hasActiveDiscount && discounts.final_service_fee !== undefined
+      ? discounts.final_service_fee
+      : localServiceFee;
+
+  // Helper to check if pricing is valid/available
+  const isPricingAvailable =
+    deliveryFee !== undefined && finalServiceFee !== undefined;
 
   // Update referral discounts when delivery fee changes (if referral code is applied)
   useEffect(() => {
@@ -912,7 +982,26 @@ export default function CheckoutItems({
       setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
       setReferralDiscount(totalReferralDiscount);
     }
-  }, [deliveryFee, serviceFee, codeType, appliedCode]);
+
+    // Update basic discount state if we have backend discounts
+    if (
+      discounts.subtotal_discount > 0 ||
+      discounts.service_fee_discount > 0 ||
+      discounts.delivery_fee_discount > 0
+    ) {
+      setDiscount(discounts.subtotal_discount);
+      setServiceFeeDiscount(discounts.service_fee_discount);
+      setDeliveryFeeDiscount(discounts.delivery_fee_discount);
+    }
+  }, [
+    codeType,
+    appliedCode,
+    serviceFee,
+    deliveryFee,
+    discounts.subtotal_discount,
+    discounts.service_fee_discount,
+    discounts.delivery_fee_discount,
+  ]);
 
   // Compute total delivery time: travel time in 3D plus shopping time/preparation time
   const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
@@ -1092,6 +1181,164 @@ export default function CheckoutItems({
 
   // discountsEnabled is now a separate state that's always fetched fresh from server
 
+  // Function to fetch cart items for snapshot
+  const fetchCartSnapshot = useCallback(async () => {
+    if (isFoodCart && restaurant) {
+      return restaurant.items.map((item) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+    }
+
+    try {
+      const response = await fetch(`/api/cart-items?shop_id=${shopId}`);
+      const data = await response.json();
+      return (data.items || []).map((item: any) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+    } catch (error) {
+      console.error("Error fetching cart snapshot:", error);
+      return [];
+    }
+  }, [isFoodCart, restaurant, shopId]);
+
+  // AUTO PROMOTIONS: Apply store-wide/flash sales on load
+  useEffect(() => {
+    const applyAutoPromotions = async () => {
+      // Fix: Skip auto-apply if a manual code is already active
+      if (!discountsEnabled || autoApplying || appliedCode) return;
+
+      setAutoApplying(true);
+      try {
+        const items = await fetchCartSnapshot();
+        const cartSnapshot = {
+          cart_id: shopId,
+          user_id: isGuest ? "guest" : "user", // Simplified for now
+          items,
+          items_count: items.length,
+          subtotal: Total,
+          service_fee: serviceFee,
+          delivery_fee: deliveryFee,
+          applied_codes: appliedCode ? [appliedCode] : [],
+        };
+
+        const response = await fetch("/api/promotions/auto-apply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart: cartSnapshot }),
+        });
+
+        const result = await response.json();
+        if (result.success && result.discounts) {
+          setDiscounts((prev) => ({
+            ...prev,
+            ...result.discounts,
+            subtotal_discount: parseFloat(
+              result.discounts.subtotal_discount || "0"
+            ),
+            service_fee_discount: parseFloat(
+              result.discounts.service_fee_discount || "0"
+            ),
+            delivery_fee_discount: parseFloat(
+              result.discounts.delivery_fee_discount || "0"
+            ),
+            promotions_applied:
+              result.promotions_applied || prev.promotions_applied || [],
+          }));
+        }
+      } catch (error) {
+        console.error("Error auto-applying promotions:", error);
+      } finally {
+        setAutoApplying(false);
+      }
+    };
+
+    applyAutoPromotions();
+  }, [
+    shopId,
+    Total,
+    serviceFee,
+    deliveryFee,
+    selectedAddressId,
+    discountsEnabled,
+    appliedCode,
+  ]);
+
+  const triggerPricingSync = useCallback(async () => {
+    // Backend is now the source of truth, so we always sync if possible
+    try {
+      const items = await fetchCartSnapshot();
+      const cartSnapshot = {
+        cart_id: shopId,
+        restaurant_id: isFoodCart && restaurant ? restaurant.id : null,
+        user_id: isGuest ? "guest" : "user",
+        items,
+        items_count: items.length,
+        subtotal: Total,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        applied_codes: appliedCode ? [appliedCode] : [],
+      };
+
+      // For combined carts, include all shops for accuracy
+      if (selectedCartIds.size > 0) {
+        (cartSnapshot as any).carts = [
+          { cart_id: shopId, items, subtotal: Total },
+          ...Array.from(selectedCartIds).map((cartId) => ({
+            cart_id: cartId,
+            items: cartDetails[cartId]?.items || [],
+            subtotal: cartDetails[cartId]?.subtotal || 0,
+          })),
+        ];
+        (cartSnapshot as any).cart_ids =
+          Array.from(selectedCartIds).concat(shopId);
+      }
+
+      const response = await fetch("/api/promotions/validate-final", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart: cartSnapshot }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.pricing_token) {
+        setDiscounts((prev) => ({
+          ...prev,
+          ...data.discounts,
+          pricing_token: data.pricing_token,
+          promotions_applied:
+            data.promotions_applied || prev.promotions_applied || [],
+        }));
+        // Update final total if returned
+        if (data.final_total !== undefined) {
+          // We can use this to display the final total from backend
+        }
+      }
+    } catch (error) {
+      console.error("Pricing sync failed:", error);
+    }
+  }, [
+    shopId,
+    Total,
+    serviceFee,
+    deliveryFee,
+    appliedCode,
+    isGuest,
+    isFoodCart,
+    restaurant,
+    selectedCartIds,
+    cartDetails,
+    fetchCartSnapshot,
+  ]);
+
+  // Re-sync pricing when cart or address changes - ALWAYS (No Promotion Flow)
+  useEffect(() => {
+    triggerPricingSync();
+  }, [Total, serviceFee, deliveryFee, appliedCode, triggerPricingSync]);
+
   const handleApplyCode = async () => {
     // If discounts are disabled, don't apply codes
     if (!discountsEnabled) {
@@ -1115,75 +1362,80 @@ export default function CheckoutItems({
       return;
     }
 
-    setValidatingCode(true);
-
-    // First, check if it's a promo code
-    const PROMO_CODES: { [code: string]: number } = {
-      SAVE10: 0.1,
-      SAVE20: 0.2,
-    };
-
-    if (PROMO_CODES[code]) {
-      // It's a promo code
-      setDiscount(Total * PROMO_CODES[code]);
-      setAppliedCode(code);
-      setCodeType("promo");
-      // Clear referral discounts
-      setServiceFeeDiscount(0);
-      setDeliveryFeeDiscount(0);
-      setReferralDiscount(0);
-
+    // Check stacking rules from current applied promotions
+    const hasExclusive = discounts?.promotions_applied?.some(
+      (p) => p.stacking_type === "exclusive"
+    );
+    if (hasExclusive) {
       toaster.push(
-        <Notification type="success" header="Promo Code Applied">
-          Discount applied successfully!
+        <Notification type="warning" header="Stacking Bound">
+          Existing promotion does not allow additional codes.
         </Notification>,
         { placement: "topEnd" }
       );
-      setValidatingCode(false);
       return;
     }
 
-    // If not a promo code, check if it's a referral code
+    setValidatingCode(true);
+
     try {
-      const response = await fetch("/api/referrals/validate-code", {
+      const items = await fetchCartSnapshot();
+      const cartSnapshot = {
+        cart_id: shopId,
+        user_id: isGuest ? "guest" : "user",
+        items,
+        subtotal: Total,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        applied_codes: appliedCode ? [appliedCode] : [],
+      };
+
+      const response = await fetch("/api/promotions/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referralCode: code }),
+        body: JSON.stringify({ code, cart: cartSnapshot }),
       });
 
       const result = await response.json();
-
       if (result.valid) {
-        // Calculate 17% discount from service fee and delivery fee
-        // Split: 8.5% from service fee, 8.5% from delivery fee
-        // Note: These will be recalculated when delivery fee changes
-        const serviceFeeDiscountAmount = serviceFee * 0.085;
-        const deliveryFeeDiscountAmount = deliveryFee * 0.085;
-        const totalReferralDiscount =
-          serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+        setDiscounts({
+          subtotal_discount: parseFloat(
+            result.discounts.subtotal_discount || "0"
+          ),
+          service_fee_discount: parseFloat(
+            result.discounts.service_fee_discount || "0"
+          ),
+          delivery_fee_discount: parseFloat(
+            result.discounts.delivery_fee_discount || "0"
+          ),
+          final_delivery_fee: result.discounts.final_delivery_fee,
+          final_service_fee: result.discounts.final_service_fee,
+          final_subtotal: result.discounts.final_subtotal,
+          final_total: result.discounts.final_total,
+          free_delivery: !!result.discounts.free_delivery,
+          promotions_applied: result.promotions_applied || [],
+          rejected_promotions: result.rejected_promotions || [],
+        });
 
-        setServiceFeeDiscount(serviceFeeDiscountAmount);
-        setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
-        setReferralDiscount(totalReferralDiscount);
         setAppliedCode(code);
-        setCodeType("referral");
-        // Clear promo discount
-        setDiscount(0);
+        setCodeType(result.is_referral ? "referral" : "promo");
+
+        // Re-sync will happen automatically via useEffect [appliedCode]
 
         toaster.push(
-          <Notification type="success" header="Referral Code Applied">
-            You've received a 17% discount on service and delivery fees!
+          <Notification type="success" header="Promotion Applied">
+            {result.message || "Discount applied successfully!"}
           </Notification>,
           { placement: "topEnd" }
         );
       } else {
-        // Reset all discounts
-        setServiceFeeDiscount(0);
-        setDeliveryFeeDiscount(0);
-        setReferralDiscount(0);
-        setDiscount(0);
-        setAppliedCode(null);
-        setCodeType(null);
+        setDiscounts((prev) => ({
+          ...prev,
+          rejected_promotions: result.rejected_promotions || [
+            { code, reason: result.message },
+          ],
+        }));
+
         toaster.push(
           <Notification type="error" header="Invalid Code">
             {result.message || "Invalid code. Please check and try again."}
@@ -1193,13 +1445,6 @@ export default function CheckoutItems({
       }
     } catch (error) {
       console.error("Error validating code:", error);
-      // Reset all discounts
-      setServiceFeeDiscount(0);
-      setDeliveryFeeDiscount(0);
-      setReferralDiscount(0);
-      setDiscount(0);
-      setAppliedCode(null);
-      setCodeType(null);
       toaster.push(
         <Notification type="error" header="Error">
           Failed to validate code. Please try again.
@@ -1222,21 +1467,212 @@ export default function CheckoutItems({
     if (details) {
       combinedSubtotal += details.total;
       combinedUnits += details.units;
-      // Service fee is NOT added - it stays the same as the main cart
-      // combinedServiceFee += details.serviceFee; // REMOVED
       // Add 70% of delivery fee for additional carts
-      combinedDeliveryFee += details.deliveryFee * 0.7;
+      combinedDeliveryFee += (details.deliveryFee || 0) * 0.7;
     }
   });
 
-  // Compute numeric final total including service fee and delivery fee, minus discounts
-  const finalServiceFee = serviceFee - serviceFeeDiscount + combinedServiceFee;
-  const finalDeliveryFee =
-    deliveryFee - deliveryFeeDiscount + combinedDeliveryFee;
+  const finalDeliveryFee = (deliveryFee || 0) + combinedDeliveryFee;
+
   const grandSubtotal = Total + combinedSubtotal;
   const grandTotalUnits = totalUnits + combinedUnits;
+
+  // Compute numeric final total including service fee and delivery fee, minus discounts
+  // PREFER BACKEND VALUE (Absolute Source of Truth)
   const finalTotal =
-    grandSubtotal - discount + finalServiceFee + finalDeliveryFee;
+    discounts.final_total !== undefined
+      ? discounts.final_total
+      : grandSubtotal -
+        discounts.subtotal_discount +
+        (deliveryFee || 0) +
+        (finalServiceFee || 0);
+
+  const formatPhoneForMoMo = (phone: string) => {
+    let partyId = String(phone).replace(/\D/g, "");
+    if (partyId.startsWith("0")) {
+      partyId = "250" + partyId.slice(1);
+    } else if (!partyId.startsWith("250")) {
+      partyId = "250" + partyId;
+    }
+    return partyId;
+  };
+
+  const handleMoMoPayment = async (orderId: string, amount: number) => {
+    const phone = selectedPaymentMethod?.number || oneTimePhoneNumber;
+    console.log("🟡 [MoMo Checkout] handleMoMoPayment triggered", {
+      orderId,
+      amount,
+      phone,
+      selectedPaymentMethod,
+    });
+
+    if (!phone) {
+      console.warn("⚠️ [MoMo Checkout] No phone number available — aborting");
+      toaster.push(
+        <Notification type="error" header="Phone Number Required">
+          Please provide a valid MoMo phone number.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      setIsCheckoutLoading(false);
+      return;
+    }
+
+    const formattedPhone = formatPhoneForMoMo(phone);
+    console.log("📞 [MoMo Checkout] Formatted phone:", formattedPhone);
+
+    setPaymentStatus("pending");
+    setProcessingStep("initiating_payment");
+    setIsExpanded(false); // Collapse the order summary so the payment overlay is visible
+
+    try {
+      console.log("📡 [MoMo Checkout] Calling /api/momo/request-to-pay...", {
+        amount: Math.round(amount),
+        payerNumber: formattedPhone,
+        orderId,
+      });
+      const response = await fetch("/api/momo/request-to-pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Math.round(amount),
+          currency: "RWF",
+          payerNumber: formattedPhone,
+          externalId: orderId,
+          orderId: orderId,
+          payerMessage: `Order ${orderId.slice(-8)}`,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("📬 [MoMo Checkout] /api/momo/request-to-pay response:", {
+        ok: response.ok,
+        status: response.status,
+        data,
+      });
+
+      if (response.ok && data.referenceId) {
+        setProcessingStep("awaiting_approval");
+        const referenceId = data.referenceId;
+        console.log(
+          "✅ [MoMo Checkout] MoMo request sent — polling for status. referenceId:",
+          referenceId
+        );
+
+        // Polling for payment status
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = setInterval(async () => {
+          try {
+            const statusRes = await fetch(
+              `/api/momo/request-to-pay-status?referenceId=${referenceId}`
+            );
+            const statusData = await statusRes.json();
+
+            if (statusData.status === "SUCCESSFUL") {
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+              setPaymentStatus("success");
+              setProcessingStep("success");
+
+              toaster.push(
+                <Notification type="success" header="Payment Successful!">
+                  Your payment was successful and your order is being processed.
+                </Notification>,
+                { placement: "topEnd", duration: 5000 }
+              );
+
+              // Clear food cart if applicable
+              if (isFoodCart) {
+                clearRestaurant(shopId);
+              } else {
+                // For grocery/shopping, notify other components to refetch carts for the main shop
+                window.dispatchEvent(
+                  new CustomEvent("cartChanged", {
+                    detail: { refetch: true, shop_id: shopId },
+                  })
+                );
+
+                // Also clear any combined carts if this was a combined checkout
+                if (selectedCartIds.size > 0) {
+                  selectedCartIds.forEach((id) => {
+                    window.dispatchEvent(
+                      new CustomEvent("cartChanged", {
+                        detail: { refetch: true, shop_id: id },
+                      })
+                    );
+                  });
+                  // Reset selected carts
+                  setSelectedCartIds(new Set());
+                }
+              }
+
+              // Redirect to success or refresh - wait 2.5 seconds to show the success overlay
+              setTimeout(() => {
+                const basePath =
+                  successRedirectPath ||
+                  (isFoodCart ? "/restaurant/" : "/stores/");
+                router.push(`${basePath}${shopId}?orderSuccess=true`);
+              }, 2500);
+            } else if (
+              ["FAILED", "REJECTED", "EXPIRED"].includes(statusData.status)
+            ) {
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+              setPaymentStatus("failed");
+              setProcessingStep("idle");
+              setIsCheckoutLoading(false);
+              setIsExpanded(true); // Re-expand so user can see checkout and retry
+
+              const reason =
+                statusData.reason || statusData.financial_transaction_id
+                  ? "Your payment was declined or expired. Your order has been cancelled — please try again."
+                  : "Payment was not completed. Your order has been cancelled. Please try again.";
+
+              toaster.push(
+                <Notification
+                  type="error"
+                  header="Payment Failed — Order Cancelled"
+                >
+                  {reason}
+                </Notification>,
+                { placement: "topEnd", duration: 9000 }
+              );
+            }
+          } catch (pollErr) {
+            console.error("Polling error:", pollErr);
+          }
+        }, 3000);
+
+        // Cleanup interval after 3 minutes
+        setTimeout(() => {
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            setProcessingStep("idle");
+            setIsCheckoutLoading(false);
+          }
+        }, 180000);
+      } else {
+        setPaymentStatus("failed");
+        setProcessingStep("idle");
+        setIsCheckoutLoading(false);
+        toaster.push(
+          <Notification type="error" header="MoMo Request Failed">
+            {data.error ||
+              "Failed to initiate MoMo prompt. Please check your number and try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      }
+    } catch (err) {
+      setPaymentStatus("failed");
+      setProcessingStep("idle");
+      setIsCheckoutLoading(false);
+      console.error("MoMo payment error:", err);
+    }
+  };
 
   const handleProceedToCheckout = async () => {
     // Validate cart has items
@@ -1252,7 +1688,6 @@ export default function CheckoutItems({
 
     // Get selected delivery address from cookie
     const cookieValue = Cookies.get("delivery_address");
-
     if (!cookieValue) {
       toaster.push(
         <Notification type="error" header="Address Required">
@@ -1278,7 +1713,6 @@ export default function CheckoutItems({
     }
 
     const deliveryAddressId = addressObj.id;
-
     if (!deliveryAddressId) {
       toaster.push(
         <Notification type="error" header="Invalid Address">
@@ -1291,102 +1725,119 @@ export default function CheckoutItems({
 
     setIsCheckoutLoading(true);
 
-    // Set a timeout fallback to ensure loading state is always cleared
-    const loadingTimeout = setTimeout(() => {
-      console.warn("Checkout timeout - clearing loading state");
-      setIsCheckoutLoading(false);
-    }, 30000); // 30 second timeout
-
-    // Process checkout in background
     try {
-      let payload;
-      let apiEndpoint;
+      const items = await fetchCartSnapshot();
+      const cartSnapshot = {
+        cart_id: shopId,
+        user_id: isGuest ? "guest" : "user",
+        items,
+        subtotal: Total,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
+        applied_codes: appliedCode ? [appliedCode] : [],
+      };
+
+      const validateRes = await fetch("/api/promotions/validate-final", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart: cartSnapshot }),
+      });
+
+      const validateData = await validateRes.json();
+      if (!validateData.success || !validateData.pricing_token) {
+        toaster.push(
+          <Notification type="error" header="Price Sync Failed">
+            {validateData.message ||
+              "Unable to sync final prices. Please try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+        setIsCheckoutLoading(false);
+        return;
+      }
+
+      const finalPayloadDiscounts = validateData.discounts;
+      const pricingToken = validateData.pricing_token;
+      const finalGrandTotal = validateData.final_total;
+
+      if (!finalGrandTotal) {
+        toaster.push(
+          <Notification type="error" header="Price Sync Failed">
+            Unable to verify final total. Please try again.
+          </Notification>,
+          { placement: "topEnd" }
+        );
+        setIsCheckoutLoading(false);
+        return;
+      }
+
+      // --- Refactored payload builder (Backend = Single Source of Truth) ---
+      let payload: any = {
+        delivery_address_id: deliveryAddressId,
+        delivery_time: deliveryTimestamp,
+        delivery_notes: deliveryNotes || null,
+        pricing_token: pricingToken,
+        payment_method:
+          selectedPaymentMethod?.type === "card"
+            ? "card"
+            : selectedPaymentMethod?.type === "wallet"
+            ? "wallet"
+            : selectedPaymentMethod?.type === "refund"
+            ? "refund"
+            : "mobile_money",
+        payment_method_id: selectedPaymentMethod?.id || null,
+        total_discount: Math.round(finalPayloadDiscounts.total_discount || 0),
+        discount_breakdown: finalPayloadDiscounts.discount_breakdown || {
+          subtotal: 0,
+          service_fee: 0,
+          delivery_fee: 0,
+        },
+        applied_promotions: finalPayloadDiscounts.promotions_applied || [],
+        subtotal: Total,
+        items_count: (cartSnapshot as any).items?.length || 0,
+      };
+
+      let apiEndpoint = "/api/checkout";
 
       if (isFoodCart && restaurant) {
-        // Food cart checkout
         apiEndpoint = "/api/food-checkout";
         payload = {
+          ...payload,
           restaurant_id: restaurant.id,
-          delivery_address_id: deliveryAddressId,
-          service_fee: "0", // No service fee for food orders
-          delivery_fee: finalDeliveryFee.toString(),
-          discount: discount > 0 ? discount.toString() : null,
-          voucher_code: codeType === "promo" ? appliedCode : null,
-          referral_code: codeType === "referral" ? appliedCode : null,
-          referral_discount:
-            referralDiscount > 0 ? referralDiscount.toString() : null,
-          service_fee_discount:
-            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
-          delivery_fee_discount:
-            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
-          delivery_time: deliveryTimestamp,
-          delivery_notes: deliveryNotes || null,
+          service_fee: "0",
+          delivery_fee: Math.round(deliveryFee || 0).toString(),
           items: restaurant.items.map((item) => ({
             dish_id: item.id,
             quantity: item.quantity,
-            price: item.price,
-            discount: item.discount || null,
+            price: Math.round(parseFloat(item.price)),
           })),
         };
-      } else {
-        // Check if this is a combined checkout
-        if (selectedCartIds.size > 0) {
-          // Combined checkout with multiple carts
-          apiEndpoint = "/api/mutations/create-combined-orders";
-
-          // Prepare stores data
-          const stores = [
-            // Current cart
+      } else if (selectedCartIds.size > 0) {
+        apiEndpoint = "/api/mutations/create-combined-orders";
+        payload = {
+          ...payload,
+          cart_ids: Array.from(selectedCartIds).concat(shopId),
+          carts: (cartSnapshot as any).carts,
+          stores: [
             {
               store_id: shopId,
-              delivery_fee: (deliveryFee - deliveryFeeDiscount).toString(),
-              service_fee: (serviceFee - serviceFeeDiscount).toString(),
-              discount: discount > 0 ? discount.toString() : null,
-              voucher_code: codeType === "promo" ? appliedCode : null,
+              delivery_fee: Math.round(deliveryFee || 0).toString(),
+              service_fee: Math.round(finalServiceFee || 0).toString(),
             },
-            // Additional selected carts (with 70% delivery fee, no service fee)
-            ...Array.from(selectedCartIds).map((cartId) => {
-              const details = cartDetails[cartId];
-              return {
-                store_id: cartId,
-                delivery_fee: (details.deliveryFee * 0.7).toString(), // 70% delivery fee
-                service_fee: "0", // No service fee for additional carts
-              };
-            }),
-          ];
-
-          payload = {
-            stores,
-            delivery_address_id: deliveryAddressId,
-            delivery_time: deliveryTimestamp,
-            delivery_notes: deliveryNotes || null,
-            payment_method: "mobile_money", // This will be set properly
-            payment_method_id: selectedPaymentMethod?.id || null,
-          };
-        } else {
-          // Regular single cart checkout
-          apiEndpoint = "/api/checkout";
-          payload = {
-            shop_id: shopId,
-            delivery_address_id: deliveryAddressId,
-            service_fee: finalServiceFee.toString(),
-            delivery_fee: finalDeliveryFee.toString(),
-            discount: discount > 0 ? discount.toString() : null,
-            voucher_code: codeType === "promo" ? appliedCode : null,
-            referral_code: codeType === "referral" ? appliedCode : null,
-            referral_discount:
-              referralDiscount > 0 ? referralDiscount.toString() : null,
-            service_fee_discount:
-              serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
-            delivery_fee_discount:
-              deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
-            delivery_time: deliveryTimestamp,
-            delivery_notes: deliveryNotes || null,
-          };
-        }
+            ...Array.from(selectedCartIds).map((cartId) => ({
+              store_id: cartId,
+            })),
+          ],
+        };
+      } else {
+        payload = {
+          ...payload,
+          shop_id: shopId,
+          service_fee: Math.round(finalServiceFee || 0).toString(),
+          delivery_fee: Math.round(deliveryFee || 0).toString(),
+        };
       }
 
-      // Make API call in background (don't await)
       fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1399,7 +1850,6 @@ export default function CheckoutItems({
               "❌ Checkout error:",
               data.error || "Checkout failed"
             );
-            // Show error notification
             toaster.push(
               <Notification type="error" header="Checkout Failed">
                 {data.error ||
@@ -1407,93 +1857,92 @@ export default function CheckoutItems({
               </Notification>,
               { placement: "topEnd", duration: 5000 }
             );
-            clearTimeout(loadingTimeout);
             setIsCheckoutLoading(false);
           } else {
             if (isFoodCart && restaurant) {
-              // Handle food cart success
               clearRestaurant(restaurant.id);
-              toaster.push(
-                <Notification
-                  type="success"
-                  header="Food Order Completed Successfully!"
-                >
-                  Your food order #{data.order_id?.slice(-8)} has been placed
-                  and is being prepared! You can view it in "Current Orders".
-                </Notification>,
-                { placement: "topEnd", duration: 5000 }
-              );
-              clearTimeout(loadingTimeout);
-              setIsCheckoutLoading(false);
-
-              // Trigger cart refetch to show cart is cleared
-              setTimeout(() => {
-                const cartChangedEvent = new CustomEvent("cartChanged", {
-                  detail: { refetch: true },
-                });
-                window.dispatchEvent(cartChangedEvent);
-              }, 500);
+              if (selectedPaymentMethod?.type === "momo" && data.order_id) {
+                console.log(
+                  "🚀 [MoMo Checkout] Food order created, triggering MoMo payment:",
+                  data.order_id
+                );
+                handleMoMoPayment(data.order_id, finalGrandTotal);
+              } else {
+                console.log(
+                  "ℹ️ [MoMo Checkout] Food order — non-MoMo payment or missing order_id",
+                  { type: selectedPaymentMethod?.type, order_id: data.order_id }
+                );
+                toaster.push(
+                  <Notification
+                    type="success"
+                    header="Food Order Completed Successfully!"
+                  >
+                    Your food order has been placed! You can view it in "Current
+                    Orders".
+                  </Notification>,
+                  { placement: "topEnd", duration: 5000 }
+                );
+              }
             } else {
-              // Handle regular shop cart success or combined orders success
-              // Clear loading state immediately
-              clearTimeout(loadingTimeout);
-              setIsCheckoutLoading(false);
-
-              // Check if this was a combined order
               const isCombinedOrder = data.combined_order_id && data.orders;
+              const orderId = isCombinedOrder
+                ? data.combined_order_id
+                : data.order_id;
+              console.log("🛒 [MoMo Checkout] Order created:", {
+                orderId,
+                paymentType: selectedPaymentMethod?.type,
+                isCombinedOrder,
+              });
 
-              // Show success notification
-              toaster.push(
-                <Notification
-                  type="success"
-                  header="Order Completed Successfully!"
-                >
-                  {isCombinedOrder
-                    ? `Your ${data.orders.length} combined orders have been placed successfully! You can view them in "Current Orders".`
-                    : `Your order #${data.order_id?.slice(
-                        -8
-                      )} has been placed and is being prepared! You can view it in "Current Orders".`}
-                </Notification>,
-                { placement: "topEnd", duration: 5000 }
-              );
+              if (selectedPaymentMethod?.type === "momo" && orderId) {
+                console.log(
+                  "🚀 [MoMo Checkout] Triggering MoMo payment for order:",
+                  orderId
+                );
+                handleMoMoPayment(orderId, finalGrandTotal);
+              } else {
+                toaster.push(
+                  <Notification
+                    type="success"
+                    header="Order Completed Successfully!"
+                  >
+                    {isCombinedOrder
+                      ? `Your ${data.orders.length} combined orders have been placed successfully!`
+                      : `Your order has been placed and is being prepared!`}
+                  </Notification>,
+                  { placement: "topEnd", duration: 5000 }
+                );
+              }
+            }
 
-              // Trigger cart refresh to show cart(s) are cleared
-              setTimeout(() => {
-                if (isCombinedOrder) {
-                  // Clear all combined carts
-                  data.orders.forEach((order: any) => {
-                    const cartChangedEvent = new CustomEvent("cartChanged", {
-                      detail: { shop_id: order.shop_id, refetch: true },
-                    });
-                    window.dispatchEvent(cartChangedEvent);
-                  });
-                } else {
-                  // Clear single cart
-                  const cartChangedEvent = new CustomEvent("cartChanged", {
-                    detail: { shop_id: shopId, refetch: true },
-                  });
-                  window.dispatchEvent(cartChangedEvent);
-                }
-              }, 500);
+            setTimeout(() => {
+              const detail = isFoodCart
+                ? { refetch: true }
+                : { shop_id: shopId, refetch: true };
+              window.dispatchEvent(new CustomEvent("cartChanged", { detail }));
+              if (!isFoodCart && data.orders) {
+                data.orders.forEach((o: any) => {
+                  window.dispatchEvent(
+                    new CustomEvent("cartChanged", {
+                      detail: { shop_id: o.shop_id, refetch: true },
+                    })
+                  );
+                });
+              }
+            }, 500);
+
+            // Only reset loading if MoMo was NOT triggered. MoMo manages its own loading state via processingStep/polling.
+            if (selectedPaymentMethod?.type !== "momo") {
+              setIsCheckoutLoading(false);
             }
           }
         })
         .catch((err) => {
           console.error("❌ Checkout fetch error:", err);
-          clearTimeout(loadingTimeout);
-          toaster.push(
-            <Notification type="error" header="Network Error">
-              Unable to process your order. Please check your connection and try
-              again.
-            </Notification>,
-            { placement: "topEnd", duration: 5000 }
-          );
           setIsCheckoutLoading(false);
         });
     } catch (err: any) {
       console.error("❌ Checkout setup error:", err);
-      // Hide loading overlay on error
-      clearTimeout(loadingTimeout);
       setIsCheckoutLoading(false);
     }
   };
@@ -1542,7 +1991,11 @@ export default function CheckoutItems({
       const method = savedPaymentMethods.find((m) => m.id === value);
       if (method) {
         setSelectedPaymentMethod({
-          type: method.method.toLowerCase() === "mtn momo" ? "momo" : "card",
+          type:
+            method.method.toLowerCase().includes("momo") ||
+            method.method.toLowerCase().includes("mtn")
+              ? "momo"
+              : "card",
           id: method.id,
           number: method.number,
         });
@@ -1574,7 +2027,7 @@ export default function CheckoutItems({
   };
 
   // Helper function to get payment method icon
-  const getPaymentMethodIcon = (value: string, methodType?: string) => {
+  const getPaymentMethodIcon = (value: string | null, methodType?: string) => {
     if (value === "refund") {
       return (
         <svg
@@ -1637,11 +2090,31 @@ export default function CheckoutItems({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
+          <rect
+            x="5"
+            y="2"
+            width="14"
+            height="20"
+            rx="2"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+            d="M15 2l4 4"
+          />
+          <rect
+            x="8"
+            y="10"
+            width="8"
+            height="5"
+            rx="1"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       );
@@ -1685,7 +2158,19 @@ export default function CheckoutItems({
     const canUseRefund = refundBalance >= finalTotal;
     const canUseWallet = walletBalance >= finalTotal;
 
-    // Add refund option if balance is sufficient
+    // Add wallet option (Prioritized)
+    if (hasWallet) {
+      options.push({
+        label: canUseWallet
+          ? `Wallet (${formatCurrency(walletBalance)} available)`
+          : `Wallet (${formatCurrency(
+              walletBalance
+            )} available - Insufficient)`,
+        value: "wallet",
+      });
+    }
+
+    // Add refund option if balance is sufficient (Prioritized)
     if (canUseRefund) {
       options.push({
         label: `Use Refund Balance (${formatCurrency(
@@ -1695,28 +2180,10 @@ export default function CheckoutItems({
       });
     }
 
-    // Add wallet option (always show if wallet exists)
-    if (hasWallet) {
-      options.push({
-        label: canUseWallet
-          ? `Use Wallet (${formatCurrency(walletBalance)} available)`
-          : `Use Wallet (${formatCurrency(
-              walletBalance
-            )} available - Insufficient)`,
-        value: "wallet",
-      });
-    }
-
     // Add saved payment methods
     savedPaymentMethods.forEach((method) => {
-      const displayNumber =
-        method.method.toLowerCase() === "mtn momo"
-          ? `•••• ${method.number.slice(-3)}`
-          : `•••• ${method.number.slice(-4)}`;
       options.push({
-        label: `${method.method} ${displayNumber}${
-          method.is_default ? " (Default)" : ""
-        }`,
+        label: `${method.number}${method.is_default ? " · Primary" : ""}`,
         value: method.id,
         methodType: method.method,
       });
@@ -1724,7 +2191,7 @@ export default function CheckoutItems({
 
     // Add one-time phone number option
     options.push({
-      label: "Use One-Time Phone Number",
+      label: "Other Number (MTN)",
       value: "one-time-phone",
     });
 
@@ -1813,7 +2280,7 @@ export default function CheckoutItems({
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
             : selectedPaymentMethod.type === "wallet"
-            ? `Using Wallet (${formatCurrency(walletBalance)} available)`
+            ? `Wallet (${formatCurrency(walletBalance)} available)`
             : selectedPaymentMethod.type === "momo"
             ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
             : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
@@ -1925,7 +2392,7 @@ export default function CheckoutItems({
         }`}
         style={{
           maxHeight: isExpanded ? "95vh" : "auto",
-          overflow: isExpanded ? "visible" : "hidden",
+          overflow: isExpanded ? "hidden" : "hidden",
           boxShadow: !isExpanded
             ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1)"
             : undefined,
@@ -2008,7 +2475,13 @@ export default function CheckoutItems({
                     theme === "dark" ? "text-green-400" : "text-green-600"
                   }`}
                 >
-                  {formatCurrency(finalTotal)}
+                  {isPricingAvailable ? (
+                    formatCurrency(finalTotal)
+                  ) : (
+                    <span className="animate-pulse text-xs font-normal italic opacity-70">
+                      Syncing...
+                    </span>
+                  )}
                 </span>
               )}
               <button
@@ -2116,30 +2589,83 @@ export default function CheckoutItems({
             )}
 
             {discountsEnabled && (
-              <div>
-                <p
-                  className={`mb-0.5 ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Promo or Referral Code
-                </p>
+              <div
+                className={`mb-3 rounded-2xl p-4 ${
+                  theme === "dark"
+                    ? "bg-gray-800/70"
+                    : "border border-gray-100 bg-gray-50"
+                }`}
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <div
+                    className={`rounded-lg p-1.5 ${
+                      theme === "dark"
+                        ? "bg-green-900/40 text-green-400"
+                        : "bg-green-100 text-green-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                  </div>
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Promo or Referral Code
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
-                    placeholder="Enter promo or referral code"
+                    disabled={discounts?.promotions_applied?.some(
+                      (p) => p.stacking_type === "exclusive"
+                    )}
+                    placeholder={
+                      discounts?.promotions_applied?.some(
+                        (p) => p.stacking_type === "exclusive"
+                      )
+                        ? "Exclusive promo applied"
+                        : "Enter promo or referral code"
+                    }
                     className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
                       theme === "dark"
                         ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
                         : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    } ${
+                      discounts?.promotions_applied?.some(
+                        (p) => p.stacking_type === "exclusive"
+                      )
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
                     }`}
                   />
                   <Button
                     appearance="primary"
                     color="green"
-                    className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
+                    disabled={discounts?.promotions_applied?.some(
+                      (p) => p.stacking_type === "exclusive"
+                    )}
+                    className={`whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md ${
+                      discounts?.promotions_applied?.some(
+                        (p) => p.stacking_type === "exclusive"
+                      )
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }`}
                     onClick={handleApplyCode}
                     loading={validatingCode}
                   >
@@ -2149,129 +2675,287 @@ export default function CheckoutItems({
               </div>
             )}
 
-            <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
+            {/* Price Breakdown Card */}
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
+              <div className="mb-3 flex items-center gap-2">
+                <div
+                  className={`rounded-lg p-1.5 ${
+                    theme === "dark"
+                      ? "bg-blue-900/40 text-blue-400"
+                      : "bg-blue-100 text-blue-600"
+                  }`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Price Breakdown
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Subtotal{" "}
+                    {selectedCartIds.size > 0 &&
+                      `(${selectedCartIds.size + 1} carts)`}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {formatCurrency(grandSubtotal)}
+                  </span>
+                </div>
+                {/* Backend Promotions Breakdown */}
+                {discounts?.promotions_applied?.map(
+                  (promo: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between py-1 text-green-600 dark:text-green-400"
+                    >
+                      <div className="flex items-center gap-1 text-sm">
+                        <span className="capitalize">
+                          {promo.name ||
+                            promo.promotion_type?.replace(/_/g, " ")}
+                        </span>
+                        <span
+                          className={`rounded px-1 text-[10px] font-bold uppercase ${
+                            promo.funded_by === "merchant"
+                              ? "bg-orange-100 text-orange-600"
+                              : promo.funded_by === "shared"
+                              ? "bg-yellow-100 text-yellow-600"
+                              : "bg-green-100 text-green-600"
+                          }`}
+                        >
+                          {promo.funded_by || "Platform"}
+                        </span>
+                        {promo.influencer_code && (
+                          <span className="rounded bg-purple-100 px-1 text-[10px] font-bold uppercase text-purple-600">
+                            Influencer
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm font-medium">
+                        -
+                        {formatCurrency(
+                          parseFloat(promo.discount_applied || "0")
+                        )}
+                      </div>
+                    </div>
+                  )
+                )}
 
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Subtotal{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(${selectedCartIds.size + 1} carts)`}
-                </span>
-                <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {formatCurrency(grandSubtotal)}
-                </span>
-              </div>
-              {discount > 0 && codeType === "promo" && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">Discount ({appliedCode})</span>
-                  <span className="text-sm font-medium">
-                    -{formatCurrency(discount)}
+                {/* Rejected Promotions */}
+                {discounts?.rejected_promotions?.map(
+                  (rej: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between py-1 text-red-500 opacity-70"
+                    >
+                      <div className="flex items-center gap-1 text-sm italic">
+                        <span>{rej.code}</span>
+                        <span className="rounded border border-red-200 px-1 text-[10px]">
+                          Rejected
+                        </span>
+                      </div>
+                      <div className="self-center text-[10px]">
+                        {rej.reason}
+                      </div>
+                    </div>
+                  )
+                )}
+
+                {discounts.free_delivery && (
+                  <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-1 text-sm">
+                      <span>Free Delivery</span>
+                      <span className="rounded bg-blue-100 px-1 text-[10px] font-bold uppercase text-blue-600">
+                        {discounts?.promotions_applied?.[0]?.delivery_paid_by ||
+                          "Platform"}
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium">Backend Applied</div>
+                  </div>
+                )}
+
+                {discount > 0 &&
+                  codeType === "promo" &&
+                  !discounts?.promotions_applied?.length && (
+                    <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                      <span className="text-sm">Discount ({appliedCode})</span>
+                      <span className="text-sm font-medium">
+                        -{formatCurrency(discount)}
+                      </span>
+                    </div>
+                  )}
+                {referralDiscount > 0 &&
+                  codeType === "referral" &&
+                  !discounts?.promotions_applied?.length && (
+                    <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                      <span className="text-sm">
+                        Referral Discount ({appliedCode})
+                      </span>
+                      <span className="text-sm font-medium">17% off</span>
+                    </div>
+                  )}
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Units
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {grandTotalUnits}
                   </span>
                 </div>
-              )}
-              {referralDiscount > 0 && codeType === "referral" && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">
-                    Referral Discount ({appliedCode})
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Service Fee
                   </span>
-                  <span className="text-sm font-medium">17% off</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {formatCurrency(finalServiceFee)}
+                  </span>
                 </div>
-              )}
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Units
-                </span>
-                <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {grandTotalUnits}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Service Fee
-                </span>
-                <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {formatCurrency(finalServiceFee)}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Delivery Fee{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(+${selectedCartIds.size} at 70%)`}
-                </span>
-                <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {formatCurrency(finalDeliveryFee)}
-                </span>
-              </div>
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-lg font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Total
-                </span>
-                <span className="text-lg font-bold text-green-500 dark:text-green-400">
-                  {formatCurrency(finalTotal)}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Delivery Time
-                </span>
-                <span
-                  className={`text-sm font-medium text-green-600 dark:text-green-400`}
-                >
-                  {deliveryTime}
-                </span>
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Delivery Fee{" "}
+                    {selectedCartIds.size > 0 &&
+                      `(+${selectedCartIds.size} at 70%)`}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {formatCurrency(finalDeliveryFee)}
+                  </span>
+                </div>
+                <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-lg font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Total
+                  </span>
+                  <span className="text-lg font-bold text-green-500 dark:text-green-400">
+                    {isPricingAvailable ? (
+                      formatCurrency(finalTotal)
+                    ) : (
+                      <span className="animate-pulse text-xs font-normal italic opacity-70">
+                        Syncing...
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Delivery Time
+                  </span>
+                  <span
+                    className={`text-sm font-medium text-green-600 dark:text-green-400`}
+                  >
+                    {deliveryTime}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="mt-2">
-              <h4
-                className={`mb-1 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Delivery Address
-              </h4>
+
+            {/* Delivery Address Card */}
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`rounded-lg p-1.5 ${
+                      theme === "dark"
+                        ? "bg-orange-900/40 text-orange-400"
+                        : "bg-orange-100 text-orange-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </div>
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    Delivery Address
+                  </span>
+                </div>
+              </div>
               <div className="relative">
                 <button
                   type="button"
@@ -2279,10 +2963,14 @@ export default function CheckoutItems({
                     setShowAddressDropdown(!showAddressDropdown);
                     setShowPaymentDropdown(false);
                   }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                  className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
                     selectedAddressId
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      ? theme === "dark"
+                        ? "border-gray-600 bg-gray-700/50 text-white"
+                        : "border-gray-200 bg-white text-gray-900"
+                      : theme === "dark"
+                      ? "border-gray-600 bg-gray-800 text-gray-400"
+                      : "border-gray-200 bg-white text-gray-400"
                   }`}
                 >
                   {selectedAddressId
@@ -2312,7 +3000,13 @@ export default function CheckoutItems({
                       className="fixed inset-0 z-10"
                       onClick={() => setShowAddressDropdown(false)}
                     />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div
+                      className={`absolute z-20 mt-1 w-full overflow-hidden rounded-xl border shadow-xl ${
+                        theme === "dark"
+                          ? "border-gray-700 bg-gray-800"
+                          : "border-gray-100 bg-white"
+                      }`}
+                    >
                       {getAddressOptions().map((option) => (
                         <button
                           key={option.value}
@@ -2321,9 +3015,9 @@ export default function CheckoutItems({
                             handleAddressChange(option.value);
                             setShowAddressDropdown(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                          className={`w-full px-4 py-3 text-left text-sm transition-colors ${
                             selectedAddressId === option.value
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              ? "bg-green-50 font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300"
                               : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                           }`}
                         >
@@ -2334,27 +3028,46 @@ export default function CheckoutItems({
                   </>
                 )}
               </div>
-              {/* Hide "Add New Address" button for guest users who already have an address */}
-              {(!isGuest || !selectedAddressId) && (
-                <button
-                  type="button"
-                  className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                  onClick={() => {
-                    setShowAddressModal(true);
-                  }}
-                >
-                  + Add New Address
-                </button>
-              )}
             </div>
-            <div className="mt-2">
-              <h4
-                className={`mb-1 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Payment Method
-              </h4>
+
+            {/* Payment Method Card */}
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
+              <div className="mb-3 flex items-center gap-2">
+                <div
+                  className={`rounded-lg p-1.5 ${
+                    theme === "dark"
+                      ? "bg-purple-900/40 text-purple-400"
+                      : "bg-purple-100 text-purple-600"
+                  }`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                </div>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Payment Method
+                </span>
+              </div>
 
               {/* For guest users, show only phone input */}
               {isGuest ? (
@@ -2388,17 +3101,31 @@ export default function CheckoutItems({
                         setShowPaymentDropdown(!showPaymentDropdown);
                         setShowAddressDropdown(false);
                       }}
-                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                      className={`w-full rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
                         selectedPaymentValue
-                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                          ? theme === "dark"
+                            ? "border-gray-600 bg-gray-700/50 text-white"
+                            : "border-gray-200 bg-white text-gray-900"
+                          : theme === "dark"
+                          ? "border-gray-600 bg-gray-800 text-gray-400"
+                          : "border-gray-200 bg-white text-gray-400"
                       }`}
                     >
-                      {selectedPaymentValue
-                        ? getPaymentMethodOptions().find(
-                            (opt) => opt.value === selectedPaymentValue
-                          )?.label || "Select payment method"
-                        : "Select payment method"}
+                      <span className="flex items-center gap-2 pr-6">
+                        <span className="flex-shrink-0 text-green-500">
+                          {getPaymentMethodIcon(
+                            selectedPaymentValue,
+                            getPaymentMethodOptions().find(
+                              (o) => o.value === selectedPaymentValue
+                            )?.methodType
+                          )}
+                        </span>
+                        {selectedPaymentValue
+                          ? getPaymentMethodOptions().find(
+                              (opt) => opt.value === selectedPaymentValue
+                            )?.label || "Select payment method"
+                          : "Select payment method"}
+                      </span>
                       <svg
                         className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
                           showPaymentDropdown ? "rotate-180" : ""
@@ -2421,7 +3148,13 @@ export default function CheckoutItems({
                           className="fixed inset-0 z-10"
                           onClick={() => setShowPaymentDropdown(false)}
                         />
-                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                        <div
+                          className={`absolute z-20 mt-1 w-full overflow-hidden rounded-xl border shadow-xl ${
+                            theme === "dark"
+                              ? "border-gray-700 bg-gray-800"
+                              : "border-gray-100 bg-white"
+                          }`}
+                        >
                           {getPaymentMethodOptions().map((option) => {
                             const isWalletInsufficient =
                               option.value === "wallet" &&
@@ -2437,21 +3170,21 @@ export default function CheckoutItems({
                                   }
                                 }}
                                 disabled={isWalletInsufficient}
-                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
                                   isWalletInsufficient
                                     ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
                                     : selectedPaymentValue === option.value
-                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                    ? "bg-green-50 font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300"
                                     : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                                 }`}
                               >
                                 <span
                                   className={`flex-shrink-0 ${
                                     isWalletInsufficient
-                                      ? "text-red-500 dark:text-red-400"
+                                      ? "text-red-500"
                                       : selectedPaymentValue === option.value
                                       ? "text-green-600 dark:text-green-400"
-                                      : "text-gray-500 dark:text-gray-400"
+                                      : "text-gray-400 dark:text-gray-500"
                                   }`}
                                 >
                                   {getPaymentMethodIcon(
@@ -2460,6 +3193,19 @@ export default function CheckoutItems({
                                   )}
                                 </span>
                                 <span className="flex-1">{option.label}</span>
+                                {selectedPaymentValue === option.value && (
+                                  <svg
+                                    className="h-4 w-4 text-green-600 dark:text-green-400"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                )}
                               </button>
                             );
                           })}
@@ -2468,30 +3214,71 @@ export default function CheckoutItems({
                     )}
                   </div>
                   {showOneTimePhoneInput && (
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={oneTimePhoneNumber}
-                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                      className={`mt-2 w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                        theme === "dark"
-                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      }`}
-                    />
+                    <div className="mt-2">
+                      <p
+                        className={`mb-1 text-xs font-medium ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        Enter your MTN Mobile Money number
+                      </p>
+                      <input
+                        type="tel"
+                        placeholder="e.g. 078XXXXXXX"
+                        value={oneTimePhoneNumber}
+                        onChange={(e) =>
+                          handleOneTimePhoneChange(e.target.value)
+                        }
+                        className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                          theme === "dark"
+                            ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                            : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        }`}
+                      />
+                    </div>
                   )}
                 </>
               )}
             </div>
-            {/* Delivery Notes Input */}
-            <div className="mt-2">
-              <h4
-                className={`mb-0.5 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Add a Note
-              </h4>
+
+            {/* Delivery Notes Card */}
+            <div
+              className={`mb-3 rounded-2xl p-4 ${
+                theme === "dark"
+                  ? "bg-gray-800/70"
+                  : "border border-gray-100 bg-gray-50"
+              }`}
+            >
+              <div className="mb-3 flex items-center gap-2">
+                <div
+                  className={`rounded-lg p-1.5 ${
+                    theme === "dark"
+                      ? "bg-gray-700 text-gray-400"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </div>
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Add a Note
+                </span>
+              </div>
               <textarea
                 rows={3}
                 value={deliveryNotes}
@@ -2506,12 +3293,13 @@ export default function CheckoutItems({
               />
             </div>
           </div>
-          {/* Proceed to Checkout Button - Fixed at bottom */}
+
+          {/* Place Order Button - Fixed at bottom */}
           <div
             className={`border-t p-4 ${
               theme === "dark"
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
+                ? "border-gray-700 bg-gray-900"
+                : "border-gray-100 bg-white"
             }`}
           >
             <Button
@@ -2522,197 +3310,234 @@ export default function CheckoutItems({
               loading={isCheckoutLoading}
               disabled={!canProceedToCheckout() || isCheckoutLoading}
               onClick={handleProceedToCheckout}
-              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+              className="rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-bold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-green-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
             >
-              Proceed to Checkout
+              Place Order Now
             </Button>
+            <p className="mt-2 text-center text-[10px] text-gray-400">
+              Secure Payments · Guaranteed Delivery
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Desktop View - Only visible on medium and larger devices */}
-      <div className="hidden w-full md:block lg:w-1/3">
-        <div className="sticky top-20">
-          <Panel
-            shaded
-            bordered
-            className={`overflow-hidden rounded-xl border-0 shadow-lg ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
+      {/* Desktop View - Premium Floating Bottom Card */}
+      <div
+        className={`fixed left-0 right-0 z-[9998] hidden transition-all duration-500 ease-in-out md:left-16 md:block ${
+          isExpanded
+            ? "bottom-0 h-[75vh] rounded-t-[2.5rem] shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
+            : "bottom-0 h-24 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]"
+        } ${
+          theme === "dark"
+            ? "border-t border-gray-800 bg-gray-900/95"
+            : "border-t border-gray-200 bg-white/95"
+        } backdrop-blur-xl`}
+      >
+        <div className="mx-auto h-full max-w-7xl px-8">
+          {/* Collapsed Bar Content */}
+          <div
+            className={`flex h-24 items-center justify-between transition-opacity duration-300 ${
+              isExpanded
+                ? "pointer-events-none absolute opacity-0"
+                : "opacity-100"
             }`}
-            style={{
-              boxShadow:
-                "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            }}
           >
-            <div
-              className={`-mx-4 -mt-4 mb-2 p-3 ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h2
-                  className={`text-xl font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
+            <div className="flex items-center gap-8">
+              <div className="flex flex-col">
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
                   Order Summary
-                </h2>
-                {!loadingCarts && availableCarts.length > 0 && (
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Clear cart details and trigger refetch
-                      setCartDetails({});
-                      setRefetchCartDetails((prev) => prev + 1);
-                      setShowCombineModal(true);
-                    }}
-                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`text-2xl font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                      {selectedCartIds.size > 0
-                        ? `${selectedCartIds.size} Combined`
-                        : "Combine Carts"}
+                    {grandTotalUnits} Items
+                  </span>
+                  {selectedCartIds.size > 0 && (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                      {selectedCartIds.size + 1} Carts Combined
                     </span>
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Subtotal{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(${selectedCartIds.size + 1} carts)`}
-                </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(grandSubtotal)}
-                </span>
-              </div>
-
-              {discount > 0 && codeType === "promo" && (
-                <div className="flex justify-between py-1">
-                  <span className="text-sm text-green-600 dark:text-green-400">
-                    Discount ({appliedCode})
-                  </span>
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                    -{formatCurrency(discount)}
-                  </span>
+                  )}
                 </div>
-              )}
-              {referralDiscount > 0 && codeType === "referral" && (
-                <div className="flex justify-between py-1">
-                  <span className="text-sm text-green-600 dark:text-green-400">
-                    Referral Discount ({appliedCode})
-                  </span>
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                    17% off
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Units
-                </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {grandTotalUnits}
-                </span>
               </div>
 
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Service Fee
-                </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(finalServiceFee)}
-                </span>
-              </div>
+              <div
+                className={`h-10 w-px ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
 
-              <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Delivery Fee{" "}
-                  {selectedCartIds.size > 0 &&
-                    `(+${selectedCartIds.size} at 70%)`}
-                </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(finalDeliveryFee)}
-                </span>
-              </div>
-
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <div className="flex justify-between py-1">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  Total
-                </span>
-                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(finalTotal)}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-2">
-              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-                Delivery Time
-              </h4>
-              <div className="flex items-center rounded-xl bg-gray-50 p-2 shadow-sm dark:bg-gray-700/50">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-2 h-5 w-5 text-green-500"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                  {deliveryTime}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-                Delivery Address
-              </h4>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddressDropdown(!showAddressDropdown);
-                    setShowPaymentDropdown(false);
-                  }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedAddressId
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+              <div className="flex flex-col">
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  {selectedAddressId
-                    ? getAddressOptions().find(
-                        (opt) => opt.value === selectedAddressId
-                      )?.label || "Select delivery address"
-                    : "Select delivery address"}
-                  <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showAddressDropdown ? "rotate-180" : ""
+                  Total Payable
+                </span>
+                <span
+                  className={`text-2xl font-black ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {isPricingAvailable ? (
+                    formatCurrency(finalTotal)
+                  ) : (
+                    <span className="animate-pulse text-sm font-normal italic opacity-70">
+                      Syncing pricing...
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div
+                className={`h-10 w-px ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
+
+              <div className="flex flex-col">
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Payment Method
+                </span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                      theme === "dark" ? "bg-gray-800" : "bg-gray-100"
                     }`}
+                  >
+                    {getPaymentMethodIcon(selectedPaymentValue)}
+                  </div>
+                  <span
+                    className={`max-w-[130px] truncate text-sm font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {getPaymentMethodOptions()
+                      .find((opt) => opt.value === selectedPaymentValue)
+                      ?.label.split("(")[0]
+                      .trim() || "Select Method"}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className={`h-10 w-px ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
+
+              <div className="flex flex-col">
+                <span
+                  className={`text-xs font-medium uppercase tracking-wider ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Est. Delivery
+                </span>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <span
+                    className={
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }
+                  >
+                    {deliveryTime
+                      ? deliveryTime.includes("(")
+                        ? deliveryTime
+                            .split("(")[0]
+                            .replace("Will be delivered in ", "")
+                            .trim()
+                        : deliveryTime
+                      : "30-45 mins"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={toggleExpand}
+                className={`group flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <span>View Details</span>
+                <svg
+                  className={`h-4 w-4 transition-transform duration-300 ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              </button>
+
+              <Button
+                appearance="primary"
+                color="green"
+                size="lg"
+                loading={isCheckoutLoading}
+                disabled={!canProceedToCheckout() || isCheckoutLoading}
+                onClick={handleProceedToCheckout}
+                className="min-w-[240px] rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-4 text-lg font-bold text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-green-500/20 active:scale-[0.98] disabled:opacity-50"
+              >
+                Place Order Now
+              </Button>
+            </div>
+          </div>
+
+          {/* Expanded Content */}
+          {isExpanded && (
+            <div className="flex h-full flex-col py-8 duration-500 animate-in fade-in slide-in-from-bottom-4">
+              <div className="mb-6 flex items-center justify-between border-b pb-4 dark:border-gray-800">
+                <div className="flex items-center gap-4">
+                  <h2
+                    className={`text-3xl font-black ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Checkout Details
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                      {grandTotalUnits} Items
+                    </span>
+                    {selectedCartIds.size > 0 && (
+                      <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                        {selectedCartIds.size + 1} Carts
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={toggleExpand}
+                  className={`rounded-full p-2 transition-colors ${
+                    theme === "dark"
+                      ? "text-gray-400 hover:bg-gray-800"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                >
+                  <svg
+                    className="h-8 w-8"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2725,111 +3550,348 @@ export default function CheckoutItems({
                     />
                   </svg>
                 </button>
-                {showAddressDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowAddressDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getAddressOptions().map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            handleAddressChange(option.value);
-                            setShowAddressDropdown(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            selectedAddressId === option.value
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
               </div>
-              {/* Hide "Add New Address" button for guest users who already have an address */}
-              {(!isGuest || !selectedAddressId) && (
-                <button
-                  type="button"
-                  className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                  onClick={() => {
-                    setShowAddressModal(true);
-                  }}
-                >
-                  + Add New Address
-                </button>
-              )}
-            </div>
 
-            <div className="mt-2">
-              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-                Payment Method
-              </h4>
+              <div className="flex flex-1 gap-12 overflow-hidden">
+                {/* Left Side: Summary & Items */}
+                <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto pr-4">
+                  <div className="space-y-6">
+                    {/* Combine Carts Action */}
+                    {!loadingCarts && availableCarts.length > 0 && (
+                      <div
+                        className={`rounded-2xl border-2 border-dashed p-6 transition-colors ${
+                          theme === "dark"
+                            ? "border-gray-800 bg-gray-800/50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="rounded-xl bg-blue-500/10 p-3 text-blue-500">
+                              <svg
+                                className="h-6 w-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4
+                                className={`font-bold ${
+                                  theme === "dark"
+                                    ? "text-white"
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                Multiple Carts Available
+                              </h4>
+                              <p
+                                className={`text-sm ${
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                Combine multiple shop orders to save on delivery
+                                fees
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            appearance="primary"
+                            color="blue"
+                            onClick={() => setShowCombineModal(true)}
+                            className="rounded-xl font-bold"
+                          >
+                            Manage Carts
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
-              {/* For guest users, show only phone input */}
-              {isGuest ? (
-                <div>
-                  <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
-                    Pay with MTN Mobile Money
-                  </p>
-                  <input
-                    type="tel"
-                    placeholder="Enter phone number (e.g., 078XXXXXXX)"
-                    value={oneTimePhoneNumber}
-                    onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-                  />
-                </div>
-              ) : (
-                <>
-                  {/* For regular users, show payment method dropdown */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPaymentDropdown(!showPaymentDropdown);
-                        setShowAddressDropdown(false);
-                      }}
-                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                        selectedPaymentValue
-                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                    {/* Price Breakdown */}
+                    <div
+                      className={`rounded-2xl p-6 ${
+                        theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
                       }`}
                     >
-                      {selectedPaymentValue
-                        ? getPaymentMethodOptions().find(
-                            (opt) => opt.value === selectedPaymentValue
-                          )?.label || "Select payment method"
-                        : "Select payment method"}
-                      <svg
-                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                          showPaymentDropdown ? "rotate-180" : ""
+                      <h4
+                        className={`mb-4 text-xs font-bold uppercase tracking-widest ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
                         }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                    {showPaymentDropdown && (
-                      <>
+                        Financial Summary
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span
+                            className={
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }
+                          >
+                            Subtotal
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {formatCurrency(grandSubtotal)}
+                          </span>
+                        </div>
+
+                        {/* Promotions */}
+                        {discounts?.promotions_applied?.map(
+                          (promo: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-green-500"
+                            >
+                              <div className="flex items-center gap-2">
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  {promo.name || "Promo Discount"}
+                                </span>
+                              </div>
+                              <span className="font-bold">
+                                -
+                                {formatCurrency(
+                                  parseFloat(promo.discount_applied || "0")
+                                )}
+                              </span>
+                            </div>
+                          )
+                        )}
+
+                        <div className="flex justify-between">
+                          <span
+                            className={
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }
+                          >
+                            Service Fee
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {formatCurrency(finalServiceFee)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span
+                            className={
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }
+                          >
+                            Delivery Fee
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {formatCurrency(finalDeliveryFee)}
+                          </span>
+                        </div>
+
                         <div
-                          className="fixed inset-0 z-10"
-                          onClick={() => setShowPaymentDropdown(false)}
-                        />
-                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                          className={`mt-4 flex items-center justify-between border-t pt-4 ${
+                            theme === "dark"
+                              ? "border-gray-700"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`text-xl font-black ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            Total
+                          </span>
+                          <span
+                            className={`text-2xl font-black ${
+                              theme === "dark"
+                                ? "text-green-400"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {isPricingAvailable
+                              ? formatCurrency(finalTotal)
+                              : "Calculating..."}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Promo Code Input */}
+                    {discountsEnabled && (
+                      <div
+                        className={`rounded-2xl p-6 ${
+                          theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                        }`}
+                      >
+                        <h4 className="mb-3 text-sm font-bold">
+                          Have a Promo Code?
+                        </h4>
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={discountCode}
+                            onChange={(e) => setDiscountCode(e.target.value)}
+                            placeholder="Enter code here"
+                            className={`flex-1 rounded-xl border px-4 py-3 transition-all ${
+                              theme === "dark"
+                                ? "border-gray-700 bg-gray-900 text-white focus:border-green-500"
+                                : "border-gray-200 bg-white text-gray-900 focus:border-green-500"
+                            }`}
+                          />
+                          <Button
+                            appearance="primary"
+                            color="green"
+                            onClick={handleApplyCode}
+                            loading={validatingCode}
+                            className="rounded-xl px-6 font-bold"
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Delivery & Payment */}
+                <div className="scrollbar-hide flex w-[400px] flex-col gap-6 overflow-y-auto pr-1">
+                  {/* Delivery Address */}
+                  <div
+                    className={`rounded-2xl p-6 ${
+                      theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"
+                    }`}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="font-bold">Delivery Address</h4>
+                      <button
+                        onClick={() => setShowAddressModal(true)}
+                        className="text-sm font-bold text-green-500 hover:text-green-600"
+                      >
+                        Change
+                      </button>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-xl bg-orange-500/10 p-3 text-orange-500">
+                        <svg
+                          className="h-6 w-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`line-clamp-2 text-sm font-medium ${
+                            theme === "dark" ? "text-gray-200" : "text-gray-700"
+                          }`}
+                        >
+                          {selectedAddressId
+                            ? getAddressOptions().find(
+                                (opt) => opt.value === selectedAddressId
+                              )?.label || "Select an address"
+                            : "No address selected"}
+                        </p>
+                        <p className="mt-1 text-xs font-bold text-green-500">
+                          Estimated Delivery: {deliveryTime}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Method */}
+                  <div
+                    className={`rounded-2xl p-6 ${
+                      theme === "dark" ? "bg-gray-800/80" : "bg-gray-100"
+                    }`}
+                  >
+                    <h4 className="mb-4 font-bold">Payment Method</h4>
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setShowPaymentDropdown(!showPaymentDropdown)
+                        }
+                        className={`group flex w-full items-center justify-between rounded-xl border-2 p-4 transition-all ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-900 hover:border-green-500"
+                            : "border-gray-200 bg-white hover:border-green-500"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-green-500">
+                            {getPaymentMethodIcon(selectedPaymentValue)}
+                          </div>
+                          <span className="font-bold">
+                            {getPaymentMethodOptions().find(
+                              (opt) => opt.value === selectedPaymentValue
+                            )?.label || "Select Payment"}
+                          </span>
+                        </div>
+                        <svg
+                          className={`h-5 w-5 transition-transform ${
+                            showPaymentDropdown ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+
+                      {showPaymentDropdown && (
+                        <div className="absolute bottom-full z-10 mb-2 w-full rounded-2xl border bg-white p-2 shadow-2xl duration-200 animate-in fade-in zoom-in-95 dark:border-gray-700 dark:bg-gray-800">
                           {getPaymentMethodOptions().map((option) => {
                             const isWalletInsufficient =
                               option.value === "wallet" &&
@@ -2837,126 +3899,103 @@ export default function CheckoutItems({
                             return (
                               <button
                                 key={option.value}
-                                type="button"
-                                onClick={() => {
-                                  if (!isWalletInsufficient) {
-                                    handlePaymentMethodChange(option.value);
-                                    setShowPaymentDropdown(false);
-                                  }
-                                }}
                                 disabled={isWalletInsufficient}
-                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                onClick={() => {
+                                  handlePaymentMethodChange(option.value);
+                                  setShowPaymentDropdown(false);
+                                }}
+                                className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
                                   isWalletInsufficient
-                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                    : selectedPaymentValue === option.value
-                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                    : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    ? "cursor-not-allowed opacity-40 grayscale"
+                                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
                                 }`}
                               >
-                                <span
-                                  className={`flex-shrink-0 ${
-                                    isWalletInsufficient
-                                      ? "text-red-500 dark:text-red-400"
-                                      : selectedPaymentValue === option.value
-                                      ? "text-green-600 dark:text-green-400"
-                                      : "text-gray-500 dark:text-gray-400"
-                                  }`}
-                                >
-                                  {getPaymentMethodIcon(
-                                    option.value,
-                                    option.methodType
-                                  )}
+                                <span className="text-green-500">
+                                  {getPaymentMethodIcon(option.value)}
                                 </span>
-                                <span className="flex-1">{option.label}</span>
+                                <span className="font-medium">
+                                  {option.label}
+                                </span>
                               </button>
                             );
                           })}
                         </div>
-                      </>
-                    )}
-                  </div>
-                  {showOneTimePhoneInput && (
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={oneTimePhoneNumber}
-                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-                    />
-                  )}
-                </>
-              )}
-            </div>
+                      )}
 
-            {discountsEnabled && (
-              <div className="mt-4">
-                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                  Promo or Referral Code
-                </h4>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value)}
-                    placeholder="Enter promo or referral code"
-                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-                  />
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
-                    onClick={handleApplyCode}
-                    loading={validatingCode}
-                  >
-                    Apply
-                  </Button>
+                      {/* Phone number input when "Use Another Number" is selected */}
+                      {showOneTimePhoneInput && (
+                        <div className="mt-3">
+                          <p
+                            className={`mb-1 text-xs font-medium ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Enter your MTN Mobile Money number
+                          </p>
+                          <input
+                            type="tel"
+                            placeholder="e.g. 078XXXXXXX"
+                            value={oneTimePhoneNumber}
+                            onChange={(e) =>
+                              handleOneTimePhoneChange(e.target.value)
+                            }
+                            className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 ${
+                              theme === "dark"
+                                ? "border-gray-700 bg-gray-900 text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500/20"
+                                : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Place Order Action */}
+                  <div className="mt-auto">
+                    {/* Delivery Note */}
+                    <div className="mb-6">
+                      <h4
+                        className={`mb-2 text-sm font-bold ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        Add a Note
+                      </h4>
+                      <textarea
+                        rows={2}
+                        value={deliveryNotes}
+                        onChange={(e) => setDeliveryNotes(e.target.value)}
+                        placeholder="Delivery instructions (e.g. Leave at door)"
+                        className={`w-full rounded-xl border px-4 py-3 text-sm transition-all focus:ring-2 focus:ring-green-500/20 ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-900 text-white focus:border-green-500"
+                            : "border-gray-200 bg-white text-gray-900 focus:border-green-500"
+                        }`}
+                      />
+                    </div>
+
+                    <Button
+                      appearance="primary"
+                      color="green"
+                      block
+                      size="lg"
+                      loading={isCheckoutLoading}
+                      disabled={!canProceedToCheckout() || isCheckoutLoading}
+                      onClick={handleProceedToCheckout}
+                      className="rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 py-6 text-xl font-black text-white shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-green-500/30 active:scale-[0.98]"
+                    >
+                      Complete Checkout
+                    </Button>
+                    <p className="mt-4 text-center text-xs text-gray-500">
+                      Security Guaranteed. Secure Payments.
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
-
-            <div className="mt-2">
-              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
-                Add a Note
-              </h4>
-              <textarea
-                rows={3}
-                value={deliveryNotes}
-                onChange={(e) => setDeliveryNotes(e.target.value)}
-                placeholder="Enter any delivery instructions or notes"
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
-              />
             </div>
-
-            <Button
-              color="green"
-              appearance="primary"
-              block
-              size="lg"
-              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-              onClick={handleProceedToCheckout}
-              loading={isCheckoutLoading}
-              disabled={!canProceedToCheckout() || isCheckoutLoading}
-            >
-              Proceed to Checkout
-            </Button>
-
-            <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-              By placing your order, you agree to our{" "}
-              <Link
-                href="/terms"
-                className="text-green-600 dark:text-green-400"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                className="text-green-600 dark:text-green-400"
-              >
-                Privacy Policy
-              </Link>
-            </div>
-          </Panel>
+          )}
         </div>
       </div>
 
@@ -2997,6 +4036,17 @@ export default function CheckoutItems({
         loadingCarts={loadingCarts}
         onContinue={() => setShowCombineModal(false)}
       />
+
+      {processingStep !== "idle" && (
+        <PaymentProcessingOverlay
+          processingStep={
+            processingStep as
+              | "initiating_payment"
+              | "awaiting_approval"
+              | "success"
+          }
+        />
+      )}
     </>
   );
 }

@@ -17,6 +17,12 @@ const VALIDATE_REFERRAL_CODE = gql`
       referralCode
       status
       user_id
+      deviceFingerprint
+      email
+      name
+      phone
+      phoneVerified
+      created_at
     }
   }
 `;

@@ -40,6 +40,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isOrderDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewOrderDetails/"
   );
+  const isPackageDetailsPage = router.pathname.startsWith(
+    "/CurrentPendingOrders/viewPackageDetails/"
+  );
 
   return (
     <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
@@ -49,7 +52,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isMessagesPage &&
         !isPlasBusinessPage &&
         !isStoresPage &&
-        (isOrderDetailsPage ? (
+        (isOrderDetailsPage || isPackageDetailsPage ? (
           <div className="hidden md:block">
             <HeaderLayout />
           </div>
@@ -71,7 +74,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           isPlasBusinessPage ||
           isStoresPage
             ? ""
-            : isOrderDetailsPage
+            : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
         }`}
@@ -97,7 +100,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             isPlasBusinessPage ||
             isStoresPage ||
             isMessagesPage ||
-            isOrderDetailsPage
+            isOrderDetailsPage ||
+            isPackageDetailsPage
               ? { height: "100%", width: "100%" }
               : {}
           }
@@ -111,9 +115,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           !hideBottomBar && <BottomBar />}
       </main>
       {/* AI Chat - Available on all pages except chat pages */}
-      {!isChatPage && !isMessagesPage && !isOrderDetailsPage && (
-        <AIChatProvider />
-      )}
+      {!isChatPage && !isMessagesPage && <AIChatProvider />}
     </div>
   );
 }

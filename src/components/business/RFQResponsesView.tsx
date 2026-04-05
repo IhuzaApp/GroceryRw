@@ -485,6 +485,36 @@ export function RFQResponsesView({
         return <Clock className="h-4 w-4" />;
     }
   };
+  const downloadAttachment = (url: string, fileName: string) => {
+    if (url.startsWith("http")) {
+      window.open(url, "_blank");
+      return;
+    }
+
+    try {
+      const [mimeType, base64Data] = url.split(",");
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], {
+        type: mimeType.split(":")[1].split(";")[0],
+      });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Error downloading attachment:", error);
+      toast.error("Failed to download attachment");
+    }
+  };
 
   if (loading) {
     return (
@@ -914,7 +944,15 @@ export function RFQResponsesView({
                               </p>
                             </div>
                           </div>
-                          <button className="text-blue-600 hover:text-blue-700 dark:hover:text-blue-400">
+                          <button
+                            onClick={() =>
+                              downloadAttachment(
+                                attachment.url,
+                                attachment.name
+                              )
+                            }
+                            className="text-blue-600 hover:text-blue-700 dark:hover:text-blue-400"
+                          >
                             <Download className="h-4 w-4" />
                           </button>
                         </div>

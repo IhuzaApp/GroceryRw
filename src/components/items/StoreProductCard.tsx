@@ -238,18 +238,18 @@ export default function StoreProductCard({
         </div>
 
         {/* Mobile: Minimal info - Name, Price, Unit, Add button */}
-        <div className="p-1.5 sm:hidden">
-          <p className="mb-0.5 line-clamp-1 text-[11px] font-semibold leading-tight text-gray-900 dark:text-white">
+        <div className="p-2 sm:hidden">
+          <p className="mb-1 line-clamp-1 text-sm font-semibold leading-tight text-gray-900 dark:text-white">
             {name}
           </p>
-          <div className="flex items-center justify-between gap-1">
+          <div className="mt-1 flex items-center justify-between gap-1.5">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold text-green-600 dark:text-green-400">
+              <p className="text-sm font-black text-green-600 dark:text-green-400">
                 {formatCurrencySync(parseFloat(price || "0"))}
               </p>
               {(measurement_unit || unit) && (
-                <p className="truncate text-[9px] font-medium text-gray-500 dark:text-gray-400">
-                  {measurement_unit || unit}
+                <p className="truncate text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  per {measurement_unit || unit}
                 </p>
               )}
             </div>
@@ -259,9 +259,9 @@ export default function StoreProductCard({
                 e.stopPropagation();
                 setShowQuantityModal(true);
               }}
-              className="flex-shrink-0 rounded-md bg-gradient-to-r from-green-500 to-emerald-500 p-1 shadow-md transition-all active:scale-95"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-md shadow-green-500/20 transition-all active:scale-95"
             >
-              <Plus className="h-3 w-3 text-white" />
+              <Plus className="h-5 w-5 !text-white" />
             </button>
           </div>
         </div>

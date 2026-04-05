@@ -1,5 +1,18 @@
 import React, { useState } from "react";
 import { useTheme } from "../../../context/ThemeContext";
+import {
+  X,
+  MessageSquare,
+  ClipboardList,
+  Store,
+  Tag,
+  Activity,
+  Send,
+  CheckCircle2,
+  ArrowRight,
+  Headphones,
+  Info,
+} from "lucide-react";
 
 function formatOrderID(id?: string | number): string {
   const s = id != null ? id.toString() : "0";
@@ -12,7 +25,7 @@ export interface ContactSupportModalProps {
   /** Current order (regular, reel, or restaurant) */
   order: any;
   /** Order type for this order */
-  orderType: "regular" | "reel" | "restaurant" | "business";
+  orderType: "regular" | "reel" | "restaurant" | "business" | "package";
   onSuccess?: () => void;
 }
 
@@ -27,21 +40,30 @@ export default function ContactSupportModal({
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successCode, setSuccessCode] = useState<number | null>(null);
+
+  const isDark = theme === "dark";
 
   const storeName =
     order?.shop?.name ??
     order?.reel?.title ??
     order?.Restaurant?.name ??
     order?.restaurant?.name ??
-    "—";
+    (orderType === "package" ? "Plas Package" : "—");
+
   const orderDisplayId =
-    order?.OrderID != null ? formatOrderID(order.OrderID) : order?.id ?? "—";
+    order?.DeliveryCode != null
+      ? order.DeliveryCode
+      : order?.OrderID != null
+      ? formatOrderID(order.OrderID)
+      : order?.id ?? "—";
+
   const status = order?.status ?? "—";
 
   const handleSubmit = async () => {
     const trimmed = message.trim();
     if (!trimmed) {
-      setError("Please enter your message.");
+      setError("Please explain what you need help with.");
       return;
     }
     setError(null);
@@ -61,14 +83,20 @@ export default function ContactSupportModal({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "Failed to submit. Please try again.");
+        setError(data.error ?? "Submission failed. Please try again.");
         return;
       }
-      setMessage("");
-      onSuccess?.();
-      onClose();
+
+      if (data.code) {
+        setSuccessCode(data.code);
+        onSuccess?.();
+      } else {
+        setMessage("");
+        onSuccess?.();
+        onClose();
+      }
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -78,251 +106,337 @@ export default function ContactSupportModal({
     if (!submitting) {
       setMessage("");
       setError(null);
+      setSuccessCode(null);
       onClose();
     }
   };
 
   if (!open) return null;
 
-  const colors = {
-    focus: "focus:ring-green-500",
-    border: "focus:border-green-500",
-  };
-
   return (
-    <div className="fixed inset-0 z-[100000] flex items-end justify-center p-0 sm:items-center sm:p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden p-4 sm:p-6">
+      {/* Premium Backdrop with Blur */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-500 animate-in fade-in"
         onClick={handleClose}
       />
 
-      {/* Modal */}
+      {/* Modal Container */}
       <div
-        className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl sm:border ${
-          theme === "dark"
-            ? "bg-gray-800 sm:border-gray-700"
-            : "bg-white sm:border-gray-200"
+        className={`relative z-10 w-full max-w-xl overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-10 ${
+          isDark
+            ? "border-white/10 bg-gray-900 shadow-black/50"
+            : "border-gray-200 bg-white"
         }`}
       >
-        {/* Header */}
+        {/* Decorative Background Element */}
         <div
-          className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
-            theme === "dark"
-              ? "border-b border-gray-700"
-              : "border-b border-gray-200"
+          className={`absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-20 blur-[100px] ${
+            isDark ? "bg-emerald-500" : "bg-emerald-400"
+          }`}
+        />
+
+        {/* Header Section */}
+        <div
+          className={`relative flex items-start justify-between border-b px-8 py-8 ${
+            isDark ? "border-white/5" : "border-gray-100"
           }`}
         >
-          <div>
-            <h2
-              className={`text-2xl font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
+          <div className="flex gap-4">
+            <div
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-inner ${
+                isDark
+                  ? "bg-emerald-500/10 text-emerald-400"
+                  : "bg-emerald-50 text-emerald-600"
               }`}
             >
-              Contact Support
-            </h2>
-            <p
-              className={`mt-1.5 text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              Describe your issue and we’ll create a ticket for this order
-            </p>
+              <Headphones className="h-7 w-7" />
+            </div>
+            <div>
+              <h2
+                className={`text-2xl font-black tracking-tight ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Customer Support
+              </h2>
+              <p
+                className={`mt-1 text-sm font-medium ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                We're here to help. Send us a message!
+              </p>
+            </div>
           </div>
           <button
             onClick={handleClose}
             disabled={submitting}
-            className={`rounded-lg p-2 transition-colors disabled:opacity-50 ${
-              theme === "dark"
-                ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
-                : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className={`group rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-white/5 ${
+              isDark
+                ? "text-white/40 hover:text-white"
+                : "text-gray-400 hover:text-gray-900"
             }`}
           >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Body */}
-        <div
-          className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          }`}
-        >
-          {error && (
-            <div className="mb-6 flex items-start gap-3 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-              <svg
-                className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
-                  theme === "dark" ? "text-red-400" : "text-red-500"
+        {/* Content Section */}
+        <div className="scrollbar-hide relative max-h-[65vh] overflow-y-auto px-8 py-8">
+          {successCode ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center duration-500 animate-in fade-in zoom-in-95">
+              <div className="relative mb-8">
+                <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-xl shadow-emerald-500/20">
+                  <CheckCircle2 className="h-12 w-12" />
+                </div>
+              </div>
+
+              <h3
+                className={`text-3xl font-black italic tracking-tighter ${
+                  isDark ? "text-white" : "text-gray-900"
                 }`}
-                viewBox="0 0 20 20"
-                fill="currentColor"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
+                TICKET SENT!
+              </h3>
+
+              <div className="mt-6 flex flex-col items-center">
+                <p
+                  className={`text-sm font-bold uppercase tracking-widest ${
+                    isDark ? "text-emerald-400/60" : "text-emerald-600/60"
+                  }`}
+                >
+                  Your Tracking Code
+                </p>
+                <div
+                  className={`mt-2 rounded-2xl border-2 border-dashed px-8 py-3 text-4xl font-black tracking-widest ${
+                    isDark
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  }`}
+                >
+                  #{successCode}
+                </div>
+              </div>
+
+              <div
+                className={`mt-10 max-w-sm rounded-[1.5rem] p-6 text-center text-sm leading-relaxed ${
+                  isDark
+                    ? "bg-white/5 text-gray-400"
+                    : "bg-gray-50 text-gray-500"
+                }`}
+              >
+                <Info
+                  className={`mx-auto mb-3 h-5 w-5 ${
+                    isDark ? "text-emerald-400" : "text-emerald-600"
+                  }`}
                 />
-              </svg>
-              <p
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-red-400" : "text-red-700"
+                Please keep this code safe. You can ask our <b>AI Assistant</b>{" "}
+                for updates using this number.
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {error && (
+                <div className="flex items-center gap-3 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500 ring-1 ring-inset ring-red-500/20">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                  {error}
+                </div>
+              )}
+
+              {/* Enhanced Order Brief Card */}
+              <div
+                className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-300 hover:shadow-lg ${
+                  isDark
+                    ? "border-white/5 bg-white/[0.02]"
+                    : "border-gray-100 bg-gray-50/50"
                 }`}
               >
-                {error}
-              </p>
+                <div className="mb-4 flex items-center justify-between">
+                  <span
+                    className={`text-xs font-black uppercase tracking-widest ${
+                      isDark ? "text-white/30" : "text-gray-400"
+                    }`}
+                  >
+                    Reference Details
+                  </span>
+                  <div
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase ${
+                      isDark
+                        ? "bg-white/10 text-white"
+                        : "bg-emerald-500 text-white"
+                    }`}
+                  >
+                    <Activity className="h-3 w-3" />
+                    {status}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div className="flex items-center gap-3">
+                    <ClipboardList
+                      className={`h-4 w-4 ${
+                        isDark ? "text-emerald-400" : "text-emerald-600"
+                      }`}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase opacity-40">
+                        Order ID
+                      </p>
+                      <p
+                        className={`truncate text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        #{orderDisplayId}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Tag
+                      className={`h-4 w-4 ${
+                        isDark ? "text-emerald-400" : "text-emerald-600"
+                      }`}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase opacity-40">
+                        Category
+                      </p>
+                      <p
+                        className={`truncate text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {orderType.charAt(0).toUpperCase() + orderType.slice(1)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="col-span-2 flex items-center gap-3">
+                    <Store
+                      className={`h-4 w-4 ${
+                        isDark ? "text-emerald-400" : "text-emerald-600"
+                      }`}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase opacity-40">
+                        Store/Source
+                      </p>
+                      <p
+                        className={`truncate text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {storeName}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message Input Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <MessageSquare
+                    className={`h-4 w-4 ${
+                      isDark ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                  />
+                  <label
+                    className={`text-sm font-black uppercase tracking-wider ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    How can we help?
+                  </label>
+                </div>
+                <div className="group relative">
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Tell us what's happening..."
+                    rows={5}
+                    disabled={submitting}
+                    className={`w-full resize-none rounded-[1.5rem] border-2 p-5 text-sm font-medium leading-relaxed transition-all duration-300 focus:outline-none ${
+                      isDark
+                        ? "border-white/5 bg-white/[0.03] text-white placeholder-white/20 focus:border-emerald-500/50"
+                        : "border-gray-100 bg-gray-50 text-gray-900 placeholder-gray-400 focus:border-emerald-500/50 focus:bg-white"
+                    }`}
+                  />
+                  <div className="absolute bottom-4 right-4 text-[10px] font-bold opacity-30">
+                    {message.length} characters
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Order details (included in ticket) */}
-          <div
-            className={`mb-6 rounded-xl border p-4 sm:p-5 ${
-              theme === "dark"
-                ? "border-gray-700/50 bg-gray-900/40"
-                : "border-gray-200 bg-gray-50/80"
-            }`}
-          >
-            <p
-              className={`mb-3 text-sm font-semibold ${
-                theme === "dark" ? "text-gray-200" : "text-gray-700"
-              }`}
-            >
-              Order details (included in this ticket)
-            </p>
-            <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <p
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
-                <span className="font-medium">Order ID:</span> #{orderDisplayId}
-              </p>
-              <p
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
-                <span className="font-medium">Type:</span>{" "}
-                {orderType === "reel"
-                  ? "Reel"
-                  : orderType === "restaurant"
-                  ? "Restaurant"
-                  : orderType === "business"
-                  ? "Store"
-                  : "Regular"}
-              </p>
-              <p
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
-                <span className="font-medium">Store / Shop:</span> {storeName}
-              </p>
-              <p
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
-                <span className="font-medium">Status:</span> {status}
-              </p>
-            </div>
-          </div>
-
-          {/* Message */}
-          <div className="space-y-4">
-            <label
-              className={`block text-base font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              Your message
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Describe your issue or question..."
-              rows={5}
-              disabled={submitting}
-              className={`w-full resize-none rounded-xl p-4 text-sm leading-relaxed transition-all duration-200 focus:outline-none ${
-                theme === "dark"
-                  ? "border-2 border-gray-700/50 bg-gray-900/40 text-white placeholder-gray-500/70 focus:border-gray-600 focus:bg-gray-900/60"
-                  : "border-2 border-gray-200 bg-gray-50/80 text-gray-900 placeholder-gray-400 focus:border-gray-300 focus:bg-white"
-              } ${colors.border} ${
-                colors.focus
-              } focus:ring-2 focus:ring-offset-0`}
-            />
-          </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer Buttons Section */}
         <div
-          className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
-            theme === "dark"
-              ? "border-t border-gray-700"
-              : "border-t border-gray-200"
+          className={`flex flex-col gap-3 border-t p-8 sm:flex-row sm:items-center sm:justify-end ${
+            isDark
+              ? "border-white/5 bg-white/[0.01]"
+              : "border-gray-50 bg-gray-50/20"
           }`}
         >
-          <button
-            onClick={handleClose}
-            disabled={submitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-semibold !text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            style={{ color: "white" }}
-            type="button"
-          >
-            <span className="!text-white">Cancel</span>
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            style={{ color: "white" }}
-            type="button"
-          >
-            {submitting ? (
-              <span className="flex items-center justify-center !text-white">
-                <svg
-                  className="mr-2 h-4 w-4 shrink-0 text-white"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Submitting...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center !text-white">
-                <svg
-                  className="mr-2 h-4 w-4 shrink-0 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
-                  />
-                </svg>
-                Submit ticket
-              </span>
-            )}
-          </button>
+          {successCode ? (
+            <button
+              onClick={handleClose}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:bg-emerald-600 active:scale-95 sm:w-auto"
+            >
+              GOT IT
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleClose}
+                disabled={submitting}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-8 py-4 text-base font-bold transition-all sm:w-auto ${
+                  isDark
+                    ? "border-white/10 text-white hover:bg-white/5"
+                    : "border-gray-200 text-gray-400 hover:bg-gray-100/50 hover:text-gray-900"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-700 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:from-emerald-600 hover:to-emerald-800 hover:shadow-emerald-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                {submitting ? (
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className="h-5 w-5 animate-spin text-white"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    SUBMITTING...
+                  </div>
+                ) : (
+                  <>
+                    SUBMIT TICKET
+                    <Send className="h-5 w-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

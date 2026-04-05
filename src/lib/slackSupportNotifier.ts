@@ -21,6 +21,8 @@ export interface SupportTicketPayload {
   userPhone?: string;
   /** Ticket number from DB (shown in Slack instead of internal ID) */
   ticketNum?: number;
+  /** Image URL for delivery issues */
+  image?: string | null;
 }
 
 const ORDER_TYPE_LABELS: Record<SupportTicketPayload["orderType"], string> = {
@@ -96,6 +98,15 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
         text: `*Message*\n${ticket.message || "_No message provided._"}`,
       },
     },
+    ...(ticket.image
+      ? [
+          {
+            type: "image",
+            image_url: ticket.image,
+            alt_text: "Attached issue image",
+          },
+        ]
+      : []),
     { type: "divider" },
     {
       type: "context",

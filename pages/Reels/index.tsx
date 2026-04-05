@@ -1,14 +1,20 @@
-"use client";
-
 import React, { useState, useRef, useEffect } from "react";
+import { GetServerSideProps } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]";
+import { getReelsData } from "../api/queries/reels";
 import RootLayout from "@components/ui/layout";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useSession } from "next-auth/react";
 import ReelPlaceholder from "@components/Reels/ReelPlaceholder";
+import DesktopReelPlaceholder from "../../src/components/Reels/DesktopReelPlaceholder";
 import MobileReelsView from "../../src/components/Reels/MobileReelsView";
 import DesktopReelsView from "../../src/components/Reels/DesktopReelsView";
 import GuestAuthModal from "../../src/components/ui/GuestAuthModal";
 import GuestUpgradeModal from "../../src/components/ui/GuestUpgradeModal";
+import { Message, toaster } from "rsuite";
+import "rsuite/dist/rsuite.min.css";
+import { useMediaQuery } from "react-responsive";
 import {
   PostType,
   Comment,
@@ -18,6 +24,7 @@ import {
   ChefPost,
   BusinessPost,
   FoodPost,
+  isValidMediaUrl,
 } from "../../src/components/Reels/ReelTypes";
 
 // Inline SVGs for icons
@@ -328,18 +335,241 @@ interface DatabaseReel {
   } | null;
 }
 
+// --- HELPERS (Top-Level) ---
+
 // Format timestamp to relative time
 const formatTimestamp = (timestamp: string): string => {
-  const now = new Date();
-  const commentTime = new Date(timestamp);
-  const diffInMinutes = Math.floor(
-    (now.getTime() - commentTime.getTime()) / (1000 * 60)
+  if (!timestamp) return "Just now";
+  try {
+    const now = new Date();
+    const commentTime = new Date(timestamp);
+    const diffInSeconds = Math.floor(
+      (now.getTime() - commentTime.getTime()) / 1000
+    );
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    return `${Math.floor(diffInSeconds / 86400)}d`;
+  } catch (e) {
+    return "Just now";
+  }
+};
+
+// Helper function to extract string value from complex DB fields
+const extractStringValue = (value: any): string | null => {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  if (typeof value === "object" && value !== null) {
+    if (value.value && typeof value.value === "string") {
+      const trimmed = value.value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    if (value.text && typeof value.text === "string") {
+      const trimmed = value.text.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    if (value.name && typeof value.name === "string") {
+      const trimmed = value.name.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    try {
+      const str = value.toString();
+      if (str && str !== "[object Object]" && typeof str === "string") {
+        const trimmed = str.trim();
+        return trimmed.length > 0 ? trimmed : null;
+      }
+    } catch (e) {}
+    const keys = Object.keys(value);
+    for (const key of keys) {
+      if (typeof value[key] === "string") {
+        const trimmed = value[key].trim();
+        if (trimmed.length > 0) return trimmed;
+      }
+    }
+  }
+  return null;
+};
+
+// Helper to convert DB comment to UI Comment
+const convertDBCommentToComment = (comment: any): Comment => ({
+  id: comment.id,
+  user: {
+    name: comment.User?.name || "Plas Reel Agent",
+    avatar:
+      comment.User?.profile_picture &&
+      isValidMediaUrl(comment.User.profile_picture)
+        ? comment.User.profile_picture
+        : "/placeholder.svg?height=32&width=32",
+    verified:
+      comment.User?.role === "admin" ||
+      comment.User?.role === "verified" ||
+      false,
+  },
+  text: comment.text,
+  timestamp: formatTimestamp(comment.created_on),
+  likes: parseInt(comment.likes || "0"),
+  isLiked: comment.isLiked || false,
+});
+
+// Convert database reel to FoodPost format
+const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
+  // console.log(`[Reels Sync] Converting DB Reel ${dbReel.id} | isLiked: ${dbReel.isLiked}`);
+  const userHasLiked = dbReel.isLiked || false;
+
+  const commentsList: Comment[] = (dbReel.Reels_comments || []).map((comment) =>
+    convertDBCommentToComment(comment)
   );
 
-  if (diffInMinutes < 1) return "now";
-  if (diffInMinutes < 60) return `${diffInMinutes}m`;
-  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
-  return `${Math.floor(diffInMinutes / 1440)}d`;
+  let shopLat = 0,
+    shopLng = 0,
+    shopAlt = 0;
+  if (dbReel.Restaurant) {
+    shopLat = dbReel.Restaurant.lat || 0;
+    shopLng = dbReel.Restaurant.long || 0;
+  } else if (dbReel.Shops) {
+    shopLat = dbReel.Shops.latitude ? parseFloat(dbReel.Shops.latitude) : 0;
+    shopLng = dbReel.Shops.longitude ? parseFloat(dbReel.Shops.longitude) : 0;
+  }
+
+  const creatorName =
+    dbReel.User?.name ||
+    dbReel.business_account?.business_name ||
+    dbReel.Restaurant?.name ||
+    dbReel.Shops?.name ||
+    "Plas Reel Agent";
+
+  const basePost: BasePost = {
+    id: dbReel.id,
+    type: dbReel.type as PostType,
+    creator: {
+      name: creatorName,
+      avatar:
+        dbReel.User?.profile_picture &&
+        isValidMediaUrl(dbReel.User.profile_picture)
+          ? dbReel.User.profile_picture
+          : dbReel.business_account?.face_image &&
+            isValidMediaUrl(dbReel.business_account.face_image)
+          ? dbReel.business_account.face_image
+          : dbReel.Restaurant?.profile &&
+            isValidMediaUrl(dbReel.Restaurant.profile)
+          ? dbReel.Restaurant.profile
+          : dbReel.Shops?.image && isValidMediaUrl(dbReel.Shops.image)
+          ? dbReel.Shops.image
+          : "/placeholder.svg?height=40&width=40",
+      verified:
+        dbReel.User?.role === "admin" ||
+        dbReel.User?.role === "verified" ||
+        dbReel.Restaurant?.verified ||
+        false,
+    },
+    content: {
+      title: dbReel.title,
+      description: dbReel.description,
+      video: dbReel.video_url,
+      thumbnail:
+        dbReel.Product?.image ||
+        dbReel.Product?.thumbnail ||
+        dbReel.Product?.img ||
+        null,
+      category: dbReel.category,
+    },
+    stats: {
+      likes:
+        dbReel.reel_likes_aggregate?.aggregate?.count ||
+        parseInt(dbReel.likes || "0"),
+      comments: (dbReel.Reels_comments || []).length,
+    },
+    isLiked: userHasLiked,
+    commentsList,
+    shop_id: dbReel.shop_id || null,
+    restaurant_id: dbReel.restaurant_id || null,
+    created_on: dbReel.created_on,
+    shopLat,
+    shopLng,
+    shopAlt,
+  };
+
+  switch (dbReel.type) {
+    case "restaurant":
+      let restaurantLocation = extractStringValue(dbReel.Restaurant?.location);
+      if (!restaurantLocation && dbReel.Shops) {
+        restaurantLocation =
+          extractStringValue(dbReel.Shops.address) ||
+          extractStringValue(dbReel.Shops.name);
+      }
+      return {
+        ...basePost,
+        type: "restaurant",
+        restaurant: {
+          rating: 4.5,
+          reviews: 100,
+          location: restaurantLocation || "Location unavailable",
+          deliveryTime: dbReel.delivery_time || "30-45 min",
+          price: parseFloat(dbReel.Price || "0"),
+        },
+      } as RestaurantPost;
+
+    case "supermarket":
+    case "shop":
+    case "store":
+      const product = dbReel.Product || {};
+      let storeName = dbReel.Shops
+        ? extractStringValue(dbReel.Shops.name) ||
+          extractStringValue(dbReel.Shops.address)
+        : null;
+      if (!storeName && product) {
+        storeName =
+          extractStringValue(product.store) ||
+          extractStringValue(product.storeName);
+      }
+      return {
+        ...basePost,
+        type: "supermarket",
+        product: {
+          price: parseFloat(dbReel.Price || "0"),
+          originalPrice: product.originalPrice,
+          store: storeName || "Store information unavailable",
+          inStock: product.inStock !== false,
+          discount: product.discount,
+          image: product.image || product.thumbnail || product.img,
+        },
+      } as SupermarketPost;
+
+    case "chef":
+      const recipe = dbReel.Product || {};
+      return {
+        ...basePost,
+        type: "chef",
+        recipe: {
+          difficulty: recipe.difficulty || "Medium",
+          cookTime: recipe.cookTime || "1 hour",
+          servings: recipe.servings || 4,
+          youtubeChannel: recipe.youtubeChannel || "@ChefChannel",
+          subscribers: recipe.subscribers || "1M",
+        },
+      } as ChefPost;
+
+    case "business":
+      return {
+        ...basePost,
+        type: "business",
+        business: {
+          name: dbReel.business_account?.business_name || "Business",
+          location:
+            dbReel.business_account?.business_location ||
+            "Location unavailable",
+          email: dbReel.business_account?.business_email || "",
+          phone: dbReel.business_account?.business_phone || "",
+        },
+      } as BusinessPost;
+
+    default:
+      return basePost as FoodPost;
+  }
 };
 
 // Calculate user's preferred reel types based on their likes
@@ -444,17 +674,33 @@ interface CachedReels {
   version: string;
 }
 
-export default function FoodReelsApp() {
+export default function FoodReelsApp({
+  initialReels = [],
+  initialUserPreferences = {},
+}: {
+  initialReels?: any[];
+  initialUserPreferences?: any;
+}) {
   const { theme } = useTheme();
-  const { data: session } = useSession();
-  const [posts, setPosts] = useState<FoodPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status: sessionStatus } = useSession();
+  const [posts, setPosts] = useState<FoodPost[]>(() => {
+    if (initialReels && initialReels.length > 0) {
+      return initialReels.map((reel: any) =>
+        convertDatabaseReelToFoodPost(reel)
+      );
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(initialReels.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [isRefreshingComments, setIsRefreshingComments] = useState(false);
   const [visiblePostIndex, setVisiblePostIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+
+  // Use robust hook for mobile detection
+  const isMobile = useMediaQuery({ maxWidth: 767 });
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [optimisticComments, setOptimisticComments] = useState<{
@@ -468,626 +714,192 @@ export default function FoodReelsApp() {
   });
   const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
   const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
+  const [renderTick, setRenderTick] = useState(0); // Force re-render helper
   const mountedRef = useRef(true); // To track if component is mounted
+  const processingLikesRef = useRef<Set<string>>(new Set());
+  const lastLikedTargetRef = useRef<Map<string, boolean>>(new Map());
+
+  // Function to refetch ALL data for a specific reel (Stats + Comments)
+  const refetchReelData = async (postId: string) => {
+    try {
+      // Use timestamp for cache-busting to ensure we always get fresh data from server
+      const response = await fetch(
+        `/api/queries/reels?id=${postId}&_t=${Date.now()}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch reel data");
+
+      const data = await response.json();
+      if (!data.reels || data.reels.length === 0) return;
+
+      const updatedReel = convertDatabaseReelToFoodPost(data.reels[0]);
+
+      if (mountedRef.current) {
+        setPosts((prevPosts: FoodPost[]) => {
+          const matchingPost = prevPosts.find((p) => p.id === postId);
+          if (!matchingPost) {
+          }
+
+          const newPosts = prevPosts.map((post: FoodPost) => {
+            if (post.id === postId) {
+              const isProcessing = processingLikesRef.current.has(postId);
+              const lastTarget = lastLikedTargetRef.current.get(postId);
+
+              const finalIsLiked =
+                lastTarget !== undefined ? lastTarget : updatedReel.isLiked;
+              const finalLikes =
+                lastTarget !== undefined
+                  ? lastTarget
+                    ? Math.max(post.stats.likes, updatedReel.stats.likes)
+                    : Math.min(post.stats.likes, updatedReel.stats.likes)
+                  : updatedReel.stats.likes;
+
+              return {
+                ...updatedReel,
+                isLiked: finalIsLiked,
+                isProcessingLike: isProcessing || post.isProcessingLike,
+                stats: {
+                  ...updatedReel.stats,
+                  likes: finalLikes,
+                },
+              };
+            }
+            return post;
+          });
+          return newPosts;
+        });
+        // Force a re-render tick just in case React's reconciliation is stuck
+        setRenderTick((t) => t + 1);
+      }
+    } catch (error) {
+      console.error(`Error refetching reel data for ${postId}:`, error);
+    }
+  };
+
+  // Function to refetch comments for a specific post (kept for backwards compatibility)
+  const refetchComments = async (postId: string) => {
+    return refetchReelData(postId);
+  };
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
   }, []);
 
-  // Cache utility functions
-  const getCachedReels = (): CachedReels | null => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
+  // State reconciliation: merged server data with local optimistic state
+  const reconcileReelWithLocalState = (
+    newPost: FoodPost,
+    prevPosts: FoodPost[]
+  ): FoodPost => {
+    const existingPost = prevPosts.find((p) => p.id === newPost.id);
+    if (!existingPost) return newPost;
 
-      const parsedCache: CachedReels = JSON.parse(cached);
-      const now = Date.now();
+    const isProcessing = processingLikesRef.current.has(newPost.id);
+    const lastTarget = lastLikedTargetRef.current.get(newPost.id);
 
-      // Check if cache is still valid
-      if (now - parsedCache.timestamp > MAX_CACHE_AGE) {
-        localStorage.removeItem(CACHE_KEY);
-        return null;
-      }
+    // PRIORITY:
+    // 1. lastTarget (Active interaction on this specific client)
+    // 2. newPost (Fresh server state)
+    // 3. existingPost (Only as fallback for fields not in newPost)
 
-      return parsedCache;
-    } catch (error) {
-      // console.error("Error reading cache:", error);
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
+    return {
+      ...newPost,
+      isLiked: lastTarget !== undefined ? lastTarget : newPost.isLiked,
+      isProcessingLike: isProcessing || false,
+      stats: {
+        ...newPost.stats,
+        // If we have an active click, use our predicted count until server definitely syncs
+        likes:
+          lastTarget !== undefined
+            ? lastTarget
+              ? Math.max(existingPost.stats.likes, newPost.stats.likes)
+              : Math.min(existingPost.stats.likes, newPost.stats.likes)
+            : newPost.stats.likes,
+        comments: Math.max(newPost.stats.comments, existingPost.stats.comments),
+      },
+    };
   };
 
-  const setCachedReels = (data: FoodPost[]): void => {
+  // Fetch reels from database
+  const fetchReelsFromAPI = async (isBackgroundRefresh: boolean = false) => {
     try {
-      // Create a compressed version of the data with only essential fields
-      const compressedData = data.map((post) => ({
-        id: post.id,
-        type: post.type,
-        creator: {
-          name: post.creator.name,
-          avatar: post.creator.avatar,
-          verified: post.creator.verified,
-        },
-        content: {
-          title: post.content.title,
-          description: post.content.description,
-          video: post.content.video,
-          category: post.content.category,
-        },
-        stats: {
-          likes: post.stats.likes,
-          comments: post.stats.comments,
-        },
-        isLiked: post.isLiked,
-        // Only store essential type-specific data
-        ...(post.type === "restaurant" && {
-          restaurant: {
-            rating: post.restaurant.rating,
-            reviews: post.restaurant.reviews,
-            location: post.restaurant.location,
-            deliveryTime: post.restaurant.deliveryTime,
-            price: post.restaurant.price,
-          },
-        }),
-        ...(post.type === "supermarket" && {
-          product: {
-            price: post.product.price,
-            originalPrice: post.product.originalPrice,
-            store: post.product.store,
-            inStock: post.product.inStock,
-            discount: post.product.discount,
-          },
-        }),
-        ...(post.type === "chef" && {
-          recipe: {
-            difficulty: post.recipe.difficulty,
-            cookTime: post.recipe.cookTime,
-            servings: post.recipe.servings,
-            youtubeChannel: post.recipe.youtubeChannel,
-            subscribers: post.recipe.subscribers,
-          },
-        }),
-        ...(post.type === "business" && {
-          business: {
-            name: post.business.name,
-            location: post.business.location,
-            email: post.business.email,
-            phone: post.business.phone,
-          },
-        }),
-      }));
+      if (!isBackgroundRefresh && mountedRef.current) {
+        setLoading(true);
+        setError(null);
 
-      const cacheData: CachedReels = {
-        data: compressedData as FoodPost[],
-        timestamp: Date.now(),
-        lastFetch: Date.now(),
-        version: "1.0",
-      };
-
-      const serialized = JSON.stringify(cacheData);
-
-      // Check if data is too large for localStorage
-      if (serialized.length > 4 * 1024 * 1024) {
-        // 4MB limit
-        console.warn("Cache data too large, skipping cache save");
-        return;
+        // Safety timeout to prevent stuck loading
+        setTimeout(() => {
+          if (mountedRef.current) {
+            setLoading((prev) => {
+              return false;
+            });
+          }
+        }, 7000);
       }
 
-      localStorage.setItem(CACHE_KEY, serialized);
-    } catch (error) {
-      if (
-        error instanceof DOMException &&
-        error.name === "QuotaExceededError"
-      ) {
-        console.warn(
-          "localStorage quota exceeded, clearing old cache and retrying"
-        );
-        // Clear old cache and try again
-        try {
-          localStorage.removeItem(CACHE_KEY);
-          // Try with even more compressed data
-          const minimalData = data.slice(0, 10).map((post) => ({
-            id: post.id,
-            type: post.type,
-            creator: {
-              name: post.creator.name,
-              avatar: post.creator.avatar,
-              verified: post.creator.verified,
-            },
-            content: {
-              title: post.content.title,
-              description: post.content.description,
-              video: post.content.video,
-              category: post.content.category,
-            },
-            stats: { likes: post.stats.likes, comments: post.stats.comments },
-            isLiked: post.isLiked,
-          }));
+      // Use timestamp for cache-busting
+      const response = await fetch(`/api/queries/reels?_t=${Date.now()}`);
+      if (!response.ok) throw new Error("Failed to fetch reels");
 
-          const minimalCache: CachedReels = {
-            data: minimalData as FoodPost[],
-            timestamp: Date.now(),
-            lastFetch: Date.now(),
-            version: "1.0",
-          };
-
-          localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
-        } catch (retryError) {
-          console.error("Failed to save even minimal cache:", retryError);
-        }
-      } else {
-        console.error("Error saving cache:", error);
-      }
-    }
-  };
-
-  const shouldRefreshCache = (cached: CachedReels): boolean => {
-    const now = Date.now();
-    return now - cached.lastFetch > CACHE_DURATION;
-  };
-
-  // Clean up old cache entries to free up space
-  const cleanupOldCache = (): void => {
-    try {
-      const keys = Object.keys(localStorage);
-      const cacheKeys = keys.filter(
-        (key) => key.startsWith("reels_") || key.startsWith("cache_")
+      const data = await response.json();
+      const convertedPosts = data.reels.map((reel: DatabaseReel) =>
+        convertDatabaseReelToFoodPost(reel)
       );
 
-      // Remove old cache entries (older than 1 hour)
-      cacheKeys.forEach((key) => {
-        try {
-          const data = localStorage.getItem(key);
-          if (data) {
-            const parsed = JSON.parse(data);
-            if (
-              parsed.timestamp &&
-              Date.now() - parsed.timestamp > 60 * 60 * 1000
-            ) {
-              localStorage.removeItem(key);
-            }
-          }
-        } catch (e) {
-          // Remove corrupted cache entries
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.error("Error cleaning up cache:", error);
+      let userPreferences: Map<string, number> | undefined;
+      if (
+        data.userPreferences &&
+        Object.keys(data.userPreferences).length > 0
+      ) {
+        userPreferences = new Map(Object.entries(data.userPreferences));
+      } else {
+        userPreferences = calculateUserPreferences(convertedPosts);
+      }
+
+      const randomizedPosts = randomizeReelsWithPriority(
+        convertedPosts,
+        userPreferences.size > 0 ? userPreferences : undefined
+      );
+
+      if (mountedRef.current) {
+        setPosts((prevPosts: FoodPost[]) => {
+          return randomizedPosts.map((newPost: FoodPost) =>
+            reconcileReelWithLocalState(newPost, prevPosts)
+          );
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching reels from API:", err);
+      if (!isBackgroundRefresh && mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to fetch reels");
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
     }
   };
 
-  // Convert database reel to FoodPost format with current user's like status
-  const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
-    // Use isLiked field from database (set by backend based on current user)
-    const userHasLiked = dbReel.isLiked || false;
-
-    // Convert comments - handle case where Reels_comments might be undefined
-    const commentsList: Comment[] = (dbReel.Reels_comments || []).map(
-      (comment) => ({
-        id: comment.id,
-        user: {
-          name: comment.User?.name || "Plas Reel Agent",
-          avatar:
-            comment.User?.profile_picture ||
-            "/placeholder.svg?height=32&width=32",
-          verified:
-            comment.User?.role === "admin" ||
-            comment.User?.role === "verified" ||
-            false,
-        },
-        text: comment.text,
-        timestamp: formatTimestamp(comment.created_on),
-        likes: parseInt(comment.likes || "0"),
-        isLiked: comment.isLiked,
-      })
-    );
-
-    // Get coordinates from Restaurant or Shops
-    let shopLat = 0;
-    let shopLng = 0;
-    let shopAlt = 0;
-
-    if (dbReel.Restaurant) {
-      // Use Restaurant coordinates
-      shopLat = dbReel.Restaurant.lat || 0;
-      shopLng = dbReel.Restaurant.long || 0;
-      shopAlt = 0; // Restaurant doesn't have altitude in the schema
-    } else if (dbReel.Shops) {
-      // Use Shops coordinates (latitude and longitude are stored as strings)
-      shopLat = dbReel.Shops.latitude ? parseFloat(dbReel.Shops.latitude) : 0;
-      shopLng = dbReel.Shops.longitude ? parseFloat(dbReel.Shops.longitude) : 0;
-      shopAlt = 0; // Shops doesn't have altitude in the schema
-    }
-
-    // Determine creator name with fallback
-    const creatorName =
-      dbReel.User?.name ||
-      dbReel.business_account?.business_name ||
-      dbReel.Restaurant?.name ||
-      dbReel.Shops?.name ||
-      "Plas Reel Agent";
-
-    // Base post structure
-    const basePost: BasePost = {
-      id: dbReel.id,
-      type: dbReel.type as PostType,
-      creator: {
-        name: creatorName,
-        avatar:
-          dbReel.User?.profile_picture ||
-          dbReel.business_account?.face_image ||
-          dbReel.Restaurant?.profile ||
-          dbReel.Shops?.image ||
-          "/placeholder.svg?height=40&width=40",
-        verified:
-          dbReel.User?.role === "admin" ||
-          dbReel.User?.role === "verified" ||
-          dbReel.Restaurant?.verified ||
-          false,
-      },
-      content: {
-        title: dbReel.title,
-        description: dbReel.description,
-        video: dbReel.video_url,
-        category: dbReel.category,
-      },
-      stats: {
-        likes:
-          dbReel.reel_likes_aggregate?.aggregate?.count ||
-          parseInt(dbReel.likes || "0"), // Use aggregate count for accurate likes
-        comments: (dbReel.Reels_comments || []).length,
-      },
-      isLiked: userHasLiked, // Use actual user like status
-      commentsList,
-      shop_id: dbReel.shop_id || null,
-      restaurant_id: dbReel.restaurant_id || null,
-      created_on: dbReel.created_on, // Include created_on for randomization
-      shopLat,
-      shopLng,
-      shopAlt,
-    };
-
-    // Helper function to extract string value
-    const extractStringValue = (value: any): string | null => {
-      if (!value) return null;
-      if (typeof value === "string") {
-        const trimmed = value.trim();
-        return trimmed.length > 0 ? trimmed : null;
-      }
-      if (typeof value === "object" && value !== null) {
-        if (value.value && typeof value.value === "string") {
-          const trimmed = value.value.trim();
-          return trimmed.length > 0 ? trimmed : null;
-        }
-        if (value.text && typeof value.text === "string") {
-          const trimmed = value.text.trim();
-          return trimmed.length > 0 ? trimmed : null;
-        }
-        if (value.name && typeof value.name === "string") {
-          const trimmed = value.name.trim();
-          return trimmed.length > 0 ? trimmed : null;
-        }
-        try {
-          const str = value.toString();
-          if (str && str !== "[object Object]" && typeof str === "string") {
-            const trimmed = str.trim();
-            return trimmed.length > 0 ? trimmed : null;
-          }
-        } catch (e) {}
-        const keys = Object.keys(value);
-        for (const key of keys) {
-          if (typeof value[key] === "string") {
-            const trimmed = value[key].trim();
-            if (trimmed.length > 0) return trimmed;
-          }
-        }
-      }
-      return null;
-    };
-
-    // Convert based on type
-    switch (dbReel.type) {
-      case "restaurant":
-        // Try Restaurant location first, then fallback to Shops address if restaurant_id is null
-        let restaurantLocation = null;
-
-        if (dbReel.Restaurant?.location) {
-          restaurantLocation = extractStringValue(dbReel.Restaurant.location);
-        }
-
-        // If no restaurant location but we have a shop_id, try using Shops address
-        if (!restaurantLocation && dbReel.Shops) {
-          restaurantLocation =
-            extractStringValue(dbReel.Shops.address) ||
-            extractStringValue(dbReel.Shops.name);
-        }
-
-        const finalLocation =
-          restaurantLocation || "Location information unavailable";
-
-        return {
-          ...basePost,
-          type: "restaurant",
-          restaurant: {
-            rating: 4.5,
-            reviews: 100,
-            location: finalLocation,
-            deliveryTime: dbReel.delivery_time || "30-45 min",
-            price: parseFloat(dbReel.Price || "0"),
-          },
-        } as RestaurantPost;
-
-      case "supermarket":
-        const product = dbReel.Product || {};
-
-        // Try multiple sources for store information, in order of preference:
-        let storeName: string | null = null;
-
-        // 1. Try Shops relationship (if shop_id exists and Shops is loaded)
-        if (dbReel.Shops) {
-          storeName =
-            extractStringValue(dbReel.Shops.name) ||
-            extractStringValue(dbReel.Shops.address);
-        }
-
-        // 2. Try Product JSON field for store information (some reels might store it there)
-        if (!storeName && product && typeof product === "object") {
-          storeName =
-            extractStringValue(product.store) ||
-            extractStringValue(product.storeName) ||
-            extractStringValue(product.shopName) ||
-            extractStringValue(product.shop);
-        }
-
-        // 3. Try Restaurant name/location if we have restaurant_id instead of shop_id
-        if (!storeName && dbReel.Restaurant) {
-          storeName =
-            extractStringValue(dbReel.Restaurant.name) ||
-            extractStringValue(dbReel.Restaurant.location);
-        }
-
-        // 4. Last resort - check if description or title contains store info
-        if (!storeName) {
-          const description = extractStringValue(dbReel.description);
-          const title = extractStringValue(dbReel.title);
-          if (description && description.length < 100) {
-            storeName = description;
-          } else if (title && title.length < 50) {
-            storeName = title;
-          }
-        }
-
-        const finalStoreName = storeName || "Store information unavailable";
-
-        return {
-          ...basePost,
-          type: "supermarket",
-          product: {
-            price: parseFloat(dbReel.Price || "0"),
-            originalPrice: product.originalPrice || undefined,
-            store: finalStoreName,
-            inStock: product.inStock !== false,
-            discount: product.discount || undefined,
-          },
-        } as SupermarketPost;
-
-      case "chef":
-        const recipe = dbReel.Product || {};
-        return {
-          ...basePost,
-          type: "chef",
-          recipe: {
-            difficulty: recipe.difficulty || "Medium",
-            cookTime: recipe.cookTime || "1 hour",
-            servings: recipe.servings || 4,
-            youtubeChannel: recipe.youtubeChannel || "@ChefChannel",
-            subscribers: recipe.subscribers || "1M",
-          },
-        } as ChefPost;
-
-      case "business":
-        return {
-          ...basePost,
-          type: "business",
-          business: {
-            name: dbReel.business_account?.business_name || "Business",
-            location:
-              dbReel.business_account?.business_location ||
-              "Location unavailable",
-            email: dbReel.business_account?.business_email || "",
-            phone: dbReel.business_account?.business_phone || "",
-          },
-        } as BusinessPost;
-
-      case "shop":
-      case "store":
-        // Handle shop/store type reels - similar to supermarket
-        const shopProduct = dbReel.Product || {};
-
-        // Try multiple sources for store information
-        let shopStoreName: string | null = null;
-
-        // 1. Try Shops relationship
-        if (dbReel.Shops) {
-          shopStoreName =
-            extractStringValue(dbReel.Shops.name) ||
-            extractStringValue(dbReel.Shops.address);
-        }
-
-        // 2. Try Product JSON field
-        if (!shopStoreName && shopProduct) {
-          shopStoreName =
-            extractStringValue(shopProduct.store) ||
-            extractStringValue(shopProduct.storeName) ||
-            extractStringValue(shopProduct.shopName) ||
-            extractStringValue(shopProduct.shop);
-        }
-
-        // 3. Try Restaurant name/location
-        if (!shopStoreName && dbReel.Restaurant) {
-          shopStoreName =
-            extractStringValue(dbReel.Restaurant.name) ||
-            extractStringValue(dbReel.Restaurant.location);
-        }
-
-        // 4. If we have shop_id but no Shops data
-        if (!shopStoreName && dbReel.shop_id) {
-          shopStoreName = "Store information available (loading...)";
-        }
-
-        const finalShopStoreName =
-          shopStoreName || "Store information unavailable";
-
-        return {
-          ...basePost,
-          type: "supermarket" as PostType, // Map shop/store to supermarket type for display
-          product: {
-            price: parseFloat(dbReel.Price || "0"),
-            originalPrice: shopProduct.originalPrice || undefined,
-            store: finalShopStoreName,
-            inStock: shopProduct.inStock !== false,
-            discount: shopProduct.discount || undefined,
-          },
-        } as SupermarketPost;
-
-      default:
-        return basePost as FoodPost;
-    }
-  };
-
-  // Fetch reels from database with caching
+  // Initial fetch (if not already loaded via SSR)
   useEffect(() => {
-    const fetchReels = async (forceRefresh: boolean = false) => {
-      try {
-        // Clean up old cache entries first
-        cleanupOldCache();
-
-        // Check cache first
-        const cached = getCachedReels();
-
-        if (cached && !forceRefresh) {
-          // console.log("Loading reels from cache");
-          if (mountedRef.current) {
-            setPosts(cached.data);
-            setLoading(false);
-          }
-
-          // Check if we need to refresh in background
-          if (shouldRefreshCache(cached)) {
-            // console.log("Cache is stale, refreshing in background");
-            fetchReelsFromAPI(true); // Background refresh
-          }
-          return;
-        }
-
-        // No cache or force refresh - fetch from API
-        await fetchReelsFromAPI(false);
-      } catch (err) {
-        console.error("Error in fetchReels:", err);
-        if (mountedRef.current) {
-          setError(
-            err instanceof Error ? err.message : "Failed to fetch reels"
-          );
-          setLoading(false);
-        }
-      }
-    };
-
-    const fetchReelsFromAPI = async (isBackgroundRefresh: boolean = false) => {
-      try {
-        if (!isBackgroundRefresh) {
-          if (mountedRef.current) {
-            setLoading(true);
-            setError(null);
-          }
-        } else {
-          if (mountedRef.current) {
-            setIsRefreshing(true);
-          }
-        }
-
-        const response = await fetch("/api/queries/reels");
-        if (!response.ok) {
-          throw new Error("Failed to fetch reels");
-        }
-
-        const data = await response.json();
-        const convertedPosts = data.reels.map((reel: DatabaseReel) =>
-          convertDatabaseReelToFoodPost(reel)
-        );
-
-        // Get user preferences from API or calculate from current batch
-        let userPreferences: Map<string, number> | undefined;
-        if (
-          data.userPreferences &&
-          Object.keys(data.userPreferences).length > 0
-        ) {
-          // Use preferences from API (based on user's full like history)
-          userPreferences = new Map(Object.entries(data.userPreferences));
-        } else {
-          // Fallback: calculate from current batch
-          userPreferences = calculateUserPreferences(convertedPosts);
-        }
-
-        // Randomize reels while prioritizing recent ones and user preferences
-        const randomizedPosts = randomizeReelsWithPriority(
-          convertedPosts,
-          userPreferences.size > 0 ? userPreferences : undefined
-        );
-
-        // Update state first
-        if (mountedRef.current) {
-          console.log(
-            "DEBUG: Setting randomized posts to state:",
-            randomizedPosts
-          );
-          setPosts(randomizedPosts);
-        }
-
-        // Try to update cache, but don't fail if it doesn't work
-        try {
-          setCachedReels(randomizedPosts);
-        } catch (cacheError) {
-          console.warn(
-            "Failed to update cache, continuing without cache:",
-            cacheError
-          );
-        }
-
-        // if (isBackgroundRefresh) {
-        //   console.log("Background refresh completed");
-        // }
-      } catch (err) {
-        console.error("Error fetching reels from API:", err);
-        if (!isBackgroundRefresh && mountedRef.current) {
-          setError(
-            err instanceof Error ? err.message : "Failed to fetch reels"
-          );
-        }
-      } finally {
-        if (mountedRef.current) {
-          setLoading(false);
-          setIsRefreshing(false);
-        }
-      }
-    };
-
-    fetchReels();
-  }, [session?.user?.id]);
+    // If we have posts from SSR, we might still want to re-run
+    // to get personalized likes if the session just loaded
+    if (
+      mountedRef.current &&
+      (posts.length === 0 || sessionStatus === "authenticated")
+    ) {
+      fetchReelsFromAPI(posts.length > 0); // isBackground if we already have posts
+    }
+  }, [session?.user?.id, sessionStatus]);
 
   // Manual refresh function
   const refreshReels = async () => {
-    // Prevent overlapping refreshes
     if (isRefreshing) return;
 
-    // Safety timeout to ensure state clears even if promise hangs
     const fallbackTimeout = setTimeout(() => {
-      if (mountedRef.current) {
-        setIsRefreshing(false);
-      }
+      if (mountedRef.current) setIsRefreshing(false);
     }, 10000);
 
     try {
@@ -1095,62 +907,11 @@ export default function FoodReelsApp() {
         setIsRefreshing(true);
         setError(null);
       }
-
-      const response = await fetch("/api/queries/reels");
-      if (!response.ok) {
-        throw new Error("Failed to fetch reels");
-      }
-
-      const data = await response.json();
-      const convertedPosts = data.reels.map((reel: DatabaseReel) =>
-        convertDatabaseReelToFoodPost(reel)
-      );
-
-      // Get user preferences from API or calculate from current batch
-      let userPreferences: Map<string, number> | undefined;
-      if (
-        data.userPreferences &&
-        Object.keys(data.userPreferences).length > 0
-      ) {
-        // Use preferences from API (based on user's full like history)
-        userPreferences = new Map(Object.entries(data.userPreferences));
-      } else {
-        // Fallback: calculate from current batch
-        userPreferences = calculateUserPreferences(convertedPosts);
-      }
-
-      // Randomize reels while prioritizing recent ones and user preferences
-      const randomizedPosts = randomizeReelsWithPriority(
-        convertedPosts,
-        userPreferences.size > 0 ? userPreferences : undefined
-      );
-
-      // Update state first for immediate UI update
-      if (mountedRef.current) {
-        setPosts(randomizedPosts);
-      }
-
-      // Try to update cache, but don't fail if it doesn't work
-      try {
-        setCachedReels(randomizedPosts);
-      } catch (cacheError) {
-        console.warn(
-          "Failed to update cache, continuing without cache:",
-          cacheError
-        );
-      }
+      await fetchReelsFromAPI(true);
     } catch (err) {
       console.error("Error refreshing reels:", err);
-      if (mountedRef.current) {
-        setError(
-          err instanceof Error ? err.message : "Failed to refresh reels"
-        );
-      }
     } finally {
       clearTimeout(fallbackTimeout);
-      if (mountedRef.current) {
-        setIsRefreshing(false);
-      }
     }
   };
 
@@ -1364,37 +1125,7 @@ export default function FoodReelsApp() {
     };
   }, [posts.length, visiblePostIndex, isMobile]);
 
-  // Check if mobile on mount and resize with debouncing
-  useEffect(() => {
-    const checkIfMobile = () => {
-      const newIsMobile = window.innerWidth < 768;
-      if (newIsMobile !== isMobile) {
-        // console.log(
-        //   `Screen size changed: ${newIsMobile ? "mobile" : "desktop"}`
-        // );
-        if (mountedRef.current) {
-          setIsMobile(newIsMobile);
-          // Reset visible post index when switching layouts
-          setVisiblePostIndex(0);
-        }
-      }
-    };
-
-    checkIfMobile();
-
-    // Debounced resize handler
-    let resizeTimeout: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(checkIfMobile, 100);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(resizeTimeout);
-    };
-  }, [isMobile]);
+  // Handle component mount status (already managed by separate useEffect)
 
   // Intersection Observer to detect which post is visible
   useEffect(() => {
@@ -1463,43 +1194,51 @@ export default function FoodReelsApp() {
   };
 
   const toggleLike = async (postId: string) => {
-    // Check if user is logged in
-    if (handleAuthRequired()) return;
+    const currentPost = posts.find((post: FoodPost) => post.id === postId);
+    if (!currentPost) return;
+
+    const isCurrentlyLiked = currentPost.isLiked;
+    const targetLikedState = !isCurrentlyLiked;
 
     try {
-      const currentPost = posts.find((post: FoodPost) => post.id === postId);
-      if (!currentPost) return;
-
-      const isCurrentlyLiked = currentPost.isLiked;
-
-      // Prevent action if already processing (avoid double-clicks)
-      if (currentPost.isProcessingLike) return;
-
-      // Immediately update UI for instant feedback
-      if (mountedRef.current) {
-        setPosts(
-          posts.map((post: FoodPost) =>
-            post.id === postId
-              ? {
-                  ...post,
-                  isLiked: !isCurrentlyLiked,
-                  isProcessingLike: true, // Mark as processing
-                  stats: {
-                    ...post.stats,
-                    likes: isCurrentlyLiked
-                      ? Math.max(0, post.stats.likes - 1)
-                      : post.stats.likes + 1,
-                  },
-                }
-              : post
-          )
-        );
+      // 1. Check strict processing lock
+      if (processingLikesRef.current.has(postId)) {
+        return;
       }
 
-      // Process backend request in background
-      const method = isCurrentlyLiked ? "DELETE" : "POST";
+      // 2. Check if we just sent this exact target state (deduplication)
+      if (lastLikedTargetRef.current.get(postId) === targetLikedState) {
+        return;
+      }
 
-      fetch("/api/queries/reel-likes", {
+      processingLikesRef.current.add(postId);
+      lastLikedTargetRef.current.set(postId, targetLikedState);
+
+      // Immediately update UI for instant feedback
+      setPosts((prevPosts: FoodPost[]) => {
+        const newPosts = prevPosts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: targetLikedState,
+                isProcessingLike: true,
+                stats: {
+                  ...post.stats,
+                  likes: targetLikedState
+                    ? (post.stats.likes || 0) + 1
+                    : Math.max(0, (post.stats.likes || 0) - 1),
+                },
+              }
+            : post
+        );
+        return newPosts;
+      });
+      setRenderTick((t) => t + 1);
+
+      // Process backend request
+      const method = targetLikedState ? "POST" : "DELETE";
+
+      const response = await fetch("/api/queries/reel-likes", {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -1507,107 +1246,187 @@ export default function FoodReelsApp() {
         body: JSON.stringify({
           reel_id: postId,
         }),
-      })
-        .then(async (response) => {
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("Error toggling like:", response.status, errorData);
+      });
 
-            // If user already liked (400 error), revert the UI change
-            if (
-              response.status === 400 &&
-              errorData.error?.includes("already liked")
-            ) {
-              if (mountedRef.current) {
-                setPosts(
-                  posts.map((post: FoodPost) =>
-                    post.id === postId
-                      ? {
-                          ...post,
-                          isLiked: isCurrentlyLiked, // Revert to original state
-                          isProcessingLike: false,
-                          stats: {
-                            ...post.stats,
-                            likes: isCurrentlyLiked
-                              ? post.stats.likes + 1
-                              : Math.max(0, post.stats.likes - 1),
-                          },
-                        }
-                      : post
-                  )
-                );
-              }
-            } else {
-              // For other errors, revert the optimistic update
-              if (mountedRef.current) {
-                setPosts(
-                  posts.map((post: FoodPost) =>
-                    post.id === postId
-                      ? {
-                          ...post,
-                          isLiked: isCurrentlyLiked, // Revert to original state
-                          isProcessingLike: false,
-                          stats: {
-                            ...post.stats,
-                            likes: isCurrentlyLiked
-                              ? post.stats.likes + 1
-                              : Math.max(0, post.stats.likes - 1),
-                          },
-                        }
-                      : post
-                  )
-                );
-              }
-            }
-          } else {
-            // Success - clear processing flag
-            if (mountedRef.current) {
-              setPosts(
-                posts.map((post: FoodPost) =>
-                  post.id === postId
-                    ? {
-                        ...post,
-                        isProcessingLike: false,
-                      }
-                    : post
-                )
-              );
-            }
-          }
-        })
-        .catch((error) => {
-          console.error("Error toggling like:", error);
-          // Revert UI on error
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        // Handle specific "already in sync" errors quietly
+        if (
+          (response.status === 400 &&
+            result.error?.includes("already liked")) ||
+          (response.status === 404 && result.error?.includes("Like not found"))
+        ) {
           if (mountedRef.current) {
-            setPosts(
-              posts.map((post: FoodPost) =>
+            setPosts((prevPosts: FoodPost[]) =>
+              prevPosts.map((post: FoodPost) =>
                 post.id === postId
                   ? {
                       ...post,
-                      isLiked: isCurrentlyLiked, // Revert to original state
+                      isProcessingLike: false,
+                      isLiked: targetLikedState,
+                    }
+                  : post
+              )
+            );
+            toaster.push(
+              <Message type="info" closable>
+                Already in sync: {targetLikedState ? "Liked" : "Unliked"}
+              </Message>,
+              { placement: "topEnd" }
+            );
+          }
+        } else {
+          // Revert on other errors
+          console.error(
+            `[Reels UI] Backend returned ${response.status} for ${postId}:`,
+            result
+          );
+          if (mountedRef.current) {
+            setPosts((prevPosts: FoodPost[]) =>
+              prevPosts.map((post: FoodPost) =>
+                post.id === postId
+                  ? {
+                      ...post,
+                      isLiked: isCurrentlyLiked,
                       isProcessingLike: false,
                       stats: {
                         ...post.stats,
                         likes: isCurrentlyLiked
-                          ? post.stats.likes + 1
+                          ? post.stats.likes
                           : Math.max(0, post.stats.likes - 1),
                       },
                     }
                   : post
               )
             );
+            toaster.push(
+              <Message type="error" closable>
+                Error: {result.error || "Failed to update like"}
+              </Message>,
+              { placement: "topEnd" }
+            );
           }
-        });
+        }
+      } else {
+        // Success - ensure UI is in target state and clear processing flag
+        if (mountedRef.current) {
+          setPosts((prevPosts: FoodPost[]) =>
+            prevPosts.map((post: FoodPost) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    isProcessingLike: false,
+                    isLiked: targetLikedState,
+                    // Re-calculate stats conservatively until refetch completes
+                    stats: {
+                      ...post.stats,
+                      likes: targetLikedState
+                        ? Math.max(
+                            post.stats.likes,
+                            (post.stats.likes || 0) + 1
+                          )
+                        : Math.max(0, post.stats.likes - 1),
+                    },
+                  }
+                : post
+            )
+          );
+
+          toaster.push(
+            <Message type="success" closable>
+              Successfully {targetLikedState ? "liked" : "unliked"}!
+            </Message>,
+            { placement: "topEnd" }
+          );
+        }
+
+        // REFETCH REAL-TIME DATA
+        refetchReelData(postId);
+      }
     } catch (error) {
-      console.error("Error toggling like:", error);
+      console.error(`[Reels UI] Exception in toggleLike for ${postId}:`, error);
+    } finally {
+      // Keep the lock for a short duration to prevent pile-up
+      setTimeout(() => {
+        processingLikesRef.current.delete(postId);
+      }, 800);
     }
   };
 
   const toggleCommentLike = async (postId: string, commentId: string) => {
     // Check if user is logged in
-    if (handleAuthRequired()) return;
+    if (handleAuthRequired()) {
+      return;
+    }
+
+    // Storage for original state to revert on error
+    let originalPosts: FoodPost[] = [];
+    let originalOptimistic: Record<string, Comment[]> = {};
 
     try {
+      // 1. OPTIMISTIC UPDATE
+      // We don't guard the VERY FIRST state update with mountedRef.current
+      // because if the user just clicked a button in the UI, the component MUST be mounted.
+      // Guards are mainly for async callbacks (after fetch/setTimeout).
+
+      // Backup current state for potential revert
+      originalPosts = [...posts];
+      originalOptimistic = { ...optimisticComments };
+
+      // Update posts state (server-side comments)
+      setPosts((prevPosts: FoodPost[]) => {
+        const updated = prevPosts.map((post: FoodPost) => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              commentsList: post.commentsList.map((comment: Comment) => {
+                if (comment.id === commentId) {
+                  return {
+                    ...comment,
+                    isLiked: !comment.isLiked,
+                    likes: comment.isLiked
+                      ? Math.max(0, comment.likes - 1)
+                      : comment.likes + 1,
+                  };
+                }
+                return comment;
+              }),
+            };
+          }
+          return post;
+        });
+        return updated;
+      });
+
+      // Update optimisticComments state (unsynced local comments)
+      setOptimisticComments((prev) => {
+        const postOptimistic = prev[postId] || [];
+        if (!postOptimistic.some((c) => c.id === commentId)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [postId]: postOptimistic.map((comment: Comment) =>
+            comment.id === commentId
+              ? {
+                  ...comment,
+                  isLiked: !comment.isLiked,
+                  likes: comment.isLiked
+                    ? Math.max(0, comment.likes - 1)
+                    : comment.likes + 1,
+                }
+              : comment
+          ),
+        };
+      });
+
+      // Trigger a render tick to ensure UI update
+      setRenderTick((t) => t + 1);
+
+      // 2. API CALL IN BACKGROUND
+      // No need to set refreshing true/false here to avoid flickering overlays
       const response = await fetch("/api/queries/reel-comments", {
         method: "PUT",
         headers: {
@@ -1621,9 +1440,10 @@ export default function FoodReelsApp() {
 
       if (response.ok) {
         const result = await response.json();
+        // 3. LOGICAL SYNC WITH SERVER RESULT
         if (mountedRef.current) {
-          setPosts(
-            posts.map((post: FoodPost) =>
+          setPosts((prevPosts: FoodPost[]) =>
+            prevPosts.map((post: FoodPost) =>
               post.id === postId
                 ? {
                     ...post,
@@ -1641,16 +1461,23 @@ export default function FoodReelsApp() {
             )
           );
         }
+      } else {
+        throw new Error("Failed to toggle comment like on server");
       }
     } catch (error) {
       console.error("Error toggling comment like:", error);
+      // 4. REVERT ON ERROR
+      if (mountedRef.current) {
+        setPosts(originalPosts);
+        setOptimisticComments(originalOptimistic);
+        setRenderTick((t) => t + 1);
+      }
+    } finally {
+      setIsRefreshingComments(false);
     }
   };
 
   const addComment = async (postId: string, commentText: string) => {
-    // Check if user is logged in
-    if (handleAuthRequired()) return;
-
     try {
       // Create optimistic comment for immediate UI update
       const optimisticComment: Comment = {
@@ -1667,31 +1494,31 @@ export default function FoodReelsApp() {
       };
 
       // Add to optimisticComments state
-      if (mountedRef.current) {
-        setOptimisticComments((prev) => ({
+      setOptimisticComments((prev) => {
+        return {
           ...prev,
-          [postId]: [optimisticComment, ...(prev[postId] || [])],
-        }));
-      }
+          [postId]: [...(prev[postId] || []), optimisticComment],
+        };
+      });
 
-      // Optimistic update - add comment immediately to UI
-      if (mountedRef.current) {
-        setPosts(
-          posts.map((post: FoodPost) =>
-            post.id === postId
-              ? {
-                  ...post,
-                  stats: {
-                    ...post.stats,
-                    comments: post.stats.comments + 1,
-                  },
-                }
-              : post
-          )
+      // Optimistic update - increment count immediately to UI
+      setPosts((prevPosts: FoodPost[]) => {
+        return prevPosts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                stats: {
+                  ...post.stats,
+                  comments: post.stats.comments + 1,
+                },
+              }
+            : post
         );
-      }
+      });
+      setRenderTick((t) => t + 1);
 
       // Make API call to add comment
+      setIsRefreshingComments(true);
       const response = await fetch("/api/queries/reel-comments", {
         method: "POST",
         headers: {
@@ -1710,23 +1537,49 @@ export default function FoodReelsApp() {
       const result = await response.json();
 
       if (result.success && result.comment) {
-        // Remove optimistic comment
+        // Success - update posts state with REAL server comment directly
+        const serverComment = convertDBCommentToComment(result.comment);
+
         if (mountedRef.current) {
-          setOptimisticComments((prev) => ({
-            ...prev,
-            [postId]: (prev[postId] || []).filter(
+          setPosts((prevPosts: FoodPost[]) =>
+            prevPosts.map((post: FoodPost) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    commentsList: [...(post.commentsList || []), serverComment],
+                    stats: {
+                      ...post.stats,
+                      comments: Math.max(
+                        post.stats.comments,
+                        (post.commentsList || []).length + 1
+                      ),
+                    },
+                  }
+                : post
+            )
+          );
+
+          setOptimisticComments((prev) => {
+            const newList = (prev[postId] || []).filter(
               (c) => c.id !== optimisticComment.id
-            ),
-          }));
+            );
+            return {
+              ...prev,
+              [postId]: newList,
+            };
+          });
+
+          setRenderTick((t) => t + 1);
         }
-        // Optionally, you can trigger a refetch here for extra safety
-        await refetchComments(postId);
+
+        // Trigger background sync but don't await it
+        refetchReelData(postId);
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Error adding comment:", error);
-      // Remove optimistic comment on error
+      // Remove optimistic comment and revert count on error
       if (mountedRef.current) {
         setOptimisticComments((prev) => ({
           ...prev,
@@ -1734,8 +1587,8 @@ export default function FoodReelsApp() {
             (c) => !c.id.startsWith("temp-")
           ),
         }));
-        setPosts(
-          posts.map((post: FoodPost) =>
+        setPosts((prevPosts: FoodPost[]) =>
+          prevPosts.map((post: FoodPost) =>
             post.id === postId
               ? {
                   ...post,
@@ -1747,86 +1600,79 @@ export default function FoodReelsApp() {
               : post
           )
         );
+        setRenderTick((t) => t + 1);
       }
-      alert("Failed to add comment. Please try again.");
+    } finally {
+      setIsRefreshingComments(false);
     }
   };
 
-  // Function to refetch comments for a specific post
-  const refetchComments = async (postId: string) => {
+  const deleteComment = async (postId: string, commentId: string) => {
+    // Check if user is logged in
+    if (handleAuthRequired()) return;
+
     try {
-      if (mountedRef.current) {
-        setIsRefreshingComments(true);
-      }
-      const response = await fetch(
-        `/api/queries/reel-comments?reel_id=${postId}`
+      // Find the comment to revert if needed
+      const post = posts.find((p) => p.id === postId);
+      const commentToDelete = post?.commentsList.find(
+        (c) => c.id === commentId
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch comments");
-      }
-
-      const data = await response.json();
-
-      // Convert database comments to frontend format
-      const commentsList: Comment[] = data.comments.map((comment: any) => ({
-        id: comment.id,
-        user: {
-          name: comment.User.name,
-          avatar:
-            comment.User.profile_picture ||
-            "/placeholder.svg?height=32&width=32",
-          verified:
-            comment.User.role === "admin" || comment.User.role === "verified",
-        },
-        text: comment.text,
-        timestamp: formatTimestamp(comment.created_on),
-        likes: parseInt(comment.likes || "0"),
-        isLiked: comment.isLiked,
-      }));
-
-      // Merge optimistic comments (if any)
-      const mergedComments = [
-        ...(optimisticComments[postId] || []),
-        ...commentsList.filter(
-          (c) =>
-            !(optimisticComments[postId] || []).some(
-              (o) => o.text === c.text && o.user.name === c.user.name
-            )
-        ),
-      ];
-
-      // Update posts with fresh comment data
+      // Optimistic update - remove comment immediately from UI
       if (mountedRef.current) {
-        setPosts(
-          posts.map((post: FoodPost) =>
+        setPosts((prevPosts: FoodPost[]) =>
+          prevPosts.map((post: FoodPost) =>
             post.id === postId
               ? {
                   ...post,
-                  commentsList: mergedComments,
                   stats: {
                     ...post.stats,
-                    comments: mergedComments.length,
+                    comments: Math.max(0, post.stats.comments - 1),
                   },
+                  commentsList: post.commentsList.filter(
+                    (comment: Comment) => comment.id !== commentId
+                  ),
                 }
               : post
           )
         );
+
+        // Also remove from optimisticComments if it's there
+        setOptimisticComments((prev) => ({
+          ...prev,
+          [postId]: (prev[postId] || []).filter((c) => c.id !== commentId),
+        }));
       }
+
+      // Make API call to delete comment
+      setIsRefreshingComments(true);
+      const response = await fetch("/api/queries/reel-comments", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment_id: commentId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete comment");
+      }
+
+      // REFETCH REAL-TIME DATA
+      await refetchReelData(postId);
     } catch (error) {
-      console.error("Error refetching comments:", error);
+      console.error("Error deleting comment:", error);
+      // Revert optimistic update (simplified - just refetch everything for this post)
+      await refetchReelData(postId);
     } finally {
-      if (mountedRef.current) {
-        setIsRefreshingComments(false);
-      }
+      setIsRefreshingComments(false);
     }
   };
 
   // Enhanced openComments function with comment refetching
   const openComments = async (postId: string) => {
-    // Check if user is logged in
-    if (handleAuthRequired()) return;
-
     // console.log("Opening comments for post:", postId);
     if (mountedRef.current) {
       setActivePostId(postId);
@@ -1868,10 +1714,8 @@ export default function FoodReelsApp() {
         if (mountedRef.current) {
           setActivePostId(currentPost.id);
         }
-        // Auto-fetch comments for the visible post on desktop if user is logged in
-        if (session?.user) {
-          refetchComments(currentPost.id);
-        }
+        // Auto-fetch comments for the visible post on desktop to ensure they are always visible
+        refetchComments(currentPost.id);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1886,9 +1730,6 @@ export default function FoodReelsApp() {
   };
 
   const handleShare = async (post: FoodPost) => {
-    // Check if user is logged in
-    if (handleAuthRequired()) return;
-
     try {
       // Create share link - link to the reel page with the post ID
       const shareUrl = `${window.location.origin}/Reels?reel=${post.id}`;
@@ -1903,7 +1744,6 @@ export default function FoodReelsApp() {
             text: shareText,
             url: shareUrl,
           });
-          // Share was successful
           return;
         } catch (shareError: any) {
           // User cancelled or share failed, fallback to copy
@@ -1951,20 +1791,48 @@ export default function FoodReelsApp() {
     : null;
 
   const activePost = activePostForComments;
-  const mergedActiveComments = activePost
-    ? [
-        ...(optimisticComments[activePost.id] || []),
-        ...(activePost.commentsList || []).filter(
-          (c) =>
-            !(optimisticComments[activePost.id] || []).some(
-              (o) => o.text === c.text && o.user.name === c.user.name
-            )
-        ),
-      ]
-    : [];
+
+  // AGGRESSIVE DEBUGGING: Log state on every render
+  // console.log("[Reels UI] Render Debug:", {
+  //   activePostId,
+  //   postsCount: posts.length,
+  //   activePostFound: !!activePost,
+  //   optimisticKeys: Object.keys(optimisticComments)
+  // });
+
+  const mergedActiveComments = React.useMemo(() => {
+    // If we have an activePostId, we should at least try to show optimistic comments for it
+    const targetId = activePostId || (activePost ? activePost.id : null);
+    if (!targetId) return [];
+
+    const serverComments = activePost ? activePost.commentsList || [] : [];
+    const localOptimistic = optimisticComments[targetId] || [];
+
+    // Log merging process
+    if (localOptimistic.length > 0) {
+      // console.log(`[Reels UI] MERGE for ${targetId}:`, {
+      //   localCount: localOptimistic.length,
+      //   serverCount: serverComments.length
+      // });
+    }
+
+    const merged = [
+      ...serverComments.filter(
+        (sc) =>
+          !localOptimistic.some(
+            (oc) =>
+              oc.id === sc.id ||
+              (oc.text === sc.text && oc.user.name === sc.user.name)
+          )
+      ),
+      ...localOptimistic,
+    ];
+
+    return merged;
+  }, [activePost, activePostId, optimisticComments]);
 
   if (loading) {
-    return (
+    return isMobile ? (
       <RootLayout>
         <div className="flex h-screen w-full items-center justify-center  md:p-4">
           <div className="relative h-full w-full overflow-hidden md:max-w-sm md:rounded-2xl md:shadow-2xl">
@@ -1974,6 +1842,8 @@ export default function FoodReelsApp() {
           </div>
         </div>
       </RootLayout>
+    ) : (
+      <DesktopReelPlaceholder />
     );
   }
 
@@ -2001,18 +1871,22 @@ export default function FoodReelsApp() {
   // Empty state
   if (posts.length === 0) {
     return (
-      <div
-        className={`flex min-h-screen items-center justify-center ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
-      >
-        <div className="text-center">
-          <p className="mb-4 text-gray-500">No reels available</p>
-          <p className="text-sm text-gray-400">
-            Check back later for new content
-          </p>
+      <RootLayout>
+        <div
+          className={`flex min-h-screen items-center justify-center ${
+            theme === "dark"
+              ? "bg-gray-900 text-white"
+              : "bg-white text-gray-900"
+          }`}
+        >
+          <div className="text-center">
+            <p className="mb-4 text-gray-500">No reels available</p>
+            <p className="text-sm text-gray-400">
+              Check back later for new content
+            </p>
+          </div>
         </div>
-      </div>
+      </RootLayout>
     );
   }
 
@@ -2036,6 +1910,9 @@ export default function FoodReelsApp() {
             activePost && toggleCommentLike(activePost.id, commentId)
           }
           addComment={(text) => activePost && addComment(activePost.id, text)}
+          deleteComment={(commentId) =>
+            activePost && deleteComment(activePost.id, commentId)
+          }
           isRefreshingComments={isRefreshingComments}
           toggleLike={toggleLike}
           handleShare={(post) => handleShare(post)}
@@ -2054,6 +1931,9 @@ export default function FoodReelsApp() {
             activePost && toggleCommentLike(activePost.id, commentId)
           }
           addComment={(text) => activePost && addComment(activePost.id, text)}
+          deleteComment={(commentId) =>
+            activePost && deleteComment(activePost.id, commentId)
+          }
           isRefreshingComments={isRefreshingComments}
           toggleLike={toggleLike}
           handleShare={(post) => handleShare(post)}
@@ -2078,3 +1958,51 @@ export default function FoodReelsApp() {
     </>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { req, res, query } = context;
+
+  console.log("[Reels SSR] Start getServerSideProps");
+
+  try {
+    const session = await getServerSession(req, res, authOptions as any);
+    const currentUserId = session?.user ? (session.user as any).id : null;
+
+    console.log("[Reels SSR] Session Status:", {
+      hasSession: !!session,
+      currentUserId,
+    });
+
+    const result = await getReelsData({
+      ...(query as any),
+      currentUserId,
+    });
+
+    if (!result) {
+      console.log("[Reels SSR] No result from getReelsData");
+      return {
+        props: {
+          initialReels: [],
+          initialUserPreferences: {},
+        },
+      };
+    }
+
+    console.log("[Reels SSR] Success. Reels fetched:", result.reels.length);
+
+    return {
+      props: {
+        initialReels: JSON.parse(JSON.stringify(result.reels)),
+        initialUserPreferences: result.userPreferences || {},
+      },
+    };
+  } catch (error) {
+    console.error("[Reels SSR] Error:", error);
+    return {
+      props: {
+        initialReels: [],
+        initialUserPreferences: {},
+      },
+    };
+  }
+};

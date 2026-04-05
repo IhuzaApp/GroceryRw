@@ -1004,6 +1004,7 @@ export function MobileBusinessDashboard({
           rfqId={selectedRFQForQuote.id}
           rfqTitle={selectedRFQForQuote.title}
           onSuccess={handleQuoteSubmitted}
+          businessAccount={businessAccount}
         />
       )}
 
@@ -1061,6 +1062,7 @@ export function MobileBusinessDashboard({
             fetchSectionData("contracts");
           }
         }}
+        businessAccount={businessAccount}
       />
 
       {/* Create RFQ Form Modal */}

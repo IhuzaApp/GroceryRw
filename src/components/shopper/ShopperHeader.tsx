@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import "rsuite/dist/rsuite.min.css";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTheme } from "@context/ThemeContext";
 import { Button } from "rsuite";
 import TelegramStatusButton from "./TelegramStatusButton";
@@ -12,7 +12,8 @@ import NotificationCenter from "./NotificationCenter";
 export default function ShopperHeader() {
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const pathname = usePathname();
+  const router = useRouter();
+  const pathname = router.pathname;
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {

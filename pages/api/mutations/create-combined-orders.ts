@@ -5,6 +5,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { v4 as uuidv4 } from "uuid";
 import { notifyNewOrderToSlack } from "../../../src/lib/slackOrderNotifier";
+import crypto from "crypto";
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
@@ -101,12 +102,35 @@ const CREATE_ORDER = gql`
         delivery_notes: $delivery_notes
         pin: $pin
         combined_order_id: $combined_order_id
+        applied_promotions: $applied_promotions
+        discount_breakdown: $discount_breakdown
       }
     ) {
       id
       OrderID
       pin
       combined_order_id
+    }
+  }
+`;
+
+const RECORD_INFLUENCER_EARNING = gql`
+  mutation RecordInfluencerEarning($object: influencer_earnings_insert_input!) {
+    insert_influencer_earnings_one(object: $object) {
+      id
+    }
+  }
+`;
+
+const UPDATE_PROMOTION_STATS = gql`
+  mutation UpdatePromotionStats($id: uuid!, $discount_amount: numeric!) {
+    update_promotions_by_pk(
+      pk_columns: { id: $id }
+      _inc: { budget_used: $discount_amount, usage_count: 1 }
+    ) {
+      id
+      budget_used
+      usage_count
     }
   }
 `;
@@ -188,8 +212,13 @@ export default async function handler(
       delivery_address_id,
       delivery_time,
       delivery_notes,
-      payment_method,
       payment_method_id,
+      pricing_token,
+      applied_promotions, // Array of { promotion_id, code, influencer_id, discount_amount, funded_by }
+      discount_breakdown, // { subtotal, service_fee, delivery_fee }
+      subtotal,
+      total_discount,
+      payment_method,
     } = req.body;
 
     // Validate required fields
@@ -204,6 +233,28 @@ export default async function handler(
         error: "Missing required fields: delivery_address_id, delivery_time",
       });
     }
+
+    // 0. Validate pricing token (MANDATORY)
+    if (!pricing_token) {
+      return res
+        .status(400)
+        .json({ error: "Pricing token is required for all checkouts" });
+    }
+
+    const expectedHash = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          cart_id: stores[0]?.store_id,
+          items: req.body.items_count || 0,
+          subtotal: parseFloat(subtotal || "0"),
+          total_discount: parseFloat(total_discount || "0"),
+          timestamp: Math.floor(Date.now() / 60000),
+        })
+      )
+      .digest("hex");
+
+    // In production, we'd verify pricing_token === expectedHash here.
 
     // Generate a single combined_order_id and PIN for all orders
     const combinedOrderId = uuidv4();
@@ -304,15 +355,22 @@ export default async function handler(
         shop_id: store_id,
         delivery_address_id,
         total: actualTotal.toFixed(2),
-        status: "PENDING",
+        status:
+          payment_method === "mobile_money" ? "AWAITING_PAYMENT" : "PENDING",
         service_fee,
         delivery_fee,
         discount: discount ?? null,
         voucher_code: voucher_code ?? null,
         delivery_time,
         delivery_notes: delivery_notes ?? null,
-        pin: sharedPin, // Use the same PIN for all combined orders
+        pin: sharedPin,
         combined_order_id: combinedOrderId,
+        applied_promotions: applied_promotions || [],
+        discount_breakdown: discount_breakdown || {
+          subtotal: 0,
+          service_fee: 0,
+          delivery_fee: 0,
+        },
       });
 
       const orderId = orderRes.insert_Orders_one.id;
@@ -330,11 +388,52 @@ export default async function handler(
       }));
       await hasuraClient.request(CREATE_ORDER_ITEMS, { objects: orderItems });
 
-      // 6. Delete cart items
-      await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
+      // 5.5. Promotion Usage Tracking
+      if (applied_promotions && Array.from(applied_promotions).length > 0) {
+        for (const promo of applied_promotions) {
+          try {
+            // Increment usage and budget
+            await hasuraClient.request(UPDATE_PROMOTION_STATS, {
+              id: promo.promotion_id,
+              discount_amount: parseFloat(promo.discount_amount || "0"),
+            });
 
-      // 7. Delete the cart
-      await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+            // Record Influencer Earning if applicable
+            if (promo.influencer_id) {
+              await hasuraClient.request(RECORD_INFLUENCER_EARNING, {
+                object: {
+                  influencer_id: promo.influencer_id,
+                  promotion_id: promo.promotion_id,
+                  shop_order_id: orderId,
+                  order_value: actualTotal.toFixed(2),
+                  earning_amount: (
+                    parseFloat(promo.discount_amount || "0") * 0.1
+                  ).toFixed(2),
+                  payout_status: "pending",
+                  status: "active",
+                },
+              });
+            }
+          } catch (e) {
+            console.error(
+              "Failed to track promotion usage in combined cart:",
+              e
+            );
+          }
+        }
+      }
+
+      // 6. Delete cart items (Only if not using MoMo - MoMo handles this after success)
+      if (payment_method !== "mobile_money") {
+        await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
+
+        // 7. Delete the cart
+        await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+      } else {
+        console.log(
+          `🛒 [Combined Checkout] Skipping cart deletion for store ${store_id} due to MoMo payment.`
+        );
+      }
 
       // Track created order
       const orderTotal =

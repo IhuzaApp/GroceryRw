@@ -1,6 +1,7 @@
 import RootLayout from "@components/ui/layout";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { Modal, Button as RButton, toaster, Message } from "rsuite";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaurantOrderDetails";
@@ -11,6 +12,9 @@ import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
 import { useTheme } from "../../../src/context/ThemeContext";
 import Image from "next/image";
+import { Info, AlertCircle, X } from "lucide-react";
+import CompletePaymentModal from "@components/UserCarts/orders/CompletePaymentModal";
+import CancelOrderModal from "@components/UserCarts/orders/CancelOrderModal";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -48,7 +52,32 @@ function timeAgo(timestamp: string): string {
 
 // Helper to get order status display info with SVG icons
 function getOrderStatusInfo(order: any) {
-  const isDone = order?.status === "delivered";
+  const currentStatus = String(order?.status || "").toLowerCase();
+
+  if (currentStatus === "cancelled") {
+    return {
+      status: "Cancelled",
+      color: "red",
+      icon: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      ),
+      description: "This order has been cancelled",
+    };
+  }
+
+  const isDone = currentStatus === "delivered" || currentStatus === "completed";
   const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
 
   if (isDone) {
@@ -94,7 +123,7 @@ function getOrderStatusInfo(order: any) {
       description: "Waiting for assignment",
     };
   } else {
-    switch (order?.status) {
+    switch (currentStatus) {
       case "shopping":
         return {
           status: "Shopping",
@@ -192,13 +221,19 @@ const MobileOrderDetails = ({
   orderType,
   combinedOrders,
   onContactSupport,
+  onCancel,
+  isCancelling,
   supportTicket,
+  onCompletePayment,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
+  onCancel?: () => void;
+  isCancelling?: boolean;
   supportTicket?: SupportTicketInfo;
+  onCompletePayment?: () => void;
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
@@ -392,6 +427,51 @@ const MobileOrderDetails = ({
             />
           )}
         </div>
+
+        {/* Cancellation Section for Mobile (Bottom) */}
+        {(() => {
+          const status = order?.status?.toUpperCase();
+          if (status === "AWAITING_PAYMENT") {
+            return (
+              <div className="mt-8 rounded-2xl border border-orange-100 bg-orange-50/30 p-4 dark:border-orange-900/20 dark:bg-orange-900/10">
+                <RButton
+                  block
+                  appearance="primary"
+                  color="orange"
+                  onClick={onCompletePayment}
+                  className="!rounded-xl border-2 font-black transition-all active:scale-95"
+                >
+                  Complete Payment
+                </RButton>
+                <p className="mt-3 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Please complete your payment to proceed with your order.
+                </p>
+              </div>
+            );
+          }
+          if (status === "PENDING" || status === "ACCEPTED") {
+            return (
+              <div className="mt-8 rounded-2xl border border-red-100 bg-red-50/30 p-4 dark:border-red-900/20 dark:bg-red-900/10">
+                <RButton
+                  block
+                  appearance="ghost"
+                  color="red"
+                  loading={isCancelling}
+                  onClick={onCancel}
+                  className="!rounded-xl border-2 font-black transition-all active:scale-95"
+                >
+                  Cancel Order
+                </RButton>
+                <p className="mt-3 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  {status === "PENDING"
+                    ? "Full refund will be returned to your wallet."
+                    : "Note: Since the order was accepted, 70% of fees will be refunded (30% retained)."}
+                </p>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
     </div>
   );
@@ -403,19 +483,25 @@ const DesktopOrderDetails = ({
   orderType,
   combinedOrders,
   onContactSupport,
+  onCancel,
+  isCancelling,
   supportTicket,
+  onCompletePayment,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
+  onCancel?: () => void;
+  isCancelling?: boolean;
   supportTicket?: SupportTicketInfo;
+  onCompletePayment?: () => void;
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
       {/* Desktop Content - No Header */}
       <div className="container mx-auto px-8 py-8">
-        <div className="rounded-2xl  shadow-sm ">
+        <div className="rounded-2xl shadow-sm">
           {orderType === "reel" ? (
             <UserReelOrderDetails
               order={order}
@@ -443,6 +529,69 @@ const DesktopOrderDetails = ({
             />
           )}
         </div>
+
+        {/* Desktop Cancellation Section (Bottom) */}
+        {(() => {
+          const status = order?.status?.toUpperCase();
+          if (status === "AWAITING_PAYMENT") {
+            return (
+              <div className="mt-8 flex items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/30 p-6 dark:border-orange-900/20 dark:bg-orange-900/10">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                    <Info className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">
+                      Complete Payment
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Please complete your payment to proceed with your order.
+                    </p>
+                  </div>
+                </div>
+                <RButton
+                  appearance="primary"
+                  color="orange"
+                  onClick={onCompletePayment}
+                  className="!rounded-xl border-2 !px-8 !py-3 font-black transition-all active:scale-95"
+                >
+                  Complete Payment
+                </RButton>
+              </div>
+            );
+          }
+          if (status === "PENDING" || status === "ACCEPTED") {
+            return (
+              <div className="mt-8 flex items-center justify-between rounded-2xl border border-red-100 bg-red-50/30 p-6 dark:border-red-900/20 dark:bg-red-900/10">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                    <Info className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">
+                      Order Cancellation
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {status === "PENDING"
+                        ? "You can still cancel this order for a full refund."
+                        : "Order accepted. Cancellation involves a 30% fee split."}
+                    </p>
+                  </div>
+                </div>
+                <RButton
+                  appearance="ghost"
+                  color="red"
+                  loading={isCancelling}
+                  onClick={onCancel}
+                  className="!rounded-xl border-2 !px-8 !py-3 font-black transition-all hover:!bg-red-50 active:scale-95"
+                >
+                  Cancel Order
+                </RButton>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
     </div>
   );
@@ -463,6 +612,9 @@ function ViewOrderDetailsPage() {
     ticket_num: number;
     status: string;
   } | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Fetch support ticket for this order (subject = "Order issue #orderRef")
   const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
@@ -490,6 +642,43 @@ function ViewOrderDetailsPage() {
       setSupportTicket(null);
     }
   }, []);
+
+  const handleCancelOrder = async () => {
+    if (!order?.id || !orderType) {
+      return;
+    }
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/orders/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id, orderType }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toaster.push(
+          <Message type="success" closable>
+            Order cancelled successfully. Refund processed to your wallet.
+          </Message>,
+          { placement: "topCenter" }
+        );
+        router.push("/CurrentPendingOrders");
+      } else {
+        throw new Error(data.error || "Failed to cancel order");
+      }
+    } catch (e: any) {
+      toaster.push(
+        <Message type="error" closable>
+          {e.message}
+        </Message>,
+        { placement: "topCenter" }
+      );
+    } finally {
+      setIsCancelling(false);
+      setShowCancelModal(false);
+    }
+  };
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -742,6 +931,44 @@ function ViewOrderDetailsPage() {
     );
   }
 
+  const calculateRefundDetails = () => {
+    if (!order) return { refund: 0, deduction: 0 };
+    const totalRaw =
+      order.total || order.delivery_fee || order.transportation_fee || "0";
+    const deliveryFee = parseFloat(
+      order.deliveryFee || order.delivery_fee || "0"
+    );
+    const serviceFee = parseFloat(order.serviceFee || order.service_fee || "0");
+    const totalFees = deliveryFee + serviceFee;
+
+    let grandTotal = 0;
+    let subtotal = 0;
+
+    if (orderType === "regular") {
+      subtotal = parseFloat(order.total || "0");
+      grandTotal = subtotal + totalFees;
+    } else {
+      grandTotal = parseFloat(order.total || order.delivery_fee || "0");
+      subtotal = grandTotal - totalFees;
+    }
+
+    const status = order.status?.toUpperCase();
+    let refund = 0;
+    let deduction = 0;
+
+    if (status === "PENDING" || status === "AWAITING_PAYMENT") {
+      refund = grandTotal;
+      deduction = 0;
+    } else if (status === "ACCEPTED") {
+      refund = subtotal + 0.7 * totalFees;
+      deduction = 0.3 * totalFees;
+    }
+
+    return { refund: Math.max(0, refund), deduction: Math.max(0, deduction) };
+  };
+
+  const { refund, deduction } = calculateRefundDetails();
+
   // Always show Contact support for business (store) and reel orders; for others show when "ready for pickup" or no ticket
   const isReadyForPickup =
     order?.status &&
@@ -763,6 +990,9 @@ function ViewOrderDetailsPage() {
             combinedOrders={combinedOrders}
             onContactSupport={showContactSupport}
             supportTicket={supportTicket}
+            onCancel={() => setShowCancelModal(true)}
+            isCancelling={isCancelling}
+            onCompletePayment={() => setShowPaymentModal(true)}
           />
         </div>
 
@@ -774,8 +1004,22 @@ function ViewOrderDetailsPage() {
             combinedOrders={combinedOrders}
             onContactSupport={showContactSupport}
             supportTicket={supportTicket}
+            onCancel={() => setShowCancelModal(true)}
+            isCancelling={isCancelling}
+            onCompletePayment={() => setShowPaymentModal(true)}
           />
         </div>
+
+        {/* Cancellation Confirmation Modal */}
+        <CancelOrderModal
+          open={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          order={order}
+          refund={refund}
+          deduction={deduction}
+          handleCancelOrder={handleCancelOrder}
+          isCancelling={isCancelling}
+        />
 
         <ContactSupportModal
           open={showSupportModal}
@@ -784,6 +1028,20 @@ function ViewOrderDetailsPage() {
           orderType={orderType ?? "regular"}
           onSuccess={() => fetchSupportTicket(order)}
         />
+
+        {/* Payment Modal */}
+        {order && showPaymentModal && (
+          <CompletePaymentModal
+            open={showPaymentModal}
+            order={order}
+            orderType={(orderType as string) ?? "regular"}
+            onClose={() => setShowPaymentModal(false)}
+            onSuccess={() => {
+              setShowPaymentModal(false);
+              router.reload();
+            }}
+          />
+        )}
 
         {/* Mobile-specific styles for full-width layout */}
         <style jsx global>{`

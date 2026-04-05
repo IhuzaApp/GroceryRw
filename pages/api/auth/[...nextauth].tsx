@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { GraphQLClient, gql } from "graphql-request";
 import bcrypt from "bcryptjs";
 
@@ -129,43 +130,17 @@ export const authOptions: NextAuthOptions = {
           gender: user.gender,
           role: user.role,
           is_guest: user.is_guest || false,
-        } as any;
+        };
       },
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_ID!,
+      clientSecret: process.env.GOOGLE_SECRET!,
     }),
   ],
   session: { strategy: "jwt" },
   jwt: { secret: NEXTAUTH_SECRET },
   secret: NEXTAUTH_SECRET,
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-      },
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-      },
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-      },
-    },
-  },
-  useSecureCookies: process.env.NEXTAUTH_SECURE_COOKIES === "true",
   pages: {
     signIn: "/Auth/Login",
     signOut: "/",
@@ -178,13 +153,55 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          // Check if user exists in Hasura
+          const query = gql`
+            query GetUserByEmail($email: String!) {
+              Users(where: { email: { _eq: $email } }) {
+                id
+                phone
+                gender
+              }
+            }
+          `;
+          const res = await hasuraClient.request<{
+            Users: Array<{ id: string; phone?: string; gender?: string }>;
+          }>(query, { email: user.email! });
+
+          if (res.Users.length === 0) {
+            // New user from Google
+            // Instead of inserting, redirect to complete profile
+            const params = new URLSearchParams({
+              email: user.email || "",
+              name: user.name || "",
+              image: user.image || "",
+            });
+            return `/Auth/CompleteProfile?${params.toString()}`;
+          } else {
+            // Existing user
+            const existingUser = res.Users[0];
+            (user as any).id = existingUser.id;
+            (user as any).isProfileComplete = !!(
+              existingUser.phone && existingUser.gender
+            );
+          }
+        } catch (error) {
+          console.error("Error in signIn callback:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.phone = (user as any).phone;
-        token.gender = (user as any).gender;
-        token.role = (user as any).role;
-        token.is_guest = (user as any).is_guest || false;
+        token.phone = user.phone;
+        token.gender = user.gender;
+        token.role = user.role || "user";
+        token.is_guest = user.is_guest || false;
+        token.isProfileComplete = user.isProfileComplete;
       } else if (token.id) {
         // If no user but we have a token ID, fetch the latest user data
         // This ensures we always have the latest role and guest status
@@ -195,18 +212,31 @@ export const authOptions: NextAuthOptions = {
                 id
                 role
                 is_guest
+                phone
+                gender
               }
             }
           `;
 
           const res = await hasuraClient.request<{
-            Users_by_pk: { id: string; role: string; is_guest?: boolean };
+            Users_by_pk: {
+              id: string;
+              role: string;
+              is_guest?: boolean;
+              phone?: string;
+              gender?: string;
+            };
           }>(query, { id: token.id });
 
           if (res.Users_by_pk) {
             // Update the role and guest status in the token
             token.role = res.Users_by_pk.role;
             token.is_guest = res.Users_by_pk.is_guest || false;
+            token.phone = res.Users_by_pk.phone;
+            token.gender = res.Users_by_pk.gender;
+            token.isProfileComplete = !!(
+              res.Users_by_pk.phone && res.Users_by_pk.gender
+            );
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -224,11 +254,12 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (token && session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).phone = (token as any).phone;
-        (session.user as any).gender = (token as any).gender;
-        (session.user as any).role = (token as any).role;
-        (session.user as any).is_guest = (token as any).is_guest || false;
+        session.user.id = token.id as string;
+        session.user.phone = token.phone;
+        session.user.gender = token.gender;
+        session.user.role = token.role;
+        session.user.is_guest = token.is_guest || false;
+        session.user.isProfileComplete = token.isProfileComplete;
       }
       return session;
     },
