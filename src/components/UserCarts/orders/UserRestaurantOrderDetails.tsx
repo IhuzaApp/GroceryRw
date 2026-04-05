@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
@@ -81,7 +81,7 @@ export default function UserRestaurantOrderDetails({
 
     // Calculate total preparation time from all dishes
     const totalPrepTimeMinutes =
-      order.restaurant_order_items?.reduce((total, item) => {
+      order.restaurant_order_items?.reduce((total: number, item: any) => {
         const prepTime = item.dish?.preparingTime || "0min";
         const minutes = parseInt(prepTime.replace(/[^\d]/g, "")) || 0;
         return Math.max(total, minutes); // Use the longest preparation time
@@ -170,7 +170,6 @@ export default function UserRestaurantOrderDetails({
 
       setFeedbackModal(false);
       setHasExistingRating(true);
-      Message.success("Thank you for your feedback!");
     } catch (error) {
       console.error("Error submitting rating:", error);
       setSubmitError(
@@ -194,6 +193,8 @@ export default function UserRestaurantOrderDetails({
         return "Picked and on the way";
       case "DELIVERED":
         return "Delivered to you";
+      case "CANCELLED":
+        return "Cancelled";
       default:
         return "Ongoing";
     }
@@ -318,6 +319,8 @@ export default function UserRestaurantOrderDetails({
                     ? "bg-purple-100 dark:bg-purple-900/20"
                     : order.status === "DELIVERED"
                     ? "bg-green-100 dark:bg-green-900/20"
+                    : order.status === "CANCELLED"
+                    ? "bg-red-100 dark:bg-red-900/20"
                     : "bg-gray-100 dark:bg-gray-900/20"
                 }`}
               >
@@ -335,6 +338,8 @@ export default function UserRestaurantOrderDetails({
                       ? "text-purple-600 dark:text-purple-400"
                       : order.status === "DELIVERED"
                       ? "text-green-600 dark:text-green-400"
+                      : order.status === "CANCELLED"
+                      ? "text-red-600 dark:text-red-400"
                       : "text-gray-600 dark:text-gray-400"
                   }`}
                   fill="none"
@@ -408,6 +413,8 @@ export default function UserRestaurantOrderDetails({
                       ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
                       : order.status === "DELIVERED"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                      : order.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
                       : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
                   }`}
                 >
@@ -430,6 +437,7 @@ export default function UserRestaurantOrderDetails({
               {order.status === "DELIVERED" &&
                 !order.delivery_photo_url &&
                 "Order has been delivered successfully"}
+              {order.status === "CANCELLED" && "This order has been cancelled"}
             </div>
 
             {/* Delivery Proof Image for Mobile */}

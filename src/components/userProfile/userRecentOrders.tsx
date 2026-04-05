@@ -273,8 +273,8 @@ export default function UserRecentOrders({
     // For "Completed" (done filter): show only delivered orders
     const matchesFilter =
       filter === "pending"
-        ? order.status !== "delivered"
-        : order.status === "delivered";
+        ? order.status !== "delivered" && order.status !== "cancelled"
+        : order.status === "delivered" || order.status === "cancelled";
 
     // Apply search filter
     if (!searchQuery.trim()) return matchesFilter;
@@ -424,8 +424,12 @@ export default function UserRecentOrders({
                   href={`/CurrentPendingOrders/viewOrderDetails/${order.id}${
                     order.orderType ? `?type=${order.orderType}` : ""
                   }`}
-                  className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
+                  className={`group block overflow-hidden rounded-xl border bg-white p-4 shadow-md transition-all duration-300 hover:shadow-xl dark:bg-gray-800 dark:shadow-md dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
                     isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
+                  } ${
+                    order.status === "cancelled"
+                      ? "border-red-500/50 hover:border-red-500 dark:border-red-900/50 dark:hover:border-red-500"
+                      : "border-gray-200 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-500"
                   }`}
                 >
                   <div className="flex items-center gap-3 md:gap-4">

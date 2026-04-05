@@ -418,6 +418,23 @@ function PackageDetailsPage() {
 
   const statusInfo = getPackageStatusInfo(pkg.status);
 
+  const calculateRefundDetails = () => {
+    if (!pkg) return { refund: 0, deduction: 0 };
+    const total = parseFloat(String(pkg.delivery_fee || "0"));
+    const status = pkg.status?.toUpperCase();
+    
+    if (status === "PENDING" || status === "AWAITING_PAYMENT") {
+      return { refund: total, deduction: 0 };
+    } else if (status === "ACCEPTED") {
+      const refund = 0.7 * total;
+      const deduction = 0.3 * total;
+      return { refund: Math.max(0, refund), deduction: Math.max(0, deduction) };
+    }
+    return { refund: 0, deduction: 0 };
+  };
+
+  const { refund, deduction } = calculateRefundDetails();
+
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
@@ -814,9 +831,22 @@ function PackageDetailsPage() {
               <h3 className="mb-2 text-center text-2xl font-black tracking-tight text-gray-900 dark:text-white">
                 Cancel Delivery?
               </h3>
-              <p className="mb-8 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                Are you sure you want to cancel this package delivery? The refund will be processed to your wallet.
+              <p className="mb-4 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                Are you sure you want to cancel this package delivery?
               </p>
+
+              <div className="mb-8 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/20">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Refund to Wallet</span>
+                  <span className="font-bold text-green-600 dark:text-green-400">+{refund.toLocaleString()} RWF</span>
+                </div>
+                {deduction > 0 && (
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Cancellation Fee (30% of fee)</span>
+                    <span className="font-bold text-red-500">-{deduction.toLocaleString()} RWF</span>
+                  </div>
+                )}
+              </div>
 
               {pkg?.status?.toUpperCase() === "ACCEPTED" && (
                 <div className="mb-8 w-full overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/50 p-4 backdrop-blur-sm dark:border-orange-900/20 dark:bg-orange-900/10">

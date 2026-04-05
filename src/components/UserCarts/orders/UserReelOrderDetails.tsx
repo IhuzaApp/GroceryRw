@@ -57,6 +57,10 @@ export default function UserReelOrderDetails({
   }, [order?.id]);
 
   const getStatusStep = (status: string, assignedTo: any) => {
+    // Handle cancelled status first
+    if (status === "cancelled") {
+      return -1;
+    }
     // If no Plaser is assigned yet
     if (!assignedTo) {
       return 0;
@@ -157,6 +161,13 @@ export default function UserReelOrderDetails({
       };
     }
 
+    if (normalized === "cancelled") {
+      return {
+        label: "Cancelled",
+        description: "This order has been cancelled",
+      };
+    }
+
     return {
       label: "Ongoing",
       description: "Your order is being processed",
@@ -217,7 +228,16 @@ export default function UserReelOrderDetails({
           {isMobile ? (
             // Mobile: Simple status display or Plaser details
             <div className="py-4">
-              {order.status === "delivered" ? (
+              {order.status === "cancelled" ? (
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                    Cancelled
+                  </div>
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    This order has been cancelled
+                  </div>
+                </div>
+              ) : order.status === "delivered" ? (
                 <div className="text-center">
                   <div className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
                     Delivered
@@ -320,46 +340,58 @@ export default function UserReelOrderDetails({
           ) : (
             // Desktop: Full steps display
             <div className="custom-steps-wrapper">
-              <Steps
-                current={getStatusStep(order.status, order.assignedTo)}
-                className="custom-steps"
-                vertical={false}
-              >
-                <Steps.Item
-                  title="Waiting to be accepted"
-                  description="Order placed"
-                />
-                <Steps.Item
-                  title="Accepted"
-                  description="Shopper accepted your order"
-                />
-                <Steps.Item
-                  title="Picked & on the way"
-                  description="On the way for delivery"
-                />
-                <Steps.Item
-                  title="Delivered to you"
-                  description="Order completed"
-                />
-              </Steps>
-
-              {/* Delivery Proof Image for Desktop */}
-              {order.status === "delivered" && order.delivery_photo_url && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-                    Delivery Proof
-                  </h3>
-                  <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
-                    <Image
-                      src={order.delivery_photo_url}
-                      alt="Delivery proof"
-                      width={448}
-                      height={448}
-                      className="h-auto w-full object-cover"
-                      unoptimized
-                    />
+              {order.status === "cancelled" ? (
+                <div className="rounded-xl bg-red-50 p-8 text-center text-red-600 dark:bg-red-900/10">
+                  <div className="text-2xl font-bold">Order Cancelled</div>
+                  <div className="mt-2 text-gray-500 dark:text-gray-400">
+                    This order has been cancelled and a refund has been
+                    processed.
                   </div>
                 </div>
+              ) : (
+                <>
+                  <Steps
+                    current={getStatusStep(order.status, order.assignedTo)}
+                    className="custom-steps"
+                    vertical={false}
+                  >
+                    <Steps.Item
+                      title="Waiting to be accepted"
+                      description="Order placed"
+                    />
+                    <Steps.Item
+                      title="Accepted"
+                      description="Shopper accepted your order"
+                    />
+                    <Steps.Item
+                      title="Picked & on the way"
+                      description="On the way for delivery"
+                    />
+                    <Steps.Item
+                      title="Delivered to you"
+                      description="Order completed"
+                    />
+                  </Steps>
+
+                  {/* Delivery Proof Image for Desktop */}
+                  {order.status === "delivered" && order.delivery_photo_url && (
+                    <div className="mt-6">
+                      <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+                        Delivery Proof
+                      </h3>
+                      <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                        <Image
+                          src={order.delivery_photo_url}
+                          alt="Delivery proof"
+                          width={448}
+                          height={448}
+                          className="h-auto w-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

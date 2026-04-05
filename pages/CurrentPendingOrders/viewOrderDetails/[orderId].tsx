@@ -50,7 +50,32 @@ function timeAgo(timestamp: string): string {
 
 // Helper to get order status display info with SVG icons
 function getOrderStatusInfo(order: any) {
-  const isDone = order?.status === "delivered";
+  const currentStatus = String(order?.status || "").toLowerCase();
+  
+  if (currentStatus === "cancelled") {
+    return {
+      status: "Cancelled",
+      color: "red",
+      icon: (
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      ),
+      description: "This order has been cancelled",
+    };
+  }
+
+  const isDone = currentStatus === "delivered" || currentStatus === "completed";
   const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
 
   if (isDone) {
@@ -849,6 +874,28 @@ function ViewOrderDetailsPage() {
     );
   }
 
+  const calculateRefundDetails = () => {
+    if (!order) return { refund: 0, deduction: 0 };
+    const totalRaw = order.total || order.delivery_fee || order.transportation_fee || "0";
+    const total = parseFloat(String(totalRaw));
+    const dFee = parseFloat(String(order.delivery_fee || order.transportation_fee || "0"));
+    const sFee = parseFloat(String(order.service_fee || "0"));
+    const totalFees = dFee + sFee;
+    const subtotal = Math.max(0, total - totalFees);
+    
+    const status = order.status?.toUpperCase();
+    if (status === "PENDING") {
+      return { refund: total, deduction: 0 };
+    } else if (status === "ACCEPTED") {
+      const refund = subtotal + (0.7 * totalFees);
+      const deduction = 0.3 * totalFees;
+      return { refund, deduction };
+    }
+    return { refund: 0, deduction: 0 };
+  };
+
+  const { refund, deduction } = calculateRefundDetails();
+
   // Always show Contact support for business (store) and reel orders; for others show when "ready for pickup" or no ticket
   const isReadyForPickup =
     order?.status &&
@@ -909,9 +956,22 @@ function ViewOrderDetailsPage() {
               <h3 className="mb-2 text-center text-2xl font-black tracking-tight text-gray-900 dark:text-white">
                 Cancel Order?
               </h3>
-              <p className="mb-8 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                Are you sure you want to cancel this order? This action will process an automatic refund to your wallet.
+              <p className="mb-4 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                Are you sure you want to cancel this order?
               </p>
+
+              <div className="mb-8 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/20">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Refund to Wallet</span>
+                  <span className="font-bold text-green-600 dark:text-green-400">+{refund.toLocaleString()} RWF</span>
+                </div>
+                {deduction > 0 && (
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Cancellation Fee (30% of fees)</span>
+                    <span className="font-bold text-red-500">-{deduction.toLocaleString()} RWF</span>
+                  </div>
+                )}
+              </div>
 
               {order?.status?.toUpperCase() === "ACCEPTED" && (
                 <div className="mb-8 w-full overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/50 p-4 backdrop-blur-sm dark:border-orange-900/20 dark:bg-orange-900/10">

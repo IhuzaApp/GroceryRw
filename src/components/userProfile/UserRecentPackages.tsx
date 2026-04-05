@@ -163,7 +163,11 @@ export default function UserRecentPackages({
           <Link
             key={pkg.id}
             href={`/CurrentPendingOrders/viewPackageDetails/${pkg.id}`}
-            className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:border-green-200 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800/40"
+            className={`group relative overflow-hidden rounded-2xl border bg-white p-5 transition-all hover:shadow-xl dark:bg-gray-800/40 ${
+              pkg.status === "cancelled"
+                ? "border-red-500/50 hover:border-red-500 dark:border-red-900/50 dark:hover:border-red-500"
+                : "border-gray-100 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-500"
+            }`}
           >
             <div className="flex items-start gap-4">
               {/* Package Icon/Image */}

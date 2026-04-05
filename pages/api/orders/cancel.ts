@@ -58,9 +58,59 @@ const GET_PACKAGE_ORDER = gql`
   }
 `;
 
-const UPDATE_ORDER_STATUS = (table: string) => gql`
+const GET_BUSINESS_ORDER = gql`
+  query GetBusinessOrder($id: uuid!) {
+    businessProductOrders_by_pk(id: $id) {
+      id
+      total
+      service_fee
+      transportation_fee
+      status
+      ordered_by
+      shopper_id
+    }
+  }
+`;
+
+const UPDATE_ORDER_STATUS = gql`
   mutation UpdateOrderStatus($id: uuid!, $status: String!) {
-    update_${table}_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+      id
+      status
+    }
+  }
+`;
+
+const UPDATE_REEL_ORDER_STATUS = gql`
+  mutation UpdateReelOrderStatus($id: uuid!, $status: String!) {
+    update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+      id
+      status
+    }
+  }
+`;
+
+const UPDATE_RESTAURANT_ORDER_STATUS = gql`
+  mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!) {
+    update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+      id
+      status
+    }
+  }
+`;
+
+const UPDATE_PACKAGE_ORDER_STATUS = gql`
+  mutation UpdatePackageOrderStatus($id: uuid!, $status: String!) {
+    update_package_delivery_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+      id
+      status
+    }
+  }
+`;
+
+const UPDATE_BUSINESS_ORDER_STATUS = gql`
+  mutation UpdateBusinessOrderStatus($id: uuid!, $status: String!) {
+    update_businessProductOrders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) {
       id
       status
     }
@@ -93,18 +143,24 @@ const GET_SHOPPER_WALLET = gql`
     Wallets(where: { shopper_id: { _eq: $shopper_id } }) {
       id
       available_balance
+      reserved_balance
     }
   }
 `;
 
 const UPDATE_SHOPPER_WALLET = gql`
-  mutation UpdateShopperWallet($wallet_id: uuid!, $available_balance: String!) {
+  mutation UpdateShopperWallet($wallet_id: uuid!, $available_balance: String!, $reserved_balance: String!) {
     update_Wallets_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: { available_balance: $available_balance, last_updated: "now()" }
+      _set: { 
+        available_balance: $available_balance, 
+        reserved_balance: $reserved_balance, 
+        last_updated: "now()" 
+      }
     ) {
       id
       available_balance
+      reserved_balance
     }
   }
 `;
@@ -125,6 +181,22 @@ const CREATE_SHOPPER_TRANSACTION = gql`
   }
 `;
 
+const CREATE_PERSONAL_WALLET_TRANSACTION = gql`
+  mutation CreatePersonalWalletTransaction($object: personalWalletTransactions_insert_input!) {
+    insert_personalWalletTransactions_one(object: $object) {
+      id
+    }
+  }
+`;
+
+const CREATE_ORDER_TRANSACTION = gql`
+  mutation CreateOrderTransaction($object: order_transactions_insert_input!) {
+    insert_order_transactions_one(object: $object) {
+      id
+    }
+  }
+`;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -139,7 +211,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { orderId, orderType } = req.body;
+  const { orderId } = req.body;
+  const orderType = (req.body.orderType || "").toLowerCase();
+  
   if (!orderId || !orderType) {
     return res.status(400).json({ error: "Missing orderId or orderType" });
   }
@@ -166,8 +240,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         order = (await hasuraClient.request<any>(GET_PACKAGE_ORDER, { id: orderId })).package_delivery_by_pk;
         table = "package_delivery";
         break;
+      case "business":
+        order = (await hasuraClient.request<any>(GET_BUSINESS_ORDER, { id: orderId })).businessProductOrders_by_pk;
+        table = "businessProductOrders";
+        if (order) {
+          // Map business fields to standard ones for the rest of the logic
+          order.user_id = order.ordered_by;
+          order.delivery_fee = order.transportation_fee;
+        }
+        break;
       default:
-        return res.status(400).json({ error: "Invalid order type" });
+        return res.status(400).json({ error: `Invalid order type: ${orderType}` });
     }
 
     if (!order) {
@@ -204,7 +287,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 4. Perform Updates
     // A. Update Order Status
-    await hasuraClient.request(UPDATE_ORDER_STATUS(table), { id: orderId, status: "CANCELLED" });
+    let updateMutation: any;
+    let resultKey = "";
+    switch (orderType) {
+      case "regular": 
+        updateMutation = UPDATE_ORDER_STATUS; 
+        resultKey = "update_Orders_by_pk";
+        break;
+      case "reel": 
+        updateMutation = UPDATE_REEL_ORDER_STATUS; 
+        resultKey = "update_reel_orders_by_pk";
+        break;
+      case "restaurant": 
+        updateMutation = UPDATE_RESTAURANT_ORDER_STATUS; 
+        resultKey = "update_restaurant_orders_by_pk";
+        break;
+      case "package": 
+        updateMutation = UPDATE_PACKAGE_ORDER_STATUS; 
+        resultKey = "update_package_delivery_by_pk";
+        break;
+      case "business": 
+        updateMutation = UPDATE_BUSINESS_ORDER_STATUS; 
+        resultKey = "update_businessProductOrders_by_pk";
+        break;
+    }
+    const updateResult = await hasuraClient!.request<any>(updateMutation, { id: orderId, status: "cancelled" });
+    if (!updateResult[resultKey]) {
+      console.error(`Status update failed for ${orderType} ${orderId}: Order not found in ${table}`);
+      return res.status(404).json({ error: `${orderType} order not found for status update` });
+    }
 
     // B. Refund User
     if (userRefundAmount > 0) {
@@ -214,46 +325,130 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const newBalance = (parseFloat(wallet.balance) + userRefundAmount).toFixed(2);
         await hasuraClient.request(UPDATE_USER_WALLET, { user_id: order.user_id, balance: newBalance });
         
-        // Record refund
-        await hasuraClient.request(CREATE_REFUND_RECORD, {
+        // C. Record Refund (Only for regular orders due to schema constraints)
+        if (orderType === 'regular') {
+          await hasuraClient!.request(CREATE_REFUND_RECORD, {
+            object: {
+              user_id: order.user_id, // Use the order's user_id
+              order_id: orderId,
+              amount: userRefundAmount.toFixed(0),
+              status: "COMPLETED",
+              reason: `Order cancelled by user (${currentStatus})`,
+              paid: true,
+              generated_by: "System"
+            }
+          });
+        }
+
+        // Record in personalWalletTransactions
+        await hasuraClient.request(CREATE_PERSONAL_WALLET_TRANSACTION, {
+          object: {
+            wallet_id: wallet.id,
+            amount: userRefundAmount.toString(),
+            currency: "RWF",
+            action: "Refund",
+            status: "Completed",
+            doneBy: session.user.id,
+            reference_id: `REFUND-${orderId.slice(-8)}`
+          }
+        });
+
+        // Record in order_transactions
+        await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
           object: {
             user_id: order.user_id,
+            wallet_id: wallet.id,
+            amount: userRefundAmount.toString(),
+            currency: "RWF",
+            type: "Refund",
+            status: "Completed",
             order_id: orderType === 'regular' ? orderId : null,
             reel_order_id: orderType === 'reel' ? orderId : null,
             restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-            package_delivery_id: orderType === 'package' ? orderId : null,
-            amount: userRefundAmount.toString(),
-            status: "COMPLETED",
-            reason: `Order cancelled by user (${currentStatus})`,
-            paid: true,
-            generated_by: "System"
+            package_id: orderType === 'package' ? orderId : null,
+            business_order_id: orderType === 'business' ? orderId : null,
+            reference_id: `REFUND-${orderId.slice(-8)}`
           }
         });
       }
     }
 
-    // C. Payout Shopper
-    if (shopperPayoutAmount > 0 && order.shopper_id) {
+    // C. Payout Shopper & Float Reversal
+    if (order.shopper_id) {
       const shopperWalletData = await hasuraClient.request<any>(GET_SHOPPER_WALLET, { shopper_id: order.shopper_id });
       const shopperWallet = shopperWalletData.Wallets?.[0];
       if (shopperWallet) {
-        const newBalance = (parseFloat(shopperWallet.available_balance) + shopperPayoutAmount).toFixed(2);
-        await hasuraClient.request(UPDATE_SHOPPER_WALLET, { wallet_id: shopperWallet.id, available_balance: newBalance });
+        let newAvailable = parseFloat(shopperWallet.available_balance);
+        let newReserved = parseFloat(shopperWallet.reserved_balance);
+        let updated = false;
 
-        // Record payout
-        await hasuraClient.request(CREATE_SHOPPER_TRANSACTION, {
-          object: {
+        // 1. Payout 30% Earnings (If ACCEPTED)
+        if (shopperPayoutAmount > 0) {
+          newAvailable += shopperPayoutAmount;
+          updated = true;
+
+          // Record payout transaction
+          await hasuraClient.request(CREATE_SHOPPER_TRANSACTION, {
+            object: {
+              wallet_id: shopperWallet.id,
+              amount: shopperPayoutAmount.toFixed(2),
+              currency: "RWF",
+              type: "earnings",
+              status: "completed",
+              related_order_id: orderType === 'regular' ? orderId : null,
+              related_reel_orderId: orderType === 'reel' ? orderId : null,
+              related_restaurant_order_id: orderType === 'restaurant' ? orderId : null,
+              relate_business_order_id: orderType === 'business' ? orderId : null,
+              description: `Compensation for cancelled order (${orderId})`
+            }
+          });
+
+          // Record in order_transactions
+          await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
+            object: {
+              user_id: session.user.id,
+              wallet_id: shopperWallet.id,
+              amount: shopperPayoutAmount.toFixed(2),
+              currency: "RWF",
+              type: "Payout",
+              status: "Completed",
+              order_id: orderType === 'regular' ? orderId : null,
+              reel_order_id: orderType === 'reel' ? orderId : null,
+              restaurant_order_id: orderType === 'restaurant' ? orderId : null,
+              package_id: orderType === 'package' ? orderId : null,
+              business_order_id: orderType === 'business' ? orderId : null,
+              reference_id: `PAYOUT-${orderId.slice(-8)}`
+            }
+          });
+        }
+
+        // 2. Float Reversal (Reels Only - added during assignment)
+        if (orderType === "reel" && currentStatus === "ACCEPTED") {
+          newReserved -= total;
+          updated = true;
+
+          // Record reversal transaction
+          await hasuraClient.request(CREATE_SHOPPER_TRANSACTION, {
+            object: {
+              wallet_id: shopperWallet.id,
+              amount: total.toFixed(2),
+              currency: "RWF",
+              type: "reserve_reversal",
+              status: "completed",
+              related_reel_orderId: orderId,
+              description: `Float reversal for cancelled reel order (${orderId})`
+            }
+          });
+        }
+
+        // Apply wallet changes if any
+        if (updated) {
+          await hasuraClient.request(UPDATE_SHOPPER_WALLET, {
             wallet_id: shopperWallet.id,
-            amount: shopperPayoutAmount.toFixed(2),
-            currency: "RWF",
-            type: "earnings",
-            status: "completed",
-            related_order_id: orderType === 'regular' ? orderId : null,
-            related_reel_orderId: orderType === 'reel' ? orderId : null,
-            related_restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-            description: `Compensation for cancelled order (${orderId})`
-          }
-        });
+            available_balance: newAvailable.toFixed(2),
+            reserved_balance: newReserved.toFixed(2)
+          });
+        }
       }
     }
 

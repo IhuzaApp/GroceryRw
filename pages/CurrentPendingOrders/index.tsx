@@ -270,9 +270,11 @@ function CurrentOrdersPage() {
 
   // Count all orders that are not delivered for "Ongoing" (includes unassigned orders)
   const pendingCount = orders.filter((o) => {
-    return o.status !== "delivered";
+    return o.status !== "delivered" && o.status !== "cancelled";
   }).length;
-  const completedCount = orders.filter((o) => o.status === "delivered").length;
+  const completedCount = orders.filter(
+    (o) => o.status === "delivered" || o.status === "cancelled"
+  ).length;
   const packagesCount = packages.length;
 
   return (

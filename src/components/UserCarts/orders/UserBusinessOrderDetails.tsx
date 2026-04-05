@@ -147,6 +147,8 @@ export default function UserBusinessOrderDetails({
           className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
             (order?.status || "").toLowerCase() === "delivered"
               ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+              : (order?.status || "").toLowerCase() === "cancelled"
+              ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
               : "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
           }`}
         >

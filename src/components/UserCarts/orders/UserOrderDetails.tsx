@@ -189,7 +189,16 @@ export default function UserOrderDetails({
           {isMobile ? (
             // Mobile: Simple status display or Plaser details
             <div className="py-4">
-              {order.status === "delivered" ? (
+              {order.status === "cancelled" ? (
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                    Cancelled
+                  </div>
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    This order has been cancelled
+                  </div>
+                </div>
+              ) : order.status === "delivered" ? (
                 <div className="text-center">
                   <div className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
                     Delivered
@@ -317,6 +326,8 @@ export default function UserOrderDetails({
                       ? "Packing"
                       : order.status === "shopping"
                       ? "Shopping"
+                      : order.status === "cancelled"
+                      ? "Cancelled"
                       : "Pending Assignment"}
                   </div>
                   <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -326,6 +337,8 @@ export default function UserOrderDetails({
                       ? "Preparing for delivery"
                       : order.status === "shopping"
                       ? "Picking your items"
+                      : order.status === "cancelled"
+                      ? "This order has been cancelled"
                       : "Waiting for assignment"}
                   </div>
                 </div>
