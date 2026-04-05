@@ -56,6 +56,8 @@ export default function UserRestaurantOrderDetails({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
 
+  const status = (order.status || "").toUpperCase();
+
   // Check for existing rating
   useEffect(() => {
     const checkExistingRating = async () => {
@@ -181,7 +183,6 @@ export default function UserRestaurantOrderDetails({
   };
 
   const getOrderStatus = () => {
-    const status = (order.status || "").toUpperCase();
     switch (status) {
       case "WAITING_FOR_CONFIRMATION":
       case "PENDING":
@@ -219,7 +220,6 @@ export default function UserRestaurantOrderDetails({
   };
 
   const getCurrentStep = () => {
-    const status = (order.status || "").toUpperCase();
     switch (status) {
       case "WAITING_FOR_CONFIRMATION":
       case "PENDING":
@@ -307,38 +307,38 @@ export default function UserRestaurantOrderDetails({
             <div className="flex items-center gap-3">
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                  order.status === "WAITING_FOR_CONFIRMATION"
+                  status === "WAITING_FOR_CONFIRMATION"
                     ? "bg-yellow-100 dark:bg-yellow-900/20"
-                    : order.status === "PENDING"
+                    : status === "PENDING"
                     ? "bg-blue-100 dark:bg-blue-900/20"
-                    : order.status === "CONFIRMED"
+                    : status === "CONFIRMED"
                     ? "bg-blue-100 dark:bg-blue-900/20"
-                    : order.status === "READY"
+                    : status === "READY"
                     ? "bg-green-100 dark:bg-green-900/20"
-                    : order.status === "OUT_FOR_DELIVERY"
+                    : status === "OUT_FOR_DELIVERY"
                     ? "bg-purple-100 dark:bg-purple-900/20"
-                    : order.status === "DELIVERED"
+                    : status === "DELIVERED"
                     ? "bg-green-100 dark:bg-green-900/20"
-                    : order.status === "CANCELLED"
+                    : status === "CANCELLED"
                     ? "bg-red-100 dark:bg-red-900/20"
                     : "bg-gray-100 dark:bg-gray-900/20"
                 }`}
               >
                 <svg
                   className={`h-5 w-5 ${
-                    order.status === "WAITING_FOR_CONFIRMATION"
+                    status === "WAITING_FOR_CONFIRMATION"
                       ? "text-yellow-600 dark:text-yellow-400"
-                      : order.status === "PENDING"
+                      : status === "PENDING"
                       ? "text-blue-600 dark:text-blue-400"
-                      : order.status === "CONFIRMED"
+                      : status === "CONFIRMED"
                       ? "text-blue-600 dark:text-blue-400"
-                      : order.status === "READY"
+                      : status === "READY"
                       ? "text-green-600 dark:text-green-400"
-                      : order.status === "OUT_FOR_DELIVERY"
+                      : status === "OUT_FOR_DELIVERY"
                       ? "text-purple-600 dark:text-purple-400"
-                      : order.status === "DELIVERED"
+                      : status === "DELIVERED"
                       ? "text-green-600 dark:text-green-400"
-                      : order.status === "CANCELLED"
+                      : status === "CANCELLED"
                       ? "text-red-600 dark:text-red-400"
                       : "text-gray-600 dark:text-gray-400"
                   }`}
@@ -346,42 +346,42 @@ export default function UserRestaurantOrderDetails({
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  {order.status === "WAITING_FOR_CONFIRMATION" ? (
+                  {status === "WAITING_FOR_CONFIRMATION" ? (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  ) : order.status === "PENDING" ? (
+                  ) : status === "PENDING" ? (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  ) : order.status === "CONFIRMED" ? (
+                  ) : status === "CONFIRMED" ? (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  ) : order.status === "READY" ? (
+                  ) : status === "READY" ? (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M5 13l4 4L19 7"
                     />
-                  ) : order.status === "OUT_FOR_DELIVERY" ? (
+                  ) : status === "OUT_FOR_DELIVERY" ? (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  ) : order.status === "DELIVERED" ? (
+                  ) : status === "DELIVERED" ? (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -401,19 +401,19 @@ export default function UserRestaurantOrderDetails({
               <div className="flex-grow">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium md:px-3 md:py-1 md:text-sm ${
-                    order.status === "WAITING_FOR_CONFIRMATION"
+                    status === "WAITING_FOR_CONFIRMATION"
                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
-                      : order.status === "PENDING"
+                      : status === "PENDING"
                       ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
-                      : order.status === "CONFIRMED"
+                      : status === "CONFIRMED"
                       ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
-                      : order.status === "READY"
+                      : status === "READY"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                      : order.status === "OUT_FOR_DELIVERY"
+                      : status === "OUT_FOR_DELIVERY"
                       ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
-                      : order.status === "DELIVERED"
+                      : status === "DELIVERED"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                      : order.status === "CANCELLED"
+                      : status === "CANCELLED"
                       ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
                       : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
                   }`}
@@ -425,23 +425,23 @@ export default function UserRestaurantOrderDetails({
 
             {/* Status Description */}
             <div className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
-              {order.status === "WAITING_FOR_CONFIRMATION" &&
+              {status === "WAITING_FOR_CONFIRMATION" &&
                 "Restaurant is reviewing your order"}
-              {order.status === "PENDING" &&
+              {status === "PENDING" &&
                 "Order confirmed and being prepared"}
-              {order.status === "CONFIRMED" &&
+              {status === "CONFIRMED" &&
                 "Restaurant is preparing your food"}
-              {order.status === "READY" && "Your order is ready for pickup"}
-              {order.status === "OUT_FOR_DELIVERY" &&
+              {status === "READY" && "Your order is ready for pickup"}
+              {status === "OUT_FOR_DELIVERY" &&
                 "Your order is on the way"}
-              {order.status === "DELIVERED" &&
+              {status === "DELIVERED" &&
                 !order.delivery_photo_url &&
                 "Order has been delivered successfully"}
-              {order.status === "CANCELLED" && "This order has been cancelled"}
+              {status === "CANCELLED" && "This order has been cancelled"}
             </div>
 
             {/* Delivery Proof Image for Mobile */}
-            {order.status === "DELIVERED" && order.delivery_photo_url && (
+            {status === "DELIVERED" && order.delivery_photo_url && (
               <div className="mt-4">
                 <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
                   Delivery Proof
@@ -470,7 +470,7 @@ export default function UserRestaurantOrderDetails({
           </Steps>
 
           {/* Delivery Proof Image for Desktop */}
-          {order.status === "DELIVERED" && order.delivery_photo_url && (
+          {status === "DELIVERED" && order.delivery_photo_url && (
             <div className="mt-6">
               <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
                 Delivery Proof

@@ -121,7 +121,7 @@ function getOrderStatusInfo(order: any) {
       description: "Waiting for assignment",
     };
   } else {
-    switch (order?.status) {
+    switch (currentStatus) {
       case "shopping":
         return {
           status: "Shopping",
@@ -562,6 +562,8 @@ function ViewOrderDetailsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
+  console.log("[CANCELLATION FRONTEND DEBUG] Render ViewOrderDetailsPage", { orderId, orderType, orderStatus: order?.status });
+
   // Fetch support ticket for this order (subject = "Order issue #orderRef")
   const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
     if (!orderObj?.id) return;
@@ -590,7 +592,11 @@ function ViewOrderDetailsPage() {
   }, []);
 
   const handleCancelOrder = async () => {
-    if (!order?.id || !orderType) return;
+    console.log("[CANCELLATION FRONTEND DEBUG] Triggered handleCancelOrder", { id: order?.id, type: orderType });
+    if (!order?.id || !orderType) {
+      console.warn("[CANCELLATION FRONTEND DEBUG] Aborting cancellation: missing id or type", { id: order?.id, type: orderType });
+      return;
+    }
     setIsCancelling(true);
     try {
       const res = await fetch("/api/orders/cancel", {
@@ -599,6 +605,8 @@ function ViewOrderDetailsPage() {
         body: JSON.stringify({ orderId: order.id, orderType }),
       });
       const data = await res.json();
+      console.log("[CANCELLATION FRONTEND DEBUG]", data);
+      
       if (res.ok) {
         toaster.push(
           <Message type="success" closable>
@@ -877,21 +885,47 @@ function ViewOrderDetailsPage() {
   const calculateRefundDetails = () => {
     if (!order) return { refund: 0, deduction: 0 };
     const totalRaw = order.total || order.delivery_fee || order.transportation_fee || "0";
-    const total = parseFloat(String(totalRaw));
-    const dFee = parseFloat(String(order.delivery_fee || order.transportation_fee || "0"));
-    const sFee = parseFloat(String(order.service_fee || "0"));
-    const totalFees = dFee + sFee;
-    const subtotal = Math.max(0, total - totalFees);
+    const deliveryFee = parseFloat(order.deliveryFee || order.delivery_fee || "0");
+    const serviceFee = parseFloat(order.serviceFee || order.service_fee || "0");
+    const totalFees = deliveryFee + serviceFee;
     
-    const status = order.status?.toUpperCase();
-    if (status === "PENDING") {
-      return { refund: total, deduction: 0 };
-    } else if (status === "ACCEPTED") {
-      const refund = subtotal + (0.7 * totalFees);
-      const deduction = 0.3 * totalFees;
-      return { refund, deduction };
+    let grandTotal = 0;
+    let subtotal = 0;
+
+    if (orderType === "regular") {
+      subtotal = parseFloat(order.total || "0");
+      grandTotal = subtotal + totalFees;
+    } else {
+      grandTotal = parseFloat(order.total || order.delivery_fee || "0");
+      subtotal = grandTotal - totalFees;
     }
-    return { refund: 0, deduction: 0 };
+
+    const status = order.status?.toUpperCase();
+    let refund = 0;
+    let deduction = 0;
+
+    if (status === "PENDING" || status === "AWAITING_PAYMENT") {
+      refund = grandTotal;
+      deduction = 0;
+    } else if (status === "ACCEPTED") {
+      refund = subtotal + (0.7 * totalFees);
+      deduction = 0.3 * totalFees;
+    }
+
+    console.log("[CANCELLATION FRONTEND DEBUG] calculateRefundDetails", {
+      orderType,
+      status,
+      rawTotal: order.total,
+      deliveryFee,
+      serviceFee,
+      totalFees,
+      subtotal,
+      grandTotal,
+      calculatedRefund: refund,
+      calculatedDeduction: deduction,
+    });
+
+    return { refund: Math.max(0, refund), deduction: Math.max(0, deduction) };
   };
 
   const { refund, deduction } = calculateRefundDetails();
@@ -990,15 +1024,16 @@ function ViewOrderDetailsPage() {
               )}
 
               <div className="flex w-full flex-col gap-3">
-                <RButton
-                  onClick={handleCancelOrder}
-                  color="red"
-                  appearance="primary"
-                  loading={isCancelling}
-                  className="!rounded-2xl !py-4 text-sm font-black shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                <button
+                  onClick={() => {
+                    console.log("[CANCELLATION FRONTEND DEBUG] Clicked Yes, Cancel Order button");
+                    handleCancelOrder();
+                  }}
+                  disabled={isCancelling}
+                  className="w-full rounded-2xl bg-red-500 py-4 text-sm font-black text-white shadow-xl shadow-red-500/20 transition-all hover:bg-red-600 active:scale-[0.98] disabled:opacity-50"
                 >
-                  Yes, Cancel Order
-                </RButton>
+                  {isCancelling ? "Cancelling..." : "Yes, Cancel Order"}
+                </button>
                 <RButton
                   onClick={() => setShowCancelModal(false)}
                   appearance="subtle"

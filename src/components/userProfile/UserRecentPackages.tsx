@@ -164,7 +164,7 @@ export default function UserRecentPackages({
             key={pkg.id}
             href={`/CurrentPendingOrders/viewPackageDetails/${pkg.id}`}
             className={`group relative overflow-hidden rounded-2xl border bg-white p-5 transition-all hover:shadow-xl dark:bg-gray-800/40 ${
-              pkg.status === "cancelled"
+              (pkg.status || "").toLowerCase() === "cancelled"
                 ? "border-red-500/50 hover:border-red-500 dark:border-red-900/50 dark:hover:border-red-500"
                 : "border-gray-100 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-500"
             }`}
@@ -186,11 +186,11 @@ export default function UserRecentPackages({
                 <div className="absolute -bottom-1 -right-1 rounded-full bg-white p-1 shadow-sm dark:bg-gray-800">
                   <div
                     className={`h-2.5 w-2.5 rounded-full ${
-                      pkg.status === "AWAITING_PAYMENT"
+                      (pkg.status || "").toUpperCase() === "AWAITING_PAYMENT"
                         ? "bg-amber-400"
-                        : pkg.status === "PENDING"
+                        : (pkg.status || "").toUpperCase() === "PENDING"
                         ? "bg-blue-400"
-                        : pkg.status === "DELIVERED"
+                        : (pkg.status || "").toUpperCase() === "DELIVERED"
                         ? "bg-green-500"
                         : "bg-gray-400"
                     }`}

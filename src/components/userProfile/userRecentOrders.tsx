@@ -271,10 +271,11 @@ export default function UserRecentOrders({
     // Apply status filter
     // For "Ongoing" (pending filter): show all orders that are not delivered (includes unassigned)
     // For "Completed" (done filter): show only delivered orders
+    const status = (order.status || "").toLowerCase();
     const matchesFilter =
       filter === "pending"
-        ? order.status !== "delivered" && order.status !== "cancelled"
-        : order.status === "delivered" || order.status === "cancelled";
+        ? status !== "delivered" && status !== "cancelled"
+        : status === "delivered" || status === "cancelled";
 
     // Apply search filter
     if (!searchQuery.trim()) return matchesFilter;

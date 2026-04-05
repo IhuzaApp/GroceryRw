@@ -6,45 +6,76 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 
 // GraphQL mutation to create refund record
 const CREATE_REFUND = gql`
-  mutation CreateRefund($refund: Refunds_insert_input!) {
-    insert_Refunds_one(object: $refund) {
-      id
-      amount
-      order_id
-      status
-      reason
-      generated_by
-      created_at
-    }
+mutation CreateRefund($refund: Refunds_insert_input!) {
+  insert_Refunds_one(object: $refund) {
+    id
+    amount
+    order_id
+    status
+    reason
+    generated_by
+    created_at
+    package_id
+    paid
+    reel_order_id
+    restaurant_order_id
+    update_on
+    user_id
+    business_order_id
   }
+}
+
 `;
 
 // GraphQL query to get order details and items
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetailsForRefund($order_id: uuid!) {
-    Orders_by_pk(id: $order_id) {
+  Orders_by_pk(id: $order_id) {
+    id
+    OrderID
+    user_id
+    shopper_id
+    total
+    Shop {
       id
-      OrderID
-      user_id
-      shopper_id
-      total
-      Shop {
-        id
-        name
-      }
-      Order_Items {
-        id
-        product_id
-        quantity
-        price
-        found
-        foundQuantity
-        Product {
-          name
-        }
-      }
+      name
+      ssd
+      tin
+      updated_at
+      phone
+      operating_hours
+      logo
+      longitude
+      latitude
+      description
+      created_at
+      address
     }
+    Order_Items {
+      id
+      product_id
+      quantity
+      price
+      order_id
+      created_at
+    }
+    pin
+    service_fee
+    shop_id
+    status
+    assigned_at
+    combined_order_id
+    created_at
+    delivery_fee
+    delivery_address_id
+    discount
+    voucher_code
+    updated_at
+    delivery_notes
+    applied_promotions
   }
+}
+
 `;
 
 // Interface for refund response
@@ -161,8 +192,7 @@ export default async function handler(
         detailedReason += `Found items: ${foundItems
           .map(
             (item) =>
-              `${item.Product.ProductName?.name || "Unknown Product"} (${
-                item.foundQuantity || item.quantity
+              `${item.Product.ProductName?.name || "Unknown Product"} (${item.foundQuantity || item.quantity
               })`
           )
           .join(", ")}. `;
@@ -172,16 +202,14 @@ export default async function handler(
         detailedReason += `Not found items: ${notFoundItems
           .map(
             (item) =>
-              `${item.Product.ProductName?.name || "Unknown Product"} (${
-                item.quantity
+              `${item.Product.ProductName?.name || "Unknown Product"} (${item.quantity
               })`
           )
           .join(", ")}.`;
       }
 
-      detailedReason += ` Original total: ${originalTotal}, found items total: ${
-        originalTotal - formattedRefundAmount
-      }.`;
+      detailedReason += ` Original total: ${originalTotal}, found items total: ${originalTotal - formattedRefundAmount
+        }.`;
     }
 
     // Check if hasuraClient is available

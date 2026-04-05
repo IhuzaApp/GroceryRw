@@ -284,6 +284,8 @@ function PackageDetailsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
+  console.log("[CANCELLATION FRONTEND DEBUG] Render PackageDetailsPage", { packageId, pkgId: pkg?.id, status: pkg?.status });
+
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -334,7 +336,11 @@ function PackageDetailsPage() {
   };
 
   const handleCancelPackage = async () => {
-    if (!pkg?.id) return;
+    console.log("[CANCELLATION FRONTEND DEBUG] Triggered handleCancelPackage", { id: pkg?.id });
+    if (!pkg?.id) {
+      console.warn("[CANCELLATION FRONTEND DEBUG] Aborting cancellation: missing package id", { id: pkg?.id });
+      return;
+    }
     setIsCancelling(true);
     try {
       const res = await fetch("/api/orders/cancel", {
@@ -343,6 +349,8 @@ function PackageDetailsPage() {
         body: JSON.stringify({ orderId: pkg.id, orderType: "package" }),
       });
       const data = await res.json();
+      console.log("[CANCELLATION FRONTEND DEBUG]", data);
+      
       if (res.ok) {
         toaster.push(
           <Message type="success" closable>
@@ -772,16 +780,16 @@ function PackageDetailsPage() {
                 {/* Cancellation Section (Bottom) */}
                 {(pkg.status?.toUpperCase() === "PENDING" || pkg.status?.toUpperCase() === "ACCEPTED") && (
                   <div className="mt-4 rounded-2xl border border-red-50 bg-red-50/20 p-4 dark:border-red-900/10 dark:bg-red-900/10">
-                    <Button
-                      appearance="ghost"
-                      color="red"
-                      block
-                      loading={isCancelling}
-                      onClick={() => setShowCancelModal(true)}
-                      className="!rounded-xl border-2 !py-3 font-black transition-all hover:!bg-red-50 active:scale-95"
+                    <button
+                      onClick={() => {
+                        console.log("[CANCELLATION FRONTEND DEBUG] Clicked Cancel Delivery button");
+                        setShowCancelModal(true);
+                      }}
+                      disabled={isCancelling}
+                      className="w-full rounded-xl border-2 border-red-500 py-3 font-black text-red-500 transition-all hover:bg-red-50 active:scale-95 disabled:opacity-50"
                     >
                       Cancel Delivery
-                    </Button>
+                    </button>
                     <p className="mt-2 text-center text-[10px] text-gray-500">
                       {pkg.status?.toUpperCase() === "PENDING" 
                         ? "Full refund will be returned to your wallet." 
@@ -865,15 +873,16 @@ function PackageDetailsPage() {
               )}
 
               <div className="flex w-full flex-col gap-3">
-                <Button
-                  onClick={handleCancelPackage}
-                  color="red"
-                  appearance="primary"
-                  loading={isCancelling}
-                  className="!rounded-2xl !py-4 text-sm font-black shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                <button
+                  onClick={() => {
+                    console.log("[CANCELLATION FRONTEND DEBUG] Clicked Yes, Cancel Delivery button");
+                    handleCancelPackage();
+                  }}
+                  disabled={isCancelling}
+                  className="w-full rounded-2xl bg-red-500 py-4 text-sm font-black text-white shadow-xl shadow-red-500/20 transition-all hover:bg-red-600 active:scale-[0.98] disabled:opacity-50"
                 >
-                  Yes, Cancel Delivery
-                </Button>
+                  {isCancelling ? "Cancelling..." : "Yes, Cancel Delivery"}
+                </button>
                 <Button
                   onClick={() => setShowCancelModal(false)}
                   appearance="subtle"
