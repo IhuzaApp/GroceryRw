@@ -13,6 +13,7 @@ import { AuthGuard } from "@components/AuthGuard";
 import { useTheme } from "../../../src/context/ThemeContext";
 import Image from "next/image";
 import { Info, AlertCircle, X } from "lucide-react";
+import CompletePaymentModal from "@components/UserCarts/orders/CompletePaymentModal";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -222,6 +223,7 @@ const MobileOrderDetails = ({
   onCancel,
   isCancelling,
   supportTicket,
+  onCompletePayment,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | "business" | null;
@@ -230,6 +232,7 @@ const MobileOrderDetails = ({
   onCancel?: () => void;
   isCancelling?: boolean;
   supportTicket?: SupportTicketInfo;
+  onCompletePayment?: () => void;
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
@@ -427,6 +430,24 @@ const MobileOrderDetails = ({
         {/* Cancellation Section for Mobile (Bottom) */}
         {(() => {
           const status = order?.status?.toUpperCase();
+          if (status === "AWAITING_PAYMENT") {
+            return (
+              <div className="mt-8 rounded-2xl border border-orange-100 bg-orange-50/30 p-4 dark:border-orange-900/20 dark:bg-orange-900/10">
+                <RButton
+                  block
+                  appearance="primary"
+                  color="orange"
+                  onClick={onCompletePayment}
+                  className="!rounded-xl border-2 font-black transition-all active:scale-95"
+                >
+                  Complete Payment
+                </RButton>
+                <p className="mt-3 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Please complete your payment to proceed with your order.
+                </p>
+              </div>
+            );
+          }
           if (status === "PENDING" || status === "ACCEPTED") {
             return (
               <div className="mt-8 rounded-2xl border border-red-100 bg-red-50/30 p-4 dark:border-red-900/20 dark:bg-red-900/10">
@@ -464,6 +485,7 @@ const DesktopOrderDetails = ({
   onCancel,
   isCancelling,
   supportTicket,
+  onCompletePayment,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | "business" | null;
@@ -472,6 +494,7 @@ const DesktopOrderDetails = ({
   onCancel?: () => void;
   isCancelling?: boolean;
   supportTicket?: SupportTicketInfo;
+  onCompletePayment?: () => void;
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
@@ -509,6 +532,31 @@ const DesktopOrderDetails = ({
         {/* Desktop Cancellation Section (Bottom) */}
         {(() => {
           const status = order?.status?.toUpperCase();
+          if (status === "AWAITING_PAYMENT") {
+            return (
+              <div className="mt-8 flex items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/30 p-6 dark:border-orange-900/20 dark:bg-orange-900/10">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                    <Info className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">Complete Payment</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Please complete your payment to proceed with your order.
+                    </p>
+                  </div>
+                </div>
+                <RButton
+                  appearance="primary"
+                  color="orange"
+                  onClick={onCompletePayment}
+                  className="!rounded-xl border-2 !px-8 !py-3 font-black transition-all active:scale-95"
+                >
+                  Complete Payment
+                </RButton>
+              </div>
+            );
+          }
           if (status === "PENDING" || status === "ACCEPTED") {
             return (
               <div className="mt-8 flex items-center justify-between rounded-2xl border border-red-100 bg-red-50/30 p-6 dark:border-red-900/20 dark:bg-red-900/10">
@@ -561,6 +609,7 @@ function ViewOrderDetailsPage() {
   } | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   console.log("[CANCELLATION FRONTEND DEBUG] Render ViewOrderDetailsPage", { orderId, orderType, orderStatus: order?.status });
 
@@ -953,6 +1002,7 @@ function ViewOrderDetailsPage() {
             supportTicket={supportTicket}
             onCancel={() => setShowCancelModal(true)}
             isCancelling={isCancelling}
+            onCompletePayment={() => setShowPaymentModal(true)}
           />
         </div>
 
@@ -966,6 +1016,7 @@ function ViewOrderDetailsPage() {
             supportTicket={supportTicket}
             onCancel={() => setShowCancelModal(true)}
             isCancelling={isCancelling}
+            onCompletePayment={() => setShowPaymentModal(true)}
           />
         </div>
 
@@ -1053,6 +1104,19 @@ function ViewOrderDetailsPage() {
           orderType={orderType ?? "regular"}
           onSuccess={() => fetchSupportTicket(order)}
         />
+
+        {/* Payment Modal */}
+        {order && showPaymentModal && (
+          <CompletePaymentModal
+            open={showPaymentModal}
+            order={order}
+            onClose={() => setShowPaymentModal(false)}
+            onSuccess={() => {
+              setShowPaymentModal(false);
+              router.reload();
+            }}
+          />
+        )}
 
         {/* Mobile-specific styles for full-width layout */}
         <style jsx global>{`

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { useRouter } from "next/router";
+import { Modal } from "rsuite";
+import CompletePaymentModal from "../UserCarts/orders/CompletePaymentModal";
 
 // Define the shape of an order including assignment status and external OrderID
 type Order = {
@@ -265,6 +267,10 @@ export default function UserRecentOrders({
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 4;
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Payment state
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPaymentOrder, setSelectedPaymentOrder] = useState<Order | null>(null);
 
   // Apply filter and search
   const filteredOrders = orders.filter((order: Order) => {
@@ -568,6 +574,23 @@ export default function UserRecentOrders({
                       />
                     </div>
                   )}
+
+                  {/* Payment Button */}
+                  {String(order.status).toUpperCase() === "AWAITING_PAYMENT" && (
+                    <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedPaymentOrder(order);
+                          setPaymentModalOpen(true);
+                        }}
+                        className="w-full rounded-xl bg-gradient-to-r from-orange-400 to-orange-500 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.02] hover:shadow-orange-500/40 active:scale-[0.98]"
+                      >
+                        Complete Payment
+                      </button>
+                    </div>
+                  )}
                 </Link>
               ))
         )
@@ -650,6 +673,23 @@ export default function UserRecentOrders({
             </svg>
           </button>
         </div>
+      )}
+
+      {/* Payment Modal */}
+      {/* Payment Modal */}
+      {paymentModalOpen && selectedPaymentOrder && (
+        <CompletePaymentModal
+          open={paymentModalOpen}
+          order={selectedPaymentOrder}
+          onClose={() => {
+            setPaymentModalOpen(false);
+            setSelectedPaymentOrder(null);
+          }}
+          onSuccess={() => {
+            setPaymentModalOpen(false);
+            if (onRefresh) onRefresh();
+          }}
+        />
       )}
     </>
   );
