@@ -285,7 +285,7 @@ export const sendChatNotification = async (
   recipientId: string,
   senderName: string,
   message: string,
-  orderId: string,
+  orderId: string | undefined | null,
   conversationId: string
 ): Promise<void> => {
   try {
@@ -301,7 +301,7 @@ export const sendChatNotification = async (
       body: message.length > 100 ? message.substring(0, 100) + "..." : message,
       data: {
         type: "chat_message",
-        orderId,
+        ...(orderId && { orderId }),
         conversationId,
         senderName,
       },

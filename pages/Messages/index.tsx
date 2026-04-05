@@ -15,6 +15,7 @@ import {
   addDoc,
   serverTimestamp,
   getDoc,
+  or,
 } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import { useRouter } from "next/router";
@@ -30,6 +31,7 @@ import {
   containsBlockedPii,
   getBlockedMessage,
 } from "../../src/lib/chatPiiBlock";
+import { useTheme } from "../../src/context/ThemeContext";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -77,9 +79,13 @@ interface Message {
 // Define conversation interface
 interface Conversation {
   id: string;
-  orderId: string;
-  customerId: string;
-  shopperId: string;
+  orderId?: string;
+  customerId?: string;
+  shopperId?: string;
+  businessId?: string;
+  type?: "order" | "business";
+  title?: string;
+  counterpartName?: string;
   lastMessage: string;
   lastMessageTime: any;
   unreadCount: number;
@@ -87,6 +93,7 @@ interface Conversation {
 }
 
 function MessagesPage() {
+  const { theme } = useTheme();
   const router = useRouter();
   const { data: session, status } = useSession();
   const [conversationsFromCustomer, setConversationsFromCustomer] = useState<
@@ -118,14 +125,14 @@ function MessagesPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(
     undefined
   );
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | undefined
+  >(undefined);
   const [sendError, setSendError] = useState<string | null>(null);
 
   // Check if mobile device
@@ -161,13 +168,18 @@ function MessagesPage() {
           setLoading(true);
 
           // Get conversations where the current user is either the customer or shopper
-          const conversationsRef = collection(db, "chat_conversations");
+          if (!db) return;
+          const conversationsRef = collection(db!, "chat_conversations");
 
-          // Query for conversations where user is either customer or shopper
+          // Query for conversations where user is customer, shopper, or business participant
           const q = query(
             conversationsRef,
-            where("customerId", "==", userId)
-            // Note: We might need to also query for shopperId, but for now let's focus on customerId
+            or(
+              where("customerId", "==", userId),
+              where("shopperId", "==", userId),
+              where("businessId", "==", userId)
+            ),
+            orderBy("lastMessageTime", "desc")
           );
 
           // Set up real-time listener for conversations (customerId match)
@@ -212,10 +224,10 @@ function MessagesPage() {
 
   // Fallback: fetch conversations by user's order IDs (catches guest-upgrade or customerId mismatch)
   useEffect(() => {
-    if (status !== "authenticated" || !session?.user?.id) return;
+    if (!db || status !== "authenticated" || !session?.user?.id) return;
 
     let cancelled = false;
-    const conversationsRef = collection(db, "chat_conversations");
+    const conversationsRef = collection(db!, "chat_conversations");
 
     const run = async () => {
       try {
@@ -364,210 +376,33 @@ function MessagesPage() {
     });
 
   // Handle chat click
-  const handleChatClick = async (orderId: string) => {
-    if (isMobile) {
+  const handleChatClick = async (orderId?: string, conversationId?: string) => {
+    if (isMobile && orderId) {
       router.push(`/Messages/${orderId}`);
     } else {
       setSelectedOrderId(orderId);
-      try {
-        // Get conversation ID and shopper data
-        const conversationsRef = collection(db, "chat_conversations");
-        const q = query(conversationsRef, where("orderId", "==", orderId));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const conversationDoc = querySnapshot.docs[0];
-          const conversationData = conversationDoc.data();
-          setConversationId(conversationDoc.id);
-
-          // Get shopper data
-          const shopperRef = doc(db, "users", conversationData.shopperId);
-          const shopperDoc = await getDoc(shopperRef);
-          const shopperData = shopperDoc.data();
-
-          // Set order with shopper data
-          let order = orders[orderId];
-
-          // If order doesn't have assignedTo data, fetch fresh data
-          if (!order?.assignedTo) {
-            try {
-              const res = await fetch(
-                `/api/queries/orderDetails?id=${orderId}`
-              );
-              if (res.ok) {
-                const data = await res.json();
-                order = data.order;
-              }
-            } catch (error) {
-              console.error("Error fetching fresh order data:", error);
-            }
-          }
-
-          const shopperObject = {
-            id: conversationData.shopperId,
-            name: shopperData?.name || order?.assignedTo?.name || "Shopper",
-            avatar:
-              shopperData?.avatar ||
-              order?.assignedTo?.profile_picture ||
-              "/images/ProfileImage.png",
-            phone: shopperData?.phone || order?.assignedTo?.phone,
-          };
-
-          setSelectedOrder({
-            ...order,
-            shopper: shopperObject,
-          });
-          setIsDrawerOpen(true);
-        }
-      } catch (error) {
-        console.error("Error getting conversation:", error);
-      }
+      setSelectedConversationId(conversationId);
+      setIsDrawerOpen(true);
     }
   };
 
   // Handle conversation select for desktop
-  const handleConversationSelect = (orderId: string) => {
+  const handleConversationSelect = (
+    orderId?: string,
+    conversationId?: string
+  ) => {
     setSelectedOrderId(orderId);
+    setSelectedConversationId(conversationId);
   };
 
-  // Set up messages listener
-  useEffect(() => {
-    if (!conversationId || !session?.user?.id) return;
-
-    // Set up listener for messages in this conversation
-    const messagesRef = collection(
-      db,
-      "chat_conversations",
-      conversationId,
-      "messages"
-    );
-    const q = query(messagesRef, orderBy("timestamp", "asc"));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const messagesList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          // Convert Firestore timestamp to regular Date if needed
-          timestamp:
-            doc.data().timestamp instanceof Timestamp
-              ? doc.data().timestamp.toDate()
-              : doc.data().timestamp,
-        })) as Message[];
-
-        setMessages(messagesList);
-
-        // Mark messages as read if they were sent to the current user
-        messagesList.forEach(async (message) => {
-          if (message.senderType === "shopper" && !message.read) {
-            const messageRef = doc(
-              db,
-              "chat_conversations",
-              conversationId,
-              "messages",
-              message.id
-            );
-            await updateDoc(messageRef, { read: true });
-
-            // Update unread count in conversation
-            const convRef = doc(db, "chat_conversations", conversationId);
-            await updateDoc(convRef, {
-              unreadCount: 0,
-            });
-          }
-        });
-      },
-      (error) => {
-        // Keep this error log for debugging purposes
-        console.error("Error in messages listener:", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [conversationId, session?.user?.id]);
 
   // Handle sending a new message
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (
-      !newMessage.trim() ||
-      !session?.user?.id ||
-      !conversationId ||
-      !selectedOrder?.shopper?.id
-    ) {
-      return;
-    }
-
-    const text = newMessage.trim();
-    const piiCheck = containsBlockedPii(text);
-    if (piiCheck.blocked && piiCheck.reason) {
-      setSendError(getBlockedMessage(piiCheck.reason));
-      return;
-    }
-    setSendError(null);
-
-    try {
-      setIsSending(true);
-
-      // Add new message to Firestore
-      const messagesRef = collection(
-        db,
-        "chat_conversations",
-        conversationId,
-        "messages"
-      );
-      await addDoc(messagesRef, {
-        text: newMessage.trim(),
-        message: newMessage.trim(), // Also include message field for compatibility
-        senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        senderType: "customer",
-        recipientId: selectedOrder.shopper.id,
-        timestamp: serverTimestamp(),
-        read: false,
-      });
-
-      // Update conversation with last message
-      const convRef = doc(db, "chat_conversations", conversationId);
-      await updateDoc(convRef, {
-        lastMessage: newMessage.trim(),
-        lastMessageTime: serverTimestamp(),
-        unreadCount: 1, // Increment unread count for shopper
-      });
-
-      // Trigger FCM so shopper gets device + in-app notification (bell)
-      try {
-        await fetch("/api/fcm/send-notification", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recipientId: selectedOrder.shopper.id,
-            senderName: session.user.name || "Customer",
-            message: newMessage.trim(),
-            orderId: selectedOrder.id,
-            conversationId,
-          }),
-        });
-      } catch (fcmErr) {
-        console.warn("FCM send (non-blocking):", fcmErr);
-      }
-
-      // Clear input
-      setNewMessage("");
-    } catch (error) {
-      // Keep this error log for debugging purposes
-      console.error("Error sending message:", error);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   // Render loading state
   if (loading) {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
+        <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
@@ -580,10 +415,10 @@ function MessagesPage() {
               </div>
             </div>
             <div className="text-center">
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
                 Loading...
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--text-secondary)]">
                 Loading conversations
               </p>
             </div>
@@ -597,13 +432,13 @@ function MessagesPage() {
   if (status !== "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
+        <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center">
             <div className="mb-4 text-6xl">⚠️</div>
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
               Authentication Required
             </h3>
-            <p className="mb-4 text-gray-500 dark:text-gray-400">
+            <p className="mb-4 text-[var(--text-secondary)]">
               Please sign in to view your messages.
             </p>
             <Link href="/login" passHref>
@@ -615,69 +450,20 @@ function MessagesPage() {
     );
   }
 
-  // Render empty state
-  if (conversations.length === 0) {
-    return (
-      <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center bg-white p-8 dark:bg-gray-900">
-          <div className="mx-auto w-full max-w-2xl">
-            <div className="mb-6 text-center">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Messages
-              </h1>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                Your conversations with shoppers
-              </p>
-            </div>
-            <Panel
-              className="text-center"
-              style={{
-                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-              }}
-            >
-              <Placeholder.Graph
-                style={{ height: 200 }}
-                active
-                className="mb-4"
-              />
-              <Placeholder.Paragraph rows={2} />
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                No conversations yet
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                You'll see your chat conversations with shoppers here once you
-                place orders.
-              </p>
-              <div className="mt-4">
-                <Link href="/CurrentPendingOrders" passHref>
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    className="!text-white [&_svg]:!text-white"
-                  >
-                    View Your Orders
-                  </Button>
-                </Link>
-              </div>
-            </Panel>
-          </div>
-        </div>
-      </RootLayout>
-    );
-  }
 
   // Render desktop view with new component
   if (!isMobile) {
     return (
       <AuthGuard requireAuth={true}>
         <RootLayout>
-          <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+          <div className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-[var(--bg-primary)]">
             <DesktopMessagePage
               conversations={conversations}
               orders={orders}
               loading={loading}
               onConversationSelect={handleConversationSelect}
               selectedOrderId={selectedOrderId}
+              selectedConversationId={selectedConversationId}
             />
           </div>
         </RootLayout>
@@ -689,7 +475,7 @@ function MessagesPage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+        <div className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-[var(--bg-primary)]">
           <MobileMessagePage
             conversations={conversations}
             orders={orders}
@@ -706,14 +492,27 @@ function MessagesPage() {
             onCloseDrawer={() => setIsDrawerOpen(false)}
           />
           {/* Customer Chat Drawer for Mobile */}
-          {selectedOrder && selectedOrder.shopper && (
+          {selectedConversation && (
             <CustomerChatDrawer
-              orderId={selectedOrder.id}
-              shopper={{
-                id: selectedOrder.shopper.id,
-                name: selectedOrder.shopper.name,
-                avatar: selectedOrder.shopper.avatar,
-                phone: selectedOrder.shopper.phone,
+              conversationId={selectedConversation.id}
+              orderId={selectedConversation.orderId}
+              counterpart={{
+                id:
+                  selectedConversation.shopperId ||
+                  selectedConversation.businessId ||
+                  selectedConversation.customerId ||
+                  "",
+                name:
+                  selectedConversation.counterpartName ||
+                  selectedConversation.title ||
+                  "User",
+                avatar:
+                  selectedConversation.order?.shopper?.avatar ||
+                  "/images/ProfileImage.png",
+                role:
+                  selectedConversation.type === "business"
+                    ? "business"
+                    : "shopper",
               }}
               isOpen={isDrawerOpen}
               onClose={() => setIsDrawerOpen(false)}

@@ -32,7 +32,6 @@ import PlasBusinessOnboarding from "../../../src/components/business/PlasBusines
 import { BusinessOverview } from "../../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../../src/components/business/ServicesSection";
 import { StoresSection } from "../../../src/components/business/StoresSection";
-import BusinessChatDrawer from "../../../src/components/business/BusinessChatDrawer";
 import { PortalSkeleton } from "../../../src/components/business/PortalSkeleton";
 import { ContractDetailDrawer } from "../../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
@@ -51,7 +50,6 @@ export default function PlasBusinessPage() {
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
-  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -134,8 +132,6 @@ export default function PlasBusinessPage() {
             businessAccount={businessAccount}
             rfqCreated={rfqCreated}
             setRfqCreated={setRfqCreated}
-            isChatDrawerOpen={isChatDrawerOpen}
-            setIsChatDrawerOpen={setIsChatDrawerOpen}
           />
         </div>
       </div>
@@ -154,8 +150,6 @@ function BuyerDashboardContent({
   businessAccount,
   rfqCreated,
   setRfqCreated,
-  isChatDrawerOpen,
-  setIsChatDrawerOpen,
 }: {
   selectedQuote: any;
   setSelectedQuote: (quote: any) => void;
@@ -167,8 +161,6 @@ function BuyerDashboardContent({
   businessAccount?: any;
   rfqCreated: boolean;
   setRfqCreated: (value: boolean | ((prev: boolean) => boolean)) => void;
-  isChatDrawerOpen: boolean;
-  setIsChatDrawerOpen: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedContractId, setSelectedContractId] = useState<string | null>(
@@ -234,7 +226,7 @@ function BuyerDashboardContent({
       {/* Header */}
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
-        onBusinessChat={() => setIsChatDrawerOpen(true)}
+        onBusinessChat={() => router.push("/Messages")}
         businessName={businessAccount?.businessName}
       />
 
@@ -449,11 +441,6 @@ function BuyerDashboardContent({
         businessAccount={businessAccount}
       />
 
-      {/* Business Chat Drawer */}
-      <BusinessChatDrawer
-        isOpen={isChatDrawerOpen}
-        onClose={() => setIsChatDrawerOpen(false)}
-      />
 
       <ContractDetailDrawer
         isOpen={isContractDrawerOpen}

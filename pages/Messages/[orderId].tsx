@@ -37,6 +37,7 @@ import {
   sanitizeMessageForDisplay,
 } from "../../src/lib/chatPiiBlock";
 import { useChatTypingIndicator } from "../../src/hooks/useChatTypingIndicator";
+import { useTheme } from "../../src/context/ThemeContext";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -186,11 +187,10 @@ const Message: React.FC<MessageProps> = ({
     >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
       <div
-        className={`max-w-[85%] ${
-          isCurrentUser
+        className={`max-w-[85%] ${isCurrentUser
             ? "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
             : "bg-blue-100 text-gray-900 dark:bg-blue-900 dark:text-blue-100"
-        } rounded-[20px] p-3`}
+          } rounded-[20px] p-3`}
       >
         {!isCurrentUser && (
           <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
@@ -214,6 +214,7 @@ const Message: React.FC<MessageProps> = ({
 
 // Chat page component
 function ChatPage() {
+  const { theme } = useTheme();
   const router = useRouter();
   const { orderId } = router.query;
   const { data: session, status } = useSession();
@@ -319,10 +320,8 @@ function ChatPage() {
     shopperId: string,
     customerId?: string
   ) => {
-    if (!orderId || !session?.user?.id) return;
-
-    // Use the actual customer ID from orderedBy, or fallback to session user ID
-    const actualCustomerId = customerId || session.user.id;
+    const actualCustomerId = customerId || session?.user?.id;
+    if (!db || !orderId || !session?.user?.id) return;
 
     try {
       // Check if conversation exists
@@ -367,13 +366,15 @@ function ChatPage() {
 
   // Set up messages listener
   useEffect(() => {
-    if (!conversationId || !session?.user?.id) return;
+    const markAsRead = async () => {
+      if (!db || !conversationId || !session?.user?.id) return;
+    };
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
       db,
       "chat_conversations",
-      conversationId,
+      conversationId!,
       "messages"
     );
     const q = query(messagesRef, orderBy("timestamp", "asc"));
@@ -419,7 +420,7 @@ function ChatPage() {
               const messageRef = doc(
                 db,
                 "chat_conversations",
-                conversationId,
+                conversationId!,
                 "messages",
                 message.id
               );
@@ -427,7 +428,7 @@ function ChatPage() {
             }
 
             // Update conversation unread count to 0
-            const convRef = doc(db, "chat_conversations", conversationId);
+            const convRef = doc(db, "chat_conversations", conversationId!);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
@@ -454,15 +455,7 @@ function ChatPage() {
   // Handle sending a new message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-
-    if (
-      !newMessage.trim() ||
-      !session?.user?.id ||
-      !conversationId ||
-      !shopper?.id
-    ) {
-      return;
-    }
+    if (!db || !newMessage.trim() || !session?.user?.id || !shopper?.id || !conversationId) return;
 
     const text = newMessage.trim();
     const piiCheck = containsBlockedPii(text);
@@ -476,6 +469,7 @@ function ChatPage() {
       setIsSending(true);
 
       // Add new message to Firestore
+      if (!db) return;
       const messagesRef = collection(
         db,
         "chat_conversations",
@@ -550,11 +544,11 @@ function ChatPage() {
     <AuthGuard requireAuth={true}>
       {isMobile ? (
         // Mobile: Full-screen chat interface
-        <div className="flex h-screen flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="flex h-screen flex-col bg-[var(--bg-primary)]">
           {shopper ? (
             <>
               {/* Mobile Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-[var(--bg-primary)] px-4 py-3 dark:border-gray-700">
                 <div className="flex items-center gap-3">
                   <Link
                     href="/Messages"
@@ -579,10 +573,10 @@ function ChatPage() {
                       size="sm"
                     />
                     <div>
-                      <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h2 className="text-sm font-medium text-[var(--text-primary)]">
                         {shopper.name}
                       </h2>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-[var(--text-secondary)]">
                         Order #{formatOrderID(order?.OrderID)}
                       </p>
                     </div>
@@ -609,12 +603,12 @@ function ChatPage() {
               </div>
 
               {/* Mobile Messages */}
-              <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900">
+              <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)] px-4 py-2">
                 {messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center">
                     <div className="text-center">
                       <div className="mb-2 text-4xl">💬</div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[var(--text-secondary)]">
                         Start chatting with your shopper
                       </p>
                     </div>
@@ -667,7 +661,7 @@ function ChatPage() {
                 </div>
               )}
               {/* Mobile Input */}
-              <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <div className="border-t border-gray-200 bg-[var(--bg-primary)] px-4 py-3 dark:border-gray-700">
                 <form
                   onSubmit={handleSendMessage}
                   className="flex items-end space-x-3"
@@ -746,10 +740,10 @@ function ChatPage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
                     Loading...
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Setting up your chat
                   </p>
                 </div>
@@ -759,13 +753,13 @@ function ChatPage() {
         </div>
       ) : (
         // Desktop: Sidebar layout with drawer
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex h-screen bg-[var(--bg-primary)]">
           {/* Main Content Area */}
           <div className="flex-1 overflow-hidden">
             {shopper ? (
               <div className="flex h-full flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                <div className="flex items-center justify-between border-b border-gray-200 bg-[var(--bg-primary)] px-4 py-3 dark:border-gray-700">
                   <div className="flex items-center gap-3">
                     <Link
                       href="/Messages"
@@ -790,10 +784,10 @@ function ChatPage() {
                         size="sm"
                       />
                       <div>
-                        <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                        <h2 className="text-sm font-medium text-[var(--text-primary)]">
                           {shopper.name}
                         </h2>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-[var(--text-secondary)]">
                           Order #{formatOrderID(order?.OrderID)}
                         </p>
                       </div>
@@ -947,7 +941,6 @@ function ChatPage() {
   );
 }
 
-// Add this to tell Next.js to use a custom layout
 ChatPage.getLayout = function getLayout(page: React.ReactElement) {
   return page;
 };

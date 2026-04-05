@@ -49,7 +49,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
         !isReelsPage &&
-        !isMessagesPage &&
         !isPlasBusinessPage &&
         !isStoresPage &&
         (isOrderDetailsPage || isPackageDetailsPage ? (
@@ -68,12 +67,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-          isChatPage ||
-          isReelsPage ||
-          isMessagesPage ||
-          isPlasBusinessPage ||
-          isStoresPage
+          isChatPage || isReelsPage || isPlasBusinessPage || isStoresPage
             ? ""
+            : isMessagesPage
+            ? "pt-16 md:pt-16"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"

@@ -1,5 +1,6 @@
 import React from "react";
 import { useRouter } from "next/router";
+import { useTheme } from "../../context/ThemeContext";
 
 // Helper to format time (e.g., "08:20 AM", "Yesterday", "20/03/2025")
 function formatMessageTime(timestamp: any): string {
@@ -47,9 +48,13 @@ function formatOrderID(id?: string | number): string {
 // Define conversation interface
 interface Conversation {
   id: string;
-  orderId: string;
-  customerId: string;
-  shopperId: string;
+  orderId?: string;
+  customerId?: string;
+  shopperId?: string;
+  businessId?: string;
+  type?: "order" | "business";
+  title?: string;
+  counterpartName?: string;
   lastMessage: string;
   lastMessageTime: any;
   unreadCount: number;
@@ -66,7 +71,7 @@ interface MobileMessagePageProps {
   setShowUnreadOnly: (show: boolean) => void;
   sortOrder: "newest" | "oldest";
   setSortOrder: (order: "newest" | "oldest") => void;
-  onConversationClick: (orderId: string) => void;
+  onConversationClick: (orderId?: string, conversationId?: string) => void;
   selectedOrder?: any;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
@@ -87,6 +92,7 @@ export default function MobileMessagePage({
   isDrawerOpen,
   onCloseDrawer,
 }: MobileMessagePageProps) {
+  const { theme } = useTheme();
   const router = useRouter();
 
   // Filter and sort conversations
@@ -94,7 +100,9 @@ export default function MobileMessagePage({
     .filter((conversation) => {
       // Apply search filter
       if (searchQuery) {
-        const order = orders[conversation.orderId];
+        const isBusinessChat =
+          !conversation.orderId || conversation.type === "business";
+        const order = conversation.orderId ? orders[conversation.orderId] : null;
         const employeeId = order?.assignedTo?.shopper?.Employment_id;
         const fullName =
           order?.assignedTo?.shopper?.full_name ||
@@ -150,9 +158,9 @@ export default function MobileMessagePage({
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-[var(--bg-primary)]">
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
@@ -172,7 +180,7 @@ export default function MobileMessagePage({
               />
             </svg>
           </button>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h1 className="text-lg font-semibold text-[var(--text-primary)]">
             Chat List
           </h1>
           <button className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
@@ -200,7 +208,7 @@ export default function MobileMessagePage({
               placeholder="Search by name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full bg-gray-100 px-4 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-600"
+              className="w-full rounded-full bg-gray-100 px-4 py-2.5 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder-gray-400 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:placeholder-gray-400 dark:focus:bg-gray-600"
             />
             <svg
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -247,7 +255,7 @@ export default function MobileMessagePage({
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--text-secondary)]">
                 Loading conversations...
               </p>
             </div>
@@ -256,38 +264,48 @@ export default function MobileMessagePage({
           <div className="flex h-full items-center justify-center px-4">
             <div className="text-center">
               <div className="mb-4 text-6xl">💬</div>
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
                 No conversations yet
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--text-secondary)]">
                 You'll see your chat conversations here once you place orders.
               </p>
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700 bg-[var(--bg-primary)]">
             {filteredConversations.map((conversation) => {
-              const order = orders[conversation.orderId] || {};
+              const isBusinessChat =
+                !conversation.orderId || conversation.type === "business";
+              const order = conversation.orderId
+                ? orders[conversation.orderId] || {}
+                : {};
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              const fullName =
-                order?.assignedTo?.shopper?.full_name ||
-                order?.assignedTo?.name ||
-                order?.shopper?.name ||
-                "Shopper";
+              const fullName = isBusinessChat
+                ? conversation.title ||
+                  conversation.counterpartName ||
+                  "Business Chat"
+                : order?.assignedTo?.shopper?.full_name ||
+                  order?.assignedTo?.name ||
+                  order?.shopper?.name ||
+                  "Shopper";
               const contactName = employeeId
                 ? `00${employeeId} ${fullName}`
                 : fullName;
-              const contactAvatar =
-                order?.assignedTo?.shopper?.profile_photo ||
-                order?.assignedTo?.profile_picture ||
-                order?.shopper?.avatar ||
-                "/images/ProfileImage.png";
+              const contactAvatar = isBusinessChat
+                ? "/images/BusinessPlaceholder.png"
+                : order?.assignedTo?.shopper?.profile_photo ||
+                  order?.assignedTo?.profile_picture ||
+                  order?.shopper?.avatar ||
+                  "/images/ProfileImage.png";
               const isOnline = isShopperOnline(conversation.shopperId);
 
               return (
                 <div
                   key={conversation.id}
-                  onClick={() => onConversationClick(conversation.orderId)}
+                  onClick={() =>
+                    onConversationClick(conversation.orderId, conversation.id)
+                  }
                   className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors active:bg-gray-50 dark:active:bg-gray-700"
                 >
                   {/* Avatar with online indicator */}
@@ -318,7 +336,7 @@ export default function MobileMessagePage({
                     </div>
                     {/* Online/Offline indicator */}
                     <div
-                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-800 ${
+                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--bg-primary)] ${
                         isOnline ? "bg-green-500" : "bg-gray-400"
                       }`}
                     />
@@ -328,15 +346,15 @@ export default function MobileMessagePage({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                        <h3 className="truncate text-sm font-semibold text-[var(--text-primary)]">
                           {contactName}
                         </h3>
-                        <p className="mt-0.5 line-clamp-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p className="mt-0.5 line-clamp-1 text-sm text-[var(--text-secondary)]">
                           {conversation.lastMessage || "No messages yet"}
                         </p>
                       </div>
                       <div className="flex flex-shrink-0 flex-col items-end">
-                        <span className="whitespace-nowrap text-xs text-gray-400 dark:text-gray-500">
+                        <span className="whitespace-nowrap text-xs text-[var(--text-secondary)]">
                           {formatMessageTime(conversation.lastMessageTime)}
                         </span>
                         {conversation.unreadCount > 0 && (

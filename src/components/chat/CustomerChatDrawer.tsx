@@ -30,6 +30,7 @@ import {
   sanitizeMessageForDisplay,
 } from "../../lib/chatPiiBlock";
 import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
+import { useTheme } from "../../context/ThemeContext";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -69,7 +70,7 @@ interface Message {
   text?: string;
   message?: string;
   senderId: string;
-  senderType: "customer" | "shopper";
+  senderType: "customer" | "shopper" | "business";
   recipientId?: string;
   timestamp: any;
   read?: boolean;
@@ -80,7 +81,7 @@ interface PendingMessage {
   tempId: string;
   text: string;
   senderId: string;
-  senderType: "customer" | "shopper";
+  senderType: "customer" | "shopper" | "business";
   timestamp: Date;
 }
 
@@ -88,14 +89,14 @@ interface PendingMessage {
 interface MessageProps {
   message: Message | PendingMessage;
   isCurrentUser: boolean;
-  shopperName: string;
+  counterpartName: string;
   statusLabel?: "Sending..." | "Sent" | null;
 }
 
 const CustomerMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
-  shopperName,
+  counterpartName,
   statusLabel,
 }) => {
   const rawContent =
@@ -129,7 +130,7 @@ const CustomerMessage: React.FC<MessageProps> = ({
         >
           {!isCurrentUser && (
             <div className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              {shopperName}
+              {counterpartName}
             </div>
           )}
           <div className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -153,12 +154,14 @@ const CustomerMessage: React.FC<MessageProps> = ({
 
 // Customer Chat Drawer Props
 interface CustomerChatDrawerProps {
-  orderId: string;
-  shopper: {
+  orderId?: string;
+  conversationId?: string;
+  counterpart: {
     id: string;
     name: string;
     avatar: string;
     phone?: string;
+    role?: "shopper" | "business" | "customer";
   };
   isOpen: boolean;
   onClose: () => void;
@@ -166,10 +169,12 @@ interface CustomerChatDrawerProps {
 
 const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   orderId,
-  shopper,
+  conversationId: providedConversationId,
+  counterpart,
   isOpen,
   onClose,
 }) => {
+  const { theme } = useTheme();
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
@@ -199,17 +204,27 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
   // Get or create conversation
   const getOrCreateConversation = async () => {
-    if (!orderId || !session?.user?.id || !shopper?.id) return;
+    if (
+      (!orderId && !providedConversationId) ||
+      !session?.user?.id ||
+      !counterpart?.id
+    )
+      return;
 
     try {
+      if (providedConversationId) {
+        setConversationId(providedConversationId);
+        return;
+      }
+
       console.log("🔍 [Customer Chat] Creating conversation with:", {
         orderId,
         customerId: session.user.id,
-        shopperId: shopper.id,
+        shopperId: counterpart.id,
       });
 
-      // Check if conversation exists
-      const conversationsRef = collection(db, "chat_conversations");
+      if (!db) return;
+      const conversationsRef = collection(db!, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderId));
 
       const querySnapshot = await getDocs(q);
@@ -225,9 +240,9 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
       } else {
         // Create new conversation
         const newConversation = {
-          orderId,
+          orderId: orderId || null,
           customerId: session.user.id,
-          shopperId: shopper.id,
+          shopperId: counterpart.id,
           createdAt: serverTimestamp(),
           lastMessage: "",
           lastMessageTime: serverTimestamp(),
@@ -250,7 +265,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
   // Set up messages listener
   useEffect(() => {
-    if (!conversationId || !session?.user?.id) return;
+    if (!db || !conversationId || !session?.user?.id) return;
 
     console.log(
       "🔍 [Customer Chat] Setting up message listener for conversation:",
@@ -290,17 +305,17 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
           )
         );
 
-        // Check for new unread messages from shopper and play sound
+        // Check for new unread messages from counterpart and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
-        const newUnreadShopperMessages = newMessages.filter(
+        const newUnreadCounterpartMessages = newMessages.filter(
           (msg) =>
             msg.senderType === "shopper" &&
             msg.senderId !== session?.user?.id &&
             !msg.read
         );
 
-        if (newUnreadShopperMessages.length > 0) {
+        if (newUnreadCounterpartMessages.length > 0) {
           soundNotification.play();
         }
 
@@ -308,17 +323,19 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
         // Mark messages as read if they were sent to the current user (customer)
         messagesList.forEach(async (msg) => {
-          if (msg.senderType === "shopper" && !msg.read) {
+          if (msg.senderType === "counterpart" && !msg.read) {
+            if (!db || !conversationId) return;
             const messageRef = doc(
-              db,
+              db!,
               "chat_conversations",
-              conversationId,
+              conversationId!,
               "messages",
               msg.id
             );
             await updateDoc(messageRef, { read: true });
 
-            const convRef = doc(db, "chat_conversations", conversationId);
+            if (!db || !conversationId) return;
+            const convRef = doc(db!, "chat_conversations", conversationId!);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
@@ -343,10 +360,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
   // Initialize conversation when drawer opens
   useEffect(() => {
-    if (isOpen && orderId && shopper?.id) {
+    if (isOpen && orderId && counterpart?.id) {
       getOrCreateConversation();
     }
-  }, [isOpen, orderId, shopper?.id]);
+  }, [isOpen, orderId, counterpart?.id]);
 
   // Combined list for display: server messages + pending (optimistic), sorted by time
   const displayMessages = React.useMemo(() => {
@@ -377,10 +394,11 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     if (e) e.preventDefault();
 
     if (
+      !db ||
       !newMessage.trim() ||
       !session?.user?.id ||
       !conversationId ||
-      !shopper?.id
+      !counterpart?.id
     ) {
       return;
     }
@@ -410,10 +428,11 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     scrollToBottom();
 
     try {
+      if (!db || !conversationId) return;
       const messagesRef = collection(
-        db,
+        db!,
         "chat_conversations",
-        conversationId,
+        conversationId!,
         "messages"
       );
       await addDoc(messagesRef, {
@@ -422,12 +441,13 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         senderId: session.user.id,
         senderName: session.user.name || "Customer",
         senderType: "customer",
-        recipientId: shopper.id,
+        recipientId: counterpart.id,
         timestamp: serverTimestamp(),
         read: false,
       });
 
-      const convRef = doc(db, "chat_conversations", conversationId);
+      if (!db || !conversationId) return;
+      const convRef = doc(db!, "chat_conversations", conversationId!);
       await updateDoc(convRef, {
         lastMessage: text,
         lastMessageTime: serverTimestamp(),
@@ -439,7 +459,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            recipientId: shopper.id,
+            recipientId: counterpart.id,
             senderName: session.user.name || "Customer",
             message: text,
             orderId,
@@ -466,9 +486,9 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-16 z-[1000] flex h-[calc(100vh-4rem)] w-[28rem] flex-col overflow-hidden rounded-l-2xl border-l border-gray-200 bg-white shadow-2xl shadow-gray-300/30 transition-transform duration-300 ease-in-out dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/20">
+    <div className="fixed right-0 top-16 z-[1000] flex h-[calc(100vh-4rem)] w-[28rem] flex-col overflow-hidden rounded-l-2xl border-l border-gray-200 bg-[var(--bg-primary)] shadow-2xl shadow-gray-300/30 transition-transform duration-300 ease-in-out dark:border-gray-700">
       {/* Header */}
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-[var(--bg-primary)] px-4 py-3 dark:border-gray-700">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             onClick={onClose}
@@ -490,8 +510,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
           </button>
           <div className="relative flex-shrink-0">
             <Avatar
-              src={shopper.avatar}
-              alt={shopper.name}
+              src={counterpart.avatar}
+              alt={counterpart.name}
               circle
               size="md"
               className="ring-2 ring-emerald-500/20 dark:ring-emerald-400/30"
@@ -502,19 +522,19 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold text-gray-900 dark:text-white">
-              {shopper.name}
+            <h3 className="truncate font-semibold text-[var(--text-primary)]">
+              {counterpart.name}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Your Shopper
+            <p className="text-xs text-[var(--text-secondary)]">
+              {counterpart.role === "business" ? "Business" : "Your Shopper"}
             </p>
           </div>
         </div>
-        {shopper.phone && (
+        {counterpart.phone && (
           <a
-            href={`tel:${shopper.phone}`}
+            href={`tel:${counterpart.phone}`}
             className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 !text-white text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 [&_svg]:!text-white"
-            aria-label="Call shopper"
+            aria-label="Call counterpart"
           >
             <svg
               width="18"
@@ -534,7 +554,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex-1 overflow-y-auto bg-gray-50/80 px-4 py-4 dark:bg-gray-900/80">
+        <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)] px-4 py-4">
           {displayMessages.length === 0 ? (
             <div className="flex h-full min-h-[200px] items-center justify-center">
               <div className="text-center">
@@ -553,10 +573,11 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
                     />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Start chatting with your shopper
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  Start chatting with your{" "}
+                  {counterpart.role === "business" ? "business" : "shopper"}
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
                   Messages appear here
                 </p>
               </div>
@@ -565,8 +586,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             <>
               {otherTypingName && (
                 <div className="mb-3 flex justify-start">
-                  <div className="rounded-2xl bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 dark:text-gray-100">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                  <div className="rounded-2xl bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 text-[var(--text-primary)]">
+                    <span className="text-sm text-[var(--text-secondary)]">
                       {otherTypingName} is typing
                     </span>
                     <span className="typing-dots ml-1 inline-flex gap-0.5">
@@ -591,7 +612,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
                     key={"tempId" in message ? message.tempId : message.id}
                     message={message}
                     isCurrentUser={isCurrentUser}
-                    shopperName={shopper.name}
+                    counterpartName={counterpart.name}
                     statusLabel={statusLabel}
                   />
                 );
@@ -602,22 +623,23 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         </div>
 
         {/* Input area */}
-        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="border-t border-gray-200 bg-[var(--bg-primary)] p-4 dark:border-gray-700">
           <form
             onSubmit={handleSendMessage}
-            className="flex items-center gap-3"
+            className="relative flex items-end gap-2"
           >
-            <input
-              type="text"
+            <textarea
               value={newMessage}
               onChange={(e) => {
                 setNewMessage(e.target.value);
                 reportTyping();
               }}
               onBlur={clearTyping}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="Type a message..."
-              className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"
+              className="w-full resize-none rounded-2xl bg-gray-100 px-4 py-2.5 pr-12 text-sm text-[var(--text-primary)] transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:focus:bg-gray-600"
+              rows={1}
+              style={{ maxHeight: "120px" }}
             />
             <button
               type="submit"

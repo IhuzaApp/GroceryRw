@@ -25,6 +25,7 @@ import {
   sanitizeMessageForDisplay,
 } from "../../lib/chatPiiBlock";
 import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
+import { useTheme } from "../../context/ThemeContext";
 
 // Helper to format time (e.g., "01:09 am", "08:24PM")
 function formatTime(timestamp: any): string {
@@ -134,8 +135,7 @@ interface Message {
   id: string;
   text?: string;
   message?: string;
-  senderId: string;
-  senderType: "customer" | "shopper";
+  senderType: "customer" | "shopper" | "business";
   recipientId: string;
   timestamp: any;
   read: boolean;
@@ -150,9 +150,13 @@ interface Message {
 // Define conversation interface
 interface Conversation {
   id: string;
-  orderId: string;
-  customerId: string;
-  shopperId: string;
+  orderId?: string;
+  customerId?: string;
+  shopperId?: string;
+  businessId?: string;
+  type?: "order" | "business";
+  title?: string;
+  counterpartName?: string;
   lastMessage: string;
   lastMessageTime: any;
   unreadCount: number;
@@ -163,8 +167,9 @@ interface DesktopMessagePageProps {
   conversations: Conversation[];
   orders: Record<string, any>;
   loading: boolean;
-  onConversationSelect: (orderId: string) => void;
+  onConversationSelect: (orderId?: string, conversationId?: string) => void;
   selectedOrderId?: string;
+  selectedConversationId?: string;
 }
 
 export default function DesktopMessagePage({
@@ -173,7 +178,9 @@ export default function DesktopMessagePage({
   loading,
   onConversationSelect,
   selectedOrderId,
+  selectedConversationId,
 }: DesktopMessagePageProps) {
+  const { theme } = useTheme();
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConversation, setSelectedConversation] =
@@ -231,30 +238,28 @@ export default function DesktopMessagePage({
       // Get conversation ID and shopper data
       const getConversationData = async () => {
         try {
-          const conversationsRef = collection(db, "chat_conversations");
-          const q = query(
-            conversationsRef,
-            where("orderId", "==", selectedConversation.orderId)
-          );
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const conversationDoc = querySnapshot.docs[0];
-            const conversationData = conversationDoc.data();
+          if (!selectedConversation.id) return;
+          
+          setConversationId(selectedConversation.id);
 
-            setConversationId(conversationDoc.id);
+          // Get the conversation document to check unreadCount
+          const convRef = doc(db!, "chat_conversations", selectedConversation.id);
+          const convSnap = await getDoc(convRef);
+          
+          if (convSnap.exists()) {
+            const conversationData = convSnap.data();
 
             // Immediately mark conversation as read if it has unread messages
             if (conversationData.unreadCount > 0) {
-              const convRef = doc(db, "chat_conversations", conversationDoc.id);
               await updateDoc(convRef, {
                 unreadCount: 0,
               });
             }
 
-            // Fetch shopper details from Firestore users collection
+            // Fetch shopper details if applicable
             if (conversationData.shopperId) {
               try {
-                const shopperRef = doc(db, "users", conversationData.shopperId);
+                const shopperRef = doc(db!, "users", conversationData.shopperId);
                 const shopperDoc = await getDoc(shopperRef);
 
                 if (shopperDoc.exists()) {
@@ -299,7 +304,7 @@ export default function DesktopMessagePage({
     if (!conversationId || !session?.user?.id) return;
 
     const messagesRef = collection(
-      db,
+      db!,
       "chat_conversations",
       conversationId,
       "messages"
@@ -330,7 +335,7 @@ export default function DesktopMessagePage({
           (async () => {
             for (const message of unreadMessages) {
               const messageRef = doc(
-                db,
+                db!,
                 "chat_conversations",
                 conversationId,
                 "messages",
@@ -340,7 +345,7 @@ export default function DesktopMessagePage({
             }
 
             // Update conversation unread count to 0
-            const convRef = doc(db, "chat_conversations", conversationId);
+            const convRef = doc(db!, "chat_conversations", conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
@@ -384,40 +389,55 @@ export default function DesktopMessagePage({
       setIsSending(true);
 
       const messagesRef = collection(
-        db,
+        db!,
         "chat_conversations",
         conversationId,
         "messages"
       );
+      const recipientId =
+        selectedConversation.shopperId ||
+        (selectedConversation as any).businessId ||
+        selectedConversation.customerId;
+
       await addDoc(messagesRef, {
         text: newMessage.trim(),
         message: newMessage.trim(),
         senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        senderType: "customer",
-        recipientId: selectedConversation.shopperId,
+        senderName: session.user.name || "User",
+        senderType:
+          session.user.id === selectedConversation.customerId
+            ? "customer"
+            : session.user.id === selectedConversation.shopperId
+            ? "shopper"
+            : "business",
+        recipientId,
         timestamp: serverTimestamp(),
         read: false,
       });
 
       // Update conversation with last message
-      const convRef = doc(db, "chat_conversations", conversationId);
+      const convRef = doc(db!, "chat_conversations", conversationId);
       await updateDoc(convRef, {
         lastMessage: newMessage.trim(),
         lastMessageTime: serverTimestamp(),
         unreadCount: 1,
       });
 
-      // Trigger FCM so shopper gets device + in-app notification (bell)
+      // Trigger FCM so recipient gets device + in-app notification (bell)
       try {
+        const recipientId =
+          selectedConversation.shopperId ||
+          (selectedConversation as any).businessId ||
+          selectedConversation.customerId;
+
         await fetch("/api/fcm/send-notification", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            recipientId: selectedConversation.shopperId,
-            senderName: session.user.name || "Customer",
+            recipientId,
+            senderName: session.user.name || "User",
             message: newMessage.trim(),
-            orderId: selectedConversation.orderId,
+            orderId: selectedConversation.orderId || null,
             conversationId,
           }),
         });
@@ -444,9 +464,9 @@ export default function DesktopMessagePage({
     : null;
 
   return (
-    <div className="flex h-full w-full gap-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-full w-full gap-0 overflow-hidden bg-[var(--bg-primary)]">
       {/* Left Column - Conversation List */}
-      <div className="flex h-full w-80 flex-shrink-0 flex-col bg-white dark:bg-gray-800">
+      <div className="flex h-full w-80 flex-shrink-0 flex-col bg-[var(--bg-primary)] border-r border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
@@ -468,7 +488,7 @@ export default function DesktopMessagePage({
                 />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">
               Messages
             </h1>
           </div>
@@ -494,7 +514,7 @@ export default function DesktopMessagePage({
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl bg-gray-100 px-4 py-3 pl-11 text-sm text-gray-900 placeholder-gray-500 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-600"
+              className="w-full rounded-xl bg-gray-100 px-4 py-3 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-500 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:placeholder-gray-400 dark:focus:bg-gray-600"
             />
             <svg
               className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -521,7 +541,7 @@ export default function DesktopMessagePage({
             <div className="flex h-full items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-green-600 dark:border-gray-700 dark:border-t-green-500"></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-[var(--text-secondary)]">
                   Loading...
                 </p>
               </div>
@@ -530,30 +550,38 @@ export default function DesktopMessagePage({
             <div className="flex h-full items-center justify-center px-4">
               <div className="text-center">
                 <div className="mb-3 text-4xl">💬</div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-[var(--text-primary)]">
                   No conversations found
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
                   Try adjusting your search
                 </p>
               </div>
             </div>
           ) : (
             filteredConversations.map((conversation, index) => {
-              const order = orders[conversation.orderId] || {};
+              const isBusinessChat =
+                !conversation.orderId || (conversation as any).type === "business";
+              const order = conversation.orderId
+                ? orders[conversation.orderId] || {}
+                : {};
 
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              const fullName =
-                order?.assignedTo?.shopper?.full_name ||
-                order?.assignedTo?.name ||
-                "Shopper";
+              const fullName = isBusinessChat
+                ? (conversation as any).title ||
+                  (conversation as any).counterpartName ||
+                  "Business Chat"
+                : order?.assignedTo?.shopper?.full_name ||
+                  order?.assignedTo?.name ||
+                  "Shopper";
               const contactName = employeeId
                 ? `00${employeeId} ${fullName}`
                 : fullName;
-              const contactAvatar =
-                order?.assignedTo?.shopper?.profile_photo ||
-                order?.assignedTo?.profile_picture ||
-                "/images/ProfileImage.png";
+              const contactAvatar = isBusinessChat
+                ? "/images/BusinessPlaceholder.png"
+                : order?.assignedTo?.shopper?.profile_photo ||
+                  order?.assignedTo?.profile_picture ||
+                  "/images/ProfileImage.png";
               const isSelected = selectedConversation?.id === conversation.id;
 
               return (
@@ -607,7 +635,7 @@ export default function DesktopMessagePage({
                             className={`truncate text-sm font-semibold ${
                               isSelected
                                 ? "text-green-600 dark:text-green-400"
-                                : "text-gray-900 dark:text-white"
+                                : "text-[var(--text-primary)]"
                             }`}
                           >
                             {contactName}
@@ -619,8 +647,8 @@ export default function DesktopMessagePage({
                         <p
                           className={`mt-1 truncate text-xs ${
                             conversation.unreadCount > 0
-                              ? "font-medium text-gray-700 dark:text-gray-300"
-                              : "text-gray-500 dark:text-gray-400"
+                              ? "font-medium text-[var(--text-primary)]"
+                              : "text-[var(--text-secondary)]"
                           }`}
                         >
                           {conversation.lastMessage || "No messages yet"}
@@ -639,11 +667,11 @@ export default function DesktopMessagePage({
       </div>
 
       {/* Middle Column - Chat Window */}
-      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white dark:bg-gray-800">
+      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-[var(--bg-primary)]">
         {selectedConversation && selectedOrder ? (
           <>
             {/* Chat Header */}
-            <div className="flex flex-shrink-0 items-center justify-between bg-white px-6 py-4 shadow-sm dark:bg-gray-800">
+            <div className="flex flex-shrink-0 items-center justify-between bg-[var(--bg-primary)] px-6 py-4 shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
                   {selectedOrder.assignedTo?.shopper?.profile_photo ||
@@ -677,9 +705,9 @@ export default function DesktopMessagePage({
                   )}
                 </div>
                 <div>
-                  <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
+                  <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
                     {selectedOrder.assignedTo?.shopper?.Employment_id && (
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <span className="text-sm font-medium text-[var(--text-secondary)]">
                         00{selectedOrder.assignedTo.shopper.Employment_id}
                       </span>
                     )}
@@ -694,7 +722,7 @@ export default function DesktopMessagePage({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="rounded-xl p-2.5 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
+                <button className="rounded-xl p-2.5 text-[var(--text-secondary)] transition-all hover:bg-gray-100 dark:hover:bg-gray-700">
                   <svg
                     width="20"
                     height="20"
@@ -737,12 +765,12 @@ export default function DesktopMessagePage({
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className="min-h-0 flex-1 overflow-y-auto bg-gray-50 px-6 py-4 dark:bg-gray-900"
+              className="min-h-0 flex-1 overflow-y-auto bg-[var(--bg-primary)] px-6 py-4"
             >
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[var(--text-secondary)]">
                       No messages yet. Start the conversation!
                     </p>
                   </div>
@@ -751,8 +779,8 @@ export default function DesktopMessagePage({
                 <div className="space-y-4">
                   {otherTypingName && (
                     <div className="flex justify-start">
-                      <div className="rounded-2xl rounded-bl-md bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 dark:text-white">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <div className="rounded-2xl rounded-bl-md bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 text-[var(--text-primary)]">
+                        <span className="text-sm text-[var(--text-secondary)]">
                           {otherTypingName} is typing
                         </span>
                         <span className="typing-dots ml-1 inline-flex gap-0.5">

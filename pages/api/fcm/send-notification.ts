@@ -13,16 +13,10 @@ export default async function handler(
     const { recipientId, senderName, message, orderId, conversationId } =
       req.body;
 
-    if (
-      !recipientId ||
-      !senderName ||
-      !message ||
-      !orderId ||
-      !conversationId
-    ) {
+    if (!recipientId || !senderName || !message || !conversationId) {
       return res.status(400).json({
         error:
-          "Missing required fields: recipientId, senderName, message, orderId, conversationId",
+          "Missing required fields: recipientId, senderName, message, conversationId",
       });
     }
 
