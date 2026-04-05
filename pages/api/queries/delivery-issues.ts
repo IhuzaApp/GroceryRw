@@ -162,12 +162,10 @@ export default async function handler(
       }
 
       if (!found) {
-        return res
-          .status(404)
-          .json({
-            error:
-              "Could not find an order matching that PIN for the given source.",
-          });
+        return res.status(404).json({
+          error:
+            "Could not find an order matching that PIN for the given source.",
+        });
       }
 
       const mutRes = await hasuraClient.request<any>(ADD_DELIVERY_ISSUE, {
@@ -208,13 +206,11 @@ export default async function handler(
 
       const code = mutRes?.insert_Delivery_Issues?.returning?.[0]?.code;
 
-      return res
-        .status(200)
-        .json({
-          success: true,
-          affected_rows: mutRes?.insert_Delivery_Issues?.affected_rows,
-          code,
-        });
+      return res.status(200).json({
+        success: true,
+        affected_rows: mutRes?.insert_Delivery_Issues?.affected_rows,
+        code,
+      });
     }
 
     const data = await hasuraClient.request<DeliveryIssuesResponse>(

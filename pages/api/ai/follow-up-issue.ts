@@ -76,11 +76,9 @@ export default async function handler(
     const isTicket = data.tickets?.length > 0;
 
     if (!isDeliveryIssue && !isTicket) {
-      return res
-        .status(404)
-        .json({
-          error: "Could not find any issue or ticket with that tracking code.",
-        });
+      return res.status(404).json({
+        error: "Could not find any issue or ticket with that tracking code.",
+      });
     }
 
     if (isDeliveryIssue) {
@@ -126,12 +124,10 @@ export default async function handler(
       },
     });
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Priority updated and support notified.",
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Priority updated and support notified.",
+    });
   } catch (error) {
     console.error("Error updating issue priority:", error);
     return res.status(500).json({ error: "Failed to process follow-up" });

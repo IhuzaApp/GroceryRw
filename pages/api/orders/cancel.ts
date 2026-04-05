@@ -557,19 +557,15 @@ export default async function handler(
       }
     }
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: `Order cancelled and ${userRefundAmount} refunded to wallet`,
-      });
+    return res.status(200).json({
+      success: true,
+      message: `Order cancelled and ${userRefundAmount} refunded to wallet`,
+    });
   } catch (error: any) {
     console.error("Cancellation error:", error);
-    return res
-      .status(500)
-      .json({
-        error: "Cancellation and refund process failed",
-        details: error.message,
-      });
+    return res.status(500).json({
+      error: "Cancellation and refund process failed",
+      details: error.message,
+    });
   }
 }
