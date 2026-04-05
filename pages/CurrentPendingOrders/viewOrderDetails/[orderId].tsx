@@ -612,7 +612,6 @@ function ViewOrderDetailsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  console.log("[CANCELLATION FRONTEND DEBUG] Render ViewOrderDetailsPage", { orderId, orderType, orderStatus: order?.status });
 
   // Fetch support ticket for this order (subject = "Order issue #orderRef")
   const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
@@ -642,9 +641,7 @@ function ViewOrderDetailsPage() {
   }, []);
 
   const handleCancelOrder = async () => {
-    console.log("[CANCELLATION FRONTEND DEBUG] Triggered handleCancelOrder", { id: order?.id, type: orderType });
     if (!order?.id || !orderType) {
-      console.warn("[CANCELLATION FRONTEND DEBUG] Aborting cancellation: missing id or type", { id: order?.id, type: orderType });
       return;
     }
     setIsCancelling(true);
@@ -655,7 +652,6 @@ function ViewOrderDetailsPage() {
         body: JSON.stringify({ orderId: order.id, orderType }),
       });
       const data = await res.json();
-      console.log("[CANCELLATION FRONTEND DEBUG]", data);
       
       if (res.ok) {
         toaster.push(
@@ -961,19 +957,6 @@ function ViewOrderDetailsPage() {
       refund = subtotal + (0.7 * totalFees);
       deduction = 0.3 * totalFees;
     }
-
-    console.log("[CANCELLATION FRONTEND DEBUG] calculateRefundDetails", {
-      orderType,
-      status,
-      rawTotal: order.total,
-      deliveryFee,
-      serviceFee,
-      totalFees,
-      subtotal,
-      grandTotal,
-      calculatedRefund: refund,
-      calculatedDeduction: deduction,
-    });
 
     return { refund: Math.max(0, refund), deduction: Math.max(0, deduction) };
   };

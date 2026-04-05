@@ -560,8 +560,21 @@ export default function UserRecentOrders({
                     </div>
                   </div>
 
-                  {/* Delivery Time */}
-                  {order?.delivery_time && (
+                  {/* Delivery Time / Cancelled sticker */}
+                  {String(order.status).toLowerCase() === "cancelled" ? (
+                    <div className="mt-3 flex items-center justify-between border-t border-red-100 pt-2 dark:border-red-900/30">
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
+                        Status:
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5">
+                          <circle cx="12" cy="12" r="10" />
+                          <path strokeLinecap="round" d="M15 9l-6 6M9 9l6 6" />
+                        </svg>
+                        Order Cancelled
+                      </span>
+                    </div>
+                  ) : order?.delivery_time ? (
                     <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
                       <span className="text-[10px] text-gray-600 dark:text-gray-400 md:text-xs">
                         Expected Delivery:
@@ -573,7 +586,7 @@ export default function UserRecentOrders({
                         orderType={order.orderType}
                       />
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Payment Button */}
                   {String(order.status).toUpperCase() === "AWAITING_PAYMENT" && (

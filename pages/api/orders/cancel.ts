@@ -300,98 +300,105 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       subtotal = grandTotal - totalFees;
     }
 
-    console.log(`[CANCELLATION DEBUG] Order ID: ${orderId}, Type: ${orderType}, Status: ${currentStatus}`);
-    console.log(`[CANCELLATION DEBUG] Raw Total: ${order.total}, Delivery: ${order.delivery_fee}, Service: ${order.service_fee}`);
-    console.log(`[CANCELLATION DEBUG] Calculated GrandTotal: ${grandTotal}, TotalFees: ${totalFees}, Subtotal: ${subtotal}`);
-
     let userRefundAmount = 0;
     let shopperPayoutAmount = 0;
 
     if (currentStatus === "PENDING") {
       userRefundAmount = grandTotal;
       shopperPayoutAmount = 0;
-      console.log(`[CANCELLATION DEBUG] PENDING status: 100% refund of ${grandTotal}`);
     } else if (currentStatus === "ACCEPTED") {
       userRefundAmount = subtotal + (0.7 * totalFees);
       shopperPayoutAmount = 0.3 * totalFees;
-      console.log(`[CANCELLATION DEBUG] ACCEPTED status: Refund = ${subtotal} (subtotal) + ${0.7 * totalFees} (70% fees) = ${userRefundAmount}`);
-      console.log(`[CANCELLATION DEBUG] ACCEPTED status: Shopper Payout = 30% fees = ${shopperPayoutAmount}`);
     }
 
-    // 4. Perform Updates (Order status will be updated LAST if refund succeeds)
     const refundRef = `REFUND-${orderId.slice(-8)}-${Date.now()}`;
     const payoutRef = `PAYOUT-${orderId.slice(-8)}-${Date.now()}`;
 
-    // B. Refund User (idempotency: skip if already refunded for this order)
+    // ─── STEP A: Mark order as cancelled FIRST ────────────────────────────────
+    // This is the idempotency gate. If anything below fails and the user retries,
+    // the status check above (PENDING/ACCEPTED) will block further money operations.
+    let updateMutation: any;
+    let resultKey = "";
+    switch (orderType) {
+      case "regular": updateMutation = UPDATE_ORDER_STATUS; resultKey = "update_Orders_by_pk"; break;
+      case "reel": updateMutation = UPDATE_REEL_ORDER_STATUS; resultKey = "update_reel_orders_by_pk"; break;
+      case "restaurant": updateMutation = UPDATE_RESTAURANT_ORDER_STATUS; resultKey = "update_restaurant_orders_by_pk"; break;
+      case "package": updateMutation = UPDATE_PACKAGE_ORDER_STATUS; resultKey = "update_package_delivery_by_pk"; break;
+      case "business": updateMutation = UPDATE_BUSINESS_ORDER_STATUS; resultKey = "update_businessProductOrders_by_pk"; break;
+    }
+    const updateResult = await hasuraClient!.request<any>(updateMutation, { id: orderId, status: "cancelled" });
+    if (!updateResult[resultKey]) {
+      return res.status(404).json({ error: `${orderType} order not found` });
+    }
+
+    // ─── STEP B: Refund User ──────────────────────────────────────────────────
     if (userRefundAmount > 0) {
+      // Idempotency: skip if already refunded (e.g. previous partial success)
       const orderSuffix = `REFUND-${orderId.slice(-8)}%`;
       const existingTx = await hasuraClient.request<any>(CHECK_EXISTING_PERSONAL_TX, { order_suffix: orderSuffix });
       const alreadyRefunded = existingTx.personalWalletTransactions?.length > 0;
 
-      if (alreadyRefunded) {
-        console.log(`[CANCELLATION DEBUG] Refund already recorded for order ${orderId}, skipping wallet update.`);
-      } else {
-      const walletData = await hasuraClient.request<any>(GET_USER_WALLET, { user_id: order.user_id });
-      const wallet = walletData.personalWallet?.[0];
-      if (wallet) {
-        const newBalance = (parseFloat(wallet.balance) + userRefundAmount).toFixed(2);
-        console.log(`[CANCELLATION DEBUG] Updating User Wallet: Old Balance: ${wallet.balance}, New Balance: ${newBalance}`);
-        await hasuraClient.request(UPDATE_USER_WALLET, { user_id: order.user_id, balance: newBalance });
-        
-        // C. Record Refund in the Refunds table (all order types) — upsert to handle retries
-        await hasuraClient!.request(UPSERT_REFUND_RECORD, {
-          object: {
-            user_id: order.user_id,
-            order_id: orderType === 'regular' ? orderId : null,
-            reel_order_id: orderType === 'reel' ? orderId : null,
-            restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-            package_id: orderType === 'package' ? orderId : null,
-            business_order_id: orderType === 'business' ? orderId : null,
-            amount: userRefundAmount.toFixed(0),
-            status: "COMPLETED",
-            reason: `Order cancelled by user (${currentStatus}) - ${orderType}: ${orderId}`,
-            paid: true,
-            generated_by: "System"
-          }
-        });
+      if (!alreadyRefunded) {
+        const walletData = await hasuraClient.request<any>(GET_USER_WALLET, { user_id: order.user_id });
+        const wallet = walletData.personalWallet?.[0];
+        if (wallet) {
+          const newBalance = (parseFloat(wallet.balance) + userRefundAmount).toFixed(2);
+          await hasuraClient.request(UPDATE_USER_WALLET, { user_id: order.user_id, balance: newBalance });
+          
+          // Upsert refund record
+          await hasuraClient!.request(UPSERT_REFUND_RECORD, {
+            object: {
+              user_id: order.user_id,
+              order_id: orderType === 'regular' ? orderId : null,
+              reel_order_id: orderType === 'reel' ? orderId : null,
+              restaurant_order_id: orderType === 'restaurant' ? orderId : null,
+              package_id: orderType === 'package' ? orderId : null,
+              business_order_id: orderType === 'business' ? orderId : null,
+              amount: userRefundAmount.toFixed(0),
+              status: "COMPLETED",
+              reason: `Order cancelled by user (${currentStatus}) - ${orderType}: ${orderId}`,
+              paid: true,
+              generated_by: "System"
+            }
+          });
 
-        // Record in personalWalletTransactions
-        await hasuraClient.request(CREATE_PERSONAL_WALLET_TRANSACTION, {
-          object: {
-            wallet_id: wallet.id,
-            received_wallet: wallet.id, // FUND the same wallet
-            amount: userRefundAmount.toString(),
-            currency: "RWF",
-            action: "Refund",
-            status: "Completed",
-            doneBy: session.user.id,
-            reference_id: refundRef
-          }
-        });
+          // Personal wallet transaction log
+          await hasuraClient.request(CREATE_PERSONAL_WALLET_TRANSACTION, {
+            object: {
+              wallet_id: wallet.id,
+              received_wallet: wallet.id,
+              amount: userRefundAmount.toString(),
+              currency: "RWF",
+              action: "Refund",
+              status: "Completed",
+              doneBy: session.user.id,
+              reference_id: refundRef
+            }
+          });
 
-        // Record in order_transactions
-        await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
-          object: {
-            user_id: order.user_id,
-            wallet_id: wallet.id,
-            amount: userRefundAmount.toString(),
-            currency: "RWF",
-            type: "Refund",
-            status: "Completed",
-            order_id: orderType === 'regular' ? orderId : null,
-            reel_order_id: orderType === 'reel' ? orderId : null,
-            restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-            package_id: orderType === 'package' ? orderId : null,
-            business_order_id: orderType === 'business' ? orderId : null,
-            reference_id: refundRef,
-            mtn_response: JSON.stringify({ type: "system_refund", reason: "order_cancellation" })
-          }
-        });
-      } // end if (wallet)
-      } // end else (!alreadyRefunded)
-    } // end if (userRefundAmount > 0)
+          // Order transaction log — wallet_id MUST be a personalWallet id (which wallet.id is here)
+          await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
+            object: {
+              user_id: order.user_id,
+              wallet_id: wallet.id,
+              amount: userRefundAmount.toString(),
+              currency: "RWF",
+              type: "Refund",
+              status: "Completed",
+              order_id: orderType === 'regular' ? orderId : null,
+              reel_order_id: orderType === 'reel' ? orderId : null,
+              restaurant_order_id: orderType === 'restaurant' ? orderId : null,
+              package_id: orderType === 'package' ? orderId : null,
+              business_order_id: orderType === 'business' ? orderId : null,
+              reference_id: refundRef,
+              mtn_response: JSON.stringify({ type: "system_refund", reason: "order_cancellation" })
+            }
+          });
+        }
+      }
+    }
 
-    // C. Payout Shopper & Float Reversal
+    // ─── STEP C: Payout Shopper ───────────────────────────────────────────────
     if (order.shopper_id) {
       const shopperWalletData = await hasuraClient.request<any>(GET_SHOPPER_WALLET, { shopper_id: order.shopper_id });
       const shopperWallet = shopperWalletData.Wallets?.[0];
@@ -400,12 +407,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         let newReserved = parseFloat(shopperWallet.reserved_balance);
         let updated = false;
 
-        // 1. Payout 30% Earnings (If ACCEPTED)
+        // Payout 30% Earnings (If ACCEPTED)
         if (shopperPayoutAmount > 0) {
           newAvailable += shopperPayoutAmount;
           updated = true;
 
-          // Record payout transaction
+          // Shopper wallet transaction (Wallet_Transactions — references Wallets.id, not personalWallet)
           await hasuraClient.request(CREATE_SHOPPER_TRANSACTION, {
             object: {
               wallet_id: shopperWallet.id,
@@ -421,11 +428,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           });
 
-          // Record in order_transactions
+          // Order transaction log — wallet_id FK references personalWallet, NOT Wallets.
+          // Shopper payouts don't have a personalWallet, so we pass null here to avoid the FK violation.
           await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
             object: {
               user_id: session.user.id,
-              wallet_id: shopperWallet.id,
+              wallet_id: null,
               amount: shopperPayoutAmount.toFixed(2),
               currency: "RWF",
               type: "Payout",
@@ -441,12 +449,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
         }
 
-        // 2. Float Reversal (Reels Only - added during assignment)
+        // Float Reversal (Reels Only - added during assignment)
         if (orderType === "reel" && currentStatus === "ACCEPTED") {
           newReserved -= grandTotal;
           updated = true;
 
-          // Record reversal transaction
           await hasuraClient.request(CREATE_SHOPPER_TRANSACTION, {
             object: {
               wallet_id: shopperWallet.id,
@@ -460,9 +467,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
         }
 
-        // Apply wallet changes if any
         if (updated) {
-          console.log(`[CANCELLATION DEBUG] Updating Shopper Wallet: Old Available: ${shopperWallet.available_balance}, New Available: ${newAvailable.toFixed(2)}, Old Reserved: ${shopperWallet.reserved_balance}, New Reserved: ${newReserved.toFixed(2)}`);
           await hasuraClient.request(UPDATE_SHOPPER_WALLET, {
             wallet_id: shopperWallet.id,
             available_balance: newAvailable.toFixed(2),
@@ -472,38 +477,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 5. FINALLY - Update Order Status ONLY if everything else succeeded
-    let updateMutation: any;
-    let resultKey = "";
-    switch (orderType) {
-      case "regular": 
-        updateMutation = UPDATE_ORDER_STATUS; 
-        resultKey = "update_Orders_by_pk";
-        break;
-      case "reel": 
-        updateMutation = UPDATE_REEL_ORDER_STATUS; 
-        resultKey = "update_reel_orders_by_pk";
-        break;
-      case "restaurant": 
-        updateMutation = UPDATE_RESTAURANT_ORDER_STATUS; 
-        resultKey = "update_restaurant_orders_by_pk";
-        break;
-      case "package": 
-        updateMutation = UPDATE_PACKAGE_ORDER_STATUS; 
-        resultKey = "update_package_delivery_by_pk";
-        break;
-      case "business": 
-        updateMutation = UPDATE_BUSINESS_ORDER_STATUS; 
-        resultKey = "update_businessProductOrders_by_pk";
-        break;
-    }
-    const updateResult = await hasuraClient!.request<any>(updateMutation, { id: orderId, status: "cancelled" });
-    if (!updateResult[resultKey]) {
-      console.error(`Status update failed for ${orderType} ${orderId}: Order not found`);
-      return res.status(404).json({ error: `${orderType} order not found for final status update` });
-    }
-
-    console.log(`[CANCELLATION DEBUG] Order ${orderId} successfully cancelled and refunded.`);
     return res.status(200).json({ success: true, message: `Order cancelled and ${userRefundAmount} refunded to wallet` });
   } catch (error: any) {
     console.error("Cancellation error:", error);
