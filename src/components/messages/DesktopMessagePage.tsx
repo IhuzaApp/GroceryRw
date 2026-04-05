@@ -150,10 +150,12 @@ interface Message {
 // Define conversation interface
 interface Conversation {
   id: string;
+  collectionPath: "chat_conversations" | "business_conversations";
   orderId?: string;
   customerId?: string;
   shopperId?: string;
   businessId?: string;
+  counterpartId?: string;
   type?: "order" | "business";
   title?: string;
   counterpartName?: string;
@@ -238,12 +240,10 @@ export default function DesktopMessagePage({
       // Get conversation ID and shopper data
       const getConversationData = async () => {
         try {
-          if (!selectedConversation.id) return;
-          
           setConversationId(selectedConversation.id);
 
           // Get the conversation document to check unreadCount
-          const convRef = doc(db!, "chat_conversations", selectedConversation.id);
+          const convRef = doc(db!, selectedConversation.collectionPath, selectedConversation.id);
           const convSnap = await getDoc(convRef);
           
           if (convSnap.exists()) {
@@ -305,7 +305,7 @@ export default function DesktopMessagePage({
 
     const messagesRef = collection(
       db!,
-      "chat_conversations",
+      selectedConversation!.collectionPath,
       conversationId,
       "messages"
     );
@@ -336,7 +336,7 @@ export default function DesktopMessagePage({
             for (const message of unreadMessages) {
               const messageRef = doc(
                 db!,
-                "chat_conversations",
+                selectedConversation!.collectionPath,
                 conversationId,
                 "messages",
                 message.id
@@ -345,7 +345,7 @@ export default function DesktopMessagePage({
             }
 
             // Update conversation unread count to 0
-            const convRef = doc(db!, "chat_conversations", conversationId);
+            const convRef = doc(db!, selectedConversation!.collectionPath, conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
@@ -390,7 +390,7 @@ export default function DesktopMessagePage({
 
       const messagesRef = collection(
         db!,
-        "chat_conversations",
+        selectedConversation.collectionPath,
         conversationId,
         "messages"
       );
@@ -416,7 +416,7 @@ export default function DesktopMessagePage({
       });
 
       // Update conversation with last message
-      const convRef = doc(db!, "chat_conversations", conversationId);
+      const convRef = doc(db!, selectedConversation.collectionPath, conversationId);
       await updateDoc(convRef, {
         lastMessage: newMessage.trim(),
         lastMessageTime: serverTimestamp(),
@@ -427,6 +427,7 @@ export default function DesktopMessagePage({
       try {
         const recipientId =
           selectedConversation.shopperId ||
+          selectedConversation.counterpartId ||
           (selectedConversation as any).businessId ||
           selectedConversation.customerId;
 
@@ -439,6 +440,7 @@ export default function DesktopMessagePage({
             message: newMessage.trim(),
             orderId: selectedConversation.orderId || null,
             conversationId,
+            collectionPath: selectedConversation.collectionPath,
           }),
         });
       } catch (fcmErr) {
@@ -561,22 +563,27 @@ export default function DesktopMessagePage({
           ) : (
             filteredConversations.map((conversation, index) => {
               const isBusinessChat =
-                !conversation.orderId || (conversation as any).type === "business";
+                conversation.type === "business" || !conversation.orderId;
               const order = conversation.orderId
                 ? orders[conversation.orderId] || {}
                 : {};
 
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              const fullName = isBusinessChat
-                ? (conversation as any).title ||
-                  (conversation as any).counterpartName ||
-                  "Business Chat"
-                : order?.assignedTo?.shopper?.full_name ||
+              
+              // Handle name display for business chats
+              let fullName = "Business Chat";
+              if (isBusinessChat) {
+                fullName = conversation.title || conversation.counterpartName || "Business Chat";
+              } else {
+                fullName = order?.assignedTo?.shopper?.full_name ||
                   order?.assignedTo?.name ||
                   "Shopper";
-              const contactName = employeeId
+              }
+
+              const contactName = employeeId && !isBusinessChat
                 ? `00${employeeId} ${fullName}`
                 : fullName;
+                
               const contactAvatar = isBusinessChat
                 ? "/images/BusinessPlaceholder.png"
                 : order?.assignedTo?.shopper?.profile_photo ||

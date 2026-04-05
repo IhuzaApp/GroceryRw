@@ -10,7 +10,7 @@ interface MyRFQsSectionProps {
   className?: string;
   onCreateRFQ?: () => void;
   onAssignContract?: (contractData: any) => void;
-  onMessageSupplier?: (supplierId: string) => void;
+  onMessageSupplier?: (supplierId: string, rfqId?: string, title?: string) => void;
   onRFQCreated?: boolean;
 }
 
@@ -81,9 +81,9 @@ export function MyRFQsSection({
     // Handle reject response logic
   };
 
-  const handleMessageSupplier = (supplierId: string) => {
+  const handleMessageSupplier = (supplierId: string, rfqId?: string, title?: string) => {
     if (onMessageSupplier) {
-      onMessageSupplier(supplierId);
+      onMessageSupplier(supplierId, rfqId, title);
     } else {
       console.log("Messaging supplier:", supplierId);
     }

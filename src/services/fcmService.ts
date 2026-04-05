@@ -2,6 +2,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { getFirestore } from "firebase-admin/firestore";
 import { formatCurrency } from "../lib/formatCurrency";
+import { ChatCollection } from "./chatService";
 
 // Check if Firebase credentials are available
 const hasFirebaseCredentials = () => {
@@ -286,7 +287,8 @@ export const sendChatNotification = async (
   senderName: string,
   message: string,
   orderId: string | undefined | null,
-  conversationId: string
+  conversationId: string,
+  collectionPath: ChatCollection = "chat_conversations"
 ): Promise<void> => {
   try {
     if (!messaging) {
@@ -303,6 +305,7 @@ export const sendChatNotification = async (
         type: "chat_message",
         ...(orderId && { orderId }),
         conversationId,
+        collectionPath,
         senderName,
       },
     };

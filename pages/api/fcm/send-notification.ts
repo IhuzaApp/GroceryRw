@@ -10,7 +10,7 @@ export default async function handler(
   }
 
   try {
-    const { recipientId, senderName, message, orderId, conversationId } =
+    const { recipientId, senderName, message, orderId, conversationId, collectionPath } =
       req.body;
 
     if (!recipientId || !senderName || !message || !conversationId) {
@@ -25,7 +25,8 @@ export default async function handler(
       senderName,
       message,
       orderId,
-      conversationId
+      conversationId,
+      collectionPath
     );
     return res.status(200).json({ success: true });
   } catch (error) {

@@ -35,6 +35,7 @@ import { StoresSection } from "../../../src/components/business/StoresSection";
 import { PortalSkeleton } from "../../../src/components/business/PortalSkeleton";
 import { ContractDetailDrawer } from "../../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
+import { getOrCreateBusinessConversation } from "../../../src/services/chatService";
 
 // Data moved to individual components
 
@@ -191,12 +192,42 @@ function BuyerDashboardContent({
     setIsQuoteModalOpen(false);
   };
 
-  const handleMessageQuoteSupplier = (supplierId: string) => {
-    router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
+  const handleMessageQuoteSupplier = async (supplierId: string, rfqId?: string, title?: string) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateBusinessConversation(
+        businessAccount.id,
+        supplierId,
+        rfqId,
+        title
+      );
+      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+    } catch (error) {
+      console.error("Error starting business conversation:", error);
+      toast.error("Failed to start conversation. Please try again.");
+    }
   };
 
-  const handleMessageContractSupplier = (supplierId: string) => {
-    router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
+  const handleMessageContractSupplier = async (supplierId: string) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateBusinessConversation(
+        businessAccount.id,
+        supplierId
+      );
+      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+    } catch (error) {
+      console.error("Error starting business conversation:", error);
+      toast.error("Failed to start conversation. Please try again.");
+    }
   };
 
   const handleCreateRFQ = () => {

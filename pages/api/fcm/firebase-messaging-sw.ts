@@ -89,14 +89,22 @@ if (messaging && messaging.onBackgroundMessage) {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification?.data || {};
-  const type = data.type;
-  const orderId = data.orderId;
-  const urlToOpen =
-    type === "chat_message" && orderId
-      ? "/Messages/" + orderId
-      : (type === "new_order" || type === "batch_orders")
-        ? "/Plasa/active-batches"
-        : "/Plasa/active-batches";
+  const { type, orderId, conversationId, collectionPath } = data;
+  
+  let urlToOpen = "/Plasa/active-batches";
+  
+  if (type === "chat_message") {
+    if (orderId) {
+      urlToOpen = "/Messages/" + orderId;
+    } else if (conversationId) {
+      const isBusiness = collectionPath === "business_conversations" || !orderId;
+      urlToOpen = "/Messages?conversationId=" + conversationId + (isBusiness ? "&collection=business_conversations" : "");
+    } else {
+      urlToOpen = "/Messages";
+    }
+  } else if (type === "new_order" || type === "batch_orders") {
+    urlToOpen = "/Plasa/active-batches";
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {

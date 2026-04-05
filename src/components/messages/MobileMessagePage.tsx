@@ -48,6 +48,7 @@ function formatOrderID(id?: string | number): string {
 // Define conversation interface
 interface Conversation {
   id: string;
+  collectionPath: "chat_conversations" | "business_conversations";
   orderId?: string;
   customerId?: string;
   shopperId?: string;
@@ -151,7 +152,7 @@ export default function MobileMessagePage({
     });
 
   // Determine if shopper is online (you can customize this logic)
-  const isShopperOnline = (shopperId: string) => {
+  const isShopperOnline = (shopperId?: string) => {
     // For now, we'll assume they're online if they have recent activity
     // You can implement actual online status checking here
     return true; // Placeholder
@@ -276,22 +277,27 @@ export default function MobileMessagePage({
           <div className="divide-y divide-gray-200 dark:divide-gray-700 bg-[var(--bg-primary)]">
             {filteredConversations.map((conversation) => {
               const isBusinessChat =
-                !conversation.orderId || conversation.type === "business";
+                conversation.type === "business" || !conversation.orderId;
               const order = conversation.orderId
                 ? orders[conversation.orderId] || {}
                 : {};
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              const fullName = isBusinessChat
-                ? conversation.title ||
-                  conversation.counterpartName ||
-                  "Business Chat"
-                : order?.assignedTo?.shopper?.full_name ||
+              
+              // Handle name display for business chats
+              let fullName = "Business Chat";
+              if (isBusinessChat) {
+                fullName = conversation.title || conversation.counterpartName || "Business Chat";
+              } else {
+                fullName = order?.assignedTo?.shopper?.full_name ||
                   order?.assignedTo?.name ||
                   order?.shopper?.name ||
                   "Shopper";
-              const contactName = employeeId
+              }
+
+              const contactName = employeeId && !isBusinessChat
                 ? `00${employeeId} ${fullName}`
                 : fullName;
+
               const contactAvatar = isBusinessChat
                 ? "/images/BusinessPlaceholder.png"
                 : order?.assignedTo?.shopper?.profile_photo ||
@@ -304,7 +310,7 @@ export default function MobileMessagePage({
                 <div
                   key={conversation.id}
                   onClick={() =>
-                    onConversationClick(conversation.orderId, conversation.id)
+                    onConversationClick(conversation.orderId, conversation.id!)
                   }
                   className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors active:bg-gray-50 dark:active:bg-gray-700"
                 >

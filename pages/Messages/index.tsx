@@ -8,54 +8,20 @@ import {
   orderBy,
   getDocs,
   onSnapshot,
-  doc,
-  updateDoc,
   Timestamp,
-  Unsubscribe,
-  addDoc,
-  serverTimestamp,
-  getDoc,
   or,
 } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
-import { formatCurrency } from "../../src/lib/formatCurrency";
+import { Button } from "rsuite";
 import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage";
 import MobileMessagePage from "../../src/components/messages/MobileMessagePage";
-import {
-  containsBlockedPii,
-  getBlockedMessage,
-} from "../../src/lib/chatPiiBlock";
 import { useTheme } from "../../src/context/ThemeContext";
-
-// Helper to display timestamps as relative time ago
-function timeAgo(timestamp: any) {
-  if (!timestamp) return "";
-
-  const now = new Date().getTime();
-  const date =
-    timestamp instanceof Timestamp
-      ? timestamp.toDate().getTime()
-      : new Date(timestamp).getTime();
-
-  const diff = now - date;
-  const seconds = Math.floor(diff / 1000);
-
-  if (seconds < 60) return `${seconds} sec${seconds !== 1 ? "s" : ""} ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min${minutes !== 1 ? "s" : ""} ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-
-  return new Date(date).toLocaleDateString();
-}
+import { ChatCollection, ChatConversation as Conversation } from "../../src/services/chatService";
 
 // Helper to format order ID
 function formatOrderID(id?: string | number): string {
@@ -64,60 +30,28 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
-// Define message interface
-interface Message {
-  id: string;
-  text?: string;
-  message?: string;
-  senderId: string;
-  senderType: "customer" | "shopper";
-  recipientId: string;
-  timestamp: any;
-  read: boolean;
-}
-
-// Define conversation interface
-interface Conversation {
-  id: string;
-  orderId?: string;
-  customerId?: string;
-  shopperId?: string;
-  businessId?: string;
-  type?: "order" | "business";
-  title?: string;
-  counterpartName?: string;
-  lastMessage: string;
-  lastMessageTime: any;
-  unreadCount: number;
-  order?: any;
-}
-
 function MessagesPage() {
   const { theme } = useTheme();
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [conversationsFromCustomer, setConversationsFromCustomer] = useState<
-    Conversation[]
-  >([]);
-  const [conversationsFromOrders, setConversationsFromOrders] = useState<
-    Conversation[]
-  >([]);
-  // Merged and deduped: customerId match + conversations for user's orders (fallback for ID mismatch e.g. guest upgrade)
+  
+  const [orderConversations, setOrderConversations] = useState<Conversation[]>([]);
+  const [businessConversations, setBusinessConversations] = useState<Conversation[]>([]);
+  const [conversationsFromOrders, setConversationsFromOrders] = useState<Conversation[]>([]);
+  
+  // Merged and deduped
   const conversations = React.useMemo(() => {
     const byId = new Map<string, Conversation>();
-    [...conversationsFromCustomer, ...conversationsFromOrders].forEach((c) => {
+    [...orderConversations, ...businessConversations, ...conversationsFromOrders].forEach((c) => {
       if (c.id && !byId.has(c.id)) byId.set(c.id, c);
     });
     return Array.from(byId.values()).sort((a, b) => {
-      const timeA = a.lastMessageTime
-        ? new Date(a.lastMessageTime).getTime()
-        : 0;
-      const timeB = b.lastMessageTime
-        ? new Date(b.lastMessageTime).getTime()
-        : 0;
+      const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+      const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
       return timeB - timeA;
     });
-  }, [conversationsFromCustomer, conversationsFromOrders]);
+  }, [orderConversations, businessConversations, conversationsFromOrders]);
+
   const [orders, setOrders] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,15 +59,9 @@ function MessagesPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(
-    undefined
-  );
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | undefined
-  >(undefined);
-  const [sendError, setSendError] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(undefined);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>(undefined);
 
   // Check if mobile device
   useEffect(() => {
@@ -145,176 +73,155 @@ function MessagesPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Handle orderId query parameter to auto-select conversation (no auto-creation)
+  // Handle query parameters for auto-selection
   useEffect(() => {
-    const { orderId } = router.query;
+    const { orderId, conversationId } = router.query;
     if (orderId && typeof orderId === "string") {
       setSelectedOrderId(orderId);
-      // If mobile, navigate to the specific order chat page that handles creation safely
       if (isMobile) {
         router.push(`/Messages/${orderId}`);
       }
     }
+    if (conversationId && typeof conversationId === "string") {
+      setSelectedConversationId(conversationId);
+    }
   }, [router.query, isMobile]);
 
-  // Fetch conversations and their associated orders
+  // Real-time listener for Order Conversations
   useEffect(() => {
-    // Only fetch if user is authenticated
     if (status === "authenticated" && session?.user?.id) {
       const userId = session.user.id;
+      if (!db) return;
+      
+      const q = query(
+        collection(db!, "chat_conversations"),
+        or(
+          where("customerId", "==", userId),
+          where("shopperId", "==", userId)
+        ),
+        orderBy("lastMessageTime", "desc")
+      );
 
-      const fetchConversationsAndOrders = async () => {
-        try {
-          setLoading(true);
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const list = snapshot.docs.map(doc => ({
+          id: doc.id,
+          collectionPath: "chat_conversations" as ChatCollection,
+          ...doc.data(),
+          lastMessageTime: doc.data().lastMessageTime instanceof Timestamp 
+            ? doc.data().lastMessageTime.toDate() 
+            : doc.data().lastMessageTime,
+        })) as Conversation[];
+        setOrderConversations(list);
+        setLoading(false);
+      }, () => setLoading(false));
 
-          // Get conversations where the current user is either the customer or shopper
-          if (!db) return;
-          const conversationsRef = collection(db!, "chat_conversations");
-
-          // Query for conversations where user is customer, shopper, or business participant
-          const q = query(
-            conversationsRef,
-            or(
-              where("customerId", "==", userId),
-              where("shopperId", "==", userId),
-              where("businessId", "==", userId)
-            ),
-            orderBy("lastMessageTime", "desc")
-          );
-
-          // Set up real-time listener for conversations (customerId match)
-          const unsubscribe = onSnapshot(
-            q,
-            async (snapshot) => {
-              const conversationList = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-                lastMessageTime:
-                  doc.data().lastMessageTime instanceof Timestamp
-                    ? doc.data().lastMessageTime.toDate()
-                    : doc.data().lastMessageTime,
-              })) as Conversation[];
-
-              setConversationsFromCustomer(conversationList);
-
-              setLoading(false);
-            },
-            (error) => {
-              setLoading(false);
-            }
-          );
-
-          return unsubscribe;
-        } catch (error) {
-          setLoading(false);
-          return undefined;
-        }
-      };
-
-      const unsubscribePromise = fetchConversationsAndOrders();
-      return () => {
-        unsubscribePromise.then((unsubscribe) => {
-          if (unsubscribe) {
-            unsubscribe();
-          }
-        });
-      };
+      return () => unsubscribe();
     }
   }, [status, session?.user?.id]);
 
-  // Fallback: fetch conversations by user's order IDs (catches guest-upgrade or customerId mismatch)
+  // Real-time listener for Business Conversations
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.id) {
+      const userId = session.user.id;
+      if (!db) return;
+      
+      const q = query(
+        collection(db!, "business_conversations"),
+        or(
+          where("businessId", "==", userId),
+          where("counterpartId", "==", userId)
+        ),
+        orderBy("lastMessageTime", "desc")
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const list = snapshot.docs.map(doc => ({
+          id: doc.id,
+          collectionPath: "business_conversations" as ChatCollection,
+          ...doc.data(),
+          lastMessageTime: doc.data().lastMessageTime instanceof Timestamp 
+            ? doc.data().lastMessageTime.toDate() 
+            : doc.data().lastMessageTime,
+        })) as Conversation[];
+        setBusinessConversations(list);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [status, session?.user?.id]);
+
+  // Fallback for guest-upgraded orders or ID mismatches
   useEffect(() => {
     if (!db || status !== "authenticated" || !session?.user?.id) return;
 
     let cancelled = false;
-    const conversationsRef = collection(db!, "chat_conversations");
-
     const run = async () => {
       try {
-        const res = await fetch(
-          "/api/queries/user-orders?page=1&limit=30&minimal=1"
-        );
+        const res = await fetch("/api/queries/user-orders?page=1&limit=30&minimal=1");
         if (!res.ok || cancelled) return;
         const data = await res.json();
-        const ordersList = data.orders || [];
-        const orderIds = ordersList
+        const orderIds = (data.orders || [])
           .map((o: any) => o.id)
-          .filter(
-            (id: string) =>
-              id &&
-              typeof id === "string" &&
-              id.trim() !== "" &&
-              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-                id
-              )
-          )
-          .slice(0, 30); // Firestore "in" limit
+          .filter((id: string) => id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+          .slice(0, 30);
+          
         if (orderIds.length === 0 || cancelled) return;
 
-        const q = query(conversationsRef, where("orderId", "in", orderIds));
+        const q = query(collection(db!, "chat_conversations"), where("orderId", "in", orderIds));
         const snapshot = await getDocs(q);
         if (cancelled) return;
-        const list = snapshot.docs.map((doc) => ({
+        
+        const list = snapshot.docs.map(doc => ({
           id: doc.id,
+          collectionPath: "chat_conversations" as ChatCollection,
           ...doc.data(),
-          lastMessageTime:
-            doc.data().lastMessageTime instanceof Timestamp
-              ? doc.data().lastMessageTime.toDate()
-              : doc.data().lastMessageTime,
+          lastMessageTime: doc.data().lastMessageTime instanceof Timestamp 
+            ? doc.data().lastMessageTime.toDate() 
+            : doc.data().lastMessageTime,
         })) as Conversation[];
         setConversationsFromOrders(list);
       } catch (err) {
-        if (!cancelled)
-          console.error("Error fetching conversations by orders:", err);
+        if (!cancelled) console.error("Error fetching conversations by orders:", err);
       }
     };
 
     run();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [status, session?.user?.id]);
 
-  // Fetch order details for all conversations (merged list)
+  // Fetch order details for order-type conversations
   useEffect(() => {
     const orderIds = conversations
-      .map((c) => c.orderId)
-      .filter((id) => id && typeof id === "string" && id.trim() !== "");
+      .filter(c => c.collectionPath === "chat_conversations" && c.orderId)
+      .map(c => c.orderId!)
+      .filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+      
     if (orderIds.length === 0) return;
 
     let cancelled = false;
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const validIds = orderIds.filter((id) => uuidRegex.test(id));
-
     const fetchOrders = async () => {
-      // Only fetch orders we don't already have (avoid refetch on every merge)
-      const toFetch = validIds.filter(
-        (id) => !orders[id] || (orders[id] as any)?.error
-      );
+      const toFetch = orderIds.filter(id => !orders[id] || (orders[id] as any)?.error);
       if (toFetch.length === 0) return;
+      
       const promises = toFetch.map(async (orderId) => {
         try {
           const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
-          if (!res.ok)
-            return { orderId, order: { error: true, status: res.status } };
+          if (!res.ok) return { orderId, order: { error: true, status: res.status } };
           const data = await res.json();
           return { orderId, order: data.order };
         } catch (error) {
           return { orderId, order: { error: true } };
         }
       });
+      
       const results = await Promise.all(promises);
       if (cancelled) return;
-      setOrders((prev) => {
+      
+      setOrders(prev => {
         const next = { ...prev };
         let changed = false;
         results.forEach(({ orderId, order }) => {
-          if (
-            order &&
-            !order.error &&
-            (!prev[orderId] || (prev[orderId] as any).error)
-          ) {
+          if (order && !order.error && (!prev[orderId] || (prev[orderId] as any).error)) {
             next[orderId] = order;
             changed = true;
           } else if (!prev[orderId]) {
@@ -327,56 +234,40 @@ function MessagesPage() {
     };
 
     fetchOrders();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [conversations, orders]);
 
-  // Filter and sort conversations
   const filteredConversations = conversations
-    .filter((conversation) => {
-      // Apply search filter
+    .filter(conversation => {
       if (searchQuery) {
-        const order = orders[conversation.orderId];
-        const shopName = order?.shop?.name?.toLowerCase() || "";
-        const orderNumber = formatOrderID(
-          order?.OrderID || conversation.orderId
-        ).toLowerCase();
-        const messageText = conversation.lastMessage?.toLowerCase() || "";
-
         const searchLower = searchQuery.toLowerCase();
-        return (
-          shopName.includes(searchLower) ||
-          orderNumber.includes(searchLower) ||
-          messageText.includes(searchLower)
-        );
+        
+        // Match by message text
+        if (conversation.lastMessage?.toLowerCase().includes(searchLower)) return true;
+        
+        // Match by title (for business chats)
+        if (conversation.title?.toLowerCase().includes(searchLower)) return true;
+        if (conversation.counterpartName?.toLowerCase().includes(searchLower)) return true;
+        
+        // Match by order details
+        if (conversation.orderId) {
+          const order = orders[conversation.orderId];
+          const shopName = order?.shop?.name?.toLowerCase() || "";
+          const orderNumber = formatOrderID(order?.OrderID || conversation.orderId).toLowerCase();
+          return shopName.includes(searchLower) || orderNumber.includes(searchLower);
+        }
+        
+        return false;
       }
-
-      // Apply unread filter
-      if (showUnreadOnly) {
-        return conversation.unreadCount > 0;
-      }
-
-      return true;
+      return showUnreadOnly ? conversation.unreadCount > 0 : true;
     })
     .sort((a, b) => {
-      const timeA = a.lastMessageTime
-        ? new Date(a.lastMessageTime).getTime()
-        : 0;
-      const timeB = b.lastMessageTime
-        ? new Date(b.lastMessageTime).getTime()
-        : 0;
-
-      // Sort by time
-      if (sortOrder === "newest") {
-        return timeB - timeA; // newest first
-      } else {
-        return timeA - timeB; // oldest first
-      }
+      const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+      const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
     });
 
-  // Handle chat click
-  const handleChatClick = async (orderId?: string, conversationId?: string) => {
+  const handleChatClick = (orderId?: string, conversationId?: string) => {
     if (isMobile && orderId) {
       router.push(`/Messages/${orderId}`);
     } else {
@@ -386,41 +277,16 @@ function MessagesPage() {
     }
   };
 
-  // Handle conversation select for desktop
-  const handleConversationSelect = (
-    orderId?: string,
-    conversationId?: string
-  ) => {
-    setSelectedOrderId(orderId);
-    setSelectedConversationId(conversationId);
-  };
-
-
-  // Handle sending a new message
-
-  // Render loading state
-  if (loading) {
+  if (loading && status === "authenticated") {
     return (
       <RootLayout>
         <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
-              <img
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                className="h-16 w-16 animate-pulse"
-              />
+              <img src="/assets/logos/PlasIcon.png" alt="Plas Logo" className="h-16 w-16 animate-pulse" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
               </div>
-            </div>
-            <div className="text-center">
-              <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-                Loading...
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)]">
-                Loading conversations
-              </p>
             </div>
           </div>
         </div>
@@ -428,30 +294,21 @@ function MessagesPage() {
     );
   }
 
-  // Render authentication required
   if (status !== "authenticated") {
     return (
       <RootLayout>
         <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center">
-            <div className="mb-4 text-6xl">⚠️</div>
-            <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-              Authentication Required
-            </h3>
-            <p className="mb-4 text-[var(--text-secondary)]">
-              Please sign in to view your messages.
-            </p>
-            <Link href="/login" passHref>
-              <Button appearance="primary">Sign In</Button>
-            </Link>
+            <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">Authentication Required</h3>
+            <Link href="/login" passHref><Button appearance="primary">Sign In</Button></Link>
           </div>
         </div>
       </RootLayout>
     );
   }
 
+  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
-  // Render desktop view with new component
   if (!isMobile) {
     return (
       <AuthGuard requireAuth={true}>
@@ -461,7 +318,10 @@ function MessagesPage() {
               conversations={conversations}
               orders={orders}
               loading={loading}
-              onConversationSelect={handleConversationSelect}
+              onConversationSelect={(orderId, convId) => {
+                setSelectedOrderId(orderId);
+                setSelectedConversationId(convId);
+              }}
               selectedOrderId={selectedOrderId}
               selectedConversationId={selectedConversationId}
             />
@@ -471,7 +331,6 @@ function MessagesPage() {
     );
   }
 
-  // Render mobile view with new component
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
@@ -491,28 +350,16 @@ function MessagesPage() {
             isDrawerOpen={isDrawerOpen}
             onCloseDrawer={() => setIsDrawerOpen(false)}
           />
-          {/* Customer Chat Drawer for Mobile */}
           {selectedConversation && (
             <CustomerChatDrawer
-              conversationId={selectedConversation.id}
+              conversationId={selectedConversation.id!}
+              collectionPath={selectedConversation.collectionPath}
               orderId={selectedConversation.orderId}
               counterpart={{
-                id:
-                  selectedConversation.shopperId ||
-                  selectedConversation.businessId ||
-                  selectedConversation.customerId ||
-                  "",
-                name:
-                  selectedConversation.counterpartName ||
-                  selectedConversation.title ||
-                  "User",
-                avatar:
-                  selectedConversation.order?.shopper?.avatar ||
-                  "/images/ProfileImage.png",
-                role:
-                  selectedConversation.type === "business"
-                    ? "business"
-                    : "shopper",
+                id: selectedConversation.shopperId || selectedConversation.businessId || selectedConversation.counterpartId || selectedConversation.customerId || "",
+                name: selectedConversation.title || selectedConversation.counterpartName || "User",
+                avatar: orders[selectedConversation.orderId!]?.shopper?.avatar || "/images/ProfileImage.png",
+                role: selectedConversation.collectionPath === "business_conversations" ? "business" : "shopper",
               }}
               isOpen={isDrawerOpen}
               onClose={() => setIsDrawerOpen(false)}
