@@ -13787,9 +13787,18 @@ The AI Assistant (Plas Agent) is a Gemini-powered interactive companion that han
 - `get_user_checkout_details`: Retrieves saved addresses and payment methods.
 - `get_order_preview`: Calculates final totals, fees, and generating pricing tokens.
 - `show_checkout_form`: Mandatory interactive form for finalizing orders.
+- `create_support_ticket`: Registers general account queries and generates an issue tracking code.
+- `report_delivery_issue`: Files specific order complaints (broken items, wrong deliveries) requiring an order PIN, returning a trackable issue code.
+- `follow_up_issue`: Looks up existing tracking codes, assesses user urgency, escalates database priority, and instantly alerts support agents on Slack.
 
-### 4. Proactive Error Reporting
+### 4. Dynamic AI Persona
 
+- **Randomized Identity**: The AI is assigned a random name (e.g. Alice, Jon, Emma) on each chat session to create a friendly, personalized experience while keeping its core "Plas Agent" instructions intact.
+- **Premium UI Visibility**: The AI entry button features a floating sparkle SVG layout with a hovering "Need help? Ask AI" notification tool-tip to boost user engagement.
+
+### 5. Proactive Error Reporting
+
+- **Feedback Escalation**: The `follow_up_issue` tool triggers dynamic dual-Slack alerts to `#system_logs` and `#support`, ensuring high-priority user issues are visible.
 - **Slack Integration**: Serverside errors in AI APIs are reported to Slack via `logErrorToSlack`.
 - **Client Proxy**: A secure `/api/support/slack-logger` endpoint allows the frontend to report streaming and tool-execution failures without exposing webhooks.
 

@@ -33,7 +33,7 @@ export default function AIChatButton({
         }`}
       >
         <div className="relative rounded-2xl border border-[#115e59]/20 bg-white px-4 py-2 text-sm font-bold text-[#115e59] shadow-xl dark:border-white/10 dark:bg-gray-800 dark:text-[#84cc16]">
-          ✨ Need help? Ask AI
+          ✨ Need Help? Get an AI Agent
           {/* Tooltip Tail pointer */}
           <div className="absolute -bottom-2 right-5 h-4 w-4 rotate-45 border-b border-r border-[#115e59]/20 bg-white dark:border-white/10 dark:bg-gray-800"></div>
         </div>
