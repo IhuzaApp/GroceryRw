@@ -1,6 +1,7 @@
 import RootLayout from "@components/ui/layout";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { Modal, Button as RButton, toaster, Message } from "rsuite";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaurantOrderDetails";
@@ -11,6 +12,7 @@ import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
 import { useTheme } from "../../../src/context/ThemeContext";
 import Image from "next/image";
+import { Info, AlertCircle, X } from "lucide-react";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -192,12 +194,16 @@ const MobileOrderDetails = ({
   orderType,
   combinedOrders,
   onContactSupport,
+  onCancel,
+  isCancelling,
   supportTicket,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
+  onCancel?: () => void;
+  isCancelling?: boolean;
   supportTicket?: SupportTicketInfo;
 }) => {
   const { theme } = useTheme();
@@ -392,6 +398,33 @@ const MobileOrderDetails = ({
             />
           )}
         </div>
+
+        {/* Cancellation Section for Mobile (Bottom) */}
+        {(() => {
+          const status = order?.status?.toUpperCase();
+          if (status === "PENDING" || status === "ACCEPTED") {
+            return (
+              <div className="mt-8 rounded-2xl border border-red-100 bg-red-50/30 p-4 dark:border-red-900/20 dark:bg-red-900/10">
+                <RButton
+                  block
+                  appearance="ghost"
+                  color="red"
+                  loading={isCancelling}
+                  onClick={onCancel}
+                  className="!rounded-xl border-2 font-black transition-all active:scale-95"
+                >
+                  Cancel Order
+                </RButton>
+                <p className="mt-3 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  {status === "PENDING" 
+                    ? "Full refund will be returned to your wallet." 
+                    : "Note: Since the order was accepted, 70% of fees will be refunded (30% retained)."}
+                </p>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
     </div>
   );
@@ -403,19 +436,23 @@ const DesktopOrderDetails = ({
   orderType,
   combinedOrders,
   onContactSupport,
+  onCancel,
+  isCancelling,
   supportTicket,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
+  onCancel?: () => void;
+  isCancelling?: boolean;
   supportTicket?: SupportTicketInfo;
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
       {/* Desktop Content - No Header */}
       <div className="container mx-auto px-8 py-8">
-        <div className="rounded-2xl  shadow-sm ">
+        <div className="rounded-2xl shadow-sm">
           {orderType === "reel" ? (
             <UserReelOrderDetails
               order={order}
@@ -443,6 +480,40 @@ const DesktopOrderDetails = ({
             />
           )}
         </div>
+
+        {/* Desktop Cancellation Section (Bottom) */}
+        {(() => {
+          const status = order?.status?.toUpperCase();
+          if (status === "PENDING" || status === "ACCEPTED") {
+            return (
+              <div className="mt-8 flex items-center justify-between rounded-2xl border border-red-100 bg-red-50/30 p-6 dark:border-red-900/20 dark:bg-red-900/10">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                    <Info className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">Order Cancellation</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {status === "PENDING" 
+                        ? "You can still cancel this order for a full refund." 
+                        : "Order accepted. Cancellation involves a 30% fee split."}
+                    </p>
+                  </div>
+                </div>
+                <RButton
+                  appearance="ghost"
+                  color="red"
+                  loading={isCancelling}
+                  onClick={onCancel}
+                  className="!rounded-xl border-2 !px-8 !py-3 font-black transition-all hover:!bg-red-50 active:scale-95"
+                >
+                  Cancel Order
+                </RButton>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
     </div>
   );
@@ -463,6 +534,8 @@ function ViewOrderDetailsPage() {
     ticket_num: number;
     status: string;
   } | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // Fetch support ticket for this order (subject = "Order issue #orderRef")
   const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
@@ -490,6 +563,40 @@ function ViewOrderDetailsPage() {
       setSupportTicket(null);
     }
   }, []);
+
+  const handleCancelOrder = async () => {
+    if (!order?.id || !orderType) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/orders/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id, orderType }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toaster.push(
+          <Message type="success" closable>
+            Order cancelled successfully. Refund processed to your wallet.
+          </Message>,
+          { placement: "topCenter" }
+        );
+        router.push("/CurrentPendingOrders");
+      } else {
+        throw new Error(data.error || "Failed to cancel order");
+      }
+    } catch (e: any) {
+      toaster.push(
+        <Message type="error" closable>
+          {e.message}
+        </Message>,
+        { placement: "topCenter" }
+      );
+    } finally {
+      setIsCancelling(false);
+      setShowCancelModal(false);
+    }
+  };
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -763,6 +870,8 @@ function ViewOrderDetailsPage() {
             combinedOrders={combinedOrders}
             onContactSupport={showContactSupport}
             supportTicket={supportTicket}
+            onCancel={() => setShowCancelModal(true)}
+            isCancelling={isCancelling}
           />
         </div>
 
@@ -774,8 +883,73 @@ function ViewOrderDetailsPage() {
             combinedOrders={combinedOrders}
             onContactSupport={showContactSupport}
             supportTicket={supportTicket}
+            onCancel={() => setShowCancelModal(true)}
+            isCancelling={isCancelling}
           />
         </div>
+
+        {/* Cancellation Confirmation Modal */}
+        <Modal 
+          open={showCancelModal} 
+          onClose={() => setShowCancelModal(false)} 
+          size="xs"
+          backdrop="static"
+          className="premium-redesign-modal"
+        >
+          <Modal.Body className="!p-0">
+            <div className="flex flex-col items-center px-8 py-10">
+              {/* Icon with pulse effect */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20 dark:bg-red-900/30"></div>
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500 shadow-inner dark:bg-red-900/20">
+                  <AlertCircle className="h-10 w-10" />
+                </div>
+              </div>
+
+              <h3 className="mb-2 text-center text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+                Cancel Order?
+              </h3>
+              <p className="mb-8 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                Are you sure you want to cancel this order? This action will process an automatic refund to your wallet.
+              </p>
+
+              {order?.status?.toUpperCase() === "ACCEPTED" && (
+                <div className="mb-8 w-full overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/50 p-4 backdrop-blur-sm dark:border-orange-900/20 dark:bg-orange-900/10">
+                  <div className="flex gap-3">
+                    <Info className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+                    <div>
+                      <p className="text-xs font-bold text-orange-800 dark:text-orange-300">
+                        Refund Policy Notice
+                      </p>
+                      <p className="mt-1 text-[11px] leading-normal text-orange-700/80 dark:text-orange-400/80">
+                        Since the order has been accepted, 30% of fees will be retained as compensation. The remainder will be refunded.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex w-full flex-col gap-3">
+                <RButton
+                  onClick={handleCancelOrder}
+                  color="red"
+                  appearance="primary"
+                  loading={isCancelling}
+                  className="!rounded-2xl !py-4 text-sm font-black shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Yes, Cancel Order
+                </RButton>
+                <RButton
+                  onClick={() => setShowCancelModal(false)}
+                  appearance="subtle"
+                  className="!rounded-2xl !py-4 text-sm font-bold text-gray-500 transition-all hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                >
+                  No, Keep Order
+                </RButton>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
 
         <ContactSupportModal
           open={showSupportModal}

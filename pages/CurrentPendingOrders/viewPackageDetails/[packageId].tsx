@@ -1,7 +1,7 @@
 import RootLayout from "@components/ui/layout";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Button, Loader } from "rsuite";
+import { Button, Loader, Modal, toaster, Message } from "rsuite";
 import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
 import { useTheme } from "../../../src/context/ThemeContext";
@@ -28,6 +28,7 @@ import {
   Truck,
   Footprints,
   Car,
+  AlertCircle,
 } from "lucide-react";
 
 // Helper to display timestamps as relative time ago
@@ -280,6 +281,8 @@ function PackageDetailsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -327,6 +330,40 @@ function PackageDetailsPage() {
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCancelPackage = async () => {
+    if (!pkg?.id) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/orders/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: pkg.id, orderType: "package" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toaster.push(
+          <Message type="success" closable>
+            Package delivery cancelled successfully. Refund processed to your wallet.
+          </Message>,
+          { placement: "topCenter" }
+        );
+        router.push("/CurrentPendingOrders");
+      } else {
+        throw new Error(data.error || "Failed to cancel delivery");
+      }
+    } catch (e: any) {
+      toaster.push(
+        <Message type="error" closable>
+          {e.message}
+        </Message>,
+        { placement: "topCenter" }
+      );
+    } finally {
+      setIsCancelling(false);
+      setShowCancelModal(false);
     }
   };
 
@@ -501,7 +538,6 @@ function PackageDetailsPage() {
                     </Button>
                   )}
                 </div>
-
                 <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold">Delivery Status</h3>
@@ -715,6 +751,27 @@ function PackageDetailsPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Cancellation Section (Bottom) */}
+                {(pkg.status?.toUpperCase() === "PENDING" || pkg.status?.toUpperCase() === "ACCEPTED") && (
+                  <div className="mt-4 rounded-2xl border border-red-50 bg-red-50/20 p-4 dark:border-red-900/10 dark:bg-red-900/10">
+                    <Button
+                      appearance="ghost"
+                      color="red"
+                      block
+                      loading={isCancelling}
+                      onClick={() => setShowCancelModal(true)}
+                      className="!rounded-xl border-2 !py-3 font-black transition-all hover:!bg-red-50 active:scale-95"
+                    >
+                      Cancel Delivery
+                    </Button>
+                    <p className="mt-2 text-center text-[10px] text-gray-500">
+                      {pkg.status?.toUpperCase() === "PENDING" 
+                        ? "Full refund will be returned to your wallet." 
+                        : "70% of fees will be returned (30% retained)."}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -735,6 +792,69 @@ function PackageDetailsPage() {
           order={pkg}
           orderType="package"
         />
+
+        {/* Cancellation Confirmation Modal */}
+        <Modal 
+          open={showCancelModal} 
+          onClose={() => setShowCancelModal(false)} 
+          size="xs"
+          backdrop="static"
+          className="premium-redesign-modal"
+        >
+          <Modal.Body className="!p-0">
+            <div className="flex flex-col items-center px-8 py-10">
+              {/* Icon with pulse effect */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20 dark:bg-red-900/30"></div>
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500 shadow-inner dark:bg-red-900/20">
+                  <AlertCircle className="h-10 w-10" />
+                </div>
+              </div>
+
+              <h3 className="mb-2 text-center text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+                Cancel Delivery?
+              </h3>
+              <p className="mb-8 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+                Are you sure you want to cancel this package delivery? The refund will be processed to your wallet.
+              </p>
+
+              {pkg?.status?.toUpperCase() === "ACCEPTED" && (
+                <div className="mb-8 w-full overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/50 p-4 backdrop-blur-sm dark:border-orange-900/20 dark:bg-orange-900/10">
+                  <div className="flex gap-3">
+                    <Info className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+                    <div>
+                      <p className="text-xs font-bold text-orange-800 dark:text-orange-300">
+                        Refund Policy Notice
+                      </p>
+                      <p className="mt-1 text-[11px] leading-normal text-orange-700/80 dark:text-orange-400/80">
+                        Since the delivery has been accepted, 30% of the fee will be retained as compensation for the Plasa.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex w-full flex-col gap-3">
+                <Button
+                  onClick={handleCancelPackage}
+                  color="red"
+                  appearance="primary"
+                  loading={isCancelling}
+                  className="!rounded-2xl !py-4 text-sm font-black shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Yes, Cancel Delivery
+                </Button>
+                <Button
+                  onClick={() => setShowCancelModal(false)}
+                  appearance="subtle"
+                  className="!rounded-2xl !py-4 text-sm font-bold text-gray-500 transition-all hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                >
+                  No, Keep It
+                </Button>
+              </div>
+            </div>
+          </Modal.Body>
+        </Modal>
       </RootLayout>
     </AuthGuard>
   );
