@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { logErrorToSlack } from "../../src/lib/slackErrorReporter";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 export default async function handler(
   req: NextApiRequest,
