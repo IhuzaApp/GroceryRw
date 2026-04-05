@@ -41,7 +41,7 @@ type Body =
       requestType?: "order";
       orderId: string;
       orderDisplayId?: string;
-      orderType: "regular" | "reel" | "restaurant" | "business";
+      orderType: "regular" | "reel" | "restaurant" | "business" | "package";
       storeName?: string;
       status?: string;
       message: string;

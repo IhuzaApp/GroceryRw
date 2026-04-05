@@ -730,9 +730,10 @@ function PackageDetailsPage() {
         />
 
         <ContactSupportModal
-          isOpen={supportModal}
+          open={supportModal}
           onClose={() => setSupportModal(false)}
-          orderId={pkg.id}
+          order={pkg}
+          orderType="package"
         />
       </RootLayout>
     </AuthGuard>
