@@ -165,10 +165,25 @@ const UPDATE_SHOPPER_WALLET = gql`
   }
 `;
 
-const CREATE_REFUND_RECORD = gql`
-  mutation CreateRefundRecord($object: Refunds_insert_input!) {
-    insert_Refunds_one(object: $object) {
+const UPSERT_REFUND_RECORD = gql`
+  mutation UpsertRefundRecord($object: Refunds_insert_input!) {
+    insert_Refunds_one(
+      object: $object
+      on_conflict: {
+        constraint: Refunds_order_id_key
+        update_columns: [amount, status, reason, paid]
+      }
+    ) {
       id
+    }
+  }
+`;
+
+const CHECK_EXISTING_PERSONAL_TX = gql`
+  query CheckExistingPersonalTx($order_suffix: String!) {
+    personalWalletTransactions(where: { reference_id: { _like: $order_suffix } }) {
+      id
+      reference_id
     }
   }
 `;
@@ -304,9 +319,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 4. Perform Updates (Order status will be updated LAST if refund succeeds)
+    const refundRef = `REFUND-${orderId.slice(-8)}-${Date.now()}`;
+    const payoutRef = `PAYOUT-${orderId.slice(-8)}-${Date.now()}`;
 
-    // B. Refund User
+    // B. Refund User (idempotency: skip if already refunded for this order)
     if (userRefundAmount > 0) {
+      const orderSuffix = `REFUND-${orderId.slice(-8)}%`;
+      const existingTx = await hasuraClient.request<any>(CHECK_EXISTING_PERSONAL_TX, { order_suffix: orderSuffix });
+      const alreadyRefunded = existingTx.personalWalletTransactions?.length > 0;
+
+      if (alreadyRefunded) {
+        console.log(`[CANCELLATION DEBUG] Refund already recorded for order ${orderId}, skipping wallet update.`);
+      } else {
       const walletData = await hasuraClient.request<any>(GET_USER_WALLET, { user_id: order.user_id });
       const wallet = walletData.personalWallet?.[0];
       if (wallet) {
@@ -314,11 +338,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`[CANCELLATION DEBUG] Updating User Wallet: Old Balance: ${wallet.balance}, New Balance: ${newBalance}`);
         await hasuraClient.request(UPDATE_USER_WALLET, { user_id: order.user_id, balance: newBalance });
         
-        // C. Record Refund in the Refunds table (all order types)
-        await hasuraClient!.request(CREATE_REFUND_RECORD, {
+        // C. Record Refund in the Refunds table (all order types) — upsert to handle retries
+        await hasuraClient!.request(UPSERT_REFUND_RECORD, {
           object: {
             user_id: order.user_id,
             order_id: orderType === 'regular' ? orderId : null,
+            reel_order_id: orderType === 'reel' ? orderId : null,
+            restaurant_order_id: orderType === 'restaurant' ? orderId : null,
+            package_id: orderType === 'package' ? orderId : null,
+            business_order_id: orderType === 'business' ? orderId : null,
             amount: userRefundAmount.toFixed(0),
             status: "COMPLETED",
             reason: `Order cancelled by user (${currentStatus}) - ${orderType}: ${orderId}`,
@@ -337,7 +365,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             action: "Refund",
             status: "Completed",
             doneBy: session.user.id,
-            reference_id: `REFUND-${orderId.slice(-8)}`
+            reference_id: refundRef
           }
         });
 
@@ -355,12 +383,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             restaurant_order_id: orderType === 'restaurant' ? orderId : null,
             package_id: orderType === 'package' ? orderId : null,
             business_order_id: orderType === 'business' ? orderId : null,
-            reference_id: `REFUND-${orderId.slice(-8)}`,
+            reference_id: refundRef,
             mtn_response: JSON.stringify({ type: "system_refund", reason: "order_cancellation" })
           }
         });
-      }
-    }
+      } // end if (wallet)
+      } // end else (!alreadyRefunded)
+    } // end if (userRefundAmount > 0)
 
     // C. Payout Shopper & Float Reversal
     if (order.shopper_id) {
@@ -406,7 +435,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               restaurant_order_id: orderType === 'restaurant' ? orderId : null,
               package_id: orderType === 'package' ? orderId : null,
               business_order_id: orderType === 'business' ? orderId : null,
-              reference_id: `PAYOUT-${orderId.slice(-8)}`,
+              reference_id: payoutRef,
               mtn_response: JSON.stringify({ type: "system_payout", reason: "order_cancellation_compensation" })
             }
           });
