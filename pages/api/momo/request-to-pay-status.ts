@@ -153,18 +153,18 @@ const ACTIVATE_INVOICE = gql`
 `;
 
 const UPDATE_ORDER_STATUS = gql`
-  mutation UpdateOrderStatus($id: uuid!, $status: String!) {
-    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) {
+  mutation UpdateOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
+    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) {
       id
     }
   }
 `;
 
 const UPDATE_FOOD_ORDER_STATUS = gql`
-  mutation UpdateFoodOrderStatus($id: uuid!, $status: String!) {
+  mutation UpdateFoodOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
     update_restaurant_orders_by_pk(
       pk_columns: { id: $id }
-      _set: { status: $status }
+      _set: { status: $status, delivery_time: $delivery_time }
     ) {
       id
     }
@@ -183,10 +183,10 @@ const UPDATE_COMBINED_ORDER_STATUS = gql`
 `;
 
 const UPDATE_REEL_ORDER_STATUS = gql`
-  mutation UpdateReelOrderStatus($id: uuid!, $status: String!) {
+  mutation UpdateReelOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
     update_reel_orders_by_pk(
       pk_columns: { id: $id }
-      _set: { status: $status }
+      _set: { status: $status, delivery_time: $delivery_time }
     ) {
       id
     }
@@ -201,6 +201,28 @@ const UPDATE_PACKAGE_DELIVERY_STATUS = gql`
     ) {
       id
     }
+  }
+`;
+
+// Query to get order timing fields for delivery time recalculation
+const GET_ORDER_TIMING = gql`
+  query GetOrderTiming($id: uuid!) {
+    Orders_by_pk(id: $id) { created_at delivery_time }
+  }
+`;
+const GET_REEL_ORDER_TIMING = gql`
+  query GetReelOrderTiming($id: uuid!) {
+    reel_orders_by_pk(id: $id) { created_at delivery_time }
+  }
+`;
+const GET_RESTAURANT_ORDER_TIMING = gql`
+  query GetRestaurantOrderTiming($id: uuid!) {
+    restaurant_orders_by_pk(id: $id) { created_at delivery_time }
+  }
+`;
+const GET_BUSINESS_ORDER_TIMING = gql`
+  query GetBusinessOrderTiming($id: uuid!) {
+    business_orders_by_pk(id: $id) { created_at delivery_time }
   }
 `;
 
@@ -371,14 +393,33 @@ export default async function handler(
             const packageId = orderTransaction.package_id;
 
             if (newStatus === "SUCCESSFUL") {
+              // Helper: compute fresh delivery time from original creation-to-delivery delta
+              const computeNewDelivery = (created_at?: string, delivery_time?: string): string => {
+                if (created_at && delivery_time) {
+                  const createdMs = new Date(created_at).getTime();
+                  const deliveryMs = new Date(delivery_time).getTime();
+                  if (!isNaN(createdMs) && !isNaN(deliveryMs) && deliveryMs > createdMs) {
+                    return new Date(Date.now() + (deliveryMs - createdMs)).toISOString();
+                  }
+                }
+                return new Date(Date.now() + 60 * 60000).toISOString(); // fallback: +1 hour
+              };
+
               // SUCCESS: Activate orders and CLEAR CART
               if (orderId) {
                 console.log(
                   `🚀[MoMo Status] Activating grocery order: ${orderId} `
                 );
+                // Fetch timing to recalculate delivery_time from payment moment
+                const timingRes = await hasuraClient.request<{ Orders_by_pk: any }>(GET_ORDER_TIMING, { id: orderId });
+                const newDeliveryTime = computeNewDelivery(
+                  timingRes.Orders_by_pk?.created_at,
+                  timingRes.Orders_by_pk?.delivery_time
+                );
                 await hasuraClient.request(UPDATE_ORDER_STATUS, {
                   id: orderId,
                   status: "PENDING",
+                  delivery_time: newDeliveryTime,
                 });
                 await hasuraClient.request(UPDATE_COMBINED_ORDER_STATUS, {
                   combined_id: orderId,
@@ -421,9 +462,15 @@ export default async function handler(
                 console.log(
                   `🚀[MoMo Status] Activating food order: ${restaurantOrderId} `
                 );
+                const timingRes = await hasuraClient.request<{ restaurant_orders_by_pk: any }>(GET_RESTAURANT_ORDER_TIMING, { id: restaurantOrderId });
+                const newDeliveryTime = computeNewDelivery(
+                  timingRes.restaurant_orders_by_pk?.created_at,
+                  timingRes.restaurant_orders_by_pk?.delivery_time
+                );
                 await hasuraClient.request(UPDATE_FOOD_ORDER_STATUS, {
                   id: restaurantOrderId,
                   status: "WAITING_FOR_CONFIRMATION",
+                  delivery_time: newDeliveryTime,
                 });
 
                 // Clear cart for food
@@ -447,9 +494,15 @@ export default async function handler(
                 console.log(
                   `🚀[MoMo Status] Activating business order: ${businessOrderId} `
                 );
+                const timingRes = await hasuraClient.request<{ business_orders_by_pk: any }>(GET_BUSINESS_ORDER_TIMING, { id: businessOrderId });
+                const newDeliveryTime = computeNewDelivery(
+                  timingRes.business_orders_by_pk?.created_at,
+                  timingRes.business_orders_by_pk?.delivery_time
+                );
                 await hasuraClient.request(UPDATE_ORDER_STATUS, {
                   id: businessOrderId,
                   status: "PENDING",
+                  delivery_time: newDeliveryTime,
                 });
               }
 
@@ -457,9 +510,15 @@ export default async function handler(
                 console.log(
                   `🚀[MoMo Status] Activating reel order: ${reelOrderId} `
                 );
+                const timingRes = await hasuraClient.request<{ reel_orders_by_pk: any }>(GET_REEL_ORDER_TIMING, { id: reelOrderId });
+                const newDeliveryTime = computeNewDelivery(
+                  timingRes.reel_orders_by_pk?.created_at,
+                  timingRes.reel_orders_by_pk?.delivery_time
+                );
                 await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, {
                   id: reelOrderId,
                   status: "PENDING",
+                  delivery_time: newDeliveryTime,
                 });
               }
 

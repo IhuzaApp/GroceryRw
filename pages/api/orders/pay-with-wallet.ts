@@ -7,22 +7,22 @@ import { gql } from "graphql-request";
 // GET QUERIES
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($id: uuid!) {
-    Orders_by_pk(id: $id) { id user_id total status }
+    Orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
   }
 `;
 const GET_REEL_ORDER = gql`
   query GetReelOrder($id: uuid!) {
-    reel_orders_by_pk(id: $id) { id user_id total status }
+    reel_orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
   }
 `;
 const GET_BUSINESS_ORDER = gql`
   query GetBusinessOrder($id: uuid!) {
-    business_orders_by_pk(id: $id) { id user_id total status }
+    business_orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
   }
 `;
 const GET_RESTAURANT_ORDER = gql`
   query GetRestaurantOrder($id: uuid!) {
-    restaurant_orders_by_pk(id: $id) { id user_id total status }
+    restaurant_orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
   }
 `;
 
@@ -42,23 +42,23 @@ const UPDATE_WALLET_BALANCE = gql`
 `;
 
 const UPDATE_ORDER_STATUS = gql`
-  mutation UpdateOrderStatus($id: uuid!, $status: String!) {
-    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) { id }
+  mutation UpdateOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
+    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
   }
 `;
 const UPDATE_REEL_ORDER_STATUS = gql`
-  mutation UpdateReelOrderStatus($id: uuid!, $status: String!) {
-    update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) { id }
+  mutation UpdateReelOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
+    update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
   }
 `;
 const UPDATE_BUSINESS_ORDER_STATUS = gql`
-  mutation UpdateBusinessOrderStatus($id: uuid!, $status: String!) {
-    update_business_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) { id }
+  mutation UpdateBusinessOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
+    update_business_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
   }
 `;
 const UPDATE_RESTAURANT_ORDER_STATUS = gql`
-  mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!) {
-    update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) { id }
+  mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
+    update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
   }
 `;
 
@@ -151,19 +151,36 @@ export default async function handler(
 
     const newBalance = (currentBalance - orderTotal).toFixed(2);
 
+    // 2.5 Calculate exact delivery time offset based on payment completion vs start time
+    let newDeliveryTimeISO: string | null = null;
+    if (order.created_at && order.delivery_time) {
+      const createdAtMs = new Date(order.created_at).getTime();
+      const originalDeliveryMs = new Date(order.delivery_time).getTime();
+      if (!isNaN(createdAtMs) && !isNaN(originalDeliveryMs) && originalDeliveryMs > createdAtMs) {
+        const deltaMs = originalDeliveryMs - createdAtMs;
+        newDeliveryTimeISO = new Date(Date.now() + deltaMs).toISOString();
+      }
+    }
+    // Default fallback: 1 hour from now if the original was not adequately defined
+    if (!newDeliveryTimeISO) {
+      newDeliveryTimeISO = new Date(Date.now() + 60 * 60000).toISOString();
+    }
+
     // 3. Deduct Wallet
     await hasuraClient.request(UPDATE_WALLET_BALANCE, { id: wallet.id, balance: newBalance });
 
-    // 4. Update Order Status
+    // 4. Update Order Status & delivery time
+    const updateVariables = { id: orderId, status: "PENDING", delivery_time: newDeliveryTimeISO };
+
     if (orderType === "reel") {
-      await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, { id: orderId, status: "PENDING" });
+      await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, updateVariables);
     } else if (orderType === "business") {
-      await hasuraClient.request(UPDATE_BUSINESS_ORDER_STATUS, { id: orderId, status: "PENDING" });
+      await hasuraClient.request(UPDATE_BUSINESS_ORDER_STATUS, updateVariables);
     } else if (orderType === "restaurant") {
-      await hasuraClient.request(UPDATE_RESTAURANT_ORDER_STATUS, { id: orderId, status: "PENDING" });
+      await hasuraClient.request(UPDATE_RESTAURANT_ORDER_STATUS, updateVariables);
     } else {
-      await hasuraClient.request(UPDATE_ORDER_STATUS, { id: orderId, status: "PENDING" });
-      await hasuraClient.request(UPDATE_COMBINED_ORDER_STATUS, { combined_id: orderId, status: "PENDING" });
+      await hasuraClient.request(UPDATE_ORDER_STATUS, updateVariables);
+      await hasuraClient.request(UPDATE_COMBINED_ORDER_STATUS, { combined_id: orderId, status: "PENDING" }); // Intentionally missing delivery time since only individual orders track it fully realistically
     }
 
     // 5. Record Transaction
