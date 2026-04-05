@@ -53,7 +53,7 @@ function timeAgo(timestamp: string): string {
 // Helper to get order status display info with SVG icons
 function getOrderStatusInfo(order: any) {
   const currentStatus = String(order?.status || "").toLowerCase();
-  
+
   if (currentStatus === "cancelled") {
     return {
       status: "Cancelled",
@@ -463,8 +463,8 @@ const MobileOrderDetails = ({
                   Cancel Order
                 </RButton>
                 <p className="mt-3 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
-                  {status === "PENDING" 
-                    ? "Full refund will be returned to your wallet." 
+                  {status === "PENDING"
+                    ? "Full refund will be returned to your wallet."
                     : "Note: Since the order was accepted, 70% of fees will be refunded (30% retained)."}
                 </p>
               </div>
@@ -541,7 +541,9 @@ const DesktopOrderDetails = ({
                     <Info className="h-6 w-6 text-orange-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white">Complete Payment</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white">
+                      Complete Payment
+                    </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Please complete your payment to proceed with your order.
                     </p>
@@ -566,10 +568,12 @@ const DesktopOrderDetails = ({
                     <Info className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 dark:text-white">Order Cancellation</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white">
+                      Order Cancellation
+                    </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {status === "PENDING" 
-                        ? "You can still cancel this order for a full refund." 
+                      {status === "PENDING"
+                        ? "You can still cancel this order for a full refund."
                         : "Order accepted. Cancellation involves a 30% fee split."}
                     </p>
                   </div>
@@ -612,7 +616,6 @@ function ViewOrderDetailsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-
   // Fetch support ticket for this order (subject = "Order issue #orderRef")
   const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
     if (!orderObj?.id) return;
@@ -652,7 +655,7 @@ function ViewOrderDetailsPage() {
         body: JSON.stringify({ orderId: order.id, orderType }),
       });
       const data = await res.json();
-      
+
       if (res.ok) {
         toaster.push(
           <Message type="success" closable>
@@ -930,11 +933,14 @@ function ViewOrderDetailsPage() {
 
   const calculateRefundDetails = () => {
     if (!order) return { refund: 0, deduction: 0 };
-    const totalRaw = order.total || order.delivery_fee || order.transportation_fee || "0";
-    const deliveryFee = parseFloat(order.deliveryFee || order.delivery_fee || "0");
+    const totalRaw =
+      order.total || order.delivery_fee || order.transportation_fee || "0";
+    const deliveryFee = parseFloat(
+      order.deliveryFee || order.delivery_fee || "0"
+    );
     const serviceFee = parseFloat(order.serviceFee || order.service_fee || "0");
     const totalFees = deliveryFee + serviceFee;
-    
+
     let grandTotal = 0;
     let subtotal = 0;
 
@@ -954,7 +960,7 @@ function ViewOrderDetailsPage() {
       refund = grandTotal;
       deduction = 0;
     } else if (status === "ACCEPTED") {
-      refund = subtotal + (0.7 * totalFees);
+      refund = subtotal + 0.7 * totalFees;
       deduction = 0.3 * totalFees;
     }
 

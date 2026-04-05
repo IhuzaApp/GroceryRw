@@ -267,10 +267,11 @@ export default function UserRecentOrders({
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 4;
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Payment state
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [selectedPaymentOrder, setSelectedPaymentOrder] = useState<Order | null>(null);
+  const [selectedPaymentOrder, setSelectedPaymentOrder] =
+    useState<Order | null>(null);
 
   // Apply filter and search
   const filteredOrders = orders.filter((order: Order) => {
@@ -567,7 +568,13 @@ export default function UserRecentOrders({
                         Status:
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          className="h-3.5 w-3.5"
+                        >
                           <circle cx="12" cy="12" r="10" />
                           <path strokeLinecap="round" d="M15 9l-6 6M9 9l6 6" />
                         </svg>
@@ -589,7 +596,8 @@ export default function UserRecentOrders({
                   ) : null}
 
                   {/* Payment Button */}
-                  {String(order.status).toUpperCase() === "AWAITING_PAYMENT" && (
+                  {String(order.status).toUpperCase() ===
+                    "AWAITING_PAYMENT" && (
                     <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
                       <button
                         onClick={(e) => {

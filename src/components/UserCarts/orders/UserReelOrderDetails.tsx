@@ -730,7 +730,8 @@ export default function UserReelOrderDetails({
                       order.status === "delivered" || !order.assignedTo?.phone
                     }
                     className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${
-                      order.status?.toLowerCase() === "delivered" || !order.assignedTo?.phone
+                      order.status?.toLowerCase() === "delivered" ||
+                      !order.assignedTo?.phone
                         ? "cursor-not-allowed bg-gray-400 opacity-50"
                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
                     }`}

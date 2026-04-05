@@ -107,13 +107,18 @@ export default async function handler(
     if (body.requestType === "general") {
       const { message } = body;
       if (!message || typeof message !== "string") {
-        return res.status(400).json({ error: "Missing required field: message" });
+        return res
+          .status(400)
+          .json({ error: "Missing required field: message" });
       }
 
       let ticketNum: number | undefined;
       if (hasuraClient) {
         const result = await hasuraClient.request<{
-          insert_tickets: { affected_rows: number; returning: Array<{ ticket_num: number }> };
+          insert_tickets: {
+            affected_rows: number;
+            returning: Array<{ ticket_num: number }>;
+          };
         }>(ADD_TICKET_REQUEST, {
           priority: "normal",
           status: "open",

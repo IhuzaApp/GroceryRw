@@ -10,25 +10,24 @@ const hasuraClient = new GraphQLClient(HASURA_URL, {
 });
 
 const GET_REFUNDS = gql`
-query GetRefunds($user_id: uuid!) {
-  Refunds(where: {user_id: {_eq: $user_id}, status: {_eq: "pending"}}) {
-    id
-    amount
-    status
-    created_at
-    order_id
-    package_id
-    paid
-    reason
-    reel_order_id
-    restaurant_order_id
-    update_on
-    user_id
-    generated_by
-    business_order_id
+  query GetRefunds($user_id: uuid!) {
+    Refunds(where: { user_id: { _eq: $user_id }, status: { _eq: "pending" } }) {
+      id
+      amount
+      status
+      created_at
+      order_id
+      package_id
+      paid
+      reason
+      reel_order_id
+      restaurant_order_id
+      update_on
+      user_id
+      generated_by
+      business_order_id
+    }
   }
-}
-
 `;
 
 interface RefundResponse {

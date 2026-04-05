@@ -9,11 +9,11 @@ const GET_TRANSACTION_STATUS = gql`
     order_transactions(
       where: {
         _or: [
-          { order_id: { _eq: $order_id } },
-          { reel_order_id: { _eq: $order_id } },
-          { business_order_id: { _eq: $order_id } },
+          { order_id: { _eq: $order_id } }
+          { reel_order_id: { _eq: $order_id } }
+          { business_order_id: { _eq: $order_id } }
           { restaurant_order_id: { _eq: $order_id } }
-        ],
+        ]
         status: { _eq: "SUCCESSFUL" }
       }
     ) {

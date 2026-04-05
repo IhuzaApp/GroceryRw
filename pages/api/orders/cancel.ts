@@ -74,7 +74,10 @@ const GET_BUSINESS_ORDER = gql`
 
 const UPDATE_ORDER_STATUS = gql`
   mutation UpdateOrderStatus($id: uuid!, $status: String!) {
-    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+    update_Orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
       id
       status
     }
@@ -83,7 +86,10 @@ const UPDATE_ORDER_STATUS = gql`
 
 const UPDATE_REEL_ORDER_STATUS = gql`
   mutation UpdateReelOrderStatus($id: uuid!, $status: String!) {
-    update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+    update_reel_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
       id
       status
     }
@@ -92,7 +98,10 @@ const UPDATE_REEL_ORDER_STATUS = gql`
 
 const UPDATE_RESTAURANT_ORDER_STATUS = gql`
   mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!) {
-    update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+    update_restaurant_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
       id
       status
     }
@@ -101,7 +110,10 @@ const UPDATE_RESTAURANT_ORDER_STATUS = gql`
 
 const UPDATE_PACKAGE_ORDER_STATUS = gql`
   mutation UpdatePackageOrderStatus($id: uuid!, $status: String!) {
-    update_package_delivery_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: "now()" }) {
+    update_package_delivery_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
       id
       status
     }
@@ -110,7 +122,10 @@ const UPDATE_PACKAGE_ORDER_STATUS = gql`
 
 const UPDATE_BUSINESS_ORDER_STATUS = gql`
   mutation UpdateBusinessOrderStatus($id: uuid!, $status: String!) {
-    update_businessProductOrders_by_pk(pk_columns: { id: $id }, _set: { status: $status }) {
+    update_businessProductOrders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status }
+    ) {
       id
       status
     }
@@ -149,13 +164,17 @@ const GET_SHOPPER_WALLET = gql`
 `;
 
 const UPDATE_SHOPPER_WALLET = gql`
-  mutation UpdateShopperWallet($wallet_id: uuid!, $available_balance: String!, $reserved_balance: String!) {
+  mutation UpdateShopperWallet(
+    $wallet_id: uuid!
+    $available_balance: String!
+    $reserved_balance: String!
+  ) {
     update_Wallets_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: { 
-        available_balance: $available_balance, 
-        reserved_balance: $reserved_balance, 
-        last_updated: "now()" 
+      _set: {
+        available_balance: $available_balance
+        reserved_balance: $reserved_balance
+        last_updated: "now()"
       }
     ) {
       id
@@ -181,7 +200,9 @@ const UPSERT_REFUND_RECORD = gql`
 
 const CHECK_EXISTING_PERSONAL_TX = gql`
   query CheckExistingPersonalTx($order_suffix: String!) {
-    personalWalletTransactions(where: { reference_id: { _like: $order_suffix } }) {
+    personalWalletTransactions(
+      where: { reference_id: { _like: $order_suffix } }
+    ) {
       id
       reference_id
     }
@@ -189,7 +210,9 @@ const CHECK_EXISTING_PERSONAL_TX = gql`
 `;
 
 const CREATE_SHOPPER_TRANSACTION = gql`
-  mutation CreateShopperTransaction($object: Wallet_Transactions_insert_input!) {
+  mutation CreateShopperTransaction(
+    $object: Wallet_Transactions_insert_input!
+  ) {
     insert_Wallet_Transactions_one(object: $object) {
       id
     }
@@ -197,7 +220,9 @@ const CREATE_SHOPPER_TRANSACTION = gql`
 `;
 
 const CREATE_PERSONAL_WALLET_TRANSACTION = gql`
-  mutation CreatePersonalWalletTransaction($object: personalWalletTransactions_insert_input!) {
+  mutation CreatePersonalWalletTransaction(
+    $object: personalWalletTransactions_insert_input!
+  ) {
     insert_personalWalletTransactions_one(object: $object) {
       id
     }
@@ -212,7 +237,10 @@ const CREATE_ORDER_TRANSACTION = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -228,7 +256,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { orderId } = req.body;
   const orderType = (req.body.orderType || "").toLowerCase();
-  
+
   if (!orderId || !orderType) {
     return res.status(400).json({ error: "Missing orderId or orderType" });
   }
@@ -240,23 +268,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 1. Fetch order details based on type
     switch (orderType) {
       case "regular":
-        order = (await hasuraClient.request<any>(GET_ORDER, { id: orderId })).Orders_by_pk;
+        order = (await hasuraClient.request<any>(GET_ORDER, { id: orderId }))
+          .Orders_by_pk;
         table = "Orders";
         break;
       case "reel":
-        order = (await hasuraClient.request<any>(GET_REEL_ORDER, { id: orderId })).reel_orders_by_pk;
+        order = (
+          await hasuraClient.request<any>(GET_REEL_ORDER, { id: orderId })
+        ).reel_orders_by_pk;
         table = "reel_orders";
         break;
       case "restaurant":
-        order = (await hasuraClient.request<any>(GET_RESTAURANT_ORDER, { id: orderId })).restaurant_orders_by_pk;
+        order = (
+          await hasuraClient.request<any>(GET_RESTAURANT_ORDER, { id: orderId })
+        ).restaurant_orders_by_pk;
         table = "restaurant_orders";
         break;
       case "package":
-        order = (await hasuraClient.request<any>(GET_PACKAGE_ORDER, { id: orderId })).package_delivery_by_pk;
+        order = (
+          await hasuraClient.request<any>(GET_PACKAGE_ORDER, { id: orderId })
+        ).package_delivery_by_pk;
         table = "package_delivery";
         break;
       case "business":
-        order = (await hasuraClient.request<any>(GET_BUSINESS_ORDER, { id: orderId })).businessProductOrders_by_pk;
+        order = (
+          await hasuraClient.request<any>(GET_BUSINESS_ORDER, { id: orderId })
+        ).businessProductOrders_by_pk;
         table = "businessProductOrders";
         if (order) {
           // Map business fields to standard ones for the rest of the logic
@@ -265,7 +302,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         break;
       default:
-        return res.status(400).json({ error: `Invalid order type: ${orderType}` });
+        return res
+          .status(400)
+          .json({ error: `Invalid order type: ${orderType}` });
     }
 
     if (!order) {
@@ -279,14 +318,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const currentStatus = order.status.toUpperCase();
     if (currentStatus !== "PENDING" && currentStatus !== "ACCEPTED") {
-      return res.status(400).json({ error: `Cannot cancel order in ${currentStatus} status` });
+      return res
+        .status(400)
+        .json({ error: `Cannot cancel order in ${currentStatus} status` });
     }
 
     // 3. Calculate refund and payout
     const deliveryFee = parseFloat(order.delivery_fee || "0");
     const serviceFee = parseFloat(order.service_fee || "0");
     const totalFees = deliveryFee + serviceFee;
-    
+
     let grandTotal = 0;
     let subtotal = 0;
 
@@ -307,7 +348,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userRefundAmount = grandTotal;
       shopperPayoutAmount = 0;
     } else if (currentStatus === "ACCEPTED") {
-      userRefundAmount = subtotal + (0.7 * totalFees);
+      userRefundAmount = subtotal + 0.7 * totalFees;
       shopperPayoutAmount = 0.3 * totalFees;
     }
 
@@ -320,13 +361,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let updateMutation: any;
     let resultKey = "";
     switch (orderType) {
-      case "regular": updateMutation = UPDATE_ORDER_STATUS; resultKey = "update_Orders_by_pk"; break;
-      case "reel": updateMutation = UPDATE_REEL_ORDER_STATUS; resultKey = "update_reel_orders_by_pk"; break;
-      case "restaurant": updateMutation = UPDATE_RESTAURANT_ORDER_STATUS; resultKey = "update_restaurant_orders_by_pk"; break;
-      case "package": updateMutation = UPDATE_PACKAGE_ORDER_STATUS; resultKey = "update_package_delivery_by_pk"; break;
-      case "business": updateMutation = UPDATE_BUSINESS_ORDER_STATUS; resultKey = "update_businessProductOrders_by_pk"; break;
+      case "regular":
+        updateMutation = UPDATE_ORDER_STATUS;
+        resultKey = "update_Orders_by_pk";
+        break;
+      case "reel":
+        updateMutation = UPDATE_REEL_ORDER_STATUS;
+        resultKey = "update_reel_orders_by_pk";
+        break;
+      case "restaurant":
+        updateMutation = UPDATE_RESTAURANT_ORDER_STATUS;
+        resultKey = "update_restaurant_orders_by_pk";
+        break;
+      case "package":
+        updateMutation = UPDATE_PACKAGE_ORDER_STATUS;
+        resultKey = "update_package_delivery_by_pk";
+        break;
+      case "business":
+        updateMutation = UPDATE_BUSINESS_ORDER_STATUS;
+        resultKey = "update_businessProductOrders_by_pk";
+        break;
     }
-    const updateResult = await hasuraClient!.request<any>(updateMutation, { id: orderId, status: "cancelled" });
+    const updateResult = await hasuraClient!.request<any>(updateMutation, {
+      id: orderId,
+      status: "cancelled",
+    });
     if (!updateResult[resultKey]) {
       return res.status(404).json({ error: `${orderType} order not found` });
     }
@@ -335,31 +394,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (userRefundAmount > 0) {
       // Idempotency: skip if already refunded (e.g. previous partial success)
       const orderSuffix = `REFUND-${orderId.slice(-8)}%`;
-      const existingTx = await hasuraClient.request<any>(CHECK_EXISTING_PERSONAL_TX, { order_suffix: orderSuffix });
+      const existingTx = await hasuraClient.request<any>(
+        CHECK_EXISTING_PERSONAL_TX,
+        { order_suffix: orderSuffix }
+      );
       const alreadyRefunded = existingTx.personalWalletTransactions?.length > 0;
 
       if (!alreadyRefunded) {
-        const walletData = await hasuraClient.request<any>(GET_USER_WALLET, { user_id: order.user_id });
+        const walletData = await hasuraClient.request<any>(GET_USER_WALLET, {
+          user_id: order.user_id,
+        });
         const wallet = walletData.personalWallet?.[0];
         if (wallet) {
-          const newBalance = (parseFloat(wallet.balance) + userRefundAmount).toFixed(2);
-          await hasuraClient.request(UPDATE_USER_WALLET, { user_id: order.user_id, balance: newBalance });
-          
+          const newBalance = (
+            parseFloat(wallet.balance) + userRefundAmount
+          ).toFixed(2);
+          await hasuraClient.request(UPDATE_USER_WALLET, {
+            user_id: order.user_id,
+            balance: newBalance,
+          });
+
           // Upsert refund record
           await hasuraClient!.request(UPSERT_REFUND_RECORD, {
             object: {
               user_id: order.user_id,
-              order_id: orderType === 'regular' ? orderId : null,
-              reel_order_id: orderType === 'reel' ? orderId : null,
-              restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-              package_id: orderType === 'package' ? orderId : null,
-              business_order_id: orderType === 'business' ? orderId : null,
+              order_id: orderType === "regular" ? orderId : null,
+              reel_order_id: orderType === "reel" ? orderId : null,
+              restaurant_order_id: orderType === "restaurant" ? orderId : null,
+              package_id: orderType === "package" ? orderId : null,
+              business_order_id: orderType === "business" ? orderId : null,
               amount: userRefundAmount.toFixed(0),
               status: "COMPLETED",
               reason: `Order cancelled by user (${currentStatus}) - ${orderType}: ${orderId}`,
               paid: true,
-              generated_by: "System"
-            }
+              generated_by: "System",
+            },
           });
 
           // Personal wallet transaction log
@@ -372,8 +441,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               action: "Refund",
               status: "Completed",
               doneBy: session.user.id,
-              reference_id: refundRef
-            }
+              reference_id: refundRef,
+            },
           });
 
           // Order transaction log — wallet_id MUST be a personalWallet id (which wallet.id is here)
@@ -385,14 +454,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               currency: "RWF",
               type: "Refund",
               status: "Completed",
-              order_id: orderType === 'regular' ? orderId : null,
-              reel_order_id: orderType === 'reel' ? orderId : null,
-              restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-              package_id: orderType === 'package' ? orderId : null,
-              business_order_id: orderType === 'business' ? orderId : null,
+              order_id: orderType === "regular" ? orderId : null,
+              reel_order_id: orderType === "reel" ? orderId : null,
+              restaurant_order_id: orderType === "restaurant" ? orderId : null,
+              package_id: orderType === "package" ? orderId : null,
+              business_order_id: orderType === "business" ? orderId : null,
               reference_id: refundRef,
-              mtn_response: JSON.stringify({ type: "system_refund", reason: "order_cancellation" })
-            }
+              mtn_response: JSON.stringify({
+                type: "system_refund",
+                reason: "order_cancellation",
+              }),
+            },
           });
         }
       }
@@ -400,7 +472,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ─── STEP C: Payout Shopper ───────────────────────────────────────────────
     if (order.shopper_id) {
-      const shopperWalletData = await hasuraClient.request<any>(GET_SHOPPER_WALLET, { shopper_id: order.shopper_id });
+      const shopperWalletData = await hasuraClient.request<any>(
+        GET_SHOPPER_WALLET,
+        { shopper_id: order.shopper_id }
+      );
       const shopperWallet = shopperWalletData.Wallets?.[0];
       if (shopperWallet) {
         let newAvailable = parseFloat(shopperWallet.available_balance);
@@ -420,12 +495,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               currency: "RWF",
               type: "earnings",
               status: "completed",
-              related_order_id: orderType === 'regular' ? orderId : null,
-              related_reel_orderId: orderType === 'reel' ? orderId : null,
-              related_restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-              relate_business_order_id: orderType === 'business' ? orderId : null,
-              description: `Compensation for cancelled order (${orderId})`
-            }
+              related_order_id: orderType === "regular" ? orderId : null,
+              related_reel_orderId: orderType === "reel" ? orderId : null,
+              related_restaurant_order_id:
+                orderType === "restaurant" ? orderId : null,
+              relate_business_order_id:
+                orderType === "business" ? orderId : null,
+              description: `Compensation for cancelled order (${orderId})`,
+            },
           });
 
           // Order transaction log — wallet_id FK references personalWallet, NOT Wallets.
@@ -438,14 +515,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               currency: "RWF",
               type: "Payout",
               status: "Completed",
-              order_id: orderType === 'regular' ? orderId : null,
-              reel_order_id: orderType === 'reel' ? orderId : null,
-              restaurant_order_id: orderType === 'restaurant' ? orderId : null,
-              package_id: orderType === 'package' ? orderId : null,
-              business_order_id: orderType === 'business' ? orderId : null,
+              order_id: orderType === "regular" ? orderId : null,
+              reel_order_id: orderType === "reel" ? orderId : null,
+              restaurant_order_id: orderType === "restaurant" ? orderId : null,
+              package_id: orderType === "package" ? orderId : null,
+              business_order_id: orderType === "business" ? orderId : null,
               reference_id: payoutRef,
-              mtn_response: JSON.stringify({ type: "system_payout", reason: "order_cancellation_compensation" })
-            }
+              mtn_response: JSON.stringify({
+                type: "system_payout",
+                reason: "order_cancellation_compensation",
+              }),
+            },
           });
         }
 
@@ -462,8 +542,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               type: "reserve_reversal",
               status: "completed",
               related_reel_orderId: orderId,
-              description: `Float reversal for cancelled reel order (${orderId})`
-            }
+              description: `Float reversal for cancelled reel order (${orderId})`,
+            },
           });
         }
 
@@ -471,15 +551,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           await hasuraClient.request(UPDATE_SHOPPER_WALLET, {
             wallet_id: shopperWallet.id,
             available_balance: newAvailable.toFixed(2),
-            reserved_balance: newReserved.toFixed(2)
+            reserved_balance: newReserved.toFixed(2),
           });
         }
       }
     }
 
-    return res.status(200).json({ success: true, message: `Order cancelled and ${userRefundAmount} refunded to wallet` });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: `Order cancelled and ${userRefundAmount} refunded to wallet`,
+      });
   } catch (error: any) {
     console.error("Cancellation error:", error);
-    return res.status(500).json({ error: "Cancellation and refund process failed", details: error.message });
+    return res
+      .status(500)
+      .json({
+        error: "Cancellation and refund process failed",
+        details: error.message,
+      });
   }
 }

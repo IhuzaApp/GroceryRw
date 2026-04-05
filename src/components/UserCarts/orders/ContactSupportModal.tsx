@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { useTheme } from "../../../context/ThemeContext";
-import { 
-  X, 
-  MessageSquare, 
-  ClipboardList, 
-  Store, 
-  Tag, 
-  Activity, 
-  Send, 
-  CheckCircle2, 
+import {
+  X,
+  MessageSquare,
+  ClipboardList,
+  Store,
+  Tag,
+  Activity,
+  Send,
+  CheckCircle2,
   ArrowRight,
   Headphones,
-  Info
+  Info,
 } from "lucide-react";
 
 function formatOrderID(id?: string | number): string {
@@ -50,14 +50,14 @@ export default function ContactSupportModal({
     order?.Restaurant?.name ??
     order?.restaurant?.name ??
     (orderType === "package" ? "Plas Package" : "—");
-    
+
   const orderDisplayId =
     order?.DeliveryCode != null
       ? order.DeliveryCode
       : order?.OrderID != null
       ? formatOrderID(order.OrderID)
       : order?.id ?? "—";
-      
+
   const status = order?.status ?? "—";
 
   const handleSubmit = async () => {
@@ -86,7 +86,7 @@ export default function ContactSupportModal({
         setError(data.error ?? "Submission failed. Please try again.");
         return;
       }
-      
+
       if (data.code) {
         setSuccessCode(data.code);
         onSuccess?.();
@@ -130,25 +130,41 @@ export default function ContactSupportModal({
         }`}
       >
         {/* Decorative Background Element */}
-        <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] opacity-20 ${
-          isDark ? "bg-emerald-500" : "bg-emerald-400"
-        }`} />
+        <div
+          className={`absolute -right-20 -top-20 h-64 w-64 rounded-full opacity-20 blur-[100px] ${
+            isDark ? "bg-emerald-500" : "bg-emerald-400"
+          }`}
+        />
 
         {/* Header Section */}
-        <div className={`relative flex items-start justify-between border-b px-8 py-8 ${
-          isDark ? "border-white/5" : "border-gray-100"
-        }`}>
+        <div
+          className={`relative flex items-start justify-between border-b px-8 py-8 ${
+            isDark ? "border-white/5" : "border-gray-100"
+          }`}
+        >
           <div className="flex gap-4">
-            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-inner ${
-              isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"
-            }`}>
+            <div
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-inner ${
+                isDark
+                  ? "bg-emerald-500/10 text-emerald-400"
+                  : "bg-emerald-50 text-emerald-600"
+              }`}
+            >
               <Headphones className="h-7 w-7" />
             </div>
             <div>
-              <h2 className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+              <h2
+                className={`text-2xl font-black tracking-tight ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Customer Support
               </h2>
-              <p className={`mt-1 text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              <p
+                className={`mt-1 text-sm font-medium ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 We're here to help. Send us a message!
               </p>
             </div>
@@ -157,7 +173,9 @@ export default function ContactSupportModal({
             onClick={handleClose}
             disabled={submitting}
             className={`group rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-white/5 ${
-              isDark ? "text-white/40 hover:text-white" : "text-gray-400 hover:text-gray-900"
+              isDark
+                ? "text-white/40 hover:text-white"
+                : "text-gray-400 hover:text-gray-900"
             }`}
           >
             <X className="h-6 w-6" />
@@ -165,7 +183,7 @@ export default function ContactSupportModal({
         </div>
 
         {/* Content Section */}
-        <div className="relative max-h-[65vh] overflow-y-auto px-8 py-8 scrollbar-hide">
+        <div className="scrollbar-hide relative max-h-[65vh] overflow-y-auto px-8 py-8">
           {successCode ? (
             <div className="flex flex-col items-center justify-center py-6 text-center duration-500 animate-in fade-in zoom-in-95">
               <div className="relative mb-8">
@@ -174,49 +192,82 @@ export default function ContactSupportModal({
                   <CheckCircle2 className="h-12 w-12" />
                 </div>
               </div>
-              
-              <h3 className={`text-3xl font-black italic tracking-tighter ${isDark ? "text-white" : "text-gray-900"}`}>
+
+              <h3
+                className={`text-3xl font-black italic tracking-tighter ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 TICKET SENT!
               </h3>
-              
+
               <div className="mt-6 flex flex-col items-center">
-                <p className={`text-sm font-bold uppercase tracking-widest ${isDark ? "text-emerald-400/60" : "text-emerald-600/60"}`}>
+                <p
+                  className={`text-sm font-bold uppercase tracking-widest ${
+                    isDark ? "text-emerald-400/60" : "text-emerald-600/60"
+                  }`}
+                >
                   Your Tracking Code
                 </p>
-                <div className={`mt-2 rounded-2xl border-2 border-dashed px-8 py-3 text-4xl font-black tracking-widest ${
-                  isDark ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                }`}>
+                <div
+                  className={`mt-2 rounded-2xl border-2 border-dashed px-8 py-3 text-4xl font-black tracking-widest ${
+                    isDark
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  }`}
+                >
                   #{successCode}
                 </div>
               </div>
 
-              <div className={`mt-10 max-w-sm rounded-[1.5rem] p-6 text-sm text-center leading-relaxed ${
-                isDark ? "bg-white/5 text-gray-400" : "bg-gray-50 text-gray-500"
-              }`}>
-                <Info className={`mx-auto mb-3 h-5 w-5 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
-                Please keep this code safe. You can ask our <b>AI Assistant</b> for updates using this number.
+              <div
+                className={`mt-10 max-w-sm rounded-[1.5rem] p-6 text-center text-sm leading-relaxed ${
+                  isDark
+                    ? "bg-white/5 text-gray-400"
+                    : "bg-gray-50 text-gray-500"
+                }`}
+              >
+                <Info
+                  className={`mx-auto mb-3 h-5 w-5 ${
+                    isDark ? "text-emerald-400" : "text-emerald-600"
+                  }`}
+                />
+                Please keep this code safe. You can ask our <b>AI Assistant</b>{" "}
+                for updates using this number.
               </div>
             </div>
           ) : (
             <div className="space-y-8">
               {error && (
                 <div className="flex items-center gap-3 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500 ring-1 ring-inset ring-red-500/20">
-                  <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                   {error}
                 </div>
               )}
 
               {/* Enhanced Order Brief Card */}
-              <div className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-300 hover:shadow-lg ${
-                isDark ? "border-white/5 bg-white/[0.02]" : "border-gray-100 bg-gray-50/50"
-              }`}>
+              <div
+                className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-300 hover:shadow-lg ${
+                  isDark
+                    ? "border-white/5 bg-white/[0.02]"
+                    : "border-gray-100 bg-gray-50/50"
+                }`}
+              >
                 <div className="mb-4 flex items-center justify-between">
-                  <span className={`text-xs font-black uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                  <span
+                    className={`text-xs font-black uppercase tracking-widest ${
+                      isDark ? "text-white/30" : "text-gray-400"
+                    }`}
+                  >
                     Reference Details
                   </span>
-                  <div className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase ${
-                    isDark ? "bg-white/10 text-white" : "bg-emerald-500 text-white"
-                  }`}>
+                  <div
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase ${
+                      isDark
+                        ? "bg-white/10 text-white"
+                        : "bg-emerald-500 text-white"
+                    }`}
+                  >
                     <Activity className="h-3 w-3" />
                     {status}
                   </div>
@@ -224,26 +275,60 @@ export default function ContactSupportModal({
 
                 <div className="grid grid-cols-2 gap-y-4">
                   <div className="flex items-center gap-3">
-                    <ClipboardList className={`h-4 w-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
+                    <ClipboardList
+                      className={`h-4 w-4 ${
+                        isDark ? "text-emerald-400" : "text-emerald-600"
+                      }`}
+                    />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase opacity-40">Order ID</p>
-                      <p className={`truncate text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>#{orderDisplayId}</p>
+                      <p className="text-[10px] font-bold uppercase opacity-40">
+                        Order ID
+                      </p>
+                      <p
+                        className={`truncate text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        #{orderDisplayId}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Tag className={`h-4 w-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
+                    <Tag
+                      className={`h-4 w-4 ${
+                        isDark ? "text-emerald-400" : "text-emerald-600"
+                      }`}
+                    />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase opacity-40">Category</p>
-                      <p className={`truncate text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                      <p className="text-[10px] font-bold uppercase opacity-40">
+                        Category
+                      </p>
+                      <p
+                        className={`truncate text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         {orderType.charAt(0).toUpperCase() + orderType.slice(1)}
                       </p>
                     </div>
                   </div>
                   <div className="col-span-2 flex items-center gap-3">
-                    <Store className={`h-4 w-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
+                    <Store
+                      className={`h-4 w-4 ${
+                        isDark ? "text-emerald-400" : "text-emerald-600"
+                      }`}
+                    />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase opacity-40">Store/Source</p>
-                      <p className={`truncate text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{storeName}</p>
+                      <p className="text-[10px] font-bold uppercase opacity-40">
+                        Store/Source
+                      </p>
+                      <p
+                        className={`truncate text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {storeName}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -252,12 +337,20 @@ export default function ContactSupportModal({
               {/* Message Input Section */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className={`h-4 w-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
-                  <label className={`text-sm font-black uppercase tracking-wider ${isDark ? "text-white" : "text-gray-900"}`}>
+                  <MessageSquare
+                    className={`h-4 w-4 ${
+                      isDark ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                  />
+                  <label
+                    className={`text-sm font-black uppercase tracking-wider ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     How can we help?
                   </label>
                 </div>
-                <div className="relative group">
+                <div className="group relative">
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
@@ -280,13 +373,17 @@ export default function ContactSupportModal({
         </div>
 
         {/* Footer Buttons Section */}
-        <div className={`flex flex-col gap-3 border-t p-8 sm:flex-row sm:items-center sm:justify-end ${
-          isDark ? "border-white/5 bg-white/[0.01]" : "border-gray-50 bg-gray-50/20"
-        }`}>
+        <div
+          className={`flex flex-col gap-3 border-t p-8 sm:flex-row sm:items-center sm:justify-end ${
+            isDark
+              ? "border-white/5 bg-white/[0.01]"
+              : "border-gray-50 bg-gray-50/20"
+          }`}
+        >
           {successCode ? (
             <button
               onClick={handleClose}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:bg-emerald-600 hover:scale-105 active:scale-95 sm:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:bg-emerald-600 active:scale-95 sm:w-auto"
             >
               GOT IT
             </button>
@@ -296,9 +393,9 @@ export default function ContactSupportModal({
                 onClick={handleClose}
                 disabled={submitting}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-8 py-4 text-base font-bold transition-all sm:w-auto ${
-                  isDark 
-                  ? "border-white/10 text-white hover:bg-white/5" 
-                  : "border-gray-200 text-gray-400 hover:bg-gray-100/50 hover:text-gray-900"
+                  isDark
+                    ? "border-white/10 text-white hover:bg-white/5"
+                    : "border-gray-200 text-gray-400 hover:bg-gray-100/50 hover:text-gray-900"
                 }`}
               >
                 Cancel
@@ -306,20 +403,35 @@ export default function ContactSupportModal({
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-700 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:from-emerald-600 hover:to-emerald-800 hover:scale-105 hover:shadow-emerald-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-700 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:from-emerald-600 hover:to-emerald-800 hover:shadow-emerald-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {submitting ? (
                   <div className="flex items-center gap-3">
-                    <svg className="h-5 w-5 animate-spin text-white" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="h-5 w-5 animate-spin text-white"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     SUBMITTING...
                   </div>
                 ) : (
                   <>
                     SUBMIT TICKET
-                    <Send className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                    <Send className="h-5 w-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
                   </>
                 )}
               </button>
@@ -330,4 +442,3 @@ export default function ContactSupportModal({
     </div>
   );
 }
-

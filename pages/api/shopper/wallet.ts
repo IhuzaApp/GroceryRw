@@ -19,8 +19,20 @@ const GET_WALLET_BY_SHOPPER_ID = gql`
 
 // GraphQL mutation to update wallet information
 const UPDATE_WALLET = gql`
-  mutation UpdateWallet($available_balance: String!, $reserved_balance: String!, $last_updated: timestamptz!, $shopper_id: uuid!) {
-    update_Wallets(_set: {available_balance: $available_balance, reserved_balance: $reserved_balance, last_updated: $last_updated}, where: {shopper_id: {_eq: $shopper_id}}) {
+  mutation UpdateWallet(
+    $available_balance: String!
+    $reserved_balance: String!
+    $last_updated: timestamptz!
+    $shopper_id: uuid!
+  ) {
+    update_Wallets(
+      _set: {
+        available_balance: $available_balance
+        reserved_balance: $reserved_balance
+        last_updated: $last_updated
+      }
+      where: { shopper_id: { _eq: $shopper_id } }
+    ) {
       affected_rows
       returning {
         id
@@ -52,7 +64,11 @@ export default async function handler(
 
   try {
     // Get user session
-    const session = (await getServerSession(req, res, authOptions as any)) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
 
     if (!session || !session.user) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -98,19 +114,23 @@ export default async function handler(
         success: true,
         wallet: walletResponse.Wallets[0],
       });
-    } 
-    
+    }
+
     if (req.method === "POST") {
       const { shopperId, available_balance, reserved_balance } = req.body;
 
       // Validate required fields
       if (!shopperId) {
-        return res.status(400).json({ error: "Missing required field: shopperId" });
+        return res
+          .status(400)
+          .json({ error: "Missing required field: shopperId" });
       }
 
       // Verify authorization
       if (session.user.id !== shopperId) {
-        return res.status(403).json({ error: "Not authorized to update this wallet" });
+        return res
+          .status(403)
+          .json({ error: "Not authorized to update this wallet" });
       }
 
       // Update wallet
@@ -118,7 +138,7 @@ export default async function handler(
         shopper_id: shopperId,
         available_balance: available_balance?.toString() || "0",
         reserved_balance: reserved_balance?.toString() || "0",
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
       });
 
       if (updateResponse.update_Wallets.affected_rows === 0) {
@@ -133,7 +153,8 @@ export default async function handler(
   } catch (error) {
     await logErrorToSlack("shopper/wallet", error, {
       method: req.method,
-      shopperId: req.method === "GET" ? req.query.shopperId : req.body.shopperId,
+      shopperId:
+        req.method === "GET" ? req.query.shopperId : req.body.shopperId,
     });
     return res.status(500).json({
       error:

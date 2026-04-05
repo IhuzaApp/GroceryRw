@@ -427,13 +427,10 @@ export default function UserRestaurantOrderDetails({
             <div className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
               {status === "WAITING_FOR_CONFIRMATION" &&
                 "Restaurant is reviewing your order"}
-              {status === "PENDING" &&
-                "Order confirmed and being prepared"}
-              {status === "CONFIRMED" &&
-                "Restaurant is preparing your food"}
+              {status === "PENDING" && "Order confirmed and being prepared"}
+              {status === "CONFIRMED" && "Restaurant is preparing your food"}
               {status === "READY" && "Your order is ready for pickup"}
-              {status === "OUT_FOR_DELIVERY" &&
-                "Your order is on the way"}
+              {status === "OUT_FOR_DELIVERY" && "Your order is on the way"}
               {status === "DELIVERED" &&
                 !order.delivery_photo_url &&
                 "Order has been delivered successfully"}

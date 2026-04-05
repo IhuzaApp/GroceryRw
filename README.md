@@ -36,6 +36,10 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 15. **AI Assistant & Interactive Checkout System** ⭐ NEW
 
+### 16. **Order Cancellation & Refund System** ⭐ NEW
+
+### 17. **Modern Payment Modal & Flow (React Portals)** ⭐ NEW
+
 ---
 
 # 🚀 Order Offers & Nearby Assignment System
@@ -13822,6 +13826,60 @@ graph TD
       D --> J
     end
 ```
+
+---
+
+# 🛡️ Order Cancellation & Refund System
+
+## Overview
+
+A robust, multi-stage cancellation system that handles refunds, shopper compensation, and order state transition across all order types (Grocery, Reels, Restaurant, Packages, Business).
+
+### Key Features
+
+1.  **Multi-Order Type Support**: Dynamically routes logic based on `orderType`.
+2.  **Idempotency Locked**: Order status is set to `cancelled` **before** any financial transactions. This prevents double-refunds if a request is retried after a partial failure.
+3.  **Shopper Compensation**: Automatically calculates and pays out 30% of service/delivery fees to shoppers for `ACCEPTED` orders to compensate for their time.
+4.  **Wallet Integration**: Integrated with the Personal Wallet system for instant user refunds.
+5.  **Audit Trail**: Every cancellation generates comprehensive logs in `Refunds`, `personalWalletTransactions`, and `order_transactions`.
+
+### Technical Implementation
+
+- **API Route**: `pages/api/orders/cancel.ts`
+- **Security**: Verifies session `user.id` against the order's `user_id`.
+- **Status Gating**: Only allows cancellation for `PENDING` or `ACCEPTED` orders.
+
+---
+
+# 💳 Modern Payment Modal & Flow
+
+## Architecture
+
+The payment flow has been modernized using a **React Portal** architecture to ensure the modal renders above all other UI elements without Z-index conflicts.
+
+### Key Components
+
+1.  **`CompletePaymentModal.tsx`**:
+
+    - **Portal-Based**: Uses `createPortal` to render into `document.body`.
+    - **Theme-Aware**: Fully integrated with `ThemeContext` (Dark/Light mode support).
+    - **Responsive Design**: Glassmorphic "Fly-out" drawer on mobile, centered modal on desktop.
+    - **Real-time Verification**: Checks `/api/orders/transaction-status` on load to prevent duplicate payments for already-processed transactions.
+
+2.  **Payment Methods**:
+    - **Personal Wallet**: Instant deduction with balance verification.
+    - **MTN Mobile Money**:
+      - **Saved Numbers**: Dynamic fetching of user's previous MoMo numbers.
+      - **New Number Entry**: Manual input with validation.
+      - **Async Status Polling**: Automatic status check every 3 seconds after initiation.
+
+### Technical Flow
+
+- **Initiation**: Calls `/api/momo/request-to-pay` or `pay-with-wallet.ts`.
+- **Delivery Recalculation**: On payment success, the system calculates the time delta (Payment Time - Creation Time) and shifts the `delivery_time` forward to ensure delivery estimates remain accurate.
+- **Success UI**: Interactive success state with automatic modal closing and data refresh.
+
+---
 
 ## Setup & Environment
 

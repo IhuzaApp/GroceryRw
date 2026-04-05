@@ -7,64 +7,137 @@ import { gql } from "graphql-request";
 // GET QUERIES
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($id: uuid!) {
-    Orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
+    Orders_by_pk(id: $id) {
+      id
+      user_id
+      total
+      status
+      created_at
+      delivery_time
+    }
   }
 `;
 const GET_REEL_ORDER = gql`
   query GetReelOrder($id: uuid!) {
-    reel_orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
+    reel_orders_by_pk(id: $id) {
+      id
+      user_id
+      total
+      status
+      created_at
+      delivery_time
+    }
   }
 `;
 const GET_BUSINESS_ORDER = gql`
   query GetBusinessOrder($id: uuid!) {
-    business_orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
+    business_orders_by_pk(id: $id) {
+      id
+      user_id
+      total
+      status
+      created_at
+      delivery_time
+    }
   }
 `;
 const GET_RESTAURANT_ORDER = gql`
   query GetRestaurantOrder($id: uuid!) {
-    restaurant_orders_by_pk(id: $id) { id user_id total status created_at delivery_time }
+    restaurant_orders_by_pk(id: $id) {
+      id
+      user_id
+      total
+      status
+      created_at
+      delivery_time
+    }
   }
 `;
 
 const GET_WALLET_BALANCE = gql`
   query GetPersonalWalletBalance($user_id: uuid!) {
-    personalWallet(where: { user_id: { _eq: $user_id } }) { id balance }
+    personalWallet(where: { user_id: { _eq: $user_id } }) {
+      id
+      balance
+    }
   }
 `;
 
 // UPDATE QUERIES
 const UPDATE_WALLET_BALANCE = gql`
   mutation UpdatePersonalWalletBalance($id: uuid!, $balance: String!) {
-    update_personalWallet(where: { id: { _eq: $id } }, _set: { balance: $balance, updated_at: "now()" }) {
+    update_personalWallet(
+      where: { id: { _eq: $id } }
+      _set: { balance: $balance, updated_at: "now()" }
+    ) {
       affected_rows
     }
   }
 `;
 
 const UPDATE_ORDER_STATUS = gql`
-  mutation UpdateOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
-    update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
+  mutation UpdateOrderStatus(
+    $id: uuid!
+    $status: String!
+    $delivery_time: String
+  ) {
+    update_Orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, delivery_time: $delivery_time }
+    ) {
+      id
+    }
   }
 `;
 const UPDATE_REEL_ORDER_STATUS = gql`
-  mutation UpdateReelOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
-    update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
+  mutation UpdateReelOrderStatus(
+    $id: uuid!
+    $status: String!
+    $delivery_time: String
+  ) {
+    update_reel_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, delivery_time: $delivery_time }
+    ) {
+      id
+    }
   }
 `;
 const UPDATE_BUSINESS_ORDER_STATUS = gql`
-  mutation UpdateBusinessOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
-    update_business_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
+  mutation UpdateBusinessOrderStatus(
+    $id: uuid!
+    $status: String!
+    $delivery_time: String
+  ) {
+    update_business_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, delivery_time: $delivery_time }
+    ) {
+      id
+    }
   }
 `;
 const UPDATE_RESTAURANT_ORDER_STATUS = gql`
-  mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!, $delivery_time: String) {
-    update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, delivery_time: $delivery_time }) { id }
+  mutation UpdateRestaurantOrderStatus(
+    $id: uuid!
+    $status: String!
+    $delivery_time: String
+  ) {
+    update_restaurant_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, delivery_time: $delivery_time }
+    ) {
+      id
+    }
   }
 `;
 
 const UPDATE_COMBINED_ORDER_STATUS = gql`
   mutation UpdateCombinedOrderStatus($combined_id: uuid!, $status: String!) {
-    update_Orders(where: { combined_order_id: { _eq: $combined_id } }, _set: { status: $status }) {
+    update_Orders(
+      where: { combined_order_id: { _eq: $combined_id } }
+      _set: { status: $status }
+    ) {
       affected_rows
     }
   }
@@ -105,10 +178,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Method not allowed" });
 
   const session = (await getServerSession(req, res, authOptions as any)) as any;
-  if (!session?.user?.id) return res.status(401).json({ error: "Unauthorized" });
+  if (!session?.user?.id)
+    return res.status(401).json({ error: "Unauthorized" });
 
   const user_id = session.user.id;
   const { orderId, orderType = "regular" } = req.body;
@@ -121,33 +196,51 @@ export default async function handler(
     // 1. Get Order
     let order: any;
     if (orderType === "reel") {
-      const db = await hasuraClient.request<{ reel_orders_by_pk: any }>(GET_REEL_ORDER, { id: orderId });
+      const db = await hasuraClient.request<{ reel_orders_by_pk: any }>(
+        GET_REEL_ORDER,
+        { id: orderId }
+      );
       order = db.reel_orders_by_pk;
     } else if (orderType === "business") {
-      const db = await hasuraClient.request<{ business_orders_by_pk: any }>(GET_BUSINESS_ORDER, { id: orderId });
+      const db = await hasuraClient.request<{ business_orders_by_pk: any }>(
+        GET_BUSINESS_ORDER,
+        { id: orderId }
+      );
       order = db.business_orders_by_pk;
     } else if (orderType === "restaurant") {
-      const db = await hasuraClient.request<{ restaurant_orders_by_pk: any }>(GET_RESTAURANT_ORDER, { id: orderId });
+      const db = await hasuraClient.request<{ restaurant_orders_by_pk: any }>(
+        GET_RESTAURANT_ORDER,
+        { id: orderId }
+      );
       order = db.restaurant_orders_by_pk;
     } else {
-      const db = await hasuraClient.request<{ Orders_by_pk: any }>(GET_ORDER_DETAILS, { id: orderId });
+      const db = await hasuraClient.request<{ Orders_by_pk: any }>(
+        GET_ORDER_DETAILS,
+        { id: orderId }
+      );
       order = db.Orders_by_pk;
     }
 
     if (!order) return res.status(404).json({ error: "Order not found" });
-    if (order.user_id !== user_id) return res.status(403).json({ error: "Not your order" });
-    if (order.status !== "AWAITING_PAYMENT") return res.status(400).json({ error: "Order is not awaiting payment" });
+    if (order.user_id !== user_id)
+      return res.status(403).json({ error: "Not your order" });
+    if (order.status !== "AWAITING_PAYMENT")
+      return res.status(400).json({ error: "Order is not awaiting payment" });
 
     const orderTotal = parseFloat(order.total || "0");
 
     // 2. Get Wallet Balance
-    const walletData = await hasuraClient.request<{ personalWallet: any[] }>(GET_WALLET_BALANCE, { user_id });
+    const walletData = await hasuraClient.request<{ personalWallet: any[] }>(
+      GET_WALLET_BALANCE,
+      { user_id }
+    );
     const wallet = walletData.personalWallet?.[0];
 
     if (!wallet) return res.status(400).json({ error: "Wallet not found" });
 
     const currentBalance = parseFloat(wallet.balance || "0");
-    if (currentBalance < orderTotal) return res.status(400).json({ error: "Insufficient wallet balance" });
+    if (currentBalance < orderTotal)
+      return res.status(400).json({ error: "Insufficient wallet balance" });
 
     const newBalance = (currentBalance - orderTotal).toFixed(2);
 
@@ -156,7 +249,11 @@ export default async function handler(
     if (order.created_at && order.delivery_time) {
       const createdAtMs = new Date(order.created_at).getTime();
       const originalDeliveryMs = new Date(order.delivery_time).getTime();
-      if (!isNaN(createdAtMs) && !isNaN(originalDeliveryMs) && originalDeliveryMs > createdAtMs) {
+      if (
+        !isNaN(createdAtMs) &&
+        !isNaN(originalDeliveryMs) &&
+        originalDeliveryMs > createdAtMs
+      ) {
         const deltaMs = originalDeliveryMs - createdAtMs;
         newDeliveryTimeISO = new Date(Date.now() + deltaMs).toISOString();
       }
@@ -167,20 +264,33 @@ export default async function handler(
     }
 
     // 3. Deduct Wallet
-    await hasuraClient.request(UPDATE_WALLET_BALANCE, { id: wallet.id, balance: newBalance });
+    await hasuraClient.request(UPDATE_WALLET_BALANCE, {
+      id: wallet.id,
+      balance: newBalance,
+    });
 
     // 4. Update Order Status & delivery time
-    const updateVariables = { id: orderId, status: "PENDING", delivery_time: newDeliveryTimeISO };
+    const updateVariables = {
+      id: orderId,
+      status: "PENDING",
+      delivery_time: newDeliveryTimeISO,
+    };
 
     if (orderType === "reel") {
       await hasuraClient.request(UPDATE_REEL_ORDER_STATUS, updateVariables);
     } else if (orderType === "business") {
       await hasuraClient.request(UPDATE_BUSINESS_ORDER_STATUS, updateVariables);
     } else if (orderType === "restaurant") {
-      await hasuraClient.request(UPDATE_RESTAURANT_ORDER_STATUS, updateVariables);
+      await hasuraClient.request(
+        UPDATE_RESTAURANT_ORDER_STATUS,
+        updateVariables
+      );
     } else {
       await hasuraClient.request(UPDATE_ORDER_STATUS, updateVariables);
-      await hasuraClient.request(UPDATE_COMBINED_ORDER_STATUS, { combined_id: orderId, status: "PENDING" }); // Intentionally missing delivery time since only individual orders track it fully realistically
+      await hasuraClient.request(UPDATE_COMBINED_ORDER_STATUS, {
+        combined_id: orderId,
+        status: "PENDING",
+      }); // Intentionally missing delivery time since only individual orders track it fully realistically
     }
 
     // 5. Record Transaction

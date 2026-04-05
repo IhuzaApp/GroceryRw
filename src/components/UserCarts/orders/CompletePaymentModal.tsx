@@ -98,9 +98,13 @@ export default function CompletePaymentModal({
         if (methodsRes.ok) {
           const methodsData = await methodsRes.json();
           if (methodsData?.paymentMethods) {
-            setSavedMethods(methodsData.paymentMethods.filter((m: any) => 
-               m.method.toLowerCase().includes("momo") || m.method.toLowerCase().includes("mtn")
-            ));
+            setSavedMethods(
+              methodsData.paymentMethods.filter(
+                (m: any) =>
+                  m.method.toLowerCase().includes("momo") ||
+                  m.method.toLowerCase().includes("mtn")
+              )
+            );
           }
         }
       } catch (err) {
@@ -143,7 +147,7 @@ export default function CompletePaymentModal({
           body: JSON.stringify({ orderId: order.id, orderType }),
         });
         const data = await res.json();
-        
+
         if (data.success) {
           setProcessingStep("success");
           toaster.push(
@@ -187,7 +191,10 @@ export default function CompletePaymentModal({
     }
 
     const formattedPhone = formatPhoneForMoMo(targetPhone);
-    if (!formattedPhone.startsWith("25078") && !formattedPhone.startsWith("25079")) {
+    if (
+      !formattedPhone.startsWith("25078") &&
+      !formattedPhone.startsWith("25079")
+    ) {
       toaster.push(
         <Notification type="warning" header="Invalid MTN Number">
           Please enter a valid MTN Rwanda number (078... or 079...).
@@ -206,7 +213,9 @@ export default function CompletePaymentModal({
         currency: "RWF",
         payerNumber: formattedPhone,
         externalId: order.id,
-        payerMessage: `Payment for Order ${order.OrderID || order.id.substring(0, 8)}`,
+        payerMessage: `Payment for Order ${
+          order.OrderID || order.id.substring(0, 8)
+        }`,
       };
 
       if (orderType === "reel") payload.reelOrderId = order.id;
@@ -236,7 +245,8 @@ export default function CompletePaymentModal({
             const statusData = await statusRes.json();
 
             if (statusData.status === "SUCCESSFUL") {
-              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
               setProcessingStep("success");
               toaster.push(
                 <Notification type="success" header="Payment Successful!">
@@ -248,7 +258,8 @@ export default function CompletePaymentModal({
             } else if (
               ["FAILED", "REJECTED", "EXPIRED"].includes(statusData.status)
             ) {
-              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              if (pollIntervalRef.current)
+                clearInterval(pollIntervalRef.current);
               setProcessingStep("failed");
               setIsProcessing(false);
               toaster.push(
@@ -272,7 +283,8 @@ export default function CompletePaymentModal({
               setIsProcessing(false);
               toaster.push(
                 <Notification type="error" header="Payment Timeout">
-                  We didn't receive a confirmation in time. Please check your MoMo app.
+                  We didn't receive a confirmation in time. Please check your
+                  MoMo app.
                 </Notification>,
                 { placement: "topEnd", duration: 8000 }
               );
@@ -295,7 +307,11 @@ export default function CompletePaymentModal({
   };
 
   const handleModalClose = () => {
-    if (!isProcessing || processingStep === "failed" || processingStep === "success") {
+    if (
+      !isProcessing ||
+      processingStep === "failed" ||
+      processingStep === "success"
+    ) {
       onClose();
     }
   };
@@ -304,7 +320,7 @@ export default function CompletePaymentModal({
 
   // Build selectpicker data
   const paymentOptions = [
-    { label: `Wallet (${formatCurrency(walletBalance)})`, value: "wallet" }
+    { label: `Wallet (${formatCurrency(walletBalance)})`, value: "wallet" },
   ];
 
   savedMethods.forEach((method) => {
@@ -331,8 +347,8 @@ export default function CompletePaymentModal({
         <div
           className={`flex flex-shrink-0 items-center justify-between border-b p-4 md:p-5 ${
             isDark
-              ? "border-gray-700 bg-gray-800 rounded-t-2xl sm:rounded-t-2xl"
-              : "border-gray-200 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-t-2xl sm:rounded-t-2xl"
+              ? "rounded-t-2xl border-gray-700 bg-gray-800 sm:rounded-t-2xl"
+              : "rounded-t-2xl border-gray-200 bg-gradient-to-r from-orange-50 to-yellow-50 sm:rounded-t-2xl"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -349,7 +365,12 @@ export default function CompletePaymentModal({
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div>
@@ -362,7 +383,9 @@ export default function CompletePaymentModal({
               </h2>
             </div>
           </div>
-          {(!isProcessing || processingStep === "failed" || processingStep === "success") && (
+          {(!isProcessing ||
+            processingStep === "failed" ||
+            processingStep === "success") && (
             <button
               onClick={handleModalClose}
               className={`rounded-xl p-2 transition-colors ${
@@ -371,8 +394,18 @@ export default function CompletePaymentModal({
                   : "text-gray-500 hover:bg-gray-100"
               }`}
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -385,151 +418,228 @@ export default function CompletePaymentModal({
           }`}
         >
           {isLoadingData ? (
-             <div className="flex flex-col justify-center items-center py-12">
-               <div className="w-8 h-8 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin mb-4"></div>
-               <p className={isDark ? "text-gray-400" : "text-gray-500"}>Verifying Order Status...</p>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500"></div>
+              <p className={isDark ? "text-gray-400" : "text-gray-500"}>
+                Verifying Order Status...
+              </p>
             </div>
           ) : processingStep === "awaiting_approval" ? (
-             <div className="text-center py-8">
-               <div className="inline-block relative w-20 h-20 mb-4">
-                 <span className="absolute inset-0 border-4 border-yellow-200 rounded-full animate-ping opacity-75"></span>
-                 <span className="relative flex justify-center items-center w-full h-full bg-yellow-100 rounded-full">
-                   <span className="w-12 h-12 rounded-full bg-yellow-400 animate-pulse"></span>
-                 </span>
-               </div>
-               <h4 className={`text-lg font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-                 Check your Phone
-               </h4>
-               <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                 A push notification has been sent to your MoMo number. Please enter your PIN to approve the payment.
-               </p>
-             </div>
+            <div className="py-8 text-center">
+              <div className="relative mb-4 inline-block h-20 w-20">
+                <span className="absolute inset-0 animate-ping rounded-full border-4 border-yellow-200 opacity-75"></span>
+                <span className="relative flex h-full w-full items-center justify-center rounded-full bg-yellow-100">
+                  <span className="h-12 w-12 animate-pulse rounded-full bg-yellow-400"></span>
+                </span>
+              </div>
+              <h4
+                className={`mb-2 text-lg font-bold ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Check your Phone
+              </h4>
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                A push notification has been sent to your MoMo number. Please
+                enter your PIN to approve the payment.
+              </p>
+            </div>
           ) : processingStep === "success" ? (
-             <div className="text-center py-6">
-                <div className="inline-flex justify-center items-center w-20 h-20 rounded-full bg-green-100 mb-4">
-                  <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h4 className={`text-lg font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Payment Completed!
-                </h4>
-                <p className={`text-sm mb-6 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                   We've received your payment.
-                </p>
-                <button 
-                  className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-colors shadow-lg"
-                  onClick={onSuccess} 
+            <div className="py-6 text-center">
+              <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+                <svg
+                  className="h-10 w-10 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Continue
-                </button>
-             </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h4
+                className={`mb-2 text-lg font-bold ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Payment Completed!
+              </h4>
+              <p
+                className={`mb-6 text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                We've received your payment.
+              </p>
+              <button
+                className="w-full rounded-xl bg-green-500 py-3 font-bold text-white shadow-lg transition-colors hover:bg-green-600"
+                onClick={onSuccess}
+              >
+                Continue
+              </button>
+            </div>
           ) : (
             <div className="space-y-6">
-               {/* Order Info */}
-               <div className={`p-4 rounded-xl ${isDark ? "bg-gray-900/50" : "bg-gray-50"}`}>
-                 <div className="flex justify-between mb-2">
-                   <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Order ID</span>
-                   <span className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}>
-                     #{order?.OrderID || order?.id?.substring(0, 8)}
-                   </span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Amount Due</span>
-                   <span className="font-bold text-lg text-orange-500">
-                     {formatCurrency(order?.total || 0)}
-                   </span>
-                 </div>
-               </div>
+              {/* Order Info */}
+              <div
+                className={`rounded-xl p-4 ${
+                  isDark ? "bg-gray-900/50" : "bg-gray-50"
+                }`}
+              >
+                <div className="mb-2 flex justify-between">
+                  <span
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Order ID
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      isDark ? "text-gray-200" : "text-gray-700"
+                    }`}
+                  >
+                    #{order?.OrderID || order?.id?.substring(0, 8)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Amount Due
+                  </span>
+                  <span className="text-lg font-bold text-orange-500">
+                    {formatCurrency(order?.total || 0)}
+                  </span>
+                </div>
+              </div>
 
-               <div>
-                 <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                   Select Payment Method
-                 </label>
-                 <select
-                   value={selectedMethod}
-                   onChange={(e) => setSelectedMethod(e.target.value)}
-                   className={`w-full appearance-none rounded-xl border-2 py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-                     isDark
-                       ? "bg-gray-700 border-gray-600 text-white focus:border-orange-500"
-                       : "bg-white border-gray-300 text-gray-900 focus:border-orange-500"
-                   }`}
-                   style={{
-                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='${isDark ? '%239ca3af' : '%236b7280'}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                     backgroundPosition: "right 0.5rem center",
-                     backgroundRepeat: "no-repeat",
-                     backgroundSize: "1.5em 1.5em"
-                   }}
-                 >
-                   {paymentOptions.map((opt, idx) => (
-                     <option key={idx} value={opt.value}>
-                       {opt.label}
-                     </option>
-                   ))}
-                 </select>
-               </div>
+              <div>
+                <label
+                  className={`mb-2 block text-sm font-semibold ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Select Payment Method
+                </label>
+                <select
+                  value={selectedMethod}
+                  onChange={(e) => setSelectedMethod(e.target.value)}
+                  className={`w-full appearance-none rounded-xl border-2 py-3 pl-4 pr-10 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700 text-white focus:border-orange-500"
+                      : "border-gray-300 bg-white text-gray-900 focus:border-orange-500"
+                  }`}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='${
+                      isDark ? "%239ca3af" : "%236b7280"
+                    }' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: "right 0.5rem center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "1.5em 1.5em",
+                  }}
+                >
+                  {paymentOptions.map((opt, idx) => (
+                    <option key={idx} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-               {selectedMethod === "momo-new" && (
-                 <div>
-                   <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                     MTN Mobile Money Number
-                   </label>
-                   <div className="relative">
-                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                       <span className="text-gray-500 font-medium">+250</span>
-                     </div>
-                     <input
-                       type="tel"
-                       value={phoneNumber.replace(/^(250|\+250)/, "")}
-                       onChange={(e) => setPhoneNumber(e.target.value)}
-                       placeholder="78XXXXXXX"
-                       className={`w-full pl-16 pr-4 py-3 rounded-xl border-2 transition duration-200 outline-none
-                         ${isDark 
-                           ? "bg-gray-700 border-gray-600 text-white focus:border-orange-500" 
-                           : "bg-white border-gray-300 text-gray-900 focus:border-orange-500"
+              {selectedMethod === "momo-new" && (
+                <div>
+                  <label
+                    className={`mb-2 block text-sm font-semibold ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    MTN Mobile Money Number
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <span className="font-medium text-gray-500">+250</span>
+                    </div>
+                    <input
+                      type="tel"
+                      value={phoneNumber.replace(/^(250|\+250)/, "")}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="78XXXXXXX"
+                      className={`w-full rounded-xl border-2 py-3 pl-16 pr-4 outline-none transition duration-200
+                         ${
+                           isDark
+                             ? "border-gray-600 bg-gray-700 text-white focus:border-orange-500"
+                             : "border-gray-300 bg-white text-gray-900 focus:border-orange-500"
                          }`}
-                     />
-                   </div>
-                 </div>
-               )}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        {(!isLoadingData && processingStep !== "success" && processingStep !== "awaiting_approval") && (
-          <div
-             className={`flex flex-shrink-0 items-center justify-end gap-3 p-4 md:p-5 ${
-               isDark
-                 ? "border-t border-gray-700 bg-gray-800 rounded-b-2xl sm:rounded-b-2xl"
-                 : "bg-white rounded-b-2xl sm:rounded-b-2xl"
-             }`}
-          >
-             <div className="flex w-full gap-3">
-               <button
-                 onClick={handlePay}
-                 disabled={isProcessing}
-                 className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 shadow-lg ${
-                   isProcessing
-                     ? "cursor-not-allowed bg-orange-400"
-                     : "bg-orange-500 hover:bg-orange-600 hover:shadow-orange-500/25"
-                 }`}
-               >
-                 {isProcessing ? (
-                   <>
-                     <svg className="h-5 w-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                     </svg>
-                     Processing...
-                   </>
-                 ) : (
-                   `Pay ${formatCurrency(order?.total || 0)}`
-                 )}
-               </button>
-             </div>
-          </div>
-        )}
+        {!isLoadingData &&
+          processingStep !== "success" &&
+          processingStep !== "awaiting_approval" && (
+            <div
+              className={`flex flex-shrink-0 items-center justify-end gap-3 p-4 md:p-5 ${
+                isDark
+                  ? "rounded-b-2xl border-t border-gray-700 bg-gray-800 sm:rounded-b-2xl"
+                  : "rounded-b-2xl bg-white sm:rounded-b-2xl"
+              }`}
+            >
+              <div className="flex w-full gap-3">
+                <button
+                  onClick={handlePay}
+                  disabled={isProcessing}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 ${
+                    isProcessing
+                      ? "cursor-not-allowed bg-orange-400"
+                      : "bg-orange-500 hover:bg-orange-600 hover:shadow-orange-500/25"
+                  }`}
+                >
+                  {isProcessing ? (
+                    <>
+                      <svg
+                        className="h-5 w-5 animate-spin text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay ${formatCurrency(order?.total || 0)}`
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

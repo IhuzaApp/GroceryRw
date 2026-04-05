@@ -726,7 +726,18 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const shopCart = useCart();
   const foodCart = useFoodCart();
 
-  const AGENT_NAMES = ["Alice", "Alex", "Jon", "Sarah", "Michael", "Emma", "David", "Sophia", "Daniel", "Olivia"];
+  const AGENT_NAMES = [
+    "Alice",
+    "Alex",
+    "Jon",
+    "Sarah",
+    "Michael",
+    "Emma",
+    "David",
+    "Sophia",
+    "Daniel",
+    "Olivia",
+  ];
   const [agentName, setAgentName] = useState("Plas Agent");
 
   useEffect(() => {
@@ -743,7 +754,9 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     timestamp: new Date(),
   });
 
-  const [messages, setMessages] = useState<Message[]>([getInitialMessage("Plas Agent")]);
+  const [messages, setMessages] = useState<Message[]>([
+    getInitialMessage("Plas Agent"),
+  ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [usageStatus, setUsageStatus] = useState<AIUsageStatus | null>(null);
@@ -1149,8 +1162,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 parameters: {
                   type: "OBJECT",
                   properties: {
-                    requestType: { type: "STRING", description: "Must be 'general'" },
-                    message: { type: "STRING", description: "Detailed explanation of the issue." }
+                    requestType: {
+                      type: "STRING",
+                      description: "Must be 'general'",
+                    },
+                    message: {
+                      type: "STRING",
+                      description: "Detailed explanation of the issue.",
+                    },
                   },
                   required: ["requestType", "message"],
                 },
@@ -1162,12 +1181,32 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 parameters: {
                   type: "OBJECT",
                   properties: {
-                    pin: { type: "STRING", description: "The order PIN/DeliveryCode from the user." },
-                    order_source: { type: "STRING", description: "Source of the order: 'shop', 'restaurant', 'reel', 'business', or 'package'." },
-                    description: { type: "STRING", description: "Details about what went wrong with the delivery." },
-                    issue_type: { type: "STRING", description: "Type of issue, e.g., 'Broken Item', 'Wrong Item', 'Shopper Complaint'." }
+                    pin: {
+                      type: "STRING",
+                      description: "The order PIN/DeliveryCode from the user.",
+                    },
+                    order_source: {
+                      type: "STRING",
+                      description:
+                        "Source of the order: 'shop', 'restaurant', 'reel', 'business', or 'package'.",
+                    },
+                    description: {
+                      type: "STRING",
+                      description:
+                        "Details about what went wrong with the delivery.",
+                    },
+                    issue_type: {
+                      type: "STRING",
+                      description:
+                        "Type of issue, e.g., 'Broken Item', 'Wrong Item', 'Shopper Complaint'.",
+                    },
                   },
-                  required: ["pin", "order_source", "description", "issue_type"],
+                  required: [
+                    "pin",
+                    "order_source",
+                    "description",
+                    "issue_type",
+                  ],
                 },
               },
               {
@@ -1177,15 +1216,23 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
                 parameters: {
                   type: "OBJECT",
                   properties: {
-                    tracking_code: { type: "STRING", description: "The integer tracking code." },
-                    urgency: { type: "STRING", description: "low, medium, or high" },
-                    message: { type: "STRING", description: "The follow up message." }
+                    tracking_code: {
+                      type: "STRING",
+                      description: "The integer tracking code.",
+                    },
+                    urgency: {
+                      type: "STRING",
+                      description: "low, medium, or high",
+                    },
+                    message: {
+                      type: "STRING",
+                      description: "The follow up message.",
+                    },
                   },
                   required: ["tracking_code", "urgency", "message"],
                 },
-              }
+              },
             ],
-
           } as any,
         ],
       });
@@ -1825,7 +1872,11 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     ]);
   };
 
-  const handleConfirmDeliveryIssue = async (msgId: string, payload: DeliveryIssueSetupPayload, file: File | null) => {
+  const handleConfirmDeliveryIssue = async (
+    msgId: string,
+    payload: DeliveryIssueSetupPayload,
+    file: File | null
+  ) => {
     try {
       setMessages((prev) =>
         prev.map((m) => (m.id === msgId ? { ...m, isProcessing: true } : m))
@@ -1833,7 +1884,10 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
       let image = null;
       if (file && storage) {
-        const storageRef = ref(storage, `delivery_issues/${Date.now()}_${file.name}`);
+        const storageRef = ref(
+          storage,
+          `delivery_issues/${Date.now()}_${file.name}`
+        );
         const snapshot = await uploadBytes(storageRef, file);
         image = await getDownloadURL(snapshot.ref);
       }
@@ -1847,15 +1901,24 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
       setMessages((prev) => [
         ...prev.map((m) =>
-          m.id === msgId ? { ...m, isProcessing: false, deliveryIssuePlaced: true, isComplete: true } : m
+          m.id === msgId
+            ? {
+                ...m,
+                isProcessing: false,
+                deliveryIssuePlaced: true,
+                isComplete: true,
+              }
+            : m
         ),
         {
           id: (Date.now() + 1).toString(),
-          text: `I have completed reporting your issue.\n\n**Tracking Code:** #${data.code || "PENDING"}\n\nThe Agent will contact you in 10 to 20 minutes, but also expect it to be resolved below that time. You can use this tracking code to follow up!`,
+          text: `I have completed reporting your issue.\n\n**Tracking Code:** #${
+            data.code || "PENDING"
+          }\n\nThe Agent will contact you in 10 to 20 minutes, but also expect it to be resolved below that time. You can use this tracking code to follow up!`,
           sender: "ai",
           timestamp: new Date(),
           isComplete: true,
-        }
+        },
       ]);
     } catch (error) {
       console.error(error);
@@ -1892,135 +1955,138 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               Give me some time to find you an AI agent available...
             </p>
           </div>
-        ) : (!usageStatus || usageStatus?.isBlocked) && (
-          <div className="absolute bottom-0 left-0 right-0 z-[10001] flex transform flex-col items-center justify-center rounded-b-3xl border-t border-gray-200 bg-white/95 px-6 py-6 text-center shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all duration-500 animate-in slide-in-from-bottom dark:bg-gray-900/95">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 shadow-inner dark:bg-amber-900/30 dark:text-amber-400">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m0 0v3m0-3h3m-3 0H9m12-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="mb-1 text-lg font-bold">AI Usage Limit Reached</h3>
-            <p className="mb-5 px-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-              You've used all your AI requests for this month. Upgrade to{" "}
-              <strong className="text-[#115e59] dark:text-[#84cc16]">
-                AI Assistant Plus
-              </strong>{" "}
-              to continue chatting!
-            </p>
+        ) : (
+          (!usageStatus || usageStatus?.isBlocked) && (
+            <div className="absolute bottom-0 left-0 right-0 z-[10001] flex transform flex-col items-center justify-center rounded-b-3xl border-t border-gray-200 bg-white/95 px-6 py-6 text-center shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.1)] backdrop-blur-xl transition-all duration-500 animate-in slide-in-from-bottom dark:bg-gray-900/95">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 shadow-inner dark:bg-amber-900/30 dark:text-amber-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m0 0v3m0-3h3m-3 0H9m12-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="mb-1 text-lg font-bold">AI Usage Limit Reached</h3>
+              <p className="mb-5 px-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                You've used all your AI requests for this month. Upgrade to{" "}
+                <strong className="text-[#115e59] dark:text-[#84cc16]">
+                  AI Assistant Plus
+                </strong>{" "}
+                to continue chatting!
+              </p>
 
-            {!showSubscriptionPrompt ? (
-              <button
-                onClick={() => setShowSubscriptionPrompt(true)}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#115e59]/20 transition hover:scale-[1.02] active:scale-95"
-              >
-                Upgrade for 1,000 RWF / month
-              </button>
-            ) : paymentStep !== "idle" ? (
-              <div className="w-full space-y-4 py-2 duration-300 animate-in fade-in zoom-in-95">
-                <div className="flex justify-center">
-                  <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-full shadow-inner transition-all duration-500 ${
-                      paymentStep === "success"
-                        ? "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400"
-                        : paymentStep === "error"
-                        ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"
-                        : "bg-[#115e59]/10 text-[#115e59] dark:bg-[#115e59]/30 dark:text-[#84cc16]"
-                    }`}
-                  >
-                    {paymentStep === "success" ? (
-                      <CheckCircle2 className="h-8 w-8" />
-                    ) : paymentStep === "error" ? (
-                      <AlertCircle className="h-8 w-8" />
-                    ) : (
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                    )}
+              {!showSubscriptionPrompt ? (
+                <button
+                  onClick={() => setShowSubscriptionPrompt(true)}
+                  className="w-full rounded-2xl bg-gradient-to-r from-[#115e59] to-[#047857] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#115e59]/20 transition hover:scale-[1.02] active:scale-95"
+                >
+                  Upgrade for 1,000 RWF / month
+                </button>
+              ) : paymentStep !== "idle" ? (
+                <div className="w-full space-y-4 py-2 duration-300 animate-in fade-in zoom-in-95">
+                  <div className="flex justify-center">
+                    <div
+                      className={`flex h-16 w-16 items-center justify-center rounded-full shadow-inner transition-all duration-500 ${
+                        paymentStep === "success"
+                          ? "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400"
+                          : paymentStep === "error"
+                          ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"
+                          : "bg-[#115e59]/10 text-[#115e59] dark:bg-[#115e59]/30 dark:text-[#84cc16]"
+                      }`}
+                    >
+                      {paymentStep === "success" ? (
+                        <CheckCircle2 className="h-8 w-8" />
+                      ) : paymentStep === "error" ? (
+                        <AlertCircle className="h-8 w-8" />
+                      ) : (
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                      {paymentStep === "initiating" && "Initiating Payment..."}
+                      {paymentStep === "awaiting_approval" &&
+                        "Awaiting Approval"}
+                      {paymentStep === "success" && "Subscription Active!"}
+                      {paymentStep === "error" && "Payment Failed"}
+                    </h4>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {paymentStep === "initiating" &&
+                        "Connecting to MoMo securely..."}
+                      {paymentStep === "awaiting_approval" && (
+                        <span className="flex items-center justify-center gap-1 font-medium">
+                          <Phone className="h-3 w-3" /> Check your phone to
+                          approve (1,000 RWF).
+                        </span>
+                      )}
+                      {paymentStep === "success" &&
+                        "Thank you! You now have 100 requests."}
+                      {paymentStep === "error" &&
+                        (paymentError || "Please try again.")}
+                    </p>
+                  </div>
+                  {(paymentStep === "error" || paymentStep === "success") && (
+                    <button
+                      onClick={() => {
+                        if (paymentStep === "success") {
+                          fetchUsageStatus();
+                          onClose();
+                          setShowSubscriptionPrompt(false);
+                        }
+                        setPaymentStep("idle");
+                      }}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white py-3 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      {paymentStep === "success"
+                        ? "Continue Chatting"
+                        : "Try Again"}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                  <input
+                    type="text"
+                    placeholder="Enter MoMo Number (e.g. 078...)"
+                    value={subscribePhone}
+                    onChange={(e) => setSubscribePhone(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm focus:border-[#115e59] focus:outline-none focus:ring-2 focus:ring-[#115e59]/20 dark:border-gray-700 dark:bg-gray-800"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowSubscriptionPrompt(false)}
+                      className="flex-1 rounded-xl border border-gray-200 bg-white py-3 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSubscribe}
+                      disabled={isSubscribing || !subscribePhone}
+                      className="flex-[2] rounded-xl bg-gradient-to-r from-[#115e59] to-[#047857] py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+                    >
+                      Pay with MoMo
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <h4 className="text-base font-bold text-gray-900 dark:text-white">
-                    {paymentStep === "initiating" && "Initiating Payment..."}
-                    {paymentStep === "awaiting_approval" && "Awaiting Approval"}
-                    {paymentStep === "success" && "Subscription Active!"}
-                    {paymentStep === "error" && "Payment Failed"}
-                  </h4>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {paymentStep === "initiating" &&
-                      "Connecting to MoMo securely..."}
-                    {paymentStep === "awaiting_approval" && (
-                      <span className="flex items-center justify-center gap-1 font-medium">
-                        <Phone className="h-3 w-3" /> Check your phone to
-                        approve (1,000 RWF).
-                      </span>
-                    )}
-                    {paymentStep === "success" &&
-                      "Thank you! You now have 100 requests."}
-                    {paymentStep === "error" &&
-                      (paymentError || "Please try again.")}
-                  </p>
-                </div>
-                {(paymentStep === "error" || paymentStep === "success") && (
-                  <button
-                    onClick={() => {
-                      if (paymentStep === "success") {
-                        fetchUsageStatus();
-                        onClose();
-                        setShowSubscriptionPrompt(false);
-                      }
-                      setPaymentStep("idle");
-                    }}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-white py-3 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    {paymentStep === "success"
-                      ? "Continue Chatting"
-                      : "Try Again"}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-2">
-                <input
-                  type="text"
-                  placeholder="Enter MoMo Number (e.g. 078...)"
-                  value={subscribePhone}
-                  onChange={(e) => setSubscribePhone(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm focus:border-[#115e59] focus:outline-none focus:ring-2 focus:ring-[#115e59]/20 dark:border-gray-700 dark:bg-gray-800"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowSubscriptionPrompt(false)}
-                    className="flex-1 rounded-xl border border-gray-200 bg-white py-3 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSubscribe}
-                    disabled={isSubscribing || !subscribePhone}
-                    className="flex-[2] rounded-xl bg-gradient-to-r from-[#115e59] to-[#047857] py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    Pay with MoMo
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
 
-            <button
-              onClick={onClose}
-              className="mt-4 text-xs font-semibold text-gray-400 transition hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              I'll do it later
-            </button>
-          </div>
+              <button
+                onClick={onClose}
+                className="mt-4 text-xs font-semibold text-gray-400 transition hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                I'll do it later
+              </button>
+            </div>
+          )
         )}
 
         {/* Header */}
@@ -2051,7 +2117,9 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
             </div>
             <div>
               <h3 className="text-lg font-bold tracking-tight text-white drop-shadow-sm">
-                {agentName === "Plas Agent" ? "Plas Agent" : `${agentName} - Plas Agent`}
+                {agentName === "Plas Agent"
+                  ? "Plas Agent"
+                  : `${agentName} - Plas Agent`}
               </h3>
               <p className="text-xs font-medium text-[#84cc16]">
                 Online & Ready
