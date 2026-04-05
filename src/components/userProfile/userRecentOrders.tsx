@@ -681,6 +681,7 @@ export default function UserRecentOrders({
         <CompletePaymentModal
           open={paymentModalOpen}
           order={selectedPaymentOrder}
+          orderType={selectedPaymentOrder.orderType || "regular"}
           onClose={() => {
             setPaymentModalOpen(false);
             setSelectedPaymentOrder(null);

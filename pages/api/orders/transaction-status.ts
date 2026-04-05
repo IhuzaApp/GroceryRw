@@ -7,7 +7,15 @@ import { gql } from "graphql-request";
 const GET_TRANSACTION_STATUS = gql`
   query GetTransactionStatus($order_id: uuid!) {
     order_transactions(
-      where: { order_id: { _eq: $order_id }, status: { _eq: "SUCCESSFUL" } }
+      where: {
+        _or: [
+          { order_id: { _eq: $order_id } },
+          { reel_order_id: { _eq: $order_id } },
+          { business_order_id: { _eq: $order_id } },
+          { restaurant_order_id: { _eq: $order_id } }
+        ],
+        status: { _eq: "SUCCESSFUL" }
+      }
     ) {
       id
       status

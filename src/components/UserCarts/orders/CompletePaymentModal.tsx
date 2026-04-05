@@ -8,6 +8,7 @@ interface CompletePaymentModalProps {
   open: boolean;
   onClose: () => void;
   order: any;
+  orderType?: string;
   onSuccess?: () => void;
 }
 
@@ -15,6 +16,7 @@ export default function CompletePaymentModal({
   open,
   onClose,
   order,
+  orderType = "regular",
   onSuccess,
 }: CompletePaymentModalProps) {
   const { theme } = useTheme();
@@ -138,7 +140,7 @@ export default function CompletePaymentModal({
         const res = await fetch("/api/orders/pay-with-wallet", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: order.id }),
+          body: JSON.stringify({ orderId: order.id, orderType }),
         });
         const data = await res.json();
         
@@ -199,17 +201,23 @@ export default function CompletePaymentModal({
     setProcessingStep("initiating");
 
     try {
+      const payload: any = {
+        amount: Math.round(order.total),
+        currency: "RWF",
+        payerNumber: formattedPhone,
+        externalId: order.id,
+        payerMessage: `Payment for Order ${order.OrderID || order.id.substring(0, 8)}`,
+      };
+
+      if (orderType === "reel") payload.reelOrderId = order.id;
+      else if (orderType === "business") payload.businessOrderId = order.id;
+      else if (orderType === "restaurant") payload.restaurantOrderId = order.id;
+      else payload.orderId = order.id;
+
       const response = await fetch("/api/momo/request-to-pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: Math.round(order.total),
-          currency: "RWF",
-          payerNumber: formattedPhone,
-          externalId: order.id,
-          orderId: order.id,
-          payerMessage: `Payment for Order ${order.OrderID || order.id.substring(0, 8)}`,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();

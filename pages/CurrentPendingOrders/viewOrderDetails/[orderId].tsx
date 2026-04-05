@@ -1045,6 +1045,7 @@ function ViewOrderDetailsPage() {
           <CompletePaymentModal
             open={showPaymentModal}
             order={order}
+            orderType={(orderType as string) ?? "regular"}
             onClose={() => setShowPaymentModal(false)}
             onSuccess={() => {
               setShowPaymentModal(false);
