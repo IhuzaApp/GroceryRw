@@ -194,6 +194,8 @@ export default function DesktopMessagePage({
   const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [piiError, setPiiError] = useState<string | null>(null);
+  const [selectedRfq, setSelectedRfq] = useState<any>(null);
+  const [loadingRfq, setLoadingRfq] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -260,60 +262,40 @@ export default function DesktopMessagePage({
         try {
           setConversationId(selectedConversation.id);
 
-          // Get the conversation document to check unreadCount
+          // Mark as read logic preserved...
           const convRef = doc(db!, selectedConversation.collectionPath, selectedConversation.id);
           const convSnap = await getDoc(convRef);
           
-          if (convSnap.exists()) {
-            const conversationData = convSnap.data();
+          if (convSnap.exists() && convSnap.data().unreadCount > 0) {
+            await updateDoc(convRef, { unreadCount: 0 });
+          }
 
-            // Immediately mark conversation as read if it has unread messages
-            if (conversationData.unreadCount > 0) {
-              await updateDoc(convRef, {
-                unreadCount: 0,
-              });
-            }
-
-            // Fetch shopper details if applicable
-            if (conversationData.shopperId) {
-              try {
-                const shopperRef = doc(db!, "users", conversationData.shopperId);
-                const shopperDoc = await getDoc(shopperRef);
-
-                if (shopperDoc.exists()) {
-                  const shopperData = shopperDoc.data();
-
-                  // Fetch additional shopper profile from API
-                  try {
-                    const response = await fetch(
-                      `/api/queries/shopper-profile?user_id=${conversationData.shopperId}`
-                    );
-                    if (response.ok) {
-                      const profileData = await response.json();
-                    }
-                  } catch (apiError) {
-                    console.error(
-                      "Error fetching shopper profile from API:",
-                      apiError
-                    );
-                  }
-                }
-              } catch (shopperError) {
-                console.error(
-                  "Error fetching shopper from Firebase:",
-                  shopperError
-                );
+          // Fetch RFQ details if it's a business chat
+          if (selectedConversation.collectionPath === "business_conversations" && selectedConversation.rfqId) {
+            setLoadingRfq(true);
+            try {
+              const res = await fetch(`/api/queries/rfq-details-and-responses?rfq_id=${selectedConversation.rfqId}`);
+              if (res.ok) {
+                const data = await res.json();
+                setSelectedRfq(data.rfq);
               }
+            } catch (err) {
+              console.error("Error fetching RFQ details:", err);
+            } finally {
+              setLoadingRfq(false);
             }
+          } else {
+            setSelectedRfq(null);
           }
         } catch (error) {
-          console.error("Error getting conversation ID:", error);
+          console.error("Error getting conversation data:", error);
         }
       };
       getConversationData();
     } else {
       setConversationId(null);
       setMessages([]);
+      setSelectedRfq(null);
     }
   }, [selectedConversation]);
 
@@ -870,9 +852,8 @@ export default function DesktopMessagePage({
                                       />
                                     </svg>
                                   )
-                                ) : selectedOrder.assignedTo?.shopper
-                                    ?.profile_photo ||
-                                  selectedOrder.assignedTo?.profile_picture ? (
+                                ) : (selectedOrder?.assignedTo?.shopper?.profile_photo ||
+                                    selectedOrder?.assignedTo?.profile_picture) ? (
                                   <img
                                     src={
                                       selectedOrder.assignedTo?.shopper
@@ -885,6 +866,12 @@ export default function DesktopMessagePage({
                                       selectedOrder.assignedTo?.name ||
                                       "Shopper"
                                     }
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : isBusinessChat ? (
+                                  <img
+                                    src={selectedConversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"}
+                                    alt="Business"
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
@@ -1067,45 +1054,23 @@ export default function DesktopMessagePage({
                 </div>
                 <button
                   type="submit"
-                  disabled={isSending || !newMessage.trim()}
+                  disabled={!newMessage.trim()}
                   className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 !text-white text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800 [&_*]:!text-white [&_svg]:!text-white"
                   aria-label="Send message"
                 >
-                  {isSending ? (
-                    <svg
-                      className="h-5 w-5 animate-spin text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    <svg
-                      className="h-5 w-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                      />
-                    </svg>
-                  )}
+                  <svg
+                    className="h-5 w-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
                 </button>
               </form>
             </div>
@@ -1141,296 +1106,133 @@ export default function DesktopMessagePage({
       </div>
 
       <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700">
-        {selectedConversation && selectedOrder ? (
+        {selectedConversation && (selectedOrder || selectedRfq) ? (
           <>
-            {/* Order Header */}
+            {/* Header */}
             <div className="flex-shrink-0 bg-white px-6 py-5 shadow-sm dark:bg-gray-800">
               <h2 className="text-base font-bold text-gray-900 dark:text-white">
-                Order Details
+                {selectedOrder ? "Order Details" : "Quote Details"}
               </h2>
             </div>
 
-            {/* Order Content */}
+            {/* Content */}
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              {/* Company/Team Info Card */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
-                    <svg
-                      className="h-7 w-7 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                      {selectedOrder.shop?.name || "Store"}
-                    </h3>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      Order #
-                      {formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="my-4 h-px bg-gray-100 dark:bg-gray-700"></div>
-
-                {/* Status Badge */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Status
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                      selectedOrder.status === "completed"
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : selectedOrder.status === "in_progress"
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : selectedOrder.status === "pending"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                        : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
-                    }`}
-                  >
-                    <span className="inline-block h-2 w-2 rounded-full bg-current"></span>
-                    {selectedOrder.status &&
-                    typeof selectedOrder.status === "string"
-                      ? selectedOrder.status.charAt(0).toUpperCase() +
-                        selectedOrder.status.slice(1)
-                      : "Pending"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Members Card */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                <div className="mb-4 flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                    Shopper Details
-                  </h4>
-                </div>
-
-                {selectedOrder.assignedTo && (
-                  <div className="space-y-4">
-                    {/* Shopper Profile */}
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm">
-                        {selectedOrder.assignedTo?.shopper?.profile_photo ||
-                        selectedOrder.assignedTo?.profile_picture ? (
-                          <img
-                            src={
-                              selectedOrder.assignedTo?.shopper
-                                ?.profile_photo ||
-                              selectedOrder.assignedTo?.profile_picture
-                            }
-                            alt="Shopper"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <svg
-                            className="h-6 w-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        )}
+              {selectedOrder ? (
+                <>
+                  {/* Company Info Card */}
+                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                        <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          {selectedOrder.assignedTo?.shopper?.Employment_id && (
-                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                              00{selectedOrder.assignedTo.shopper.Employment_id}
-                            </span>
-                          )}
-                        </div>
-                        <h5 className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
-                          {selectedOrder.assignedTo?.shopper?.full_name ||
-                            selectedOrder.assignedTo?.name ||
-                            "Shopper"}
-                        </h5>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {selectedOrder.assignedTo?.email || "No email"}
+                      <div className="flex-1">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                          {selectedOrder.shop?.name || "Store"}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          Order #{formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
                         </p>
                       </div>
                     </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <button className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700 transition-all hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30">
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                          />
-                        </svg>
-                        Contact
-                      </button>
-                      <button className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-all hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30">
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                          />
-                        </svg>
-                        Report
-                      </button>
+                    <div className="my-4 h-px bg-gray-100 dark:bg-gray-700"></div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Status</span>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                        selectedOrder.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                        selectedOrder.status === "in_progress" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                        selectedOrder.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
+                      }`}>
+                        <span className="inline-block h-2 w-2 rounded-full bg-current"></span>
+                        {selectedOrder.status?.charAt(0).toUpperCase() + selectedOrder.status?.slice(1) || "Pending"}
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Shared Files Card */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                <div className="mb-4 flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                    Order Items
-                  </h4>
-                  <button className="text-xs font-semibold text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300">
-                    View all
-                  </button>
-                </div>
-                <div className="space-y-2.5">
-                  {selectedOrder.items
-                    ?.slice(0, 3)
-                    .map((item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="group flex items-center gap-3 rounded-xl bg-gray-50 p-3 transition-all hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700"
-                      >
-                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
+                  {/* Shopper Details Card */}
+                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+                    <h4 className="mb-4 text-sm font-bold text-gray-900 dark:text-white">Shopper Details</h4>
+                    {selectedOrder.assignedTo && (
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm">
+                          {selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture ? (
+                            <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt="Shopper" className="h-full w-full object-cover" />
                           ) : (
-                            <svg
-                              className="h-6 w-6 text-green-600 dark:text-green-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                              />
+                            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
-                            {item.name || "Product"}
-                          </p>
-                          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                            Qty: {item.quantity || 1}
-                          </p>
+                          {selectedOrder.assignedTo?.shopper?.Employment_id && (
+                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20">
+                              00{selectedOrder.assignedTo.shopper.Employment_id}
+                            </span>
+                          )}
+                          <h5 className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                            {selectedOrder.assignedTo?.shopper?.full_name || selectedOrder.assignedTo?.name || "Shopper"}
+                          </h5>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{selectedOrder.assignedTo?.email || "No email"}</p>
                         </div>
                       </div>
-                    ))}
-                </div>
-              </div>
-
-              {/* Delivery Info Card */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                <div className="mb-4 flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                    Delivery Info
-                  </h4>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/50">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20">
-                      <svg
-                        className="h-5 w-5 text-green-600 dark:text-green-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
+                    )}
+                  </div>
+                </>
+              ) : selectedRfq ? (
+                <>
+                  {/* RFQ Info Card */}
+                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg text-white">
+                        <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                          {selectedRfq.title || "RFQ Details"}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          RFQ ID: {selectedRfq.id?.split("-")[0].toUpperCase()}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                        Delivery Address
-                      </p>
-                      <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                        {selectedOrder.delivery_address || "Not provided"}
-                      </p>
+                    <div className="my-4 h-px bg-gray-100 dark:bg-gray-700"></div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Category</span>
+                        <span className="text-xs font-semibold text-[var(--text-primary)]">{selectedRfq.category || "General"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Budget Range</span>
+                        <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+                          {selectedRfq.min_budget} - {selectedRfq.max_budget}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Urgency</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                          selectedRfq.urgency_level === "high" || selectedRfq.urgency_level === "urgent"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30"
+                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/30"
+                        }`}>
+                          {selectedRfq.urgency_level || "Normal"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {selectedOrder.shop?.address && (
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/50">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20">
-                        <svg
-                          className="h-5 w-5 text-green-600 dark:text-green-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          />
-                        </svg>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                          Shop Location
-                        </p>
-                        <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                          {selectedOrder.shop.address}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                  {/* Requirements Card */}
+                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+                    <h4 className="mb-2 text-sm font-bold text-gray-900 dark:text-white">Requirements</h4>
+                    <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                      {selectedRfq.description || "No description provided."}
+                    </p>
+                  </div>
+                </>
+              ) : null}
             </div>
           </>
         ) : (
