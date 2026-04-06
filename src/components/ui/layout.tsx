@@ -46,7 +46,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+    <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
         !isReelsPage &&
@@ -68,10 +68,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-          isChatPage || isReelsPage || isPlasBusinessPage || isStoresPage || isMessagesChat
+          isChatPage ||
+          isReelsPage ||
+          isPlasBusinessPage ||
+          isStoresPage ||
+          isMessagesChat
             ? ""
             : isMessagesList
-            ? "pt-0 pb-[60px] md:pb-0"
+            ? "pb-[60px] pt-0 md:pb-0"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
@@ -90,7 +94,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         }
       >
         {/* Sidebar: hide on order details (mobile), show on desktop (SideBar has hidden md:block) */}
-        {!isChatPage && !isReelsPage && !isMessagesList && !isMessagesChat && <SideBar />}
+        {!isChatPage && !isReelsPage && !isMessagesList && !isMessagesChat && (
+          <SideBar />
+        )}
         <div
           className="[&_*]:text-inherit"
           style={

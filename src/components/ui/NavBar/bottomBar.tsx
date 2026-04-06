@@ -574,7 +574,7 @@ export default function BottomBar() {
 
       {/* Bottom Navigation Bar */}
       {router.pathname !== "/Reels" && (
-        <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
+        <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-[var(--bg-primary)] md:hidden">
           {/* Reels - First icon */}
           <NavItem
             href="/Reels"
@@ -724,7 +724,7 @@ export default function BottomBar() {
           {/* Central Home Button - Third (middle) */}
           <div className="z-50 -mt-12">
             <Link href="/" passHref>
-              <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800">
+              <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-[var(--bg-primary)]">
                 <svg
                   width="24px"
                   height="24px"

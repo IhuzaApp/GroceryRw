@@ -192,7 +192,11 @@ function BuyerDashboardContent({
     setIsQuoteModalOpen(false);
   };
 
-  const handleMessageQuoteSupplier = async (supplierId: string, rfqId?: string, title?: string) => {
+  const handleMessageQuoteSupplier = async (
+    supplierId: string,
+    rfqId?: string,
+    title?: string
+  ) => {
     if (!businessAccount?.id) {
       toast.error("Please ensure your business account is fully set up");
       return;
@@ -205,7 +209,9 @@ function BuyerDashboardContent({
         rfqId,
         title
       );
-      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
     } catch (error) {
       console.error("Error starting business conversation:", error);
       toast.error("Failed to start conversation. Please try again.");
@@ -223,7 +229,9 @@ function BuyerDashboardContent({
         businessAccount.id,
         supplierId
       );
-      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
     } catch (error) {
       console.error("Error starting business conversation:", error);
       toast.error("Failed to start conversation. Please try again.");
@@ -471,7 +479,6 @@ function BuyerDashboardContent({
         onSubmit={handleRFQSubmit}
         businessAccount={businessAccount}
       />
-
 
       <ContractDetailDrawer
         isOpen={isContractDrawerOpen}

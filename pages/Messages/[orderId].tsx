@@ -187,10 +187,11 @@ const Message: React.FC<MessageProps> = ({
     >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
       <div
-        className={`max-w-[85%] ${isCurrentUser
+        className={`max-w-[85%] ${
+          isCurrentUser
             ? "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
             : "bg-blue-100 text-gray-900 dark:bg-blue-900 dark:text-blue-100"
-          } rounded-[20px] p-3`}
+        } rounded-[20px] p-3`}
       >
         {!isCurrentUser && (
           <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
@@ -455,7 +456,14 @@ function ChatPage() {
   // Handle sending a new message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!db || !newMessage.trim() || !session?.user?.id || !shopper?.id || !conversationId) return;
+    if (
+      !db ||
+      !newMessage.trim() ||
+      !session?.user?.id ||
+      !shopper?.id ||
+      !conversationId
+    )
+      return;
 
     const text = newMessage.trim();
     const piiCheck = containsBlockedPii(text);

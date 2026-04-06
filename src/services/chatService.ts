@@ -56,19 +56,29 @@ export const createConversation = async (
   customCollection: ChatCollection = "chat_conversations"
 ): Promise<string> => {
   try {
-    console.log(`🔍 [Chat Service] Creating conversation in ${customCollection}:`, {
-      orderId,
-      customerId,
-      shopperId,
-      type,
-      ...metadata,
-    });
+    console.log(
+      `🔍 [Chat Service] Creating conversation in ${customCollection}:`,
+      {
+        orderId,
+        customerId,
+        shopperId,
+        type,
+        ...metadata,
+      }
+    );
 
     // Check if conversation already exists (for order type in chat_conversations)
-    if (customCollection === "chat_conversations" && type === "order" && orderId) {
+    if (
+      customCollection === "chat_conversations" &&
+      type === "order" &&
+      orderId
+    ) {
       const existingConv = await getConversationByOrderId(orderId);
       if (existingConv) {
-        console.log("🔍 [Chat Service] Conversation already exists:", existingConv.id);
+        console.log(
+          "🔍 [Chat Service] Conversation already exists:",
+          existingConv.id
+        );
         return existingConv.id as string;
       }
     }
@@ -93,10 +103,16 @@ export const createConversation = async (
       conversationData
     );
 
-    console.log(`🔍 [Chat Service] Conversation created in ${customCollection}:`, docRef.id);
+    console.log(
+      `🔍 [Chat Service] Conversation created in ${customCollection}:`,
+      docRef.id
+    );
     return docRef.id;
   } catch (error) {
-    console.error(`❌ [Chat Service] Error creating conversation in ${customCollection}:`, error);
+    console.error(
+      `❌ [Chat Service] Error creating conversation in ${customCollection}:`,
+      error
+    );
     throw error;
   }
 };
@@ -112,7 +128,7 @@ export const getOrCreateBusinessConversation = async (
 ): Promise<string> => {
   try {
     const customCollection: ChatCollection = "business_conversations";
-    
+
     // Check if a conversation between these two for this RFQ already exists
     const conversationsRef = collection(db!, customCollection);
     let q = query(
@@ -132,14 +148,24 @@ export const getOrCreateBusinessConversation = async (
     }
 
     // Create new business conversation in business_conversations collection
-    return await createConversation(null, "", "", "business", {
-      businessId,
-      counterpartId,
-      rfqId,
-      title: title || "Business Chat",
-    }, customCollection);
+    return await createConversation(
+      null,
+      "",
+      "",
+      "business",
+      {
+        businessId,
+        counterpartId,
+        rfqId,
+        title: title || "Business Chat",
+      },
+      customCollection
+    );
   } catch (error) {
-    console.error("❌ [Chat Service] Error in getOrCreateBusinessConversation:", error);
+    console.error(
+      "❌ [Chat Service] Error in getOrCreateBusinessConversation:",
+      error
+    );
     throw error;
   }
 };
@@ -201,7 +227,9 @@ export const addMessage = async (
     const convSnap = await getDoc(convRef);
 
     if (!convSnap.exists()) {
-      throw new Error(`Conversation not found in ${collectionPath}: ${conversationId}`);
+      throw new Error(
+        `Conversation not found in ${collectionPath}: ${conversationId}`
+      );
     }
 
     const messagesRef = collection(
@@ -210,7 +238,7 @@ export const addMessage = async (
       conversationId,
       "messages"
     );
-    
+
     const messageData = {
       senderId,
       senderType,
@@ -221,7 +249,7 @@ export const addMessage = async (
     };
 
     const docRef = await addDoc(messagesRef, messageData);
-    
+
     await updateDoc(convRef, {
       lastMessage: message.trim(),
       lastMessageTime: serverTimestamp(),
@@ -322,14 +350,11 @@ export const getCollectionConversations = async (
   try {
     const conversationsRef = collection(db!, collectionPath);
     let q;
-    
+
     if (collectionPath === "chat_conversations") {
       q = query(
         conversationsRef,
-        or(
-          where("customerId", "==", userId),
-          where("shopperId", "==", userId)
-        ),
+        or(where("customerId", "==", userId), where("shopperId", "==", userId)),
         orderBy("lastMessageTime", "desc")
       );
     } else {

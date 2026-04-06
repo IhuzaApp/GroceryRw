@@ -199,10 +199,13 @@ export default function DesktopMessagePage({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const isBusinessChat = !!selectedConversation && (!selectedConversation.orderId || selectedConversation.type === "business");
-  const selectedOrder = (selectedConversation && selectedConversation.orderId)
-    ? orders[selectedConversation.orderId as string]
-    : null;
+  const isBusinessChat =
+    !!selectedConversation &&
+    (!selectedConversation.orderId || selectedConversation.type === "business");
+  const selectedOrder =
+    selectedConversation && selectedConversation.orderId
+      ? orders[selectedConversation.orderId as string]
+      : null;
 
   const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
     {
@@ -218,7 +221,9 @@ export default function DesktopMessagePage({
   const filteredConversations = conversations.filter((conversation) => {
     if (!searchQuery) return true;
 
-    const order = conversation.orderId ? orders[conversation.orderId as string] : undefined;
+    const order = conversation.orderId
+      ? orders[conversation.orderId as string]
+      : undefined;
     const customerName =
       order?.orderedBy?.name?.toLowerCase() ||
       order?.customer?.name?.toLowerCase() ||
@@ -252,7 +257,12 @@ export default function DesktopMessagePage({
     if (filteredConversations.length > 0 && !selectedConversation) {
       setSelectedConversation(filteredConversations[0]);
     }
-  }, [selectedOrderId, selectedConversationId, conversations, filteredConversations]);
+  }, [
+    selectedOrderId,
+    selectedConversationId,
+    conversations,
+    filteredConversations,
+  ]);
 
   // Get conversation ID and shopper data when conversation is selected
   useEffect(() => {
@@ -263,18 +273,27 @@ export default function DesktopMessagePage({
           setConversationId(selectedConversation.id);
 
           // Mark as read logic preserved...
-          const convRef = doc(db!, selectedConversation.collectionPath, selectedConversation.id);
+          const convRef = doc(
+            db!,
+            selectedConversation.collectionPath,
+            selectedConversation.id
+          );
           const convSnap = await getDoc(convRef);
-          
+
           if (convSnap.exists() && convSnap.data().unreadCount > 0) {
             await updateDoc(convRef, { unreadCount: 0 });
           }
 
           // Fetch RFQ details if it's a business chat
-          if (selectedConversation.collectionPath === "business_conversations" && selectedConversation.rfqId) {
+          if (
+            selectedConversation.collectionPath === "business_conversations" &&
+            selectedConversation.rfqId
+          ) {
             setLoadingRfq(true);
             try {
-              const res = await fetch(`/api/queries/rfq-details-and-responses?rfq_id=${selectedConversation.rfqId}`);
+              const res = await fetch(
+                `/api/queries/rfq-details-and-responses?rfq_id=${selectedConversation.rfqId}`
+              );
               if (res.ok) {
                 const data = await res.json();
                 setSelectedRfq(data.rfq);
@@ -345,7 +364,11 @@ export default function DesktopMessagePage({
             }
 
             // Update conversation unread count to 0
-            const convRef = doc(db!, selectedConversation!.collectionPath, conversationId);
+            const convRef = doc(
+              db!,
+              selectedConversation!.collectionPath,
+              conversationId
+            );
             await updateDoc(convRef, {
               unreadCount: 0,
             });
@@ -416,7 +439,11 @@ export default function DesktopMessagePage({
       });
 
       // Update conversation with last message
-      const convRef = doc(db!, selectedConversation.collectionPath, conversationId);
+      const convRef = doc(
+        db!,
+        selectedConversation.collectionPath,
+        conversationId
+      );
       await updateDoc(convRef, {
         lastMessage: newMessage.trim(),
         lastMessageTime: serverTimestamp(),
@@ -460,7 +487,6 @@ export default function DesktopMessagePage({
     setSelectedConversation(conversation);
     onConversationSelect(conversation.orderId, conversation.id);
   };
-
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -566,23 +592,31 @@ export default function DesktopMessagePage({
                 : {};
 
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              
+
               // Handle name display for business chats
               let fullName = "Business Chat";
               if (isBusinessChat) {
-                fullName = conversation.title || conversation.counterpartName || "Business Chat";
+                fullName =
+                  conversation.title ||
+                  conversation.counterpartName ||
+                  "Business Chat";
               } else {
-                fullName = order?.assignedTo?.shopper?.full_name ||
+                fullName =
+                  order?.assignedTo?.shopper?.full_name ||
                   order?.assignedTo?.name ||
                   "Shopper";
               }
 
-              const contactName = employeeId && !isBusinessChat
-                ? `00${employeeId} ${fullName}`
-                : fullName;
-                
+              const contactName =
+                employeeId && !isBusinessChat
+                  ? `00${employeeId} ${fullName}`
+                  : fullName;
+
               const contactAvatar = isBusinessChat
-                ? conversation.counterpartAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=10b981&color=fff`
+                ? conversation.counterpartAvatar ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    fullName
+                  )}&background=10b981&color=fff`
                 : order?.assignedTo?.shopper?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
                   "/images/ProfileImage.png";
@@ -681,11 +715,19 @@ export default function DesktopMessagePage({
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg ring-2 ring-white dark:ring-gray-700">
                     {isBusinessChat ? (
                       <img
-                        src={selectedConversation.counterpartAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedConversation.title || selectedConversation.counterpartName || "Business")}&background=10b981&color=fff`}
+                        src={
+                          selectedConversation.counterpartAvatar ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            selectedConversation.title ||
+                              selectedConversation.counterpartName ||
+                              "Business"
+                          )}&background=10b981&color=fff`
+                        }
                         alt={selectedConversation.title || "Business"}
                         className="h-full w-full object-cover"
                       />
-                    ) : selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
+                    ) : selectedOrder?.assignedTo?.shopper?.profile_photo ||
+                      selectedOrder?.assignedTo?.profile_picture ? (
                       <img
                         src={
                           selectedOrder.assignedTo?.shopper?.profile_photo ||
@@ -719,7 +761,9 @@ export default function DesktopMessagePage({
                 <div>
                   <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
                     {isBusinessChat ? (
-                      selectedConversation.title || selectedConversation.counterpartName || "Business Chat"
+                      selectedConversation.title ||
+                      selectedConversation.counterpartName ||
+                      "Business Chat"
                     ) : (
                       <>
                         {selectedOrder?.assignedTo?.shopper?.full_name ||
@@ -793,7 +837,7 @@ export default function DesktopMessagePage({
                 <div className="space-y-4">
                   {otherTypingName && (
                     <div className="flex justify-start">
-                      <div className="rounded-2xl rounded-bl-md bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 text-[var(--text-primary)]">
+                      <div className="rounded-2xl rounded-bl-md bg-white px-4 py-2.5 text-[var(--text-primary)] shadow-sm dark:bg-gray-700">
                         <span className="text-sm text-[var(--text-secondary)]">
                           {otherTypingName} is typing
                         </span>
@@ -826,7 +870,9 @@ export default function DesktopMessagePage({
                             <React.Fragment key={message.id}>
                               <div
                                 className={`flex items-end gap-3 ${
-                                  isCurrentUser ? "flex-row-reverse" : "flex-row"
+                                  isCurrentUser
+                                    ? "flex-row-reverse"
+                                    : "flex-row"
                                 }`}
                               >
                                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
@@ -838,24 +884,34 @@ export default function DesktopMessagePage({
                                         className="h-full w-full object-cover"
                                       />
                                     ) : (
-                                      <span className="text-[10px] font-bold text-white uppercase">
+                                      <span className="text-[10px] font-bold uppercase text-white">
                                         {(session?.user?.name || "Y").charAt(0)}
                                       </span>
                                     )
-                                  ) : (selectedOrder?.assignedTo?.shopper?.profile_photo ||
-                                      selectedOrder?.assignedTo?.profile_picture) ? (
+                                  ) : selectedOrder?.assignedTo?.shopper
+                                      ?.profile_photo ||
+                                    selectedOrder?.assignedTo
+                                      ?.profile_picture ? (
                                     <img
                                       src={
                                         selectedOrder.assignedTo?.shopper
                                           ?.profile_photo ||
-                                        selectedOrder.assignedTo?.profile_picture
+                                        selectedOrder.assignedTo
+                                          ?.profile_picture
                                       }
                                       alt="Shopper"
                                       className="h-full w-full object-cover"
                                     />
                                   ) : isBusinessChat ? (
                                     <img
-                                      src={selectedConversation.counterpartAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedConversation.title || selectedConversation.counterpartName || "Business")}&background=10b981&color=fff`}
+                                      src={
+                                        selectedConversation.counterpartAvatar ||
+                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                          selectedConversation.title ||
+                                            selectedConversation.counterpartName ||
+                                            "Business"
+                                        )}&background=10b981&color=fff`
+                                      }
                                       alt="Business"
                                       className="h-full w-full object-cover"
                                     />
@@ -883,8 +939,8 @@ export default function DesktopMessagePage({
                                   <div
                                     className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
                                       isCurrentUser
-                                        ? "border-2 border-green-500/20 bg-green-500/5 font-medium text-green-700 dark:text-green-400 rounded-br-none"
-                                        : "border-2 border-gray-200/50 bg-gray-50/50 backdrop-blur-sm text-gray-900 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-100 rounded-bl-none"
+                                        ? "rounded-br-none border-2 border-green-500/20 bg-green-500/5 font-medium text-green-700 dark:text-green-400"
+                                        : "rounded-bl-none border-2 border-gray-200/50 bg-gray-50/50 text-gray-900 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-100"
                                     }`}
                                   >
                                     {message.product ? (
@@ -894,12 +950,14 @@ export default function DesktopMessagePage({
                                           alt={message.product.name}
                                           className="h-14 w-14 rounded-lg object-cover shadow-sm"
                                         />
-                                        <div className="ml-3 flex-1 min-w-0">
+                                        <div className="ml-3 min-w-0 flex-1">
                                           <p className="truncate text-sm font-bold opacity-90">
                                             {message.product.name}
                                           </p>
                                           <p className="text-xs font-semibold opacity-70">
-                                            {formatCurrency(message.product.price)}
+                                            {formatCurrency(
+                                              message.product.price
+                                            )}
                                           </p>
                                         </div>
                                       </div>
@@ -912,7 +970,9 @@ export default function DesktopMessagePage({
                                   </div>
                                   <div
                                     className={`mt-1.5 flex items-center gap-1.5 px-1 ${
-                                      isCurrentUser ? "flex-row-reverse" : "flex-row"
+                                      isCurrentUser
+                                        ? "flex-row-reverse"
+                                        : "flex-row"
                                     }`}
                                   >
                                     <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
@@ -1077,7 +1137,7 @@ export default function DesktopMessagePage({
         )}
       </div>
 
-      <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700">
+      <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden border-l border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
         {selectedConversation && (selectedOrder || selectedRfq) ? (
           <>
             {/* Header */}
@@ -1095,29 +1155,49 @@ export default function DesktopMessagePage({
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                     <div className="flex items-center gap-4">
                       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20">
-                        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        <svg
+                          className="h-8 w-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
                           {selectedOrder.shop?.name || "Store"}
                         </h3>
-                        <p className="mt-0.5 text-xs font-semibold text-gray-400 uppercase tracking-widest">
-                          ID: #{formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
+                        <p className="mt-0.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                          ID: #
+                          {formatOrderID(
+                            selectedOrder.OrderID || selectedOrder.id
+                          )}
                         </p>
                       </div>
                     </div>
                     <div className="my-5 h-px bg-gray-100 dark:bg-gray-700/50"></div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</span>
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
-                        selectedOrder.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" :
-                        selectedOrder.status === "in_progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" :
-                        selectedOrder.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" :
-                        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
-                      }`}>
-                        <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse"></span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                        Status
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                          selectedOrder.status === "completed"
+                            ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
+                            : selectedOrder.status === "in_progress"
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                            : selectedOrder.status === "pending"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                            : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>
                         {selectedOrder.status || "Pending"}
                       </span>
                     </div>
@@ -1125,30 +1205,58 @@ export default function DesktopMessagePage({
 
                   {/* Shopper Details Card */}
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
-                    <h4 className="mb-5 text-sm font-bold text-gray-400 uppercase tracking-wider font-bold">Shopper Details</h4>
+                    <h4 className="mb-5 text-sm font-bold font-bold uppercase tracking-wider text-gray-400">
+                      Shopper Details
+                    </h4>
                     {selectedOrder.assignedTo && (
                       <div className="flex items-center gap-4">
                         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
-                          {selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture ? (
-                            <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt="Shopper" className="h-full w-full object-cover" />
+                          {selectedOrder.assignedTo?.shopper?.profile_photo ||
+                          selectedOrder.assignedTo?.profile_picture ? (
+                            <img
+                              src={
+                                selectedOrder.assignedTo?.shopper
+                                  ?.profile_photo ||
+                                selectedOrder.assignedTo?.profile_picture
+                              }
+                              alt="Shopper"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
-                            <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <svg
+                              className="h-7 w-7 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
                             </svg>
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            {selectedOrder.assignedTo?.shopper?.Employment_id && (
+                            {selectedOrder.assignedTo?.shopper
+                              ?.Employment_id && (
                               <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-500/20 dark:text-green-400">
-                                #00{selectedOrder.assignedTo.shopper.Employment_id}
+                                #00
+                                {selectedOrder.assignedTo.shopper.Employment_id}
                               </span>
                             )}
                           </div>
                           <h5 className="mt-1 truncate text-sm font-bold text-gray-900 dark:text-white">
-                            {selectedOrder.assignedTo?.shopper?.full_name || selectedOrder.assignedTo?.name || "Shopper"}
+                            {selectedOrder.assignedTo?.shopper?.full_name ||
+                              selectedOrder.assignedTo?.name ||
+                              "Shopper"}
                           </h5>
-                          <p className="truncate text-xs font-medium text-gray-500 dark:text-gray-400">{selectedOrder.assignedTo?.email || "No contact info"}</p>
+                          <p className="truncate text-xs font-medium text-gray-500 dark:text-gray-400">
+                            {selectedOrder.assignedTo?.email ||
+                              "No contact info"}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -1160,15 +1268,25 @@ export default function DesktopMessagePage({
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                     <div className="flex items-center gap-4">
                       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
-                        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg
+                          className="h-8 w-8"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
                           {selectedRfq.title || "Business Inquiry"}
                         </h3>
-                        <p className="mt-0.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                           RFQ: #{selectedRfq.id?.split("-")[0].toUpperCase()}
                         </p>
                       </div>
@@ -1176,16 +1294,26 @@ export default function DesktopMessagePage({
                     <div className="my-5 h-px bg-gray-100 dark:bg-gray-700/50"></div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category</p>
-                        <p className="text-xs font-bold text-gray-900 dark:text-white">{selectedRfq.category || "General"}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          Category
+                        </p>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white">
+                          {selectedRfq.category || "General"}
+                        </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Urgency</p>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                          selectedRfq.urgency === "high" ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400" :
-                          selectedRfq.urgency === "medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" :
-                          "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-                        }`}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          Urgency
+                        </p>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                            selectedRfq.urgency === "high"
+                              ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+                              : selectedRfq.urgency === "medium"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                              : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                          }`}
+                        >
                           {selectedRfq.urgency || "normal"}
                         </span>
                       </div>
@@ -1195,18 +1323,25 @@ export default function DesktopMessagePage({
                   {/* Budget & Requirements Card */}
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                     <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Details</h4>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                        Details
+                      </h4>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Budget</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          Budget
+                        </p>
                         <p className="text-sm font-black text-green-600 dark:text-green-400">
                           {selectedRfq.budget_range || "Open"}
                         </p>
                       </div>
                     </div>
                     <div className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-900/50">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Requirements</p>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                        Requirements
+                      </p>
                       <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
-                        {selectedRfq.requirements || "No specific requirements provided."}
+                        {selectedRfq.requirements ||
+                          "No specific requirements provided."}
                       </p>
                     </div>
                   </div>
@@ -1245,5 +1380,5 @@ export default function DesktopMessagePage({
         )}
       </div>
     </div>
-);
+  );
 }

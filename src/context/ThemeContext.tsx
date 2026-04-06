@@ -28,10 +28,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     if (newTheme === "dark") {
       root.classList.add("dark");
-      root.style.setProperty("--bg-primary", "#1f2937");
-      root.style.setProperty("--text-primary", "#f3f4f6");
-      root.style.setProperty("--bg-secondary", "#111827");
-      root.style.setProperty("--text-secondary", "#e5e7eb");
+      root.style.setProperty("--bg-primary", "#000000"); // True black
+      root.style.setProperty("--text-primary", "#ffffff");
+      root.style.setProperty("--bg-secondary", "#171717"); // Dark gray for contrast
+      root.style.setProperty("--text-secondary", "#a1a1aa");
     } else {
       root.classList.remove("dark");
       root.style.setProperty("--bg-primary", "#e6e5e5"); // Custom warm white

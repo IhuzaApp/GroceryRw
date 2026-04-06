@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Avatar,
-  Input,
-} from "rsuite";
+import { Avatar, Input } from "rsuite";
 import {
   collection,
   query,
@@ -111,7 +108,7 @@ const CustomerMessage: React.FC<MessageProps> = ({
       {!isCurrentUser && (
         <div className="relative flex-shrink-0">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
-            <span className="text-sm font-bold text-white uppercase">
+            <span className="text-sm font-bold uppercase text-white">
               {counterpartName.charAt(0)}
             </span>
           </div>
@@ -123,10 +120,10 @@ const CustomerMessage: React.FC<MessageProps> = ({
         }`}
       >
         <div
-          className={`px-5 py-3.5 shadow-sm text-[15px] leading-relaxed transition-all ${
+          className={`px-5 py-3.5 text-[15px] leading-relaxed shadow-sm transition-all ${
             isCurrentUser
-              ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-emerald-500/20 rounded-2xl rounded-br-none"
-              : "border border-emerald-500/10 bg-emerald-500/5 text-gray-900 rounded-2xl rounded-bl-none dark:text-gray-100 shadow-none"
+              ? "rounded-2xl rounded-br-none bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-emerald-500/20"
+              : "rounded-2xl rounded-bl-none border border-emerald-500/10 bg-emerald-500/5 text-gray-900 shadow-none dark:text-gray-100"
           }`}
         >
           {!isCurrentUser && (
@@ -294,16 +291,16 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         snapshot.docs.forEach(async (d) => {
           const msg = d.data();
           if (msg.senderId !== session?.user?.id && !msg.read) {
-             await updateDoc(d.ref, { read: true });
+            await updateDoc(d.ref, { read: true });
           }
         });
 
         // Reset unread count
         const convRef = doc(db!, collectionPath, conversationId);
-        getDoc(convRef).then(snap => {
-           if (snap.exists() && snap.data().unreadCount > 0) {
-              updateDoc(convRef, { unreadCount: 0 });
-           }
+        getDoc(convRef).then((snap) => {
+          if (snap.exists() && snap.data().unreadCount > 0) {
+            updateDoc(convRef, { unreadCount: 0 });
+          }
         });
 
         setTimeout(scrollToBottom, 100);
@@ -327,8 +324,18 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     );
     const combined = [...messages, ...pendingAsDisplay];
     combined.sort((a, b) => {
-      const tA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : 0);
-      const tB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : 0);
+      const tA =
+        a.timestamp instanceof Date
+          ? a.timestamp.getTime()
+          : a.timestamp?.seconds
+          ? a.timestamp.seconds * 1000
+          : 0;
+      const tB =
+        b.timestamp instanceof Date
+          ? b.timestamp.getTime()
+          : b.timestamp?.seconds
+          ? b.timestamp.seconds * 1000
+          : 0;
       return tA - tB;
     });
     return combined;
@@ -337,7 +344,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId) return;
+    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId)
+      return;
 
     const text = newMessage.trim();
     const piiCheck = containsBlockedPii(text);
@@ -361,7 +369,12 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     setNewMessage("");
 
     try {
-      const messagesRef = collection(db!, collectionPath, conversationId, "messages");
+      const messagesRef = collection(
+        db!,
+        collectionPath,
+        conversationId,
+        "messages"
+      );
       await addDoc(messagesRef, {
         text,
         message: text,
@@ -410,37 +423,58 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-16 bottom-0 z-[1000] flex w-full sm:w-[28rem] flex-col overflow-hidden sm:rounded-l-[30px] border-l-0 sm:border-l border-gray-100 bg-[var(--bg-primary)] shadow-2xl dark:border-gray-800 transition-all duration-300 ease-in-out">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 bg-[var(--bg-primary)]/80 px-5 py-4 backdrop-blur-xl z-10 dark:border-gray-800">
+    <div className="fixed bottom-0 right-0 top-16 z-[1000] flex w-full flex-col overflow-hidden border-l-0 border-gray-100 bg-[var(--bg-primary)] shadow-2xl transition-all duration-300 ease-in-out dark:border-gray-800 sm:w-[28rem] sm:rounded-l-[30px] sm:border-l">
+      <div className="bg-[var(--bg-primary)]/80 z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4 backdrop-blur-xl dark:border-gray-800">
         <div className="flex items-center gap-4">
-          <button onClick={onClose} className="p-2 -ml-2 text-gray-500 hover:text-gray-900 transition-colors dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          <button
+            onClick={onClose}
+            className="-ml-2 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
           </button>
           <div className="relative flex-shrink-0">
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
-              {counterpart.avatar && counterpart.avatar !== "/images/ProfileImage.png" ? (
+              {counterpart.avatar &&
+              counterpart.avatar !== "/images/ProfileImage.png" ? (
                 <img
                   src={counterpart.avatar}
                   alt={counterpart.name}
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="text-xl font-bold text-white uppercase">
+                <span className="text-xl font-bold uppercase text-white">
                   {counterpart.name.charAt(0)}
                 </span>
               )}
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-extrabold tracking-tight text-gray-900 dark:text-white">{counterpart.name}</h3>
+            <h3 className="truncate text-lg font-extrabold tracking-tight text-gray-900 dark:text-white">
+              {counterpart.name}
+            </h3>
             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-              {collectionPath === "business_conversations" ? "Business Contact" : "Your Shopper"}
+              {collectionPath === "business_conversations"
+                ? "Business Contact"
+                : "Your Shopper"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
+      <div className="flex-1 overflow-y-auto scroll-smooth px-4 py-6">
         {displayMessages.map((message) => (
           <CustomerMessage
             key={"tempId" in message ? message.tempId : message.id}
@@ -453,20 +487,39 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-gray-100 bg-[var(--bg-primary)]/80 dark:border-gray-800 backdrop-blur-xl p-4 sm:p-5">
-        <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
+      <div className="bg-[var(--bg-primary)]/80 border-t border-gray-100 p-4 backdrop-blur-xl dark:border-gray-800 sm:p-5">
+        <form onSubmit={handleSendMessage} className="flex items-end gap-3">
           <textarea
             value={newMessage}
-            onChange={(e) => { setNewMessage(e.target.value); reportTyping(); }}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              reportTyping();
+            }}
             onBlur={clearTyping}
             onKeyDown={handleKeyPress}
             placeholder="Type a message..."
             className="w-full resize-none rounded-[20px] bg-gray-100/80 px-5 py-3.5 text-[15px] font-medium text-gray-900 placeholder-gray-500 transition-all focus:bg-gray-200/80 focus:outline-none dark:bg-gray-900/80 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-800"
             rows={1}
-            style={{ minHeight: '52px', maxHeight: '120px' }}
+            style={{ minHeight: "52px", maxHeight: "120px" }}
           />
-          <button type="submit" disabled={!newMessage.trim()} className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-green-500 to-emerald-600 shadow-sm shadow-emerald-500/20 text-white transition-all active:scale-95 disabled:opacity-50 disabled:grayscale">
-            <svg className="h-6 w-6 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+          <button
+            type="submit"
+            disabled={!newMessage.trim()}
+            className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+          >
+            <svg
+              className="ml-1 h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
+            </svg>
           </button>
         </form>
       </div>

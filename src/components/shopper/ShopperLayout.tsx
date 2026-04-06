@@ -263,7 +263,9 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
-      className={`h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
+      className={`h-screen ${
+        theme === "dark" ? "bg-[var(--bg-primary)]" : "bg-gray-50"
+      }`}
     >
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
@@ -272,7 +274,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         <main
           className={`relative flex-1 transition-colors duration-200 ${
             theme === "dark"
-              ? "bg-gray-900 text-gray-100"
+              ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
               : "bg-gray-50 text-gray-900"
           } ${isMobile ? "p-3 pb-24" : "p-4 pl-64"}`}
         >
