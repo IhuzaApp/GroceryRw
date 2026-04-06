@@ -427,7 +427,7 @@ function MessagesPage() {
   if (loading && status === "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-[var(--bg-primary)]">
+        <div className="flex h-full w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img src="/assets/logos/PlasIcon.png" alt="Plas Logo" className="h-16 w-16 animate-pulse" />
@@ -444,7 +444,7 @@ function MessagesPage() {
   if (status !== "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-[var(--bg-primary)]">
+        <div className="flex h-full w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center">
             <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">Authentication Required</h3>
             <Link href="/login" passHref><Button appearance="primary">Sign In</Button></Link>
@@ -460,7 +460,7 @@ function MessagesPage() {
     return (
       <AuthGuard requireAuth={true}>
         <RootLayout>
-          <div className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-[var(--bg-primary)]">
+          <div className="h-full w-full overflow-hidden bg-[var(--bg-primary)]">
             <DesktopMessagePage
               conversations={conversations}
               orders={orders}
@@ -481,7 +481,7 @@ function MessagesPage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="h-[calc(100vh-4rem)] w-full overflow-hidden bg-[var(--bg-primary)]">
+        <div className="h-full w-full overflow-hidden bg-[var(--bg-primary)]">
           <MobileMessagePage
             conversations={conversations}
             orders={orders}

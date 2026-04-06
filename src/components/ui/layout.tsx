@@ -70,7 +70,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           isChatPage || isReelsPage || isPlasBusinessPage || isStoresPage
             ? ""
             : isMessagesPage
-            ? "pt-16 md:pt-16"
+            ? "pt-0"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
@@ -80,9 +80,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             ? {
                 margin: 0,
                 padding: 0,
-                height: "100vh",
-                minHeight: "100vh",
-                maxHeight: "100vh",
+                height: isMessagesPage ? "calc(100vh - 60px)" : "100vh",
+                minHeight: isMessagesPage ? "calc(100vh - 60px)" : "100vh",
+                maxHeight: isMessagesPage ? "calc(100vh - 60px)" : "100vh",
                 overflow: "hidden",
               }
             : {}

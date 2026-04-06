@@ -463,9 +463,9 @@ export default function DesktopMessagePage({
 
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div className="flex h-full w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Left Column - Conversation List */}
-      <div className="flex h-full w-80 flex-shrink-0 flex-col bg-[var(--bg-primary)] border-r border-gray-200 dark:border-gray-700">
+      <div className="flex h-full w-80 flex-shrink-0 flex-col border-l border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
@@ -510,10 +510,10 @@ export default function DesktopMessagePage({
           <div className="relative">
             <input
               type="text"
-              placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl bg-gray-100 px-4 py-3 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-500 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:placeholder-gray-400 dark:focus:bg-gray-600"
+              placeholder="Search conversations..."
+              className="w-full rounded-xl bg-white/40 px-4 py-3 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-500 transition-all focus:bg-white/60 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-800/40 dark:placeholder-gray-400 dark:focus:bg-gray-700/60"
             />
             <svg
               className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -582,7 +582,7 @@ export default function DesktopMessagePage({
                 : fullName;
                 
               const contactAvatar = isBusinessChat
-                ? conversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
+                ? conversation.counterpartAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=10b981&color=fff`
                 : order?.assignedTo?.shopper?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
                   "/images/ProfileImage.png";
@@ -592,18 +592,18 @@ export default function DesktopMessagePage({
                 <React.Fragment key={conversation.id}>
                   <div
                     onClick={() => handleConversationClick(conversation)}
-                    className={`group relative cursor-pointer px-4 py-3.5 transition-all ${
+                    className={`group relative cursor-pointer px-5 py-4 transition-all duration-200 ${
                       isSelected
-                        ? "bg-green-50 dark:bg-green-900/20"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        ? "bg-white/70 shadow-sm ring-1 ring-black/5 backdrop-blur-sm dark:bg-gray-800/70 dark:ring-white/10"
+                        : "hover:bg-white/40 dark:hover:bg-gray-800/40"
                     }`}
                   >
                     {isSelected && (
                       <div className="absolute left-0 top-0 h-full w-1 bg-green-600 dark:bg-green-500"></div>
                     )}
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-4">
                       <div className="relative flex-shrink-0">
-                        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm">
+                        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
                           {contactAvatar &&
                           contactAvatar !== "/images/ProfileImage.png" ? (
                             <img
@@ -613,7 +613,7 @@ export default function DesktopMessagePage({
                             />
                           ) : (
                             <svg
-                              className="h-6 w-6 text-white"
+                              className="h-7 w-7 text-white"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -628,31 +628,31 @@ export default function DesktopMessagePage({
                           )}
                         </div>
                         {conversation.unreadCount > 0 && (
-                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold !text-white shadow-lg">
+                          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold !text-white shadow-lg ring-2 ring-white dark:ring-gray-800">
                             {conversation.unreadCount}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
+                        <div className="flex items-center justify-between gap-2">
                           <h3
-                            className={`truncate text-sm font-semibold ${
+                            className={`truncate text-sm font-bold tracking-tight ${
                               isSelected
                                 ? "text-green-600 dark:text-green-400"
-                                : "text-[var(--text-primary)]"
+                                : "text-gray-900 dark:text-white"
                             }`}
                           >
                             {contactName}
                           </h3>
-                          <span className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
                             {formatTime(conversation.lastMessageTime)}
                           </span>
                         </div>
                         <p
-                          className={`mt-1 truncate text-xs ${
+                          className={`mt-1 line-clamp-1 text-xs leading-relaxed ${
                             conversation.unreadCount > 0
-                              ? "font-medium text-[var(--text-primary)]"
-                              : "text-[var(--text-secondary)]"
+                              ? "font-semibold text-gray-900 dark:text-gray-100"
+                              : "text-gray-500 dark:text-gray-400"
                           }`}
                         >
                           {conversation.lastMessage || "No messages yet"}
@@ -671,69 +671,71 @@ export default function DesktopMessagePage({
       </div>
 
       {/* Middle Column - Chat Window */}
-      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-[var(--bg-primary)]">
+      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="flex flex-shrink-0 items-center justify-between bg-[var(--bg-primary)] px-6 py-4 shadow-sm">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-8 py-5 dark:border-gray-700/50">
               <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
-                  {isBusinessChat ? (
-                    <img
-                      src={selectedConversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"}
-                      alt={selectedConversation.title || "Business"}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
-                    <img
-                      src={
-                        selectedOrder.assignedTo?.shopper?.profile_photo ||
-                        selectedOrder.assignedTo?.profile_picture
-                      }
-                      alt={
-                        selectedOrder.assignedTo?.shopper?.full_name ||
-                        selectedOrder.assignedTo?.name ||
-                        "Shopper"
-                      }
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <svg
-                      className="h-6 w-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                <div className="relative">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg ring-2 ring-white dark:ring-gray-700">
+                    {isBusinessChat ? (
+                      <img
+                        src={selectedConversation.counterpartAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedConversation.title || selectedConversation.counterpartName || "Business")}&background=10b981&color=fff`}
+                        alt={selectedConversation.title || "Business"}
+                        className="h-full w-full object-cover"
                       />
-                    </svg>
-                  )}
+                    ) : selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
+                      <img
+                        src={
+                          selectedOrder.assignedTo?.shopper?.profile_photo ||
+                          selectedOrder.assignedTo?.profile_picture
+                        }
+                        alt={
+                          selectedOrder.assignedTo?.shopper?.full_name ||
+                          selectedOrder.assignedTo?.name ||
+                          "Shopper"
+                        }
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <svg
+                        className="h-7 w-7 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500 shadow-sm dark:border-gray-800"></div>
                 </div>
                 <div>
-                  <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
+                  <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
                     {isBusinessChat ? (
                       selectedConversation.title || selectedConversation.counterpartName || "Business Chat"
                     ) : (
                       <>
-                        {selectedOrder?.assignedTo?.shopper?.Employment_id && (
-                          <span className="text-sm font-medium text-[var(--text-secondary)]">
-                            00{selectedOrder.assignedTo.shopper.Employment_id}
-                          </span>
-                        )}
                         {selectedOrder?.assignedTo?.shopper?.full_name ||
                           selectedOrder?.assignedTo?.name ||
                           "Shopper"}
+                        {selectedOrder?.assignedTo?.shopper?.Employment_id && (
+                          <span className="ml-2 text-xs font-semibold text-gray-400 dark:text-gray-500">
+                            #00{selectedOrder.assignedTo.shopper.Employment_id}
+                          </span>
+                        )}
                       </>
                     )}
                   </h2>
-                  <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
-                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
-                    Active now
-                  </div>
+                  <p className="text-xs font-medium text-green-600 dark:text-green-400">
+                    Online Now
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -778,10 +780,7 @@ export default function DesktopMessagePage({
             </div>
 
             {/* Messages Area */}
-            <div
-              ref={messagesContainerRef}
-              className="min-h-0 flex-1 overflow-y-auto bg-[var(--bg-primary)] px-6 py-4"
-            >
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center">
@@ -818,28 +817,51 @@ export default function DesktopMessagePage({
                       </div>
 
                       {/* Messages for this date */}
-                      {group.messages.map((message, index) => {
-                        const isCurrentUser =
-                          message.senderId === session?.user?.id;
+                      <div className="flex flex-col gap-6">
+                        {group.messages.map((message, index) => {
+                          const isCurrentUser =
+                            message.senderId === session?.user?.id;
 
-                        return (
-                          <React.Fragment key={message.id}>
-                            <div
-                              className={`flex items-end gap-2.5 ${
-                                isCurrentUser ? "flex-row-reverse" : "flex-row"
-                              }`}
-                            >
-                              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
-                                {isCurrentUser ? (
-                                  session?.user?.image ? (
+                          return (
+                            <React.Fragment key={message.id}>
+                              <div
+                                className={`flex items-end gap-3 ${
+                                  isCurrentUser ? "flex-row-reverse" : "flex-row"
+                                }`}
+                              >
+                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
+                                  {isCurrentUser ? (
+                                    session?.user?.image ? (
+                                      <img
+                                        src={session.user.image}
+                                        alt={session?.user?.name || "You"}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <span className="text-[10px] font-bold text-white uppercase">
+                                        {(session?.user?.name || "Y").charAt(0)}
+                                      </span>
+                                    )
+                                  ) : (selectedOrder?.assignedTo?.shopper?.profile_photo ||
+                                      selectedOrder?.assignedTo?.profile_picture) ? (
                                     <img
-                                      src={session.user.image}
-                                      alt={session?.user?.name || "You"}
+                                      src={
+                                        selectedOrder.assignedTo?.shopper
+                                          ?.profile_photo ||
+                                        selectedOrder.assignedTo?.profile_picture
+                                      }
+                                      alt="Shopper"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : isBusinessChat ? (
+                                    <img
+                                      src={selectedConversation.counterpartAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedConversation.title || selectedConversation.counterpartName || "Business")}&background=10b981&color=fff`}
+                                      alt="Business"
                                       className="h-full w-full object-cover"
                                     />
                                   ) : (
                                     <svg
-                                      className="h-4 w-4 text-white"
+                                      className="h-5 w-5 text-white"
                                       fill="none"
                                       stroke="currentColor"
                                       viewBox="0 0 24 24"
@@ -851,125 +873,73 @@ export default function DesktopMessagePage({
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                       />
                                     </svg>
-                                  )
-                                ) : (selectedOrder?.assignedTo?.shopper?.profile_photo ||
-                                    selectedOrder?.assignedTo?.profile_picture) ? (
-                                  <img
-                                    src={
-                                      selectedOrder.assignedTo?.shopper
-                                        ?.profile_photo ||
-                                      selectedOrder.assignedTo?.profile_picture
-                                    }
-                                    alt={
-                                      selectedOrder.assignedTo?.shopper
-                                        ?.full_name ||
-                                      selectedOrder.assignedTo?.name ||
-                                      "Shopper"
-                                    }
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : isBusinessChat ? (
-                                  <img
-                                    src={selectedConversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"}
-                                    alt="Business"
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <svg
-                                    className="h-4 w-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              <div
-                                className={`flex max-w-md flex-col ${
-                                  isCurrentUser ? "items-end" : "items-start"
-                                }`}
-                              >
+                                  )}
+                                </div>
                                 <div
-                                  className={`rounded-2xl px-4 py-3 shadow-sm ${
-                                    isCurrentUser
-                                      ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 !text-white [&_*]:!text-white [&_svg]:!text-white"
-                                      : "rounded-bl-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                                  className={`flex max-w-[70%] flex-col ${
+                                    isCurrentUser ? "items-end" : "items-start"
                                   }`}
                                 >
-                                  {message.product ? (
-                                    <div className="flex gap-3">
-                                      <img
-                                        src={message.product.image}
-                                        alt={message.product.name}
-                                        className="h-16 w-16 rounded-lg object-cover"
-                                      />
-                                      <div>
-                                        <p
-                                          className={`text-sm font-medium ${
-                                            isCurrentUser
-                                              ? "text-white"
-                                              : "text-gray-900 dark:text-white"
-                                          }`}
-                                        >
-                                          {message.product.name}
-                                        </p>
-                                        <p
-                                          className={`mt-1 text-sm font-semibold ${
-                                            isCurrentUser
-                                              ? "text-white"
-                                              : "text-green-500"
-                                          }`}
-                                        >
-                                          Rp{" "}
-                                          {message.product.price.toLocaleString()}
-                                        </p>
+                                  <div
+                                    className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
+                                      isCurrentUser
+                                        ? "border-2 border-green-500/20 bg-green-500/5 font-medium text-green-700 dark:text-green-400 rounded-br-none"
+                                        : "border-2 border-gray-200/50 bg-gray-50/50 backdrop-blur-sm text-gray-900 dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-100 rounded-bl-none"
+                                    }`}
+                                  >
+                                    {message.product ? (
+                                      <div className="mb-3 flex overflow-hidden rounded-xl bg-black/5 p-2 dark:bg-white/5">
+                                        <img
+                                          src={message.product.image}
+                                          alt={message.product.name}
+                                          className="h-14 w-14 rounded-lg object-cover shadow-sm"
+                                        />
+                                        <div className="ml-3 flex-1 min-w-0">
+                                          <p className="truncate text-sm font-bold opacity-90">
+                                            {message.product.name}
+                                          </p>
+                                          <p className="text-xs font-semibold opacity-70">
+                                            {formatCurrency(message.product.price)}
+                                          </p>
+                                        </div>
                                       </div>
-                                    </div>
-                                  ) : (
+                                    ) : null}
                                     <p className="whitespace-pre-wrap text-sm leading-relaxed">
                                       {sanitizeMessageForDisplay(
                                         message.text || message.message || ""
                                       )}
                                     </p>
-                                  )}
-                                </div>
-                                <div
-                                  className={`mt-1.5 flex items-center gap-1.5 px-2 ${
-                                    isCurrentUser
-                                      ? "flex-row-reverse"
-                                      : "flex-row"
-                                  }`}
-                                >
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {formatTime(message.timestamp)}
-                                  </span>
-                                  {isCurrentUser && (
-                                    <svg
-                                      className="h-4 w-4 text-green-600 dark:text-green-400"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2.5}
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  )}
+                                  </div>
+                                  <div
+                                    className={`mt-1.5 flex items-center gap-1.5 px-1 ${
+                                      isCurrentUser ? "flex-row-reverse" : "flex-row"
+                                    }`}
+                                  >
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                      {formatTime(message.timestamp)}
+                                    </span>
+                                    {isCurrentUser && (
+                                      <svg
+                                        className="h-3.5 w-3.5 text-green-500"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={3}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </React.Fragment>
-                        );
-                      })}
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                   <div ref={messagesEndRef} />
@@ -986,43 +956,45 @@ export default function DesktopMessagePage({
               </div>
             )}
             {/* Message Input */}
-            <div className="flex-shrink-0 px-6 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.03)] ">
+            <div className="flex-shrink-0 px-8 py-6">
               <form
                 onSubmit={handleSendMessage}
-                className="flex items-center gap-3"
+                className="relative mx-auto flex max-w-4xl items-center gap-3"
               >
-                <button
-                  type="button"
-                  className="flex-shrink-0 rounded-xl p-2.5 text-gray-500 transition-all hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400"
                   >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="flex-shrink-0 rounded-xl p-2.5 text-gray-500 transition-all hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400"
                   >
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                  </svg>
-                </button>
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -1032,16 +1004,16 @@ export default function DesktopMessagePage({
                       reportTyping();
                     }}
                     onBlur={clearTyping}
-                    placeholder="Type a message..."
-                    className="w-full rounded-full border border-gray-200 bg-white px-5 py-3 pr-12 text-sm text-gray-900 placeholder-gray-500 transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500"
+                    placeholder="Write a message..."
+                    className="h-12 w-full rounded-2xl border-none bg-white/40 px-6 pr-12 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:bg-white/60 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-800/40 dark:text-white dark:placeholder-gray-500 dark:focus:bg-gray-700/60"
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-500 transition-all hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition-all hover:text-green-600 dark:hover:text-green-400"
                   >
                     <svg
-                      width="18"
-                      height="18"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -1055,11 +1027,11 @@ export default function DesktopMessagePage({
                 <button
                   type="submit"
                   disabled={!newMessage.trim()}
-                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 !text-white text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800 [&_*]:!text-white [&_svg]:!text-white"
+                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
                   aria-label="Send message"
                 >
                   <svg
-                    className="h-5 w-5 text-white"
+                    className="h-6 w-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1067,7 +1039,7 @@ export default function DesktopMessagePage({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                       d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                     />
                   </svg>
@@ -1109,129 +1081,136 @@ export default function DesktopMessagePage({
         {selectedConversation && (selectedOrder || selectedRfq) ? (
           <>
             {/* Header */}
-            <div className="flex-shrink-0 bg-white px-6 py-5 shadow-sm dark:bg-gray-800">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">
+            <div className="flex-shrink-0 bg-white px-8 py-6 shadow-sm dark:bg-gray-800/50">
+              <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
                 {selectedOrder ? "Order Details" : "Quote Details"}
               </h2>
             </div>
 
             {/* Content */}
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+            <div className="flex-1 space-y-6 overflow-y-auto p-6">
               {selectedOrder ? (
                 <>
                   {/* Company Info Card */}
-                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
-                        <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20">
+                        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
                           {selectedOrder.shop?.name || "Store"}
                         </h3>
-                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                          Order #{formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
+                        <p className="mt-0.5 text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                          ID: #{formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
                         </p>
                       </div>
                     </div>
-                    <div className="my-4 h-px bg-gray-100 dark:bg-gray-700"></div>
+                    <div className="my-5 h-px bg-gray-100 dark:bg-gray-700/50"></div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Status</span>
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        selectedOrder.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                        selectedOrder.status === "in_progress" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                        selectedOrder.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Status</span>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                        selectedOrder.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" :
+                        selectedOrder.status === "in_progress" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" :
+                        selectedOrder.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" :
                         "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
                       }`}>
-                        <span className="inline-block h-2 w-2 rounded-full bg-current"></span>
-                        {selectedOrder.status?.charAt(0).toUpperCase() + selectedOrder.status?.slice(1) || "Pending"}
+                        <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse"></span>
+                        {selectedOrder.status || "Pending"}
                       </span>
                     </div>
                   </div>
 
                   {/* Shopper Details Card */}
-                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                    <h4 className="mb-4 text-sm font-bold text-gray-900 dark:text-white">Shopper Details</h4>
+                  <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                    <h4 className="mb-5 text-sm font-bold text-gray-400 uppercase tracking-wider font-bold">Shopper Details</h4>
                     {selectedOrder.assignedTo && (
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
                           {selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture ? (
                             <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt="Shopper" className="h-full w-full object-cover" />
                           ) : (
-                            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          {selectedOrder.assignedTo?.shopper?.Employment_id && (
-                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20">
-                              00{selectedOrder.assignedTo.shopper.Employment_id}
-                            </span>
-                          )}
-                          <h5 className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-2">
+                            {selectedOrder.assignedTo?.shopper?.Employment_id && (
+                              <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-500/20 dark:text-green-400">
+                                #00{selectedOrder.assignedTo.shopper.Employment_id}
+                              </span>
+                            )}
+                          </div>
+                          <h5 className="mt-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                             {selectedOrder.assignedTo?.shopper?.full_name || selectedOrder.assignedTo?.name || "Shopper"}
                           </h5>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{selectedOrder.assignedTo?.email || "No email"}</p>
+                          <p className="truncate text-xs font-medium text-gray-500 dark:text-gray-400">{selectedOrder.assignedTo?.email || "No contact info"}</p>
                         </div>
                       </div>
                     )}
                   </div>
                 </>
               ) : selectedRfq ? (
-                <>
-                  {/* RFQ Info Card */}
-                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg text-white">
-                        <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-6">
+                  {/* Quote Header Card */}
+                  <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+                        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                          {selectedRfq.title || "RFQ Details"}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
+                          {selectedRfq.title || "Business Inquiry"}
                         </h3>
-                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                          RFQ ID: {selectedRfq.id?.split("-")[0].toUpperCase()}
+                        <p className="mt-0.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                          RFQ: #{selectedRfq.id?.split("-")[0].toUpperCase()}
                         </p>
                       </div>
                     </div>
-                    <div className="my-4 h-px bg-gray-100 dark:bg-gray-700"></div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Category</span>
-                        <span className="text-xs font-semibold text-[var(--text-primary)]">{selectedRfq.category || "General"}</span>
+                    <div className="my-5 h-px bg-gray-100 dark:bg-gray-700/50"></div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category</p>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white">{selectedRfq.category || "General"}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Budget Range</span>
-                        <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                          {selectedRfq.min_budget} - {selectedRfq.max_budget}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Urgency</span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          selectedRfq.urgency_level === "high" || selectedRfq.urgency_level === "urgent"
-                            ? "bg-red-100 text-red-700 dark:bg-red-900/30"
-                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/30"
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Urgency</p>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          selectedRfq.urgency === "high" ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400" :
+                          selectedRfq.urgency === "medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" :
+                          "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
                         }`}>
-                          {selectedRfq.urgency_level || "Normal"}
+                          {selectedRfq.urgency || "normal"}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Requirements Card */}
-                  <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                    <h4 className="mb-2 text-sm font-bold text-gray-900 dark:text-white">Requirements</h4>
-                    <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                      {selectedRfq.description || "No description provided."}
-                    </p>
+                  {/* Budget & Requirements Card */}
+                  <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Details</h4>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Budget</p>
+                        <p className="text-sm font-black text-green-600 dark:text-green-400">
+                          {selectedRfq.budget_range || "Open"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-gray-50 p-4 dark:bg-gray-900/50">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Requirements</p>
+                      <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                        {selectedRfq.requirements || "No specific requirements provided."}
+                      </p>
+                    </div>
                   </div>
-                </>
+                </div>
               ) : null}
             </div>
           </>
