@@ -301,7 +301,7 @@ export default function MobileMessagePage({
                 : fullName;
 
               const contactAvatar = isBusinessChat
-                ? conversation.counterpartAvatar || "/images/BusinessPlaceholder.png"
+                ? conversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
                 : order?.assignedTo?.shopper?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
                   order?.shopper?.avatar ||

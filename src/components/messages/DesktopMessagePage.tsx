@@ -197,6 +197,11 @@ export default function DesktopMessagePage({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  const isBusinessChat = !!selectedConversation && (!selectedConversation.orderId || selectedConversation.type === "business");
+  const selectedOrder = (selectedConversation && selectedConversation.orderId)
+    ? orders[selectedConversation.orderId as string]
+    : null;
+
   const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
     {
       conversationId,
@@ -211,7 +216,7 @@ export default function DesktopMessagePage({
   const filteredConversations = conversations.filter((conversation) => {
     if (!searchQuery) return true;
 
-    const order = orders[conversation.orderId];
+    const order = conversation.orderId ? orders[conversation.orderId as string] : undefined;
     const customerName =
       order?.orderedBy?.name?.toLowerCase() ||
       order?.customer?.name?.toLowerCase() ||
@@ -224,17 +229,28 @@ export default function DesktopMessagePage({
     );
   });
 
-  // Set selected conversation when selectedOrderId changes
+  // Set selected conversation when selectedOrderId or selectedConversationId changes
   useEffect(() => {
+    if (selectedConversationId) {
+      const conv = conversations.find((c) => c.id === selectedConversationId);
+      if (conv) {
+        setSelectedConversation(conv);
+        return;
+      }
+    }
+
     if (selectedOrderId) {
       const conv = conversations.find((c) => c.orderId === selectedOrderId);
       if (conv) {
         setSelectedConversation(conv);
+        return;
       }
-    } else if (filteredConversations.length > 0 && !selectedConversation) {
+    }
+
+    if (filteredConversations.length > 0 && !selectedConversation) {
       setSelectedConversation(filteredConversations[0]);
     }
-  }, [selectedOrderId, conversations, filteredConversations]);
+  }, [selectedOrderId, selectedConversationId, conversations, filteredConversations]);
 
   // Get conversation ID and shopper data when conversation is selected
   useEffect(() => {
@@ -460,15 +476,12 @@ export default function DesktopMessagePage({
   // Handle conversation click
   const handleConversationClick = (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    onConversationSelect(conversation.orderId);
+    onConversationSelect(conversation.orderId, conversation.id);
   };
 
-  const selectedOrder = selectedConversation
-    ? orders[selectedConversation.orderId]
-    : null;
 
   return (
-    <div className="flex h-full w-full gap-0 overflow-hidden bg-[var(--bg-primary)]">
+    <div className="flex h-full w-full overflow-hidden">
       {/* Left Column - Conversation List */}
       <div className="flex h-full w-80 flex-shrink-0 flex-col bg-[var(--bg-primary)] border-r border-gray-200 dark:border-gray-700">
         {/* Header */}
@@ -587,7 +600,7 @@ export default function DesktopMessagePage({
                 : fullName;
                 
               const contactAvatar = isBusinessChat
-                ? conversation.counterpartAvatar || "/images/BusinessPlaceholder.png"
+                ? conversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
                 : order?.assignedTo?.shopper?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
                   "/images/ProfileImage.png";
@@ -677,14 +690,19 @@ export default function DesktopMessagePage({
 
       {/* Middle Column - Chat Window */}
       <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-[var(--bg-primary)]">
-        {selectedConversation && selectedOrder ? (
+        {selectedConversation ? (
           <>
             {/* Chat Header */}
             <div className="flex flex-shrink-0 items-center justify-between bg-[var(--bg-primary)] px-6 py-4 shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
-                  {selectedOrder.assignedTo?.shopper?.profile_photo ||
-                  selectedOrder.assignedTo?.profile_picture ? (
+                  {isBusinessChat ? (
+                    <img
+                      src={selectedConversation.counterpartAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"}
+                      alt={selectedConversation.title || "Business"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
                     <img
                       src={
                         selectedOrder.assignedTo?.shopper?.profile_photo ||
@@ -715,14 +733,20 @@ export default function DesktopMessagePage({
                 </div>
                 <div>
                   <h2 className="flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
-                    {selectedOrder.assignedTo?.shopper?.Employment_id && (
-                      <span className="text-sm font-medium text-[var(--text-secondary)]">
-                        00{selectedOrder.assignedTo.shopper.Employment_id}
-                      </span>
+                    {isBusinessChat ? (
+                      selectedConversation.title || selectedConversation.counterpartName || "Business Chat"
+                    ) : (
+                      <>
+                        {selectedOrder?.assignedTo?.shopper?.Employment_id && (
+                          <span className="text-sm font-medium text-[var(--text-secondary)]">
+                            00{selectedOrder.assignedTo.shopper.Employment_id}
+                          </span>
+                        )}
+                        {selectedOrder?.assignedTo?.shopper?.full_name ||
+                          selectedOrder?.assignedTo?.name ||
+                          "Shopper"}
+                      </>
                     )}
-                    {selectedOrder.assignedTo?.shopper?.full_name ||
-                      selectedOrder.assignedTo?.name ||
-                      "Shopper"}
                   </h2>
                   <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
@@ -1116,8 +1140,7 @@ export default function DesktopMessagePage({
         )}
       </div>
 
-      {/* Right Column - Order Details */}
-      <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700">
         {selectedConversation && selectedOrder ? (
           <>
             {/* Order Header */}
@@ -1441,5 +1464,5 @@ export default function DesktopMessagePage({
         )}
       </div>
     </div>
-  );
+);
 }

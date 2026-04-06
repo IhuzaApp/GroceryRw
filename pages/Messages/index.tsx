@@ -10,6 +10,8 @@ import {
   onSnapshot,
   Timestamp,
   or,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import { useRouter } from "next/router";
@@ -39,6 +41,10 @@ function MessagesPage() {
   const [businessConversations, setBusinessConversations] = useState<Conversation[]>([]);
   const [conversationsFromOrders, setConversationsFromOrders] = useState<Conversation[]>([]);
   
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingBusiness, setLoadingBusiness] = useState(true);
+  const loading = loadingOrders || loadingBusiness;
+  
   // Merged and deduped
   const conversations = React.useMemo(() => {
     const byId = new Map<string, Conversation>();
@@ -51,9 +57,8 @@ function MessagesPage() {
       return timeB - timeA;
     });
   }, [orderConversations, businessConversations, conversationsFromOrders]);
-
+  
   const [orders, setOrders] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -84,6 +89,9 @@ function MessagesPage() {
     }
     if (conversationId && typeof conversationId === "string") {
       setSelectedConversationId(conversationId);
+      if (isMobile) {
+        setIsDrawerOpen(true);
+      }
     }
   }, [router.query, isMobile]);
 
@@ -111,9 +119,13 @@ function MessagesPage() {
             ? doc.data().lastMessageTime.toDate() 
             : doc.data().lastMessageTime,
         })) as Conversation[];
+        console.log(`🔍 [Messages] Received ${list.length} order conversations`);
         setOrderConversations(list);
-        setLoading(false);
-      }, () => setLoading(false));
+        setLoadingOrders(false);
+      }, (err) => {
+        console.error("❌ [Messages] Order conversations error:", err);
+        setLoadingOrders(false);
+      });
 
       return () => unsubscribe();
     }
@@ -143,12 +155,64 @@ function MessagesPage() {
             ? doc.data().lastMessageTime.toDate() 
             : doc.data().lastMessageTime,
         })) as Conversation[];
+        if (list.length > 0) {
+          console.log("🔍 [Messages] Sample Business Chat Data:", list[0]);
+        }
+        console.log(`🔍 [Messages] Received ${list.length} business conversations`);
         setBusinessConversations(list);
+        setLoadingBusiness(false);
+      }, (err) => {
+        console.error("❌ [Messages] Business conversations error:", err);
+        setLoadingBusiness(false);
       });
 
       return () => unsubscribe();
     }
   }, [status, session?.user?.id]);
+
+  // Fetch specific conversation from query params if not in list
+  useEffect(() => {
+    if (!db || status !== "authenticated") return;
+    const { conversationId, collection: collectionName } = router.query;
+    
+    if (conversationId && typeof conversationId === "string" && collectionName && typeof collectionName === "string") {
+      const coll = collectionName as ChatCollection;
+      const alreadyInList = [...orderConversations, ...businessConversations, ...conversationsFromOrders].some(c => c.id === conversationId);
+      
+      if (!alreadyInList) {
+        console.log(`🔍 [Messages] Deep link conversation ${conversationId} not in list, fetching specifically...`);
+        const fetchSpec = async () => {
+          try {
+            const docRef = doc(db!, coll, conversationId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const conv = {
+                id: docSnap.id,
+                collectionPath: coll,
+                ...data,
+                lastMessageTime: data.lastMessageTime instanceof Timestamp 
+                  ? data.lastMessageTime.toDate() 
+                  : data.lastMessageTime,
+              } as Conversation;
+              
+              if (coll === "business_conversations") {
+                setBusinessConversations(prev => [conv, ...prev]);
+              } else {
+                setOrderConversations(prev => [conv, ...prev]);
+              }
+              console.log(`🔍 [Messages] Successfully fetched deep link conversation:`, conv);
+            } else {
+              console.warn(`⚠️ [Messages] Deep link conversation not found in ${coll}: ${conversationId}`);
+            }
+          } catch (err) {
+            console.error("❌ [Messages] Error fetching deep link conversation:", err);
+          }
+        };
+        fetchSpec();
+      }
+    }
+  }, [router.query, db, status, orderConversations.length, businessConversations.length]);
 
   // Fallback for guest-upgraded orders or ID mismatches
   useEffect(() => {
