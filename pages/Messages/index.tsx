@@ -22,6 +22,7 @@ import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage";
 import MobileMessagePage from "../../src/components/messages/MobileMessagePage";
+import MobileChatPage from "../../src/components/messages/MobileChatPage";
 import { useTheme } from "../../src/context/ThemeContext";
 import { ChatCollection, ChatConversation as Conversation } from "../../src/services/chatService";
 
@@ -82,18 +83,20 @@ function MessagesPage() {
 
   // Handle query parameters for auto-selection
   useEffect(() => {
-    const { orderId, conversationId } = router.query;
+    const { orderId, conversationId, chat } = router.query;
+    const activeChatId = chat || conversationId;
+    
     if (orderId && typeof orderId === "string") {
       setSelectedOrderId(orderId);
-      if (isMobile) {
-        router.push(`/Messages/${orderId}`);
-      }
     }
-    if (conversationId && typeof conversationId === "string") {
-      setSelectedConversationId(conversationId);
-      if (isMobile) {
+    if (activeChatId && typeof activeChatId === "string") {
+      setSelectedConversationId(activeChatId);
+      if (!isMobile) {
         setIsDrawerOpen(true);
       }
+    } else {
+      setSelectedConversationId(undefined);
+      setIsDrawerOpen(false);
     }
   }, [router.query, isMobile]);
 
@@ -415,8 +418,11 @@ function MessagesPage() {
     });
 
   const handleChatClick = (orderId?: string, conversationId?: string) => {
-    if (isMobile && orderId) {
-      router.push(`/Messages/${orderId}`);
+    if (isMobile && conversationId) {
+      router.push({
+        pathname: '/Messages',
+        query: { ...router.query, chat: conversationId, orderId: orderId || '' }
+      }, undefined, { shallow: true });
     } else {
       setSelectedOrderId(orderId);
       setSelectedConversationId(conversationId);
@@ -478,6 +484,38 @@ function MessagesPage() {
     );
   }
 
+  // Render Mobile View
+  // If a chat is selected via URL query, render just the ChatPage full screen
+  if (selectedConversation && router.query.chat) {
+    return (
+      <AuthGuard requireAuth={true}>
+        <RootLayout hideNavigation={true}>
+          <div className="h-full w-full bg-[var(--bg-primary)]">
+            <MobileChatPage
+              conversationId={selectedConversation.id!}
+              collectionPath={selectedConversation.collectionPath}
+              orderId={selectedConversation.orderId}
+              counterpart={{
+                id: selectedConversation.shopperId || selectedConversation.businessId || selectedConversation.counterpartId || selectedConversation.customerId || "",
+                name: selectedConversation.title || selectedConversation.counterpartName || "User",
+                avatar: orders[selectedConversation.orderId!]?.shopper?.avatar || selectedConversation.counterpartAvatar || "/images/ProfileImage.png",
+                role: selectedConversation.collectionPath === "business_conversations" ? "business" : "shopper",
+                phone: ""
+              }}
+              onBack={() => {
+                // Remove chat from query to return to list
+                const newQuery = { ...router.query };
+                delete newQuery.chat;
+                router.push({ pathname: '/Messages', query: newQuery }, undefined, { shallow: true });
+              }}
+            />
+          </div>
+        </RootLayout>
+      </AuthGuard>
+    );
+  }
+
+  // Otherwise render the Chat List
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
@@ -494,24 +532,9 @@ function MessagesPage() {
             setSortOrder={setSortOrder}
             onConversationClick={handleChatClick}
             selectedOrder={selectedOrder}
-            isDrawerOpen={isDrawerOpen}
-            onCloseDrawer={() => setIsDrawerOpen(false)}
+            isDrawerOpen={false}
+            onCloseDrawer={() => {}}
           />
-          {selectedConversation && (
-            <CustomerChatDrawer
-              conversationId={selectedConversation.id!}
-              collectionPath={selectedConversation.collectionPath}
-              orderId={selectedConversation.orderId}
-              counterpart={{
-                id: selectedConversation.shopperId || selectedConversation.businessId || selectedConversation.counterpartId || selectedConversation.customerId || "",
-                name: selectedConversation.title || selectedConversation.counterpartName || "User",
-                avatar: orders[selectedConversation.orderId!]?.shopper?.avatar || "/images/ProfileImage.png",
-                role: selectedConversation.collectionPath === "business_conversations" ? "business" : "shopper",
-              }}
-              isOpen={isDrawerOpen}
-              onClose={() => setIsDrawerOpen(false)}
-            />
-          )}
         </div>
       </RootLayout>
     </AuthGuard>

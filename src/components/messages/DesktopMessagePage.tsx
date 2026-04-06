@@ -465,7 +465,7 @@ export default function DesktopMessagePage({
   return (
     <div className="flex h-full w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Left Column - Conversation List */}
-      <div className="flex h-full w-80 flex-shrink-0 flex-col border-l border-gray-200 dark:border-gray-700">
+      <div className="flex h-full w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">

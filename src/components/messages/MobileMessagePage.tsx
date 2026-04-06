@@ -161,99 +161,75 @@ export default function MobileMessagePage({
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[var(--bg-primary)]">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-[var(--bg-primary)]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <div className="flex-shrink-0 z-20 px-4 pt-1 pb-2">
+        <div className="flex items-center justify-between py-2.5">
+          <div className="flex items-center gap-1.5 focus:outline-none">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center justify-center text-green-500 transition-opacity active:opacity-50"
+              aria-label="Back"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold text-[var(--text-primary)]">
-            Chat List
-          </h1>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-              />
-            </svg>
-          </button>
+              <svg className="h-[28px] w-[28px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 className="text-[28px] font-bold tracking-tight text-[var(--text-primary)] leading-none mb-1">
+              Chats
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="text-green-500 transition-opacity active:opacity-50" aria-label="Camera">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+            <button className="text-green-500 transition-opacity active:opacity-50" aria-label="New Chat">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v8"/>
+                <path d="M8 12h8"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex items-center gap-2 px-4 pb-3">
+        {/* Search */}
+        <div className="mt-1 flex items-center gap-2">
           <div className="relative flex-1">
+            <div className="absolute left-3.5 top-0 bottom-0 flex items-center justify-center">
+              <svg className="h-[18px] w-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
             <input
               type="text"
-              placeholder="Search by name"
+              placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full bg-gray-100 px-4 py-2.5 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder-gray-400 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:placeholder-gray-400 dark:focus:bg-gray-600"
+              className="w-full rounded-[10px] bg-[var(--bg-secondary)] py-2.5 pl-10 pr-4 text-[16px] text-[var(--text-primary)] placeholder-gray-500 transition-colors focus:outline-none"
             />
-            <svg
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
           </div>
           <button
             onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
+            className={`flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${
               showUnreadOnly
-                ? "bg-green-500 !text-white [&_svg]:!text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+                ? "bg-green-500 text-white"
+                : "text-green-500"
             }`}
+            aria-label="Filter Unread"
           >
-            <svg
-              className={`h-5 w-5 ${showUnreadOnly ? "text-white" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
           </button>
         </div>
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+      <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-3">
@@ -276,7 +252,7 @@ export default function MobileMessagePage({
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700 bg-[var(--bg-primary)]">
+          <div className="flex flex-col">
             {filteredConversations.map((conversation) => {
               const isBusinessChat =
                 conversation.type === "business" || !conversation.orderId;
@@ -314,65 +290,46 @@ export default function MobileMessagePage({
                   onClick={() =>
                     onConversationClick(conversation.orderId, conversation.id!)
                   }
-                  className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors active:bg-gray-50 dark:active:bg-gray-700"
+                  className="flex cursor-pointer items-center transition-colors hover:bg-black/5 active:bg-black/10 dark:hover:bg-white/5 dark:active:bg-white/10"
                 >
-                  {/* Avatar with online indicator */}
-                  <div className="relative flex-shrink-0">
-                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                      {contactAvatar &&
-                      contactAvatar !== "/images/ProfileImage.png" ? (
+                  {/* Left Side: Avatar */}
+                  <div className="relative pl-4 pr-3 py-3 flex-shrink-0">
+                    <div className="flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600">
+                      {contactAvatar && contactAvatar !== "/images/ProfileImage.png" ? (
                         <img
                           src={contactAvatar}
                           alt={contactName}
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <svg
-                          className="h-6 w-6 text-gray-400 dark:text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
+                        <span className="text-[22px] font-medium text-[var(--text-secondary)] uppercase">
+                          {contactName.charAt(0)}
+                        </span>
                       )}
                     </div>
-                    {/* Online/Offline indicator */}
-                    <div
-                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--bg-primary)] ${
-                        isOnline ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    />
                   </div>
 
-                  {/* Content */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-sm font-semibold text-[var(--text-primary)]">
-                          {contactName}
-                        </h3>
-                        <p className="mt-0.5 line-clamp-1 text-sm text-[var(--text-secondary)]">
-                          {conversation.lastMessage || "No messages yet"}
-                        </p>
-                      </div>
-                      <div className="flex flex-shrink-0 flex-col items-end">
-                        <span className="whitespace-nowrap text-xs text-[var(--text-secondary)]">
-                          {formatMessageTime(conversation.lastMessageTime)}
-                        </span>
-                        {conversation.unreadCount > 0 && (
-                          <div className="mt-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-500 px-1.5 text-xs font-medium !text-white">
-                            {conversation.unreadCount > 9
-                              ? "9+"
-                              : conversation.unreadCount}
-                          </div>
-                        )}
-                      </div>
+                  {/* Right Side: Content with perfectly aligned inner bottom border common in iOS WhatsApp */}
+                  <div className="min-w-0 flex-1 py-3 pr-4 h-full flex flex-col justify-center border-b border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center justify-between pb-[1px]">
+                      <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
+                        {contactName}
+                      </h3>
+                      <span className={`whitespace-nowrap pl-2 text-xs ${conversation.unreadCount > 0 ? "font-medium text-green-500" : "font-normal text-[var(--text-secondary)]"}`}>
+                        {formatMessageTime(conversation.lastMessageTime)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className={`line-clamp-1 pr-2 text-[15px] leading-tight ${conversation.unreadCount > 0 ? "font-medium text-[var(--text-primary)]" : "font-normal text-[var(--text-secondary)]"}`}>
+                        {conversation.lastMessage || "No messages yet"}
+                      </p>
+                      {conversation.unreadCount > 0 && (
+                        <div className="flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded-full bg-green-500 px-[5px] text-[11px] font-bold text-white shadow-sm">
+                          {conversation.unreadCount > 9
+                            ? "9+"
+                            : conversation.unreadCount}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

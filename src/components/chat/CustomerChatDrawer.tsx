@@ -104,47 +104,46 @@ const CustomerMessage: React.FC<MessageProps> = ({
 
   return (
     <div
-      className={`mb-3 flex gap-2 ${
+      className={`mb-4 flex gap-3 ${
         isCurrentUser ? "justify-end" : "justify-start"
       }`}
     >
       {!isCurrentUser && (
-        <div className="flex-shrink-0">
-          <Avatar color="green" circle size="sm" />
+        <div className="relative flex-shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
+            <span className="text-sm font-bold text-white uppercase">
+              {counterpartName.charAt(0)}
+            </span>
+          </div>
         </div>
       )}
       <div
-        className={`flex max-w-[82%] flex-col ${
+        className={`flex max-w-[75%] flex-col ${
           isCurrentUser ? "items-end" : "items-start"
         }`}
       >
         <div
-          className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+          className={`px-5 py-3.5 shadow-sm text-[15px] leading-relaxed transition-all ${
             isCurrentUser
-              ? "bg-emerald-500 !text-white dark:bg-emerald-600 [&_*]:!text-white [&_svg]:!text-white"
-              : "bg-white text-gray-900 shadow-gray-200/50 dark:bg-gray-700 dark:text-gray-100 dark:shadow-none"
+              ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-emerald-500/20 rounded-2xl rounded-br-none"
+              : "border border-emerald-500/10 bg-emerald-500/5 text-gray-900 rounded-2xl rounded-bl-none dark:text-gray-100 shadow-none"
           }`}
         >
           {!isCurrentUser && (
-            <div className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <div className="mb-1 text-xs font-bold tracking-wide text-emerald-600 dark:text-emerald-400">
               {counterpartName}
             </div>
           )}
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+          <div className="whitespace-pre-wrap font-medium">
             {messageContent}
           </div>
         </div>
         {isCurrentUser && statusLabel && (
-          <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <span className="mt-1.5 text-[11px] font-bold tracking-wide text-gray-400 dark:text-gray-500">
             {statusLabel}
           </span>
         )}
       </div>
-      {isCurrentUser && (
-        <div className="flex-shrink-0">
-          <Avatar color="green" circle size="sm" />
-        </div>
-      )}
     </div>
   );
 };
@@ -411,23 +410,37 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-16 z-[1000] flex h-[calc(100vh-4rem)] w-[28rem] flex-col overflow-hidden rounded-l-2xl border-l border-gray-200 bg-[var(--bg-primary)] shadow-2xl dark:border-gray-700">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-[var(--bg-primary)] px-4 py-3 dark:border-gray-700">
-        <div className="flex items-center gap-3">
-          <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+    <div className="fixed right-0 top-16 bottom-0 z-[1000] flex w-full sm:w-[28rem] flex-col overflow-hidden sm:rounded-l-[30px] border-l-0 sm:border-l border-gray-100 bg-[var(--bg-primary)] shadow-2xl dark:border-gray-800 transition-all duration-300 ease-in-out">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 bg-[var(--bg-primary)]/80 px-5 py-4 backdrop-blur-xl z-10 dark:border-gray-800">
+        <div className="flex items-center gap-4">
+          <button onClick={onClose} className="p-2 -ml-2 text-gray-500 hover:text-gray-900 transition-colors dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <Avatar src={counterpart.avatar} alt={counterpart.name} circle size="md" />
+          <div className="relative flex-shrink-0">
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
+              {counterpart.avatar && counterpart.avatar !== "/images/ProfileImage.png" ? (
+                <img
+                  src={counterpart.avatar}
+                  alt={counterpart.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-white uppercase">
+                  {counterpart.name.charAt(0)}
+                </span>
+              )}
+            </div>
+          </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold text-[var(--text-primary)]">{counterpart.name}</h3>
-            <p className="text-xs text-[var(--text-secondary)]">
+            <h3 className="truncate text-lg font-extrabold tracking-tight text-gray-900 dark:text-white">{counterpart.name}</h3>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
               {collectionPath === "business_conversations" ? "Business Contact" : "Your Shopper"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
         {displayMessages.map((message) => (
           <CustomerMessage
             key={"tempId" in message ? message.tempId : message.id}
@@ -440,19 +453,20 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-gray-200 bg-[var(--bg-primary)] p-4 dark:border-gray-700">
-        <form onSubmit={handleSendMessage} className="flex gap-2">
+      <div className="border-t border-gray-100 bg-[var(--bg-primary)]/80 dark:border-gray-800 backdrop-blur-xl p-4 sm:p-5">
+        <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
           <textarea
             value={newMessage}
             onChange={(e) => { setNewMessage(e.target.value); reportTyping(); }}
             onBlur={clearTyping}
             onKeyDown={handleKeyPress}
             placeholder="Type a message..."
-            className="w-full resize-none rounded-xl bg-gray-100 px-4 py-2.5 text-sm dark:bg-gray-700"
+            className="w-full resize-none rounded-[20px] bg-gray-100/80 px-5 py-3.5 text-[15px] font-medium text-gray-900 placeholder-gray-500 transition-all focus:bg-gray-200/80 focus:outline-none dark:bg-gray-900/80 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-800"
             rows={1}
+            style={{ minHeight: '52px', maxHeight: '120px' }}
           />
-          <button type="submit" disabled={!newMessage.trim()} className="rounded-full bg-emerald-500 p-2.5 text-white">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+          <button type="submit" disabled={!newMessage.trim()} className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[20px] bg-gradient-to-br from-green-500 to-emerald-600 shadow-sm shadow-emerald-500/20 text-white transition-all active:scale-95 disabled:opacity-50 disabled:grayscale">
+            <svg className="h-6 w-6 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
           </button>
         </form>
       </div>
