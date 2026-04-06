@@ -43,7 +43,9 @@ function MessagesPage() {
   
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingBusiness, setLoadingBusiness] = useState(true);
-  const loading = loadingOrders || loadingBusiness;
+  const [businessAccountId, setBusinessAccountId] = useState<string | null>(null);
+  const [loadingBusinessAccount, setLoadingBusinessAccount] = useState(true);
+  const loading = loadingOrders || loadingBusiness || (status === "authenticated" && loadingBusinessAccount);
   
   // Merged and deduped
   const conversations = React.useMemo(() => {
@@ -95,6 +97,30 @@ function MessagesPage() {
     }
   }, [router.query, isMobile]);
 
+  // Fetch user's business account ID
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.id) {
+      const fetchBusinessAccount = async () => {
+        try {
+          const res = await fetch("/api/queries/check-business-account");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.hasAccount && data.account?.id) {
+              setBusinessAccountId(data.account.id);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching business account:", err);
+        } finally {
+          setLoadingBusinessAccount(false);
+        }
+      };
+      fetchBusinessAccount();
+    } else if (status !== "loading") {
+      setLoadingBusinessAccount(false);
+    }
+  }, [status, session?.user?.id]);
+
   // Real-time listener for Order Conversations
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
@@ -120,7 +146,11 @@ function MessagesPage() {
             : doc.data().lastMessageTime,
         })) as Conversation[];
         console.log(`🔍 [Messages] Received ${list.length} order conversations`);
-        setOrderConversations(list);
+        setOrderConversations(prev => {
+          const newIds = new Set(list.map(c => c.id));
+          const manualItems = prev.filter(c => !newIds.has(c.id));
+          return [...list, ...manualItems];
+        });
         setLoadingOrders(false);
       }, (err) => {
         console.error("❌ [Messages] Order conversations error:", err);
@@ -137,12 +167,19 @@ function MessagesPage() {
       const userId = session.user.id;
       if (!db) return;
       
+      const constraints = [
+        where("businessId", "==", userId),
+        where("counterpartId", "==", userId)
+      ];
+
+      if (businessAccountId) {
+        constraints.push(where("businessId", "==", businessAccountId));
+        constraints.push(where("counterpartId", "==", businessAccountId));
+      }
+
       const q = query(
         collection(db!, "business_conversations"),
-        or(
-          where("businessId", "==", userId),
-          where("counterpartId", "==", userId)
-        ),
+        or(...constraints),
         orderBy("lastMessageTime", "desc")
       );
 
@@ -159,7 +196,12 @@ function MessagesPage() {
           console.log("🔍 [Messages] Sample Business Chat Data:", list[0]);
         }
         console.log(`🔍 [Messages] Received ${list.length} business conversations`);
-        setBusinessConversations(list);
+        setBusinessConversations(prev => {
+          // Merge snapshot with existing items (preserving manually fetched ones not in snapshot yet)
+          const newIds = new Set(list.map(c => c.id));
+          const manualItems = prev.filter(c => !newIds.has(c.id));
+          return [...list, ...manualItems];
+        });
         setLoadingBusiness(false);
       }, (err) => {
         console.error("❌ [Messages] Business conversations error:", err);
@@ -168,7 +210,7 @@ function MessagesPage() {
 
       return () => unsubscribe();
     }
-  }, [status, session?.user?.id]);
+  }, [status, session?.user?.id, businessAccountId]);
 
   // Fetch specific conversation from query params if not in list
   useEffect(() => {
