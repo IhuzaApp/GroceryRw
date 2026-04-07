@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     if (newTheme === "dark") {
       root.classList.add("dark");
-      root.style.setProperty("--bg-primary", "#000000"); // True black
+      root.style.setProperty("--bg-primary", "#000000ff"); // True black
       root.style.setProperty("--text-primary", "#ffffff");
       root.style.setProperty("--bg-secondary", "#171717"); // Dark gray for contrast
       root.style.setProperty("--text-secondary", "#a1a1aa");
