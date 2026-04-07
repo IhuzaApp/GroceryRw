@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { Panel, Tag, Button, Nav, Modal } from "rsuite";
-import UserRecentOrders from "./userRecentOrders";
+import UserAISubscriptions from "./UserAISubscriptions";
 import UserAddress from "./userAddress";
 import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
@@ -215,14 +215,9 @@ export default function MobileProfile({
                 <UserAccount />
               </div>
             )}
-            {visitedTabs.has("orders") && (
-              <div className={activeTab !== "orders" ? "hidden" : ""}>
-                <UserRecentOrders
-                  filter="all"
-                  orders={userOrders}
-                  loading={ordersLoading}
-                  onRefresh={refreshOrders}
-                />
+            {visitedTabs.has("ai-subscriptions") && (
+              <div className={activeTab !== "ai-subscriptions" ? "hidden" : ""}>
+                <UserAISubscriptions />
               </div>
             )}
             {visitedTabs.has("addresses") && (
@@ -420,14 +415,14 @@ export default function MobileProfile({
 
       {/* Navigation List */}
       <div className="space-y-0">
-        {/* Orders */}
+        {/* AI Subscriptions */}
         <button
-          onClick={() => handleNavigation("orders")}
+          onClick={() => handleNavigation("ai-subscriptions")}
           className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
                 <svg
                   className="h-6 w-6 !text-white"
                   fill="none"
@@ -438,37 +433,32 @@ export default function MobileProfile({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                   />
                 </svg>
               </div>
               <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t("nav.orders")}
+                  AI Subscriptions
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  View your order history
+                  Usage & invoice history
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                {orderCount}
-              </span>
-              <svg
-                className="h-5 w-5 !text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
+            <svg
+              className="h-5 w-5 !text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </div>
         </button>
 

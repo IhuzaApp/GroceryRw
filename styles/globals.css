@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===================================
+   DARK THEME — Gray override
+   Tailwind's gray-700 (#374151) and gray-800 (#1f2937) are too light
+   for our true-black dark theme. Override them to near-black shades
+   that still provide subtle layering/contrast.
+   =================================== */
+.dark .dark\:bg-gray-800,
+.dark\:bg-gray-800:is(.dark *) {
+  background-color: #0f0f0f !important;
+}
+
+.dark .dark\:bg-gray-700,
+.dark\:bg-gray-700:is(.dark *) {
+  background-color: #1a1a1a !important;
+}
+
+.dark .dark\:border-gray-700,
+.dark\:border-gray-700:is(.dark *) {
+  border-color: #2a2a2a !important;
+}
+
+.dark .dark\:border-gray-800,
+.dark\:border-gray-800:is(.dark *) {
+  border-color: #181818 !important;
+}
+
+.dark .dark\:hover\:bg-gray-700:hover,
+.dark\:hover\:bg-gray-700:is(.dark *):hover {
+  background-color: #1a1a1a !important;
+}
+
+.dark .dark\:hover\:bg-gray-800:hover,
+.dark\:hover\:bg-gray-800:is(.dark *):hover {
+  background-color: #0f0f0f !important;
+}
+
 /* Custom Animations */
 @keyframes fadeInUp {
   from {
