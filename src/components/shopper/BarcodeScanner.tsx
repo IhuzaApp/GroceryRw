@@ -81,36 +81,27 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300`}
         aria-hidden="true"
       />
 
       <div
-        className={`relative z-10 w-full max-w-md rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl sm:border ${
+        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
           theme === "dark"
-            ? "bg-gray-800 text-white sm:border-gray-700"
-            : "bg-white text-gray-900 sm:border-gray-200"
+            ? "border border-gray-700 bg-gray-900/95 text-white backdrop-blur-xl"
+            : "border border-gray-200 bg-white/95 text-gray-900 backdrop-blur-xl"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
-          className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
-            theme === "dark"
-              ? "border-b border-gray-700"
-              : "border-b border-gray-200"
-          }`}
+          className={`flex items-center justify-between px-6 pt-8 pb-6 sm:px-8`}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className={`rounded-full p-2 ${
-                theme === "dark" ? "bg-purple-600" : "bg-purple-100"
-              }`}
-            >
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 transition-opacity hover:opacity-100"></div>
               <svg
-                className={`h-6 w-6 ${
-                  theme === "dark" ? "text-white" : "text-purple-600"
-                }`}
+                className="h-6 w-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -118,33 +109,28 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  strokeWidth={2.5}
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
             </div>
             <div>
-              <h3 className="text-xl font-bold">Scan Barcode</h3>
+              <h3 className="text-xl font-black tracking-tight">Scan Barcode</h3>
               <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`text-xs font-semibold tracking-wider uppercase mt-0.5 ${
+                  theme === "dark" ? "text-emerald-400" : "text-emerald-600"
                 }`}
               >
-                Position barcode within the frame
+                Auto-Detection Active
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className={`rounded-lg p-2 transition-colors ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
               theme === "dark"
-                ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
-                : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                ? "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
             }`}
           >
             <svg
@@ -156,7 +142,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
@@ -164,30 +150,14 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         </div>
 
         {/* Body */}
-        <div
-          className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
-            theme === "dark" ? "bg-gray-800" : "bg-white"
-          }`}
-        >
+        <div className="px-6 pb-8 sm:px-8">
           {/* Error Message */}
           {error && (
-            <div
-              className={`mb-4 rounded-xl border-l-4 p-4 ${
-                theme === "dark"
-                  ? "border-red-500 bg-red-900/20 text-red-300"
-                  : "border-red-500 bg-red-50 text-red-800"
-              }`}
-            >
+            <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-500 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div
-                  className={`rounded-full p-1 ${
-                    theme === "dark" ? "bg-red-600" : "bg-red-100"
-                  }`}
-                >
+                <div className="rounded-full bg-red-500/20 p-2">
                   <svg
-                    className={`h-4 w-4 ${
-                      theme === "dark" ? "text-white" : "text-red-600"
-                    }`}
+                    className="h-5 w-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -201,93 +171,70 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                   </svg>
                 </div>
                 <div>
-                  <p className="mb-1 font-semibold">Camera Error</p>
-                  <p className="text-sm opacity-90">{error}</p>
+                  <p className="font-bold tracking-wide">Camera Error</p>
+                  <p className="text-sm font-medium opacity-80">{error}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Video Scanner Section */}
-          <div>
-            <div className="relative overflow-hidden rounded-xl bg-gray-900">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="h-64 w-full object-cover sm:h-80"
-              />
+          <div className="relative overflow-hidden rounded-[2rem] bg-black shadow-inner ring-1 ring-white/10">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="container h-64 w-full object-cover sm:h-[350px]"
+            />
 
-              {/* Scanning Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  {/* Scanning Frame */}
-                  <div className="h-48 w-64 rounded-lg border-2 border-white opacity-80 sm:h-56 sm:w-80" />
+            {/* Tactical Scanning Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                {/* Dark Vignette outside frame */}
+                <div className="absolute -inset-96 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-none" />
 
-                  {/* Corner Indicators */}
-                  <div className="absolute -left-1 -top-1 h-6 w-6 border-l-4 border-t-4 border-white opacity-90" />
-                  <div className="absolute -right-1 -top-1 h-6 w-6 border-r-4 border-t-4 border-white opacity-90" />
-                  <div className="absolute -bottom-1 -left-1 h-6 w-6 border-b-4 border-l-4 border-white opacity-90" />
-                  <div className="absolute -bottom-1 -right-1 h-6 w-6 border-b-4 border-r-4 border-white opacity-90" />
+                {/* Laser Frame bounds */}
+                <div className="h-40 w-64 rounded-xl border border-white/20 sm:h-52 sm:w-80 overflow-hidden relative">
+                   {/* Scanning Laser Beam Effect */}
+                  <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-transparent via-green-400/40 to-green-400/90 shadow-[0_5px_20px_rgba(74,222,128,0.5)] animate-[bounce_2s_infinite]" />
+                </div>
 
-                  {/* Scanning Line Animation */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-0.5 w-full animate-pulse bg-gradient-to-r from-transparent via-white to-transparent opacity-60" />
-                  </div>
+                {/* Cyberpunk Corner Indicators */}
+                <div className="absolute -left-2 -top-2 flex h-8 w-8">
+                  <div className="h-full w-1 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                  <div className="h-1 w-full rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                </div>
+                <div className="absolute -right-2 -top-2 flex h-8 w-8 flex-col items-end">
+                  <div className="h-1 w-full rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                  <div className="h-full w-1 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                </div>
+                <div className="absolute -bottom-2 -left-2 flex h-8 w-8 items-end">
+                  <div className="h-full w-1 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                  <div className="h-1 w-full rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 flex h-8 w-8 flex-col items-end justify-end">
+                  <div className="h-full w-1 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                  <div className="h-1 w-full rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
                 </div>
               </div>
+            </div>
 
-              {/* Scanning Instructions */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
-                <div
-                  className={`rounded-lg px-4 py-2 ${
-                    theme === "dark"
-                      ? "bg-gray-800/90 text-white"
-                      : "bg-white/90 text-gray-900"
-                  } shadow-lg`}
-                >
-                  <p className="text-center text-sm font-medium">
-                    📱 Point camera at barcode
-                  </p>
-                </div>
+            {/* Tactical HUD Additions */}
+            <div className="absolute z-10 bottom-4 left-1/2 -translate-x-1/2 transform whitespace-nowrap">
+              <div className="rounded-full bg-black/50 px-4 py-2 backdrop-blur-md border border-white/10">
+                <p className="flex items-center gap-2 text-xs font-bold tracking-widest text-green-400 uppercase">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                  </span>
+                  Align code inside frame
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div
-          className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
-            theme === "dark"
-              ? "border-t border-gray-700"
-              : "border-t border-gray-200"
-          }`}
-        >
-          <button
-            onClick={onClose}
-            className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-              theme === "dark"
-                ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
-                : "border border-gray-300 text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-            Cancel
-          </button>
-        </div>
       </div>
     </div>
   );

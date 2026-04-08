@@ -304,7 +304,7 @@ export default function BottomBar() {
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
         router.pathname !== "/plasBusiness/store/[storeId]" && (
-          <div className="fixed bottom-24 right-4 z-50 md:hidden">
+          <div className="notranslate fixed bottom-24 right-4 z-50 md:hidden">
             <Link href="/Cart" passHref>
               <div className="relative flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">
                 {count > 0 && (
@@ -367,7 +367,7 @@ export default function BottomBar() {
         )}
 
       {/* Desktop Floating Buttons */}
-      <div className="fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
+      <div className="notranslate fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
         {open && (
           <div className="mb-2 flex flex-col items-end gap-2">
             {/* AI Support - Only show for non-guest users */}
@@ -574,7 +574,7 @@ export default function BottomBar() {
 
       {/* Bottom Navigation Bar */}
       {router.pathname !== "/Reels" && (
-        <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-[var(--bg-primary)] md:hidden">
+        <nav className="notranslate fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-[var(--bg-primary)] md:hidden">
           {/* Reels - First icon */}
           <NavItem
             href="/Reels"
