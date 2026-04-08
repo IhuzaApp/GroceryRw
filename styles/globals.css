@@ -795,3 +795,49 @@ body.hide-bottom-bar nav {
     font-size: 16px !important;
   }
 }
+
+/* ===================================
+   Google Translate UI Overrides
+   ===================================
+   Completely nuke the default translate widget and top banner, 
+   since we handle it via our custom preferences dropdown
+*/
+
+/* Force the body top to always be 0 (Google assigns pixel values here) */
+body {
+  top: 0 !important;
+  position: static !important;
+}
+
+/* Hide the banner iframe specifically */
+iframe.goog-te-banner-frame, 
+iframe.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide the translation gadget div entirely */
+.goog-te-gadget, 
+#google_translate_element {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hide the popup tooltip that appears on hover */
+#goog-gt-tt, 
+.goog-te-balloon-frame {
+  display: none !important;
+}
+
+/* Remove the blue background highlight on translated text */
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Prevent translation wrapper from doing anything weird */
+.skiptranslate > iframe.goog-te-banner-frame {
+  display: none !important;
+}

@@ -53,13 +53,27 @@ export default function UserPreference() {
     setPreferences((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleLanguageChange = (newLanguage: "en" | "rw") => {
-    setLanguage(newLanguage);
-    const languageName =
-      newLanguage === "en"
-        ? t("preferences.english")
-        : t("preferences.kinyarwanda");
-    toast.success(`${t("preferences.languageChanged")} ${languageName}`);
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage as any);
+    
+    let languageName = "English";
+    if (newLanguage === "rw") languageName = "Kinyarwanda";
+    if (newLanguage === "fr") languageName = "French";
+    if (newLanguage === "sw") languageName = "Swahili";
+      
+    // Set the Google Translate cookie
+    if (newLanguage === "en") {
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    } else {
+      document.cookie = `googtrans=/en/${newLanguage}; path=/`;
+    }
+    
+    toast.success(`Language changed to ${languageName}. Reloading...`);
+    
+    // Reload to apply the Google translation to the DOM
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   const handleSave = async () => {
@@ -313,13 +327,13 @@ export default function UserPreference() {
               </label>
               <select
                 value={language}
-                onChange={(e) =>
-                  handleLanguageChange(e.target.value as "en" | "rw")
-                }
+                onChange={(e) => handleLanguageChange(e.target.value)}
                 className="w-full rounded-xl border-2 border-transparent bg-white px-4 py-2 text-xs font-black transition-all focus:border-green-500 focus:outline-none dark:bg-gray-900"
               >
-                <option value="en">{t("preferences.english")}</option>
-                <option value="rw">{t("preferences.kinyarwanda")}</option>
+                <option value="en">English (Default)</option>
+                <option value="rw">Kinyarwanda</option>
+                <option value="fr">Français (French)</option>
+                <option value="sw">Kiswahili (Swahili)</option>
               </select>
             </div>
 

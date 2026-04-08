@@ -3,6 +3,7 @@ import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
+import Script from "next/script";
 
 // Suppress AbortError messages in development
 if (process.env.NODE_ENV === "development") {
@@ -23,6 +24,36 @@ import {
   isRoleSwitchInProgress,
   clearRoleSwitchFlag,
 } from "../src/lib/sessionRefresh";
+
+// --- Google Translate React Crash Fix ---
+// Google Translate modifies the DOM by inserting <font> tags. React loses track of these nodes 
+// and throws a "NotFoundError: Failed to execute 'removeChild' on 'Node'" when it tries to unmount.
+// This safely intercepts those DOM operations so React doesn't crash the entire app.
+if (typeof window !== "undefined" && typeof Node !== "undefined") {
+  const originalRemoveChild = Node.prototype.removeChild;
+  // @ts-ignore
+  Node.prototype.removeChild = function<T extends Node>(child: T): T {
+    if (child.parentNode !== this) {
+      if (console) {
+        console.warn('React attempted to remove a child manipulated by Google Translate. Operation safely aborted.', child, this);
+      }
+      return child;
+    }
+    return originalRemoveChild.apply(this, [child] as any) as T;
+  };
+
+  const originalInsertBefore = Node.prototype.insertBefore;
+  // @ts-ignore
+  Node.prototype.insertBefore = function<T extends Node>(newNode: T, referenceNode: Node | null): T {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      if (console) {
+        console.warn('React attempted to insert before a node manipulated by Google Translate. Operation safely aborted.', referenceNode, this);
+      }
+      return newNode;
+    }
+    return originalInsertBefore.apply(this, [newNode, referenceNode] as any) as T;
+  };
+}
 import { ThemeProvider } from "../src/context/ThemeContext";
 import { LanguageProvider } from "../src/context/LanguageContext";
 import InstallPrompt from "../src/components/ui/InstallPrompt";
@@ -399,6 +430,26 @@ export default function App({ Component, pageProps }: AppProps) {
             }}
           />
         </Head>
+        
+        {/* Google Translate Integration */}
+        <Script
+          strategy="afterInteractive"
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+        />
+        <Script id="google-translate-config" strategy="afterInteractive">
+          {`
+            function googleTranslateElementInit() {
+              new google.translate.TranslateElement(
+                { 
+                  pageLanguage: 'en',
+                  autoDisplay: false
+                },
+                'google_translate_element'
+              );
+            }
+          `}
+        </Script>
+
         <SessionProvider
           session={(pageProps as any).session}
           basePath="/api/auth"
