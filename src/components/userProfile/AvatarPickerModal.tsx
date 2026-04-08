@@ -14,7 +14,9 @@ interface AvatarOption {
 
 /** Build a DiceBear SVG URL */
 const dicebear = (style: string, seed: string, extra = "") =>
-  `https://api.dicebear.com/8.x/${style}/svg?seed=${encodeURIComponent(seed)}${extra}`;
+  `https://api.dicebear.com/8.x/${style}/svg?seed=${encodeURIComponent(
+    seed
+  )}${extra}`;
 
 const CATEGORIES: {
   key: AvatarCategory;
@@ -23,87 +25,147 @@ const CATEGORIES: {
   gradient: string;
   avatars: AvatarOption[];
 }[] = [
-    {
-      key: "superheroes",
-      label: "Superheroes",
-      emoji: "🦸",
-      gradient: "from-violet-500 to-indigo-600",
-      avatars: [
-        { id: "sh1", url: dicebear("avataaars", "Thor"), label: "Thor" },
-        { id: "sh2", url: dicebear("avataaars", "IronMan"), label: "Iron Man" },
-        { id: "sh3", url: dicebear("avataaars", "Batman"), label: "Batman" },
-        { id: "sh4", url: dicebear("avataaars", "Spiderman"), label: "Spider-Man" },
-        { id: "sh5", url: dicebear("avataaars", "WonderWoman"), label: "Wonder Woman" },
-        { id: "sh6", url: dicebear("avataaars", "CaptainAmerica"), label: "Captain America" },
-        { id: "sh7", url: dicebear("avataaars", "BlackPanther"), label: "Black Panther" },
-        { id: "sh8", url: dicebear("avataaars", "Superman"), label: "Superman" },
-        { id: "sh9", url: dicebear("avataaars", "Flash"), label: "Flash" },
-        { id: "sh10", url: dicebear("avataaars", "Hulk"), label: "Hulk" },
-        { id: "sh11", url: dicebear("avataaars", "AquaMan"), label: "Aqua Man" },
-        { id: "sh12", url: dicebear("avataaars", "DrStrange"), label: "Dr. Strange" },
-      ],
-    },
-    {
-      key: "Faces",
-      label: "Faces",
-      emoji: "🐾",
-      gradient: "from-emerald-500 to-teal-600",
-      avatars: [
-        { id: "an1", url: dicebear("adventurer", "Lion"), label: "Lion" },
-        { id: "an2", url: dicebear("adventurer", "Panda"), label: "Panda" },
-        { id: "an3", url: dicebear("adventurer", "Fox"), label: "Fox" },
-        { id: "an4", url: dicebear("adventurer", "Wolf"), label: "Wolf" },
-        { id: "an5", url: dicebear("adventurer", "Bear"), label: "Bear" },
-        { id: "an6", url: dicebear("adventurer", "Tiger"), label: "Tiger" },
-        { id: "an7", url: dicebear("adventurer", "Rabbit"), label: "Rabbit" },
-        { id: "an8", url: dicebear("adventurer", "Cat"), label: "Cat" },
-        { id: "an9", url: dicebear("adventurer", "Dog"), label: "Dog" },
-        { id: "an10", url: dicebear("adventurer", "Elephant"), label: "Elephant" },
-        { id: "an11", url: dicebear("adventurer", "Penguin"), label: "Penguin" },
-        { id: "an12", url: dicebear("adventurer", "Koala"), label: "Koala" },
-      ],
-    },
-    {
-      key: "cartoons",
-      label: "Cartoons",
-      emoji: "🎨",
-      gradient: "from-pink-500 to-rose-600",
-      avatars: [
-        { id: "ct1", url: dicebear("lorelei", "Sunny"), label: "Sunny" },
-        { id: "ct2", url: dicebear("lorelei", "Buddy"), label: "Buddy" },
-        { id: "ct3", url: dicebear("lorelei", "Zippy"), label: "Zippy" },
-        { id: "ct4", url: dicebear("lorelei", "Doodle"), label: "Doodle" },
-        { id: "ct5", url: dicebear("micah", "Pixel"), label: "Pixel" },
-        { id: "ct6", url: dicebear("micah", "Spark"), label: "Spark" },
-        { id: "ct7", url: dicebear("micah", "Nova"), label: "Nova" },
-        { id: "ct8", url: dicebear("micah", "Blaze"), label: "Blaze" },
-        { id: "ct9", url: dicebear("fun-emoji", "Cheerful"), label: "Cheerful" },
-        { id: "ct10", url: dicebear("fun-emoji", "Jolly"), label: "Jolly" },
-        { id: "ct11", url: dicebear("fun-emoji", "Giddy"), label: "Giddy" },
-        { id: "ct12", url: dicebear("fun-emoji", "Peppy"), label: "Peppy" },
-      ],
-    },
-    {
-      key: "chefs",
-      label: "Chefs",
-      emoji: "👨‍🍳",
-      gradient: "from-orange-500 to-amber-500",
-      avatars: [
-        { id: "ch1", url: dicebear("notionists", "GordonRamsay"), label: "Gordon" },
-        { id: "ch2", url: dicebear("notionists", "JamieOliver"), label: "Jamie" },
-        { id: "ch3", url: dicebear("notionists", "MasterChef"), label: "MasterChef" },
-        { id: "ch4", url: dicebear("notionists", "SousChef"), label: "Sous Chef" },
-        { id: "ch5", url: dicebear("notionists", "PastryChef"), label: "Pastry Chef" },
-        { id: "ch6", url: dicebear("notionists", "GrillMaster"), label: "Grill Master" },
-        { id: "ch7", url: dicebear("personas", "ChefBob"), label: "Chef Bob" },
-        { id: "ch8", url: dicebear("personas", "ChefMaria"), label: "Chef Maria" },
-        { id: "ch9", url: dicebear("personas", "BakeryKing"), label: "Bakery King" },
-        { id: "ch10", url: dicebear("personas", "SushiSensei"), label: "Sushi Sensei" },
-        { id: "ch11", url: dicebear("personas", "SpiceGuru"), label: "Spice Guru" },
-        { id: "ch12", url: dicebear("personas", "CafeBoss"), label: "Cafe Boss" },
-      ],
-    },
-  ];
+  {
+    key: "superheroes",
+    label: "Superheroes",
+    emoji: "🦸",
+    gradient: "from-violet-500 to-indigo-600",
+    avatars: [
+      { id: "sh1", url: dicebear("avataaars", "Thor"), label: "Thor" },
+      { id: "sh2", url: dicebear("avataaars", "IronMan"), label: "Iron Man" },
+      { id: "sh3", url: dicebear("avataaars", "Batman"), label: "Batman" },
+      {
+        id: "sh4",
+        url: dicebear("avataaars", "Spiderman"),
+        label: "Spider-Man",
+      },
+      {
+        id: "sh5",
+        url: dicebear("avataaars", "WonderWoman"),
+        label: "Wonder Woman",
+      },
+      {
+        id: "sh6",
+        url: dicebear("avataaars", "CaptainAmerica"),
+        label: "Captain America",
+      },
+      {
+        id: "sh7",
+        url: dicebear("avataaars", "BlackPanther"),
+        label: "Black Panther",
+      },
+      { id: "sh8", url: dicebear("avataaars", "Superman"), label: "Superman" },
+      { id: "sh9", url: dicebear("avataaars", "Flash"), label: "Flash" },
+      { id: "sh10", url: dicebear("avataaars", "Hulk"), label: "Hulk" },
+      { id: "sh11", url: dicebear("avataaars", "AquaMan"), label: "Aqua Man" },
+      {
+        id: "sh12",
+        url: dicebear("avataaars", "DrStrange"),
+        label: "Dr. Strange",
+      },
+    ],
+  },
+  {
+    key: "Faces",
+    label: "Faces",
+    emoji: "🐾",
+    gradient: "from-emerald-500 to-teal-600",
+    avatars: [
+      { id: "an1", url: dicebear("adventurer", "Lion"), label: "Lion" },
+      { id: "an2", url: dicebear("adventurer", "Panda"), label: "Panda" },
+      { id: "an3", url: dicebear("adventurer", "Fox"), label: "Fox" },
+      { id: "an4", url: dicebear("adventurer", "Wolf"), label: "Wolf" },
+      { id: "an5", url: dicebear("adventurer", "Bear"), label: "Bear" },
+      { id: "an6", url: dicebear("adventurer", "Tiger"), label: "Tiger" },
+      { id: "an7", url: dicebear("adventurer", "Rabbit"), label: "Rabbit" },
+      { id: "an8", url: dicebear("adventurer", "Cat"), label: "Cat" },
+      { id: "an9", url: dicebear("adventurer", "Dog"), label: "Dog" },
+      {
+        id: "an10",
+        url: dicebear("adventurer", "Elephant"),
+        label: "Elephant",
+      },
+      { id: "an11", url: dicebear("adventurer", "Penguin"), label: "Penguin" },
+      { id: "an12", url: dicebear("adventurer", "Koala"), label: "Koala" },
+    ],
+  },
+  {
+    key: "cartoons",
+    label: "Cartoons",
+    emoji: "🎨",
+    gradient: "from-pink-500 to-rose-600",
+    avatars: [
+      { id: "ct1", url: dicebear("lorelei", "Sunny"), label: "Sunny" },
+      { id: "ct2", url: dicebear("lorelei", "Buddy"), label: "Buddy" },
+      { id: "ct3", url: dicebear("lorelei", "Zippy"), label: "Zippy" },
+      { id: "ct4", url: dicebear("lorelei", "Doodle"), label: "Doodle" },
+      { id: "ct5", url: dicebear("micah", "Pixel"), label: "Pixel" },
+      { id: "ct6", url: dicebear("micah", "Spark"), label: "Spark" },
+      { id: "ct7", url: dicebear("micah", "Nova"), label: "Nova" },
+      { id: "ct8", url: dicebear("micah", "Blaze"), label: "Blaze" },
+      { id: "ct9", url: dicebear("fun-emoji", "Cheerful"), label: "Cheerful" },
+      { id: "ct10", url: dicebear("fun-emoji", "Jolly"), label: "Jolly" },
+      { id: "ct11", url: dicebear("fun-emoji", "Giddy"), label: "Giddy" },
+      { id: "ct12", url: dicebear("fun-emoji", "Peppy"), label: "Peppy" },
+    ],
+  },
+  {
+    key: "chefs",
+    label: "Chefs",
+    emoji: "👨‍🍳",
+    gradient: "from-orange-500 to-amber-500",
+    avatars: [
+      {
+        id: "ch1",
+        url: dicebear("notionists", "GordonRamsay"),
+        label: "Gordon",
+      },
+      { id: "ch2", url: dicebear("notionists", "JamieOliver"), label: "Jamie" },
+      {
+        id: "ch3",
+        url: dicebear("notionists", "MasterChef"),
+        label: "MasterChef",
+      },
+      {
+        id: "ch4",
+        url: dicebear("notionists", "SousChef"),
+        label: "Sous Chef",
+      },
+      {
+        id: "ch5",
+        url: dicebear("notionists", "PastryChef"),
+        label: "Pastry Chef",
+      },
+      {
+        id: "ch6",
+        url: dicebear("notionists", "GrillMaster"),
+        label: "Grill Master",
+      },
+      { id: "ch7", url: dicebear("personas", "ChefBob"), label: "Chef Bob" },
+      {
+        id: "ch8",
+        url: dicebear("personas", "ChefMaria"),
+        label: "Chef Maria",
+      },
+      {
+        id: "ch9",
+        url: dicebear("personas", "BakeryKing"),
+        label: "Bakery King",
+      },
+      {
+        id: "ch10",
+        url: dicebear("personas", "SushiSensei"),
+        label: "Sushi Sensei",
+      },
+      {
+        id: "ch11",
+        url: dicebear("personas", "SpiceGuru"),
+        label: "Spice Guru",
+      },
+      { id: "ch12", url: dicebear("personas", "CafeBoss"), label: "Cafe Boss" },
+    ],
+  },
+];
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -185,8 +247,18 @@ export default function AvatarPickerModal({
             onClick={onClose}
             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
@@ -212,17 +284,28 @@ export default function AvatarPickerModal({
             <span className="text-[10px] text-gray-400">Current</span>
           </div>
 
-          <svg className="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
 
           {/* Selected */}
           <div className="flex flex-col items-center gap-1">
             <div
-              className={`h-14 w-14 overflow-hidden rounded-full border-3 shadow-lg transition-all ${selectedUrl
+              className={`border-3 h-14 w-14 overflow-hidden rounded-full shadow-lg transition-all ${
+                selectedUrl
                   ? "border-green-400 ring-2 ring-green-300 ring-offset-1"
                   : "border-dashed border-gray-300 dark:border-gray-600"
-                }`}
+              }`}
             >
               {selectedUrl ? (
                 <img
@@ -249,16 +332,41 @@ export default function AvatarPickerModal({
             >
               {saving ? (
                 <>
-                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg
+                    className="h-4 w-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   Saving...
                 </>
               ) : (
                 <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Save
                 </>
@@ -273,10 +381,11 @@ export default function AvatarPickerModal({
             <button
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all ${activeCategory === cat.key
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all ${
+                activeCategory === cat.key
                   ? `bg-gradient-to-r ${cat.gradient} text-white shadow-md`
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                }`}
+              }`}
             >
               <span>{cat.emoji}</span>
               <span>{cat.label}</span>
@@ -295,16 +404,18 @@ export default function AvatarPickerModal({
                 <button
                   key={avatar.id}
                   onClick={() => setSelectedUrl(avatar.url)}
-                  className={`group flex flex-col items-center gap-1.5 rounded-2xl p-2 transition-all duration-200 ${isSelected
+                  className={`group flex flex-col items-center gap-1.5 rounded-2xl p-2 transition-all duration-200 ${
+                    isSelected
                       ? `bg-gradient-to-br ${currentCat.gradient} shadow-lg ring-2 ring-white/50`
                       : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                  }`}
                 >
                   <div
-                    className={`relative h-12 w-12 overflow-hidden rounded-full border-2 transition-all ${isSelected
+                    className={`relative h-12 w-12 overflow-hidden rounded-full border-2 transition-all ${
+                      isSelected
                         ? "border-white shadow-xl"
                         : "border-gray-200 group-hover:border-gray-300 dark:border-gray-700"
-                      }`}
+                    }`}
                   >
                     {hasError ? (
                       <div className="flex h-full w-full items-center justify-center bg-gray-100 text-lg dark:bg-gray-800">
@@ -323,16 +434,29 @@ export default function AvatarPickerModal({
                     {/* Checkmark overlay */}
                     {isSelected && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <svg className="h-5 w-5 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        <svg
+                          className="h-5 w-5 text-white drop-shadow"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </div>
                     )}
                   </div>
 
                   <span
-                    className={`max-w-full truncate text-[10px] font-medium leading-tight ${isSelected ? "text-white" : "text-gray-500 dark:text-gray-400"
-                      }`}
+                    className={`max-w-full truncate text-[10px] font-medium leading-tight ${
+                      isSelected
+                        ? "text-white"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
                   >
                     {avatar.label}
                   </span>

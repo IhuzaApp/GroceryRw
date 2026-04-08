@@ -26,16 +26,20 @@ import {
 } from "../src/lib/sessionRefresh";
 
 // --- Google Translate React Crash Fix ---
-// Google Translate modifies the DOM by inserting <font> tags. React loses track of these nodes 
+// Google Translate modifies the DOM by inserting <font> tags. React loses track of these nodes
 // and throws a "NotFoundError: Failed to execute 'removeChild' on 'Node'" when it tries to unmount.
 // This safely intercepts those DOM operations so React doesn't crash the entire app.
 if (typeof window !== "undefined" && typeof Node !== "undefined") {
   const originalRemoveChild = Node.prototype.removeChild;
   // @ts-ignore
-  Node.prototype.removeChild = function<T extends Node>(child: T): T {
+  Node.prototype.removeChild = function <T extends Node>(child: T): T {
     if (child.parentNode !== this) {
       if (console) {
-        console.warn('React attempted to remove a child manipulated by Google Translate. Operation safely aborted.', child, this);
+        console.warn(
+          "React attempted to remove a child manipulated by Google Translate. Operation safely aborted.",
+          child,
+          this
+        );
       }
       return child;
     }
@@ -44,14 +48,24 @@ if (typeof window !== "undefined" && typeof Node !== "undefined") {
 
   const originalInsertBefore = Node.prototype.insertBefore;
   // @ts-ignore
-  Node.prototype.insertBefore = function<T extends Node>(newNode: T, referenceNode: Node | null): T {
+  Node.prototype.insertBefore = function <T extends Node>(
+    newNode: T,
+    referenceNode: Node | null
+  ): T {
     if (referenceNode && referenceNode.parentNode !== this) {
       if (console) {
-        console.warn('React attempted to insert before a node manipulated by Google Translate. Operation safely aborted.', referenceNode, this);
+        console.warn(
+          "React attempted to insert before a node manipulated by Google Translate. Operation safely aborted.",
+          referenceNode,
+          this
+        );
       }
       return newNode;
     }
-    return originalInsertBefore.apply(this, [newNode, referenceNode] as any) as T;
+    return originalInsertBefore.apply(this, [
+      newNode,
+      referenceNode,
+    ] as any) as T;
   };
 }
 import { ThemeProvider } from "../src/context/ThemeContext";
@@ -430,7 +444,7 @@ export default function App({ Component, pageProps }: AppProps) {
             }}
           />
         </Head>
-        
+
         {/* Google Translate Integration */}
         <Script
           strategy="afterInteractive"

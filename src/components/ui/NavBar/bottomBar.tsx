@@ -11,6 +11,7 @@ import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { Briefcase } from "lucide-react";
 import GuestUpgradeModal from "../GuestUpgradeModal";
+import HomeActionsModal from "./HomeActionsModal";
 import PackageDeliveryModal from "./PackageDeliveryModal";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
@@ -160,6 +161,35 @@ export default function BottomBar() {
   const [messageUnreadCount, setMessageUnreadCount] = useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
+  const [showHomeActions, setShowHomeActions] = useState(false);
+
+  const homePressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressActive = useRef(false);
+
+  const handleHomeTouchStart = () => {
+    isLongPressActive.current = false;
+    homePressTimerRef.current = setTimeout(() => {
+      isLongPressActive.current = true;
+      setShowHomeActions(true);
+    }, 500); // 500ms long press threshold
+  };
+
+  const handleHomeTouchEnd = () => {
+    if (homePressTimerRef.current) {
+      clearTimeout(homePressTimerRef.current);
+      homePressTimerRef.current = null;
+    }
+  };
+
+  const handleHomeClick = (e: React.MouseEvent) => {
+    if (isLongPressActive.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    // Normal click logic
+    router.push("/", undefined, { shallow: true });
+  };
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -723,39 +753,45 @@ export default function BottomBar() {
 
           {/* Central Home Button - Third (middle) */}
           <div className="z-50 -mt-12">
-            <Link href="/" passHref>
-              <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-[var(--bg-primary)]">
-                <svg
-                  width="24px"
-                  height="24px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-green-500 dark:text-green-400"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
+            <div
+              className="flex h-16 w-16 cursor-pointer select-none flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg transition-transform active:scale-95 dark:bg-[var(--bg-primary)]"
+              onTouchStart={handleHomeTouchStart}
+              onTouchEnd={handleHomeTouchEnd}
+              onMouseDown={handleHomeTouchStart}
+              onMouseUp={handleHomeTouchEnd}
+              onMouseLeave={handleHomeTouchEnd}
+              onClick={handleHomeClick}
+            >
+              <svg
+                width="24px"
+                height="24px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-green-500 dark:text-green-400"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>
-                    <path
-                      d="M15 18H9"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>
-                  </g>
-                </svg>
-              </div>
-            </Link>
+                  ></path>
+                  <path
+                    d="M15 18H9"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  ></path>
+                </g>
+              </svg>
+            </div>
           </div>
 
           {/* Orders - Fourth icon - Show for all signed in users including guests */}
@@ -1257,6 +1293,12 @@ export default function BottomBar() {
       <PackageDeliveryModal
         open={showPackageModal}
         onClose={() => setShowPackageModal(false)}
+      />
+
+      {/* Home Actions Modal */}
+      <HomeActionsModal
+        open={showHomeActions}
+        onClose={() => setShowHomeActions(false)}
       />
     </>
   );

@@ -33,8 +33,7 @@ const statusConfig: Record<
 > = {
   paid: {
     label: "Paid",
-    bgClass:
-      "bg-green-100 dark:bg-green-900/30",
+    bgClass: "bg-green-100 dark:bg-green-900/30",
     textClass: "text-green-800 dark:text-green-300",
     dotClass: "bg-green-500",
   },
@@ -58,13 +57,7 @@ const statusConfig: Record<
   },
 };
 
-function UsageMeter({
-  count,
-  limit,
-}: {
-  count: number;
-  limit: number;
-}) {
+function UsageMeter({ count, limit }: { count: number; limit: number }) {
   const unlimited = limit === -1;
   const pct = unlimited ? 0 : Math.min((count / limit) * 100, 100);
   const isNearLimit = !unlimited && pct >= 80;
@@ -257,7 +250,9 @@ export default function UserAISubscriptions() {
           {data?.limit !== -1 && (
             <p className="mt-1.5 text-xs text-white/60">
               {(data?.limit || 0) - (data?.usageCount || 0) > 0
-                ? `${(data?.limit || 0) - (data?.usageCount || 0)} requests remaining`
+                ? `${
+                    (data?.limit || 0) - (data?.usageCount || 0)
+                  } requests remaining`
                 : "Limit reached — subscribe now to continue"}
             </p>
           )}

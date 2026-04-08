@@ -6,7 +6,10 @@ import { authOptions } from "../auth/[...nextauth]";
 
 const GET_AI_INVOICES_QUERY = gql`
   query GetAIInvoices($user_id: uuid!) {
-    ai_usage(where: { user_id: { _eq: $user_id } }, order_by: { year: desc, month: desc }) {
+    ai_usage(
+      where: { user_id: { _eq: $user_id } }
+      order_by: { year: desc, month: desc }
+    ) {
       id
       month
       year

@@ -159,7 +159,7 @@ export default function UserPaymentCards({
     }
   );
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
-  
+
   // Loyalty and Scanner state
   const [showScanner, setShowScanner] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
@@ -427,7 +427,7 @@ export default function UserPaymentCards({
 
           {/* Balance Row */}
           <div className="relative z-10 mb-8 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 shadow-inner backdrop-blur-md border border-white/5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/5 bg-white/10 shadow-inner backdrop-blur-md">
               <img
                 className="h-8 w-8 object-contain opacity-90 drop-shadow-md filter"
                 src="/assets/images/chip.png"
@@ -455,7 +455,7 @@ export default function UserPaymentCards({
                 </p>
               </div>
             </div>
-            
+
             {/* Action Button */}
             <button
               onClick={() => setShowAddMoneyModal(true)}
@@ -467,7 +467,12 @@ export default function UserPaymentCards({
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Top Up
             </button>
@@ -491,7 +496,7 @@ export default function UserPaymentCards({
       {/* =========================================================
                              LOYALTY CARDS SECTION
           ========================================================= */}
-      <div className="mt-12 mb-6 flex items-center justify-between">
+      <div className="mb-6 mt-12 flex items-center justify-between">
         <div>
           <h3 className="text-xl font-black text-gray-900 dark:text-white">
             Loyalty & Rewards
@@ -512,7 +517,7 @@ export default function UserPaymentCards({
 
       <div className="relative pb-24">
         {/* 'Coming Soon' Overlay */}
-        <div className="absolute top-0 left-0 z-20 h-full w-full rounded-[2rem] flex items-center justify-center bg-white/40 dark:bg-black/40 backdrop-blur-sm">
+        <div className="absolute left-0 top-0 z-20 flex h-full w-full items-center justify-center rounded-[2rem] bg-white/40 backdrop-blur-sm dark:bg-black/40">
           <div className="rounded-2xl border border-white/30 bg-black/60 px-8 py-4 shadow-2xl backdrop-blur-md">
             <h2 className="text-xl font-black uppercase tracking-[0.3em] text-white">
               Launching Soon
@@ -520,83 +525,89 @@ export default function UserPaymentCards({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 opacity-60 pointer-events-none filter blur-[2px] blur-sm transition-all">
-        {/* Default Mock: The Stamp Loyalty Card (Fashion Shop) */}
-        <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-pink-500 to-rose-600 p-6 text-white shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl">
-          <div className="mb-6 flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                PUNCH CARD
-              </p>
-              <h4 className="flex items-center gap-2 text-lg font-bold tracking-widest text-white">
-                <Scissors size={20} />
-                KIGALI FASHION
-              </h4>
-            </div>
-            <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur-md">
-              7 / 10
-            </div>
-          </div>
-          
-          <div className="mb-4">
-            <p className="mb-3 text-xs font-medium opacity-90">Buy 10 items, get 1 FREE!</p>
-            <div className="grid grid-cols-5 gap-3">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 backdrop-blur-sm transition-all ${
-                    i < 7 ? 'bg-white text-rose-500 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'bg-transparent text-white/20'
-                  }`}
-                >
-                  <Gift size={20} className={i < 7 ? '' : 'hidden'} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Default Mock: The Barcode Loyalty Card (Supermarket) */}
-        <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 p-6 text-white shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl">
-          {/* Abstract circles */}
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white opacity-10 blur-xl"></div>
-          
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                MEMBERSHIP
-              </p>
-              <h4 className="flex items-center gap-2 text-lg font-bold tracking-wide text-white">
-                <ShoppingCart size={20} />
-                SIMBA SUPERMARKET
-              </h4>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-white p-4 text-center shadow-inner">
-            <div className="mx-auto flex justify-center overflow-hidden">
-              <div className="mix-blend-multiply">
-                <Barcode 
-                  value={scannedBarcode || "SM-9048-2831"} 
-                  width={2} 
-                  height={50} 
-                  background="transparent" 
-                  lineColor="#1e3a8a" 
-                  displayValue={true} 
-                  fontSize={14} 
-                  margin={0} 
-                />
+        <div className="pointer-events-none grid grid-cols-1 gap-6 opacity-60 blur-[2px] blur-sm filter transition-all sm:grid-cols-2">
+          {/* Default Mock: The Stamp Loyalty Card (Fashion Shop) */}
+          <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-pink-500 to-rose-600 p-6 text-white shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl">
+            <div className="mb-6 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+                  PUNCH CARD
+                </p>
+                <h4 className="flex items-center gap-2 text-lg font-bold tracking-widest text-white">
+                  <Scissors size={20} />
+                  KIGALI FASHION
+                </h4>
+              </div>
+              <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur-md">
+                7 / 10
               </div>
             </div>
-            <p className="mt-2 text-[10px] font-bold text-gray-400">Cashier: Scan at checkout</p>
+
+            <div className="mb-4">
+              <p className="mb-3 text-xs font-medium opacity-90">
+                Buy 10 items, get 1 FREE!
+              </p>
+              <div className="grid grid-cols-5 gap-3">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 backdrop-blur-sm transition-all ${
+                      i < 7
+                        ? "bg-white text-rose-500 shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                        : "bg-transparent text-white/20"
+                    }`}
+                  >
+                    <Gift size={20} className={i < 7 ? "" : "hidden"} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Default Mock: The Barcode Loyalty Card (Supermarket) */}
+          <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 p-6 text-white shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl">
+            {/* Abstract circles */}
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white opacity-10 blur-xl"></div>
+
+            <div className="mb-4 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+                  MEMBERSHIP
+                </p>
+                <h4 className="flex items-center gap-2 text-lg font-bold tracking-wide text-white">
+                  <ShoppingCart size={20} />
+                  SIMBA SUPERMARKET
+                </h4>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-white p-4 text-center shadow-inner">
+              <div className="mx-auto flex justify-center overflow-hidden">
+                <div className="mix-blend-multiply">
+                  <Barcode
+                    value={scannedBarcode || "SM-9048-2831"}
+                    width={2}
+                    height={50}
+                    background="transparent"
+                    lineColor="#1e3a8a"
+                    displayValue={true}
+                    fontSize={14}
+                    margin={0}
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] font-bold text-gray-400">
+                Cashier: Scan at checkout
+              </p>
+            </div>
           </div>
         </div>
       </div>
-     </div>
 
       {showScanner && (
-        <BarcodeScanner 
-           onBarcodeDetected={handleBarcodeDetected} 
-           onClose={() => setShowScanner(false)} 
+        <BarcodeScanner
+          onBarcodeDetected={handleBarcodeDetected}
+          onClose={() => setShowScanner(false)}
         />
       )}
     </>

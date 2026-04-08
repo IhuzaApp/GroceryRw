@@ -587,17 +587,17 @@ function MessagesPage() {
               <div className="ml-3 h-5 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
             </div>
             <div className="flex-1 space-y-6 p-6">
-               <div className="flex gap-3">
-                 <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
-                 <div className="h-20 w-1/2 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
-               </div>
-               <div className="flex justify-end gap-3">
-                 <div className="h-16 w-1/3 animate-pulse rounded-2xl rounded-tr-none bg-green-50 dark:bg-green-900/20" />
-               </div>
-               <div className="flex gap-3">
-                 <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
-                 <div className="h-12 w-1/3 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
-               </div>
+              <div className="flex gap-3">
+                <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                <div className="h-20 w-1/2 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
+              </div>
+              <div className="flex justify-end gap-3">
+                <div className="h-16 w-1/3 animate-pulse rounded-2xl rounded-tr-none bg-green-50 dark:bg-green-900/20" />
+              </div>
+              <div className="flex gap-3">
+                <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                <div className="h-12 w-1/3 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
+              </div>
             </div>
             <div className="border-t border-gray-100 p-4 dark:border-gray-800">
               <div className="h-12 w-full animate-pulse rounded-full bg-gray-100 dark:bg-gray-800" />

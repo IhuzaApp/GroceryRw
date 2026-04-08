@@ -55,21 +55,22 @@ export default function UserPreference() {
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as any);
-    
+
     let languageName = "English";
     if (newLanguage === "rw") languageName = "Kinyarwanda";
     if (newLanguage === "fr") languageName = "French";
     if (newLanguage === "sw") languageName = "Swahili";
-      
+
     // Set the Google Translate cookie
     if (newLanguage === "en") {
-      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     } else {
       document.cookie = `googtrans=/en/${newLanguage}; path=/`;
     }
-    
+
     toast.success(`Language changed to ${languageName}. Reloading...`);
-    
+
     // Reload to apply the Google translation to the DOM
     setTimeout(() => {
       window.location.reload();

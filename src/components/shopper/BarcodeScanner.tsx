@@ -95,7 +95,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       >
         {/* Header */}
         <div
-          className={`flex items-center justify-between px-6 pt-8 pb-6 sm:px-8`}
+          className={`flex items-center justify-between px-6 pb-6 pt-8 sm:px-8`}
         >
           <div className="flex items-center gap-4">
             <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
@@ -115,9 +115,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="text-xl font-black tracking-tight">Scan Barcode</h3>
+              <h3 className="text-xl font-black tracking-tight">
+                Scan Barcode
+              </h3>
               <p
-                className={`text-xs font-semibold tracking-wider uppercase mt-0.5 ${
+                className={`mt-0.5 text-xs font-semibold uppercase tracking-wider ${
                   theme === "dark" ? "text-emerald-400" : "text-emerald-600"
                 }`}
               >
@@ -192,12 +194,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
                 {/* Dark Vignette outside frame */}
-                <div className="absolute -inset-96 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-none" />
+                <div className="pointer-events-none absolute -inset-96 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
 
                 {/* Laser Frame bounds */}
-                <div className="h-40 w-64 rounded-xl border border-white/20 sm:h-52 sm:w-80 overflow-hidden relative">
-                   {/* Scanning Laser Beam Effect */}
-                  <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-transparent via-green-400/40 to-green-400/90 shadow-[0_5px_20px_rgba(74,222,128,0.5)] animate-[bounce_2s_infinite]" />
+                <div className="relative h-40 w-64 overflow-hidden rounded-xl border border-white/20 sm:h-52 sm:w-80">
+                  {/* Scanning Laser Beam Effect */}
+                  <div className="absolute left-0 top-0 h-[30%] w-full animate-[bounce_2s_infinite] bg-gradient-to-b from-transparent via-green-400/40 to-green-400/90 shadow-[0_5px_20px_rgba(74,222,128,0.5)]" />
                 </div>
 
                 {/* Cyberpunk Corner Indicators */}
@@ -221,9 +223,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             </div>
 
             {/* Tactical HUD Additions */}
-            <div className="absolute z-10 bottom-4 left-1/2 -translate-x-1/2 transform whitespace-nowrap">
-              <div className="rounded-full bg-black/50 px-4 py-2 backdrop-blur-md border border-white/10">
-                <p className="flex items-center gap-2 text-xs font-bold tracking-widest text-green-400 uppercase">
+            <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 transform whitespace-nowrap">
+              <div className="rounded-full border border-white/10 bg-black/50 px-4 py-2 backdrop-blur-md">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-green-400">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
@@ -234,7 +236,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

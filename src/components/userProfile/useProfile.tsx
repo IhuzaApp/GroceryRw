@@ -268,7 +268,9 @@ export default function UserProfile() {
 
   // Handle avatar change from avatar picker modal
   const handleAvatarChange = (newAvatarUrl: string) => {
-    setUser((prev) => prev ? { ...prev, profile_picture: newAvatarUrl } : prev);
+    setUser((prev) =>
+      prev ? { ...prev, profile_picture: newAvatarUrl } : prev
+    );
   };
 
   // Show loading state while determining screen size
@@ -277,7 +279,7 @@ export default function UserProfile() {
       <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 md:bg-transparent">
         {/* Mobile Header Background Space */}
         <div className="h-32 w-full animate-pulse rounded-b-3xl bg-gray-200 dark:bg-gray-800 md:hidden" />
-        
+
         <div className="mx-auto w-full max-w-4xl px-4 py-6 md:mt-8">
           {/* Profile Details Skeleton */}
           <div className="-mt-16 mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800/50 md:mt-0">

@@ -82,7 +82,6 @@
 }
 
 @layer utilities {
-
   /* Hide scrollbar for Chrome, Safari and Opera */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -516,7 +515,7 @@ a:visited {
 }
 
 /* Ensure each video takes full height and snaps properly */
-.reels-container>div {
+.reels-container > div {
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
@@ -528,7 +527,7 @@ a:visited {
     /* Less aggressive snapping on desktop */
   }
 
-  .reels-container>div {
+  .reels-container > div {
     scroll-snap-stop: normal;
     /* Allow scrolling past multiple items */
   }
@@ -588,7 +587,7 @@ a:visited {
     /* Aggressive snapping on mobile */
   }
 
-  .reels-container>div {
+  .reels-container > div {
     scroll-snap-stop: always;
     /* Always stop at each video on mobile */
   }
@@ -618,7 +617,7 @@ a:visited {
 
 /* Main Toast Container (default react-hot-toast container) */
 /* Target the default toast container that doesn't have batch-notification-container class */
-[data-react-hot-toast]>div:not(.batch-notification-container) {
+[data-react-hot-toast] > div:not(.batch-notification-container) {
   /* Mobile: top-center */
   top: 1rem !important;
   left: 50% !important;
@@ -628,7 +627,7 @@ a:visited {
 
 /* Desktop: bottom-center for main toasts */
 @media (min-width: 768px) {
-  [data-react-hot-toast]>div:not(.batch-notification-container) {
+  [data-react-hot-toast] > div:not(.batch-notification-container) {
     top: auto !important;
     bottom: 2rem !important;
     left: 50% !important;
@@ -644,15 +643,24 @@ a:visited {
 */
 
 /* Hide batch notifications from the main toast container */
-[data-react-hot-toast]>div:not(.batch-notification-container) .batch-notification-toast,
-[data-react-hot-toast]>div:not(.batch-notification-container) .batch-warning-toast,
-[data-react-hot-toast]>div:not(.batch-notification-container) [class*="batch-notification-toast"],
-[data-react-hot-toast]>div:not(.batch-notification-container) [class*="batch-warning-toast"] {
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-notification-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-warning-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  [class*="batch-notification-toast"],
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  [class*="batch-warning-toast"] {
   display: none !important;
 }
 
 /* Hide regular notifications from the batch notification container */
-.batch-notification-container>div:not([class*="batch-notification-toast"]):not([class*="batch-warning-toast"]) {
+.batch-notification-container
+  > div:not([class*="batch-notification-toast"]):not([class*="batch-warning-toast"]) {
   display: none !important;
 }
 
@@ -677,7 +685,7 @@ a:visited {
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
   }
 
-  .batch-notification-toast>div {
+  .batch-notification-toast > div {
     border-radius: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
@@ -698,7 +706,7 @@ a:visited {
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
   }
 
-  .batch-warning-toast>div {
+  .batch-warning-toast > div {
     border-radius: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
@@ -788,7 +796,6 @@ body.hide-bottom-bar nav {
 
 /* Prevent auto-zoom on mobile browsers (specifically iOS Safari) when focusing inputs */
 @media screen and (max-width: 767px) {
-
   input,
   textarea,
   select {
@@ -810,14 +817,14 @@ body {
 }
 
 /* Hide the banner iframe specifically */
-iframe.goog-te-banner-frame, 
+iframe.goog-te-banner-frame,
 iframe.skiptranslate {
   display: none !important;
   visibility: hidden !important;
 }
 
 /* Hide the translation gadget div entirely */
-.goog-te-gadget, 
+.goog-te-gadget,
 #google_translate_element {
   display: none !important;
   height: 0 !important;
@@ -826,7 +833,7 @@ iframe.skiptranslate {
 }
 
 /* Hide the popup tooltip that appears on hover */
-#goog-gt-tt, 
+#goog-gt-tt,
 .goog-te-balloon-frame {
   display: none !important;
 }
