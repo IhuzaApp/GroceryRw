@@ -841,3 +841,22 @@ iframe.skiptranslate {
 .skiptranslate > iframe.goog-te-banner-frame {
   display: none !important;
 }
+
+/* Nuke all Google Translate logos, loaders, and branding */
+.goog-logo-link,
+.goog-te-gadget span,
+.goog-te-gadget img,
+.goog-te-spinner-pos,
+.goog-te-spinner-animation,
+.goog-te-gadget-simple,
+.goog-te-gadget-icon,
+img[src*="translate.google.com"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Eliminate any Google-injected tooltips completely via wildcard */
+div[id^="goog-gt-"] {
+  display: none !important;
+}
