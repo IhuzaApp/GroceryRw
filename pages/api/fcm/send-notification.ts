@@ -10,19 +10,19 @@ export default async function handler(
   }
 
   try {
-    const { recipientId, senderName, message, orderId, conversationId } =
-      req.body;
+    const {
+      recipientId,
+      senderName,
+      message,
+      orderId,
+      conversationId,
+      collectionPath,
+    } = req.body;
 
-    if (
-      !recipientId ||
-      !senderName ||
-      !message ||
-      !orderId ||
-      !conversationId
-    ) {
+    if (!recipientId || !senderName || !message || !conversationId) {
       return res.status(400).json({
         error:
-          "Missing required fields: recipientId, senderName, message, orderId, conversationId",
+          "Missing required fields: recipientId, senderName, message, conversationId",
       });
     }
 
@@ -31,7 +31,8 @@ export default async function handler(
       senderName,
       message,
       orderId,
-      conversationId
+      conversationId,
+      collectionPath
     );
     return res.status(200).json({ success: true });
   } catch (error) {

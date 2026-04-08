@@ -212,7 +212,7 @@ export default function HeaderLayout() {
           shadow-[0_2px_24px_0_rgba(0,0,0,0.08)] backdrop-blur-xl
           transition-all
           duration-300 dark:border-white/10
-          dark:bg-gray-900/80
+          dark:bg-[var(--bg-primary)]
           dark:shadow-[0_2px_24px_0_rgba(0,0,0,0.4)] md:block
         "
       >

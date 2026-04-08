@@ -8,52 +8,26 @@ import {
   orderBy,
   getDocs,
   onSnapshot,
-  doc,
-  updateDoc,
   Timestamp,
-  Unsubscribe,
-  addDoc,
-  serverTimestamp,
+  or,
+  doc,
   getDoc,
 } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
-import { formatCurrency } from "../../src/lib/formatCurrency";
+import { Button } from "rsuite";
 import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage";
 import MobileMessagePage from "../../src/components/messages/MobileMessagePage";
+import MobileChatPage from "../../src/components/messages/MobileChatPage";
+import { useTheme } from "../../src/context/ThemeContext";
 import {
-  containsBlockedPii,
-  getBlockedMessage,
-} from "../../src/lib/chatPiiBlock";
-
-// Helper to display timestamps as relative time ago
-function timeAgo(timestamp: any) {
-  if (!timestamp) return "";
-
-  const now = new Date().getTime();
-  const date =
-    timestamp instanceof Timestamp
-      ? timestamp.toDate().getTime()
-      : new Date(timestamp).getTime();
-
-  const diff = now - date;
-  const seconds = Math.floor(diff / 1000);
-
-  if (seconds < 60) return `${seconds} sec${seconds !== 1 ? "s" : ""} ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min${minutes !== 1 ? "s" : ""} ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-
-  return new Date(date).toLocaleDateString();
-}
+  ChatCollection,
+  ChatConversation as Conversation,
+} from "../../src/services/chatService";
 
 // Helper to format order ID
 function formatOrderID(id?: string | number): string {
@@ -62,43 +36,40 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
-// Define message interface
-interface Message {
-  id: string;
-  text?: string;
-  message?: string;
-  senderId: string;
-  senderType: "customer" | "shopper";
-  recipientId: string;
-  timestamp: any;
-  read: boolean;
-}
-
-// Define conversation interface
-interface Conversation {
-  id: string;
-  orderId: string;
-  customerId: string;
-  shopperId: string;
-  lastMessage: string;
-  lastMessageTime: any;
-  unreadCount: number;
-  order?: any;
-}
-
 function MessagesPage() {
+  const { theme } = useTheme();
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [conversationsFromCustomer, setConversationsFromCustomer] = useState<
+
+  const [orderConversations, setOrderConversations] = useState<Conversation[]>(
+    []
+  );
+  const [businessConversations, setBusinessConversations] = useState<
     Conversation[]
   >([]);
   const [conversationsFromOrders, setConversationsFromOrders] = useState<
     Conversation[]
   >([]);
-  // Merged and deduped: customerId match + conversations for user's orders (fallback for ID mismatch e.g. guest upgrade)
+
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingBusiness, setLoadingBusiness] = useState(true);
+  const [businessAccountId, setBusinessAccountId] = useState<string | null>(
+    null
+  );
+  const [loadingBusinessAccount, setLoadingBusinessAccount] = useState(true);
+  const loading =
+    loadingOrders ||
+    loadingBusiness ||
+    (status === "authenticated" && loadingBusinessAccount);
+
+  // Merged and deduped
   const conversations = React.useMemo(() => {
     const byId = new Map<string, Conversation>();
-    [...conversationsFromCustomer, ...conversationsFromOrders].forEach((c) => {
+    [
+      ...orderConversations,
+      ...businessConversations,
+      ...conversationsFromOrders,
+    ].forEach((c) => {
       if (c.id && !byId.has(c.id)) byId.set(c.id, c);
     });
     return Array.from(byId.values()).sort((a, b) => {
@@ -110,23 +81,21 @@ function MessagesPage() {
         : 0;
       return timeB - timeA;
     });
-  }, [conversationsFromCustomer, conversationsFromOrders]);
+  }, [orderConversations, businessConversations, conversationsFromOrders]);
+
   const [orders, setOrders] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(
     undefined
   );
-  const [sendError, setSendError] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | undefined
+  >(undefined);
 
   // Check if mobile device
   useEffect(() => {
@@ -138,85 +107,226 @@ function MessagesPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Handle orderId query parameter to auto-select conversation (no auto-creation)
+  // Handle query parameters for auto-selection
   useEffect(() => {
-    const { orderId } = router.query;
+    const { orderId, conversationId, chat } = router.query;
+    const activeChatId = chat || conversationId;
+
     if (orderId && typeof orderId === "string") {
       setSelectedOrderId(orderId);
-      // If mobile, navigate to the specific order chat page that handles creation safely
-      if (isMobile) {
-        router.push(`/Messages/${orderId}`);
+    }
+    if (activeChatId && typeof activeChatId === "string") {
+      setSelectedConversationId(activeChatId);
+      if (!isMobile) {
+        setIsDrawerOpen(true);
       }
+    } else {
+      setSelectedConversationId(undefined);
+      setIsDrawerOpen(false);
     }
   }, [router.query, isMobile]);
 
-  // Fetch conversations and their associated orders
+  // Fetch user's business account ID
   useEffect(() => {
-    // Only fetch if user is authenticated
     if (status === "authenticated" && session?.user?.id) {
-      const userId = session.user.id;
-
-      const fetchConversationsAndOrders = async () => {
+      const fetchBusinessAccount = async () => {
         try {
-          setLoading(true);
-
-          // Get conversations where the current user is either the customer or shopper
-          const conversationsRef = collection(db, "chat_conversations");
-
-          // Query for conversations where user is either customer or shopper
-          const q = query(
-            conversationsRef,
-            where("customerId", "==", userId)
-            // Note: We might need to also query for shopperId, but for now let's focus on customerId
-          );
-
-          // Set up real-time listener for conversations (customerId match)
-          const unsubscribe = onSnapshot(
-            q,
-            async (snapshot) => {
-              const conversationList = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-                lastMessageTime:
-                  doc.data().lastMessageTime instanceof Timestamp
-                    ? doc.data().lastMessageTime.toDate()
-                    : doc.data().lastMessageTime,
-              })) as Conversation[];
-
-              setConversationsFromCustomer(conversationList);
-
-              setLoading(false);
-            },
-            (error) => {
-              setLoading(false);
+          const res = await fetch("/api/queries/check-business-account");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.hasAccount && data.account?.id) {
+              setBusinessAccountId(data.account.id);
             }
-          );
-
-          return unsubscribe;
-        } catch (error) {
-          setLoading(false);
-          return undefined;
+          }
+        } catch (err) {
+          console.error("Error fetching business account:", err);
+        } finally {
+          setLoadingBusinessAccount(false);
         }
       };
-
-      const unsubscribePromise = fetchConversationsAndOrders();
-      return () => {
-        unsubscribePromise.then((unsubscribe) => {
-          if (unsubscribe) {
-            unsubscribe();
-          }
-        });
-      };
+      fetchBusinessAccount();
+    } else if (status !== "loading") {
+      setLoadingBusinessAccount(false);
     }
   }, [status, session?.user?.id]);
 
-  // Fallback: fetch conversations by user's order IDs (catches guest-upgrade or customerId mismatch)
+  // Real-time listener for Order Conversations
   useEffect(() => {
-    if (status !== "authenticated" || !session?.user?.id) return;
+    if (status === "authenticated" && session?.user?.id) {
+      const userId = session.user.id;
+      if (!db) return;
+
+      const q = query(
+        collection(db!, "chat_conversations"),
+        or(where("customerId", "==", userId), where("shopperId", "==", userId)),
+        orderBy("lastMessageTime", "desc")
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const list = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            collectionPath: "chat_conversations" as ChatCollection,
+            ...doc.data(),
+            lastMessageTime:
+              doc.data().lastMessageTime instanceof Timestamp
+                ? doc.data().lastMessageTime.toDate()
+                : doc.data().lastMessageTime,
+          })) as Conversation[];
+          console.log(
+            `🔍 [Messages] Received ${list.length} order conversations`
+          );
+          setOrderConversations((prev) => {
+            const newIds = new Set(list.map((c) => c.id));
+            const manualItems = prev.filter((c) => !newIds.has(c.id));
+            return [...list, ...manualItems];
+          });
+          setLoadingOrders(false);
+        },
+        (err) => {
+          console.error("❌ [Messages] Order conversations error:", err);
+          setLoadingOrders(false);
+        }
+      );
+
+      return () => unsubscribe();
+    }
+  }, [status, session?.user?.id]);
+
+  // Real-time listener for Business Conversations
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.id) {
+      const userId = session.user.id;
+      if (!db) return;
+
+      const constraints = [
+        where("businessId", "==", userId),
+        where("counterpartId", "==", userId),
+      ];
+
+      if (businessAccountId) {
+        constraints.push(where("businessId", "==", businessAccountId));
+        constraints.push(where("counterpartId", "==", businessAccountId));
+      }
+
+      const q = query(
+        collection(db!, "business_conversations"),
+        or(...constraints),
+        orderBy("lastMessageTime", "desc")
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const list = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            collectionPath: "business_conversations" as ChatCollection,
+            ...doc.data(),
+            lastMessageTime:
+              doc.data().lastMessageTime instanceof Timestamp
+                ? doc.data().lastMessageTime.toDate()
+                : doc.data().lastMessageTime,
+          })) as Conversation[];
+          if (list.length > 0) {
+            console.log("🔍 [Messages] Sample Business Chat Data:", list[0]);
+          }
+          console.log(
+            `🔍 [Messages] Received ${list.length} business conversations`
+          );
+          setBusinessConversations((prev) => {
+            // Merge snapshot with existing items (preserving manually fetched ones not in snapshot yet)
+            const newIds = new Set(list.map((c) => c.id));
+            const manualItems = prev.filter((c) => !newIds.has(c.id));
+            return [...list, ...manualItems];
+          });
+          setLoadingBusiness(false);
+        },
+        (err) => {
+          console.error("❌ [Messages] Business conversations error:", err);
+          setLoadingBusiness(false);
+        }
+      );
+
+      return () => unsubscribe();
+    }
+  }, [status, session?.user?.id, businessAccountId]);
+
+  // Fetch specific conversation from query params if not in list
+  useEffect(() => {
+    if (!db || status !== "authenticated") return;
+    const { conversationId, collection: collectionName } = router.query;
+
+    if (
+      conversationId &&
+      typeof conversationId === "string" &&
+      collectionName &&
+      typeof collectionName === "string"
+    ) {
+      const coll = collectionName as ChatCollection;
+      const alreadyInList = [
+        ...orderConversations,
+        ...businessConversations,
+        ...conversationsFromOrders,
+      ].some((c) => c.id === conversationId);
+
+      if (!alreadyInList) {
+        console.log(
+          `🔍 [Messages] Deep link conversation ${conversationId} not in list, fetching specifically...`
+        );
+        const fetchSpec = async () => {
+          try {
+            const docRef = doc(db!, coll, conversationId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const conv = {
+                id: docSnap.id,
+                collectionPath: coll,
+                ...data,
+                lastMessageTime:
+                  data.lastMessageTime instanceof Timestamp
+                    ? data.lastMessageTime.toDate()
+                    : data.lastMessageTime,
+              } as Conversation;
+
+              if (coll === "business_conversations") {
+                setBusinessConversations((prev) => [conv, ...prev]);
+              } else {
+                setOrderConversations((prev) => [conv, ...prev]);
+              }
+              console.log(
+                `🔍 [Messages] Successfully fetched deep link conversation:`,
+                conv
+              );
+            } else {
+              console.warn(
+                `⚠️ [Messages] Deep link conversation not found in ${coll}: ${conversationId}`
+              );
+            }
+          } catch (err) {
+            console.error(
+              "❌ [Messages] Error fetching deep link conversation:",
+              err
+            );
+          }
+        };
+        fetchSpec();
+      }
+    }
+  }, [
+    router.query,
+    db,
+    status,
+    orderConversations.length,
+    businessConversations.length,
+  ]);
+
+  // Fallback for guest-upgraded orders or ID mismatches
+  useEffect(() => {
+    if (!db || status !== "authenticated" || !session?.user?.id) return;
 
     let cancelled = false;
-    const conversationsRef = collection(db, "chat_conversations");
-
     const run = async () => {
       try {
         const res = await fetch(
@@ -224,26 +334,29 @@ function MessagesPage() {
         );
         if (!res.ok || cancelled) return;
         const data = await res.json();
-        const ordersList = data.orders || [];
-        const orderIds = ordersList
+        const orderIds = (data.orders || [])
           .map((o: any) => o.id)
           .filter(
             (id: string) =>
               id &&
-              typeof id === "string" &&
-              id.trim() !== "" &&
               /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
                 id
               )
           )
-          .slice(0, 30); // Firestore "in" limit
+          .slice(0, 30);
+
         if (orderIds.length === 0 || cancelled) return;
 
-        const q = query(conversationsRef, where("orderId", "in", orderIds));
+        const q = query(
+          collection(db!, "chat_conversations"),
+          where("orderId", "in", orderIds)
+        );
         const snapshot = await getDocs(q);
         if (cancelled) return;
+
         const list = snapshot.docs.map((doc) => ({
           id: doc.id,
+          collectionPath: "chat_conversations" as ChatCollection,
           ...doc.data(),
           lastMessageTime:
             doc.data().lastMessageTime instanceof Timestamp
@@ -263,24 +376,85 @@ function MessagesPage() {
     };
   }, [status, session?.user?.id]);
 
-  // Fetch order details for all conversations (merged list)
+  // Fetch counterpart details for business conversations
+  useEffect(() => {
+    const businessConversationsToFetch = conversations
+      .filter(
+        (c) =>
+          c.collectionPath === "business_conversations" &&
+          c.counterpartId &&
+          !c.counterpartName
+      )
+      .map((c) => c.counterpartId!);
+
+    if (businessConversationsToFetch.length === 0) return;
+
+    let cancelled = false;
+    const fetchCounterparts = async () => {
+      const uniqueIds = Array.from(new Set(businessConversationsToFetch));
+      const promises = uniqueIds.map(async (uid) => {
+        try {
+          const userRef = doc(db!, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            return {
+              id: uid,
+              name: userSnap.data().name || userSnap.data().full_name,
+              avatar:
+                userSnap.data().profile_picture ||
+                userSnap.data().profile_photo,
+            };
+          }
+          return { id: uid, name: "Unknown User" };
+        } catch (error) {
+          return { id: uid, name: "Error Loading" };
+        }
+      });
+
+      const results = await Promise.all(promises);
+      if (cancelled) return;
+
+      setBusinessConversations((prev) =>
+        prev.map((conv) => {
+          const result = results.find((r) => r.id === conv.counterpartId);
+          if (result && !conv.counterpartName) {
+            return {
+              ...conv,
+              counterpartName: result.name,
+              counterpartAvatar: result.avatar,
+            };
+          }
+          return conv;
+        })
+      );
+    };
+
+    fetchCounterparts();
+    return () => {
+      cancelled = true;
+    };
+  }, [conversations]);
+
+  // Fetch order details for order-type conversations
   useEffect(() => {
     const orderIds = conversations
-      .map((c) => c.orderId)
-      .filter((id) => id && typeof id === "string" && id.trim() !== "");
+      .filter((c) => c.collectionPath === "chat_conversations" && c.orderId)
+      .map((c) => c.orderId!)
+      .filter((id) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          id
+        )
+      );
+
     if (orderIds.length === 0) return;
 
     let cancelled = false;
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const validIds = orderIds.filter((id) => uuidRegex.test(id));
-
     const fetchOrders = async () => {
-      // Only fetch orders we don't already have (avoid refetch on every merge)
-      const toFetch = validIds.filter(
+      const toFetch = orderIds.filter(
         (id) => !orders[id] || (orders[id] as any)?.error
       );
       if (toFetch.length === 0) return;
+
       const promises = toFetch.map(async (orderId) => {
         try {
           const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
@@ -292,8 +466,10 @@ function MessagesPage() {
           return { orderId, order: { error: true } };
         }
       });
+
       const results = await Promise.all(promises);
       if (cancelled) return;
+
       setOrders((prev) => {
         const next = { ...prev };
         let changed = false;
@@ -320,32 +496,38 @@ function MessagesPage() {
     };
   }, [conversations, orders]);
 
-  // Filter and sort conversations
   const filteredConversations = conversations
     .filter((conversation) => {
-      // Apply search filter
       if (searchQuery) {
-        const order = orders[conversation.orderId];
-        const shopName = order?.shop?.name?.toLowerCase() || "";
-        const orderNumber = formatOrderID(
-          order?.OrderID || conversation.orderId
-        ).toLowerCase();
-        const messageText = conversation.lastMessage?.toLowerCase() || "";
-
         const searchLower = searchQuery.toLowerCase();
-        return (
-          shopName.includes(searchLower) ||
-          orderNumber.includes(searchLower) ||
-          messageText.includes(searchLower)
-        );
-      }
 
-      // Apply unread filter
-      if (showUnreadOnly) {
-        return conversation.unreadCount > 0;
-      }
+        // Match by message text
+        if (conversation.lastMessage?.toLowerCase().includes(searchLower))
+          return true;
 
-      return true;
+        // Match by title (for business chats)
+        if (conversation.title?.toLowerCase().includes(searchLower))
+          return true;
+        if (conversation.counterpartName?.toLowerCase().includes(searchLower))
+          return true;
+        if (conversation.counterpartId?.toLowerCase().includes(searchLower))
+          return true;
+
+        // Match by order details
+        if (conversation.orderId) {
+          const order = orders[conversation.orderId];
+          const shopName = order?.shop?.name?.toLowerCase() || "";
+          const orderNumber = formatOrderID(
+            order?.OrderID || conversation.orderId
+          ).toLowerCase();
+          return (
+            shopName.includes(searchLower) || orderNumber.includes(searchLower)
+          );
+        }
+
+        return false;
+      }
+      return showUnreadOnly ? conversation.unreadCount > 0 : true;
     })
     .sort((a, b) => {
       const timeA = a.lastMessageTime
@@ -354,238 +536,71 @@ function MessagesPage() {
       const timeB = b.lastMessageTime
         ? new Date(b.lastMessageTime).getTime()
         : 0;
-
-      // Sort by time
-      if (sortOrder === "newest") {
-        return timeB - timeA; // newest first
-      } else {
-        return timeA - timeB; // oldest first
-      }
+      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
     });
 
-  // Handle chat click
-  const handleChatClick = async (orderId: string) => {
-    if (isMobile) {
-      router.push(`/Messages/${orderId}`);
+  const handleChatClick = (orderId?: string, conversationId?: string) => {
+    if (isMobile && conversationId) {
+      router.push(
+        {
+          pathname: "/Messages",
+          query: {
+            ...router.query,
+            chat: conversationId,
+            orderId: orderId || "",
+          },
+        },
+        undefined,
+        { shallow: true }
+      );
     } else {
       setSelectedOrderId(orderId);
-      try {
-        // Get conversation ID and shopper data
-        const conversationsRef = collection(db, "chat_conversations");
-        const q = query(conversationsRef, where("orderId", "==", orderId));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const conversationDoc = querySnapshot.docs[0];
-          const conversationData = conversationDoc.data();
-          setConversationId(conversationDoc.id);
-
-          // Get shopper data
-          const shopperRef = doc(db, "users", conversationData.shopperId);
-          const shopperDoc = await getDoc(shopperRef);
-          const shopperData = shopperDoc.data();
-
-          // Set order with shopper data
-          let order = orders[orderId];
-
-          // If order doesn't have assignedTo data, fetch fresh data
-          if (!order?.assignedTo) {
-            try {
-              const res = await fetch(
-                `/api/queries/orderDetails?id=${orderId}`
-              );
-              if (res.ok) {
-                const data = await res.json();
-                order = data.order;
-              }
-            } catch (error) {
-              console.error("Error fetching fresh order data:", error);
-            }
-          }
-
-          const shopperObject = {
-            id: conversationData.shopperId,
-            name: shopperData?.name || order?.assignedTo?.name || "Shopper",
-            avatar:
-              shopperData?.avatar ||
-              order?.assignedTo?.profile_picture ||
-              "/images/ProfileImage.png",
-            phone: shopperData?.phone || order?.assignedTo?.phone,
-          };
-
-          setSelectedOrder({
-            ...order,
-            shopper: shopperObject,
-          });
-          setIsDrawerOpen(true);
-        }
-      } catch (error) {
-        console.error("Error getting conversation:", error);
-      }
+      setSelectedConversationId(conversationId);
+      setIsDrawerOpen(true);
     }
   };
 
-  // Handle conversation select for desktop
-  const handleConversationSelect = (orderId: string) => {
-    setSelectedOrderId(orderId);
-  };
-
-  // Set up messages listener
-  useEffect(() => {
-    if (!conversationId || !session?.user?.id) return;
-
-    // Set up listener for messages in this conversation
-    const messagesRef = collection(
-      db,
-      "chat_conversations",
-      conversationId,
-      "messages"
-    );
-    const q = query(messagesRef, orderBy("timestamp", "asc"));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const messagesList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          // Convert Firestore timestamp to regular Date if needed
-          timestamp:
-            doc.data().timestamp instanceof Timestamp
-              ? doc.data().timestamp.toDate()
-              : doc.data().timestamp,
-        })) as Message[];
-
-        setMessages(messagesList);
-
-        // Mark messages as read if they were sent to the current user
-        messagesList.forEach(async (message) => {
-          if (message.senderType === "shopper" && !message.read) {
-            const messageRef = doc(
-              db,
-              "chat_conversations",
-              conversationId,
-              "messages",
-              message.id
-            );
-            await updateDoc(messageRef, { read: true });
-
-            // Update unread count in conversation
-            const convRef = doc(db, "chat_conversations", conversationId);
-            await updateDoc(convRef, {
-              unreadCount: 0,
-            });
-          }
-        });
-      },
-      (error) => {
-        // Keep this error log for debugging purposes
-        console.error("Error in messages listener:", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [conversationId, session?.user?.id]);
-
-  // Handle sending a new message
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (
-      !newMessage.trim() ||
-      !session?.user?.id ||
-      !conversationId ||
-      !selectedOrder?.shopper?.id
-    ) {
-      return;
-    }
-
-    const text = newMessage.trim();
-    const piiCheck = containsBlockedPii(text);
-    if (piiCheck.blocked && piiCheck.reason) {
-      setSendError(getBlockedMessage(piiCheck.reason));
-      return;
-    }
-    setSendError(null);
-
-    try {
-      setIsSending(true);
-
-      // Add new message to Firestore
-      const messagesRef = collection(
-        db,
-        "chat_conversations",
-        conversationId,
-        "messages"
-      );
-      await addDoc(messagesRef, {
-        text: newMessage.trim(),
-        message: newMessage.trim(), // Also include message field for compatibility
-        senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        senderType: "customer",
-        recipientId: selectedOrder.shopper.id,
-        timestamp: serverTimestamp(),
-        read: false,
-      });
-
-      // Update conversation with last message
-      const convRef = doc(db, "chat_conversations", conversationId);
-      await updateDoc(convRef, {
-        lastMessage: newMessage.trim(),
-        lastMessageTime: serverTimestamp(),
-        unreadCount: 1, // Increment unread count for shopper
-      });
-
-      // Trigger FCM so shopper gets device + in-app notification (bell)
-      try {
-        await fetch("/api/fcm/send-notification", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recipientId: selectedOrder.shopper.id,
-            senderName: session.user.name || "Customer",
-            message: newMessage.trim(),
-            orderId: selectedOrder.id,
-            conversationId,
-          }),
-        });
-      } catch (fcmErr) {
-        console.warn("FCM send (non-blocking):", fcmErr);
-      }
-
-      // Clear input
-      setNewMessage("");
-    } catch (error) {
-      // Keep this error log for debugging purposes
-      console.error("Error sending message:", error);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // Render loading state
-  if (loading) {
+  if (loading && status === "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <img
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                className="h-16 w-16 animate-pulse"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        <div className="flex h-full w-full flex-col bg-[var(--bg-primary)] sm:flex-row">
+          {/* Sidebar Skeleton */}
+          <div className="h-full w-full border-r border-gray-100 p-4 dark:border-gray-800 sm:w-1/3 md:w-1/4">
+            <div className="mb-6 h-8 w-1/2 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <div className="mb-4 h-10 w-full animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Main Area Skeleton (hidden on small screens) */}
+          <div className="hidden h-full flex-1 flex-col sm:flex">
+            <div className="flex items-center border-b border-gray-100 p-4 dark:border-gray-800">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+              <div className="ml-3 h-5 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            </div>
+            <div className="flex-1 space-y-6 p-6">
+              <div className="flex gap-3">
+                <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                <div className="h-20 w-1/2 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
+              </div>
+              <div className="flex justify-end gap-3">
+                <div className="h-16 w-1/3 animate-pulse rounded-2xl rounded-tr-none bg-green-50 dark:bg-green-900/20" />
+              </div>
+              <div className="flex gap-3">
+                <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                <div className="h-12 w-1/3 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
               </div>
             </div>
-            <div className="text-center">
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                Loading...
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Loading conversations
-              </p>
+            <div className="border-t border-gray-100 p-4 dark:border-gray-800">
+              <div className="h-12 w-full animate-pulse rounded-full bg-gray-100 dark:bg-gray-800" />
             </div>
           </div>
         </div>
@@ -593,19 +608,14 @@ function MessagesPage() {
     );
   }
 
-  // Render authentication required
   if (status !== "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
+        <div className="flex h-full w-full items-center justify-center bg-[var(--bg-primary)]">
           <div className="text-center">
-            <div className="mb-4 text-6xl">⚠️</div>
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
               Authentication Required
             </h3>
-            <p className="mb-4 text-gray-500 dark:text-gray-400">
-              Please sign in to view your messages.
-            </p>
             <Link href="/login" passHref>
               <Button appearance="primary">Sign In</Button>
             </Link>
@@ -615,69 +625,25 @@ function MessagesPage() {
     );
   }
 
-  // Render empty state
-  if (conversations.length === 0) {
-    return (
-      <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center bg-white p-8 dark:bg-gray-900">
-          <div className="mx-auto w-full max-w-2xl">
-            <div className="mb-6 text-center">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Messages
-              </h1>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                Your conversations with shoppers
-              </p>
-            </div>
-            <Panel
-              className="text-center"
-              style={{
-                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-              }}
-            >
-              <Placeholder.Graph
-                style={{ height: 200 }}
-                active
-                className="mb-4"
-              />
-              <Placeholder.Paragraph rows={2} />
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                No conversations yet
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                You'll see your chat conversations with shoppers here once you
-                place orders.
-              </p>
-              <div className="mt-4">
-                <Link href="/CurrentPendingOrders" passHref>
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    className="!text-white [&_svg]:!text-white"
-                  >
-                    View Your Orders
-                  </Button>
-                </Link>
-              </div>
-            </Panel>
-          </div>
-        </div>
-      </RootLayout>
-    );
-  }
+  const selectedConversation = conversations.find(
+    (c) => c.id === selectedConversationId
+  );
 
-  // Render desktop view with new component
   if (!isMobile) {
     return (
       <AuthGuard requireAuth={true}>
         <RootLayout>
-          <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+          <div className="h-full w-full overflow-hidden bg-[var(--bg-primary)]">
             <DesktopMessagePage
               conversations={conversations}
               orders={orders}
               loading={loading}
-              onConversationSelect={handleConversationSelect}
+              onConversationSelect={(orderId, convId) => {
+                setSelectedOrderId(orderId);
+                setSelectedConversationId(convId);
+              }}
               selectedOrderId={selectedOrderId}
+              selectedConversationId={selectedConversationId}
             />
           </div>
         </RootLayout>
@@ -685,11 +651,61 @@ function MessagesPage() {
     );
   }
 
-  // Render mobile view with new component
+  // Render Mobile View
+  // If a chat is selected via URL query, render just the ChatPage full screen
+  if (selectedConversation && router.query.chat) {
+    return (
+      <AuthGuard requireAuth={true}>
+        <RootLayout hideNavigation={true}>
+          <div className="h-full w-full bg-[var(--bg-primary)]">
+            <MobileChatPage
+              conversationId={selectedConversation.id!}
+              collectionPath={selectedConversation.collectionPath}
+              orderId={selectedConversation.orderId}
+              counterpart={{
+                id:
+                  selectedConversation.shopperId ||
+                  selectedConversation.businessId ||
+                  selectedConversation.counterpartId ||
+                  selectedConversation.customerId ||
+                  "",
+                name:
+                  selectedConversation.title ||
+                  selectedConversation.counterpartName ||
+                  "User",
+                avatar:
+                  orders[selectedConversation.orderId!]?.shopper?.avatar ||
+                  selectedConversation.counterpartAvatar ||
+                  "/images/ProfileImage.png",
+                role:
+                  selectedConversation.collectionPath ===
+                  "business_conversations"
+                    ? "business"
+                    : "shopper",
+                phone: "",
+              }}
+              onBack={() => {
+                // Remove chat from query to return to list
+                const newQuery = { ...router.query };
+                delete newQuery.chat;
+                router.push(
+                  { pathname: "/Messages", query: newQuery },
+                  undefined,
+                  { shallow: true }
+                );
+              }}
+            />
+          </div>
+        </RootLayout>
+      </AuthGuard>
+    );
+  }
+
+  // Otherwise render the Chat List
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+        <div className="h-full w-full overflow-hidden bg-[var(--bg-primary)]">
           <MobileMessagePage
             conversations={conversations}
             orders={orders}
@@ -702,23 +718,9 @@ function MessagesPage() {
             setSortOrder={setSortOrder}
             onConversationClick={handleChatClick}
             selectedOrder={selectedOrder}
-            isDrawerOpen={isDrawerOpen}
-            onCloseDrawer={() => setIsDrawerOpen(false)}
+            isDrawerOpen={false}
+            onCloseDrawer={() => {}}
           />
-          {/* Customer Chat Drawer for Mobile */}
-          {selectedOrder && selectedOrder.shopper && (
-            <CustomerChatDrawer
-              orderId={selectedOrder.id}
-              shopper={{
-                id: selectedOrder.shopper.id,
-                name: selectedOrder.shopper.name,
-                avatar: selectedOrder.shopper.avatar,
-                phone: selectedOrder.shopper.phone,
-              }}
-              isOpen={isDrawerOpen}
-              onClose={() => setIsDrawerOpen(false)}
-            />
-          )}
         </div>
       </RootLayout>
     </AuthGuard>

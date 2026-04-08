@@ -32,10 +32,10 @@ import PlasBusinessOnboarding from "../../../src/components/business/PlasBusines
 import { BusinessOverview } from "../../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../../src/components/business/ServicesSection";
 import { StoresSection } from "../../../src/components/business/StoresSection";
-import BusinessChatDrawer from "../../../src/components/business/BusinessChatDrawer";
 import { PortalSkeleton } from "../../../src/components/business/PortalSkeleton";
 import { ContractDetailDrawer } from "../../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
+import { getOrCreateBusinessConversation } from "../../../src/services/chatService";
 
 // Data moved to individual components
 
@@ -51,7 +51,6 @@ export default function PlasBusinessPage() {
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
-  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -134,8 +133,6 @@ export default function PlasBusinessPage() {
             businessAccount={businessAccount}
             rfqCreated={rfqCreated}
             setRfqCreated={setRfqCreated}
-            isChatDrawerOpen={isChatDrawerOpen}
-            setIsChatDrawerOpen={setIsChatDrawerOpen}
           />
         </div>
       </div>
@@ -154,8 +151,6 @@ function BuyerDashboardContent({
   businessAccount,
   rfqCreated,
   setRfqCreated,
-  isChatDrawerOpen,
-  setIsChatDrawerOpen,
 }: {
   selectedQuote: any;
   setSelectedQuote: (quote: any) => void;
@@ -167,8 +162,6 @@ function BuyerDashboardContent({
   businessAccount?: any;
   rfqCreated: boolean;
   setRfqCreated: (value: boolean | ((prev: boolean) => boolean)) => void;
-  isChatDrawerOpen: boolean;
-  setIsChatDrawerOpen: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedContractId, setSelectedContractId] = useState<string | null>(
@@ -199,12 +192,50 @@ function BuyerDashboardContent({
     setIsQuoteModalOpen(false);
   };
 
-  const handleMessageQuoteSupplier = (supplierId: string) => {
-    router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
+  const handleMessageQuoteSupplier = async (
+    supplierId: string,
+    rfqId?: string,
+    title?: string
+  ) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateBusinessConversation(
+        businessAccount.id,
+        supplierId,
+        rfqId,
+        title
+      );
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting business conversation:", error);
+      toast.error("Failed to start conversation. Please try again.");
+    }
   };
 
-  const handleMessageContractSupplier = (supplierId: string) => {
-    router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
+  const handleMessageContractSupplier = async (supplierId: string) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateBusinessConversation(
+        businessAccount.id,
+        supplierId
+      );
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting business conversation:", error);
+      toast.error("Failed to start conversation. Please try again.");
+    }
   };
 
   const handleCreateRFQ = () => {
@@ -234,7 +265,7 @@ function BuyerDashboardContent({
       {/* Header */}
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
-        onBusinessChat={() => setIsChatDrawerOpen(true)}
+        onBusinessChat={() => router.push("/Messages")}
         businessName={businessAccount?.businessName}
       />
 
@@ -447,12 +478,6 @@ function BuyerDashboardContent({
         onClose={() => setIsCreateRFQOpen(false)}
         onSubmit={handleRFQSubmit}
         businessAccount={businessAccount}
-      />
-
-      {/* Business Chat Drawer */}
-      <BusinessChatDrawer
-        isOpen={isChatDrawerOpen}
-        onClose={() => setIsChatDrawerOpen(false)}
       />
 
       <ContractDetailDrawer

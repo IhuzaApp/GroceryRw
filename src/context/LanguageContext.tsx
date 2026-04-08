@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getTranslation } from "../utils/translations";
 
-type Language = "en" | "rw";
+type Language = "en" | "rw" | "fr" | "sw";
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string; // Translation function
+  t: (key: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -16,39 +16,23 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("en");
 
-  const updateLanguage = (newLanguage: Language) => {
-    // Update HTML lang attribute
-    if (typeof document !== "undefined") {
-      document.documentElement.lang = newLanguage;
-    }
-
-    // Save to localStorage
-    if (typeof window !== "undefined") {
-      localStorage.setItem("language", newLanguage);
-    }
-  };
-
+  // Load purely for local state tracking
   useEffect(() => {
-    // Load language from localStorage on mount
     if (typeof window !== "undefined") {
       const savedLanguage = localStorage.getItem("language") as Language | null;
-      const initialLanguage = savedLanguage || "en"; // Default to English
-
-      setLanguage(initialLanguage);
-      updateLanguage(initialLanguage);
+      if (savedLanguage) setLanguage(savedLanguage);
     }
   }, []);
 
   const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
-    updateLanguage(newLanguage);
-    // Language change will trigger re-renders in components using useLanguage hook
-    // No need to reload the page - React will handle the updates
+    if (typeof window !== "undefined") {
+      localStorage.setItem("language", newLanguage);
+    }
   };
 
-  // Translation function
   const t = (key: string) => {
-    return getTranslation(language, key);
+    return getTranslation("en", key); // We always just return the English raw text and let Google Translate handle the UI
   };
 
   return (

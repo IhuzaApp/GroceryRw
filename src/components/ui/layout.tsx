@@ -30,7 +30,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { hideBottomBar } = useHideBottomBar();
 
   const isChatPage = router.pathname.startsWith("/Messages/[orderId]");
-  const isMessagesPage = router.pathname === "/Messages";
+  const isMessagesList = router.pathname === "/Messages" && !router.query.chat;
+  const isMessagesChat = router.pathname === "/Messages" && !!router.query.chat;
   const isReelsPage = router.pathname === "/Reels";
   const isPlasBusinessPage =
     router.pathname === "/plasBusiness" ||
@@ -45,11 +46,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+    <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
         !isReelsPage &&
-        !isMessagesPage &&
         !isPlasBusinessPage &&
         !isStoresPage &&
         (isOrderDetailsPage || isPackageDetailsPage ? (
@@ -70,36 +70,41 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
           isChatPage ||
           isReelsPage ||
-          isMessagesPage ||
           isPlasBusinessPage ||
-          isStoresPage
+          isStoresPage ||
+          isMessagesChat
             ? ""
+            : isMessagesList
+            ? "pb-[60px] pt-0 md:pb-0"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
         }`}
         style={
-          isReelsPage || isMessagesPage
+          isReelsPage || isMessagesList || isMessagesChat
             ? {
                 margin: 0,
                 padding: 0,
-                height: "100vh",
-                minHeight: "100vh",
-                maxHeight: "100vh",
+                height: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
+                minHeight: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
+                maxHeight: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
                 overflow: "hidden",
               }
             : {}
         }
       >
         {/* Sidebar: hide on order details (mobile), show on desktop (SideBar has hidden md:block) */}
-        {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
+        {!isChatPage && !isReelsPage && !isMessagesList && !isMessagesChat && (
+          <SideBar />
+        )}
         <div
           className="[&_*]:text-inherit"
           style={
             isReelsPage ||
             isPlasBusinessPage ||
             isStoresPage ||
-            isMessagesPage ||
+            isMessagesList ||
+            isMessagesChat ||
             isOrderDetailsPage ||
             isPackageDetailsPage
               ? { height: "100%", width: "100%" }
@@ -110,12 +115,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         </div>
         {!isChatPage &&
           !isReelsPage &&
-          !isMessagesPage &&
+          !isMessagesChat &&
           !isStoresCheckoutPage &&
           !hideBottomBar && <BottomBar />}
       </main>
       {/* AI Chat - Available on all pages except chat pages */}
-      {!isChatPage && !isMessagesPage && <AIChatProvider />}
+      {!isChatPage && !isMessagesChat && <AIChatProvider />}
     </div>
   );
 }

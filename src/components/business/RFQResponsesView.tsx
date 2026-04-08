@@ -90,7 +90,11 @@ interface RFQResponsesViewProps {
   onBack: () => void;
   onAcceptResponse: (responseId: string) => void;
   onRejectResponse: (responseId: string) => void;
-  onMessageSupplier: (supplierId: string) => void;
+  onMessageSupplier: (
+    supplierId: string,
+    rfqId?: string,
+    title?: string
+  ) => void;
   onAssignContract?: (contractData: any) => void;
 }
 
@@ -818,7 +822,13 @@ export function RFQResponsesView({
                   </>
                 )}
                 <button
-                  onClick={() => onMessageSupplier(response.supplierId)}
+                  onClick={() =>
+                    onMessageSupplier(
+                      response.supplierId,
+                      rfqId,
+                      rfqDetails.title
+                    )
+                  }
                   className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:flex-none sm:px-4 sm:py-2"
                 >
                   Message

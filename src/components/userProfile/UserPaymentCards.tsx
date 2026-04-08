@@ -5,6 +5,10 @@ import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import CryptoJS from "crypto-js";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
+import Barcode from "react-barcode";
+import BarcodeScanner from "../shopper/BarcodeScanner";
+import { Camera, Gift, Scissors, ShoppingCart } from "lucide-react";
+import toast from "react-hot-toast";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -155,7 +159,18 @@ export default function UserPaymentCards({
     }
   );
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
+
+  // Loyalty and Scanner state
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
+
   const { setHideBottomBar } = useHideBottomBar();
+
+  const handleBarcodeDetected = (barcode: string) => {
+    setScannedBarcode(barcode);
+    toast.success(`Loyalty Card Digitized! Code: ${barcode}`);
+    // Future: Save this code to the user's account in db
+  };
 
   // Fetch user data if not provided by server-side props
   useEffect(() => {
@@ -375,95 +390,92 @@ export default function UserPaymentCards({
 
   return (
     <>
-      <div className="mb-4 mt-3 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Your Wallet</h3>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-black text-gray-900 dark:text-white">
+            My Wallet
+          </h3>
+          <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+            Manage your personal funds and balances.
+          </p>
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {/* Purple Refund Card */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-600 to-gray-800 p-5 text-white shadow-lg [&_h1]:!text-white [&_h2]:!text-white [&_h3]:!text-white [&_h4]:!text-white [&_h5]:!text-white [&_h6]:!text-white [&_p]:!text-white [&_span]:!text-white">
-          <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
-          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
 
-          <div className="mb-8 flex items-start justify-between">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        {/* Premium Dark-Green Accent Wallet Card */}
+        <div className="group relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 text-white shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.3)]">
+          {/* Glassmorphic overlay effects */}
+          <div className="absolute right-0 top-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-green-500 opacity-10 blur-3xl transition-all duration-500 group-hover:scale-150 group-hover:bg-green-400 group-hover:opacity-20"></div>
+          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 h-32 w-32 rounded-full bg-emerald-500 opacity-10 blur-2xl transition-all duration-500 group-hover:opacity-20"></div>
+
+          {/* Top Row: Master/Visa logo equivalent using Green instead of Yellow */}
+          <div className="relative z-10 mb-8 flex items-center justify-between">
             <div>
-              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest opacity-80">
-                Wallet Balance
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                Current Balance
               </p>
-              <h4 className="text-base font-black uppercase tracking-tight tracking-tighter">
-                My Wallet
+              <h4 className="text-sm font-bold tracking-widest text-gray-300">
+                PLAS PAY
               </h4>
             </div>
+            {/* Green interlocking shapes replacing yellow */}
             <div className="flex items-center">
-              <div className="mr-1 h-5 w-8 rounded-sm bg-yellow-400"></div>
-              <div className="h-5 w-8 rounded-sm bg-yellow-500 opacity-70"></div>
+              <div className="relative z-20 h-6 w-6 rounded-full bg-green-400 opacity-90 mix-blend-screen shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+              <div className="relative z-10 -ml-3 h-6 w-6 rounded-full bg-emerald-500 opacity-90 mix-blend-screen shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
             </div>
           </div>
 
-          <div className="mb-6">
-            <div className="mb-1 flex items-center">
-              <div className="mr-2 h-6 w-10 rounded-sm bg-opacity-30">
-                <img
-                  className="-mt-3 h-12 w-12"
-                  src="/assets/images/chip.png"
-                  alt=""
-                />
-              </div>
-              <p className="font-mono text-base font-black tracking-wider">
-                {formatCurrencySync(walletBalance)}
-              </p>
+          {/* Balance Row */}
+          <div className="relative z-10 mb-8 flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/5 bg-white/10 shadow-inner backdrop-blur-md">
+              <img
+                className="h-8 w-8 object-contain opacity-90 drop-shadow-md filter"
+                src="/assets/images/chip.png"
+                alt="Chip"
+              />
             </div>
+            <p className="font-mono text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+              {formatCurrencySync(walletBalance)}
+            </p>
           </div>
 
-          <div className="flex items-center justify-between">
+          {/* Bottom Row */}
+          <div className="relative z-10 flex items-end justify-between">
             <div>
-              <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest opacity-80">
-                Last Updated
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                Status
               </p>
-              <p className="text-xs font-black">Today</p>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                </span>
+                <p className="text-xs font-extrabold uppercase tracking-widest text-green-400">
+                  Active
+                </p>
+              </div>
             </div>
-            <div className="text-right">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-8 w-8 opacity-80"
-              >
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <path d="M2 10h20" />
-              </svg>
-            </div>
-          </div>
 
-          {/* Add Money Button */}
-          <div className="mt-4">
+            {/* Action Button */}
             <button
               onClick={() => setShowAddMoneyModal(true)}
-              className="w-full rounded-lg border border-white/10 bg-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest !text-white shadow-lg backdrop-blur-sm transition-all hover:scale-[1.02] hover:bg-white/30 active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all hover:scale-105 hover:from-green-400 hover:to-emerald-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] active:scale-95"
             >
-              <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Money
-              </span>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Top Up
             </button>
-          </div>
-
-          <div className="absolute bottom-3 right-3">
-            <p className="text-xs font-bold uppercase opacity-70">
-              PERSONAL USE ONLY
-            </p>
           </div>
         </div>
 
@@ -480,6 +492,124 @@ export default function UserPaymentCards({
           initialPhoneNumber={userPhone}
         />
       </div>
+
+      {/* =========================================================
+                             LOYALTY CARDS SECTION
+          ========================================================= */}
+      <div className="mb-6 mt-12 flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-black text-gray-900 dark:text-white">
+            Loyalty & Rewards
+          </h3>
+          <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+            Digital punch cards and store memberships
+          </p>
+        </div>
+        <button
+          disabled
+          onClick={() => setShowScanner(true)}
+          className="flex cursor-not-allowed items-center gap-2 rounded-xl bg-purple-100 px-4 py-2 text-xs font-bold text-purple-700 opacity-50 transition-colors dark:bg-purple-900/30 dark:text-purple-400"
+        >
+          <Camera size={16} />
+          Scan Card
+        </button>
+      </div>
+
+      <div className="relative pb-24">
+        {/* 'Coming Soon' Overlay */}
+        <div className="absolute left-0 top-0 z-20 flex h-full w-full items-center justify-center rounded-[2rem] bg-white/40 backdrop-blur-sm dark:bg-black/40">
+          <div className="rounded-2xl border border-white/30 bg-black/60 px-8 py-4 shadow-2xl backdrop-blur-md">
+            <h2 className="text-xl font-black uppercase tracking-[0.3em] text-white">
+              Launching Soon
+            </h2>
+          </div>
+        </div>
+
+        <div className="pointer-events-none grid grid-cols-1 gap-6 opacity-60 blur-[2px] blur-sm filter transition-all sm:grid-cols-2">
+          {/* Default Mock: The Stamp Loyalty Card (Fashion Shop) */}
+          <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-pink-500 to-rose-600 p-6 text-white shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl">
+            <div className="mb-6 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+                  PUNCH CARD
+                </p>
+                <h4 className="flex items-center gap-2 text-lg font-bold tracking-widest text-white">
+                  <Scissors size={20} />
+                  KIGALI FASHION
+                </h4>
+              </div>
+              <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur-md">
+                7 / 10
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="mb-3 text-xs font-medium opacity-90">
+                Buy 10 items, get 1 FREE!
+              </p>
+              <div className="grid grid-cols-5 gap-3">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 backdrop-blur-sm transition-all ${
+                      i < 7
+                        ? "bg-white text-rose-500 shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                        : "bg-transparent text-white/20"
+                    }`}
+                  >
+                    <Gift size={20} className={i < 7 ? "" : "hidden"} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Default Mock: The Barcode Loyalty Card (Supermarket) */}
+          <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-indigo-800 p-6 text-white shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl">
+            {/* Abstract circles */}
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white opacity-10 blur-xl"></div>
+
+            <div className="mb-4 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+                  MEMBERSHIP
+                </p>
+                <h4 className="flex items-center gap-2 text-lg font-bold tracking-wide text-white">
+                  <ShoppingCart size={20} />
+                  SIMBA SUPERMARKET
+                </h4>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-white p-4 text-center shadow-inner">
+              <div className="mx-auto flex justify-center overflow-hidden">
+                <div className="mix-blend-multiply">
+                  <Barcode
+                    value={scannedBarcode || "SM-9048-2831"}
+                    width={2}
+                    height={50}
+                    background="transparent"
+                    lineColor="#1e3a8a"
+                    displayValue={true}
+                    fontSize={14}
+                    margin={0}
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] font-bold text-gray-400">
+                Cashier: Scan at checkout
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showScanner && (
+        <BarcodeScanner
+          onBarcodeDetected={handleBarcodeDetected}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </>
   );
 }

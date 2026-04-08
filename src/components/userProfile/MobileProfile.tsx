@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { Panel, Tag, Button, Nav, Modal } from "rsuite";
-import UserRecentOrders from "./userRecentOrders";
+import UserAISubscriptions from "./UserAISubscriptions";
 import UserAddress from "./userAddress";
 import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
 import UserPaymentCards from "./UserPaymentCards";
 import UserReferral from "./UserReferral";
+import AvatarPickerModal from "./AvatarPickerModal";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
@@ -53,6 +54,7 @@ interface MobileProfileProps {
     status?: string;
   } | null;
   loadingReferral: boolean;
+  onAvatarChange: (newUrl: string) => void;
 }
 
 export default function MobileProfile({
@@ -75,11 +77,13 @@ export default function MobileProfile({
   refreshOrders,
   referralStatus,
   loadingReferral,
+  onAvatarChange,
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   // Keep visited tab content mounted to avoid refetching when switching tabs
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set());
 
@@ -97,7 +101,7 @@ export default function MobileProfile({
 
   // Handle navigation: add tab to visited so we keep content mounted (cached, no refetch on switch)
   const handleNavigation = (section: string) => {
-    setVisitedTabs((prev) => new Set([...prev, section]));
+    setVisitedTabs((prev) => new Set(Array.from(prev).concat(section)));
     setActiveTab(section);
   };
 
@@ -215,14 +219,9 @@ export default function MobileProfile({
                 <UserAccount />
               </div>
             )}
-            {visitedTabs.has("orders") && (
-              <div className={activeTab !== "orders" ? "hidden" : ""}>
-                <UserRecentOrders
-                  filter="all"
-                  orders={userOrders}
-                  loading={ordersLoading}
-                  onRefresh={refreshOrders}
-                />
+            {visitedTabs.has("ai-subscriptions") && (
+              <div className={activeTab !== "ai-subscriptions" ? "hidden" : ""}>
+                <UserAISubscriptions />
               </div>
             )}
             {visitedTabs.has("addresses") && (
@@ -264,21 +263,62 @@ export default function MobileProfile({
         {/* User Profile Section */}
         <div className="mb-4 flex items-center gap-3">
           <div className="relative">
-            <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-green-100 bg-white shadow-md dark:border-green-900/30">
+            <button
+              onClick={() => setShowAvatarModal(true)}
+              className="group relative h-16 w-16 overflow-hidden rounded-full border-2 border-green-100 bg-white shadow-md transition-all hover:border-green-300 dark:border-green-900/30"
+              aria-label="Change avatar"
+            >
               <Image
-                src={
-                  user?.profile_picture ||
-                  (role === "shopper"
-                    ? "/images/userProfile.png"
-                    : "/images/userProfile.png")
-                }
+                src={user?.profile_picture || "/images/userProfile.png"}
                 alt="Profile"
                 width={64}
                 height={64}
                 className="h-full w-full object-cover"
+                unoptimized
               />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
+              {/* Camera edit overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
+                <svg
+                  className="h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+            </button>
+            {/* Edit badge */}
+            <button
+              onClick={() => setShowAvatarModal(true)}
+              className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-green-500 transition-transform hover:scale-110 dark:border-gray-800"
+              aria-label="Edit avatar"
+            >
+              <svg
+                className="h-2.5 w-2.5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </button>
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -420,14 +460,14 @@ export default function MobileProfile({
 
       {/* Navigation List */}
       <div className="space-y-0">
-        {/* Orders */}
+        {/* AI Subscriptions */}
         <button
-          onClick={() => handleNavigation("orders")}
+          onClick={() => handleNavigation("ai-subscriptions")}
           className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
                 <svg
                   className="h-6 w-6 !text-white"
                   fill="none"
@@ -438,37 +478,32 @@ export default function MobileProfile({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                   />
                 </svg>
               </div>
               <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t("nav.orders")}
+                  AI Subscriptions
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  View your order history
+                  Usage & invoice history
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                {orderCount}
-              </span>
-              <svg
-                className="h-5 w-5 !text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
+            <svg
+              className="h-5 w-5 !text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </div>
         </button>
 
@@ -974,6 +1009,14 @@ export default function MobileProfile({
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Avatar Picker Modal */}
+      <AvatarPickerModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        currentAvatar={user?.profile_picture}
+        onAvatarSaved={onAvatarChange}
+      />
     </div>
   );
 }

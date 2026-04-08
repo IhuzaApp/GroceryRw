@@ -122,7 +122,7 @@ export default function SideBar() {
   return (
     <>
       {/* Sidebar */}
-      <div className="fixed left-0 top-1/4 z-50 ml-3 hidden rounded-full bg-white shadow-md transition-colors duration-200 dark:bg-gray-800 md:block">
+      <div className="notranslate fixed left-0 top-1/4 z-50 ml-3 hidden rounded-full bg-white shadow-md transition-colors duration-200 dark:bg-gray-800 md:block">
         <div className="flex flex-col items-center gap-6 p-4">
           {/* Home */}
           <Link

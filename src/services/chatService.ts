@@ -11,13 +11,16 @@ import {
   onSnapshot,
   updateDoc,
   Timestamp,
+  or,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+
+export type ChatCollection = "chat_conversations" | "business_conversations";
 
 export interface ChatMessage {
   id?: string;
   senderId: string;
-  senderType: "customer" | "shopper";
+  senderType: "customer" | "shopper" | "business";
   message: string;
   timestamp: any;
   isRead: boolean;
@@ -26,9 +29,15 @@ export interface ChatMessage {
 
 export interface ChatConversation {
   id?: string;
-  orderId: string;
-  customerId: string;
-  shopperId: string;
+  collectionPath: ChatCollection;
+  type?: "order" | "business";
+  orderId?: string | null;
+  businessId?: string; // The business that initiated the chat (e.g. RFQ creator)
+  counterpartId?: string; // The person being talked to (e.g. Supplier)
+  rfqId?: string; // Optional RFQ link
+  title?: string; // Optional title (e.g. RFQ Title)
+  customerId?: string;
+  shopperId?: string;
   createdAt: any;
   lastMessage?: string;
   lastMessageTime?: any;
@@ -36,77 +45,140 @@ export interface ChatConversation {
 }
 
 /**
- * Create a new chat conversation between customer and shopper for an order
+ * Create a new chat conversation
  */
 export const createConversation = async (
-  orderId: string,
+  orderId: string | null,
   customerId: string,
-  shopperId: string
+  shopperId: string,
+  type: "order" | "business" = "order",
+  metadata?: Partial<ChatConversation>,
+  customCollection: ChatCollection = "chat_conversations"
 ): Promise<string> => {
   try {
-    console.log("🔍 [Chat Service] Creating conversation:", {
-      orderId,
-      customerId,
-      shopperId,
-    });
+    console.log(
+      `🔍 [Chat Service] Creating conversation in ${customCollection}:`,
+      {
+        orderId,
+        customerId,
+        shopperId,
+        type,
+        ...metadata,
+      }
+    );
 
-    // Validate input parameters
-    if (!orderId || !customerId || !shopperId) {
-      throw new Error(
-        "Missing required parameters: orderId, customerId, or shopperId"
-      );
-    }
-
-    // Check if conversation already exists
-    const existingConv = await getConversationByOrderId(orderId);
-    if (existingConv) {
-      console.log(
-        "🔍 [Chat Service] Conversation already exists:",
-        existingConv.id
-      );
-      return existingConv.id as string;
+    // Check if conversation already exists (for order type in chat_conversations)
+    if (
+      customCollection === "chat_conversations" &&
+      type === "order" &&
+      orderId
+    ) {
+      const existingConv = await getConversationByOrderId(orderId);
+      if (existingConv) {
+        console.log(
+          "🔍 [Chat Service] Conversation already exists:",
+          existingConv.id
+        );
+        return existingConv.id as string;
+      }
     }
 
     // Create new conversation
-    const conversationData = {
-      orderId,
-      customerId,
-      shopperId,
+    const conversationData: any = {
+      type,
       createdAt: serverTimestamp(),
       lastMessage: "",
       lastMessageTime: serverTimestamp(),
       unreadCount: 0,
+      ...metadata,
     };
 
-    console.log(
-      "🔍 [Chat Service] Creating conversation with data:",
-      conversationData
-    );
+    // Only populate customer/shopper IDs if they are explicitly provided or relevant
+    if (customerId) conversationData.customerId = customerId;
+    if (shopperId) conversationData.shopperId = shopperId;
+    if (orderId) conversationData.orderId = orderId;
+
     const docRef = await addDoc(
-      collection(db, "chat_conversations"),
+      collection(db!, customCollection),
       conversationData
     );
 
-    console.log("🔍 [Chat Service] Conversation created:", docRef.id);
+    console.log(
+      `🔍 [Chat Service] Conversation created in ${customCollection}:`,
+      docRef.id
+    );
     return docRef.id;
   } catch (error) {
-    console.error("❌ [Chat Service] Error creating conversation:", error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to create conversation: ${error.message}`);
-    }
-    throw new Error("Failed to create conversation: Unknown error");
+    console.error(
+      `❌ [Chat Service] Error creating conversation in ${customCollection}:`,
+      error
+    );
+    throw error;
   }
 };
 
 /**
- * Get a conversation by order ID
+ * Get or create a business conversation (B2B / RFQ)
+ */
+export const getOrCreateBusinessConversation = async (
+  businessId: string,
+  counterpartId: string,
+  rfqId?: string,
+  title?: string
+): Promise<string> => {
+  try {
+    const customCollection: ChatCollection = "business_conversations";
+
+    // Check if a conversation between these two for this RFQ already exists
+    const conversationsRef = collection(db!, customCollection);
+    let q = query(
+      conversationsRef,
+      where("businessId", "==", businessId),
+      where("counterpartId", "==", counterpartId)
+    );
+
+    if (rfqId) {
+      q = query(q, where("rfqId", "==", rfqId));
+    }
+
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].id;
+    }
+
+    // Create new business conversation in business_conversations collection
+    return await createConversation(
+      null,
+      "",
+      "",
+      "business",
+      {
+        businessId,
+        counterpartId,
+        rfqId,
+        title: title || "Business Chat",
+      },
+      customCollection
+    );
+  } catch (error) {
+    console.error(
+      "❌ [Chat Service] Error in getOrCreateBusinessConversation:",
+      error
+    );
+    throw error;
+  }
+};
+
+/**
+ * Get a conversation by order ID (exclusively from chat_conversations)
  */
 export const getConversationByOrderId = async (
   orderId: string
 ): Promise<ChatConversation | null> => {
   try {
     const q = query(
-      collection(db, "chat_conversations"),
+      collection(db!, "chat_conversations"),
       where("orderId", "==", orderId)
     );
     const querySnapshot = await getDocs(q);
@@ -118,6 +190,7 @@ export const getConversationByOrderId = async (
     const doc = querySnapshot.docs[0];
     return {
       id: doc.id,
+      collectionPath: "chat_conversations",
       ...doc.data(),
     } as ChatConversation;
   } catch (error) {
@@ -133,11 +206,12 @@ export const addMessage = async (
   conversationId: string,
   message: string,
   senderId: string,
-  senderType: "customer" | "shopper",
-  image?: string
+  senderType: "customer" | "shopper" | "business",
+  image?: string,
+  collectionPath: ChatCollection = "chat_conversations"
 ): Promise<string> => {
   try {
-    console.log("🔍 [Chat Service] Adding message:", {
+    console.log(`🔍 [Chat Service] Adding message to ${collectionPath}:`, {
       conversationId,
       message,
       senderId,
@@ -145,30 +219,26 @@ export const addMessage = async (
       image,
     });
 
-    // Validate input parameters
-    if (!conversationId || !message || !senderId || !senderType) {
+    if (!conversationId || (!message && !image) || !senderId || !senderType) {
       throw new Error("Missing required parameters for message");
     }
 
-    if (message.trim().length === 0 && !image) {
-      throw new Error("Message cannot be empty");
-    }
-
-    // Check if conversation exists
-    const convRef = doc(db, "chat_conversations", conversationId);
+    const convRef = doc(db!, collectionPath, conversationId);
     const convSnap = await getDoc(convRef);
 
     if (!convSnap.exists()) {
-      throw new Error(`Conversation not found: ${conversationId}`);
+      throw new Error(
+        `Conversation not found in ${collectionPath}: ${conversationId}`
+      );
     }
 
-    // Add message to conversation
     const messagesRef = collection(
-      db,
-      "chat_conversations",
+      db!,
+      collectionPath,
       conversationId,
       "messages"
     );
+
     const messageData = {
       senderId,
       senderType,
@@ -179,22 +249,17 @@ export const addMessage = async (
     };
 
     const docRef = await addDoc(messagesRef, messageData);
-    console.log("🔍 [Chat Service] Message added with ID:", docRef.id);
 
-    // Update conversation with last message
     await updateDoc(convRef, {
       lastMessage: message.trim(),
       lastMessageTime: serverTimestamp(),
-      unreadCount: convSnap.data().unreadCount + 1,
+      unreadCount: (convSnap.data().unreadCount || 0) + 1,
     });
 
     return docRef.id;
   } catch (error) {
     console.error("❌ [Chat Service] Error adding message:", error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to add message: ${error.message}`);
-    }
-    throw new Error("Failed to add message: Unknown error");
+    throw error;
   }
 };
 
@@ -203,13 +268,13 @@ export const addMessage = async (
  */
 export const markMessagesAsRead = async (
   conversationId: string,
-  userId: string
+  userId: string,
+  collectionPath: ChatCollection = "chat_conversations"
 ): Promise<void> => {
   try {
-    // Get messages where sender is not the current user and are unread
     const messagesRef = collection(
-      db,
-      "chat_conversations",
+      db!,
+      collectionPath,
       conversationId,
       "messages"
     );
@@ -220,7 +285,6 @@ export const markMessagesAsRead = async (
     );
     const querySnapshot = await getDocs(q);
 
-    // Update each message
     const updatePromises = querySnapshot.docs.map((doc) => {
       return updateDoc(doc.ref, {
         isRead: true,
@@ -229,8 +293,7 @@ export const markMessagesAsRead = async (
 
     await Promise.all(updatePromises);
 
-    // Reset unread count in conversation
-    const convRef = doc(db, "chat_conversations", conversationId);
+    const convRef = doc(db!, collectionPath, conversationId);
     await updateDoc(convRef, {
       unreadCount: 0,
     });
@@ -245,12 +308,13 @@ export const markMessagesAsRead = async (
  */
 export const listenForMessages = (
   conversationId: string,
+  collectionPath: ChatCollection,
   callback: (messages: ChatMessage[]) => void
 ): (() => void) => {
   try {
     const messagesRef = collection(
-      db,
-      "chat_conversations",
+      db!,
+      collectionPath,
       conversationId,
       "messages"
     );
@@ -260,7 +324,6 @@ export const listenForMessages = (
       const messages = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        // Convert Firestore timestamp to regular Date if needed
         timestamp:
           doc.data().timestamp instanceof Timestamp
             ? doc.data().timestamp.toDate()
@@ -278,26 +341,39 @@ export const listenForMessages = (
 };
 
 /**
- * Get all conversations for a user (either customer or shopper)
+ * Get all conversations for a user from a specific collection
  */
-export const getUserConversations = async (
+export const getCollectionConversations = async (
   userId: string,
-  userType: "customer" | "shopper"
+  collectionPath: ChatCollection
 ): Promise<ChatConversation[]> => {
   try {
-    const field = userType === "customer" ? "customerId" : "shopperId";
-    const q = query(
-      collection(db, "chat_conversations"),
-      where(field, "==", userId),
-      orderBy("lastMessageTime", "desc")
-    );
+    const conversationsRef = collection(db!, collectionPath);
+    let q;
+
+    if (collectionPath === "chat_conversations") {
+      q = query(
+        conversationsRef,
+        or(where("customerId", "==", userId), where("shopperId", "==", userId)),
+        orderBy("lastMessageTime", "desc")
+      );
+    } else {
+      q = query(
+        conversationsRef,
+        or(
+          where("businessId", "==", userId),
+          where("counterpartId", "==", userId)
+        ),
+        orderBy("lastMessageTime", "desc")
+      );
+    }
 
     const querySnapshot = await getDocs(q);
 
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
+      collectionPath,
       ...doc.data(),
-      // Convert Firestore timestamps
       createdAt:
         doc.data().createdAt instanceof Timestamp
           ? doc.data().createdAt.toDate()
@@ -308,7 +384,7 @@ export const getUserConversations = async (
           : doc.data().lastMessageTime,
     })) as ChatConversation[];
   } catch (error) {
-    console.error("Error getting user conversations:", error);
+    console.error(`Error getting conversations from ${collectionPath}:`, error);
     throw error;
   }
 };
