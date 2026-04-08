@@ -9,6 +9,7 @@ import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
 import UserPaymentCards from "./UserPaymentCards";
 import UserReferral from "./UserReferral";
+import AvatarPickerModal from "./AvatarPickerModal";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
@@ -53,6 +54,7 @@ interface MobileProfileProps {
     status?: string;
   } | null;
   loadingReferral: boolean;
+  onAvatarChange: (newUrl: string) => void;
 }
 
 export default function MobileProfile({
@@ -75,11 +77,13 @@ export default function MobileProfile({
   refreshOrders,
   referralStatus,
   loadingReferral,
+  onAvatarChange,
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   // Keep visited tab content mounted to avoid refetching when switching tabs
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set());
 
@@ -97,7 +101,7 @@ export default function MobileProfile({
 
   // Handle navigation: add tab to visited so we keep content mounted (cached, no refetch on switch)
   const handleNavigation = (section: string) => {
-    setVisitedTabs((prev) => new Set([...prev, section]));
+    setVisitedTabs((prev) => new Set(Array.from(prev).concat(section)));
     setActiveTab(section);
   };
 
@@ -259,21 +263,40 @@ export default function MobileProfile({
         {/* User Profile Section */}
         <div className="mb-4 flex items-center gap-3">
           <div className="relative">
-            <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-green-100 bg-white shadow-md dark:border-green-900/30">
+            <button
+              onClick={() => setShowAvatarModal(true)}
+              className="group relative h-16 w-16 overflow-hidden rounded-full border-2 border-green-100 bg-white shadow-md transition-all hover:border-green-300 dark:border-green-900/30"
+              aria-label="Change avatar"
+            >
               <Image
                 src={
                   user?.profile_picture ||
-                  (role === "shopper"
-                    ? "/images/userProfile.png"
-                    : "/images/userProfile.png")
+                  "/images/userProfile.png"
                 }
                 alt="Profile"
                 width={64}
                 height={64}
                 className="h-full w-full object-cover"
+                unoptimized
               />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
+              {/* Camera edit overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
+                <svg className="h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+            </button>
+            {/* Edit badge */}
+            <button
+              onClick={() => setShowAvatarModal(true)}
+              className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-green-500 transition-transform hover:scale-110 dark:border-gray-800"
+              aria-label="Edit avatar"
+            >
+              <svg className="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -964,6 +987,14 @@ export default function MobileProfile({
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Avatar Picker Modal */}
+      <AvatarPickerModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        currentAvatar={user?.profile_picture}
+        onAvatarSaved={onAvatarChange}
+      />
     </div>
   );
 }

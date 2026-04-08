@@ -266,6 +266,11 @@ export default function UserProfile() {
       .finally(() => setOrdersLoading(false));
   };
 
+  // Handle avatar change from avatar picker modal
+  const handleAvatarChange = (newAvatarUrl: string) => {
+    setUser((prev) => prev ? { ...prev, profile_picture: newAvatarUrl } : prev);
+  };
+
   // Show loading state while determining screen size
   if (loading) {
     return (
@@ -300,6 +305,9 @@ export default function UserProfile() {
         isSwitchingRole={isSwitchingRole}
         setIsSwitchingRole={setIsSwitchingRole}
         refreshOrders={refreshOrders}
+        referralStatus={referralStatus}
+        loadingReferral={loadingReferral}
+        onAvatarChange={handleAvatarChange}
       />
     );
   }
@@ -325,6 +333,7 @@ export default function UserProfile() {
       refreshOrders={refreshOrders}
       referralStatus={referralStatus}
       loadingReferral={loadingReferral}
+      onAvatarChange={handleAvatarChange}
     />
   );
 }
