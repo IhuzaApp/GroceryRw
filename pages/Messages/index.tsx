@@ -563,17 +563,44 @@ function MessagesPage() {
   if (loading && status === "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-full w-full items-center justify-center bg-[var(--bg-primary)]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <img
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                className="h-16 w-16 animate-pulse"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-              </div>
+        <div className="flex h-full w-full flex-col bg-[var(--bg-primary)] sm:flex-row">
+          {/* Sidebar Skeleton */}
+          <div className="h-full w-full border-r border-gray-100 p-4 dark:border-gray-800 sm:w-1/3 md:w-1/4">
+            <div className="mb-6 h-8 w-1/2 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <div className="mb-4 h-10 w-full animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Main Area Skeleton (hidden on small screens) */}
+          <div className="hidden h-full flex-1 flex-col sm:flex">
+            <div className="flex items-center border-b border-gray-100 p-4 dark:border-gray-800">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+              <div className="ml-3 h-5 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+            </div>
+            <div className="flex-1 space-y-6 p-6">
+               <div className="flex gap-3">
+                 <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                 <div className="h-20 w-1/2 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
+               </div>
+               <div className="flex justify-end gap-3">
+                 <div className="h-16 w-1/3 animate-pulse rounded-2xl rounded-tr-none bg-green-50 dark:bg-green-900/20" />
+               </div>
+               <div className="flex gap-3">
+                 <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                 <div className="h-12 w-1/3 animate-pulse rounded-2xl rounded-tl-none bg-gray-100 dark:bg-gray-800" />
+               </div>
+            </div>
+            <div className="border-t border-gray-100 p-4 dark:border-gray-800">
+              <div className="h-12 w-full animate-pulse rounded-full bg-gray-100 dark:bg-gray-800" />
             </div>
           </div>
         </div>
