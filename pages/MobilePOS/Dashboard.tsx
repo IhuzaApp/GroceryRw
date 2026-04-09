@@ -23,23 +23,30 @@ export default function MobilePOSDashboard() {
 
   const [session, setSession] = useState<{
     shopName: string;
+    shopId: string;
     employeeId: string;
     expiresAt: number;
   } | null>(null);
   const [shiftState, setShiftState] = useState<ShiftState>("PENDING_OPEN");
+  const [shiftStartedAt, setShiftStartedAt] = useState<number | null>(null);
+  const [openingStock, setOpeningStock] = useState<string>("0");
+  const [closingStockInput, setClosingStockInput] = useState<string>("");
+  const [shiftStats, setShiftStats] = useState<{ totalItems: number; totalSales: number }>({ totalItems: 0, totalSales: 0 });
+  
   const [showScanner, setShowScanner] = useState(false);
-  const [scannerMode, setScannerMode] = useState<
-    "ADD_STOCK" | "CHECKOUT" | null
-  >(null);
+  const [scannerMode, setScannerMode] = useState<"ADD_STOCK" | "CHECKOUT" | null>(null);
 
   useEffect(() => {
     const existingSession = localStorage.getItem("mobile_pos_session");
     if (existingSession) {
       const parsed = JSON.parse(existingSession);
-      if (parsed.expiresAt > Date.now()) {
+      // VALIDATION: Ensure session has modern UUID format and shopId
+      const isLegacy = !parsed.shopId || typeof parsed.employeeId === 'number';
+      
+      if (parsed.expiresAt > Date.now() && !isLegacy) {
         setSession(parsed);
       } else {
-        // Session expired, force close and go to login
+        // Session expired or legacy format, force re-login
         localStorage.removeItem("mobile_pos_session");
         router.push("/MobilePOS/Connect");
       }
@@ -48,30 +55,104 @@ export default function MobilePOSDashboard() {
     }
 
     const savedShiftState = localStorage.getItem("mobile_pos_shift_state");
+    const savedStart = localStorage.getItem("mobile_pos_shift_start");
+    const savedOpening = localStorage.getItem("mobile_pos_opening_stock");
+
     if (savedShiftState === "ACTIVE") {
       setShiftState("ACTIVE");
+      if (savedStart) setShiftStartedAt(parseInt(savedStart));
+      if (savedOpening) setOpeningStock(savedOpening);
     }
   }, [router]);
 
-  const handleOpenShift = () => {
-    // Logic to record Opening Stock Balance
-    // Provide a simple prompt or assume it calls an API
-    console.log("Recording Opening Stock...");
-    localStorage.setItem("mobile_pos_shift_state", "ACTIVE");
-    setShiftState("ACTIVE");
+  const handleOpenShift = async () => {
+    try {
+      if (!session) return;
+      // Fetch last closing stock and initial stats
+      const res = await fetch("/api/mobile-pos/shift-stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId: session.shopId, employeeId: session.employeeId })
+      });
+      const data = await res.json();
+      const lastStock = data.stats?.lastClosingStock || "0";
+      
+      const startTime = Date.now();
+      setOpeningStock(lastStock);
+      setShiftStartedAt(startTime);
+      setShiftState("ACTIVE");
+      
+      localStorage.setItem("mobile_pos_shift_state", "ACTIVE");
+      localStorage.setItem("mobile_pos_shift_start", String(startTime));
+      localStorage.setItem("mobile_pos_opening_stock", lastStock);
+    } catch (e) {
+      console.error("Failed to open shift", e);
+      // Fallback if API fails
+      setShiftState("ACTIVE");
+    }
   };
 
-  const handleCloseShift = () => {
+  const handleCloseShift = async () => {
+    if (!session) return;
     setShiftState("PENDING_CLOSE");
-    // User must record closing stock here
+    // Fetch latest stats for the summary
+    try {
+      const res = await fetch("/api/mobile-pos/shift-stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId: session.shopId, employeeId: session.employeeId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShiftStats(data.stats);
+        // Pre-fill closing stock based on sales (Opening + Sales)
+        const calculatedClosing = parseFloat(openingStock) + data.stats.totalSales;
+        setClosingStockInput(String(calculatedClosing));
+      }
+    } catch (e) {
+      console.error("Failed to fetch final stats", e);
+    }
   };
 
-  const submitCloseShift = () => {
-    console.log("Recording Closing Stock...");
-    setShiftState("PENDING_OPEN");
-    localStorage.removeItem("mobile_pos_shift_state");
-    localStorage.removeItem("mobile_pos_session");
-    router.push("/MobilePOS/Connect");
+  const calculateDuration = () => {
+    if (!shiftStartedAt) return "0h 0m";
+    const diff = Date.now() - shiftStartedAt;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${mins}m`;
+  };
+
+  const submitCloseShift = async () => {
+    if (!session || !closingStockInput) {
+      alert("Please enter the closing stock balance.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/mobile-pos/record-shift", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          closing_stock: closingStockInput,
+          opening_stock: openingStock,
+          orgUser_id: session.employeeId,
+          shift_durantion: calculateDuration(),
+          shop_id: session.shopId
+        })
+      });
+
+      if (res.ok) {
+        setShiftState("PENDING_OPEN");
+        localStorage.removeItem("mobile_pos_shift_state");
+        localStorage.removeItem("mobile_pos_shift_start");
+        localStorage.removeItem("mobile_pos_opening_stock");
+        localStorage.removeItem("mobile_pos_session");
+        router.push("/MobilePOS/Connect");
+      }
+    } catch (e) {
+      console.error("Failed to record shift", e);
+      alert("Failed to save shift recording. Please try again.");
+    }
   };
 
   const handleBarcodeDetected = (barcode: string) => {
@@ -123,11 +204,12 @@ export default function MobilePOSDashboard() {
         </h1>
         <button
           onClick={handleCloseShift}
-          className="rounded-full p-2.5 transition active:scale-95 
-            bg-green-100 text-green-600 hover:bg-green-200 
-            dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20"
+          className="flex items-center gap-2 rounded-xl px-4 py-2 transition active:scale-95 
+            bg-red-50 text-red-600 hover:bg-red-100 
+            dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
         >
-          <LogOut className="h-5 w-5" />
+          <span className="text-xs font-black uppercase">End Shift</span>
+          <LogOut className="h-4 w-4" />
         </button>
       </div>
 
@@ -159,10 +241,17 @@ export default function MobilePOSDashboard() {
               </p>
               <button
                 onClick={handleOpenShift}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 font-bold text-white shadow-lg shadow-green-600/30 transition hover:bg-green-700 active:scale-95"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 font-bold text-white shadow-lg shadow-green-600/30 transition hover:bg-green-700 active:scale-95 disabled:opacity-70"
               >
-                <ClipboardCheck className="h-5 w-5" />
-                Record Opening Stock
+                {loading ? (
+                  <Loader size="md" />
+                ) : (
+                  <>
+                    <ClipboardCheck className="h-5 w-5" />
+                    Record Opening Stock
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -170,44 +259,59 @@ export default function MobilePOSDashboard() {
 
         {/* SHIFT: PENDING CLOSE */}
         {shiftState === "PENDING_CLOSE" && (
-          <div className="mt-10 duration-500 animate-in fade-in zoom-in-95">
-            <div
-              className="rounded-3xl p-8 text-center shadow-2xl border border-gray-100 bg-white shadow-xl
-                dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/50"
-            >
-              <div
-                className={`mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full ${
-                  theme === "dark"
-                    ? "bg-green-500/20 text-green-400"
-                    : "bg-green-100 text-green-600"
-                }`}
-              >
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+            <div className="w-full max-w-md rounded-t-[3rem] bg-white p-10 shadow-2xl animate-in slide-in-from-bottom dark:bg-gray-900">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">
                 <StopCircle className="h-12 w-12" />
               </div>
-              <h2 className="mb-2 text-2xl font-black">End Shift</h2>
-              <p
-                className={`mb-8 text-sm font-medium ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                You are about to close this register. Please record the closing
-                stock balance before you logout.
-              </p>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setShiftState("ACTIVE")}
-                  className="w-full rounded-2xl py-4 font-bold transition active:scale-95 
-                    bg-gray-100 text-gray-900 hover:bg-gray-200 
-                    dark:bg-gray-700 dark:text-white hover:dark:bg-gray-600"
-                >
-                  Cancel
-                </button>
+              
+              <h2 className="mb-2 text-3xl font-black tracking-tight text-center">Closing Shift</h2>
+              {/* Accurate Shift Summary */}
+              <div className="mb-8 space-y-3 rounded-2xl bg-gray-50 p-6 dark:bg-gray-800/50 text-left">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Opening Stock</span>
+                  <span className="font-black">{parseFloat(openingStock).toLocaleString()} RWF</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Items Processed</span>
+                  <span className="font-black">{shiftStats.totalItems} Items</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Session Total Sales</span>
+                  <span className="font-black text-green-600">{shiftStats.totalSales.toLocaleString()} RWF</span>
+                </div>
+                <div className="border-t border-gray-100 pt-3 dark:border-gray-700 mt-2 flex justify-between text-xs font-bold uppercase tracking-widest text-gray-400">
+                  <span>Shift Duration</span>
+                  <span>{calculateDuration()}</span>
+                </div>
+              </div>
+
+              {/* Closing Stock Input */}
+              <div className="mb-8">
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 text-left">Enter Closing Stock Balance</label>
+                <input 
+                  type="number"
+                  placeholder="e.g. 150000"
+                  value={closingStockInput}
+                  onChange={(e) => setClosingStockInput(e.target.value)}
+                  className="w-full rounded-2xl border-none bg-gray-50 p-4 font-black text-center text-lg placeholder:text-gray-300 dark:bg-gray-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-4">
                 <button
                   onClick={submitCloseShift}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 font-bold text-white shadow-lg shadow-green-600/30 transition hover:bg-green-700 active:scale-95"
+                  className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-green-600 py-5 text-lg font-black text-white shadow-xl shadow-green-600/30 transition hover:bg-green-700 active:scale-95"
                 >
-                  <ClipboardCheck className="h-5 w-5" />
-                  Record & Log Out
+                  <ClipboardCheck className="h-6 w-6" />
+                  <span>Save & Log Out</span>
+                </button>
+                
+                <button
+                  onClick={() => setShiftState("ACTIVE")}
+                  className="w-full rounded-[2rem] py-4 font-bold text-gray-500 transition hover:bg-gray-100 active:scale-95 dark:text-gray-400 dark:hover:bg-gray-800"
+                >
+                  Return to Dashboard
                 </button>
               </div>
             </div>

@@ -298,7 +298,7 @@ export default function MobilePOSConnect() {
     // 4. Success
     localStorage.setItem("mobile_pos_session", JSON.stringify({
       shopName: currentUser.Shops.name,
-      shopId: currentUser.Shops.id,
+      shopId: currentUser.shop_id,
       employeeId: currentUser.id, // Using the UUID for DB compatibility
       expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     }));
