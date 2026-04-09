@@ -267,7 +267,7 @@ export default function MobilePOSDashboard() {
 
               {/* 2. Customer Checkout */}
               <button
-                onClick={() => startScanner("CHECKOUT")}
+                onClick={() => router.push("/MobilePOS/Checkout")}
                 className="group flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] 
                   border-gray-100 bg-white hover:border-gray-200 
                   dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80"

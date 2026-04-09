@@ -296,11 +296,11 @@ export default function MobilePOSConnect() {
     }
 
     // 4. Success
-    const expiry = Date.now() + 24 * 60 * 60 * 1000;
     localStorage.setItem("mobile_pos_session", JSON.stringify({
       shopName: currentUser.Shops.name,
+      shopId: currentUser.Shops.id,
       employeeId: currentUser.employeeID,
-      expiresAt: expiry,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     }));
 
     router.push("/MobilePOS/Dashboard");
