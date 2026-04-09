@@ -96,11 +96,7 @@ export default function MobilePOSDashboard() {
 
   return (
     <div
-      className={`min-h-screen pb-20 ${
-        theme === "dark"
-          ? "bg-[var(--bg-primary)] text-white"
-          : "bg-gray-50 text-gray-900"
-      }`}
+      className="min-h-screen pb-20 bg-gray-50 text-gray-900 dark:bg-black dark:text-white"
     >
       <Head>
         <title>Mobile POS Dashboard</title>
@@ -108,35 +104,28 @@ export default function MobilePOSDashboard() {
 
       {/* Top App Bar */}
       <div
-        className={`sticky top-0 z-40 flex items-center justify-between px-4 py-4 shadow-sm backdrop-blur-lg ${
-          theme === "dark"
-            ? "border-b border-gray-800 bg-gray-900/80"
-            : "border-b border-gray-200 bg-white/90"
-        }`}
+        className="sticky top-0 z-40 flex items-center justify-between px-4 py-4 shadow-sm backdrop-blur-lg 
+          border-b border-gray-200 bg-white/90 dark:border-gray-800 dark:bg-gray-900/80"
       >
         <button
           onClick={() => router.push("/")}
-          className={`rounded-full p-2.5 transition active:scale-95 ${
-            theme === "dark"
-              ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className="rounded-full p-2.5 transition active:scale-95 
+            bg-gray-100 text-gray-700 hover:bg-gray-200 
+            dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <h1 className="text-center text-lg font-black tracking-tight">
           {session.shopName} <br />{" "}
-          <span className="text-xs font-medium uppercase text-blue-500">
+          <span className="text-xs font-medium uppercase text-green-500">
             POS Terminal
           </span>
         </h1>
         <button
           onClick={handleCloseShift}
-          className={`rounded-full p-2.5 transition active:scale-95 ${
-            theme === "dark"
-              ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-              : "bg-red-100 text-red-600 hover:bg-red-200"
-          }`}
+          className="rounded-full p-2.5 transition active:scale-95 
+            bg-green-100 text-green-600 hover:bg-green-200 
+            dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20"
         >
           <LogOut className="h-5 w-5" />
         </button>
@@ -147,17 +136,14 @@ export default function MobilePOSDashboard() {
         {shiftState === "PENDING_OPEN" && (
           <div className="mt-10 duration-500 animate-in fade-in zoom-in-95">
             <div
-              className={`rounded-3xl p-8 text-center shadow-2xl ${
-                theme === "dark"
-                  ? "border border-gray-700 bg-gray-800/80 shadow-black/50"
-                  : "border border-gray-100 bg-white shadow-xl"
-              }`}
+              className="rounded-3xl p-8 text-center shadow-2xl border border-gray-100 bg-white shadow-xl
+                dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/50"
             >
               <div
                 className={`mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full ${
                   theme === "dark"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-blue-100 text-blue-600"
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-green-100 text-green-600"
                 }`}
               >
                 <PlayCircle className="h-12 w-12" />
@@ -173,7 +159,7 @@ export default function MobilePOSDashboard() {
               </p>
               <button
                 onClick={handleOpenShift}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 font-bold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 active:scale-95"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 font-bold text-white shadow-lg shadow-green-600/30 transition hover:bg-green-700 active:scale-95"
               >
                 <ClipboardCheck className="h-5 w-5" />
                 Record Opening Stock
@@ -186,17 +172,14 @@ export default function MobilePOSDashboard() {
         {shiftState === "PENDING_CLOSE" && (
           <div className="mt-10 duration-500 animate-in fade-in zoom-in-95">
             <div
-              className={`rounded-3xl p-8 text-center shadow-2xl ${
-                theme === "dark"
-                  ? "border border-gray-700 bg-gray-800/80 shadow-black/50"
-                  : "border border-gray-100 bg-white shadow-xl"
-              }`}
+              className="rounded-3xl p-8 text-center shadow-2xl border border-gray-100 bg-white shadow-xl
+                dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/50"
             >
               <div
                 className={`mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full ${
                   theme === "dark"
-                    ? "bg-red-500/20 text-red-400"
-                    : "bg-red-100 text-red-600"
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-green-100 text-green-600"
                 }`}
               >
                 <StopCircle className="h-12 w-12" />
@@ -213,17 +196,15 @@ export default function MobilePOSDashboard() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setShiftState("ACTIVE")}
-                  className={`w-full rounded-2xl py-4 font-bold transition active:scale-95 ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-white hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-                  }`}
+                  className="w-full rounded-2xl py-4 font-bold transition active:scale-95 
+                    bg-gray-100 text-gray-900 hover:bg-gray-200 
+                    dark:bg-gray-700 dark:text-white hover:dark:bg-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={submitCloseShift}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 py-4 font-bold text-white shadow-lg shadow-red-600/30 transition hover:bg-red-700 active:scale-95"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-4 font-bold text-white shadow-lg shadow-green-600/30 transition hover:bg-green-700 active:scale-95"
                 >
                   <ClipboardCheck className="h-5 w-5" />
                   Record & Log Out
@@ -238,28 +219,23 @@ export default function MobilePOSDashboard() {
           <div className="mt-4 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
             {/* Status Header */}
             <div
-              className={`flex items-center justify-between rounded-2xl border p-4 shadow-sm ${
-                theme === "dark"
-                  ? "border-indigo-500/20 bg-indigo-900/20"
-                  : "border-indigo-100 bg-indigo-50"
-              }`}
+              className="flex items-center justify-between rounded-2xl border p-4 shadow-xl 
+                border-green-100 bg-green-50 dark:border-gray-700 dark:bg-gray-800"
             >
               <div className="flex items-center gap-3">
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500 text-white">
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white shadow-lg shadow-green-500/20">
                   <Store className="h-5 w-5" />
                   <span className="absolute -bottom-1 -right-1 flex h-3 w-3">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-900"></span>
+                    <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></span>
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+                  <p className="text-xs font-bold uppercase tracking-wider text-green-500">
                     Active Shift
                   </p>
                   <p
-                    className={`font-semibold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
+                    className="font-semibold text-gray-900 dark:text-white"
                   >
                     Employee #{session.employeeId}
                   </p>
@@ -272,21 +248,15 @@ export default function MobilePOSDashboard() {
               {/* 1. Add to Stock */}
               <button
                 onClick={() => startScanner("ADD_STOCK")}
-                className={`group flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800 hover:bg-gray-800/80"
-                    : "border-gray-100 bg-white hover:border-gray-200"
-                }`}
+                className="group flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] 
+                  border-gray-100 bg-white hover:border-gray-200 
+                  dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-lg shadow-green-500/30 transition-transform group-hover:scale-110">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-green-700 text-white shadow-lg shadow-green-500/30 transition-transform group-hover:scale-110">
                   <Box className="h-8 w-8" />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className={`font-bold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
+                  <h3 className="font-bold text-gray-900 dark:text-white">
                     Add Stock
                   </h3>
                   <p className="mt-1 text-xs font-medium text-gray-500">
@@ -298,21 +268,15 @@ export default function MobilePOSDashboard() {
               {/* 2. Customer Checkout */}
               <button
                 onClick={() => startScanner("CHECKOUT")}
-                className={`group flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800 hover:bg-gray-800/80"
-                    : "border-gray-100 bg-white hover:border-gray-200"
-                }`}
+                className="group flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] 
+                  border-gray-100 bg-white hover:border-gray-200 
+                  dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 text-white shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-green-700 text-white shadow-lg shadow-green-500/30 transition-transform group-hover:scale-110">
                   <ShoppingCart className="h-8 w-8" />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className={`font-bold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
+                  <h3 className="font-bold text-gray-900 dark:text-white">
                     Checkout
                   </h3>
                   <p className="mt-1 text-xs font-medium text-gray-500">
@@ -323,21 +287,15 @@ export default function MobilePOSDashboard() {
 
               {/* 3. Print Invoices */}
               <button
-                className={`group col-span-2 flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800 hover:bg-gray-800/80"
-                    : "border-gray-100 bg-white hover:border-gray-200"
-                }`}
+                className="group col-span-2 flex flex-col items-center justify-center gap-4 rounded-3xl border p-6 shadow-sm transition-all hover:shadow-md active:scale-[0.98] 
+                  border-gray-100 bg-white hover:border-gray-200 
+                  dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-400 to-fuchsia-600 text-white shadow-lg shadow-purple-500/30 transition-transform group-hover:scale-110">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-green-700 text-white shadow-lg shadow-green-500/30 transition-transform group-hover:scale-110">
                   <Printer className="h-8 w-8" />
                 </div>
                 <div className="text-center">
-                  <h3
-                    className={`font-bold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
+                  <h3 className="font-bold text-gray-900 dark:text-white">
                     Print Invoices
                   </h3>
                   <p className="mt-1 text-xs font-medium text-gray-500">
