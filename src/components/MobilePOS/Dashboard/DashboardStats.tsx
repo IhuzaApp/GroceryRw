@@ -3,9 +3,10 @@ import { Store } from "lucide-react";
 
 interface DashboardStatsProps {
   employeeId: string;
+  employeeName?: string;
 }
 
-export const DashboardStats: React.FC<DashboardStatsProps> = ({ employeeId }) => {
+export const DashboardStats: React.FC<DashboardStatsProps> = ({ employeeId, employeeName }) => {
   return (
     <div className="flex items-center justify-between rounded-2xl border p-4 shadow-xl border-green-100 bg-green-50 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center gap-3">
@@ -21,7 +22,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ employeeId }) =>
             Active Shift
           </p>
           <p className="font-semibold text-gray-900 dark:text-white">
-            Employee #{employeeId}
+            {employeeName || `Employee #${employeeId}`}
           </p>
         </div>
       </div>

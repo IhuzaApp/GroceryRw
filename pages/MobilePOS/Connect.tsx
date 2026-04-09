@@ -182,6 +182,7 @@ export default function MobilePOSConnect() {
         shopName: currentUser.Shops.name,
         shopId: currentUser.shop_id,
         employeeId: currentUser.id,
+        employeeName: currentUser.fullnames,
         expiresAt: Date.now() + 24 * 60 * 60 * 1000,
       }));
       router.push("/MobilePOS/Dashboard");

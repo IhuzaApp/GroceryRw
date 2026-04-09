@@ -37,6 +37,7 @@ export default async function handler(
           password
           twoFactorSecret: twoFactorSecrets
           shop_id
+          fullnames
           Shops {
             name
           }

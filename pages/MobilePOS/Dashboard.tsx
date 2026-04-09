@@ -21,6 +21,7 @@ export default function MobilePOSDashboard() {
     shopName: string;
     shopId: string;
     employeeId: string;
+    employeeName: string;
     expiresAt: number;
   } | null>(null);
   const [shiftState, setShiftState] = useState<ShiftState>("PENDING_OPEN");
@@ -203,7 +204,7 @@ export default function MobilePOSDashboard() {
 
         {shiftState === "ACTIVE" && (
           <div className="mt-4 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
-            <DashboardStats employeeId={session.employeeId} />
+            <DashboardStats employeeId={session.employeeId} employeeName={session.employeeName} />
             <DashboardGrid 
               onAddStock={() => router.push("/MobilePOS/AddStock")}
               onCheckout={() => router.push("/MobilePOS/Checkout")}
