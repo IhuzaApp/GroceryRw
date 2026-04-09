@@ -10,6 +10,7 @@ import { CloseShiftModal } from "../../src/components/MobilePOS/Dashboard/CloseS
 import { DashboardStats } from "../../src/components/MobilePOS/Dashboard/DashboardStats";
 import { DashboardGrid } from "../../src/components/MobilePOS/Dashboard/DashboardGrid";
 import POSBarcodeScanner from "../../src/components/ui/POSBarcodeScanner";
+import BottomBar from "../../src/components/ui/NavBar/bottomBar";
 
 type ShiftState = "PENDING_OPEN" | "ACTIVE" | "PENDING_CLOSE";
 
@@ -221,6 +222,8 @@ export default function MobilePOSDashboard() {
           }}
         />
       )}
+
+      <BottomBar />
     </div>
   );
 }

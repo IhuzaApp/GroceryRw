@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { POSHeader } from "../../src/components/MobilePOS/POSHeader";
 import dynamic from "next/dynamic";
+import BottomBar from "../../src/components/ui/NavBar/bottomBar";
 
 const POSBarcodeScanner = dynamic(
   () => import("../../src/components/ui/POSBarcodeScanner"),
@@ -820,6 +821,8 @@ export default function AddStock() {
           onClose={() => setShowScanner(false)}
         />
       )}
+
+      <BottomBar />
     </div>
   );
 }
