@@ -6,16 +6,20 @@ interface OpenShiftCardProps {
   loading?: boolean;
 }
 
-export const OpenShiftCard: React.FC<OpenShiftCardProps> = ({ onOpen, loading }) => {
+export const OpenShiftCard: React.FC<OpenShiftCardProps> = ({
+  onOpen,
+  loading,
+}) => {
   return (
     <div className="mt-10 duration-500 animate-in fade-in zoom-in-95">
-      <div className="rounded-3xl p-8 text-center shadow-2xl border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
+      <div className="rounded-3xl border border-gray-100 bg-white p-8 text-center shadow-2xl dark:border-gray-700 dark:bg-gray-800">
         <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
           <PlayCircle className="h-12 w-12" />
         </div>
         <h2 className="mb-2 text-2xl font-black">Start Shift</h2>
         <p className="mb-8 text-sm font-medium text-gray-500 dark:text-gray-400">
-          To begin your 24-hour shift, you must first record the opening stock balance.
+          To begin your 24-hour shift, you must first record the opening stock
+          balance.
         </p>
         <button
           onClick={onOpen}

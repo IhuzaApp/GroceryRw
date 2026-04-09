@@ -3,11 +3,15 @@ import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { INSERT_PRODUCT_NAME, INSERT_PRODUCT } from "../queries/products";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Method not allowed" });
 
   const {
-    mode,            // "new_product" | "add_to_shop" | "top_up"
+    mode, // "new_product" | "add_to_shop" | "top_up"
     shopId,
     // Product identity (for new product)
     productName,
@@ -35,7 +39,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "shopId and quantity are required" });
   }
 
-  if (!hasuraClient) return res.status(500).json({ error: "Hasura client not initialized" });
+  if (!hasuraClient)
+    return res.status(500).json({ error: "Hasura client not initialized" });
 
   const now = new Date().toISOString();
 
@@ -45,7 +50,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ── Mode: new_product ────────────────────────────────────────────────────
     // Create in productNames first, then add to Products
     if (mode === "new_product") {
-      if (!productName) return res.status(400).json({ error: "productName is required" });
+      if (!productName)
+        return res.status(400).json({ error: "productName is required" });
 
       const nameResult: any = await hasuraClient.request(INSERT_PRODUCT_NAME, {
         name: productName,
@@ -56,27 +62,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       finalProductNameId = nameResult.insert_productNames?.returning?.[0]?.id;
-      if (!finalProductNameId) throw new Error("Failed to create product name record");
+      if (!finalProductNameId)
+        throw new Error("Failed to create product name record");
     }
 
     // ── Mode: top_up ─────────────────────────────────────────────────────────
     if (mode === "top_up" && productId) {
       const UPDATE_STOCK = gql`
         mutation UpdateStock(
-          $id: uuid!, $addQty: Int!, $supplier: String,
-          $price: String, $final_price: String, $buying_price: String, $updated_at: String
+          $id: uuid!
+          $addQty: Int!
+          $supplier: String
+          $price: String
+          $final_price: String
+          $buying_price: String
+          $updated_at: String
         ) {
           update_Products_by_pk(
-            pk_columns: { id: $id },
-            _inc: { quantity: $addQty },
+            pk_columns: { id: $id }
+            _inc: { quantity: $addQty }
             _set: {
-              supplier: $supplier,
-              price: $price,
-              final_price: $final_price,
-              buying_price: $buying_price,
+              supplier: $supplier
+              price: $price
+              final_price: $final_price
+              buying_price: $buying_price
               updated_at: $updated_at
             }
-          ) { id quantity }
+          ) {
+            id
+            quantity
+          }
         }
       `;
 
@@ -90,26 +105,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updated_at: now,
       });
 
-      return res.status(200).json({ success: true, updated: result.update_Products_by_pk });
+      return res
+        .status(200)
+        .json({ success: true, updated: result.update_Products_by_pk });
     }
 
     // ── Update Product Identity (SKU/Barcode) if they were empty ─────────────
     if (finalProductNameId && (barcode || sku)) {
       const UPDATE_PRODUCT_NAME_ID = gql`
-        mutation UpdateProductNameIdentity($id: uuid!, $barcode: String, $sku: String) {
+        mutation UpdateProductNameIdentity(
+          $id: uuid!
+          $barcode: String
+          $sku: String
+        ) {
           update_productNames_by_pk(
-            pk_columns: { id: $id },
+            pk_columns: { id: $id }
             _set: { barcode: $barcode, sku: $sku }
-          ) { id }
+          ) {
+            id
+          }
         }
       `;
-      await hasuraClient.request(UPDATE_PRODUCT_NAME_ID, {
-        id: finalProductNameId,
-        barcode: barcode || undefined,
-        sku: sku || undefined
-      }).catch(err => {
-        console.warn("Minor: Failed to update product global identity:", err.message);
-      });
+      await hasuraClient
+        .request(UPDATE_PRODUCT_NAME_ID, {
+          id: finalProductNameId,
+          barcode: barcode || undefined,
+          sku: sku || undefined,
+        })
+        .catch((err) => {
+          console.warn(
+            "Minor: Failed to update product global identity:",
+            err.message
+          );
+        });
     }
 
     // ── Mode: new_product OR add_to_shop ────────────────────────────────────
@@ -137,6 +165,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (error: any) {
     console.error("Add stock failed:", error);
-    return res.status(500).json({ error: "Add stock failed", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Add stock failed", details: error.message });
   }
 }

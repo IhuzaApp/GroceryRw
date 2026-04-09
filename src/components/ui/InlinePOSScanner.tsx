@@ -5,13 +5,7 @@ import {
   prepareZXingModule,
 } from "zxing-wasm";
 import { useTheme } from "../../context/ThemeContext";
-import {
-  Zap,
-  ZapOff,
-  Eye,
-  Maximize2,
-  Camera,
-} from "lucide-react";
+import { Zap, ZapOff, Eye, Maximize2, Camera } from "lucide-react";
 
 interface InlinePOSScannerProps {
   onBarcodeDetected: (barcode: string) => void;
@@ -57,10 +51,14 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
   const toggleTorch = useCallback(async () => {
     if (!videoRef.current || !capabilities.torch) return;
     try {
-      const track = (videoRef.current.srcObject as MediaStream)?.getVideoTracks()[0];
+      const track = (
+        videoRef.current.srcObject as MediaStream
+      )?.getVideoTracks()[0];
       if (track) {
         const newState = !isTorchOn;
-        await track.applyConstraints({ advanced: [{ torch: newState } as any] });
+        await track.applyConstraints({
+          advanced: [{ torch: newState } as any],
+        });
         setIsTorchOn(newState);
       }
     } catch (e) {
@@ -68,18 +66,23 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
     }
   }, [isTorchOn, capabilities]);
 
-  const handleZoom = useCallback(async (value: number) => {
-    if (!videoRef.current || !capabilities.zoom) return;
-    try {
-      const track = (videoRef.current.srcObject as MediaStream)?.getVideoTracks()[0];
-      if (track) {
-        await track.applyConstraints({ advanced: [{ zoom: value } as any] });
-        setZoomLevel(value);
+  const handleZoom = useCallback(
+    async (value: number) => {
+      if (!videoRef.current || !capabilities.zoom) return;
+      try {
+        const track = (
+          videoRef.current.srcObject as MediaStream
+        )?.getVideoTracks()[0];
+        if (track) {
+          await track.applyConstraints({ advanced: [{ zoom: value } as any] });
+          setZoomLevel(value);
+        }
+      } catch (e) {
+        console.warn("Zoom failed:", e);
       }
-    } catch (e) {
-      console.warn("Zoom failed:", e);
-    }
-  }, [capabilities]);
+    },
+    [capabilities]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -118,7 +121,14 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
         let frameCount = 0;
 
         const scanFrame = async () => {
-          if (!isMounted || successMode || isProcessing || !videoRef.current || !ctx) return;
+          if (
+            !isMounted ||
+            successMode ||
+            isProcessing ||
+            !videoRef.current ||
+            !ctx
+          )
+            return;
           isProcessing = true;
 
           try {
@@ -147,14 +157,25 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
             const row = Math.floor(roiH * 0.5) * targetWidth * 4;
             for (let x = 100; x < targetWidth - 100; x += 15) {
               const i = row + x * 4;
-              const lum = (roiImageData.data[i] + roiImageData.data[i + 1] + roiImageData.data[i + 2]) / 3;
+              const lum =
+                (roiImageData.data[i] +
+                  roiImageData.data[i + 1] +
+                  roiImageData.data[i + 2]) /
+                3;
               if (lum < 60 || lum > 190) lineScore++;
             }
             setHasVisualLines(lineScore > 30);
             if (frameCount % 10 === 0) setEnginePulse((p) => (p + 1) % 4);
 
             const results = await readBarcodesFromImageData(roiImageData, {
-              formats: ["EAN_13", "EAN_8", "UPC_A", "UPC_E", "Code_128", "Code_39"] as BarcodeFormat[],
+              formats: [
+                "EAN_13",
+                "EAN_8",
+                "UPC_A",
+                "UPC_E",
+                "Code_128",
+                "Code_39",
+              ] as BarcodeFormat[],
               tryHarder: true,
               maxNumberOfSymbols: 1,
             });
@@ -195,7 +216,9 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
           if (isMounted) animationFrameId = requestAnimationFrame(scanFrame);
         };
 
-        setTimeout(() => { if (isMounted) scanFrame(); }, 500);
+        setTimeout(() => {
+          if (isMounted) scanFrame();
+        }, 500);
       } catch (err) {
         if (isMounted) setError("Could not start camera.");
       }
@@ -227,21 +250,32 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
               successMode ? "opacity-40" : "opacity-100"
             }`}
           />
-          
+
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className={`h-[40%] w-[85%] rounded-xl border-2 transition-all duration-300 ${
-              successMode ? "scale-105 border-green-500 bg-green-500/20" : "border-white/30"
-            }`}>
-              <div className={`absolute top-1/2 h-0.5 w-full transition-colors ${
-                successMode ? "bg-green-400" : "bg-red-500/50"
-              }`} />
+            <div
+              className={`h-[40%] w-[85%] rounded-xl border-2 transition-all duration-300 ${
+                successMode
+                  ? "scale-105 border-green-500 bg-green-500/20"
+                  : "border-white/30"
+              }`}
+            >
+              <div
+                className={`absolute top-1/2 h-0.5 w-full transition-colors ${
+                  successMode ? "bg-green-400" : "bg-red-500/50"
+                }`}
+              />
             </div>
           </div>
 
           <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 backdrop-blur-md">
             <div className="flex gap-0.5">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className={`h-1 w-2 rounded-full ${enginePulse >= i ? "bg-green-400" : "bg-white/20"}`} />
+                <div
+                  key={i}
+                  className={`h-1 w-2 rounded-full ${
+                    enginePulse >= i ? "bg-green-400" : "bg-white/20"
+                  }`}
+                />
               ))}
             </div>
             <span className="font-mono text-[9px] font-black uppercase tracking-tighter text-white/80">
@@ -250,22 +284,35 @@ const InlinePOSScanner: React.FC<InlinePOSScannerProps> = ({
           </div>
 
           {showDebug && (
-            <canvas ref={debugCanvasRef} className="absolute left-2 top-2 h-20 w-32 rounded border border-green-500/50 object-cover opacity-80" />
+            <canvas
+              ref={debugCanvasRef}
+              className="absolute left-2 top-2 h-20 w-32 rounded border border-green-500/50 object-cover opacity-80"
+            />
           )}
 
           <div className="absolute right-3 top-3 flex flex-col gap-2">
             <button
               onClick={() => setShowDebug(!showDebug)}
-              className={`p-2 rounded-full backdrop-blur-md ${showDebug ? "bg-green-500 text-white" : "bg-black/40 text-white"}`}
+              className={`rounded-full p-2 backdrop-blur-md ${
+                showDebug ? "bg-green-500 text-white" : "bg-black/40 text-white"
+              }`}
             >
               <Eye className="h-4 w-4" />
             </button>
             {capabilities.torch && (
               <button
                 onClick={toggleTorch}
-                className={`p-2 rounded-full backdrop-blur-md ${isTorchOn ? "bg-yellow-400 text-black" : "bg-black/40 text-white"}`}
+                className={`rounded-full p-2 backdrop-blur-md ${
+                  isTorchOn
+                    ? "bg-yellow-400 text-black"
+                    : "bg-black/40 text-white"
+                }`}
               >
-                {isTorchOn ? <Zap className="h-4 w-4 fill-current" /> : <ZapOff className="h-4 w-4" />}
+                {isTorchOn ? (
+                  <Zap className="h-4 w-4 fill-current" />
+                ) : (
+                  <ZapOff className="h-4 w-4" />
+                )}
               </button>
             )}
           </div>

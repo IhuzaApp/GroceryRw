@@ -23,19 +23,23 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   closingStockInput,
 }) => {
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 text-gray-900 dark:text-white">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 text-gray-900 backdrop-blur-sm dark:text-white sm:p-4">
       <div className="w-full max-w-md rounded-t-[3rem] bg-white p-10 shadow-2xl animate-in slide-in-from-bottom dark:bg-gray-900">
         <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">
           <StopCircle className="h-12 w-12" />
         </div>
 
-        <h2 className="mb-2 text-3xl font-black tracking-tight text-center">Closing Shift</h2>
-        
+        <h2 className="mb-2 text-center text-3xl font-black tracking-tight">
+          Closing Shift
+        </h2>
+
         {/* Accurate Shift Summary */}
-        <div className="mb-8 space-y-3 rounded-2xl bg-gray-50 p-6 dark:bg-gray-800/50 text-left">
+        <div className="mb-8 space-y-3 rounded-2xl bg-gray-50 p-6 text-left dark:bg-gray-800/50">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Opening Stock</span>
-            <span className="font-black">{parseFloat(openingStock).toLocaleString()} RWF</span>
+            <span className="font-black">
+              {parseFloat(openingStock).toLocaleString()} RWF
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Items Processed</span>
@@ -43,9 +47,11 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Session Total Sales</span>
-            <span className="font-black text-green-600">{totalSales.toLocaleString()} RWF</span>
+            <span className="font-black text-green-600">
+              {totalSales.toLocaleString()} RWF
+            </span>
           </div>
-          <div className="border-t border-gray-100 pt-3 dark:border-gray-700 mt-2 flex justify-between text-xs font-bold uppercase tracking-widest text-gray-400">
+          <div className="mt-2 flex justify-between border-t border-gray-100 pt-3 text-xs font-bold uppercase tracking-widest text-gray-400 dark:border-gray-700">
             <span>Shift Duration</span>
             <span>{duration}</span>
           </div>
@@ -53,14 +59,14 @@ export const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
 
         {/* Closing Stock Input */}
         <div className="mb-8">
-          <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 text-left">
+          <label className="mb-2 block text-left text-xs font-black uppercase tracking-widest text-gray-400">
             Closing Stock Balance
           </label>
           <input
             type="number"
             value={closingStockInput}
             readOnly
-            className="w-full rounded-2xl border-none bg-gray-50 p-4 font-black text-center text-lg placeholder:text-gray-300 dark:bg-gray-800 opacity-80"
+            className="w-full rounded-2xl border-none bg-gray-50 p-4 text-center text-lg font-black opacity-80 placeholder:text-gray-300 dark:bg-gray-800"
           />
         </div>
 

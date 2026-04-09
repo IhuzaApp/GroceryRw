@@ -13,7 +13,9 @@ export default async function handler(
   const { shopId, employeeId } = req.body;
 
   if (!shopId || !employeeId) {
-    return res.status(400).json({ error: "shopId and employeeId are required" });
+    return res
+      .status(400)
+      .json({ error: "shopId and employeeId are required" });
   }
 
   if (!hasuraClient) {
@@ -27,18 +29,26 @@ export default async function handler(
     const todayIso = today.toISOString();
 
     const SHIFT_STATS_QUERY = gql`
-      query GetShiftStats($shopId: uuid!, $employeeId: uuid!, $today: timestamptz!) {
-        shopCheckouts(where: {
-          shop_id: {_eq: $shopId},
-          Processed_By: {_eq: $employeeId},
-          created_on: {_gte: $today}
-        }) {
+      query GetShiftStats(
+        $shopId: uuid!
+        $employeeId: uuid!
+        $today: timestamptz!
+      ) {
+        shopCheckouts(
+          where: {
+            shop_id: { _eq: $shopId }
+            Processed_By: { _eq: $employeeId }
+            created_on: { _gte: $today }
+          }
+        ) {
           total
           cartItems
         }
-        SalesRecordings(where: {
-          shop_id: {_eq: $shopId}
-        }, order_by: {update_at: desc}, limit: 1) {
+        SalesRecordings(
+          where: { shop_id: { _eq: $shopId } }
+          order_by: { update_at: desc }
+          limit: 1
+        ) {
           closing_stock
         }
       }
@@ -47,7 +57,7 @@ export default async function handler(
     const data: any = await hasuraClient.request(SHIFT_STATS_QUERY, {
       shopId,
       employeeId,
-      today: todayIso
+      today: todayIso,
     });
 
     const checkouts = data.shopCheckouts || [];
@@ -59,7 +69,8 @@ export default async function handler(
 
     checkouts.forEach((c: any) => {
       totalSales += parseFloat(c.total || "0");
-      const items = typeof c.cartItems === "string" ? JSON.parse(c.cartItems) : c.cartItems;
+      const items =
+        typeof c.cartItems === "string" ? JSON.parse(c.cartItems) : c.cartItems;
       if (Array.isArray(items)) {
         items.forEach((it: any) => {
           totalItems += it.quantity || 0;
@@ -72,12 +83,13 @@ export default async function handler(
       stats: {
         totalItems,
         totalSales,
-        lastClosingStock
-      }
+        lastClosingStock,
+      },
     });
-
   } catch (error: any) {
     console.error("Failed to fetch shift stats:", error);
-    return res.status(500).json({ error: "Internal server error", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
   }
 }

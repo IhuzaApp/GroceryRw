@@ -28,18 +28,23 @@ export default function MobilePOSDashboard() {
   const [shiftStartedAt, setShiftStartedAt] = useState<number | null>(null);
   const [openingStock, setOpeningStock] = useState<string>("0");
   const [closingStockInput, setClosingStockInput] = useState<string>("");
-  const [shiftStats, setShiftStats] = useState<{ totalItems: number; totalSales: number }>({ totalItems: 0, totalSales: 0 });
-  
+  const [shiftStats, setShiftStats] = useState<{
+    totalItems: number;
+    totalSales: number;
+  }>({ totalItems: 0, totalSales: 0 });
+
   const [showScanner, setShowScanner] = useState(false);
-  const [scannerMode, setScannerMode] = useState<"ADD_STOCK" | "CHECKOUT" | null>(null);
+  const [scannerMode, setScannerMode] = useState<
+    "ADD_STOCK" | "CHECKOUT" | null
+  >(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const existingSession = localStorage.getItem("mobile_pos_session");
     if (existingSession) {
       const parsed = JSON.parse(existingSession);
-      const isLegacy = !parsed.shopId || typeof parsed.employeeId === 'number';
-      
+      const isLegacy = !parsed.shopId || typeof parsed.employeeId === "number";
+
       if (parsed.expiresAt > Date.now() && !isLegacy) {
         setSession(parsed);
       } else {
@@ -68,16 +73,19 @@ export default function MobilePOSDashboard() {
       const res = await fetch("/api/mobile-pos/shift-stats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopId: session.shopId, employeeId: session.employeeId })
+        body: JSON.stringify({
+          shopId: session.shopId,
+          employeeId: session.employeeId,
+        }),
       });
       const data = await res.json();
       const lastStock = data.stats?.lastClosingStock || "0";
-      
+
       const startTime = Date.now();
       setOpeningStock(lastStock);
       setShiftStartedAt(startTime);
       setShiftState("ACTIVE");
-      
+
       localStorage.setItem("mobile_pos_shift_state", "ACTIVE");
       localStorage.setItem("mobile_pos_shift_start", String(startTime));
       localStorage.setItem("mobile_pos_opening_stock", lastStock);
@@ -96,12 +104,16 @@ export default function MobilePOSDashboard() {
       const res = await fetch("/api/mobile-pos/shift-stats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopId: session.shopId, employeeId: session.employeeId })
+        body: JSON.stringify({
+          shopId: session.shopId,
+          employeeId: session.employeeId,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setShiftStats(data.stats);
-        const calculatedClosing = parseFloat(openingStock) + data.stats.totalSales;
+        const calculatedClosing =
+          parseFloat(openingStock) + data.stats.totalSales;
         setClosingStockInput(String(calculatedClosing));
       }
     } catch (e) {
@@ -133,8 +145,8 @@ export default function MobilePOSDashboard() {
           opening_stock: openingStock,
           orgUser_id: session.employeeId,
           shift_durantion: calculateDuration(),
-          shop_id: session.shopId
-        })
+          shop_id: session.shopId,
+        }),
       });
 
       if (res.ok) {
@@ -164,19 +176,19 @@ export default function MobilePOSDashboard() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen pb-20 bg-gray-50 text-gray-900 dark:bg-black dark:text-white">
+    <div className="min-h-screen bg-gray-50 pb-20 text-gray-900 dark:bg-black dark:text-white">
       <Head>
         <title>Mobile POS Dashboard</title>
       </Head>
 
-      <POSHeader 
+      <POSHeader
         title={session.shopName}
         subtitle="POS Terminal"
         onBack={() => router.push("/")}
         rightAction={
           <button
             onClick={handleCloseShiftCheck}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 transition active:scale-95 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+            className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-red-600 transition hover:bg-red-100 active:scale-95 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
           >
             <span className="text-xs font-black uppercase">End Shift</span>
             <LogOut className="h-4 w-4" />
@@ -190,7 +202,7 @@ export default function MobilePOSDashboard() {
         )}
 
         {shiftState === "PENDING_CLOSE" && (
-          <CloseShiftModal 
+          <CloseShiftModal
             onCancel={() => setShiftState("ACTIVE")}
             onSubmit={submitCloseShift}
             loading={loading}
@@ -204,8 +216,11 @@ export default function MobilePOSDashboard() {
 
         {shiftState === "ACTIVE" && (
           <div className="mt-4 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
-            <DashboardStats employeeId={session.employeeId} employeeName={session.employeeName} />
-            <DashboardGrid 
+            <DashboardStats
+              employeeId={session.employeeId}
+              employeeName={session.employeeName}
+            />
+            <DashboardGrid
               onAddStock={() => router.push("/MobilePOS/AddStock")}
               onCheckout={() => router.push("/MobilePOS/Checkout")}
               onPrintInvoices={() => {}}

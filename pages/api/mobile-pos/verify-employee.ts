@@ -13,13 +13,17 @@ export default async function handler(
   const { shopName, employeeId } = req.body;
 
   if (!shopName || !employeeId) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
   }
 
   // Parse employeeId as integer
   const empIdInt = parseInt(String(employeeId), 10);
   if (isNaN(empIdInt)) {
-    return res.status(400).json({ success: false, message: "Employee ID must be a number" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Employee ID must be a number" });
   }
 
   if (!hasuraClient) {
@@ -29,10 +33,12 @@ export default async function handler(
   try {
     const VERIFY_EMPLOYEE_QUERY = gql`
       query VerifyEmployee($shopName: String!, $employeeID: Int!) {
-        orgEmployees(where: {
-          employeeID: {_eq: $employeeID},
-          Shops: {name: {_eq: $shopName}}
-        }) {
+        orgEmployees(
+          where: {
+            employeeID: { _eq: $employeeID }
+            Shops: { name: { _eq: $shopName } }
+          }
+        ) {
           id
           password
           twoFactorSecret: twoFactorSecrets
@@ -50,31 +56,43 @@ export default async function handler(
     `;
 
     const variables = { shopName, employeeID: empIdInt };
-    const data: any = await hasuraClient.request(VERIFY_EMPLOYEE_QUERY, variables);
+    const data: any = await hasuraClient.request(
+      VERIFY_EMPLOYEE_QUERY,
+      variables
+    );
 
     if (data.orgEmployees && data.orgEmployees.length > 0) {
       const user = data.orgEmployees[0];
-      
+
       // Handle the case where twoFactorSecrets is a JSON mapping (e.g., {"4-shopId": {"secret": "BASE32", "uri": "..."}})
       let extractedSecret = user.twoFactorSecret;
-      if (extractedSecret && typeof extractedSecret === "string" && extractedSecret.trim().startsWith("{")) {
+      if (
+        extractedSecret &&
+        typeof extractedSecret === "string" &&
+        extractedSecret.trim().startsWith("{")
+      ) {
         try {
           const secretsMap = JSON.parse(extractedSecret);
 
           // Find the right key: exact int, exact string, composite key starting with employeeID, or first key
-          const matchingKey = 
-            Object.keys(secretsMap).find(k => k === String(empIdInt) || k.startsWith(`${empIdInt}-`)) 
-            || Object.keys(secretsMap)[0];
+          const matchingKey =
+            Object.keys(secretsMap).find(
+              (k) => k === String(empIdInt) || k.startsWith(`${empIdInt}-`)
+            ) || Object.keys(secretsMap)[0];
 
           if (matchingKey) {
             const rawValue = secretsMap[matchingKey];
-            
+
             if (typeof rawValue === "string") {
               // Already a plain Base32 string
               extractedSecret = rawValue;
             } else if (rawValue && typeof rawValue === "object") {
               // Nested object like {secret: "BASE32", uri: "otpauth://..."}
-              extractedSecret = rawValue.secret || rawValue.base32 || rawValue.key || Object.values(rawValue)[0] as string;
+              extractedSecret =
+                rawValue.secret ||
+                rawValue.base32 ||
+                rawValue.key ||
+                (Object.values(rawValue)[0] as string);
             }
           }
 
@@ -94,10 +112,18 @@ export default async function handler(
 
       return res.status(200).json({ success: true, user });
     } else {
-      return res.status(401).json({ success: false, message: "Invalid credentials or shop name" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials or shop name" });
     }
   } catch (error: any) {
     console.error("Employee verification failed:", error);
-    return res.status(500).json({ success: false, message: "Internal server error", details: error.message });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal server error",
+        details: error.message,
+      });
   }
 }

@@ -23,27 +23,36 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
   setTin,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:p-4 text-gray-900 dark:text-white">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 text-gray-900 backdrop-blur-sm dark:text-white sm:p-4">
       <div className="w-full max-w-md rounded-t-[3rem] bg-white p-10 shadow-2xl animate-in slide-in-from-bottom dark:bg-gray-900">
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-3xl font-black">Payment</h2>
-          <button onClick={onClose} className="rounded-full bg-gray-100 p-2 dark:bg-gray-800">
+          <button
+            onClick={onClose}
+            className="rounded-full bg-gray-100 p-2 dark:bg-gray-800"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
         <div className="mb-8 rounded-3xl bg-green-50 p-6 dark:bg-green-500/10">
-          <p className="text-xs font-bold uppercase tracking-widest text-green-600">Amount Due</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-green-600">
+            Amount Due
+          </p>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-black text-green-700 dark:text-green-400">
               {total.toLocaleString()}
             </span>
-            <span className="text-sm font-bold text-green-600/60 uppercase">RWF</span>
+            <span className="text-sm font-bold uppercase text-green-600/60">
+              RWF
+            </span>
           </div>
         </div>
 
         <div className="mb-8 space-y-4">
-          <label className="text-xs font-black uppercase tracking-widest text-gray-400 text-left block">Payment Method</label>
+          <label className="block text-left text-xs font-black uppercase tracking-widest text-gray-400">
+            Payment Method
+          </label>
           <div className="grid grid-cols-3 gap-3">
             {["momo", "cash", "card"].map((method) => (
               <button
@@ -62,7 +71,9 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
         </div>
 
         <div className="mb-10 text-left">
-          <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">Customer TIN (Optional)</label>
+          <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">
+            Customer TIN (Optional)
+          </label>
           <input
             type="text"
             placeholder="Enter TIN for EBM"

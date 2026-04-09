@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { 
-  Search, 
-  Camera, 
-  ShoppingCart,
-  Receipt
-} from "lucide-react";
+import { Search, Camera, ShoppingCart, Receipt } from "lucide-react";
 
 // Components
 import { POSHeader } from "../../src/components/MobilePOS/POSHeader";
@@ -25,7 +20,7 @@ export default function POSCheckout() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [cart, setCart] = useState<any[]>([]);
-  
+
   // Payment State
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -53,8 +48,8 @@ export default function POSCheckout() {
           if (res.ok) {
             const data = await res.json();
             // Filter products by shop_id if session exists
-            const filtered = (data.products || []).filter((p: any) => 
-                !session?.shopId || p.shop_id === session.shopId
+            const filtered = (data.products || []).filter(
+              (p: any) => !session?.shopId || p.shop_id === session.shopId
             );
             setSearchResults(filtered);
           }
@@ -119,9 +114,9 @@ export default function POSCheckout() {
         body: JSON.stringify({
           shop_id: session.shopId,
           Processed_By: session.employeeId,
-          cartItems: cart.map(item => ({
+          cartItems: cart.map((item) => ({
             ...item,
-            quantity: item.cartQuantity // Map for API
+            quantity: item.cartQuantity, // Map for API
           })),
           total,
           tax,
@@ -151,7 +146,7 @@ export default function POSCheckout() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-40 dark:bg-black text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-gray-50 pb-40 text-gray-900 dark:bg-black dark:text-white">
       <Head>
         <title>POS Checkout</title>
       </Head>
@@ -180,20 +175,33 @@ export default function POSCheckout() {
       <div className="mx-auto max-w-md p-6">
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className="mb-8 space-y-3 rounded-[2rem] border border-gray-100 bg-white p-4 shadow-2xl dark:border-gray-800 dark:bg-gray-900 animate-in fade-in slide-in-from-top-2">
-            <p className="px-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Search Results</p>
+          <div className="mb-8 space-y-3 rounded-[2rem] border border-gray-100 bg-white p-4 shadow-2xl animate-in fade-in slide-in-from-top-2 dark:border-gray-800 dark:bg-gray-900">
+            <p className="px-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+              Search Results
+            </p>
             {searchResults.map((product) => (
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="flex w-full items-center gap-4 rounded-2xl p-2 transition hover:bg-gray-50 dark:hover:bg-gray-800 text-left"
+                className="flex w-full items-center gap-4 rounded-2xl p-2 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
               >
-                <div className="h-12 w-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                   {product.ProductName?.image ? <img src={product.ProductName.image} className="w-full h-full object-cover" /> : <Search className="text-gray-400 h-5 w-5" />}
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                  {product.ProductName?.image ? (
+                    <img
+                      src={product.ProductName.image}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Search className="h-5 w-5 text-gray-400" />
+                  )}
                 </div>
                 <div>
-                  <p className="font-bold">{product.ProductName?.name || "Product"}</p>
-                  <p className="text-xs font-black text-green-600">{parseFloat(product.price).toLocaleString()} RWF</p>
+                  <p className="font-bold">
+                    {product.ProductName?.name || "Product"}
+                  </p>
+                  <p className="text-xs font-black text-green-600">
+                    {parseFloat(product.price).toLocaleString()} RWF
+                  </p>
                 </div>
               </button>
             ))}
@@ -205,8 +213,8 @@ export default function POSCheckout() {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-black">Shopping Cart</h2>
             <button
-               onClick={() => setCart([])}
-               className="text-xs font-black uppercase tracking-widest text-red-500/60 hover:text-red-500"
+              onClick={() => setCart([])}
+              className="text-xs font-black uppercase tracking-widest text-red-500/60 hover:text-red-500"
             >
               Clear Cart
             </button>
@@ -214,9 +222,9 @@ export default function POSCheckout() {
 
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-              <div className="relative h-24 w-24 mb-4">
+              <div className="relative mb-4 h-24 w-24">
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                    <Receipt className="h-10 w-10 text-gray-300 dark:text-gray-600" />
+                  <Receipt className="h-10 w-10 text-gray-300 dark:text-gray-600" />
                 </div>
               </div>
               <p className="font-bold">No items in cart</p>
@@ -225,7 +233,7 @@ export default function POSCheckout() {
           ) : (
             <div className="space-y-4">
               {cart.map((item) => (
-                <CartItem 
+                <CartItem
                   key={item.id}
                   item={item}
                   onUpdateQuantity={updateQuantity}
@@ -237,7 +245,7 @@ export default function POSCheckout() {
         </div>
       </div>
 
-      <CheckoutFooter 
+      <CheckoutFooter
         subtotal={subtotal}
         tax={tax}
         total={total}
@@ -246,7 +254,7 @@ export default function POSCheckout() {
       />
 
       {isPaymentOpen && (
-        <PaymentDialog 
+        <PaymentDialog
           total={total}
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
@@ -261,8 +269,8 @@ export default function POSCheckout() {
       {showScanner && (
         <POSBarcodeScanner
           onBarcodeDetected={(barcode) => {
-             console.log("Scanned barcode:", barcode);
-             // Implement barcode to product lookup if needed
+            console.log("Scanned barcode:", barcode);
+            // Implement barcode to product lookup if needed
           }}
           onClose={() => setShowScanner(false)}
         />

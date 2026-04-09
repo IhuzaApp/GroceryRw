@@ -14,7 +14,7 @@ export const CheckoutFooter: React.FC<CheckoutFooterProps> = ({
   tax,
   total,
   onProceed,
-  disabled
+  disabled,
 }) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white/90 p-6 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/80">
@@ -28,7 +28,7 @@ export const CheckoutFooter: React.FC<CheckoutFooterProps> = ({
             <span>VAT (18%) Included</span>
             <span>{tax.toLocaleString()} RWF</span>
           </div>
-          <div className="flex justify-between text-2xl font-black pt-2">
+          <div className="flex justify-between pt-2 text-2xl font-black">
             <span>Total</span>
             <span className="text-green-600">{total.toLocaleString()} RWF</span>
           </div>

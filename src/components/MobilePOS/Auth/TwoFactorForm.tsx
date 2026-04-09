@@ -15,14 +15,15 @@ export const TwoFactorForm: React.FC<TwoFactorFormProps> = ({
   loading,
 }) => {
   return (
-    <div className="duration-500 animate-in fade-in slide-in-from-bottom-4 text-gray-900 dark:text-white">
+    <div className="text-gray-900 duration-500 animate-in fade-in slide-in-from-bottom-4 dark:text-white">
       <div className="mb-8 flex flex-col items-center justify-center text-center">
         <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-green-100 text-green-600 shadow-xl shadow-green-500/10 dark:bg-green-500/20 dark:text-green-400">
           <Fingerprint className="h-12 w-12" />
         </div>
         <h2 className="text-3xl font-black tracking-tight">Two-Factor</h2>
         <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-          Enter the security code from your authenticator app to authorize this terminal.
+          Enter the security code from your authenticator app to authorize this
+          terminal.
         </p>
       </div>
 
@@ -37,7 +38,7 @@ export const TwoFactorForm: React.FC<TwoFactorFormProps> = ({
           autoFocus
           required
         />
-        
+
         <button
           type="submit"
           disabled={loading || totpCode.length < 6}

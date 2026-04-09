@@ -564,8 +564,6 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                     </div>
                   </div>
                 </div>
-
-
               </div>
             </div>
           </div>

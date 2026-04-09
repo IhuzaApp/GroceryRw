@@ -16,7 +16,11 @@ interface CartItemProps {
   onRemove: (id: string) => void;
 }
 
-export const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove }) => {
+export const CartItem: React.FC<CartItemProps> = ({
+  item,
+  onUpdateQuantity,
+  onRemove,
+}) => {
   const imageUrl = item.image || "/images/groceryPlaceholder.png";
 
   return (
@@ -32,7 +36,9 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRe
         />
       </div>
       <div className="flex-1">
-        <h3 className="font-bold text-gray-900 dark:text-white capitalize">{item.name}</h3>
+        <h3 className="font-bold capitalize text-gray-900 dark:text-white">
+          {item.name}
+        </h3>
         <p className="text-sm font-black text-green-600">
           {parseFloat(String(item.price)).toLocaleString()} RWF
         </p>

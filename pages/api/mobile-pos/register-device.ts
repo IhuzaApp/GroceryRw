@@ -18,32 +18,40 @@ export default async function handler(
 
   try {
     const REGISTER_DEVICE_MUTATION = gql`
-      mutation RecordLogin($fingerprint: String!, $loc: String!, $uid: uuid!, $details: String!) {
+      mutation RecordLogin(
+        $fingerprint: String!
+        $loc: String!
+        $uid: uuid!
+        $details: String!
+      ) {
         insert_POSMobileConnect(
           objects: {
-            fingerprint: $fingerprint, 
-            location: $loc, 
-            orgUser_id: $uid, 
+            fingerprint: $fingerprint
+            location: $loc
+            orgUser_id: $uid
             phone_details: $details
-          },
+          }
           on_conflict: {
-            constraint: POSMobileConnect_orgUser_id_key,
+            constraint: POSMobileConnect_orgUser_id_key
             update_columns: [fingerprint, location, phone_details]
           }
-        ) { 
-          affected_rows 
+        ) {
+          affected_rows
         }
       }
     `;
 
-    const variables = { 
-      fingerprint: fingerprint || "unknown", 
-      loc: location || "unknown", 
-      uid: userId, 
-      details: details || "unknown" 
+    const variables = {
+      fingerprint: fingerprint || "unknown",
+      loc: location || "unknown",
+      uid: userId,
+      details: details || "unknown",
     };
 
-    const data: any = await hasuraClient.request(REGISTER_DEVICE_MUTATION, variables);
+    const data: any = await hasuraClient.request(
+      REGISTER_DEVICE_MUTATION,
+      variables
+    );
 
     if (data.insert_POSMobileConnect?.affected_rows > 0) {
       return res.status(200).json({ success: true });
@@ -53,6 +61,11 @@ export default async function handler(
   } catch (error: any) {
     console.error("Device registration failed:", error);
     // We return 200 even on error for device registration to not block the login flow
-    return res.status(200).json({ success: false, message: "Device logging failed but login continues" });
+    return res
+      .status(200)
+      .json({
+        success: false,
+        message: "Device logging failed but login continues",
+      });
   }
 }

@@ -6,9 +6,12 @@ interface DashboardStatsProps {
   employeeName?: string;
 }
 
-export const DashboardStats: React.FC<DashboardStatsProps> = ({ employeeId, employeeName }) => {
+export const DashboardStats: React.FC<DashboardStatsProps> = ({
+  employeeId,
+  employeeName,
+}) => {
   return (
-    <div className="flex items-center justify-between rounded-2xl border p-4 shadow-xl border-green-100 bg-green-50 dark:border-gray-700 dark:bg-gray-800">
+    <div className="flex items-center justify-between rounded-2xl border border-green-100 bg-green-50 p-4 shadow-xl dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center gap-3">
         <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white shadow-lg shadow-green-500/20">
           <Store className="h-5 w-5" />

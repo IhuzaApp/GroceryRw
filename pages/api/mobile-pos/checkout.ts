@@ -28,8 +28,9 @@ export default async function handler(
 
   try {
     // 1. Parse cart items to generate quantity updates
-    const items = typeof cartItems === "string" ? JSON.parse(cartItems) : cartItems;
-    
+    const items =
+      typeof cartItems === "string" ? JSON.parse(cartItems) : cartItems;
+
     // 2. Build the multi-mutation for atomicity
     // We insert the checkout and decrement each product's quantity
     let quantityUpdates = "";
@@ -45,7 +46,7 @@ export default async function handler(
         payment_method,
         number: number || Math.floor(Math.random() * 100000),
         created_on: new Date().toISOString(),
-      }
+      },
     };
 
     items.forEach((item: any, index: number) => {
@@ -68,7 +69,9 @@ export default async function handler(
     const CHECKOUT_MUTATION = gql`
       mutation POSCheckout(
         $checkout: shopCheckouts_insert_input!,
-        ${items.map((_: any, i: number) => `$id_${i}: uuid!, $qty_${i}: Int!`).join(",\n")}
+        ${items
+          .map((_: any, i: number) => `$id_${i}: uuid!, $qty_${i}: Int!`)
+          .join(",\n")}
       ) {
         insert_shopCheckouts_one(object: $checkout) {
           id
@@ -79,24 +82,23 @@ export default async function handler(
     `;
 
     const data = await hasuraClient.request<{
-      insert_shopCheckouts_one: { id: string; number: number }
+      insert_shopCheckouts_one: { id: string; number: number };
     }>(CHECKOUT_MUTATION, variables);
 
     if (!data || !data.insert_shopCheckouts_one) {
       throw new Error("No response from database");
     }
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       checkoutId: data.insert_shopCheckouts_one.id,
-      orderNumber: data.insert_shopCheckouts_one.number
+      orderNumber: data.insert_shopCheckouts_one.number,
     });
-
   } catch (error: any) {
     console.error("Checkout transaction failed:", error);
-    return res.status(500).json({ 
-      error: "Checkout failed", 
-      details: error.message 
+    return res.status(500).json({
+      error: "Checkout failed",
+      details: error.message,
     });
   }
 }

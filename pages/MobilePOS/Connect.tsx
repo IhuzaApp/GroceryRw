@@ -15,9 +15,8 @@ import BottomBar from "../../src/components/ui/NavBar/bottomBar";
 // --- TOTP Helper ---
 const verifyTOTP = (secret: string, code: string) => {
   try {
-    console.log("Verifying TOTP for secret:", secret?.substring(0, 4) + "...");
     const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    
+
     const base32ToHex = (s: string) => {
       let bits = "";
       let hex = "";
@@ -46,13 +45,15 @@ const verifyTOTP = (secret: string, code: string) => {
     const epoch = Math.round(new Date().getTime() / 1000.0);
     const time = leftpad(Math.floor(epoch / 30).toString(16), 16, "0");
 
-    const hmacObj = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(time), CryptoJS.enc.Hex.parse(secretHex));
+    const hmacObj = CryptoJS.HmacSHA1(
+      CryptoJS.enc.Hex.parse(time),
+      CryptoJS.enc.Hex.parse(secretHex)
+    );
     const hmac = hmacObj.toString();
     const offset = parseInt(hmac.substring(hmac.length - 1), 16);
     const otp = (parseInt(hmac.substr(offset * 2, 8), 16) & 0x7fffffff) + "";
     const currentCode = otp.substr(otp.length - 6, 6).padStart(6, "0");
 
-    console.log("Calculated OTP:", currentCode, "vs Provided:", code);
     return currentCode === code;
   } catch (e) {
     console.error("TOTP verification error:", e);
@@ -62,10 +63,12 @@ const verifyTOTP = (secret: string, code: string) => {
 
 // --- Fingerprint Helper ---
 const getDeviceFingerprint = () => {
-    if (typeof window === "undefined") return "";
-    const { userAgent, language, hardwareConcurrency } = window.navigator;
-    const { width, height } = window.screen;
-    return btoa(`${userAgent}-${language}-${hardwareConcurrency}-${width}x${height}`);
+  if (typeof window === "undefined") return "";
+  const { userAgent, language, hardwareConcurrency } = window.navigator;
+  const { width, height } = window.screen;
+  return btoa(
+    `${userAgent}-${language}-${hardwareConcurrency}-${width}x${height}`
+  );
 };
 
 export default function MobilePOSConnect() {
@@ -77,7 +80,7 @@ export default function MobilePOSConnect() {
   const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
-  
+
   const [loading, setLoading] = useState(false);
   const [authRequired, setAuthRequired] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -105,12 +108,13 @@ export default function MobilePOSConnect() {
   useEffect(() => {
     if (shopName.length >= 2) {
       const matches = allShops
-        .filter(s => 
-          s.name.toLowerCase().includes(shopName.toLowerCase()) && 
-          s.name.toLowerCase() !== shopName.toLowerCase()
+        .filter(
+          (s) =>
+            s.name.toLowerCase().includes(shopName.toLowerCase()) &&
+            s.name.toLowerCase() !== shopName.toLowerCase()
         )
         .slice(0, 3)
-        .map(s => s.name);
+        .map((s) => s.name);
       setSuggestions(matches);
     } else {
       setSuggestions([]);
@@ -163,28 +167,32 @@ export default function MobilePOSConnect() {
 
     setLoading(true);
     // Development backdoor for testing 888888
-    const isValid = totpCode === "888888" || verifyTOTP(currentUser.twoFactorSecret, totpCode);
-    console.log("OTP Validation Result:", isValid, "Code used:", totpCode);
+    const isValid =
+      totpCode === "888888" ||
+      verifyTOTP(currentUser.twoFactorSecret, totpCode);
 
     if (isValid) {
       // Register Device (Optional Log)
       try {
-          const fingerprint = getDeviceFingerprint();
-          await fetch("/api/mobile-pos/register-device", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ fingerprint, userId: currentUser.id })
-          }).catch(() => {});
+        const fingerprint = getDeviceFingerprint();
+        await fetch("/api/mobile-pos/register-device", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fingerprint, userId: currentUser.id }),
+        }).catch(() => {});
       } catch (e) {}
 
       // Set Session
-      localStorage.setItem("mobile_pos_session", JSON.stringify({
-        shopName: currentUser.Shops.name,
-        shopId: currentUser.shop_id,
-        employeeId: currentUser.id,
-        employeeName: currentUser.fullnames,
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-      }));
+      localStorage.setItem(
+        "mobile_pos_session",
+        JSON.stringify({
+          shopName: currentUser.Shops.name,
+          shopId: currentUser.shop_id,
+          employeeId: currentUser.id,
+          employeeName: currentUser.fullnames,
+          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        })
+      );
       router.push("/MobilePOS/Dashboard");
     } else {
       alert("Invalid security code");
@@ -199,7 +207,7 @@ export default function MobilePOSConnect() {
         <title>Connect Shop POS</title>
       </Head>
 
-      <POSHeader 
+      <POSHeader
         title={step === "LOGIN" ? "Mobile POS" : "Verify Identity"}
         onBack={() => (step === "2FA" ? setStep("LOGIN") : router.back())}
       />
@@ -211,7 +219,9 @@ export default function MobilePOSConnect() {
               <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-green-100 shadow-xl shadow-green-500/20 dark:bg-green-500/20 dark:shadow-green-500/10">
                 <Store className="h-10 w-10 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-3xl font-black tracking-tight">Connect to Shop</h2>
+              <h2 className="text-3xl font-black tracking-tight">
+                Connect to Shop
+              </h2>
               <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
                 Enter your credentials to start your 24-hour mobile POS shift.
               </p>
@@ -220,10 +230,13 @@ export default function MobilePOSConnect() {
             {authRequired ? (
               <SecurityAlert onBack={() => setAuthRequired(false)} />
             ) : (
-              <LoginForm 
-                shopName={shopName} setShopName={setShopName}
-                employeeId={employeeId} setEmployeeId={setEmployeeId}
-                password={password} setPassword={setPassword}
+              <LoginForm
+                shopName={shopName}
+                setShopName={setShopName}
+                employeeId={employeeId}
+                setEmployeeId={setEmployeeId}
+                password={password}
+                setPassword={setPassword}
                 onSubmit={handleLoginSubmit}
                 suggestions={suggestions}
                 showSuggestions={showSuggestions}
@@ -233,7 +246,7 @@ export default function MobilePOSConnect() {
             )}
           </>
         ) : (
-          <TwoFactorForm 
+          <TwoFactorForm
             totpCode={totpCode}
             setTotpCode={setTotpCode}
             onSubmit={handleTOTPSubmit}
