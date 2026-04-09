@@ -37,7 +37,7 @@ export default async function handler(
       checkout: {
         shop_id,
         Processed_By,
-        cartItems: items, // jsonb
+        cartItems: JSON.stringify(items), // Stored as a stringified JSON string
         subtotal: String(subtotal),
         tax: String(tax),
         total: String(total),
