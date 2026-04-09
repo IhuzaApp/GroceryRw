@@ -52,7 +52,46 @@ export default async function handler(
     const data: any = await hasuraClient.request(VERIFY_EMPLOYEE_QUERY, variables);
 
     if (data.orgEmployees && data.orgEmployees.length > 0) {
-      return res.status(200).json({ success: true, user: data.orgEmployees[0] });
+      const user = data.orgEmployees[0];
+      
+      // Handle the case where twoFactorSecrets is a JSON mapping (e.g., {"4-shopId": {"secret": "BASE32", "uri": "..."}})
+      let extractedSecret = user.twoFactorSecret;
+      if (extractedSecret && typeof extractedSecret === "string" && extractedSecret.trim().startsWith("{")) {
+        try {
+          const secretsMap = JSON.parse(extractedSecret);
+
+          // Find the right key: exact int, exact string, composite key starting with employeeID, or first key
+          const matchingKey = 
+            Object.keys(secretsMap).find(k => k === String(empIdInt) || k.startsWith(`${empIdInt}-`)) 
+            || Object.keys(secretsMap)[0];
+
+          if (matchingKey) {
+            const rawValue = secretsMap[matchingKey];
+            
+            if (typeof rawValue === "string") {
+              // Already a plain Base32 string
+              extractedSecret = rawValue;
+            } else if (rawValue && typeof rawValue === "object") {
+              // Nested object like {secret: "BASE32", uri: "otpauth://..."}
+              extractedSecret = rawValue.secret || rawValue.base32 || rawValue.key || Object.values(rawValue)[0] as string;
+            }
+          }
+
+          console.log("Extracted TOTP secret type:", typeof extractedSecret);
+        } catch (e) {
+          console.warn("Failed to parse twoFactorSecrets JSON:", e);
+        }
+      }
+
+      // Ensure it's always a string before returning
+      if (typeof extractedSecret !== "string") {
+        extractedSecret = String(extractedSecret || "");
+      }
+
+      // Update the user object with the clean, flat secret
+      user.twoFactorSecret = extractedSecret;
+
+      return res.status(200).json({ success: true, user });
     } else {
       return res.status(401).json({ success: false, message: "Invalid credentials or shop name" });
     }

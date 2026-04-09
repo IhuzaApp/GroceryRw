@@ -15,12 +15,15 @@ import BottomBar from "../../src/components/ui/NavBar/bottomBar";
 // --- TOTP Helper ---
 const verifyTOTP = (secret: string, code: string) => {
   try {
+    console.log("Verifying TOTP for secret:", secret?.substring(0, 4) + "...");
     const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    
     const base32ToHex = (s: string) => {
       let bits = "";
       let hex = "";
       for (let i = 0; i < s.length; i++) {
         let val = base32chars.indexOf(s.charAt(i).toUpperCase());
+        if (val === -1) continue;
         bits += val.toString(2).padStart(5, "0");
       }
       for (let i = 0; i + 4 <= bits.length; i += 4) {
@@ -31,14 +34,14 @@ const verifyTOTP = (secret: string, code: string) => {
     };
 
     const leftpad = (str: string, len: number, pad: string) => {
-      if (len + 1 >= str.length) {
-        str = Array(len + 1 - str.length).join(pad) + str;
-      }
-      return str;
+      return (pad.repeat(len) + str).slice(-len);
     };
 
     const secretHex = base32ToHex(secret);
-    if (!secretHex) return false;
+    if (!secretHex) {
+      console.warn("Invalid Base32 secret");
+      return false;
+    }
 
     const epoch = Math.round(new Date().getTime() / 1000.0);
     const time = leftpad(Math.floor(epoch / 30).toString(16), 16, "0");
@@ -49,8 +52,10 @@ const verifyTOTP = (secret: string, code: string) => {
     const otp = (parseInt(hmac.substr(offset * 2, 8), 16) & 0x7fffffff) + "";
     const currentCode = otp.substr(otp.length - 6, 6).padStart(6, "0");
 
+    console.log("Calculated OTP:", currentCode, "vs Provided:", code);
     return currentCode === code;
   } catch (e) {
+    console.error("TOTP verification error:", e);
     return false;
   }
 };
@@ -159,6 +164,7 @@ export default function MobilePOSConnect() {
     setLoading(true);
     // Development backdoor for testing 888888
     const isValid = totpCode === "888888" || verifyTOTP(currentUser.twoFactorSecret, totpCode);
+    console.log("OTP Validation Result:", isValid, "Code used:", totpCode);
 
     if (isValid) {
       // Register Device (Optional Log)

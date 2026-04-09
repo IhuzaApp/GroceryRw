@@ -19,12 +19,18 @@ export default async function handler(
   try {
     const REGISTER_DEVICE_MUTATION = gql`
       mutation RecordLogin($fingerprint: String!, $loc: String!, $uid: uuid!, $details: String!) {
-        insert_POSMobileConnect(objects: {
-          fingerprint: $fingerprint, 
-          location: $loc, 
-          orgUser_id: $uid, 
-          phone_details: $details
-        }) { 
+        insert_POSMobileConnect(
+          objects: {
+            fingerprint: $fingerprint, 
+            location: $loc, 
+            orgUser_id: $uid, 
+            phone_details: $details
+          },
+          on_conflict: {
+            constraint: POSMobileConnect_orgUser_id_key,
+            update_columns: [fingerprint, location, phone_details]
+          }
+        ) { 
           affected_rows 
         }
       }
