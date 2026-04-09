@@ -24,7 +24,6 @@ import InlinePOSScanner from "../../src/components/ui/InlinePOSScanner";
 interface Product {
   id: string;
   price: string;
-  final_price: string;
   quantity: number;
   measurement_unit: string;
   shop_id: string;
@@ -58,16 +57,21 @@ export default function MobilePOSCheckout() {
 
   // --- Initialization ---
   useEffect(() => {
+    let shopId: string | null = null;
     const existingSession = localStorage.getItem("mobile_pos_session");
+    
     if (existingSession) {
       const parsed = JSON.parse(existingSession);
       if (parsed.expiresAt > Date.now()) {
         setSession(parsed);
+        shopId = parsed.shopId;
       } else {
         router.push("/MobilePOS/Connect");
+        return;
       }
     } else {
       router.push("/MobilePOS/Connect");
+      return;
     }
 
     const fetchData = async () => {
@@ -76,10 +80,10 @@ export default function MobilePOSCheckout() {
           fetch("/api/queries/products"),
           fetch("/api/queries/system-config")
         ]);
-        if (prodRes.ok && parsed.shopId) {
+        if (prodRes.ok && shopId) {
           const data = await prodRes.json();
           // FILTER: Only show products belonging to this shop
-          const shopProducts = (data.products || []).filter((p: any) => p.shop_id === parsed.shopId);
+          const shopProducts = (data.products || []).filter((p: any) => p.shop_id === shopId);
           setProducts(shopProducts);
         }
         if (configRes.ok) {
@@ -141,10 +145,11 @@ export default function MobilePOSCheckout() {
   };
 
   // --- Calculations ---
-  const subtotal = cart.reduce((acc, item) => acc + (parseFloat(item.final_price) * item.cartQuantity), 0);
+  const total = cart.reduce((acc, item) => acc + (parseFloat(item.price) * item.cartQuantity), 0);
   const taxRate = systemConfig?.tax ? parseFloat(systemConfig.tax) / 100 : 0.18;
-  const tax = subtotal * taxRate;
-  const total = subtotal + tax;
+  const tax = total * taxRate; 
+  const subtotal = total - tax; 
+
 
   // --- Final Checkout ---
   const handleFinalCheckout = async () => {
@@ -152,12 +157,12 @@ export default function MobilePOSCheckout() {
     setIsProcessing(true);
     try {
       const checkoutData = {
-        shop_id: products[0]?.shop_id, // Use shop_id from first item
+        shop_id: session.shopId,
         Processed_By: session?.employeeId,
         cartItems: cart.map(item => ({
           id: item.id,
           name: item.ProductName.name,
-          price: parseFloat(item.final_price),
+          price: parseFloat(item.price),
           quantity: item.cartQuantity,
           measurement_unit: item.measurement_unit,
           image: item.ProductName.image
@@ -244,18 +249,18 @@ export default function MobilePOSCheckout() {
                         alt="" 
                         className="h-full w-full object-cover" 
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://cdn-icons-png.flaticon.com/512/679/679821.png';
+                          (e.target as HTMLImageElement).src = '/images/groceryPlaceholder.png';
                         }}
                       />
                     ) : (
-                      <Store className="h-5 w-5 text-gray-400" />
+                      <img src="/images/groceryPlaceholder.png" alt="" className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-sm font-bold leading-tight">{p.ProductName.name}</p>
                     <p className="text-[10px] uppercase tracking-wider text-gray-400">{p.ProductName.sku || "No SKU"}</p>
                   </div>
-                  <p className="font-black text-green-600">{parseFloat(p.final_price).toLocaleString()} RWF</p>
+                  <p className="font-black text-green-600">{parseFloat(p.price).toLocaleString()} RWF</p>
                 </button>
               ))}
             </div>
@@ -281,16 +286,16 @@ export default function MobilePOSCheckout() {
                         alt="" 
                         className="h-full w-full object-cover" 
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://cdn-icons-png.flaticon.com/512/679/679821.png';
+                          (e.target as HTMLImageElement).src = '/images/groceryPlaceholder.png';
                         }}
                       />
                     ) : (
-                      <Store className="h-8 w-8 text-gray-400" />
+                      <img src="/images/groceryPlaceholder.png" alt="" className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold leading-tight">{item.ProductName.name}</h4>
-                    <p className="text-xs font-black text-green-500">{parseFloat(item.final_price).toLocaleString()} RWF</p>
+                    <p className="text-xs font-black text-green-500">{parseFloat(item.price).toLocaleString()} RWF</p>
                   </div>
                   <button onClick={() => removeFromCart(item.id)} className="rounded-full p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                     <Trash2 className="h-5 w-5" />
@@ -302,7 +307,7 @@ export default function MobilePOSCheckout() {
                     <span className="min-w-[1.5rem] text-center font-black">{item.cartQuantity}</span>
                     <button onClick={() => updateCartQuantity(item.id, 1)} className="rounded-lg bg-white p-2 shadow-sm dark:bg-gray-800"><Plus className="h-3 w-3" /></button>
                   </div>
-                  <p className="font-black text-gray-900 dark:text-white">{(parseFloat(item.final_price) * item.cartQuantity).toLocaleString()} RWF</p>
+                  <p className="font-black text-gray-900 dark:text-white">{(parseFloat(item.price) * item.cartQuantity).toLocaleString()} RWF</p>
                 </div>
               </div>
             ))
@@ -385,7 +390,7 @@ export default function MobilePOSCheckout() {
               <div className="rounded-2xl bg-gray-50 p-6 dark:bg-gray-800">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-500">
-                    <span>Subtotal</span>
+                    <span>Subtotal (Excl. VAT)</span>
                     <span>{subtotal.toLocaleString()} RWF</span>
                   </div>
                   <div className="flex justify-between text-gray-500">
@@ -393,7 +398,7 @@ export default function MobilePOSCheckout() {
                     <span>{tax.toLocaleString()} RWF</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2 flex justify-between font-black text-lg text-gray-900 dark:text-white dark:border-gray-700">
-                    <span>Total Pay</span>
+                    <span>Total Amount</span>
                     <span className="text-green-600">{total.toLocaleString()} RWF</span>
                   </div>
                 </div>
