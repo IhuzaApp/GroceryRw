@@ -155,14 +155,8 @@ export default function MobilePOSDashboard() {
   };
 
   const handleBarcodeDetected = (barcode: string) => {
-    if (scannerMode === "ADD_STOCK") {
-      alert(`Scanned item to add to stock: ${barcode}`);
-    }
-  };
-
-  const startScanner = (mode: "ADD_STOCK" | "CHECKOUT") => {
-    setScannerMode(mode);
-    setShowScanner(true);
+    // Only CHECKOUT mode uses the dashboard scanner now
+    console.log("Barcode scanned for checkout:", barcode);
   };
 
   if (!session) return null;
@@ -210,7 +204,7 @@ export default function MobilePOSDashboard() {
           <div className="mt-4 space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
             <DashboardStats employeeId={session.employeeId} />
             <DashboardGrid 
-              onAddStock={() => startScanner("ADD_STOCK")}
+              onAddStock={() => router.push("/MobilePOS/AddStock")}
               onCheckout={() => router.push("/MobilePOS/Checkout")}
               onPrintInvoices={() => {}}
             />

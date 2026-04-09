@@ -361,7 +361,7 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
           className={`flex items-center justify-between px-6 pb-6 pt-8 sm:px-8`}
         >
           <div className="flex items-center gap-4">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-green-600 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
               <svg
                 className="h-6 w-6 text-white"
                 fill="none"
@@ -382,7 +382,7 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
               </h3>
               <p
                 className={`mt-0.5 text-xs font-semibold uppercase tracking-wider ${
-                  theme === "dark" ? "text-indigo-400" : "text-blue-600"
+                  theme === "dark" ? "text-green-400" : "text-green-600"
                 }`}
               >
                 1D Barcode Target
@@ -565,11 +565,7 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                   </div>
                 </div>
 
-                <div className="rounded-full border border-indigo-400/30 bg-indigo-600/90 px-6 py-2 shadow-lg backdrop-blur-md">
-                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-white">
-                    Industrial Product Scanner (WASM)
-                  </p>
-                </div>
+
               </div>
             </div>
           </div>
