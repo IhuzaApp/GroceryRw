@@ -31,7 +31,8 @@ export default async function handler(
           orgUser_id: $orgUser_id, 
           shift_durantion: $shift_durantion, 
           shop_id: $shop_id, 
-          update_at: $update_at
+          update_at: $update_at,
+          restaurant_id: null
         }) {
           affected_rows
         }
