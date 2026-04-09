@@ -52,6 +52,7 @@ export default function AddStock() {
 
   const [step, setStep] = useState<Step>("SCAN");
   const [showScanner, setShowScanner] = useState(false);
+  const [scannerContext, setScannerContext] = useState<"SEARCH" | "FORM">("SEARCH");
 
   // Search
   const [searchInput, setSearchInput] = useState("");
@@ -247,9 +248,12 @@ export default function AddStock() {
   const handleBarcodeDetected = useCallback((barcode: string) => {
     setShowScanner(false);
     setScannedBarcode(barcode);
-    setSearchInput(barcode);
-    lookupProduct(barcode, true);
-  }, [lookupProduct]);
+    
+    if (scannerContext === "SEARCH") {
+      setSearchInput(barcode);
+      lookupProduct(barcode, true);
+    }
+  }, [lookupProduct, scannerContext]);
 
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -413,7 +417,7 @@ export default function AddStock() {
                 <div className="flex gap-2">
                   <input type="text" placeholder="Scan or enter barcode" value={scannedBarcode}
                     onChange={e => setScannedBarcode(e.target.value)} className={inputCls} />
-                  <button type="button" onClick={() => setShowScanner(true)}
+                  <button type="button" onClick={() => { setScannerContext("FORM"); setShowScanner(true); }}
                     className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
                     <ScanLine className="h-5 w-5" />
                   </button>
@@ -507,7 +511,7 @@ export default function AddStock() {
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Scan barcode or search by product name / SKU</p>
             </div>
 
-            <button onClick={() => setShowScanner(true)}
+            <button onClick={() => { setScannerContext("SEARCH"); setShowScanner(true); }}
               className="group flex w-full items-center justify-between rounded-3xl border-2 border-dashed border-green-400 bg-green-50 p-5 transition hover:bg-green-100 dark:border-green-500/40 dark:bg-green-500/10">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500 text-white shadow-lg shadow-green-500/30">
@@ -752,7 +756,7 @@ export default function AddStock() {
                       className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-500">
                       <X className="h-4 w-4" />
                     </button>
-                    : <button type="button" onClick={() => setShowScanner(true)}
+                    : <button type="button" onClick={() => { setScannerContext("FORM"); setShowScanner(true); }}
                       className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
                       <ScanLine className="h-5 w-5" />
                     </button>
