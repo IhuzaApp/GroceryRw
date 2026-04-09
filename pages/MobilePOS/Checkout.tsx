@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { Search, Camera, ShoppingCart, Receipt } from "lucide-react";
+import {
+  Search,
+  Camera,
+  ShoppingCart,
+  Receipt,
+  Plus,
+  ArrowLeft,
+  X,
+  Loader2,
+  Scan,
+} from "lucide-react";
 
 // Components
 import { POSHeader } from "../../src/components/MobilePOS/POSHeader";
@@ -9,6 +19,7 @@ import { CartItem } from "../../src/components/MobilePOS/Checkout/CartItem";
 import { CheckoutFooter } from "../../src/components/MobilePOS/Checkout/CheckoutFooter";
 import { PaymentDialog } from "../../src/components/MobilePOS/Checkout/PaymentDialog";
 import POSBarcodeScanner from "../../src/components/ui/POSBarcodeScanner";
+import { useTheme } from "../../src/context/ThemeContext";
 
 export default function POSCheckout() {
   const router = useRouter();
@@ -16,10 +27,15 @@ export default function POSCheckout() {
   // Session
   const [session, setSession] = useState<any>(null);
 
-  // Cart & Search State
+  // Cart State
+  const [cart, setCart] = useState<any[]>([]);
+  const { theme } = useTheme();
+
+  // Search Modal State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [cart, setCart] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Payment State
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -28,7 +44,7 @@ export default function POSCheckout() {
   const [loading, setLoading] = useState(false);
 
   // Scanner State
-  const [showScanner, setShowScanner] = useState(false);
+  const [showScanner, setShowScanner] = useState(true);
 
   useEffect(() => {
     const existingSession = localStorage.getItem("mobile_pos_session");
@@ -39,29 +55,95 @@ export default function POSCheckout() {
     }
   }, [router]);
 
-  // Handle Search
+  // Handle Search in Modal
   useEffect(() => {
-    if (searchQuery.length > 2) {
-      const fetchProducts = async () => {
+    if (isSearchOpen && searchQuery.length > 1) {
+      const delayDebounce = setTimeout(async () => {
+        setIsSearching(true);
         try {
-          const res = await fetch(`/api/queries/products?q=${searchQuery}`);
+          const res = await fetch("/api/mobile-pos/lookup-product", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: searchQuery,
+              shopId: session?.shopId,
+            }),
+          });
           if (res.ok) {
             const data = await res.json();
-            // Filter products by shop_id if session exists
-            const filtered = (data.products || []).filter(
-              (p: any) => !session?.shopId || p.shop_id === session.shopId
-            );
-            setSearchResults(filtered);
+            setSearchResults(data.matches || []);
           }
         } catch (e) {
-          console.error("Failed to fetch products", e);
+          console.error("Search failed", e);
+        } finally {
+          setIsSearching(false);
         }
-      };
-      fetchProducts();
+      }, 500);
+      return () => clearTimeout(delayDebounce);
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery, session]);
+  }, [searchQuery, isSearchOpen, session]);
+
+  const handleBarcodeDetected = async (barcode: string) => {
+    try {
+      const res = await fetch("/api/mobile-pos/lookup-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          barcode,
+          shopId: session?.shopId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.existingStock) {
+          // Found local stock, use it
+          addToCart({
+            ...data.existingStock,
+            ProductName: data.productName,
+          });
+        } else if (data.found) {
+          // Found global but no local stock
+          // Depending on requirements, we might show a message or add with 0 price
+          alert(`Product ${data.productName.name} found but has no stock in this shop.`);
+        }
+      }
+    } catch (e) {
+      console.error("Barcode lookup failed", e);
+    }
+  };
+
+  const handleManualAdd = async (productMatch: any) => {
+    // When adding from search matches, we need the local stock info
+    try {
+      const res = await fetch("/api/mobile-pos/lookup-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sku: productMatch.sku,
+          shopId: session?.shopId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.existingStock) {
+          addToCart({
+            ...data.existingStock,
+            ProductName: data.productName,
+          });
+          setIsSearchOpen(false);
+          setSearchQuery("");
+        } else {
+          alert("This product is not available in your shop stock.");
+        }
+      }
+    } catch (e) {
+      console.error("Manual add lookup failed", e);
+    }
+  };
 
   const addToCart = (product: any) => {
     setCart((prev) => {
@@ -146,96 +228,101 @@ export default function POSCheckout() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-40 text-gray-900 dark:bg-black dark:text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-black dark:text-white">
       <Head>
         <title>POS Checkout</title>
       </Head>
 
-      <POSHeader onBack={() => router.back()}>
-        <div className="flex flex-1 items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by SKU, Name or Barcode"
-              className="w-full rounded-2xl border-none bg-gray-50 py-3 pl-10 pr-4 text-sm font-medium focus:ring-2 focus:ring-green-500 dark:bg-gray-800"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      <POSHeader
+        title="POS Checkout"
+        onBack={() => router.push("/MobilePOS/Dashboard")}
+        rightAction={
           <button
-            onClick={() => setShowScanner(true)}
-            className="rounded-full bg-green-100 p-2.5 text-green-600 dark:bg-green-500/20 dark:text-green-400"
+            onClick={() => setIsSearchOpen(true)}
+            className="rounded-2xl bg-green-500/10 p-3 text-green-500 transition-all hover:bg-green-500 hover:text-white active:scale-95 dark:bg-green-500/20"
           >
-            <Camera className="h-5 w-5" />
+            <Search className="h-5 w-5" />
           </button>
-        </div>
-      </POSHeader>
+        }
+      />
 
-      <div className="mx-auto max-w-md p-6">
-        {/* Search Results */}
-        {searchResults.length > 0 && (
-          <div className="mb-8 space-y-3 rounded-[2rem] border border-gray-100 bg-white p-4 shadow-2xl animate-in fade-in slide-in-from-top-2 dark:border-gray-800 dark:bg-gray-900">
-            <p className="px-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Search Results
-            </p>
-            {searchResults.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className="flex w-full items-center gap-4 rounded-2xl p-2 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
-                  {product.ProductName?.image ? (
-                    <img
-                      src={product.ProductName.image}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <Search className="h-5 w-5 text-gray-400" />
-                  )}
+      <div className="mx-auto max-w-xl pb-40">
+        {/* Scanner Section - Always on top */}
+        <div className="relative z-10 p-4">
+          <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-black/5 shadow-2xl backdrop-blur-md dark:bg-white/5">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/20 text-green-500">
+                  <Scan className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-bold">
-                    {product.ProductName?.name || "Product"}
-                  </p>
-                  <p className="text-xs font-black text-green-600">
-                    {parseFloat(product.price).toLocaleString()} RWF
+                  <h3 className="text-sm font-black uppercase tracking-widest">
+                    Interactive Scanner
+                  </h3>
+                  <p className="text-[10px] font-bold text-gray-500">
+                    Align barcode to scan automatically
                   </p>
                 </div>
-              </button>
-            ))}
-          </div>
-        )}
+              </div>
+              <div className="flex items-center gap-1.5 rounded-full bg-green-500/20 px-3 py-1 text-[10px] font-black uppercase text-green-500">
+                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                Live
+              </div>
+            </div>
 
-        {/* Cart Context */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black">Shopping Cart</h2>
-            <button
-              onClick={() => setCart([])}
-              className="text-xs font-black uppercase tracking-widest text-red-500/60 hover:text-red-500"
-            >
-              Clear Cart
-            </button>
+            <POSBarcodeScanner
+              isInline={true}
+              onBarcodeDetected={handleBarcodeDetected}
+              onClose={() => setShowScanner(false)}
+            />
+          </div>
+        </div>
+
+        {/* Cart Contents */}
+        <div className="px-6 py-4">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 dark:bg-white/5">
+                <ShoppingCart className="h-6 w-6 opacity-60" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black">Scanned Items</h2>
+                <p className="text-xs font-bold text-gray-400">
+                  {cart.length} product{cart.length !== 1 ? "s" : ""} in cart
+                </p>
+              </div>
+            </div>
+            {cart.length > 0 && (
+              <button
+                onClick={() => setCart([])}
+                className="flex items-center gap-2 rounded-xl bg-red-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500 hover:text-white"
+              >
+                Clear All
+              </button>
+            )}
           </div>
 
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-              <div className="relative mb-4 h-24 w-24">
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                  <Receipt className="h-10 w-10 text-gray-300 dark:text-gray-600" />
-                </div>
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-gray-100/50 dark:bg-white/5">
+                <Receipt className="h-12 w-12 opacity-20" />
               </div>
-              <p className="font-bold">No items in cart</p>
-              <p className="text-sm">Search or scan items to begin</p>
+              <h3 className="text-lg font-black opacity-80">Cart is empty</h3>
+              <p className="mt-1 text-sm font-medium text-gray-400">
+                Scan a barcode or use search to add items
+              </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4">
               {cart.map((item) => (
                 <CartItem
                   key={item.id}
-                  item={item}
+                  item={{
+                    ...item,
+                    name: item.ProductName?.name || "Unknown Product",
+                    image: item.ProductName?.image,
+                  }}
                   onUpdateQuantity={updateQuantity}
                   onRemove={removeFromCart}
                 />
@@ -244,6 +331,100 @@ export default function POSCheckout() {
           )}
         </div>
       </div>
+
+      {/* Product Search Modal */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+            onClick={() => setIsSearchOpen(false)}
+          />
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/90 shadow-2xl dark:bg-gray-900/90">
+            <div className="flex items-center justify-between border-b border-gray-100 p-6 dark:border-white/5">
+              <h3 className="text-2xl font-black">Search Product</h3>
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="rounded-full bg-gray-100 p-2 dark:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="relative mb-6">
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="SKU, Barcode or Name..."
+                  className="w-full rounded-2xl border-none bg-gray-100 py-4 pl-12 pr-6 text-lg font-bold shadow-inner focus:ring-2 focus:ring-green-500 dark:bg-white/5"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="max-h-[50vh] overflow-y-auto pr-2">
+                {isSearching ? (
+                  <div className="flex flex-col items-center justify-center py-20 opacity-40">
+                    <Loader2 className="h-10 w-10 animate-spin" />
+                    <p className="mt-4 font-black uppercase tracking-widest">
+                      Searching...
+                    </p>
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="grid gap-3">
+                    {searchResults.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleManualAdd(product)}
+                        className="flex w-full items-center gap-4 rounded-3xl bg-gray-50 p-3 text-left transition-all hover:bg-green-500 hover:text-white dark:bg-white/5"
+                      >
+                        <div className="h-16 w-16 overflow-hidden rounded-2xl bg-white dark:bg-black">
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <ShoppingCart className="h-6 w-6 opacity-20" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-black leading-tight">
+                            {product.name}
+                          </p>
+                          <p className="mt-0.5 text-xs font-bold opacity-60">
+                            SKU: {product.sku} | {product.barcode}
+                          </p>
+                        </div>
+                        <div className="mr-2 h-10 w-10 rounded-full bg-black/10 flex items-center justify-center">
+                          <Plus className="h-5 w-5" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : searchQuery.length > 1 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
+                    <X className="h-10 w-10" />
+                    <p className="mt-4 font-black uppercase tracking-widest">
+                      No products found
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-center opacity-20">
+                    <Search className="h-10 w-10" />
+                    <p className="mt-4 text-xs font-black uppercase tracking-widest">
+                      Start typing to search
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CheckoutFooter
         subtotal={subtotal}
@@ -263,16 +444,6 @@ export default function POSCheckout() {
           loading={loading}
           onClose={() => setIsPaymentOpen(false)}
           onConfirm={handleCheckout}
-        />
-      )}
-
-      {showScanner && (
-        <POSBarcodeScanner
-          onBarcodeDetected={(barcode) => {
-            console.log("Scanned barcode:", barcode);
-            // Implement barcode to product lookup if needed
-          }}
-          onClose={() => setShowScanner(false)}
         />
       )}
     </div>

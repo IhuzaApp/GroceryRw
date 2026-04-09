@@ -22,11 +22,13 @@ import {
 interface POSBarcodeScannerProps {
   onBarcodeDetected: (barcode: string) => void;
   onClose: () => void;
+  isInline?: boolean;
 }
 
 const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
   onBarcodeDetected,
   onClose,
+  isInline = false,
 }) => {
   const { theme } = useTheme();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -341,29 +343,75 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
 
   const scannerContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
-      onClick={onClose}
+      className={
+        isInline
+          ? "w-full overflow-hidden rounded-[2rem] bg-black shadow-inner ring-1 ring-white/10"
+          : "fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
+      }
+      onClick={!isInline ? onClose : undefined}
     >
-      <div
-        className={`absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300`}
-        aria-hidden="true"
-      />
+      {!isInline && (
+        <div
+          className={`absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300`}
+          aria-hidden="true"
+        />
+      )}
 
       <div
-        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
-          theme === "dark"
-            ? "border border-gray-700 bg-gray-900/95 text-white backdrop-blur-xl"
-            : "border border-gray-200 bg-white/95 text-gray-900 backdrop-blur-xl"
-        }`}
+        className={
+          isInline
+            ? "relative w-full overflow-hidden"
+            : `relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
+                theme === "dark"
+                  ? "border border-gray-700 bg-gray-900/95 text-white backdrop-blur-xl"
+                  : "border border-gray-200 bg-white/95 text-gray-900 backdrop-blur-xl"
+              }`
+        }
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className={`flex items-center justify-between px-6 pb-6 pt-8 sm:px-8`}
-        >
-          <div className="flex items-center gap-4">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-green-600 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+        {!isInline && (
+          <div
+            className={`flex items-center justify-between px-6 pb-6 pt-8 sm:px-8`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-green-600 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                <svg
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-black tracking-tight">
+                  Product Scanner
+                </h3>
+                <p
+                  className={`mt-0.5 text-xs font-semibold uppercase tracking-wider ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  1D Barcode Target
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
+                theme === "dark"
+                  ? "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+              }`}
+            >
               <svg
-                className="h-6 w-6 text-white"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -372,48 +420,14 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2.5}
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </div>
-            <div>
-              <h3 className="text-xl font-black tracking-tight">
-                Product Scanner
-              </h3>
-              <p
-                className={`mt-0.5 text-xs font-semibold uppercase tracking-wider ${
-                  theme === "dark" ? "text-green-400" : "text-green-600"
-                }`}
-              >
-                1D Barcode Target
-              </p>
-            </div>
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
-              theme === "dark"
-                ? "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
-            }`}
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+        )}
 
-        <div className="px-6 pb-8 sm:px-8">
+        <div className={isInline ? "w-full" : "px-6 pb-8 sm:px-8"}>
           {error && (
             <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-500 backdrop-blur-sm">
               <p className="font-bold tracking-wide">Camera Error</p>
@@ -421,24 +435,38 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
             </div>
           )}
 
-          <div className="relative overflow-hidden rounded-[2rem] bg-black shadow-inner ring-1 ring-white/10">
+          <div
+            className={
+              isInline
+                ? "relative overflow-hidden bg-black"
+                : "relative overflow-hidden rounded-[2rem] bg-black shadow-inner ring-1 ring-white/10"
+            }
+          >
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="h-64 w-full object-cover sm:h-[450px]"
+              className={
+                isInline
+                  ? "h-48 w-full object-cover sm:h-64"
+                  : "h-64 w-full object-cover sm:h-[450px]"
+              }
             />
 
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="relative">
-                <div className="absolute -inset-96 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]" />
+                {!isInline && (
+                  <div className="absolute -inset-96 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]" />
+                )}
 
                 <div
-                  className={`relative h-40 w-80 overflow-hidden rounded-xl border-2 shadow-[0_0_30px_rgba(79,70,229,0.2)] transition-all duration-300 ${
+                  className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
+                    isInline ? "h-24 w-64" : "h-40 w-80"
+                  } ${
                     successMode
-                      ? "scale-105 border-emerald-500 bg-emerald-500/10"
-                      : "border-indigo-500/50"
+                      ? "scale-105 border-emerald-500 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.4)]"
+                      : "border-indigo-500/50 shadow-[0_0_30px_rgba(79,70,229,0.2)]"
                   }`}
                 >
                   <div
@@ -452,32 +480,44 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
 
             {/* Debug Mirror - Corner Vision */}
             {showDebug && (
-              <div className="absolute left-4 top-24 z-50 overflow-hidden rounded-lg border-2 border-indigo-500 bg-black shadow-2xl">
-                <div className="bg-indigo-600 px-2 py-1 text-[10px] font-bold uppercase tracking-tighter text-white">
-                  Engine Vision Crop
+              <div
+                className={`absolute z-50 overflow-hidden rounded-lg border-2 border-indigo-500 bg-black shadow-2xl ${
+                  isInline ? "left-2 top-2" : "left-4 top-24"
+                }`}
+              >
+                <div className="bg-indigo-600 px-2 py-0.5 text-[8px] font-bold uppercase tracking-tighter text-white">
+                  Engine Vision
                 </div>
                 <canvas
                   ref={debugCanvasRef}
-                  className="h-auto w-48 opacity-90 contrast-150 grayscale invert"
+                  className={`${
+                    isInline ? "w-32" : "w-48"
+                  } h-auto opacity-90 contrast-150 grayscale invert`}
                 />
               </div>
             )}
 
             {/* Laser Guideline HUD */}
-            <div className="absolute right-4 top-4 z-20 flex flex-col gap-3">
+            <div
+              className={`absolute z-20 flex flex-col gap-2 ${
+                isInline ? "right-2 top-2" : "right-4 top-4"
+              }`}
+            >
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowDebug(!showDebug);
                 }}
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 backdrop-blur-md transition-all ${
+                className={`flex items-center justify-center rounded-xl border border-white/20 backdrop-blur-md transition-all ${
+                  isInline ? "h-10 w-10" : "h-12 w-12"
+                } ${
                   showDebug
                     ? "border-indigo-400 bg-indigo-500 text-white"
                     : "bg-black/40 text-white"
                 }`}
                 title="Toggle Debug Vision"
               >
-                <Eye className="h-5 w-5" />
+                <Eye className={isInline ? "h-4 w-4" : "h-5 w-5"} />
               </button>
 
               {capabilities.torch && (
@@ -486,24 +526,36 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                     e.stopPropagation();
                     toggleTorch();
                   }}
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 backdrop-blur-md transition-all ${
+                  className={`flex items-center justify-center rounded-xl border border-white/20 backdrop-blur-md transition-all ${
+                    isInline ? "h-10 w-10" : "h-12 w-12"
+                  } ${
                     isTorchOn
                       ? "border-yellow-300 bg-yellow-400 text-black"
                       : "bg-black/40 text-white"
                   }`}
                 >
                   {isTorchOn ? (
-                    <Zap className="h-5 w-5 fill-current" />
+                    <Zap
+                      className={`${isInline ? "h-4 w-4" : "h-5 w-5"} fill-current`}
+                    />
                   ) : (
-                    <ZapOff className="h-5 w-5" />
+                    <ZapOff className={isInline ? "h-4 w-4" : "h-5 w-5"} />
                   )}
                 </button>
               )}
             </div>
 
             {capabilities.zoom && (
-              <div className="absolute left-6 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-4">
-                <div className="relative h-48 w-1.5 overflow-hidden rounded-full border border-white/10 bg-black/40">
+              <div
+                className={`absolute z-20 flex flex-col items-center gap-2 -translate-y-1/2 ${
+                  isInline ? "left-2 top-1/2" : "left-6 top-1/2"
+                }`}
+              >
+                <div
+                  className={`relative overflow-hidden rounded-full border border-white/10 bg-black/40 ${
+                    isInline ? "h-24 w-1" : "h-48 w-1.5"
+                  }`}
+                >
                   <input
                     type="range"
                     min="1"
@@ -524,41 +576,57 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                     style={{ height: `${((zoomLevel - 1) / 4) * 100}%` }}
                   />
                 </div>
-                <div className="flex flex-col items-center gap-1">
-                  <Maximize2 className="h-4 w-4 text-white/60" />
-                  <span className="text-[10px] font-bold text-white/80">
+                <div className="flex flex-col items-center gap-0.5">
+                  <Maximize2 className={isInline ? "h-3 w-3 text-white/60" : "h-4 w-4 text-white/60"} />
+                  <span className={isInline ? "text-[8px] font-bold text-white/80" : "text-[10px] font-bold text-white/80"}>
                     {zoomLevel.toFixed(1)}x
                   </span>
                 </div>
               </div>
             )}
 
-            <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 transform whitespace-nowrap">
+            <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 transform whitespace-nowrap">
               <div className="flex flex-col items-center gap-4">
-                <div className="rounded-full border border-white/20 bg-black/80 px-4 py-2 shadow-xl backdrop-blur-md">
-                  <div className="flex items-center gap-4">
+                <div
+                  className={`rounded-full border border-white/20 bg-black/80 shadow-xl backdrop-blur-md ${
+                    isInline ? "px-3 py-1.5" : "px-4 py-2"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
                     <div className="flex gap-1">
                       {[0, 1, 2, 3].map((i) => (
                         <div
                           key={i}
-                          className={`h-1.5 w-3 rounded-sm transition-colors ${
+                          className={`${
+                            isInline ? "h-1 w-2" : "h-1.5 w-3"
+                          } rounded-sm transition-colors ${
                             enginePulse >= i ? "bg-indigo-400" : "bg-white/10"
                           }`}
                         />
                       ))}
                     </div>
-                    <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-white">
+                    <p
+                      className={`${
+                        isInline ? "text-[8px]" : "text-[11px]"
+                      } font-mono font-bold uppercase tracking-widest text-white`}
+                    >
                       {debugStatus}
                     </p>
-                    <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+                    <div className="flex items-center gap-2 border-l border-white/20 pl-3">
                       <div
-                        className={`h-2.5 w-2.5 rounded-full ${
+                        className={`${
+                          isInline ? "h-2 w-2" : "h-2.5 w-2.5"
+                        } rounded-full ${
                           hasVisualLines
                             ? "bg-yellow-400 shadow-[0_0_10px_#facc15]"
                             : "bg-white/10"
                         }`}
                       />
-                      <span className="text-[10px] font-black uppercase text-white/40">
+                      <span
+                        className={`${
+                          isInline ? "text-[8px]" : "text-[10px]"
+                        } font-black uppercase text-white/40`}
+                      >
                         Stripes
                       </span>
                     </div>
@@ -572,7 +640,7 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
     </div>
   );
 
-  return createPortal(scannerContent, document.body);
+  return isInline ? scannerContent : createPortal(scannerContent, document.body);
 };
 
 export default POSBarcodeScanner;
