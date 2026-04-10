@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 import { useSession } from "next-auth/react";
+import { useHideBottomBar } from "../../context/HideBottomBarContext";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -44,6 +45,7 @@ export default function NotificationCenter() {
   const isMobile = useIsMobile();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const { setHideFloatingUI } = useHideBottomBar();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currency, setCurrency] = useState<string>("UGX");
@@ -171,6 +173,20 @@ export default function NotificationCenter() {
   useEffect(() => {
     if (isOpen) loadNotifications();
   }, [isOpen, assignedOrderIds]);
+
+  // Hide bottom elements when modal is open on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setHideFloatingUI(isOpen);
+    }
+    
+    return () => {
+      // Ensure we always clean up when unmounting
+      if (isMobile) {
+        setHideFloatingUI(false);
+      }
+    };
+  }, [isOpen, isMobile, setHideFloatingUI]);
 
   const loadNotifications = () => {
     try {

@@ -15,6 +15,7 @@ import HomeActionsModal from "./HomeActionsModal";
 import PackageDeliveryModal from "./PackageDeliveryModal";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
+import { useHideBottomBar } from "../../../context/HideBottomBarContext";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -148,6 +149,7 @@ export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const router = useRouter();
+  const { hideFloatingUI } = useHideBottomBar();
   const { logout } = useAuth();
   const { isGuest } = useAuthHook();
   const { count } = useCart();
@@ -329,7 +331,7 @@ export default function BottomBar() {
       {/* Floating Buttons (Ask, Help) */}
 
       {/* Floating Cart Button (Lifted) - hidden on store & checkout pages */}
-      {router.pathname !== "/Cart" &&
+      {!hideFloatingUI && router.pathname !== "/Cart" &&
         router.pathname !== "/Reels" &&
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
