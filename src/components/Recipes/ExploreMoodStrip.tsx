@@ -13,130 +13,54 @@ interface ExploreMoodStripProps {
   onSelectCategory: (category: string) => void;
 }
 
-const LightningIcon = () => (
-  <svg
-    className="h-6 w-6 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M13 2L3 14H12L11 22L21 10H12L13 2Z"
-      fill="url(#lightning-premium)"
-      stroke="#ffffff20"
-      strokeWidth="0.5"
-    />
-    <defs>
-      <linearGradient id="lightning-premium" x1="3" y1="2" x2="21" y2="22">
-        <stop offset="0%" stopColor="#FBBF24" />
-        <stop offset="100%" stopColor="#F59E0B" />
-      </linearGradient>
-    </defs>
+const PopularIcon = () => (
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" className="text-amber-400" />
   </svg>
 );
 
-const CakeIcon = () => (
-  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M20 21V19C20 17.8954 19.1046 17 18 17H6C4.89543 17 4 17.8954 4 19V21"
-      stroke="#F472B6"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-    <path
-      d="M12 17V7M12 7L10 9M12 7L14 9"
-      stroke="#EC4899"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <rect x="7" y="11" width="10" height="6" rx="2" fill="url(#cake-grad)" />
-    <defs>
-      <linearGradient id="cake-grad" x1="7" y1="11" x2="17" y2="17">
-        <stop offset="0%" stopColor="#FBCFE8" />
-        <stop offset="100%" stopColor="#F9A8D4" />
-      </linearGradient>
-    </defs>
+const SweetsIcon = () => (
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-7a4 4 0 0 0-4-4V6a4 4 0 0 0-4-4z" className="text-pink-400" />
+    <path d="M18 9h1M11 11h1M16 13h1m-7 0h1" className="text-pink-300" />
   </svg>
 );
 
 const BreakfastIcon = () => (
-  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="9" fill="url(#egg-white)" />
-    <circle cx="12" cy="12" r="4" fill="url(#egg-yolk)" />
-    <defs>
-      <linearGradient id="egg-white" x1="3" y1="3" x2="21" y2="21">
-        <stop offset="0%" stopColor="#FFFFFF" />
-        <stop offset="100%" stopColor="#F1F5F9" />
-      </linearGradient>
-      <linearGradient id="egg-yolk" x1="8" y1="8" x2="16" y2="16">
-        <stop offset="0%" stopColor="#FBBF24" />
-        <stop offset="100%" stopColor="#F59E0B" />
-      </linearGradient>
-    </defs>
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 13a9 9 0 1 0 18 0" className="text-amber-500" />
+    <path d="M12 5V3M5 8l-1.5-1.5M19 8l1.5-1.5M12 21v-8" className="text-orange-400" />
+    <circle cx="12" cy="13" r="4" className="text-yellow-400" />
   </svg>
 );
 
-const DonutIcon = () => (
-  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="8" fill="url(#donut-grad)" />
-    <circle cx="12" cy="12" r="3" fill="#00000030" />
-    <path d="M10 8L11 9.5M14 10L13 11.5M11 15L12 13.5" stroke="#ffffff80" strokeLinecap="round" />
-    <defs>
-      <linearGradient id="donut-grad" x1="4" y1="4" x2="20" y2="20">
-        <stop offset="0%" stopColor="#DB2777" />
-        <stop offset="100%" stopColor="#9D174D" />
-      </linearGradient>
-    </defs>
+const ChocolateIcon = () => (
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="4" width="14" height="16" rx="2" className="text-rose-900" />
+    <path d="M5 8h14M5 12h14M9 4v16M14 4v16" className="text-rose-700 opacity-50" />
   </svg>
 );
 
-const SaladIcon = () => (
-  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M4 11C4 11 5 3 12 3C19 3 20 11 20 11"
-      stroke="#10B981"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M12 11V21M12 21H4C4 21 4 17 8 17M12 21H20C20 21 20 17 16 17"
-      stroke="#059669"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <circle cx="8" cy="7" r="2" fill="#34D399" />
-    <circle cx="16" cy="7" r="2" fill="#34D399" />
+const GreensIcon = () => (
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 21 2c-2.5 4-3 5.5-4.1 11.2A7 7 0 0 1 11 20z" className="text-emerald-500" />
+    <path d="M11 20v-5m0 0l-2-2m2 2l2-2" className="text-emerald-400 opacity-50" />
   </svg>
 );
 
 const LunchIcon = () => (
-  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="11" width="18" height="10" rx="2" fill="url(#lunch-grad)" />
-    <path d="M7 11V6C7 4.89543 7.89543 4 9 4H15C16.1046 4 17 4.89543 17 6V11" stroke="#475569" strokeWidth="2" />
-    <defs>
-      <linearGradient id="lunch-grad" x1="3" y1="11" x2="21" y2="21">
-        <stop offset="0%" stopColor="#3B82F6" />
-        <stop offset="100%" stopColor="#1D4ED8" />
-      </linearGradient>
-    </defs>
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8z" className="text-blue-500" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" className="text-blue-400" />
+    <path d="M12 15v2" className="text-blue-200" />
   </svg>
 );
 
 const MeatIcon = () => (
-  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M15 3C15 3 13 5 13 8C13 11 15 13 15 13M9 3C9 3 11 5 11 8C11 11 9 13 9 13"
-      stroke="#EF4444"
-      strokeWidth="1.5"
-    />
-    <rect x="6" y="14" width="12" height="7" rx="3" fill="url(#meat-grad)" />
-    <defs>
-      <linearGradient id="meat-grad" x1="6" y1="14" x2="18" y2="21">
-        <stop offset="0%" stopColor="#B91C1C" />
-        <stop offset="100%" stopColor="#7F1D1D" />
-      </linearGradient>
-    </defs>
+  <svg className="h-6 w-6 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 2L8 10M12 6L4 14M20 6l-8 8" className="text-red-500" />
+    <path d="M12 14v4a2 2 0 1 1-4 0v-4" className="text-rose-500" />
+    <path d="M18 14v4a2 2 0 1 0 4 0v-4" className="text-rose-600" />
   </svg>
 );
 
@@ -145,13 +69,13 @@ const moods: ExploreMoodChip[] = [
     id: "popular",
     label: "Popular",
     apiCategory: "Beef",
-    icon: <LightningIcon />,
+    icon: <PopularIcon />,
   },
   {
     id: "sweets",
     label: "Sweets",
     apiCategory: "Dessert",
-    icon: <CakeIcon />,
+    icon: <SweetsIcon />,
   },
   {
     id: "breakfast",
@@ -163,13 +87,13 @@ const moods: ExploreMoodChip[] = [
     id: "chocolate",
     label: "Chocolate",
     apiCategory: "Dessert",
-    icon: <DonutIcon />,
+    icon: <ChocolateIcon />,
   },
   {
     id: "greens",
     label: "Greens",
     apiCategory: "Vegan",
-    icon: <SaladIcon />,
+    icon: <GreensIcon />,
   },
   {
     id: "lunch",
