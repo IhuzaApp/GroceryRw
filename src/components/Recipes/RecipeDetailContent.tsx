@@ -45,7 +45,7 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
   const youtubeId = getYoutubeVideoId(meal.strYoutube);
 
   return (
-    <div className="mx-auto max-w-7xl pb-12">
+    <div className="mx-auto max-w-7xl pb-12 2xl:max-w-[1700px]">
       {/* Hero Section - Full Bleed on Mobile */}
       <section className="relative -mx-4 -mt-6 overflow-hidden shadow-2xl sm:mx-0 sm:mt-0 sm:rounded-[3rem]">
         <div className="relative h-[20rem] w-full sm:h-[30rem]">
