@@ -159,6 +159,17 @@ export default function AddressManagementModal({
 
   useEffect(() => {
     if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
       fetchAddresses();
     }
   }, [open]);
@@ -579,25 +590,6 @@ export default function AddressManagementModal({
               </div>
             </div>
 
-            {/* Main Modal Footer */}
-            <div
-              className={`flex items-center justify-end border-t px-8 py-6 ${
-                theme === "dark"
-                  ? "border-white/5 bg-white/[0.02]"
-                  : "border-gray-100 bg-gray-50/50"
-              }`}
-            >
-              <button
-                onClick={onClose}
-                className={`rounded-2xl px-8 py-3 text-xs font-black uppercase tracking-widest transition-all active:scale-95 ${
-                  theme === "dark"
-                    ? "bg-white/5 text-gray-400 hover:bg-white/10"
-                    : "bg-white text-gray-500 hover:bg-gray-100 border border-black/5 shadow-sm"
-                }`}
-              >
-                Close
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -616,26 +608,26 @@ export default function AddressManagementModal({
           >
             {/* Header */}
             <div
-              className={`sticky top-0 z-10 flex items-center justify-between border-b p-5 ${
+              className={`sticky top-0 z-20 flex items-center justify-between border-b px-8 py-6 backdrop-blur-xl ${
                 theme === "dark"
-                  ? "border-gray-700 bg-gray-800"
-                  : "border-gray-200 bg-white"
+                  ? "border-white/5 bg-[#0A0A0A]/80"
+                  : "border-gray-100 bg-white/80"
               }`}
             >
               <div>
                 <h3
-                  className={`text-xl font-bold ${
+                  className={`text-2xl font-black tracking-tighter ${
                     theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  Add New Address
+                  Add Location
                 </h3>
                 <p
-                  className={`mt-1 text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  className={`mt-1 text-[10px] font-black uppercase tracking-widest opacity-40 ${
+                    theme === "dark" ? "text-white" : "text-gray-600"
                   }`}
                 >
-                  Enter your delivery address details
+                  Enter your delivery details
                 </p>
               </div>
               <button
@@ -649,25 +641,17 @@ export default function AddressManagementModal({
                   setLng(null);
                   setSuggestions([]);
                   setActiveInput(false);
+                  setAddressType("home");
+                  setPlaceDetails({});
                 }}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-90 ${
                   theme === "dark"
-                    ? "bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                    ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 border border-black/5"
                 }`}
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
