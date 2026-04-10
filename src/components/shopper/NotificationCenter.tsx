@@ -474,15 +474,15 @@ export default function NotificationCenter() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative rounded-lg p-2 transition-colors ${
+        className={`group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 active:scale-90 ${
           theme === "dark"
-            ? "text-gray-300 hover:bg-gray-700"
-            : "text-gray-600 hover:bg-gray-100"
+            ? "bg-white/5 text-emerald-400 hover:bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+            : "bg-gray-100 text-emerald-600 hover:bg-gray-200 shadow-md"
         }`}
         title="Notifications"
       >
         <svg
-          className="h-6 w-6"
+          className="h-5 w-5 drop-shadow-sm transition-transform group-hover:rotate-12"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -490,14 +490,14 @@ export default function NotificationCenter() {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={2}
+            strokeWidth={2.5}
             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
           />
         </svg>
 
         {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-lg ring-2 ring-white dark:ring-gray-900 animate-in zoom-in duration-300">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -505,85 +505,76 @@ export default function NotificationCenter() {
 
       {/* Notification Dropdown/Modal */}
       {isOpen && (
-        <>
-          {/* Dropdown Panel - Full screen on mobile, dropdown on desktop */}
+        <div className="fixed inset-0 z-[100] flex flex-col md:relative md:block">
+          {/* Backdrop for mobile */}
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm md:hidden animate-in fade-in duration-500"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown Panel - Cinematic Bottom Sheet on mobile */}
           <div
             ref={panelRef}
             className={`${
               isMobile
-                ? "fixed inset-x-0 bottom-0 top-16 z-50 overflow-hidden rounded-t-3xl"
-                : "absolute right-0 top-12 z-50 w-[24rem] overflow-hidden rounded-2xl"
+                ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[3rem] animate-in slide-in-from-bottom duration-500"
+                : "absolute right-0 top-12 z-50 w-[24rem] overflow-hidden rounded-2xl animate-in zoom-in-95 duration-200"
             } ${
               theme === "dark"
-                ? "border border-white/10 bg-gray-900/90 shadow-2xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl"
-                : "border border-black/10 bg-white/90 shadow-2xl shadow-black/10 ring-1 ring-black/5 backdrop-blur-xl"
-            } transition-all`}
+                ? "border border-white/10 bg-[#0A0A0A]/90 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] shadow-black/80 backdrop-blur-2xl"
+                : "border border-black/5 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur-2xl"
+            }`}
           >
+            {/* Grab Handle for Mobile */}
+            {isMobile && (
+              <div className="flex justify-center p-3">
+                <div className={`h-1 w-12 rounded-full ${theme === "dark" ? "bg-white/10" : "bg-black/10"}`}></div>
+              </div>
+            )}
             {/* Header */}
             <div
-              className={`sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 ${
+              className={`sticky top-0 z-10 flex items-center justify-between border-b px-6 py-5 ${
                 theme === "dark"
-                  ? "border-white/10 bg-gray-900/80"
-                  : "border-black/10 bg-white/80"
-              } backdrop-blur-xl`}
+                  ? "border-white/5 bg-[#0A0A0A]/40"
+                  : "border-black/5 bg-white/40"
+              } backdrop-blur-md`}
             >
               <div>
-                <h3 className="text-base font-semibold">
-                  Notifications {unreadCount > 0 && `(${unreadCount})`}
+                <h3 className={`text-lg font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  Notifications {unreadCount > 0 && (
+                    <span className="text-emerald-500 font-bold ml-1">({unreadCount})</span>
+                  )}
                 </h3>
-                <p
-                  className={`text-[11px] ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  All FCM push notifications
-                </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 {notifications.length > 0 && (
                   <>
                     <button
                       onClick={markAllAsRead}
-                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all active:scale-90 ${
                         theme === "dark"
-                          ? "text-blue-300 hover:bg-white/10 hover:text-blue-200"
-                          : "text-blue-600 hover:bg-black/5 hover:text-blue-700"
+                          ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                          : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                       }`}
                       aria-label="Mark all as read"
                       title="Mark all as read"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 12l2 2 4-4" />
                         <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
                       </svg>
                     </button>
                     <button
                       onClick={clearAll}
-                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all active:scale-90 ${
                         theme === "dark"
-                          ? "text-red-300 hover:bg-white/10 hover:text-red-200"
-                          : "text-red-600 hover:bg-black/5 hover:text-red-700"
+                          ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                          : "bg-red-50 text-red-600 hover:bg-red-100"
                       }`}
                       aria-label="Clear all notifications"
                       title="Clear all"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 6h18" />
                         <path d="M8 6V4h8v2" />
                         <path d="M19 6l-1 14H6L5 6" />
@@ -595,25 +586,16 @@ export default function NotificationCenter() {
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className={`ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                  className={`ml-2 inline-flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 ${
                     theme === "dark"
-                      ? "text-gray-300 hover:bg-white/10"
-                      : "text-gray-600 hover:bg-black/5"
+                      ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
                   }`}
                   aria-label="Close notifications"
                   title="Close"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 6L6 18" />
-                    <path d="M6 6l12 12" />
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
               </div>
@@ -626,51 +608,44 @@ export default function NotificationCenter() {
               }`}
             >
               {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
-                  <p className="mt-2 text-sm">No notifications yet</p>
-                  <p className="text-[11px]">
-                    FCM push notifications will appear here
+                <div className="flex flex-col items-center justify-center p-12 text-center">
+                  <div className={`mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] border-2 border-dashed ${
+                    theme === "dark" ? "border-white/10 bg-white/[0.03]" : "border-black/5 bg-gray-50"
+                  }`}>
+                    <svg className={`h-10 w-10 ${theme === "dark" ? "text-white/20" : "text-gray-300"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                  </div>
+                  <h4 className={`text-sm font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    No notifications yet
+                  </h4>
+                  <p className={`mt-2 max-w-[200px] text-[11px] leading-relaxed ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                    We'll notify you when you have new messages or order updates.
                   </p>
-                  <div className="mt-3 text-[11px]">
-                    <p
-                      className={
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }
-                    >
-                      FCM status:{" "}
-                      <span className="font-semibold">
-                        {hasPermission
-                          ? isInitialized
-                            ? "Connected"
-                            : "Connecting…"
-                          : "No permission / unsupported"}
+                  
+                  <div className={`mt-8 rounded-2xl border px-4 py-2 ${
+                    theme === "dark" ? "border-white/5 bg-white/[0.02]" : "border-black/5 bg-gray-50"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`h-1.5 w-1.5 rounded-full ${hasPermission ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-red-500"}`}></div>
+                      <span className={`text-[10px] font-bold ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                        FCM STATUS: {hasPermission ? (isInitialized ? "CONNECTED" : "SYNCING...") : "DISABLED"}
                       </span>
-                    </p>
+                    </div>
                   </div>
                 </div>
               ) : (
                 notifications.map((notification, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer border-b px-4 py-3 transition-colors ${
+                    className={`group cursor-pointer border-b px-6 py-5 transition-all duration-300 ${
                       theme === "dark"
-                        ? "border-gray-700 hover:bg-gray-700"
-                        : "border-gray-100 hover:bg-gray-50"
+                        ? "border-white/5 hover:bg-white/[0.03]"
+                        : "border-black/5 hover:bg-gray-50"
                     } ${
-                      !notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                      !notification.read 
+                        ? (theme === "dark" ? "bg-emerald-500/10" : "bg-emerald-50/50") 
+                        : ""
                     }`}
                     onClick={() => {
                       // Mark as read when clicked
@@ -712,65 +687,33 @@ export default function NotificationCenter() {
                       }
                     }}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`h-2 w-2 rounded-full ${
-                            !notification.read
-                              ? "animate-pulse bg-blue-500"
-                              : "bg-gray-400"
-                          }`}
-                        />
-                        <div className="flex-shrink-0">
-                          {getNotificationIcon(
+                    <div className="flex items-start gap-4">
+                      {/* Tactical Icon Module */}
+                      <div className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-lg transition-transform group-hover:scale-110 ${
+                        theme === "dark"
+                          ? "bg-gradient-to-br from-white/10 to-white/[0.02] border border-white/10"
+                          : "bg-white border border-black/5 shadow-gray-200"
+                      }`}>
+                         {getNotificationIcon(
                             notification.type,
                             notification.isCombinedOrder
                           )}
-                        </div>
+                          {!notification.read && (
+                            <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0A0A0A] dark:ring-gray-900 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></span>
+                          )}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-medium">
-                              {notification.title}
-                            </h4>
-                            {notification.type === "new_order" &&
-                              (notification.displayOrderId ||
-                                notification.OrderID) && (
-                                <span
-                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                    theme === "dark"
-                                      ? "bg-emerald-900/40 text-emerald-200"
-                                      : "bg-emerald-100 text-emerald-800"
-                                  }`}
-                                  title="Order ID"
-                                >
-                                  #
-                                  {notification.displayOrderId ??
-                                    notification.OrderID}
-                                </span>
-                              )}
-                            {notification.isCombinedOrder && (
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                  theme === "dark"
-                                    ? "bg-purple-900/50 text-purple-300"
-                                    : "bg-purple-100 text-purple-800"
-                                }`}
-                              >
-                                🛒 {notification.orderCount} Stores
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[11px] text-gray-500">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h4 className={`text-sm font-black tracking-tight truncate ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                            {notification.title}
+                          </h4>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap opacity-40 ${theme === "dark" ? "text-white" : "text-gray-500"}`}>
                             {formatTime(notification.timestamp)}
                           </span>
                         </div>
-                        <p
-                          className={`mt-1 text-xs ${
+                        <p className={`text-xs leading-relaxed line-clamp-2 ${
                             theme === "dark" ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
+                          }`}>
                           {notification.body}
                         </p>
 
@@ -872,7 +815,7 @@ export default function NotificationCenter() {
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -305,7 +305,7 @@ export default function MobileUserDashboard({
               </div>
 
               {/* Notification Bell (FCM-backed) */}
-              <div className="shrink-0 mb-4">
+              <div className="shrink-0">
                 <NotificationCenter />
               </div>
             </div>
