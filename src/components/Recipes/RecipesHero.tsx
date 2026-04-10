@@ -62,26 +62,43 @@ const RecipesHero: React.FC<RecipesHeroProps> = ({
         </div>
 
         {/* Search inside hero */}
-        <div className="group mt-4 flex items-center gap-2 rounded-2xl bg-white/5 p-2 pl-5 pr-2 backdrop-blur-xl border border-white/10 transition-all focus-within:border-emerald-500/50 focus-within:bg-white/10">
-          <svg className="h-5 w-5 text-white/40 group-focus-within:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" /></svg>
-          <Input
-            value={searchTerm}
-            onChange={onSearchTermChange}
-            placeholder="Search recipes (e.g. Pasta, Burger)"
-            onKeyPress={onKeyPress}
-            className="!border-0 !bg-transparent !text-sm !text-white placeholder:!text-white/40"
-            style={{ color: "#ffffff" }}
-            size="lg"
-          />
-          <Button
-            appearance="primary"
-            color="green"
-            onClick={onSearch}
-            size="lg"
-            className="rounded-xl px-8 text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95"
-          >
-            Search
-          </Button>
+        <div className="space-y-4">
+          <div className="group relative flex items-center gap-2 rounded-2xl bg-white/10 p-1.5 pl-6 pr-1.5 backdrop-blur-3xl border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all duration-500 focus-within:border-emerald-500/50 focus-within:bg-white/[0.15] focus-within:scale-[1.02] focus-within:shadow-[0_0_50px_-12px_rgba(16,185,129,0.3)]">
+            <svg className="h-5 w-5 text-white/50 transition-colors group-focus-within:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
+            </svg>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => onSearchTermChange(e.target.value)}
+              placeholder="What are we cooking today?"
+              onKeyPress={onKeyPress}
+              className="flex-1 bg-transparent border-none outline-none p-0 text-sm text-white placeholder:text-white/30"
+            />
+            <button
+              onClick={onSearch}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white backdrop-blur-xl transition-all hover:bg-white/20 active:scale-90"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-4 px-2">
+             <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Trending:</span>
+             <div className="flex gap-2">
+                {["Pasta", "Burger", "Vegan", "Dessert"].map(tag => (
+                  <button 
+                    key={tag}
+                    onClick={() => onSearchTermChange(tag)}
+                    className="text-[10px] font-bold text-white/50 transition-colors hover:text-emerald-400"
+                  >
+                    {tag}
+                  </button>
+                ))}
+             </div>
+          </div>
         </div>
       </div>
 

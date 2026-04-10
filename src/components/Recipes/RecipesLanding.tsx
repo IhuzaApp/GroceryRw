@@ -176,21 +176,18 @@ const RecipesLanding: React.FC = () => {
               Over 200+ <br/> Recipes
             </h1>
             
-            <div className="mt-6 flex items-center gap-2 rounded-2xl bg-white/10 p-1.5 pl-4 pr-1.5 backdrop-blur-xl border border-white/20">
-              <Input
+            <div className="group mt-6 flex items-center gap-2 rounded-2xl bg-white/10 p-1.5 pl-4 pr-1.5 backdrop-blur-2xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] transition-all duration-500 focus-within:scale-[1.03] focus-within:bg-white/[0.15] focus-within:shadow-2xl focus-within:border-emerald-500/50">
+              <input
+                type="text"
                 value={searchTerm}
-                onChange={setSearchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search recipes..."
                 onKeyPress={handleKeyPress}
-                size="lg"
-                className="w-full flex-1 !border-0 !bg-transparent !text-sm !text-white placeholder:!text-white/50"
+                className="w-full flex-1 bg-transparent border-none outline-none p-0 text-sm text-white placeholder:text-white/30"
               />
-              <Button
-                appearance="primary"
-                color="green"
+              <button
                 onClick={handleSearch}
-                size="lg"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl !p-0 shadow-lg shadow-emerald-500/30"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white backdrop-blur-xl transition-all active:scale-95"
               >
                 <svg
                   className="h-5 w-5 text-white"
@@ -201,7 +198,7 @@ const RecipesLanding: React.FC = () => {
                 >
                   <path d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
                 </svg>
-              </Button>
+              </button>
             </div>
           </div>
         </div>
