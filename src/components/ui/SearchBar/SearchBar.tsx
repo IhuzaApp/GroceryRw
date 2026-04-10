@@ -139,10 +139,10 @@ export default function SearchBar() {
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className={`absolute z-50 mt-4 w-full max-w-md overflow-hidden rounded-[2.5rem] border shadow-2xl transition-all animate-in fade-in slide-in-from-top-4 duration-500 ${
+        <div className={`absolute z-50 mt-4 w-full overflow-hidden rounded-[2.5rem] border shadow-2xl transition-all animate-in fade-in slide-in-from-top-4 duration-500 ${
           isDark 
-            ? "border-white/10 bg-black/60 backdrop-blur-3xl" 
-            : "border-gray-200 bg-white/90 backdrop-blur-2xl"
+            ? "border-white/10 bg-[#0A0A0A] backdrop-blur-3xl" 
+            : "border-gray-200 bg-white"
         }`}>
           <div className="max-h-[32rem] overflow-y-auto p-4 custom-scrollbar">
             <div className="mb-2 px-4 py-2">
