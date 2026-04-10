@@ -45,344 +45,206 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
   const youtubeId = getYoutubeVideoId(meal.strYoutube);
 
   return (
-    <div>
-      {/* Back button */}
-      <div className="mb-6 flex items-center">
+    <div className="mx-auto max-w-4xl pb-12">
+      {/* Dynamic Header / Back Button */}
+      <div className="sticky top-0 z-50 -mx-4 mb-4 flex items-center justify-between bg-black/5 px-4 py-4 backdrop-blur-xl dark:bg-white/5 sm:relative sm:mx-0 sm:top-auto sm:z-0 sm:mb-8 sm:rounded-3xl sm:px-6">
         <Link
           href="/Recipes"
-          className={`flex items-center text-sm ${
-            isDark ? "text-slate-300" : "text-slate-700"
+          className={`group flex items-center gap-2 text-sm font-bold transition-all ${
+            isDark ? "text-emerald-400" : "text-emerald-600"
           }`}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            className="mr-2 h-5 w-5"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          <span className="hover:underline">Back</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 transition-all group-hover:bg-emerald-500/20 active:scale-90">
+             <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={3}
+              className="h-4 w-4"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </div>
+          <span className="hidden sm:inline">Back to Recipes</span>
         </Link>
+        <div className="flex items-center gap-3">
+           <button className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-black/5 bg-white text-gray-700 hover:bg-gray-50"}`}>
+             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
+           </button>
+           <button className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-black/5 bg-white text-gray-700 hover:bg-gray-50"}`}>
+             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v13" /></svg>
+           </button>
+        </div>
       </div>
 
-      {/* Mobile header with recipe name */}
-      <div className="mb-4 md:hidden">
-        <h1 className="text-xl font-semibold">{meal.strMeal}</h1>
-        <p
-          className={`mt-1 text-sm ${
-            isDark ? "text-slate-300" : "text-slate-600"
-          }`}
-        >
-          Detailed steps, ingredients, and video walkthrough for this recipe.
-        </p>
-      </div>
-
-      {/* Main layout: left details + right meta/ingredients */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: hero card */}
-        <section
-          className={`flex flex-col overflow-hidden rounded-3xl border ${
-            isDark
-              ? "border-slate-800 bg-slate-900/60"
-              : "border-slate-100 bg-white"
-          } shadow-sm`}
-        >
-          <div className="relative">
-            <img
-              src={meal.strMealThumb}
-              alt={meal.strMeal}
-              className="h-64 w-full object-cover sm:h-72 lg:h-80"
-            />
-            <div className="absolute left-4 top-4 flex gap-2">
-              <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur">
-                {meal.strArea}
-              </span>
-              <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+      {/* Hero Section */}
+      <section className="relative -mx-4 overflow-hidden shadow-2xl sm:mx-0 sm:rounded-[3rem]">
+        <div className="relative h-[25rem] w-full sm:h-[35rem]">
+          <img
+            src={meal.strMealThumb}
+            alt={meal.strMeal}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+          
+          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-10">
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="rounded-full bg-emerald-500 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20">
                 {meal.strCategory}
               </span>
+              <span className="rounded-full bg-white/20 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/20">
+                {meal.strArea} Origin
+              </span>
             </div>
-          </div>
-
-          <div className="flex flex-1 flex-col px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-            <h1 className="text-xl font-semibold sm:text-2xl">
+            
+            <h1 className="text-4xl font-black tracking-tighter text-white sm:text-6xl lg:text-7xl">
               {meal.strMeal}
             </h1>
+            
             {meal.strTags && (
-              <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <div className="mt-6 flex flex-wrap gap-2">
                 {meal.strTags.split(",").map((tag) => (
                   <span
                     key={tag}
-                    className={`rounded-full px-3 py-1 font-medium ${
-                      isDark
-                        ? "bg-emerald-900/40 text-emerald-300"
-                        : "bg-emerald-50 text-emerald-700"
-                    }`}
+                    className="rounded-xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md border border-white/10"
                   >
-                    {tag.trim()}
+                    #{tag.trim()}
                   </span>
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      </section>
 
-            <p
-              className={`mt-4 text-sm leading-relaxed ${
-                isDark ? "text-slate-300" : "text-slate-600"
+      {/* Main Content Grid */}
+      <div className="mt-8 space-y-8 px-0">
+        
+        {/* Quick Info Grid */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { label: "Prep", value: "15m", icon: "⏳" },
+            { label: "Cook", value: "45m", icon: "🔥" },
+            { label: "Serves", value: "4 ppl", icon: "👥" },
+            { label: "Level", value: "Entry", icon: "⭐" },
+          ].map((item, idx) => (
+            <div 
+              key={idx}
+              className={`flex flex-col items-center justify-center rounded-[2rem] border-2 py-6 transition-all hover:scale-105 ${
+                isDark 
+                  ? "border-white/5 bg-[#171717] shadow-lg shadow-black/20" 
+                  : "border-black/5 bg-white shadow-sm"
               }`}
             >
-              Fluffy and flavorful {meal.strMeal.toLowerCase()} made with simple
-              pantry ingredients. Perfect for busy weeknights or weekend treats,
-              this recipe is easy to follow and always a crowd-pleaser.
-            </p>
-
-            {/* Video tutorial (desktop within card) */}
-            {youtubeId && (
-              <div className="mt-4 hidden md:block">
-                <h2 className="text-sm font-semibold sm:text-base">
-                  Video tutorial
-                </h2>
-                <div className="mt-2 flex items-stretch gap-3">
-                  <div className="w-40 flex-shrink-0 overflow-hidden rounded-2xl bg-black/60">
-                    <div className="aspect-square">
-                      <iframe
-                        width="200"
-                        height="200"
-                        src={`https://www.youtube.com/embed/${youtubeId}`}
-                        title="YouTube video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="h-full w-full"
-                      ></iframe>
-                    </div>
-                  </div>
-                  <div className="text-xs sm:text-sm">
-                    <p className={isDark ? "text-slate-200" : "text-slate-700"}>
-                      Watch a quick step-by-step walkthrough for this recipe.
-                      See the texture, timing, and pan movement so it is easier
-                      to follow along while you cook.
-                    </p>
-                    <p
-                      className={`mt-2 text-[11px] uppercase tracking-wide ${
-                        isDark ? "text-emerald-300" : "text-emerald-600"
-                      }`}
-                    >
-                      Plays directly from YouTube
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Right: stats, ingredients */}
-        <section className="space-y-4">
-          {/* Time / meta row */}
-          <div
-            className={`rounded-3xl border p-4 text-xs sm:text-sm ${
-              isDark
-                ? "border-slate-800 bg-slate-900/70"
-                : "border-slate-100 bg-white"
-            }`}
-          >
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-left"
-              onClick={() => setMetaOpen((v) => !v)}
-            >
-              <h2 className="text-sm font-semibold sm:text-base">Overview</h2>
-              <span className="md:hidden">{metaOpen ? "−" : "+"}</span>
-            </button>
-            <div
-              className={`mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 ${
-                metaOpen ? "block" : "hidden md:block"
-              }`}
-            >
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Prep
-                </p>
-                <p className="mt-1 font-semibold">10 min</p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Cook
-                </p>
-                <p className="mt-1 font-semibold">20 min</p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Serves
-                </p>
-                <p className="mt-1 font-semibold">4 people</p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Difficulty
-                </p>
-                <p className="mt-1 font-semibold">Easy</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Ingredients / equipment summary */}
-          <div
-            className={`grid grid-cols-2 gap-3 rounded-3xl border p-4 text-xs sm:text-sm ${
-              isDark
-                ? "border-slate-800 bg-slate-900/70"
-                : "border-slate-100 bg-white"
-            }`}
-          >
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-left"
-              onClick={() => setIngredientsOpen((v) => !v)}
-            >
-              <h2 className="text-sm font-semibold sm:text-base">Summary</h2>
-              <span className="md:hidden">{ingredientsOpen ? "−" : "+"}</span>
-            </button>
-            <div
-              className={`mt-3 grid grid-cols-2 gap-3 ${
-                ingredientsOpen ? "block" : "hidden md:block"
-              }`}
-            >
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Ingredients
-                </p>
-                <p className="mt-1 text-lg font-semibold">
-                  {ingredients.length}
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                  Equipment
-                </p>
-                <p className="mt-1 text-lg font-semibold">Basic kitchen</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Ingredients list */}
-          <div
-            className={`rounded-3xl border p-4 ${
-              isDark
-                ? "border-slate-800 bg-slate-900/70"
-                : "border-slate-100 bg-white"
-            }`}
-          >
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-left"
-              onClick={() => setIngredientsOpen((v) => !v)}
-            >
-              <h2 className="text-sm font-semibold sm:text-base">
-                Ingredients
-              </h2>
-              <span className="md:hidden">{ingredientsOpen ? "−" : "+"}</span>
-            </button>
-            <ul
-              className={`mt-3 space-y-2 text-xs sm:text-sm ${
-                isDark ? "text-slate-200" : "text-slate-700"
-              } ${ingredientsOpen ? "block" : "hidden md:block"}`}
-            >
-              {ingredients.map((item, index) => (
-                <li
-                  key={index}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-slate-50/40 px-3 py-2 dark:bg-slate-800/60"
-                >
-                  <span className="font-medium">{item.name}</span>
-                  {item.measure && (
-                    <span className="text-xs text-slate-500 dark:text-slate-300">
-                      {item.measure}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      </div>
-
-      {/* Instructions full-width below */}
-      <div
-        className={`mt-6 rounded-3xl border p-4 ${
-          isDark
-            ? "border-slate-800 bg-slate-900/70"
-            : "border-slate-100 bg-white"
-        }`}
-      >
-        <button
-          type="button"
-          className="flex w-full items-center justify-between text-left"
-          onClick={() => setInstructionsOpen((v) => !v)}
-        >
-          <h2 className="text-sm font-semibold sm:text-base">Instructions</h2>
-          <span className="md:hidden">{instructionsOpen ? "−" : "+"}</span>
-        </button>
-        <ol
-          className={`mt-3 space-y-3 text-xs sm:text-sm ${
-            isDark ? "text-slate-200" : "text-slate-700"
-          } ${instructionsOpen ? "block" : "hidden md:block"}`}
-        >
-          {formatInstructions(meal.strInstructions).map((step, index) => (
-            <li key={index} className="flex gap-3">
-              <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
-                {index + 1}
-              </span>
-              <p>{step}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {/* Mobile-only video section at bottom */}
-      {youtubeId && (
-        <div
-          className={`mt-4 rounded-3xl border p-4 md:hidden ${
-            isDark
-              ? "border-slate-800 bg-slate-900/70"
-              : "border-slate-100 bg-white"
-          }`}
-        >
-          <button
-            type="button"
-            className="flex w-full items-center justify-between text-left"
-            onClick={() => setVideoOpen((v) => !v)}
-          >
-            <h2 className="text-sm font-semibold sm:text-base">
-              Video tutorial
-            </h2>
-            <span>{videoOpen ? "−" : "+"}</span>
-          </button>
-          {videoOpen && (
-            <div className="mt-3">
-              <div className="aspect-video overflow-hidden rounded-2xl">
-                <iframe
-                  width="560"
-                  height="315"
-                  src={`https://www.youtube.com/embed/${youtubeId}`}
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="h-full w-full"
-                ></iframe>
-              </div>
-              <p
-                className={`mt-2 text-xs ${
-                  isDark ? "text-slate-200" : "text-slate-700"
-                }`}
-              >
-                Watch the full walkthrough for timing, textures and plating tips
-                while you cook.
+              <span className="mb-2 text-2xl">{item.icon}</span>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                {item.label}
+              </p>
+              <p className={`mt-1 text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                {item.value}
               </p>
             </div>
-          )}
+          ))}
         </div>
-      )}
+
+        {/* Ingredients & Instructions */}
+        <div className="grid gap-8 lg:grid-cols-5">
+          
+          {/* Ingredients Column */}
+          <section className="lg:col-span-2">
+            <div className={`sticky top-8 rounded-[2.5rem] border-2 p-8 ${
+              isDark ? "border-white/5 bg-[#171717]" : "border-black/5 bg-white"
+            }`}>
+              <div className="mb-8 flex items-center justify-between">
+                <h2 className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                  Ingredients
+                </h2>
+                <span className={`rounded-full bg-emerald-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500`}>
+                  {ingredients.length} items
+                </span>
+              </div>
+              
+              <ul className="space-y-3">
+                {ingredients.map((item, index) => (
+                  <li
+                    key={index}
+                    className={`flex items-center justify-between gap-4 rounded-2xl border-2 px-4 py-4 transition-all hover:border-emerald-500/30 ${
+                      isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                       <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    {item.measure && (
+                      <span className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                        {item.measure}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          {/* Instructions Column */}
+          <section className="lg:col-span-3">
+            <div className={`rounded-[2.5rem] border-2 p-8 ${
+              isDark ? "border-white/5 bg-[#171717]" : "border-black/5 bg-white"
+            }`}>
+              <h2 className={`mb-8 text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                Method
+              </h2>
+              
+              <div className="space-y-10">
+                {formatInstructions(meal.strInstructions).map((step, index) => (
+                  <div key={index} className="group relative flex gap-6">
+                    <div className="flex flex-col items-center">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-110">
+                        {index + 1}
+                      </div>
+                      <div className="mt-4 h-full w-[2px] bg-gradient-to-b from-emerald-500/30 to-transparent" />
+                    </div>
+                    <div>
+                      <h4 className={`mb-2 text-xs font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        Step {index + 1}
+                      </h4>
+                      <p className={`text-base leading-relaxed ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+                        {step}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Video tutorial (if available) - Moved to bottom of method */}
+              {youtubeId && (
+                <div className="mt-12 rounded-[2rem] overflow-hidden border-2 border-white/5 bg-black/20">
+                   <div className="p-6">
+                      <h3 className="text-lg font-black text-white mb-2">Watch Tutorial</h3>
+                      <p className="text-sm text-white/60 mb-6">Learn the exact techniques used in this recipe.</p>
+                      <div className="aspect-video overflow-hidden rounded-2xl shadow-2xl">
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${youtubeId}`}
+                          title="YouTube video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="h-full w-full"
+                        ></iframe>
+                      </div>
+                   </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+        </div>
+      </div>
     </div>
   );
 };
