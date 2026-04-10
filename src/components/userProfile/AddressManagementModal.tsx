@@ -148,7 +148,7 @@ export default function AddressManagementModal({
           <div className="absolute inset-0 bg-black/40 backdrop-blur-md px-4" onClick={onClose} />
           
           <div
-            className={`relative max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[3rem] border shadow-[0_32px_120px_-20px_rgba(0,0,0,0.5)] transition-all duration-500 animate-in zoom-in-95 ${
+            className={`relative max-h-[92vh] sm:max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] border shadow-[0_32px_120px_-20px_rgba(0,0,0,0.5)] transition-all duration-500 animate-in zoom-in-95 ${
               theme === "dark"
                 ? "border-white/10 bg-[#0A0A0A]"
                 : "border-gray-200 bg-white"
@@ -156,7 +156,7 @@ export default function AddressManagementModal({
           >
             {/* Header */}
             <div
-              className={`sticky top-0 z-20 flex items-center justify-between border-b px-8 py-6 backdrop-blur-xl ${
+              className={`sticky top-0 z-20 flex items-center justify-between border-b px-5 py-4 sm:px-8 sm:py-6 backdrop-blur-xl ${
                 theme === "dark"
                   ? "border-white/5 bg-[#0A0A0A]/80"
                   : "border-gray-100 bg-white/80"
@@ -193,7 +193,7 @@ export default function AddressManagementModal({
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto p-8 custom-scrollbar">
+            <div className="overflow-y-auto p-5 sm:p-8 custom-scrollbar">
               <div className="space-y-8">
                 {/* Header Section */}
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">

@@ -185,7 +185,7 @@ export default function AddAddressModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-md px-4" onClick={handleClose} />
       
       <div
-        className={`relative max-h-[90vh] w-full max-w-xl overflow-hidden rounded-[3rem] border shadow-[0_32px_120px_-20px_rgba(0,0,0,0.6)] transition-all duration-500 animate-in slide-in-from-bottom-12 ${
+        className={`relative max-h-[92vh] sm:max-h-[90vh] w-full max-w-xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] border shadow-[0_32px_120px_-20px_rgba(0,0,0,0.6)] transition-all duration-500 animate-in slide-in-from-bottom-12 ${
           theme === "dark"
             ? "border-white/10 bg-[#0A0A0A]"
             : "border-gray-200 bg-white"
@@ -193,7 +193,7 @@ export default function AddAddressModal({
       >
         {/* Header */}
         <div
-          className={`sticky top-0 z-20 flex items-center justify-between border-b px-8 py-6 backdrop-blur-xl ${
+          className={`sticky top-0 z-20 flex items-center justify-between border-b px-5 py-4 sm:px-8 sm:py-6 backdrop-blur-xl ${
             theme === "dark"
               ? "border-white/5 bg-[#0A0A0A]/80"
               : "border-gray-100 bg-white/80"
@@ -230,7 +230,7 @@ export default function AddAddressModal({
         </div>
 
         {/* Body */}
-        <div className="space-y-5 p-6 custom-scrollbar overflow-y-auto max-h-[calc(90vh-180px)]">
+        <div className="space-y-5 p-5 sm:p-6 custom-scrollbar overflow-y-auto max-h-[calc(92vh-180px)]">
           {/* Guest User Info Banner */}
           {isGuest && (
             <div
@@ -439,11 +439,10 @@ export default function AddAddressModal({
             </label>
         </div>
 
-        {/* Actions */}
-        <div className={`border-t p-8 flex gap-4 ${theme === "dark" ? "border-white/5 bg-white/[0.01]" : "border-gray-100 bg-gray-50/50"}`}>
+        <div className={`border-t p-5 sm:p-8 flex flex-col sm:flex-row gap-4 ${theme === "dark" ? "border-white/5 bg-white/[0.01]" : "border-gray-100 bg-gray-50/50"}`}>
           <button
             onClick={handleClose}
-            className={`flex-1 rounded-2xl py-5 text-xs font-black uppercase tracking-widest transition-all ${
+            className={`w-full sm:flex-1 rounded-2xl py-4 sm:py-5 text-xs font-black uppercase tracking-widest transition-all ${
               theme === "dark" ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-white text-gray-500 hover:bg-gray-100 border border-black/5"
             }`}
           >
@@ -452,7 +451,7 @@ export default function AddAddressModal({
           <button
             onClick={handleSave}
             disabled={saving || !street}
-            className="flex-[2] rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-5 text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-emerald-500/30 transition-all hover:translate-y-[-2px] active:scale-95 disabled:opacity-30"
+            className="w-full sm:flex-[2] rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 sm:py-5 text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-emerald-500/30 transition-all hover:translate-y-[-2px] active:scale-95 disabled:opacity-30"
           >
             {saving ? "Saving..." : "Save Location"}
           </button>

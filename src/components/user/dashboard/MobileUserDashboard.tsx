@@ -15,6 +15,7 @@ import {
 import { useAddress } from "../../../hooks/useAddress";
 import AddressBubble from "./AddressBubble";
 import NotificationCenter from "../../shopper/NotificationCenter";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface MobileUserDashboardProps {
   initialData: Data;
@@ -31,6 +32,7 @@ export default function MobileUserDashboard({
   searchQuery,
   setSearchQuery,
 }: MobileUserDashboardProps) {
+  const { theme } = useTheme();
   const [shopSearchTerm, setShopSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -271,60 +273,64 @@ export default function MobileUserDashboard({
       <div className="p-0">
         {/* Mobile Header with Background */}
         <div
-          className="relative mb-6 h-48 overflow-hidden rounded-b-3xl"
+          className="relative mb-8 overflow-hidden rounded-b-[3rem] shadow-2xl"
           style={{
             marginTop: "-44px",
             marginLeft: "-16px",
             marginRight: "-16px",
+            height: "220px"
           }}
         >
           {/* Background Image */}
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[20s] hover:scale-110"
             style={{
               backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
             }}
           >
-            {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-black/20"></div>
+            {/* Dynamic Overlay for contrast */}
+            <div className={`absolute inset-0 transition-colors duration-500 ${
+              theme === "dark" ? "bg-black/40" : "bg-black/10"
+            }`}></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           </div>
 
           {/* Header Content - Address Bubble and Search Input */}
-          <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 pt-8">
+          <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 pt-12">
             {/* Top Bar with Notification Bell and Address */}
-            <div className="mb-2 flex w-full max-w-sm items-center justify-between gap-2">
+            <div className="mb-4 flex w-full max-w-sm items-center justify-between gap-4">
               {/* Address Bubble */}
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <AddressBubble />
               </div>
 
               {/* Notification Bell (FCM-backed) */}
-              <div className="flex-shrink-0">
+              <div className="shrink-0 mb-4">
                 <NotificationCenter />
               </div>
             </div>
 
             {/* Search Input */}
             <div className="w-full max-w-sm">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+              <div className="relative group">
+                <div className={`absolute inset-y-0 left-0 flex items-center pl-5 transition-colors duration-500 ${theme === "dark" ? "text-white/20" : "text-gray-400"}`}>
                   <svg
-                    className="h-5 w-5 text-gray-400"
+                    className="h-5 w-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    strokeWidth="2.5"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
                     />
                   </svg>
                 </div>
                 <input
                   type="text"
-                  placeholder="Search everything..."
+                  placeholder="What are you looking for?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => {
@@ -332,7 +338,11 @@ export default function MobileUserDashboard({
                       handleSearchSubmit();
                     }
                   }}
-                  className="w-full rounded-2xl border-0 bg-white/90 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-500 shadow-lg backdrop-blur-sm transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-gray-800/90 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-800"
+                  className={`w-full rounded-2xl border transition-all duration-500 py-4 pl-12 pr-4 text-sm font-black shadow-2xl backdrop-blur-xl ${
+                    theme === "dark"
+                      ? "border-white/10 bg-white/[0.08] text-white placeholder:text-white/40 focus:bg-white/[0.12] focus:border-emerald-500/50"
+                      : "border-black/5 bg-white/95 text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-emerald-500"
+                  }`}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4">
                   {searchQuery && (

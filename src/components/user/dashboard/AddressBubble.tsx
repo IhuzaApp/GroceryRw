@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useAddress } from "../../../hooks/useAddress";
 import AddressMap from "./AddressMap";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface AddressBubbleProps {
   className?: string;
 }
 
 export default function AddressBubble({ className = "" }: AddressBubbleProps) {
+  const { theme } = useTheme();
   const { defaultAddress, addresses, loading, refetch } = useAddress();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -198,15 +200,22 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
       <div className={`mb-4 ${className}`}>
         <div
           ref={bubbleRef}
-          className="group relative inline-flex items-center gap-3 rounded-2xl border border-white/30 bg-white/20 px-5 py-3 shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white/30 hover:shadow-2xl dark:border-gray-600/30 dark:bg-gray-900/20 dark:hover:bg-gray-900/30"
+          onClick={handleDropdownToggle}
+          className={`group relative inline-flex items-center gap-3 rounded-2xl border px-5 py-3 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] active:scale-95 cursor-pointer ${
+            theme === "dark" 
+              ? "border-white/10 bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]" 
+              : "border-black/5 bg-gray-100/50 shadow-lg"
+          }`}
         >
           {/* Glass reflection effect */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10"></div>
 
           {/* Location Icon with Background */}
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/30 backdrop-blur-sm dark:border-gray-600/40 dark:bg-gray-800/40">
+          <div className={`relative flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-colors duration-500 ${
+            theme === "dark" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-emerald-500/20 bg-emerald-500 text-white"
+          }`}>
             <svg
-              className="h-4 w-4 text-green-700 drop-shadow-sm dark:text-green-300"
+              className="h-4 w-4 drop-shadow-sm"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -228,20 +237,16 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
 
           {/* Address Text */}
           <div className="relative flex flex-1 flex-col">
-            <span className="text-sm font-semibold leading-tight text-gray-800 drop-shadow-sm dark:text-gray-100">
+            <span className={`text-sm font-black tracking-tight leading-tight transition-colors duration-500 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
               {defaultAddress.street}, {defaultAddress.city}
             </span>
           </div>
 
-          {/* Dropdown Icon */}
-          <button
-            onClick={handleDropdownToggle}
-            className="relative flex h-6 w-6 items-center justify-center rounded-full transition-colors duration-200 hover:bg-white/20 dark:hover:bg-gray-700/20"
-          >
+          <div className={`relative flex h-6 w-6 items-center justify-center rounded-full transition-all duration-300 ${isDropdownOpen ? "rotate-180" : ""} ${
+            theme === "dark" ? "text-white/40 group-hover:text-white" : "text-gray-400 group-hover:text-gray-900"
+          }`}>
             <svg
-              className={`h-4 w-4 text-gray-500 transition-transform duration-200 dark:text-gray-400 ${
-                isDropdownOpen ? "rotate-180" : ""
-              }`}
+              className="h-4 w-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -253,10 +258,12 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                 d="M19 9l-7 7-7-7"
               />
             </svg>
-          </button>
+          </div>
 
           {/* Glass edge highlight */}
-          <div className="pointer-events-none absolute inset-0 rounded-2xl border border-white/50 dark:border-gray-500/30"></div>
+          <div className={`pointer-events-none absolute inset-0 rounded-2xl border transition-colors duration-500 ${
+            theme === "dark" ? "border-white/10" : "border-black/5"
+          }`}></div>
         </div>
 
         {/* Full Screen Dropdown with Map */}
@@ -272,26 +279,27 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Dropdown Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                  <h5 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Select Address
-                  </h5>
+                <div className={`sticky top-0 z-50 flex items-center justify-between border-b px-6 py-5 backdrop-blur-xl ${
+                  theme === "dark" ? "border-white/5 bg-[#0A0A0A]/90" : "border-gray-100 bg-white/90"
+                }`}>
+                  <div>
+                    <h5 className={`text-xl font-black tracking-tighter ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                      Select Address
+                    </h5>
+                    <p className={`text-[10px] font-black uppercase tracking-widest opacity-40 ${theme === "dark" ? "text-white" : "text-gray-600"}`}>
+                      Where should we deliver?
+                    </p>
+                  </div>
                   <button
                     onClick={() => setIsDropdownOpen(false)}
-                    className="rounded-full p-1.5 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-90 ${
+                      theme === "dark" 
+                        ? "bg-white/5 text-gray-400 border border-white/10" 
+                        : "bg-gray-100 text-gray-500 border border-black/5"
+                    }`}
                   >
-                    <svg
-                      className="h-5 w-5 text-gray-500 dark:text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
@@ -318,67 +326,59 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                   </div>
 
                   {/* Address List Section - Below Map */}
-                  <div className="flex h-2/5 flex-col">
-                    <div className="border-b border-gray-200 p-4 dark:border-gray-700">
-                      <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
-                        Your Addresses
+                  <div className={`flex h-2/5 flex-col ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"}`}>
+                    <div className={`border-b px-6 py-4 ${theme === "dark" ? "border-white/5" : "border-gray-100"}`}>
+                      <h3 className={`text-sm font-black uppercase tracking-widest opacity-40 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                        Your Saved Locations
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Select an address to set as default
-                      </p>
                     </div>
 
-                    <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent flex-1 overflow-y-auto p-4">
+                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                       <div className="space-y-3">
                         {addresses.map((address) => (
                           <button
                             key={address.id}
                             onClick={() => handleAddressClick(address)}
-                            className={`w-full rounded-xl border-2 p-3 text-left transition-all duration-200 ${
+                            className={`group relative w-full overflow-hidden rounded-[2rem] border-2 p-4 text-left transition-all duration-500 active:scale-[0.98] ${
                               address.is_default
-                                ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                                : "border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500"
+                                ? theme === "dark"
+                                  ? "border-emerald-500/40 bg-emerald-500/[0.03] shadow-[0_0_40px_-15px_rgba(16,185,129,0.3)]"
+                                  : "border-emerald-500 bg-emerald-50 shadow-xl shadow-emerald-500/10"
+                                : theme === "dark"
+                                  ? "border-white/5 bg-white/[0.02] hover:border-white/10"
+                                  : "border-gray-100 bg-gray-50/50 hover:border-emerald-200 hover:bg-white hover:shadow-lg"
                             }`}
                           >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="mb-1 flex items-center gap-2">
-                                  <div
-                                    className={`h-2.5 w-2.5 rounded-full ${
-                                      address.is_default
-                                        ? "bg-green-500"
-                                        : "bg-gray-300 dark:bg-gray-600"
-                                    }`}
-                                  ></div>
-                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                                    {address.street}
-                                  </span>
-                                  {address.type && (
-                                    <span
-                                      className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
-                                        address.type === "house"
-                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                                          : address.type === "apartment"
-                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                                          : address.type === "office"
-                                          ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                                      }`}
-                                    >
-                                      {address.type.charAt(0).toUpperCase() +
-                                        address.type.slice(1)}
-                                    </span>
-                                  )}
-                                  {address.is_default && (
-                                    <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200">
-                                      Default
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-gray-600 dark:text-gray-400">
-                                  {address.city}, {address.postal_code}
-                                </div>
+                            <div className="flex items-center gap-4">
+                              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl transition-colors duration-500 ${
+                                address.is_default 
+                                  ? "bg-emerald-500 text-white" 
+                                  : theme === "dark" ? "bg-white/5 text-gray-400" : "bg-white text-gray-500 shadow-sm"
+                              }`}>
+                                {address.type === "home" ? (
+                                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                  </svg>
+                                ) : (
+                                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                )}
                               </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className={`truncate text-sm font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                                  {address.street}
+                                </h4>
+                                <p className={`truncate text-[10px] font-bold uppercase tracking-widest opacity-40 ${theme === "dark" ? "text-white" : "text-gray-600"}`}>
+                                  {address.city}
+                                </p>
+                              </div>
+                              {address.is_default && (
+                                <div className="rounded-full bg-emerald-500 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-white">
+                                  Default
+                                </div>
+                              )}
                             </div>
                           </button>
                         ))}
@@ -387,29 +387,27 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                         <div className="mt-4">
                           <button
                             onClick={() => {
-                              // TODO: Implement add new address functionality
                               console.log("Add new address clicked");
+                              // Optionally link to the main AddAddressModal if available
                             }}
-                            className="group w-full rounded-xl border-2 border-dashed border-gray-300 p-3 transition-all duration-200 hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-400 dark:hover:bg-green-900/10"
+                            className={`group w-full rounded-[2rem] border-2 border-dashed p-6 transition-all duration-500 active:scale-95 ${
+                              theme === "dark" 
+                                ? "border-white/10 bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/[0.05]" 
+                                : "border-gray-200 bg-gray-50/50 hover:border-emerald-500/40 hover:bg-emerald-50/50"
+                            }`}
                           >
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 transition-colors duration-200 group-hover:bg-green-100 dark:bg-gray-700 dark:group-hover:bg-green-900/20">
-                                <svg
-                                  className="h-3 w-3 text-gray-500 group-hover:text-green-500 dark:text-gray-400 dark:group-hover:text-green-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                  />
+                            <div className="flex flex-col items-center gap-3">
+                              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-500 group-hover:rotate-90 ${
+                                theme === "dark" ? "bg-white/5 text-gray-400" : "bg-white text-gray-400 shadow-sm"
+                              }`}>
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                                 </svg>
                               </div>
-                              <span className="text-sm font-medium text-gray-600 group-hover:text-green-600 dark:text-gray-400 dark:group-hover:text-green-400">
-                                Add New Address
+                              <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${
+                                theme === "dark" ? "text-white/40 group-hover:text-emerald-400" : "text-gray-400 group-hover:text-emerald-600"
+                              }`}>
+                                Add New Location
                               </span>
                             </div>
                           </button>
@@ -418,12 +416,12 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                     </div>
 
                     {/* Footer */}
-                    <div className="border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div className={`mt-auto border-t px-6 py-5 ${theme === "dark" ? "border-white/5 bg-[#0A0A0A]" : "border-gray-100 bg-white"}`}>
                       <button
                         onClick={() => setIsDropdownOpen(false)}
-                        className="w-full rounded-xl bg-green-600 px-4 py-3 font-medium text-white transition-colors duration-200 hover:bg-green-700"
+                        className="w-full rounded-[2rem] bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:translate-y-[-1px] active:scale-95"
                       >
-                        Done
+                        Done Choosing
                       </button>
                     </div>
                   </div>
