@@ -65,7 +65,7 @@ export default function RecipeDetailPage() {
   return (
     <RootLayout>
       <div
-        className={`mx-auto max-w-7xl px-4 py-6 md:py-10 2xl:max-w-[1700px] ${
+        className={`mx-auto max-w-7xl px-0 py-0 pb-10 sm:px-4 sm:py-6 md:py-10 2xl:max-w-[1700px] ${
           isDark ? "text-slate-50" : "text-slate-900"
         }`}
       >

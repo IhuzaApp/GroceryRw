@@ -46,40 +46,9 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
 
   return (
     <div className="mx-auto max-w-4xl pb-12">
-      {/* Dynamic Header / Back Button */}
-      <div className="sticky top-0 z-50 -mx-4 mb-4 flex items-center justify-between bg-black/5 px-4 py-4 backdrop-blur-xl dark:bg-white/5 sm:relative sm:mx-0 sm:top-auto sm:z-0 sm:mb-8 sm:rounded-3xl sm:px-6">
-        <Link
-          href="/Recipes"
-          className={`group flex items-center gap-2 text-sm font-bold transition-all ${
-            isDark ? "text-emerald-400" : "text-emerald-600"
-          }`}
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 transition-all group-hover:bg-emerald-500/20 active:scale-90">
-             <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={3}
-              className="h-4 w-4"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </div>
-          <span className="hidden sm:inline">Back to Recipes</span>
-        </Link>
-        <div className="flex items-center gap-3">
-           <button className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-black/5 bg-white text-gray-700 hover:bg-gray-50"}`}>
-             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
-           </button>
-           <button className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-black/5 bg-white text-gray-700 hover:bg-gray-50"}`}>
-             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v13" /></svg>
-           </button>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative -mx-4 overflow-hidden shadow-2xl sm:mx-0 sm:rounded-[3rem]">
-        <div className="relative h-[25rem] w-full sm:h-[35rem]">
+      {/* Hero Section - Full Bleed on Mobile */}
+      <section className="relative -mx-4 -mt-6 overflow-hidden shadow-2xl sm:mx-0 sm:mt-0 sm:rounded-[3rem]">
+        <div className="relative h-[20rem] w-full sm:h-[30rem]">
           <img
             src={meal.strMealThumb}
             alt={meal.strMeal}
@@ -87,6 +56,33 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
           
+          {/* Integrated Action Buttons (Glass Mode) */}
+          <div className="absolute top-8 left-6 right-6 flex items-center justify-between">
+            <Link
+              href="/Recipes"
+              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white backdrop-blur-xl transition-all hover:bg-emerald-500 hover:border-emerald-500 active:scale-90"
+            >
+               <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3}
+                className="h-5 w-5"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </Link>
+
+            <div className="flex items-center gap-3">
+               <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white backdrop-blur-xl transition-all hover:bg-white/20 active:scale-95">
+                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
+               </button>
+               <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white backdrop-blur-xl transition-all hover:bg-white/20 active:scale-95">
+                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V12" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v13" /></svg>
+               </button>
+            </div>
+          </div>
+
           <div className="absolute bottom-0 left-0 w-full p-6 sm:p-10">
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="rounded-full bg-emerald-500 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20">
@@ -123,10 +119,42 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
         {/* Quick Info Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Prep", value: "15m", icon: "⏳" },
-            { label: "Cook", value: "45m", icon: "🔥" },
-            { label: "Serves", value: "4 ppl", icon: "👥" },
-            { label: "Level", value: "Entry", icon: "⭐" },
+            { 
+              label: "Prep", 
+              value: "15m", 
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) 
+            },
+            { 
+              label: "Cook", 
+              value: "45m", 
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                </svg>
+              ) 
+            },
+            { 
+              label: "Serves", 
+              value: "4 ppl", 
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) 
+            },
+            { 
+              label: "Level", 
+              value: "Entry", 
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+              ) 
+            },
           ].map((item, idx) => (
             <div 
               key={idx}
@@ -136,7 +164,9 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
                   : "border-black/5 bg-white shadow-sm"
               }`}
             >
-              <span className="mb-2 text-2xl">{item.icon}</span>
+              <div className={`mb-2 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                {item.icon}
+              </div>
               <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                 {item.label}
               </p>
@@ -152,34 +182,34 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           
           {/* Ingredients Column */}
           <section className="lg:col-span-2">
-            <div className={`sticky top-8 rounded-[2.5rem] border-2 p-8 ${
+            <div className={`sticky top-8 rounded-[2rem] border-2 p-6 sm:rounded-[2.5rem] sm:p-8 ${
               isDark ? "border-white/5 bg-[#171717]" : "border-black/5 bg-white"
             }`}>
-              <div className="mb-8 flex items-center justify-between">
-                <h2 className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className={`text-xl font-black tracking-tight sm:text-2xl ${isDark ? "text-white" : "text-gray-900"}`}>
                   Ingredients
                 </h2>
-                <span className={`rounded-full bg-emerald-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500`}>
+                <span className={`rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500`}>
                   {ingredients.length} items
                 </span>
               </div>
               
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 {ingredients.map((item, index) => (
                   <li
                     key={index}
-                    className={`flex items-center justify-between gap-4 rounded-2xl border-2 px-4 py-4 transition-all hover:border-emerald-500/30 ${
-                      isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-gray-50"
+                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 transition-all hover:border-emerald-500/30 ${
+                      isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-gray-50/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                       <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                       <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                        <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                         {item.name}
                       </span>
                     </div>
                     {item.measure && (
-                      <span className={`text-xs font-black uppercase tracking-wider ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-wider ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
                         {item.measure}
                       </span>
                     )}
@@ -191,27 +221,27 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
 
           {/* Instructions Column */}
           <section className="lg:col-span-3">
-            <div className={`rounded-[2.5rem] border-2 p-8 ${
+            <div className={`rounded-[2rem] border-2 p-6 sm:rounded-[2.5rem] sm:p-8 ${
               isDark ? "border-white/5 bg-[#171717]" : "border-black/5 bg-white"
             }`}>
-              <h2 className={`mb-8 text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+              <h2 className={`mb-6 text-xl font-black tracking-tight sm:text-2xl ${isDark ? "text-white" : "text-gray-900"}`}>
                 Method
               </h2>
               
-              <div className="space-y-10">
+              <div className="space-y-8">
                 {formatInstructions(meal.strInstructions).map((step, index) => (
-                  <div key={index} className="group relative flex gap-6">
+                  <div key={index} className="group relative flex gap-4 sm:gap-6">
                     <div className="flex flex-col items-center">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-110">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-[10px] font-black text-white shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-110 sm:h-10 sm:w-10 sm:text-sm">
                         {index + 1}
                       </div>
-                      <div className="mt-4 h-full w-[2px] bg-gradient-to-b from-emerald-500/30 to-transparent" />
+                      <div className="mt-4 h-full w-[1.5px] bg-gradient-to-b from-emerald-500/30 to-transparent" />
                     </div>
-                    <div>
-                      <h4 className={`mb-2 text-xs font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                    <div className="flex-1">
+                      <h4 className={`mb-1 text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
                         Step {index + 1}
                       </h4>
-                      <p className={`text-base leading-relaxed ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-600"} sm:text-base`}>
                         {step}
                       </p>
                     </div>
