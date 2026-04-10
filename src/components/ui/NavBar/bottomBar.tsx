@@ -56,6 +56,7 @@ function MoreMenuItem({
   badgeCount = 0,
 }: MoreMenuItemProps) {
   const router = useRouter();
+  const { theme } = useTheme();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,16 +66,24 @@ function MoreMenuItem({
 
   return (
     <Link href={href} passHref onClick={handleClick}>
-      <div className="relative mx-2 flex items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700">
-        <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
+      <div className={`group relative mx-2 flex px-4 py-3.5 items-center space-x-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
+        theme === "dark" 
+          ? "text-gray-300 hover:bg-white/5 hover:text-emerald-400" 
+          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+      }`}>
+        <span className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px] shadow-sm transition-transform duration-300 group-hover:scale-110 ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-white/10 to-white/[0.02] border border-white/10"
+            : "bg-white border border-black/5"
+        }`}>
           {icon}
           {badgeCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-green-500 px-1 text-[10px] font-bold text-white">
+            <span className={`absolute -right-1.5 -top-1.5 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ${theme === "dark" ? "ring-[#0A0A0A]" : "ring-white"}`}>
               {badgeCount > 99 ? "99+" : badgeCount}
             </span>
           )}
         </span>
-        <span className="flex-1">{label}</span>
+        <span className="flex-1 tracking-wide">{label}</span>
       </div>
     </Link>
   );
@@ -910,7 +919,11 @@ export default function BottomBar() {
                   onClick={() => setMoreOpen(false)}
                 />
                 <div
-                  className="fixed bottom-24 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-2xl border border-gray-200/50 bg-white/95 p-2 shadow-2xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/95"
+                  className={`fixed bottom-[5.5rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-t-[2.5rem] rounded-b-[1.5rem] border p-3 shadow-2xl backdrop-blur-2xl animate-in slide-in-from-bottom duration-300 ${
+                    theme === "dark"
+                      ? "border-white/10 bg-[#0A0A0A]/95 shadow-[0_30px_60px_-10px_rgba(0,0,0,1)] text-white"
+                      : "border-black/5 bg-white/95 shadow-black/10 text-gray-900"
+                  }`}
                   ref={moreRef}
                 >
                   {/* Guest Badge - Show for guest users */}
@@ -921,9 +934,13 @@ export default function BottomBar() {
                           setMoreOpen(false);
                           setShowUpgradeModal(true);
                         }}
-                        className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                        className="group w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                       >
-                        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
+                         <div className={`flex items-center gap-4 rounded-[1.25rem] px-5 py-4 shadow-sm border transition-colors ${
+                          theme === "dark" 
+                            ? "border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 group-hover:from-orange-500/20" 
+                            : "border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100 group-hover:to-orange-200"
+                        }`}>
                           <svg
                             className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
                             fill="none"
@@ -1127,7 +1144,7 @@ export default function BottomBar() {
                     />
                   )}
 
-                  <div className="mx-2 my-2 border-t border-gray-200 dark:border-gray-700"></div>
+                  <div className={`mx-3 my-2 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"}`}></div>
 
                   {!session?.user && (
                     <MoreMenuItem
