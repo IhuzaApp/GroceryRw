@@ -383,10 +383,12 @@ export default function MobileUserDashboard({
                 {error}
               </div>
             )}
-            <h5 className="pb-2 text-lg font-bold text-gray-900 dark:text-white">
-              {" "}
-              Categories
-            </h5>
+            <div className="flex items-center justify-between mb-2">
+              <h5 className={`text-xs font-black uppercase tracking-[0.2em] opacity-40 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                Browse Categories
+              </h5>
+              <div className={`h-px flex-1 ml-4 ${theme === "dark" ? "bg-white/5" : "bg-black/5"}`}></div>
+            </div>
             {/* Categories Grid */}
             <div className="grid grid-cols-2 gap-4">
               {isLoading ? (
@@ -395,11 +397,13 @@ export default function MobileUserDashboard({
                   .map((_, index) => (
                     <div
                       key={index}
-                      className="animate-pulse rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 p-6 dark:from-gray-800 dark:to-gray-700"
+                      className={`animate-pulse rounded-[2rem] p-6 ${
+                        theme === "dark" ? "bg-white/5" : "bg-gray-100"
+                      }`}
                     >
-                      <div className="mb-4 h-16 w-16 rounded-2xl bg-gray-200 dark:bg-gray-600"></div>
-                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-600"></div>
-                      <div className="mt-2 h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className={`mb-4 h-16 w-16 rounded-2xl ${theme === "dark" ? "bg-white/5" : "bg-gray-200"}`}></div>
+                      <div className={`h-3 w-3/4 rounded ${theme === "dark" ? "bg-white/5" : "bg-gray-200"}`}></div>
+                      <div className={`mt-2 h-2 w-1/2 rounded ${theme === "dark" ? "bg-white/5" : "bg-gray-200"}`}></div>
                     </div>
                   ))
               ) : allCategories.length > 0 ? (
@@ -407,61 +411,68 @@ export default function MobileUserDashboard({
                   <div
                     key={category.id}
                     onClick={() => handleCategoryClick(category.id)}
-                    className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-green-500/25 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:hover:shadow-green-400/20"
+                    className={`group relative overflow-hidden rounded-[2rem] border p-6 transition-all duration-500 hover:-translate-y-2 active:scale-[0.98] cursor-pointer ${
+                      theme === "dark"
+                        ? "border-white/5 bg-[#0D0D0D] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)]"
+                        : "border-black/5 bg-white shadow-xl shadow-gray-200/50"
+                    }`}
                     style={{
-                      animationDelay: `${index * 100}ms`,
-                      animation: "fadeInUp 0.6s ease-out forwards",
+                      animationDelay: `${index * 50}ms`,
+                      animation: "fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
                       opacity: 0,
                       transform: "translateY(20px)",
                     }}
                   >
-                    {/* Background Pattern - Enhanced for light theme */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-50/80 to-blue-50/80 opacity-100 transition-opacity duration-300 group-hover:opacity-100 dark:from-green-900/20 dark:to-blue-900/20 dark:opacity-0 dark:group-hover:opacity-100"></div>
+                    {/* Glass Overlay */}
+                    <div className={`absolute inset-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100 ${
+                      theme === "dark" ? "bg-emerald-500/[0.03]" : "bg-emerald-50/50"
+                    }`}></div>
 
-                    {/* Content */}
                     <div className="relative z-10">
-                      {/* Icon Container - Enhanced for light theme */}
-                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:from-green-600 group-hover:to-green-700 group-hover:shadow-xl dark:from-green-800 dark:to-green-700 dark:group-hover:from-green-700 dark:group-hover:to-green-800">
+                      {/* Icon */}
+                      <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${
+                        theme === "dark" 
+                          ? "bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 text-emerald-400" 
+                          : "bg-emerald-500 text-white"
+                      }`}>
                         <CategoryIcon category={category.name} />
                       </div>
 
-                      {/* Category Name - Enhanced contrast for light theme */}
-                      <h3 className="mb-1 text-sm font-bold text-gray-900 transition-colors duration-300 group-hover:text-green-700 dark:text-white dark:group-hover:text-green-400">
+                      {/* Name */}
+                      <h3 className={`mb-1 text-sm font-black tracking-tight ${
+                        theme === "dark" ? "text-white group-hover:text-emerald-400" : "text-gray-900"
+                      }`}>
                         {category.name}
                       </h3>
 
-                      {/* Description - Enhanced contrast for light theme */}
-                      <p className="text-xs font-medium text-gray-600 transition-colors duration-300 group-hover:text-green-600 dark:text-gray-400 dark:group-hover:text-green-300">
-                        Browse shops
+                      <p className={`text-[10px] font-black uppercase tracking-widest opacity-40 ${
+                        theme === "dark" ? "text-white" : "text-gray-500"
+                      }`}>
+                        Discover Shops
                       </p>
 
-                      {/* Arrow Icon - Enhanced for light theme */}
-                      <div className="mt-3 flex justify-end">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white transition-all duration-300 group-hover:scale-110 group-hover:bg-green-600 dark:bg-green-800 dark:text-green-300 dark:group-hover:bg-green-700">
-                          <svg
-                            className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
+                      <div className="mt-4 flex justify-end">
+                        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-500 ${
+                          theme === "dark" ? "bg-white/5 text-gray-500" : "bg-gray-100 text-gray-400"
+                        }`}>
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                           </svg>
                         </div>
                       </div>
                     </div>
 
-                    {/* Hover Effect Border - Enhanced for light theme */}
-                    <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-300 group-hover:border-green-300 dark:group-hover:border-green-700"></div>
+                    {/* Glow */}
+                    <div className={`absolute -right-4 -bottom-4 h-24 w-24 rounded-full blur-[60px] opacity-0 transition-opacity duration-700 group-hover:opacity-40 ${
+                      theme === "dark" ? "bg-emerald-500/40" : "bg-emerald-200"
+                    }`}></div>
                   </div>
                 ))
               ) : (
                 <div className="col-span-2 mt-8 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
+                  <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${
+                    theme === "dark" ? "bg-white/5" : "bg-gray-100"
+                  }`}>
                     <svg
                       className="h-8 w-8 text-gray-400"
                       fill="none"
@@ -476,12 +487,9 @@ export default function MobileUserDashboard({
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className={`text-lg font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     No categories available
                   </h3>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Check back later for new categories
-                  </p>
                 </div>
               )}
             </div>
