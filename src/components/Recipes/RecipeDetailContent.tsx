@@ -185,37 +185,49 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
             <div className={`sticky top-8 rounded-[2rem] border-2 p-6 sm:rounded-[2.5rem] sm:p-8 ${
               isDark ? "border-white/5 bg-[#171717]" : "border-black/5 bg-white"
             }`}>
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className={`text-xl font-black tracking-tight sm:text-2xl ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Ingredients
-                </h2>
-                <span className={`rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500`}>
-                  {ingredients.length} items
-                </span>
-              </div>
+              <button 
+                onClick={() => setIngredientsOpen(!ingredientsOpen)}
+                className="mb-6 flex w-full items-center justify-between outline-none"
+              >
+                <div className="flex flex-col items-start gap-1">
+                  <h2 className={`text-xl font-black tracking-tight sm:text-2xl ${isDark ? "text-white" : "text-gray-900"}`}>
+                    Ingredients
+                  </h2>
+                  <span className={`rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500`}>
+                    {ingredients.length} items
+                  </span>
+                </div>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 transition-transform duration-300 lg:hidden ${ingredientsOpen ? "rotate-180" : ""}`}>
+                  <svg className="h-5 w-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
               
-              <ul className="space-y-2">
-                {ingredients.map((item, index) => (
-                  <li
-                    key={index}
-                    className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 transition-all hover:border-emerald-500/30 ${
-                      isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-gray-50/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                       <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                       <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                        {item.name}
-                      </span>
-                    </div>
-                    {item.measure && (
-                      <span className={`text-[10px] font-black uppercase tracking-wider ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
-                        {item.measure}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <div className={`${ingredientsOpen ? "block" : "hidden lg:block"}`}>
+                <ul className="space-y-2">
+                  {ingredients.map((item, index) => (
+                    <li
+                      key={index}
+                      className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 transition-all hover:border-emerald-500/30 ${
+                        isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-gray-50/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                         <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                          {item.name}
+                        </span>
+                      </div>
+                      {item.measure && (
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                          {item.measure}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </section>
 
@@ -224,29 +236,41 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
             <div className={`rounded-[2rem] border-2 p-6 sm:rounded-[2.5rem] sm:p-8 ${
               isDark ? "border-white/5 bg-[#171717]" : "border-black/5 bg-white"
             }`}>
-              <h2 className={`mb-6 text-xl font-black tracking-tight sm:text-2xl ${isDark ? "text-white" : "text-gray-900"}`}>
-                Method
-              </h2>
+              <button 
+                onClick={() => setInstructionsOpen(!instructionsOpen)}
+                className="mb-8 flex w-full items-center justify-between outline-none"
+              >
+                <h2 className={`text-xl font-black tracking-tight sm:text-2xl ${isDark ? "text-white" : "text-gray-900"}`}>
+                  Method
+                </h2>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 transition-transform duration-300 lg:hidden ${instructionsOpen ? "rotate-180" : ""}`}>
+                  <svg className="h-5 w-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
               
-              <div className="space-y-8">
-                {formatInstructions(meal.strInstructions).map((step, index) => (
-                  <div key={index} className="group relative flex gap-4 sm:gap-6">
-                    <div className="flex flex-col items-center">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-[10px] font-black text-white shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-110 sm:h-10 sm:w-10 sm:text-sm">
-                        {index + 1}
+              <div className={`${instructionsOpen ? "block" : "hidden lg:block"}`}>
+                <div className="space-y-8">
+                  {formatInstructions(meal.strInstructions).map((step, index) => (
+                    <div key={index} className="group relative flex gap-4 sm:gap-6">
+                      <div className="flex flex-col items-center">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-[10px] font-black text-white shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-110 sm:h-10 sm:w-10 sm:text-sm">
+                          {index + 1}
+                        </div>
+                        <div className="mt-4 h-full w-[1.5px] bg-gradient-to-b from-emerald-500/30 to-transparent" />
                       </div>
-                      <div className="mt-4 h-full w-[1.5px] bg-gradient-to-b from-emerald-500/30 to-transparent" />
+                      <div className="flex-1">
+                        <h4 className={`mb-1 text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                          Step {index + 1}
+                        </h4>
+                        <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-600"} sm:text-base`}>
+                          {step}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className={`mb-1 text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                        Step {index + 1}
-                      </h4>
-                      <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-600"} sm:text-base`}>
-                        {step}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               {/* Video tutorial (if available) - Moved to bottom of method */}
