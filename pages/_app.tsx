@@ -330,6 +330,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <LanguageProvider>
         <Head>
           <title>{pageTitle}</title>
+          <meta name="google-site-verification" content="OksRl63kpYWafgir4UK5IxTx7wYZY5cnkoL7CFrv1wM" />
           <link rel="manifest" href="/manifest.json" />
           <meta name="application-name" content="Plas" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
