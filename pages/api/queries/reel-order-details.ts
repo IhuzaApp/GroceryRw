@@ -46,17 +46,24 @@ const GET_REEL_ORDER_DETAILS = gql`
           name
           location
         }
+        business_id
+        is_active
+        shop_id
       }
       User {
         id
         name
         email
         phone
+        gender
+        profile_picture
+        role
+        updated_at
       }
       Shoppers {
         id
         name
-        email
+        profile_picture
         phone
         Ratings {
           created_at
@@ -72,9 +79,33 @@ const GET_REEL_ORDER_DETAILS = gql`
           reviewed_at
           shopper_id
           updated_at
+          businessProduct_id
+          package_id
         }
-        gender
-        profile_picture
+        shopper {
+          id
+          full_name
+          profile_photo
+          phone_number
+          address
+          Employment_id
+          Police_Clearance_Cert
+          active
+          collection_comment
+          created_at
+          guarantor
+          guarantorPhone
+          guarantorRelationship
+          mutual_status
+          phone
+          signature
+          status
+          transport_mode
+          proofOfResidency
+          telegram_id
+          updated_at
+          user_id
+        }
       }
     }
   }
@@ -146,20 +177,33 @@ export default async function handler(
             name: string;
             location: string;
           };
+          business_id: string | null;
+          is_active: boolean | null;
+          shop_id: string | null;
         };
         User: {
           id: string;
           name: string;
           email: string;
           phone: string;
+          gender: string | null;
+          profile_picture: string | null;
+          role: string | null;
+          updated_at: string | null;
         };
         Shoppers: {
           id: string;
           name: string;
-          email: string;
-          phone: string;
-          gender: string | null;
           profile_picture: string | null;
+          phone: string;
+          shopper: {
+            id: string;
+            full_name: string;
+            profile_photo: string | null;
+            phone_number: string | null;
+            address: string | null;
+            Employment_id: string | null;
+          } | null;
           Ratings: Array<{
             created_at: string;
             customer_id: string;
@@ -173,7 +217,8 @@ export default async function handler(
             review: string | null;
             reviewed_at: string | null;
             shopper_id: string;
-            updated_at: string;
+            businessProduct_id: string | null;
+            package_id: string | null;
           }>;
         } | null;
       } | null;
@@ -184,10 +229,9 @@ export default async function handler(
       return res.status(404).json({ error: "Reel order not found" });
     }
 
-    // If there's an assigned shopper, fetch their complete stats
     let shopperStats = null;
-    if (orderData.Shoppers) {
-      const shopperId = orderData.Shoppers.id;
+    if (orderData.Shoppers && orderData.shopper_id) {
+      const shopperId = orderData.shopper_id;
 
       // Query to get all ratings for this shopper and count of delivered orders
       const GET_SHOPPER_STATS = gql`
@@ -346,12 +390,12 @@ export default async function handler(
       reel: orderData.Reel,
       assignedTo: orderData.Shoppers
         ? {
-            id: orderData.Shoppers.id,
-            name: orderData.Shoppers.name,
-            phone: orderData.Shoppers.phone,
-            email: orderData.Shoppers.email,
-            profile_photo: orderData.Shoppers.profile_picture,
-            gender: orderData.Shoppers.gender,
+            id: orderData.shopper_id || orderData.Shoppers.id || "",
+            name: orderData.Shoppers.shopper?.full_name || orderData.Shoppers.name || "Plaser",
+            phone: orderData.Shoppers.shopper?.phone_number || orderData.Shoppers.shopper?.phone || orderData.Shoppers.phone || "",
+            email: "",
+            profile_photo: orderData.Shoppers.shopper?.profile_photo || orderData.Shoppers.profile_picture || null,
+            gender: null,
             rating: shopperStats?.rating || 0,
             orders_aggregate: shopperStats?.orders_aggregate || {
               aggregate: {
