@@ -284,11 +284,7 @@ function PackageDetailsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  console.log("[CANCELLATION FRONTEND DEBUG] Render PackageDetailsPage", {
-    packageId,
-    pkgId: pkg?.id,
-    status: pkg?.status,
-  });
+
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -340,14 +336,8 @@ function PackageDetailsPage() {
   };
 
   const handleCancelPackage = async () => {
-    console.log("[CANCELLATION FRONTEND DEBUG] Triggered handleCancelPackage", {
-      id: pkg?.id,
-    });
+
     if (!pkg?.id) {
-      console.warn(
-        "[CANCELLATION FRONTEND DEBUG] Aborting cancellation: missing package id",
-        { id: pkg?.id }
-      );
       return;
     }
     setIsCancelling(true);
@@ -358,7 +348,7 @@ function PackageDetailsPage() {
         body: JSON.stringify({ orderId: pkg.id, orderType: "package" }),
       });
       const data = await res.json();
-      console.log("[CANCELLATION FRONTEND DEBUG]", data);
+
 
       if (res.ok) {
         toaster.push(
@@ -793,9 +783,6 @@ function PackageDetailsPage() {
                   <div className="mt-4 rounded-2xl border border-red-50 bg-red-50/20 p-4 dark:border-red-900/10 dark:bg-red-900/10">
                     <button
                       onClick={() => {
-                        console.log(
-                          "[CANCELLATION FRONTEND DEBUG] Clicked Cancel Delivery button"
-                        );
                         setShowCancelModal(true);
                       }}
                       disabled={isCancelling}
@@ -893,9 +880,6 @@ function PackageDetailsPage() {
               <div className="flex w-full flex-col gap-3">
                 <button
                   onClick={() => {
-                    console.log(
-                      "[CANCELLATION FRONTEND DEBUG] Clicked Yes, Cancel Delivery button"
-                    );
                     handleCancelPackage();
                   }}
                   disabled={isCancelling}
