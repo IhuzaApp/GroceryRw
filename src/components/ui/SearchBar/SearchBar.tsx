@@ -28,6 +28,7 @@ interface SearchResult {
 
 export default function SearchBar() {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -106,196 +107,205 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative" ref={searchRef}>
-      <div className="relative">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleSearch}
-          placeholder="Search products and shops..."
-          className="w-full rounded-full border border-gray-200 bg-gray-50 py-2 pl-4 pr-10 text-sm transition-all duration-200 placeholder:text-gray-500 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-        />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-colors duration-200 dark:text-gray-300">
-          {isLoading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
-          ) : (
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          )}
+    <div className="relative w-full max-w-xl" ref={searchRef}>
+      <div className="group relative">
+        <div
+          className={`relative flex items-center gap-3 rounded-2xl border p-2 pl-5 pr-2 backdrop-blur-xl transition-all duration-500 ${
+            isDark
+              ? "border-white/10 bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] focus-within:border-emerald-500/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_40px_-12px_rgba(16,185,129,0.3)]"
+              : "border-black/5 bg-gray-100/50 shadow-sm focus-within:border-emerald-500/40 focus-within:bg-white focus-within:shadow-xl focus-within:shadow-emerald-500/10"
+          } focus-within:scale-[1.02]`}
+        >
+          <svg
+            className={`h-5 w-5 transition-colors duration-300 ${
+              isDark
+                ? "text-white/30 group-focus-within:text-emerald-400"
+                : "text-gray-400 group-focus-within:text-emerald-500"
+            }`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
+            />
+          </svg>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search products and shops..."
+            className={`flex-1 border-none bg-transparent p-0 text-sm outline-none transition-all placeholder:transition-opacity ${
+              isDark
+                ? "text-white placeholder:text-white/30"
+                : "text-gray-900 placeholder:text-gray-400"
+            }`}
+          />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+            {isLoading && (
+              <div className="relative flex h-5 w-5 items-center justify-center">
+                <div className="absolute h-full w-full animate-ping rounded-full bg-emerald-500 opacity-20"></div>
+                <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute z-50 mt-2 w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <div className="max-h-96 overflow-y-auto">
-            {results.map((result) => (
-              <div
-                key={`${result.type}-${result.id}`}
-                onClick={() => handleResultClick(result)}
-                className="flex w-full cursor-pointer items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
+        <div
+          className={`absolute z-50 mt-4 w-full overflow-hidden rounded-[2.5rem] border shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-top-4 ${
+            isDark
+              ? "border-white/10 bg-[#0A0A0A] backdrop-blur-3xl"
+              : "border-gray-200 bg-white"
+          }`}
+        >
+          <div className="custom-scrollbar max-h-[32rem] overflow-y-auto p-4">
+            <div className="mb-2 px-4 py-2">
+              <p
+                className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                  isDark ? "text-white/30" : "text-gray-400"
+                }`}
               >
-                {/* Product/Shop Image */}
-                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
-                  <img
-                    src={
-                      result.type === "product"
-                        ? result.image || "/images/groceryPlaceholder.png"
-                        : result.logo || "/images/groceryPlaceholder.png"
-                    }
-                    alt={result.name}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      // Prevent infinite loop if placeholder fails
-                      if (target.src.includes("groceryPlaceholder.png")) {
-                        return;
-                      }
-                      target.src = "/images/groceryPlaceholder.png";
-                    }}
-                  />
-                </div>
+                Top results
+              </p>
+            </div>
 
-                <div className="min-w-0 flex-1">
-                  {/* Product/Shop Name */}
-                  <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
-                    {result.name}
+            <div className="space-y-2">
+              {results.map((result) => (
+                <div
+                  key={`${result.type}-${result.id}`}
+                  onClick={() => handleResultClick(result)}
+                  className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-3xl p-3 transition-all duration-300 ${
+                    isDark
+                      ? "hover:bg-white/5 active:bg-white/10"
+                      : "hover:bg-gray-100/50 active:bg-gray-200/50"
+                  }`}
+                >
+                  {/* Product/Shop Image */}
+                  <div
+                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border transition-transform duration-500 group-hover:scale-105 ${
+                      isDark
+                        ? "border-white/5 bg-white/5"
+                        : "border-gray-100 bg-gray-50"
+                    }`}
+                  >
+                    <img
+                      src={
+                        result.type === "product"
+                          ? result.image || "/images/groceryPlaceholder.png"
+                          : result.logo || "/images/groceryPlaceholder.png"
+                      }
+                      alt={result.name}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
 
-                  {/* Product Details */}
-                  {result.type === "product" && (
-                    <div className="space-y-1">
-                      {/* Supermarket Name */}
-                      {result.shopName && (
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span
+                        className={`truncate text-sm font-bold tracking-tight ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {result.name}
+                      </span>
+                      {result.type === "store" && (
+                        <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-blue-500">
+                          Store
+                        </span>
+                      )}
+                    </div>
+
+                    {result.type === "product" ? (
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 overflow-hidden rounded bg-gray-100 dark:bg-gray-700">
-                            <img
-                              src={
-                                result.shopImage ||
-                                "/images/groceryPlaceholder.png"
-                              }
-                              alt={result.shopName}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                // Prevent infinite loop if placeholder fails
-                                if (
-                                  target.src.includes("groceryPlaceholder.png")
-                                ) {
-                                  return;
-                                }
-                                target.src = "/images/groceryPlaceholder.png";
-                              }}
-                            />
-                          </div>
-                          <span className="truncate text-xs text-gray-600 dark:text-gray-400">
+                          <img
+                            src={
+                              result.shopImage ||
+                              "/images/groceryPlaceholder.png"
+                            }
+                            className="h-4 w-4 rounded-full border border-white/10"
+                            alt={result.shopName}
+                          />
+                          <span
+                            className={`truncate text-[10px] font-medium ${
+                              isDark ? "text-gray-400" : "text-gray-500"
+                            }`}
+                          >
                             {result.shopName}
                           </span>
                         </div>
-                      )}
 
-                      {/* Price and Stock Status */}
-                      <div className="flex items-center justify-between">
-                        {result.price && (
-                          <div className="text-sm font-semibold text-green-600 dark:text-green-400">
-                            {formatCurrencySync(result.price)}
-                            {result.measurementUnit && (
-                              <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                                /{result.measurementUnit}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        <div className="mt-1 flex items-center justify-between">
+                          <p className="text-sm font-black text-emerald-500">
+                            {formatCurrencySync(result.price || 0)}
+                            <span className="ml-1 text-[10px] font-medium opacity-50">
+                              /{result.measurementUnit}
+                            </span>
+                          </p>
 
-                        {/* Action Buttons */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log("Add to cart:", result.id);
+                            }}
+                            className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                              result.inStock
+                                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:translate-y-[-1px] active:scale-95"
+                                : "border border-white/10 bg-white/10 text-gray-400"
+                            }`}
+                          >
+                            {result.inStock ? "Add" : "Check Shop"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
-                          {result.inStock ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Add to cart functionality would go here
-                                console.log("Add to cart:", result.id);
-                              }}
-                              className="rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40"
-                            >
-                              Add to Cart
-                            </button>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Navigate to supermarket page
-                                router.push(`/shops/${result.shopId}`);
-                                setShowResults(false);
-                                setSearchTerm("");
-                              }}
-                              className="rounded-full bg-gradient-to-r from-purple-500 to-violet-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-purple-500/25 transition-all duration-200 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-purple-500/40"
-                            >
-                              Check Supermarket
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Category */}
-                      {result.category && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {result.category}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Shop/Store Details */}
-                  {(result.type === "shop" || result.type === "store") && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {result.type === "store" && (
-                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            Store
+                          <span className="text-[10px] text-amber-400">★</span>
+                          <span
+                            className={`text-[10px] font-bold ${
+                              isDark ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            {result.rating?.toFixed(1) || "N/A"}
                           </span>
-                        )}
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {result.description}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            result.isOpen
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          className={`h-1 w-1 rounded-full ${
+                            isDark ? "bg-white/10" : "bg-gray-200"
+                          }`}
+                        />
+                        <span
+                          className={`text-[10px] font-medium ${
+                            isDark ? "text-gray-500" : "text-gray-400"
                           }`}
                         >
-                          {result.isOpen ? "Open" : "Closed"}
+                          {result.isOpen ? "Open now" : "Closed"}
                         </span>
-                        {result.rating && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                            <span>★</span>
-                            <span>{result.rating.toFixed(1)}</span>
-                            <span>({result.reviewCount})</span>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Show more results indicator */}
           {results.length >= 10 && (
-            <div className="border-t border-gray-100 px-4 py-2 text-center dark:border-gray-700">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+            <div
+              className={`border-t px-6 py-3 text-center ${
+                isDark ? "border-white/5" : "border-gray-100"
+              }`}
+            >
+              <span
+                className={`text-[10px] font-bold uppercase tracking-widest opacity-30`}
+              >
                 Showing top {results.length} results
               </span>
             </div>

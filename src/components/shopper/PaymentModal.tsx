@@ -529,7 +529,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Enter the 5-digit code from the alert popup
+                  Enter the 5-digit verification code sent to your phone via SMS
                 </p>
               </div>
 
@@ -641,12 +641,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </svg>
                   </div>
                   <div>
-                    <p className="mb-1 font-semibold">OTP Instructions</p>
+                    <p className="mb-1 font-semibold">Verification Code Sent</p>
                     <p className="text-sm opacity-90">
-                      An alert popup should have displayed the OTP. If you
-                      missed it, refresh the page and try again. In a production
-                      environment, this OTP would be sent to your phone number
-                      or email.
+                      We have sent a secure 5-digit verification code to your
+                      registered phone number via SMS. This code is required to
+                      authorize your wallet transaction.
                     </p>
                   </div>
                 </div>

@@ -159,29 +159,29 @@ const Skeleton = ({
 );
 
 const PackageDetailsSkeleton = () => (
-  <div className="min-h-screen bg-gray-50 pb-20 dark:bg-black md:pb-10">
+  <div className="min-h-screen bg-[var(--bg-primary)] pb-20 md:pb-10">
     {/* Header Skeleton - Full Bleed */}
     <div className="relative h-52 w-full animate-pulse overflow-hidden bg-slate-200 dark:bg-slate-800 md:h-80">
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
 
       {/* Back Button Skeleton */}
-      <div className="absolute left-6 top-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
-        <div className="h-5 w-5 rounded-full bg-white/30" />
+      <div className="bg-[var(--bg-primary)]/20 absolute left-6 top-10 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md">
+        <div className="bg-[var(--bg-primary)]/30 h-5 w-5 rounded-full" />
       </div>
 
       {/* Floating Pill Skeleton */}
       <div className="absolute left-1/2 top-10 -translate-x-1/2">
-        <Skeleton className="h-10 w-40 rounded-full bg-white/20 backdrop-blur-md" />
+        <Skeleton className="bg-[var(--bg-primary)]/20 h-10 w-40 rounded-full backdrop-blur-md" />
       </div>
 
       {/* Title & Badge Skeleton */}
       <div className="absolute bottom-10 left-6 right-6">
         <div className="flex items-end justify-between gap-4">
           <div className="space-y-2">
-            <Skeleton className="h-10 w-48 bg-white/30" />
-            <Skeleton className="h-4 w-32 bg-white/20" />
+            <Skeleton className="bg-[var(--bg-primary)]/30 h-10 w-48" />
+            <Skeleton className="bg-[var(--bg-primary)]/20 h-4 w-32" />
           </div>
-          <Skeleton className="h-12 w-24 rounded-2xl bg-white/20 md:h-16 md:w-40" />
+          <Skeleton className="bg-[var(--bg-primary)]/20 h-12 w-24 rounded-2xl md:h-16 md:w-40" />
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@ const PackageDetailsSkeleton = () => (
           </div>
 
           {/* Status Card */}
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
+          <div className="rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <Skeleton className="h-6 w-32" />
               <Skeleton className="h-8 w-24 rounded-full" />
@@ -207,7 +207,7 @@ const PackageDetailsSkeleton = () => (
           </div>
 
           {/* Trip Details Card */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
             <Skeleton className="mb-6 h-6 w-32" />
             <div className="space-y-8">
               <div className="flex gap-4">
@@ -234,7 +234,7 @@ const PackageDetailsSkeleton = () => (
 
         {/* Right Column */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
             <Skeleton className="mb-4 h-6 w-40" />
             <div className="flex items-center gap-4">
               <Skeleton className="h-14 w-14 rounded-full" />
@@ -244,7 +244,7 @@ const PackageDetailsSkeleton = () => (
               </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
             <Skeleton className="mb-6 h-6 w-32" />
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
@@ -283,12 +283,6 @@ function PackageDetailsPage() {
   const [hasExistingRating, setHasExistingRating] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-
-  console.log("[CANCELLATION FRONTEND DEBUG] Render PackageDetailsPage", {
-    packageId,
-    pkgId: pkg?.id,
-    status: pkg?.status,
-  });
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -340,14 +334,7 @@ function PackageDetailsPage() {
   };
 
   const handleCancelPackage = async () => {
-    console.log("[CANCELLATION FRONTEND DEBUG] Triggered handleCancelPackage", {
-      id: pkg?.id,
-    });
     if (!pkg?.id) {
-      console.warn(
-        "[CANCELLATION FRONTEND DEBUG] Aborting cancellation: missing package id",
-        { id: pkg?.id }
-      );
       return;
     }
     setIsCancelling(true);
@@ -358,7 +345,6 @@ function PackageDetailsPage() {
         body: JSON.stringify({ orderId: pkg.id, orderType: "package" }),
       });
       const data = await res.json();
-      console.log("[CANCELLATION FRONTEND DEBUG]", data);
 
       if (res.ok) {
         toaster.push(
@@ -474,7 +460,7 @@ function PackageDetailsPage() {
               {/* Back Button */}
               <button
                 onClick={() => router.back()}
-                className="absolute left-6 top-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-xl transition-all hover:scale-110 hover:bg-white/30 active:scale-95"
+                className="bg-[var(--bg-primary)]/20 absolute left-6 top-6 z-20 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-xl transition-all hover:scale-110 hover:bg-white/30 active:scale-95"
               >
                 <ChevronLeft className="h-6 w-6 text-white" />
               </button>
@@ -525,7 +511,7 @@ function PackageDetailsPage() {
                           pkg.DeliveryCode || pkg.id.slice(0, 8).toUpperCase()
                         )
                       }
-                      className="group relative inline-flex transform items-center gap-2 rounded-2xl bg-white/10 px-3 py-1.5 text-sm font-bold tracking-widest !text-white shadow-2xl ring-1 ring-white/30 backdrop-blur-xl transition-all hover:scale-105 active:scale-95 md:px-6 md:py-3 md:text-xl"
+                      className="bg-[var(--bg-primary)]/10 group relative inline-flex transform items-center gap-2 rounded-2xl px-3 py-1.5 text-sm font-bold tracking-widest !text-white shadow-2xl ring-1 ring-white/30 backdrop-blur-xl transition-all hover:scale-105 active:scale-95 md:px-6 md:py-3 md:text-xl"
                     >
                       {pkg.DeliveryCode || pkg.id.slice(0, 8).toUpperCase()}
                       {copied ? (
@@ -573,7 +559,7 @@ function PackageDetailsPage() {
                     </Button>
                   )}
                 </div>
-                <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
+                <div className="rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold">Delivery Status</h3>
                     <span
@@ -583,23 +569,23 @@ function PackageDetailsPage() {
                       {statusInfo.label}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <p className="mt-2 text-sm text-[var(--text-secondary)] dark:text-gray-400">
                     {statusInfo.description}
                   </p>
                 </div>
 
                 {/* Route Card */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
                   <h3 className="mb-6 text-lg font-bold">Trip Details</h3>
 
                   <div className="relative space-y-8">
                     {/* Vertical Line */}
-                    <div className="absolute bottom-4 left-2.5 top-4 w-0.5 bg-gray-100 dark:bg-gray-800" />
+                    <div className="absolute bottom-4 left-2.5 top-4 w-0.5 bg-[var(--bg-secondary)] dark:bg-gray-800" />
 
                     {/* Pickup */}
                     <div className="relative flex gap-4">
                       <div className="z-10 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 ring-4 ring-green-100 dark:ring-green-900/30">
-                        <div className="h-2 w-2 rounded-full bg-white" />
+                        <div className="h-2 w-2 rounded-full bg-[var(--bg-primary)]" />
                       </div>
                       <div>
                         <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -607,7 +593,7 @@ function PackageDetailsPage() {
                         </p>
                         <p className="mt-1 font-medium">{pkg.pickupLocation}</p>
                         {formatLocationDetails(pkg.pickupDetials) && (
-                          <p className="mt-1 text-sm italic text-gray-500">
+                          <p className="mt-1 text-sm italic text-[var(--text-secondary)]">
                             “{formatLocationDetails(pkg.pickupDetials)}”
                           </p>
                         )}
@@ -627,7 +613,7 @@ function PackageDetailsPage() {
                           {pkg.dropoffLocation}
                         </p>
                         {formatLocationDetails(pkg.dropoffDetails) && (
-                          <p className="mt-1 text-sm italic text-gray-500">
+                          <p className="mt-1 text-sm italic text-[var(--text-secondary)]">
                             “{formatLocationDetails(pkg.dropoffDetails)}”
                           </p>
                         )}
@@ -636,8 +622,8 @@ function PackageDetailsPage() {
                   </div>
 
                   <div className="mt-8 flex flex-wrap gap-4">
-                    <div className="flex flex-1 items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
+                    <div className="flex flex-1 items-center gap-4 rounded-xl bg-[var(--bg-secondary)] p-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-primary)] shadow-sm">
                         <Navigation className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
@@ -652,8 +638,8 @@ function PackageDetailsPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-1 items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
+                    <div className="flex flex-1 items-center gap-4 rounded-xl bg-[var(--bg-secondary)] p-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-primary)] shadow-sm">
                         {getDeliveryMethodInfo(pkg.deliveryMethod).icon}
                       </div>
                       <div>
@@ -668,7 +654,7 @@ function PackageDetailsPage() {
 
                 {/* Comment Section if exists */}
                 {pkg.comment && (
-                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
                     <h3 className="flex items-center gap-2 text-lg font-bold">
                       <Info className="h-5 w-5 text-gray-400" />
                       Extra Instructions
@@ -684,7 +670,7 @@ function PackageDetailsPage() {
               <div className="space-y-6">
                 {/* Shopper Info (if assigned) */}
                 {pkg.shopper && (
-                  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                  <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
                     <h3 className="mb-4 text-lg font-bold text-green-600 dark:text-green-400">
                       Assigned Plasa
                     </h3>
@@ -701,7 +687,7 @@ function PackageDetailsPage() {
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-bold text-gray-900 dark:text-white">
+                        <p className="truncate font-bold text-[var(--text-primary)] dark:text-white">
                           {pkg.shopper.full_name}
                         </p>
                         <a
@@ -725,15 +711,17 @@ function PackageDetailsPage() {
                 )}
 
                 {/* Receiver Info */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                  <h3 className="mb-4 text-lg font-bold">Receiver</h3>
+                <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
+                  <h3 className="mb-4 text-lg font-bold text-[var(--text-primary)]">
+                    Receiver
+                  </h3>
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-secondary)]">
                       <User className="h-6 w-6 text-gray-400" />
                     </div>
                     <div>
                       <p className="font-bold">{pkg.receiverName}</p>
-                      <div className="mt-1 flex items-center gap-1 text-sm text-gray-500">
+                      <div className="mt-1 flex items-center gap-1 text-sm text-[var(--text-secondary)]">
                         <Phone className="h-3 w-3" />
                         {pkg.receiverPhone}
                       </div>
@@ -742,11 +730,13 @@ function PackageDetailsPage() {
                 </div>
 
                 {/* Payment Summary */}
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
                   <h3 className="mb-4 text-lg font-bold">Payment Summary</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Delivery Fee</span>
+                      <span className="text-[var(--text-secondary)]">
+                        Delivery Fee
+                      </span>
                       <span className="font-medium">
                         {pkg.delivery_fee.toLocaleString()} RWF
                       </span>
@@ -793,9 +783,6 @@ function PackageDetailsPage() {
                   <div className="mt-4 rounded-2xl border border-red-50 bg-red-50/20 p-4 dark:border-red-900/10 dark:bg-red-900/10">
                     <button
                       onClick={() => {
-                        console.log(
-                          "[CANCELLATION FRONTEND DEBUG] Clicked Cancel Delivery button"
-                        );
                         setShowCancelModal(true);
                       }}
                       disabled={isCancelling}
@@ -803,7 +790,7 @@ function PackageDetailsPage() {
                     >
                       Cancel Delivery
                     </button>
-                    <p className="mt-2 text-center text-[10px] text-gray-500">
+                    <p className="mt-2 text-center text-[10px] text-[var(--text-secondary)]">
                       {pkg.status?.toUpperCase() === "PENDING"
                         ? "Full refund will be returned to your wallet."
                         : "70% of fees will be returned (30% retained)."}
@@ -840,7 +827,10 @@ function PackageDetailsPage() {
           className="premium-redesign-modal"
         >
           <Modal.Body className="!p-0">
-            <div className="flex flex-col items-center px-8 py-10">
+            <div
+              className="flex flex-col items-center px-8 py-10"
+              style={{ backgroundColor: "var(--bg-primary)" }}
+            >
               {/* Icon with pulse effect */}
               <div className="relative mb-6">
                 <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20 dark:bg-red-900/30"></div>
@@ -849,22 +839,22 @@ function PackageDetailsPage() {
                 </div>
               </div>
 
-              <h3 className="mb-2 text-center text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+              <h3 className="mb-2 text-center text-2xl font-black tracking-tight text-[var(--text-primary)] dark:text-white">
                 Cancel Delivery?
               </h3>
-              <p className="mb-4 text-center text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              <p className="mb-4 text-center text-sm leading-relaxed text-[var(--text-secondary)] dark:text-gray-400">
                 Are you sure you want to cancel this package delivery?
               </p>
 
-              <div className="mb-8 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/20">
-                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+              <div className="bg-[var(--bg-primary)]/50 mb-8 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 p-4 dark:border-gray-800 dark:bg-gray-800/20">
+                <div className="flex justify-between text-xs text-[var(--text-secondary)] dark:text-gray-400">
                   <span>Refund to Wallet</span>
                   <span className="font-bold text-green-600 dark:text-green-400">
                     +{refund.toLocaleString()} RWF
                   </span>
                 </div>
                 {deduction > 0 && (
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex justify-between text-xs text-[var(--text-secondary)] dark:text-gray-400">
                     <span>Cancellation Fee (30% of fee)</span>
                     <span className="font-bold text-red-500">
                       -{deduction.toLocaleString()} RWF
@@ -893,9 +883,6 @@ function PackageDetailsPage() {
               <div className="flex w-full flex-col gap-3">
                 <button
                   onClick={() => {
-                    console.log(
-                      "[CANCELLATION FRONTEND DEBUG] Clicked Yes, Cancel Delivery button"
-                    );
                     handleCancelPackage();
                   }}
                   disabled={isCancelling}
@@ -906,7 +893,7 @@ function PackageDetailsPage() {
                 <Button
                   onClick={() => setShowCancelModal(false)}
                   appearance="subtle"
-                  className="!rounded-2xl !py-4 text-sm font-bold text-gray-500 transition-all hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  className="!rounded-2xl !py-4 text-sm font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] dark:text-gray-400 dark:hover:bg-gray-800"
                 >
                   No, Keep It
                 </Button>

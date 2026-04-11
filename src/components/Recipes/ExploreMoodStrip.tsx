@@ -13,158 +13,128 @@ interface ExploreMoodStripProps {
   onSelectCategory: (category: string) => void;
 }
 
-const LightningIcon = () => (
+const PopularIcon = () => (
   <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
+    className="h-6 w-6 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
   >
-    <defs>
-      <linearGradient id="lightning-grad" x1="3" y1="2" x2="21" y2="22">
-        <stop offset="0%" stopColor="#f97316" />
-        <stop offset="50%" stopColor="#facc15" />
-        <stop offset="100%" stopColor="#22c55e" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M13 2 3 14h8l-2 8 12-12h-8z"
-      fill="url(#lightning-grad)"
-      stroke="rgba(15,23,42,0.3)"
-      strokeWidth={1.2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" className="text-amber-400" />
   </svg>
 );
 
-const CakeIcon = () => (
-  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-    <rect
-      x="4"
-      y="11"
-      width="16"
-      height="8"
-      rx="3"
-      fill="#f97316"
-      opacity={0.18}
-    />
+const SweetsIcon = () => (
+  <svg
+    className="h-6 w-6 sm:h-5 sm:w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path
-      d="M4 14c1.2 1.1 2.4 1.6 3.6 1.6S10 15 11 14.4c1-.6 2.2-.6 3.4 0 1.2.6 2.4 1.1 3.6 1.1"
-      fill="none"
-      stroke="#facc15"
-      strokeWidth={1.7}
-      strokeLinecap="round"
+      d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-4 4v7a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-7a4 4 0 0 0-4-4V6a4 4 0 0 0-4-4z"
+      className="text-pink-400"
     />
-    <path
-      d="M8 11h8a4 4 0 0 1 4 4v4H4v-4a4 4 0 0 1 4-4Z"
-      fill="#f97316"
-      opacity={0.8}
-    />
-    <path
-      d="M12 2v4"
-      stroke="#fb7185"
-      strokeWidth={1.7}
-      strokeLinecap="round"
-    />
-    <circle cx="12" cy="7" r="1" fill="#fb7185" />
+    <path d="M18 9h1M11 11h1M16 13h1m-7 0h1" className="text-pink-300" />
   </svg>
 );
 
 const BreakfastIcon = () => (
-  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-    <circle cx="9" cy="10" r="5.2" fill="#fef9c3" />
-    <circle cx="9" cy="10" r="2.2" fill="#facc15" />
+  <svg
+    className="h-6 w-6 sm:h-5 sm:w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 13a9 9 0 1 0 18 0" className="text-amber-500" />
     <path
-      d="M3 20h16"
-      stroke="#e5e7eb"
-      strokeWidth={1.6}
-      strokeLinecap="round"
+      d="M12 5V3M5 8l-1.5-1.5M19 8l1.5-1.5M12 21v-8"
+      className="text-orange-400"
     />
+    <circle cx="12" cy="13" r="4" className="text-yellow-400" />
+  </svg>
+);
+
+const ChocolateIcon = () => (
+  <svg
+    className="h-6 w-6 sm:h-5 sm:w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="5" y="4" width="14" height="16" rx="2" className="text-rose-900" />
     <path
-      d="M13 8h6a2 2 0 0 1 2 2v1.5a5 5 0 0 1-5 5H13"
-      fill="#e5f2ff"
-      stroke="#38bdf8"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M5 8h14M5 12h14M9 4v16M14 4v16"
+      className="text-rose-700 opacity-50"
     />
   </svg>
 );
 
-const DonutIcon = () => (
-  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="8" fill="#f9a8d4" />
-    <circle cx="12" cy="12" r="3" fill="#fef9c3" />
-    <circle cx="9.5" cy="9.5" r="0.6" fill="#ec4899" />
-    <circle cx="14.5" cy="10" r="0.6" fill="#0ea5e9" />
-    <circle cx="10" cy="14.2" r="0.6" fill="#22c55e" />
+const GreensIcon = () => (
+  <svg
+    className="h-6 w-6 sm:h-5 sm:w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path
-      d="M5.5 10c1 .5 1.6.5 2.6 0s1.7-.5 2.7 0 1.7.5 2.7 0 1.7-.5 2.7 0"
-      fill="none"
-      stroke="#fdf2f8"
-      strokeWidth={1.4}
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
-const SaladIcon = () => (
-  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-    <path
-      d="M4 11a7 7 0 0 1 13-3"
-      fill="#bbf7d0"
-      stroke="#22c55e"
-      strokeWidth={1.5}
-      strokeLinecap="round"
+      d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 21 2c-2.5 4-3 5.5-4.1 11.2A7 7 0 0 1 11 20z"
+      className="text-emerald-500"
     />
     <path
-      d="M5 22h10a5 5 0 0 0 5-5v-3H4v3a5 5 0 0 0 1 3"
-      fill="#16a34a"
-      opacity={0.9}
-    />
-    <path
-      d="M8 15c0 1.4.5 2.4 1.5 3"
-      fill="none"
-      stroke="#bbf7d0"
-      strokeWidth={1.4}
-      strokeLinecap="round"
+      d="M11 20v-5m0 0l-2-2m2 2l2-2"
+      className="text-emerald-400 opacity-50"
     />
   </svg>
 );
 
 const LunchIcon = () => (
-  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-    <rect x="3" y="11" width="18" height="4" rx="1.5" fill="#38bdf8" />
-    <rect x="5" y="15" width="14" height="4" rx="1.5" fill="#0f172a" />
+  <svg
+    className="h-6 w-6 sm:h-5 sm:w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path
-      d="M7 11V7.2a1.2 1.2 0 0 1 2.4 0V11"
-      fill="#e5e7eb"
-      stroke="#0f172a"
-      strokeWidth={1.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8z"
+      className="text-blue-500"
     />
-    <path
-      d="M15 11V6.5a1.2 1.2 0 0 1 2.4 0V11"
-      fill="#e5e7eb"
-      stroke="#0f172a"
-      strokeWidth={1.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" className="text-blue-400" />
+    <path d="M12 15v2" className="text-blue-200" />
   </svg>
 );
 
 const MeatIcon = () => (
-  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
-    <path
-      d="M5 5c3-3 8-3 11 0s3 8 0 11-8 3-11 0-3-8 0-11Z"
-      fill="#f97373"
-      stroke="#b91c1c"
-      strokeWidth={1.6}
-    />
-    <circle cx="12" cy="12" r="2.7" fill="#fee2e2" />
+  <svg
+    className="h-6 w-6 sm:h-5 sm:w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M16 2L8 10M12 6L4 14M20 6l-8 8" className="text-red-500" />
+    <path d="M12 14v4a2 2 0 1 1-4 0v-4" className="text-rose-500" />
+    <path d="M18 14v4a2 2 0 1 0 4 0v-4" className="text-rose-600" />
   </svg>
 );
 
@@ -173,13 +143,13 @@ const moods: ExploreMoodChip[] = [
     id: "popular",
     label: "Popular",
     apiCategory: "Beef",
-    icon: <LightningIcon />,
+    icon: <PopularIcon />,
   },
   {
     id: "sweets",
     label: "Sweets",
     apiCategory: "Dessert",
-    icon: <CakeIcon />,
+    icon: <SweetsIcon />,
   },
   {
     id: "breakfast",
@@ -191,13 +161,13 @@ const moods: ExploreMoodChip[] = [
     id: "chocolate",
     label: "Chocolate",
     apiCategory: "Dessert",
-    icon: <DonutIcon />,
+    icon: <ChocolateIcon />,
   },
   {
     id: "greens",
     label: "Greens",
     apiCategory: "Vegan",
-    icon: <SaladIcon />,
+    icon: <GreensIcon />,
   },
   {
     id: "lunch",
@@ -220,27 +190,27 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
 }) => {
   return (
     <section
-      className={`mt-4 rounded-2xl p-4 shadow-sm sm:mt-8 sm:p-6 lg:mt-10 ${
+      className={`-mx-4 mt-4 p-1 py-4 transition-all sm:mx-0 sm:mt-8 sm:rounded-3xl sm:p-2 sm:shadow-lg lg:mt-10 ${
         isDark
-          ? "border border-gray-800 bg-gray-900/70"
-          : "border border-slate-100 bg-white"
+          ? "border-y border-white/5 bg-white/5 backdrop-blur-md sm:border"
+          : "border-y border-black/5 bg-white sm:border"
       }`}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div>
           <h2
-            className={`text-base font-semibold sm:text-lg ${
-              isDark ? "text-slate-50" : "text-slate-900"
+            className={`text-base font-bold tracking-tight sm:text-xl ${
+              isDark ? "text-white" : "text-gray-900"
             }`}
           >
             Explore by mood
           </h2>
           <p
-            className={`text-xs sm:text-sm ${
-              isDark ? "text-slate-400" : "text-slate-500"
+            className={`text-xs font-medium sm:text-sm ${
+              isDark ? "text-gray-400" : "text-gray-500"
             }`}
           >
-            Find the perfect dish for any craving.
+            Fine-tuned for your current craving.
           </p>
         </div>
         <div className="flex-1">
@@ -248,27 +218,27 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
             {moods.map((chip) => {
               const isActive = activeCategory === chip.apiCategory;
               const baseClasses =
-                "flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition";
+                "flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-xs font-semibold transition-all duration-300";
 
               const colorClasses = isActive
                 ? isDark
-                  ? "border-emerald-500 bg-emerald-900/40 text-emerald-300"
-                  : "border-emerald-500 bg-emerald-50 text-emerald-700"
+                  ? "border-emerald-500 bg-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                  : "border-emerald-600 bg-emerald-600 text-white shadow-md"
                 : isDark
-                ? "border-gray-700 bg-gray-900 text-slate-200 hover:border-emerald-400 hover:bg-emerald-950/60"
-                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60";
+                ? "border-white/10 bg-white/5 text-gray-300 hover:border-white/20 hover:bg-white/10"
+                : "border-black/5 bg-gray-50 text-gray-700 hover:border-emerald-200 hover:bg-emerald-50/50";
 
               return (
                 <button
                   key={chip.id}
                   type="button"
                   onClick={() => onSelectCategory(chip.apiCategory)}
-                  className={`${baseClasses} ${colorClasses}`}
+                  className={`${baseClasses} ${colorClasses} active:scale-95`}
                 >
-                  <span className="flex items-center justify-center">
+                  <span className="flex items-center justify-center transition-transform group-hover:scale-110">
                     {chip.icon}
                   </span>
-                  <span>{chip.label}</span>
+                  <span className="whitespace-nowrap">{chip.label}</span>
                 </button>
               );
             })}

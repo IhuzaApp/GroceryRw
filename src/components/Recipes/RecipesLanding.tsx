@@ -146,7 +146,7 @@ const RecipesLanding: React.FC = () => {
       {/* Mobile header + search (hero is hidden on mobile) */}
       <div className="md:hidden">
         <div
-          className="relative mb-6 h-48 overflow-hidden rounded-b-3xl"
+          className="relative mb-8 h-64 overflow-hidden rounded-b-[3rem] shadow-2xl"
           style={{
             marginTop: "-44px",
             marginLeft: "-16px",
@@ -161,54 +161,44 @@ const RecipesLanding: React.FC = () => {
                 'url("https://images.pexels.com/photos/4109084/pexels-photo-4109084.jpeg?auto=compress&cs=tinysrgb&w=1200")',
             }}
           >
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
           </div>
 
           {/* Header content */}
-          <div className="relative z-10 flex h-full flex-col justify-center px-4 pt-6">
+          <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-10">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400 opacity-90">
+              Easy Home Cooking
+            </p>
             <h1
-              className="text-2xl font-semibold text-white"
+              className="text-4xl font-black leading-none tracking-tighter text-white"
               style={{ color: "#ffffff" }}
             >
-              Easy Home Cooking
+              Over 200+ <br /> Recipes
             </h1>
-            <p
-              className="mt-1 text-sm text-white/80"
-              style={{ color: "rgba(255,255,255,0.9)" }}
-            >
-              Over 200+ recipes you can cook at home.
-            </p>
-            <div className="mt-4 flex items-center gap-2">
-              <Input
+
+            <div className="group mt-6 flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 p-1.5 pl-4 pr-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] backdrop-blur-2xl transition-all duration-500 focus-within:scale-[1.03] focus-within:border-emerald-500/50 focus-within:bg-white/[0.15] focus-within:shadow-2xl">
+              <input
+                type="text"
                 value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder="Search for recipes (e.g., Pasta, Chicken)"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search recipes..."
                 onKeyPress={handleKeyPress}
-                size="lg"
-                className="w-full flex-1 !rounded-2xl !bg-white/95 !text-gray-900 placeholder:!text-gray-500"
+                className="w-full flex-1 border-none bg-transparent p-0 text-sm text-white outline-none placeholder:text-white/30"
               />
-              <Button
-                appearance="primary"
-                color="green"
+              <button
                 onClick={handleSearch}
-                size="lg"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full !p-0"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white backdrop-blur-xl transition-all active:scale-95"
               >
                 <svg
                   className="h-5 w-5 text-white"
                   viewBox="0 0 24 24"
                   fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                  stroke="currentColor"
+                  strokeWidth="3"
                 >
-                  <path
-                    d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <path d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
                 </svg>
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -232,61 +222,86 @@ const RecipesLanding: React.FC = () => {
 
         {/* All API categories as subtle pills (optional) */}
         {categories.length > 0 && (
-          <section className="mt-6">
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category.idCategory}
-                  type="button"
-                  onClick={() => handleCategoryFilter(category.strCategory)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                    activeCategory === category.strCategory
-                      ? isDark
-                        ? "border-emerald-500 bg-emerald-900/40 text-emerald-300"
-                        : "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : isDark
-                      ? "border-gray-700 bg-gray-900 text-slate-200 hover:border-emerald-400 hover:bg-emerald-950/60"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60"
-                  }`}
-                >
-                  {category.strCategory}
-                </button>
-              ))}
+          <section className="-mx-4 mt-8 sm:mx-0">
+            <div className="flex flex-nowrap gap-3 overflow-x-auto px-3 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+              {categories.map((category) => {
+                const isActive = activeCategory === category.strCategory;
+                return (
+                  <button
+                    key={category.idCategory}
+                    type="button"
+                    onClick={() => handleCategoryFilter(category.strCategory)}
+                    className={`shrink-0 rounded-2xl border-2 px-5 py-2 text-xs font-bold transition-all duration-300 ${
+                      isActive
+                        ? isDark
+                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                          : "border-emerald-600 bg-emerald-600 text-white shadow-lg"
+                        : isDark
+                        ? "border-white/5 bg-white/5 text-gray-400 hover:border-white/10 hover:text-gray-300"
+                        : "border-black/5 bg-white text-gray-600 shadow-sm hover:border-emerald-200 hover:text-emerald-700"
+                    } active:scale-95`}
+                  >
+                    {category.strCategory}
+                  </button>
+                );
+              })}
             </div>
           </section>
         )}
 
         {/* Error Message */}
         {error && (
-          <div
-            className={`mt-8 rounded-2xl border px-4 py-3 text-sm ${
-              isDark
-                ? "border-red-900 bg-red-950/70 text-red-300"
-                : "border-red-100 bg-red-50 text-red-800"
-            }`}
-          >
-            {error}
+          <div className="mt-8">
+            <div
+              className={`rounded-[2rem] border-2 px-6 py-4 text-sm font-medium ${
+                isDark
+                  ? "border-red-900/30 bg-red-950/20 text-red-400 backdrop-blur-md"
+                  : "border-red-100 bg-red-50 text-red-700"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">⚠️</span>
+                {error}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Latest Recipes */}
-        <section className="mt-10">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h2
-              className={`text-xl font-semibold sm:text-2xl ${
-                isDark ? "text-slate-50" : "text-slate-900"
-              }`}
-            >
-              Latest Recipes
-            </h2>
+        <section className="-mx-4 mt-12 sm:mx-0">
+          <div className="mb-8 flex items-center justify-between gap-2 px-4 sm:px-0">
+            <div>
+              <h2
+                className={`text-2xl font-black tracking-tight sm:text-4xl ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Featured Recipes
+              </h2>
+              <p
+                className={`mt-1 text-sm font-medium ${
+                  isDark ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
+                Hand-picked recipes for the best home cooking experience.
+              </p>
+            </div>
+            <div className="ml-8 hidden h-0.5 flex-1 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:block" />
           </div>
 
           {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader size="lg" content="Loading recipes..." />
+            <div className="flex h-64 flex-col items-center justify-center gap-4">
+              <Loader size="lg" />
+              <p
+                className={`text-xs font-bold uppercase tracking-widest ${
+                  isDark ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                Curating your feed...
+              </p>
             </div>
           ) : meals.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 px-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {meals.map((meal) => (
                 <RecipeCard
                   key={meal.idMeal}
@@ -302,17 +317,21 @@ const RecipesLanding: React.FC = () => {
           ) : (
             !error && (
               <div
-                className={`flex h-64 flex-col items-center justify-center rounded-2xl text-center shadow-inner ${
-                  isDark ? "bg-gray-900 text-slate-200" : "bg-white"
+                className={`flex h-80 flex-col items-center justify-center rounded-[3rem] border-2 border-dashed text-center ${
+                  isDark
+                    ? "border-white/5 bg-white/5 text-slate-200"
+                    : "border-black/5 bg-white"
                 }`}
               >
-                <h3 className="mb-1 text-lg font-semibold">No recipes found</h3>
+                <div className="mb-4 text-4xl opacity-50">🍽️</div>
+                <h3 className="mb-1 text-xl font-bold">No results found</h3>
                 <p
-                  className={`text-sm ${
-                    isDark ? "text-slate-400" : "text-slate-500"
+                  className={`max-w-xs text-sm ${
+                    isDark ? "text-slate-500" : "text-slate-400"
                   }`}
                 >
-                  Try searching for something else or pick another category.
+                  We couldn't find a match. Try exploring our mood categories
+                  instead.
                 </p>
               </div>
             )

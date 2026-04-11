@@ -20,9 +20,7 @@ function RestaurantSelectionSkeleton() {
   const { theme } = useTheme();
   return (
     <div
-      className={`relative h-24 w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg p-2 ${
-        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-      }`}
+      className={`relative h-24 w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg p-2 ${"bg-[var(--bg-secondary)]"}`}
     />
   );
 }
@@ -32,54 +30,34 @@ function CheckoutSkeleton() {
   const { theme } = useTheme();
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-[9998] flex h-24 items-center rounded-t-3xl px-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)] transition-all duration-500 ease-in-out md:left-16 ${
-        theme === "dark"
-          ? "border-t border-gray-800 bg-gray-900"
-          : "border-t border-gray-200 bg-white"
-      }`}
+      className={`fixed bottom-0 left-0 right-0 z-[9998] flex h-24 items-center rounded-t-3xl border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)] transition-all duration-500 ease-in-out md:left-16`}
     >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex flex-col gap-2">
             <div
-              className={`h-3 w-20 animate-pulse rounded ${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
+              className={`h-3 w-20 animate-pulse rounded ${"bg-[var(--bg-secondary)]"}`}
             />
             <div
-              className={`h-8 w-32 animate-pulse rounded ${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
+              className={`h-8 w-32 animate-pulse rounded ${"bg-[var(--bg-secondary)]"}`}
             />
           </div>
-          <div
-            className={`h-10 w-px ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
-            }`}
-          />
+          <div className={`h-10 w-px ${"bg-[var(--bg-secondary)]"}`} />
           <div className="flex flex-col gap-2">
             <div
-              className={`h-3 w-20 animate-pulse rounded ${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
+              className={`h-3 w-20 animate-pulse rounded ${"bg-[var(--bg-secondary)]"}`}
             />
             <div
-              className={`h-8 w-40 animate-pulse rounded ${
-                theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
+              className={`h-8 w-40 animate-pulse rounded ${"bg-[var(--bg-secondary)]"}`}
             />
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div
-            className={`h-12 w-32 animate-pulse rounded-xl ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-            }`}
+            className={`h-12 w-32 animate-pulse rounded-xl ${"bg-[var(--bg-secondary)]"}`}
           />
           <div
-            className={`h-14 w-60 animate-pulse rounded-xl ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-            }`}
+            className={`h-14 w-60 animate-pulse rounded-xl ${"bg-[var(--bg-secondary)]"}`}
           />
         </div>
       </div>
@@ -101,28 +79,18 @@ function CartLoadingSkeleton() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className={`relative w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg border-2 p-2 ${
-                  theme === "dark"
-                    ? "border-gray-600 bg-gray-700"
-                    : "border-gray-300 bg-gray-200"
-                }`}
+                className={`relative w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg border-2 border-[var(--bg-secondary)] bg-[var(--bg-secondary)] p-2`}
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className={`h-8 w-8 rounded-full ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                    }`}
+                    className={`h-8 w-8 rounded-full ${"bg-[var(--bg-secondary)]"}`}
                   />
                   <div
-                    className={`h-4 w-20 rounded ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                    }`}
+                    className={`h-4 w-20 rounded ${"bg-[var(--bg-secondary)]"}`}
                   />
                 </div>
                 <div
-                  className={`absolute -right-2 top-1 h-6 w-6 rounded-full ${
-                    theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                  }`}
+                  className={`absolute -right-2 top-1 h-6 w-6 rounded-full ${"bg-[var(--bg-secondary)]"}`}
                 />
               </div>
             ))}
@@ -131,41 +99,27 @@ function CartLoadingSkeleton() {
 
         {/* Cart Table Skeleton */}
         <div
-          className={`rounded-lg border p-4 ${
-            theme === "dark"
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
-          }`}
+          className={`rounded-lg border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-4`}
         >
           <div
-            className={`mb-4 h-6 w-32 rounded ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
+            className={`mb-4 h-6 w-32 rounded ${"bg-[var(--bg-secondary)]"}`}
           />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-4">
                 <div
-                  className={`h-16 w-16 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
+                  className={`h-16 w-16 rounded ${"bg-[var(--bg-secondary)]"}`}
                 />
                 <div className="flex-1 space-y-2">
                   <div
-                    className={`h-4 w-3/4 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    }`}
+                    className={`h-4 w-3/4 rounded ${"bg-[var(--bg-secondary)]"}`}
                   />
                   <div
-                    className={`h-3 w-1/2 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    }`}
+                    className={`h-3 w-1/2 rounded ${"bg-[var(--bg-secondary)]"}`}
                   />
                 </div>
                 <div
-                  className={`h-8 w-16 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
+                  className={`h-8 w-16 rounded ${"bg-[var(--bg-secondary)]"}`}
                 />
               </div>
             ))}
@@ -629,7 +583,7 @@ export default function CartMainPage() {
           <div className="relative z-10 flex h-full items-center justify-between px-6">
             <Link
               href="/"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/30"
+              className="bg-[var(--bg-primary)]/20 flex h-10 w-10 items-center justify-center rounded-full text-white backdrop-blur-md transition-colors hover:bg-white/30"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -658,9 +612,7 @@ export default function CartMainPage() {
             <div className="mb-6 hidden items-center md:flex">
               <Link
                 href="/"
-                className={`flex items-center ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`flex items-center ${"text-[var(--text-secondary)]"}`}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -673,9 +625,7 @@ export default function CartMainPage() {
                 </svg>
               </Link>
               <h1
-                className={`text-2xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-2xl font-bold ${"text-[var(--text-primary)]"}`}
               >
                 My Cart
               </h1>
@@ -692,9 +642,7 @@ export default function CartMainPage() {
                   <div className="mb-8 px-2 md:mb-10 md:px-0">
                     <div className="mb-4 flex items-center justify-between">
                       <h2
-                        className={`text-sm font-bold uppercase tracking-widest ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}
+                        className={`text-sm font-bold uppercase tracking-widest ${"text-[var(--text-secondary)]"}`}
                       >
                         Your Active Carts
                       </h2>
@@ -732,9 +680,7 @@ export default function CartMainPage() {
                                     className={`flex items-center gap-3 rounded-2xl p-2 pr-4 transition-all duration-300 ${
                                       isSelected
                                         ? "bg-green-500 text-white shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)]"
-                                        : theme === "dark"
-                                        ? "border border-gray-700/50 bg-gray-800/40 hover:bg-gray-800/80"
-                                        : "border border-gray-200 bg-white shadow-sm hover:border-gray-300"
+                                        : "border border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-sm hover:bg-[var(--bg-secondary)]"
                                     }`}
                                   >
                                     {/* Logo Container */}
@@ -812,7 +758,7 @@ export default function CartMainPage() {
 
                                     {/* Active Indicator */}
                                     {isSelected && (
-                                      <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                                      <div className="h-2 w-2 animate-pulse rounded-full bg-[var(--bg-primary)]" />
                                     )}
                                   </div>
                                 </button>
@@ -845,9 +791,7 @@ export default function CartMainPage() {
                                     className={`flex items-center gap-3 rounded-2xl p-2 pr-4 transition-all duration-300 ${
                                       isSelected
                                         ? "bg-green-500 text-white shadow-[0_10px_25px_-5px_rgba(34,197,94,0.4)]"
-                                        : theme === "dark"
-                                        ? "border border-gray-700/50 bg-gray-800/40 hover:bg-gray-800/80"
-                                        : "border border-gray-200 bg-white shadow-sm hover:border-gray-300"
+                                        : "border border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-sm hover:bg-[var(--bg-secondary)]"
                                     }`}
                                   >
                                     {/* Logo Container */}
@@ -936,7 +880,7 @@ export default function CartMainPage() {
 
                                     {/* Active Indicator */}
                                     {isSelected && (
-                                      <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                                      <div className="h-2 w-2 animate-pulse rounded-full bg-[var(--bg-primary)]" />
                                     )}
                                   </div>
                                 </button>
@@ -949,11 +893,7 @@ export default function CartMainPage() {
                           {/* Empty Cart Icon */}
                           <div className="mb-4 flex justify-center">
                             <svg
-                              className={`h-16 w-16 ${
-                                theme === "dark"
-                                  ? "text-gray-600"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-16 w-16 ${"text-[var(--text-secondary)]"}`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -969,21 +909,13 @@ export default function CartMainPage() {
 
                           {/* Empty Text */}
                           <h3
-                            className={`text-lg font-semibold ${
-                              theme === "dark"
-                                ? "text-gray-300"
-                                : "text-gray-600"
-                            }`}
+                            className={`text-lg font-semibold ${"text-[var(--text-secondary)]"}`}
                           >
                             Your cart is empty
                           </h3>
 
                           <p
-                            className={`mt-1 text-sm ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-500"
-                            }`}
+                            className={`mt-1 text-sm ${"text-[var(--text-secondary)]"}`}
                           >
                             Browse restaurants and shops to add items to your
                             cart!
@@ -1006,9 +938,7 @@ export default function CartMainPage() {
                       <div className="flex items-center space-x-2">
                         <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-green-500"></div>
                         <span
-                          className={`text-sm ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-600"
-                          }`}
+                          className={`text-sm ${"text-[var(--text-secondary)]"}`}
                         >
                           Switching tab...
                         </span>
@@ -1017,9 +947,7 @@ export default function CartMainPage() {
                   ) : selectedRestaurantId && selectedRestaurant ? (
                     <>
                       <h2
-                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${"text-[var(--text-primary)]"}`}
                       >
                         {selectedRestaurant.name}
                       </h2>
@@ -1035,9 +963,7 @@ export default function CartMainPage() {
                   ) : selectedShopId && selectedShop ? (
                     <>
                       <h2
-                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${"text-[var(--text-primary)]"}`}
                       >
                         {selectedShop.name}
                       </h2>
@@ -1051,9 +977,7 @@ export default function CartMainPage() {
                     </>
                   ) : hasAnyItems ? (
                     <div
-                      className={`p-4 px-2 text-center md:px-4 ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
+                      className={`p-4 px-2 text-center md:px-4 ${"text-[var(--text-secondary)]"}`}
                     >
                       Select a restaurant or shop to view items.
                     </div>

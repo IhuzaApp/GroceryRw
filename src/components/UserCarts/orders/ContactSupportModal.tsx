@@ -123,11 +123,7 @@ export default function ContactSupportModal({
 
       {/* Modal Container */}
       <div
-        className={`relative z-10 w-full max-w-xl overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-10 ${
-          isDark
-            ? "border-white/10 bg-gray-900 shadow-black/50"
-            : "border-gray-200 bg-white"
-        }`}
+        className={`relative z-10 w-full max-w-xl overflow-hidden rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-2xl shadow-black/30 transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-10`}
       >
         {/* Decorative Background Element */}
         <div
@@ -138,9 +134,7 @@ export default function ContactSupportModal({
 
         {/* Header Section */}
         <div
-          className={`relative flex items-start justify-between border-b px-8 py-8 ${
-            isDark ? "border-white/5" : "border-gray-100"
-          }`}
+          className={`relative flex items-start justify-between border-b border-[var(--bg-secondary)] px-8 py-8`}
         >
           <div className="flex gap-4">
             <div
@@ -154,16 +148,12 @@ export default function ContactSupportModal({
             </div>
             <div>
               <h2
-                className={`text-2xl font-black tracking-tight ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-2xl font-black tracking-tight text-[var(--text-primary)]`}
               >
                 Customer Support
               </h2>
               <p
-                className={`mt-1 text-sm font-medium ${
-                  isDark ? "text-gray-400" : "text-gray-500"
-                }`}
+                className={`mt-1 text-sm font-medium text-[var(--text-secondary)]`}
               >
                 We're here to help. Send us a message!
               </p>
@@ -172,11 +162,7 @@ export default function ContactSupportModal({
           <button
             onClick={handleClose}
             disabled={submitting}
-            className={`group rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-white/5 ${
-              isDark
-                ? "text-white/40 hover:text-white"
-                : "text-gray-400 hover:text-gray-900"
-            }`}
+            className={`group rounded-full p-2 text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
           >
             <X className="h-6 w-6" />
           </button>
@@ -194,9 +180,7 @@ export default function ContactSupportModal({
               </div>
 
               <h3
-                className={`text-3xl font-black italic tracking-tighter ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-3xl font-black italic tracking-tighter text-[var(--text-primary)]`}
               >
                 TICKET SENT!
               </h3>
@@ -221,11 +205,7 @@ export default function ContactSupportModal({
               </div>
 
               <div
-                className={`mt-10 max-w-sm rounded-[1.5rem] p-6 text-center text-sm leading-relaxed ${
-                  isDark
-                    ? "bg-white/5 text-gray-400"
-                    : "bg-gray-50 text-gray-500"
-                }`}
+                className={`mt-10 max-w-sm rounded-[1.5rem] bg-[var(--bg-secondary)] p-6 text-center text-sm leading-relaxed text-[var(--text-secondary)]`}
               >
                 <Info
                   className={`mx-auto mb-3 h-5 w-5 ${
@@ -247,17 +227,11 @@ export default function ContactSupportModal({
 
               {/* Enhanced Order Brief Card */}
               <div
-                className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-300 hover:shadow-lg ${
-                  isDark
-                    ? "border-white/5 bg-white/[0.02]"
-                    : "border-gray-100 bg-gray-50/50"
-                }`}
+                className={`bg-[var(--bg-secondary)]/50 group relative overflow-hidden rounded-[1.5rem] border border-[var(--bg-secondary)] p-6 transition-all duration-300 hover:shadow-lg`}
               >
                 <div className="mb-4 flex items-center justify-between">
                   <span
-                    className={`text-xs font-black uppercase tracking-widest ${
-                      isDark ? "text-white/30" : "text-gray-400"
-                    }`}
+                    className={`text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                   >
                     Reference Details
                   </span>
@@ -285,9 +259,7 @@ export default function ContactSupportModal({
                         Order ID
                       </p>
                       <p
-                        className={`truncate text-sm font-bold ${
-                          isDark ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`truncate text-sm font-bold text-[var(--text-primary)]`}
                       >
                         #{orderDisplayId}
                       </p>
@@ -304,9 +276,7 @@ export default function ContactSupportModal({
                         Category
                       </p>
                       <p
-                        className={`truncate text-sm font-bold ${
-                          isDark ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`truncate text-sm font-bold text-[var(--text-primary)]`}
                       >
                         {orderType.charAt(0).toUpperCase() + orderType.slice(1)}
                       </p>
@@ -323,9 +293,7 @@ export default function ContactSupportModal({
                         Store/Source
                       </p>
                       <p
-                        className={`truncate text-sm font-bold ${
-                          isDark ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`truncate text-sm font-bold text-[var(--text-primary)]`}
                       >
                         {storeName}
                       </p>
@@ -343,9 +311,7 @@ export default function ContactSupportModal({
                     }`}
                   />
                   <label
-                    className={`text-sm font-black uppercase tracking-wider ${
-                      isDark ? "text-white" : "text-gray-900"
-                    }`}
+                    className={`text-sm font-black uppercase tracking-wider text-[var(--text-primary)]`}
                   >
                     How can we help?
                   </label>
@@ -357,11 +323,7 @@ export default function ContactSupportModal({
                     placeholder="Tell us what's happening..."
                     rows={5}
                     disabled={submitting}
-                    className={`w-full resize-none rounded-[1.5rem] border-2 p-5 text-sm font-medium leading-relaxed transition-all duration-300 focus:outline-none ${
-                      isDark
-                        ? "border-white/5 bg-white/[0.03] text-white placeholder-white/20 focus:border-emerald-500/50"
-                        : "border-gray-100 bg-gray-50 text-gray-900 placeholder-gray-400 focus:border-emerald-500/50 focus:bg-white"
-                    }`}
+                    className={`w-full resize-none rounded-[1.5rem] border-2 border-[var(--bg-secondary)] bg-[var(--bg-secondary)] p-5 text-sm font-medium leading-relaxed text-[var(--text-primary)] placeholder-[var(--text-secondary)] transition-all duration-300 focus:border-emerald-500/50 focus:outline-none`}
                   />
                   <div className="absolute bottom-4 right-4 text-[10px] font-bold opacity-30">
                     {message.length} characters
@@ -374,11 +336,7 @@ export default function ContactSupportModal({
 
         {/* Footer Buttons Section */}
         <div
-          className={`flex flex-col gap-3 border-t p-8 sm:flex-row sm:items-center sm:justify-end ${
-            isDark
-              ? "border-white/5 bg-white/[0.01]"
-              : "border-gray-50 bg-gray-50/20"
-          }`}
+          className={`bg-[var(--bg-secondary)]/20 flex flex-col gap-3 border-t border-[var(--bg-secondary)] p-8 sm:flex-row sm:items-center sm:justify-end`}
         >
           {successCode ? (
             <button
@@ -392,11 +350,7 @@ export default function ContactSupportModal({
               <button
                 onClick={handleClose}
                 disabled={submitting}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-8 py-4 text-base font-bold transition-all sm:w-auto ${
-                  isDark
-                    ? "border-white/10 text-white hover:bg-white/5"
-                    : "border-gray-200 text-gray-400 hover:bg-gray-100/50 hover:text-gray-900"
-                }`}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--bg-secondary)] px-8 py-4 text-base font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] sm:w-auto`}
               >
                 Cancel
               </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import "rsuite/dist/rsuite.min.css";
@@ -26,9 +26,11 @@ function ThemeAwareLogo() {
 }
 
 export default function RegisterPage() {
+  const [isOtpSent, setIsOtpSent] = React.useState(false);
+
   return (
     <ThemeProvider>
-      <div className="h-screen overflow-hidden bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="h-screen overflow-hidden bg-white dark:bg-black">
         <div className="flex h-full lg:h-screen">
           {/* Left Side - Registration Form */}
           <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-4 py-8 lg:w-1/2 lg:px-16 lg:py-8">
@@ -36,16 +38,21 @@ export default function RegisterPage() {
               {/* Heading */}
               <div className="mb-4 text-center lg:mb-8 lg:text-left">
                 <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white lg:text-4xl">
-                  Create an account
+                  {isOtpSent ? "Verify your phone" : "Create an account"}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 lg:text-base">
-                  Sign up to start shopping for groceries
+                  {isOtpSent
+                    ? "Enter the code sent to your mobile device"
+                    : "Sign up to start shopping for groceries"}
                 </p>
               </div>
 
               {/* Registration Form */}
-              <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-gray-800/80 dark:text-white lg:p-8">
-                <UserRegistration />
+              <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-[#171717]/80 dark:text-white lg:p-8">
+                <UserRegistration
+                  isOtpSent={isOtpSent}
+                  setIsOtpSent={setIsOtpSent}
+                />
               </div>
 
               {/* Footer Links */}

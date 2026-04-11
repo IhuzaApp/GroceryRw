@@ -44,6 +44,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isPackageDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewPackageDetails/"
   );
+  const isRecipesPage = router.pathname.startsWith("/Recipes");
 
   return (
     <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">

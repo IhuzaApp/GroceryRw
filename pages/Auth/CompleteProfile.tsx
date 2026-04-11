@@ -107,10 +107,10 @@ export default function CompleteProfile() {
 
   return (
     <ThemeProvider>
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50 p-4 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50 p-4 dark:bg-black">
         <div className="w-full max-w-md">
           <ThemeAwareLogo />
-          <div className="rounded-2xl border border-white/20 bg-white/80 p-8 shadow-xl backdrop-blur-sm dark:border-gray-700/30 dark:bg-gray-800/80">
+          <div className="rounded-2xl border border-white/20 bg-white/80 p-8 shadow-xl backdrop-blur-sm dark:border-gray-700/30 dark:bg-[#171717]/80">
             <h1 className="mb-2 text-center text-2xl font-bold text-gray-900 dark:text-white">
               Complete Your Profile
             </h1>

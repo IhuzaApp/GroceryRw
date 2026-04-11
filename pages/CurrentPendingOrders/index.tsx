@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { AuthGuard } from "../../src/components/AuthGuard";
+import { useTheme } from "../../src/context/ThemeContext";
 
 const ORDERS_CACHE_KEY = "plasa_current_pending_orders";
 const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
@@ -127,6 +128,7 @@ function CurrentOrdersPage() {
   const [loadingPackages, setLoadingPackages] = useState(false);
   const initialMountDone = useRef(false);
   const { data: session } = useSession();
+  const { theme } = useTheme();
 
   const fetchOrders = useCallback(async (pageNum = 1, append = false) => {
     if (pageNum === 1) {
@@ -216,9 +218,9 @@ function CurrentOrdersPage() {
   if (!session) {
     return (
       <RootLayout>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+        <div className="min-h-screen bg-[var(--bg-primary)] md:ml-16">
           <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-12">
-            <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+            <div className="w-full max-w-md rounded-2xl bg-[var(--bg-primary)] p-8 shadow-lg">
               <div className="text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                   <svg
@@ -235,7 +237,7 @@ function CurrentOrdersPage() {
                     />
                   </svg>
                 </div>
-                <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="mb-2 text-2xl font-bold text-[var(--text-primary)] dark:text-white">
                   Sign In Required
                 </h1>
                 <p className="mb-6 text-gray-600 dark:text-gray-300">
@@ -282,7 +284,7 @@ function CurrentOrdersPage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="bg-gray-50 dark:bg-gray-900 md:ml-16">
+        <div className="bg-[var(--bg-primary)] md:ml-16">
           {/* Mobile Header */}
           <div
             className="relative mb-2 h-32 overflow-hidden rounded-b-3xl sm:hidden"
@@ -307,7 +309,7 @@ function CurrentOrdersPage() {
             <div className="relative z-10 flex h-full items-center justify-between px-6">
               <Link
                 href="/"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/30"
+                className="bg-[var(--bg-primary)]/20 flex h-10 w-10 items-center justify-center rounded-full text-white backdrop-blur-md transition-colors hover:bg-white/30"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -336,7 +338,7 @@ function CurrentOrdersPage() {
                 <div className="flex items-center gap-3 md:gap-4">
                   <Link
                     href="/"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20 md:h-10 md:w-10"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] text-[var(--text-secondary)] transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 md:h-10 md:w-10"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -349,10 +351,10 @@ function CurrentOrdersPage() {
                     </svg>
                   </Link>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-white md:text-3xl">
+                    <h1 className="text-xl font-bold text-[var(--text-primary)] md:text-3xl">
                       My Orders
                     </h1>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-1 md:text-sm">
+                    <p className="mt-0.5 text-xs text-[var(--text-secondary)] md:mt-1 md:text-sm">
                       Track and manage your orders
                     </p>
                   </div>
@@ -363,7 +365,7 @@ function CurrentOrdersPage() {
             {/* Filter Tabs - Premium Segmented Control */}
             <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-3 mb-2 px-3 py-2 duration-500 animate-in fade-in slide-in-from-top-4 md:relative md:top-0 md:m-0 md:mb-12 md:flex md:justify-center md:bg-transparent md:p-0">
               {/* Glassmorphic Container */}
-              <div className="no-scrollbar flex w-full overflow-x-auto rounded-2xl border border-gray-200/50 bg-white/80 p-1.5 shadow-xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/80 md:inline-flex md:w-auto md:shadow-sm">
+              <div className="no-scrollbar bg-[var(--bg-primary)]/80 flex w-full overflow-x-auto rounded-2xl border border-[var(--bg-secondary)] p-1.5 shadow-xl backdrop-blur-xl md:inline-flex md:w-auto md:shadow-sm">
                 <button
                   onClick={() => setFilter("pending")}
                   className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${
@@ -469,7 +471,7 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Orders List */}
-            <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-10 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
+            <div className="mx-0 min-h-screen rounded-t-2xl bg-[var(--bg-primary)] pb-10 shadow-sm md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
               <div className="px-3 py-4 md:p-6">
                 {filter === "packages" ? (
                   <UserRecentPackages
