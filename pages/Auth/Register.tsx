@@ -28,7 +28,7 @@ function ThemeAwareLogo() {
 export default function RegisterPage() {
   return (
     <ThemeProvider>
-      <div className="h-screen overflow-hidden bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="h-screen overflow-hidden bg-white dark:bg-black">
         <div className="flex h-full lg:h-screen">
           {/* Left Side - Registration Form */}
           <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-4 py-8 lg:w-1/2 lg:px-16 lg:py-8">
@@ -44,7 +44,7 @@ export default function RegisterPage() {
               </div>
 
               {/* Registration Form */}
-              <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-gray-800/80 dark:text-white lg:p-8">
+              <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-[#171717]/80 dark:text-white lg:p-8">
                 <UserRegistration />
               </div>
 
