@@ -896,7 +896,7 @@ export default function BatchDetails({
 
       // If we have enough balance or couldn't check, proceed with OTP
       const generatedCode = generateOtp(targetOrderForPayment.OrderID);
-      
+
       // Send SMS via Pindo
       const shopperPhone = (session?.user as any)?.phone;
       if (shopperPhone && generatedCode) {
@@ -904,7 +904,7 @@ export default function BatchDetails({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: shopperPhone, otp: generatedCode }),
-        }).catch(err => console.error("Error sending OTP SMS:", err));
+        }).catch((err) => console.error("Error sending OTP SMS:", err));
       }
 
       // Keep payment modal open - it will handle OTP step internally

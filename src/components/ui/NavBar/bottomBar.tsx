@@ -66,19 +66,27 @@ function MoreMenuItem({
 
   return (
     <Link href={href} passHref onClick={handleClick}>
-      <div className={`group relative mx-2 flex px-4 py-3.5 items-center space-x-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
-        theme === "dark" 
-          ? "text-gray-300 hover:bg-white/5 hover:text-emerald-400" 
-          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-      }`}>
-        <span className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px] shadow-sm transition-transform duration-300 group-hover:scale-110 ${
+      <div
+        className={`group relative mx-2 flex items-center space-x-4 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-300 ${
           theme === "dark"
-            ? "bg-gradient-to-br from-white/10 to-white/[0.02] border border-white/10"
-            : "bg-white border border-black/5"
-        }`}>
+            ? "text-gray-300 hover:bg-white/5 hover:text-emerald-400"
+            : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+        }`}
+      >
+        <span
+          className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px] shadow-sm transition-transform duration-300 group-hover:scale-110 ${
+            theme === "dark"
+              ? "border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02]"
+              : "border border-black/5 bg-white"
+          }`}
+        >
           {icon}
           {badgeCount > 0 && (
-            <span className={`absolute -right-1.5 -top-1.5 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ${theme === "dark" ? "ring-[#0A0A0A]" : "ring-white"}`}>
+            <span
+              className={`absolute -right-1.5 -top-1.5 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ${
+                theme === "dark" ? "ring-[#0A0A0A]" : "ring-white"
+              }`}
+            >
               {badgeCount > 99 ? "99+" : badgeCount}
             </span>
           )}
@@ -340,7 +348,8 @@ export default function BottomBar() {
       {/* Floating Buttons (Ask, Help) */}
 
       {/* Floating Cart Button (Lifted) - hidden on store & checkout pages */}
-      {!hideFloatingUI && router.pathname !== "/Cart" &&
+      {!hideFloatingUI &&
+        router.pathname !== "/Cart" &&
         router.pathname !== "/Reels" &&
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
@@ -919,10 +928,10 @@ export default function BottomBar() {
                   onClick={() => setMoreOpen(false)}
                 />
                 <div
-                  className={`fixed bottom-[5.5rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-t-[2.5rem] rounded-b-[1.5rem] border p-3 shadow-2xl backdrop-blur-2xl animate-in slide-in-from-bottom duration-300 ${
+                  className={`fixed bottom-[5.5rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-b-[1.5rem] rounded-t-[2.5rem] border p-3 shadow-2xl backdrop-blur-2xl duration-300 animate-in slide-in-from-bottom ${
                     theme === "dark"
-                      ? "border-white/10 bg-[#0A0A0A]/95 shadow-[0_30px_60px_-10px_rgba(0,0,0,1)] text-white"
-                      : "border-black/5 bg-white/95 shadow-black/10 text-gray-900"
+                      ? "border-white/10 bg-[#0A0A0A]/95 text-white shadow-[0_30px_60px_-10px_rgba(0,0,0,1)]"
+                      : "border-black/5 bg-white/95 text-gray-900 shadow-black/10"
                   }`}
                   ref={moreRef}
                 >
@@ -936,11 +945,13 @@ export default function BottomBar() {
                         }}
                         className="group w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                       >
-                         <div className={`flex items-center gap-4 rounded-[1.25rem] px-5 py-4 shadow-sm border transition-colors ${
-                          theme === "dark" 
-                            ? "border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 group-hover:from-orange-500/20" 
-                            : "border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100 group-hover:to-orange-200"
-                        }`}>
+                        <div
+                          className={`flex items-center gap-4 rounded-[1.25rem] border px-5 py-4 shadow-sm transition-colors ${
+                            theme === "dark"
+                              ? "border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 group-hover:from-orange-500/20"
+                              : "border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100 group-hover:to-orange-200"
+                          }`}
+                        >
                           <svg
                             className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
                             fill="none"
@@ -1144,7 +1155,11 @@ export default function BottomBar() {
                     />
                   )}
 
-                  <div className={`mx-3 my-2 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"}`}></div>
+                  <div
+                    className={`mx-3 my-2 border-t ${
+                      theme === "dark" ? "border-white/10" : "border-black/5"
+                    }`}
+                  ></div>
 
                   {!session?.user && (
                     <MoreMenuItem

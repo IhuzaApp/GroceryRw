@@ -27,12 +27,16 @@ export default async function handler(
   const storedData = otpStore.get(cleanPhone);
 
   if (!storedData) {
-    return res.status(400).json({ error: "OTP expired or not found. Please request a new one." });
+    return res
+      .status(400)
+      .json({ error: "OTP expired or not found. Please request a new one." });
   }
 
   if (Date.now() > storedData.expiresAt) {
     otpStore.delete(cleanPhone);
-    return res.status(400).json({ error: "OTP expired. Please request a new one." });
+    return res
+      .status(400)
+      .json({ error: "OTP expired. Please request a new one." });
   }
 
   if (storedData.otp !== otp) {
@@ -62,7 +66,9 @@ export default async function handler(
 
     if (existingUsers.Users.length > 0) {
       otpStore.delete(cleanPhone);
-      return res.status(400).json({ error: "An account with this email or phone already exists" });
+      return res
+        .status(400)
+        .json({ error: "An account with this email or phone already exists" });
     }
 
     const password_hash = await bcrypt.hash(password!, 10);
@@ -94,12 +100,12 @@ export default async function handler(
 
     const data = await hasuraClient.request<{
       insert_Users: { returning: { id: string }[] };
-    }>(mutation, { 
-      name: fullName, 
-      email, 
-      phone: cleanPhone, 
-      gender, 
-      password_hash 
+    }>(mutation, {
+      name: fullName,
+      email,
+      phone: cleanPhone,
+      gender,
+      password_hash,
     });
 
     const newId = data.insert_Users.returning[0]?.id;
@@ -107,13 +113,15 @@ export default async function handler(
     // Remove from otpStore
     otpStore.delete(cleanPhone);
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       userId: newId,
-      message: "Account created successfully!" 
+      message: "Account created successfully!",
     });
   } catch (error: any) {
     console.error("Error finalizing registration:", error);
-    return res.status(500).json({ error: "Registration failed. Please try again." });
+    return res
+      .status(500)
+      .json({ error: "Registration failed. Please try again." });
   }
 }

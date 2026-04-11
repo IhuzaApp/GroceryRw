@@ -118,12 +118,10 @@ export default async function handler(
     }
   } catch (error: any) {
     console.error("Employee verification failed:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error",
-        details: error.message,
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      details: error.message,
+    });
   }
 }

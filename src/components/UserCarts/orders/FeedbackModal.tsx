@@ -48,10 +48,28 @@ const RATING_LABELS: Record<number, { label: string; color: string }> = {
   5: { label: "Excellent", color: "#22c55e" },
 };
 
-const ACCENT: Record<string, { from: string; to: string; ring: string; text: string }> = {
-  green:  { from: "#16a34a", to: "#15803d", ring: "rgba(22,163,74,0.35)",  text: "#16a34a" },
-  purple: { from: "#9333ea", to: "#7e22ce", ring: "rgba(147,51,234,0.35)", text: "#9333ea" },
-  orange: { from: "#ea580c", to: "#c2410c", ring: "rgba(234,88,12,0.35)",  text: "#ea580c" },
+const ACCENT: Record<
+  string,
+  { from: string; to: string; ring: string; text: string }
+> = {
+  green: {
+    from: "#16a34a",
+    to: "#15803d",
+    ring: "rgba(22,163,74,0.35)",
+    text: "#16a34a",
+  },
+  purple: {
+    from: "#9333ea",
+    to: "#7e22ce",
+    ring: "rgba(147,51,234,0.35)",
+    text: "#9333ea",
+  },
+  orange: {
+    from: "#ea580c",
+    to: "#c2410c",
+    ring: "rgba(234,88,12,0.35)",
+    text: "#ea580c",
+  },
 };
 
 export default function FeedbackModal({
@@ -145,7 +163,10 @@ export default function FeedbackModal({
       {/* Modal */}
       <div
         className="relative z-10 w-full max-w-[520px] overflow-hidden rounded-t-[2rem] shadow-2xl transition-all duration-500 animate-in slide-in-from-bottom-8 sm:rounded-[2rem]"
-        style={{ background: "var(--bg-primary)", border: "1px solid var(--bg-secondary)" }}
+        style={{
+          background: "var(--bg-primary)",
+          border: "1px solid var(--bg-secondary)",
+        }}
       >
         {/* Decorative glow blob */}
         <div
@@ -164,7 +185,11 @@ export default function FeedbackModal({
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-inner"
               style={{ background: `${accent.from}20`, color: accent.text }}
             >
-              <Star className="h-6 w-6" fill={accent.from} stroke={accent.from} />
+              <Star
+                className="h-6 w-6"
+                fill={accent.from}
+                stroke={accent.from}
+              />
             </div>
             <div>
               <h2
@@ -203,15 +228,32 @@ export default function FeedbackModal({
         >
           {/* Overall Score Ring */}
           {overall > 0 && (
-            <div className="mb-7 flex items-center gap-5 rounded-2xl p-5 duration-500 animate-in fade-in zoom-in-95"
-              style={{ background: `${accent.from}12`, border: `1px solid ${accent.from}30` }}
+            <div
+              className="mb-7 flex items-center gap-5 rounded-2xl p-5 duration-500 animate-in fade-in zoom-in-95"
+              style={{
+                background: `${accent.from}12`,
+                border: `1px solid ${accent.from}30`,
+              }}
             >
               {/* Score circle */}
               <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
-                <svg className="absolute inset-0 h-16 w-16 -rotate-90" viewBox="0 0 64 64">
-                  <circle cx="32" cy="32" r="28" fill="none" stroke="var(--bg-secondary)" strokeWidth="5" />
+                <svg
+                  className="absolute inset-0 h-16 w-16 -rotate-90"
+                  viewBox="0 0 64 64"
+                >
                   <circle
-                    cx="32" cy="32" r="28" fill="none"
+                    cx="32"
+                    cy="32"
+                    r="28"
+                    fill="none"
+                    stroke="var(--bg-secondary)"
+                    strokeWidth="5"
+                  />
+                  <circle
+                    cx="32"
+                    cy="32"
+                    r="28"
+                    fill="none"
                     stroke={accent.from}
                     strokeWidth="5"
                     strokeLinecap="round"
@@ -219,15 +261,24 @@ export default function FeedbackModal({
                     style={{ transition: "stroke-dasharray 0.6s ease" }}
                   />
                 </svg>
-                <span className="relative text-xl font-black" style={{ color: accent.text }}>
+                <span
+                  className="relative text-xl font-black"
+                  style={{ color: accent.text }}
+                >
                   {overall}
                 </span>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: accent.text }}>
+                <p
+                  className="text-[10px] font-black uppercase tracking-widest"
+                  style={{ color: accent.text }}
+                >
                   Overall Score
                 </p>
-                <p className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>
+                <p
+                  className="text-2xl font-black"
+                  style={{ color: "var(--text-primary)" }}
+                >
                   {RATING_LABELS[overall]?.label ?? ""}
                 </p>
                 <div className="mt-1 flex gap-0.5">
@@ -266,12 +317,11 @@ export default function FeedbackModal({
                   key={field}
                   className="group flex items-center justify-between rounded-2xl px-4 py-4 transition-all duration-200"
                   style={{
-                    background: val > 0
-                      ? `${accent.from}0d`
-                      : "transparent",
-                    border: val > 0
-                      ? `1px solid ${accent.from}25`
-                      : "1px solid transparent",
+                    background: val > 0 ? `${accent.from}0d` : "transparent",
+                    border:
+                      val > 0
+                        ? `1px solid ${accent.from}25`
+                        : "1px solid transparent",
                   }}
                 >
                   {/* Left: icon + labels */}
@@ -279,7 +329,8 @@ export default function FeedbackModal({
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                       style={{
-                        background: val > 0 ? `${accent.from}18` : "var(--bg-secondary)",
+                        background:
+                          val > 0 ? `${accent.from}18` : "var(--bg-secondary)",
                         color: val > 0 ? accent.text : "var(--text-secondary)",
                         transition: "all 0.2s ease",
                       }}
@@ -297,9 +348,7 @@ export default function FeedbackModal({
                         className="text-[10px]"
                         style={{ color: "var(--text-secondary)" }}
                       >
-                        {val > 0
-                          ? RATING_LABELS[val]?.label
-                          : desc}
+                        {val > 0 ? RATING_LABELS[val]?.label : desc}
                       </p>
                     </div>
                   </div>
@@ -441,11 +490,17 @@ export default function FeedbackModal({
               <>
                 <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
                   <circle
-                    className="opacity-25" cx="12" cy="12" r="10"
-                    stroke="currentColor" strokeWidth="4" fill="none"
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
                   />
                   <path
-                    className="opacity-75" fill="currentColor"
+                    className="opacity-75"
+                    fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>

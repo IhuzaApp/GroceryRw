@@ -9,14 +9,15 @@ interface UserRegistrationProps {
   setIsOtpSent?: (val: boolean) => void;
 }
 
-export default function UserRegistration({ 
-  isOtpSent: externalIsOtpSent, 
-  setIsOtpSent: externalSetIsOtpSent 
+export default function UserRegistration({
+  isOtpSent: externalIsOtpSent,
+  setIsOtpSent: externalSetIsOtpSent,
 }: UserRegistrationProps) {
   const [internalIsOtpSent, setInternalIsOtpSent] = useState(false);
 
   // Use external state if provided, otherwise fallback to internal
-  const isOtpSent = externalIsOtpSent !== undefined ? externalIsOtpSent : internalIsOtpSent;
+  const isOtpSent =
+    externalIsOtpSent !== undefined ? externalIsOtpSent : internalIsOtpSent;
   const setIsOtpSent = externalSetIsOtpSent || setInternalIsOtpSent;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -74,7 +75,9 @@ export default function UserRegistration({
       toast.success("Verification code sent to your phone!");
     } catch (err: any) {
       console.error("OTP send error:", err);
-      toast.error(err.message || "Failed to send verification code. Please try again.");
+      toast.error(
+        err.message || "Failed to send verification code. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +125,10 @@ export default function UserRegistration({
   };
 
   return (
-    <form onSubmit={isOtpSent ? handleVerifyOtp : handleRegister} className="space-y-4">
+    <form
+      onSubmit={isOtpSent ? handleVerifyOtp : handleRegister}
+      className="space-y-4"
+    >
       {!isOtpSent ? (
         <>
           {/* Full Name Input */}
@@ -382,11 +388,17 @@ export default function UserRegistration({
               className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
             >
               I agree to the{" "}
-              <Link href="/terms" className="text-green-600 hover:text-green-500">
+              <Link
+                href="/terms"
+                className="text-green-600 hover:text-green-500"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="text-green-600 hover:text-green-500">
+              <Link
+                href="/privacy"
+                className="text-green-600 hover:text-green-500"
+              >
                 Privacy Policy
               </Link>
             </label>
@@ -484,12 +496,17 @@ export default function UserRegistration({
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Verification code sent to
                 <br />
-                <span className="font-semibold text-gray-900 dark:text-white">{phone}</span>
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {phone}
+                </span>
               </p>
             </div>
 
             <div className="space-y-4 text-left">
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Verification Code
               </label>
               <div className="relative">
@@ -501,12 +518,14 @@ export default function UserRegistration({
                   inputMode="numeric"
                   pattern="[0-9]*"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="absolute inset-0 z-10 h-full w-full opacity-0 cursor-default"
+                  onChange={(e) =>
+                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  className="absolute inset-0 z-10 h-full w-full cursor-default opacity-0"
                   autoFocus
                   required
                 />
-                
+
                 {/* Premium Grid UI */}
                 <div className="grid grid-cols-6 gap-2">
                   {[...Array(6)].map((_, index) => (
@@ -519,7 +538,9 @@ export default function UserRegistration({
                           ? "border-gray-300 bg-gray-50/50 dark:border-gray-600 dark:bg-gray-800/50"
                           : "border-gray-200 dark:border-gray-700"
                       } ${
-                        otp[index] ? "text-gray-900 dark:text-white" : "text-gray-400"
+                        otp[index]
+                          ? "text-gray-900 dark:text-white"
+                          : "text-gray-400"
                       }`}
                     >
                       {otp[index] || (otp.length === index ? "•" : "")}

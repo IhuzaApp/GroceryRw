@@ -52,7 +52,10 @@ export default function LoginPage() {
 
   return (
     <ThemeProvider>
-      <div className="h-screen overflow-hidden" style={{ backgroundColor: "var(--bg-primary)" }}>
+      <div
+        className="h-screen overflow-hidden"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
         <div className="flex h-full lg:h-screen">
           {/* Left Side - Login Form */}
           <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-4 py-8 lg:w-1/2 lg:px-16 lg:py-8">

@@ -278,20 +278,22 @@ export default function MobileUserDashboard({
             marginTop: "-44px",
             marginLeft: "-16px",
             marginRight: "-16px",
-            height: "220px"
+            height: "220px",
           }}
         >
           {/* Background Image */}
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[20s] hover:scale-110"
+            className="duration-[20s] absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform hover:scale-110"
             style={{
               backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
             }}
           >
             {/* Dynamic Overlay for contrast */}
-            <div className={`absolute inset-0 transition-colors duration-500 ${
-              theme === "dark" ? "bg-black/40" : "bg-black/10"
-            }`}></div>
+            <div
+              className={`absolute inset-0 transition-colors duration-500 ${
+                theme === "dark" ? "bg-black/40" : "bg-black/10"
+              }`}
+            ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           </div>
 
@@ -312,8 +314,12 @@ export default function MobileUserDashboard({
 
             {/* Search Input */}
             <div className="w-full max-w-sm">
-              <div className="relative group">
-                <div className={`absolute inset-y-0 left-0 flex items-center pl-5 transition-colors duration-500 ${theme === "dark" ? "text-white/20" : "text-gray-400"}`}>
+              <div className="group relative">
+                <div
+                  className={`absolute inset-y-0 left-0 flex items-center pl-5 transition-colors duration-500 ${
+                    theme === "dark" ? "text-white/20" : "text-gray-400"
+                  }`}
+                >
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -338,10 +344,10 @@ export default function MobileUserDashboard({
                       handleSearchSubmit();
                     }
                   }}
-                  className={`w-full rounded-2xl border transition-all duration-500 py-4 pl-12 pr-4 text-sm font-black shadow-2xl backdrop-blur-xl ${
+                  className={`w-full rounded-2xl border py-4 pl-12 pr-4 text-sm font-black shadow-2xl backdrop-blur-xl transition-all duration-500 ${
                     theme === "dark"
-                      ? "border-white/10 bg-white/[0.08] text-white placeholder:text-white/40 focus:bg-white/[0.12] focus:border-emerald-500/50"
-                      : "border-black/5 bg-white/95 text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-emerald-500"
+                      ? "border-white/10 bg-white/[0.08] text-white placeholder:text-white/40 focus:border-emerald-500/50 focus:bg-white/[0.12]"
+                      : "border-black/5 bg-white/95 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white"
                   }`}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4">
@@ -383,11 +389,19 @@ export default function MobileUserDashboard({
                 {error}
               </div>
             )}
-            <div className="flex items-center justify-between mb-2">
-              <h5 className={`text-xs font-black uppercase tracking-[0.2em] opacity-40 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            <div className="mb-2 flex items-center justify-between">
+              <h5
+                className={`text-xs font-black uppercase tracking-[0.2em] opacity-40 ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Browse Categories
               </h5>
-              <div className={`h-px flex-1 ml-4 ${theme === "dark" ? "bg-white/5" : "bg-black/5"}`}></div>
+              <div
+                className={`ml-4 h-px flex-1 ${
+                  theme === "dark" ? "bg-white/5" : "bg-black/5"
+                }`}
+              ></div>
             </div>
             {/* Categories Grid */}
             <div className="grid grid-cols-2 gap-4">
@@ -401,9 +415,21 @@ export default function MobileUserDashboard({
                         theme === "dark" ? "bg-white/5" : "bg-gray-100"
                       }`}
                     >
-                      <div className={`mb-4 h-16 w-16 rounded-2xl ${theme === "dark" ? "bg-white/5" : "bg-gray-200"}`}></div>
-                      <div className={`h-3 w-3/4 rounded ${theme === "dark" ? "bg-white/5" : "bg-gray-200"}`}></div>
-                      <div className={`mt-2 h-2 w-1/2 rounded ${theme === "dark" ? "bg-white/5" : "bg-gray-200"}`}></div>
+                      <div
+                        className={`mb-4 h-16 w-16 rounded-2xl ${
+                          theme === "dark" ? "bg-white/5" : "bg-gray-200"
+                        }`}
+                      ></div>
+                      <div
+                        className={`h-3 w-3/4 rounded ${
+                          theme === "dark" ? "bg-white/5" : "bg-gray-200"
+                        }`}
+                      ></div>
+                      <div
+                        className={`mt-2 h-2 w-1/2 rounded ${
+                          theme === "dark" ? "bg-white/5" : "bg-gray-200"
+                        }`}
+                      ></div>
                     </div>
                   ))
               ) : allCategories.length > 0 ? (
@@ -411,68 +437,101 @@ export default function MobileUserDashboard({
                   <div
                     key={category.id}
                     onClick={() => handleCategoryClick(category.id)}
-                    className={`group relative overflow-hidden rounded-[2rem] border p-6 transition-all duration-500 hover:-translate-y-2 active:scale-[0.98] cursor-pointer ${
+                    className={`group relative cursor-pointer overflow-hidden rounded-[2rem] border p-6 transition-all duration-500 hover:-translate-y-2 active:scale-[0.98] ${
                       theme === "dark"
                         ? "border-white/5 bg-[#0D0D0D] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)]"
                         : "border-black/5 bg-white shadow-xl shadow-gray-200/50"
                     }`}
                     style={{
                       animationDelay: `${index * 50}ms`,
-                      animation: "fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                      animation:
+                        "fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
                       opacity: 0,
                       transform: "translateY(20px)",
                     }}
                   >
                     {/* Glass Overlay */}
-                    <div className={`absolute inset-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100 ${
-                      theme === "dark" ? "bg-emerald-500/[0.03]" : "bg-emerald-50/50"
-                    }`}></div>
+                    <div
+                      className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${
+                        theme === "dark"
+                          ? "bg-emerald-500/[0.03]"
+                          : "bg-emerald-50/50"
+                      }`}
+                    ></div>
 
                     <div className="relative z-10">
                       {/* Icon */}
-                      <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${
-                        theme === "dark" 
-                          ? "bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 text-emerald-400" 
-                          : "bg-emerald-500 text-white"
-                      }`}>
+                      <div
+                        className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 ${
+                          theme === "dark"
+                            ? "border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-400"
+                            : "bg-emerald-500 text-white"
+                        }`}
+                      >
                         <CategoryIcon category={category.name} />
                       </div>
 
                       {/* Name */}
-                      <h3 className={`mb-1 text-sm font-black tracking-tight ${
-                        theme === "dark" ? "text-white group-hover:text-emerald-400" : "text-gray-900"
-                      }`}>
+                      <h3
+                        className={`mb-1 text-sm font-black tracking-tight ${
+                          theme === "dark"
+                            ? "text-white group-hover:text-emerald-400"
+                            : "text-gray-900"
+                        }`}
+                      >
                         {category.name}
                       </h3>
 
-                      <p className={`text-[10px] font-black uppercase tracking-widest opacity-40 ${
-                        theme === "dark" ? "text-white" : "text-gray-500"
-                      }`}>
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-widest opacity-40 ${
+                          theme === "dark" ? "text-white" : "text-gray-500"
+                        }`}
+                      >
                         Discover Shops
                       </p>
 
                       <div className="mt-4 flex justify-end">
-                        <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-500 ${
-                          theme === "dark" ? "bg-white/5 text-gray-500" : "bg-gray-100 text-gray-400"
-                        }`}>
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        <div
+                          className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-500 ${
+                            theme === "dark"
+                              ? "bg-white/5 text-gray-500"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M14 5l7 7m0 0l-7 7m7-7H3"
+                            />
                           </svg>
                         </div>
                       </div>
                     </div>
 
                     {/* Glow */}
-                    <div className={`absolute -right-4 -bottom-4 h-24 w-24 rounded-full blur-[60px] opacity-0 transition-opacity duration-700 group-hover:opacity-40 ${
-                      theme === "dark" ? "bg-emerald-500/40" : "bg-emerald-200"
-                    }`}></div>
+                    <div
+                      className={`absolute -bottom-4 -right-4 h-24 w-24 rounded-full opacity-0 blur-[60px] transition-opacity duration-700 group-hover:opacity-40 ${
+                        theme === "dark"
+                          ? "bg-emerald-500/40"
+                          : "bg-emerald-200"
+                      }`}
+                    ></div>
                   </div>
                 ))
               ) : (
                 <div className="col-span-2 mt-8 text-center">
-                  <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${
-                    theme === "dark" ? "bg-white/5" : "bg-gray-100"
-                  }`}>
+                  <div
+                    className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${
+                      theme === "dark" ? "bg-white/5" : "bg-gray-100"
+                    }`}
+                  >
                     <svg
                       className="h-8 w-8 text-gray-400"
                       fill="none"
@@ -487,7 +546,11 @@ export default function MobileUserDashboard({
                       />
                     </svg>
                   </div>
-                  <h3 className={`text-lg font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h3
+                    className={`text-lg font-black tracking-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     No categories available
                   </h3>
                 </div>

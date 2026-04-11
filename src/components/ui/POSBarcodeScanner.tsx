@@ -536,7 +536,9 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                 >
                   {isTorchOn ? (
                     <Zap
-                      className={`${isInline ? "h-4 w-4" : "h-5 w-5"} fill-current`}
+                      className={`${
+                        isInline ? "h-4 w-4" : "h-5 w-5"
+                      } fill-current`}
                     />
                   ) : (
                     <ZapOff className={isInline ? "h-4 w-4" : "h-5 w-5"} />
@@ -547,7 +549,7 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
 
             {capabilities.zoom && (
               <div
-                className={`absolute z-20 flex flex-col items-center gap-2 -translate-y-1/2 ${
+                className={`absolute z-20 flex -translate-y-1/2 flex-col items-center gap-2 ${
                   isInline ? "left-2 top-1/2" : "left-6 top-1/2"
                 }`}
               >
@@ -577,8 +579,20 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
                   />
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
-                  <Maximize2 className={isInline ? "h-3 w-3 text-white/60" : "h-4 w-4 text-white/60"} />
-                  <span className={isInline ? "text-[8px] font-bold text-white/80" : "text-[10px] font-bold text-white/80"}>
+                  <Maximize2
+                    className={
+                      isInline
+                        ? "h-3 w-3 text-white/60"
+                        : "h-4 w-4 text-white/60"
+                    }
+                  />
+                  <span
+                    className={
+                      isInline
+                        ? "text-[8px] font-bold text-white/80"
+                        : "text-[10px] font-bold text-white/80"
+                    }
+                  >
                     {zoomLevel.toFixed(1)}x
                   </span>
                 </div>
@@ -640,7 +654,9 @@ const POSBarcodeScanner: React.FC<POSBarcodeScannerProps> = ({
     </div>
   );
 
-  return isInline ? scannerContent : createPortal(scannerContent, document.body);
+  return isInline
+    ? scannerContent
+    : createPortal(scannerContent, document.body);
 };
 
 export default POSBarcodeScanner;

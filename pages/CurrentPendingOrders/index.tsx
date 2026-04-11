@@ -309,7 +309,7 @@ function CurrentOrdersPage() {
             <div className="relative z-10 flex h-full items-center justify-between px-6">
               <Link
                 href="/"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-primary)]/20 text-white backdrop-blur-md transition-colors hover:bg-white/30"
+                className="bg-[var(--bg-primary)]/20 flex h-10 w-10 items-center justify-center rounded-full text-white backdrop-blur-md transition-colors hover:bg-white/30"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -365,7 +365,7 @@ function CurrentOrdersPage() {
             {/* Filter Tabs - Premium Segmented Control */}
             <div className="sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-3 mb-2 px-3 py-2 duration-500 animate-in fade-in slide-in-from-top-4 md:relative md:top-0 md:m-0 md:mb-12 md:flex md:justify-center md:bg-transparent md:p-0">
               {/* Glassmorphic Container */}
-              <div className="no-scrollbar flex w-full overflow-x-auto rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)]/80 p-1.5 shadow-xl backdrop-blur-xl md:inline-flex md:w-auto md:shadow-sm">
+              <div className="no-scrollbar bg-[var(--bg-primary)]/80 flex w-full overflow-x-auto rounded-2xl border border-[var(--bg-secondary)] p-1.5 shadow-xl backdrop-blur-xl md:inline-flex md:w-auto md:shadow-sm">
                 <button
                   onClick={() => setFilter("pending")}
                   className={`relative flex min-w-[110px] flex-1 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-medium transition-all duration-300 md:min-w-0 md:flex-initial ${

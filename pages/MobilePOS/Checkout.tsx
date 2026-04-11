@@ -107,7 +107,9 @@ export default function POSCheckout() {
         } else if (data.found) {
           // Found global but no local stock
           // Depending on requirements, we might show a message or add with 0 price
-          alert(`Product ${data.productName.name} found but has no stock in this shop.`);
+          alert(
+            `Product ${data.productName.name} found but has no stock in this shop.`
+          );
         }
       }
     } catch (e) {
@@ -399,7 +401,7 @@ export default function POSCheckout() {
                             SKU: {product.sku} | {product.barcode}
                           </p>
                         </div>
-                        <div className="mr-2 h-10 w-10 rounded-full bg-black/10 flex items-center justify-center">
+                        <div className="mr-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/10">
                           <Plus className="h-5 w-5" />
                         </div>
                       </button>

@@ -123,7 +123,7 @@ export default function ContactSupportModal({
 
       {/* Modal Container */}
       <div
-        className={`relative z-10 w-full max-w-xl overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-10 border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-black/30`}
+        className={`relative z-10 w-full max-w-xl overflow-hidden rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-2xl shadow-black/30 transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-10`}
       >
         {/* Decorative Background Element */}
         <div
@@ -134,7 +134,7 @@ export default function ContactSupportModal({
 
         {/* Header Section */}
         <div
-          className={`relative flex items-start justify-between border-b px-8 py-8 border-[var(--bg-secondary)]`}
+          className={`relative flex items-start justify-between border-b border-[var(--bg-secondary)] px-8 py-8`}
         >
           <div className="flex gap-4">
             <div
@@ -162,7 +162,7 @@ export default function ContactSupportModal({
           <button
             onClick={handleClose}
             disabled={submitting}
-            className={`group rounded-full p-2 transition-all hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]`}
+            className={`group rounded-full p-2 text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
           >
             <X className="h-6 w-6" />
           </button>
@@ -205,7 +205,7 @@ export default function ContactSupportModal({
               </div>
 
               <div
-                className={`mt-10 max-w-sm rounded-[1.5rem] p-6 text-center text-sm leading-relaxed bg-[var(--bg-secondary)] text-[var(--text-secondary)]`}
+                className={`mt-10 max-w-sm rounded-[1.5rem] bg-[var(--bg-secondary)] p-6 text-center text-sm leading-relaxed text-[var(--text-secondary)]`}
               >
                 <Info
                   className={`mx-auto mb-3 h-5 w-5 ${
@@ -227,7 +227,7 @@ export default function ContactSupportModal({
 
               {/* Enhanced Order Brief Card */}
               <div
-                className={`group relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-300 hover:shadow-lg border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/50`}
+                className={`bg-[var(--bg-secondary)]/50 group relative overflow-hidden rounded-[1.5rem] border border-[var(--bg-secondary)] p-6 transition-all duration-300 hover:shadow-lg`}
               >
                 <div className="mb-4 flex items-center justify-between">
                   <span
@@ -323,7 +323,7 @@ export default function ContactSupportModal({
                     placeholder="Tell us what's happening..."
                     rows={5}
                     disabled={submitting}
-                    className={`w-full resize-none rounded-[1.5rem] border-2 p-5 text-sm font-medium leading-relaxed transition-all duration-300 focus:outline-none border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:border-emerald-500/50`}
+                    className={`w-full resize-none rounded-[1.5rem] border-2 border-[var(--bg-secondary)] bg-[var(--bg-secondary)] p-5 text-sm font-medium leading-relaxed text-[var(--text-primary)] placeholder-[var(--text-secondary)] transition-all duration-300 focus:border-emerald-500/50 focus:outline-none`}
                   />
                   <div className="absolute bottom-4 right-4 text-[10px] font-bold opacity-30">
                     {message.length} characters
@@ -336,7 +336,7 @@ export default function ContactSupportModal({
 
         {/* Footer Buttons Section */}
         <div
-          className={`flex flex-col gap-3 border-t p-8 sm:flex-row sm:items-center sm:justify-end border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20`}
+          className={`bg-[var(--bg-secondary)]/20 flex flex-col gap-3 border-t border-[var(--bg-secondary)] p-8 sm:flex-row sm:items-center sm:justify-end`}
         >
           {successCode ? (
             <button
@@ -350,7 +350,7 @@ export default function ContactSupportModal({
               <button
                 onClick={handleClose}
                 disabled={submitting}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-8 py-4 text-base font-bold transition-all sm:w-auto border-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--bg-secondary)] px-8 py-4 text-base font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] sm:w-auto`}
               >
                 Cancel
               </button>

@@ -391,10 +391,20 @@ export default async function handler(
       assignedTo: orderData.Shoppers
         ? {
             id: orderData.shopper_id || orderData.Shoppers.id || "",
-            name: orderData.Shoppers.shopper?.full_name || orderData.Shoppers.name || "Plaser",
-            phone: orderData.Shoppers.shopper?.phone_number || orderData.Shoppers.shopper?.phone || orderData.Shoppers.phone || "",
+            name:
+              orderData.Shoppers.shopper?.full_name ||
+              orderData.Shoppers.name ||
+              "Plaser",
+            phone:
+              orderData.Shoppers.shopper?.phone_number ||
+              orderData.Shoppers.shopper?.phone ||
+              orderData.Shoppers.phone ||
+              "",
             email: "",
-            profile_photo: orderData.Shoppers.shopper?.profile_photo || orderData.Shoppers.profile_picture || null,
+            profile_photo:
+              orderData.Shoppers.shopper?.profile_photo ||
+              orderData.Shoppers.profile_picture ||
+              null,
             gender: null,
             rating: shopperStats?.rating || 0,
             orders_aggregate: shopperStats?.orders_aggregate || {

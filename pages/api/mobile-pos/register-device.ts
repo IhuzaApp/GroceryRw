@@ -61,11 +61,9 @@ export default async function handler(
   } catch (error: any) {
     console.error("Device registration failed:", error);
     // We return 200 even on error for device registration to not block the login flow
-    return res
-      .status(200)
-      .json({
-        success: false,
-        message: "Device logging failed but login continues",
-      });
+    return res.status(200).json({
+      success: false,
+      message: "Device logging failed but login continues",
+    });
   }
 }

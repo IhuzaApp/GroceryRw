@@ -21,7 +21,14 @@ export function HideBottomBarProvider({
   const [hideBottomBar, setHideBottomBar] = useState(false);
   const [hideFloatingUI, setHideFloatingUI] = useState(false);
   return (
-    <HideBottomBarContext.Provider value={{ hideBottomBar, setHideBottomBar, hideFloatingUI, setHideFloatingUI }}>
+    <HideBottomBarContext.Provider
+      value={{
+        hideBottomBar,
+        setHideBottomBar,
+        hideFloatingUI,
+        setHideFloatingUI,
+      }}
+    >
       {children}
     </HideBottomBarContext.Provider>
   );
@@ -30,7 +37,12 @@ export function HideBottomBarProvider({
 export function useHideBottomBar() {
   const ctx = useContext(HideBottomBarContext);
   if (ctx === undefined) {
-    return { hideBottomBar: false, setHideBottomBar: () => {}, hideFloatingUI: false, setHideFloatingUI: () => {} };
+    return {
+      hideBottomBar: false,
+      setHideBottomBar: () => {},
+      hideFloatingUI: false,
+      setHideFloatingUI: () => {},
+    };
   }
   return ctx;
 }

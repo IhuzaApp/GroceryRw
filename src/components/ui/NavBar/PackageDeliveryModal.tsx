@@ -768,11 +768,11 @@ export default function PackageDeliveryModal({
 
         {/* Modal Container */}
         <div
-          className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl transition-all sm:rounded-2xl sm:border border-[var(--bg-secondary)] bg-[var(--bg-primary)] duration-300 animate-in slide-in-from-bottom-8`}
+          className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-2xl transition-all duration-300 animate-in slide-in-from-bottom-8 sm:rounded-2xl sm:border`}
         >
           {/* Header */}
           <div
-            className={`flex items-center justify-between px-6 py-6 sm:px-8 border-b border-[var(--bg-secondary)]`}
+            className={`flex items-center justify-between border-b border-[var(--bg-secondary)] px-6 py-6 sm:px-8`}
           >
             <div className="flex items-center gap-4">
               <div
@@ -791,14 +791,10 @@ export default function PackageDeliveryModal({
                 </svg>
               </div>
               <div>
-                <h2
-                  className={`text-xl font-bold text-[var(--text-primary)]`}
-                >
+                <h2 className={`text-xl font-bold text-[var(--text-primary)]`}>
                   Express Plas Package
                 </h2>
-                <p
-                  className={`text-sm text-[var(--text-secondary)]`}
-                >
+                <p className={`text-sm text-[var(--text-secondary)]`}>
                   Step {step} of 5:{" "}
                   {step === 1
                     ? "Route"
@@ -814,7 +810,7 @@ export default function PackageDeliveryModal({
             </div>
             <button
               onClick={handleClose}
-              className={`hidden rounded-xl p-2 transition-all hover:scale-105 active:scale-95 sm:flex text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
+              className={`hidden rounded-xl p-2 text-[var(--text-secondary)] transition-all hover:scale-105 hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] active:scale-95 sm:flex`}
             >
               <svg
                 className="h-5 w-5"
@@ -834,7 +830,7 @@ export default function PackageDeliveryModal({
 
           {/* Body */}
           <div
-            className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 bg-[var(--bg-primary)]`}
+            className={`max-h-[70vh] overflow-y-auto bg-[var(--bg-primary)] px-6 py-8 sm:px-8`}
           >
             <div className="space-y-6">
               {step === 1 && (
@@ -1085,7 +1081,7 @@ export default function PackageDeliveryModal({
                               <button
                                 key={addr.id}
                                 onClick={() => applyAddressToForm(addr, true)}
-                                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium transition-all hover:scale-105 active:scale-95 border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]`}
+                                className={`flex items-center gap-2 rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all hover:scale-105 hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)] active:scale-95`}
                               >
                                 <svg
                                   className="h-3 w-3"
@@ -1371,7 +1367,7 @@ export default function PackageDeliveryModal({
                         onClick={() =>
                           navigator.clipboard.writeText(formData.deliveryId)
                         }
-                        className={`rounded-lg p-1.5 transition-all hover:scale-110 active:scale-95 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
+                        className={`rounded-lg p-1.5 text-[var(--text-secondary)] transition-all hover:scale-110 hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] active:scale-95`}
                       >
                         <svg
                           className="h-4 w-4"
@@ -1547,7 +1543,7 @@ export default function PackageDeliveryModal({
                         Delivery Timing
                       </label>
                       <div
-                        className={`flex rounded-2xl p-1.5 bg-[var(--bg-secondary)]`}
+                        className={`flex rounded-2xl bg-[var(--bg-secondary)] p-1.5`}
                       >
                         {["instant", "scheduled"].map((type) => (
                           <button
@@ -1766,7 +1762,7 @@ export default function PackageDeliveryModal({
 
                     {/* Pricing Summary */}
                     <div
-                      className={`mt-6 rounded-2xl p-6 transition-all bg-green-600 shadow-xl shadow-green-500/20`}
+                      className={`mt-6 rounded-2xl bg-green-600 p-6 shadow-xl shadow-green-500/20 transition-all`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -1825,7 +1821,7 @@ export default function PackageDeliveryModal({
 
                     {/* Detailed Location Summary */}
                     <div
-                      className={`space-y-5 rounded-2xl border p-5 border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/50`}
+                      className={`bg-[var(--bg-secondary)]/50 space-y-5 rounded-2xl border border-[var(--bg-secondary)] p-5`}
                     >
                       <div className="flex items-start gap-4">
                         <div
@@ -1850,7 +1846,7 @@ export default function PackageDeliveryModal({
                           </p>
                           <div className="mt-1 flex flex-wrap gap-2">
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-secondary)]`}
+                              className={`rounded-full bg-[var(--bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]`}
                             >
                               {formData.pickupType}
                             </span>
@@ -1875,7 +1871,7 @@ export default function PackageDeliveryModal({
 
                       <div className="flex items-start gap-4">
                         <div
-                          className={`mt-1 rounded-full p-2.5 bg-green-500/10 text-green-400`}
+                          className={`mt-1 rounded-full bg-green-500/10 p-2.5 text-green-400`}
                         >
                           <div className="flex h-4 w-4 items-center justify-center text-[10px] font-bold leading-none">
                             TO
@@ -1894,7 +1890,7 @@ export default function PackageDeliveryModal({
                           </p>
                           <div className="mt-1 flex flex-wrap gap-2">
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-secondary)]`}
+                              className={`rounded-full bg-[var(--bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]`}
                             >
                               {formData.dropoffType}
                             </span>
@@ -1919,7 +1915,7 @@ export default function PackageDeliveryModal({
 
                       <div className="flex items-start gap-4">
                         <div
-                          className={`mt-1 rounded-full p-2.5 bg-green-500/10 text-green-400`}
+                          className={`mt-1 rounded-full bg-green-500/10 p-2.5 text-green-400`}
                         >
                           <User className="h-4 w-4" />
                         </div>
@@ -1943,7 +1939,7 @@ export default function PackageDeliveryModal({
                       {formData.instructions && (
                         <div className="flex items-start gap-4">
                           <div
-                            className={`mt-1 rounded-full p-2.5 bg-blue-500/10 text-blue-400`}
+                            className={`mt-1 rounded-full bg-blue-500/10 p-2.5 text-blue-400`}
                           >
                             <Info className="h-4 w-4" />
                           </div>
@@ -1965,7 +1961,7 @@ export default function PackageDeliveryModal({
 
                     {/* Payment Breakdown Card */}
                     <div
-                      className={`rounded-2xl p-5 bg-green-600 text-white shadow-xl shadow-green-500/20`}
+                      className={`rounded-2xl bg-green-600 p-5 text-white shadow-xl shadow-green-500/20`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -1979,7 +1975,7 @@ export default function PackageDeliveryModal({
                           </p>
                         </div>
                         <div
-                          className={`rounded-xl p-3 bg-white/20 text-white`}
+                          className={`rounded-xl bg-white/20 p-3 text-white`}
                         >
                           <CreditCard className="h-6 w-6" />
                         </div>
@@ -1999,7 +1995,7 @@ export default function PackageDeliveryModal({
                           onChange={(e) =>
                             setSelectedPaymentValue(e.target.value)
                           }
-                          className={`w-full appearance-none rounded-2xl border-2 p-5 pr-12 text-sm font-bold outline-none transition-all border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--bg-primary)] focus:border-green-500`}
+                          className={`w-full appearance-none rounded-2xl border-2 border-[var(--bg-secondary)] bg-[var(--bg-secondary)] p-5 pr-12 text-sm font-bold text-[var(--text-primary)] outline-none transition-all hover:bg-[var(--bg-primary)] focus:border-green-500`}
                         >
                           <option value="" disabled>
                             Choose a payment method...
@@ -2056,7 +2052,7 @@ export default function PackageDeliveryModal({
 
                     {/* Security Badge */}
                     <div
-                      className={`flex items-center gap-3 rounded-2xl p-4 transition-all bg-blue-500/10 text-blue-400 duration-500 animate-in fade-in slide-in-from-top-2`}
+                      className={`flex items-center gap-3 rounded-2xl bg-blue-500/10 p-4 text-blue-400 transition-all duration-500 animate-in fade-in slide-in-from-top-2`}
                     >
                       <ShieldCheck className="h-5 w-5 shrink-0" />
                       <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest">
@@ -2072,19 +2068,19 @@ export default function PackageDeliveryModal({
 
           {/* Footer */}
           <div
-            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 border-t border-[var(--bg-secondary)]`}
+            className={`flex w-full flex-col-reverse gap-3 border-t border-[var(--bg-secondary)] px-6 py-5 sm:flex-row sm:justify-end sm:px-8`}
           >
             {step === 1 ? (
               <button
                 onClick={handleClose}
-                className={`hidden rounded-xl px-8 py-3.5 text-sm font-medium transition-all sm:inline-block text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
+                className={`hidden rounded-xl px-8 py-3.5 text-sm font-medium text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] sm:inline-block`}
               >
                 Cancel
               </button>
             ) : (
               <button
                 onClick={prevStep}
-                className={`flex-1 rounded-xl py-4 text-sm font-bold transition-all active:scale-95 bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:opacity-80`}
+                className={`flex-1 rounded-xl bg-[var(--bg-secondary)] py-4 text-sm font-bold text-[var(--text-primary)] transition-all hover:opacity-80 active:scale-95`}
               >
                 Back
               </button>

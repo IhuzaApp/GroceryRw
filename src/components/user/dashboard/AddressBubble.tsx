@@ -201,9 +201,9 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
         <div
           ref={bubbleRef}
           onClick={handleDropdownToggle}
-          className={`group relative inline-flex items-center gap-3 rounded-2xl border px-5 py-3 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] active:scale-95 cursor-pointer ${
-            theme === "dark" 
-              ? "border-white/10 bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]" 
+          className={`group relative inline-flex cursor-pointer items-center gap-3 rounded-2xl border px-5 py-3 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] active:scale-95 ${
+            theme === "dark"
+              ? "border-white/10 bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
               : "border-black/5 bg-gray-100/50 shadow-lg"
           }`}
         >
@@ -211,9 +211,13 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10"></div>
 
           {/* Location Icon with Background */}
-          <div className={`relative flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-colors duration-500 ${
-            theme === "dark" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-emerald-500/20 bg-emerald-500 text-white"
-          }`}>
+          <div
+            className={`relative flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-colors duration-500 ${
+              theme === "dark"
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                : "border-emerald-500/20 bg-emerald-500 text-white"
+            }`}
+          >
             <svg
               className="h-4 w-4 drop-shadow-sm"
               fill="none"
@@ -237,14 +241,24 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
 
           {/* Address Text */}
           <div className="relative flex flex-1 flex-col">
-            <span className={`text-sm font-black tracking-tight leading-tight transition-colors duration-500 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            <span
+              className={`text-sm font-black leading-tight tracking-tight transition-colors duration-500 ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               {defaultAddress.street}, {defaultAddress.city}
             </span>
           </div>
 
-          <div className={`relative flex h-6 w-6 items-center justify-center rounded-full transition-all duration-300 ${isDropdownOpen ? "rotate-180" : ""} ${
-            theme === "dark" ? "text-white/40 group-hover:text-white" : "text-gray-400 group-hover:text-gray-900"
-          }`}>
+          <div
+            className={`relative flex h-6 w-6 items-center justify-center rounded-full transition-all duration-300 ${
+              isDropdownOpen ? "rotate-180" : ""
+            } ${
+              theme === "dark"
+                ? "text-white/40 group-hover:text-white"
+                : "text-gray-400 group-hover:text-gray-900"
+            }`}
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -261,9 +275,11 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
           </div>
 
           {/* Glass edge highlight */}
-          <div className={`pointer-events-none absolute inset-0 rounded-2xl border transition-colors duration-500 ${
-            theme === "dark" ? "border-white/10" : "border-black/5"
-          }`}></div>
+          <div
+            className={`pointer-events-none absolute inset-0 rounded-2xl border transition-colors duration-500 ${
+              theme === "dark" ? "border-white/10" : "border-black/5"
+            }`}
+          ></div>
         </div>
 
         {/* Full Screen Dropdown with Map */}
@@ -279,27 +295,49 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Dropdown Header */}
-                <div className={`sticky top-0 z-50 flex items-center justify-between border-b px-6 py-5 backdrop-blur-xl ${
-                  theme === "dark" ? "border-white/5 bg-[#0A0A0A]/90" : "border-gray-100 bg-white/90"
-                }`}>
+                <div
+                  className={`sticky top-0 z-50 flex items-center justify-between border-b px-6 py-5 backdrop-blur-xl ${
+                    theme === "dark"
+                      ? "border-white/5 bg-[#0A0A0A]/90"
+                      : "border-gray-100 bg-white/90"
+                  }`}
+                >
                   <div>
-                    <h5 className={`text-xl font-black tracking-tighter ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    <h5
+                      className={`text-xl font-black tracking-tighter ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
                       Select Address
                     </h5>
-                    <p className={`text-[10px] font-black uppercase tracking-widest opacity-40 ${theme === "dark" ? "text-white" : "text-gray-600"}`}>
+                    <p
+                      className={`text-[10px] font-black uppercase tracking-widest opacity-40 ${
+                        theme === "dark" ? "text-white" : "text-gray-600"
+                      }`}
+                    >
                       Where should we deliver?
                     </p>
                   </div>
                   <button
                     onClick={() => setIsDropdownOpen(false)}
                     className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-90 ${
-                      theme === "dark" 
-                        ? "bg-white/5 text-gray-400 border border-white/10" 
-                        : "bg-gray-100 text-gray-500 border border-black/5"
+                      theme === "dark"
+                        ? "border border-white/10 bg-white/5 text-gray-400"
+                        : "border border-black/5 bg-gray-100 text-gray-500"
                     }`}
                   >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -326,14 +364,26 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                   </div>
 
                   {/* Address List Section - Below Map */}
-                  <div className={`flex h-2/5 flex-col ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"}`}>
-                    <div className={`border-b px-6 py-4 ${theme === "dark" ? "border-white/5" : "border-gray-100"}`}>
-                      <h3 className={`text-sm font-black uppercase tracking-widest opacity-40 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <div
+                    className={`flex h-2/5 flex-col ${
+                      theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"
+                    }`}
+                  >
+                    <div
+                      className={`border-b px-6 py-4 ${
+                        theme === "dark" ? "border-white/5" : "border-gray-100"
+                      }`}
+                    >
+                      <h3
+                        className={`text-sm font-black uppercase tracking-widest opacity-40 ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         Your Saved Locations
                       </h3>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
                       <div className="space-y-3">
                         {addresses.map((address) => (
                           <button
@@ -345,32 +395,72 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                                   ? "border-emerald-500/40 bg-emerald-500/[0.03] shadow-[0_0_40px_-15px_rgba(16,185,129,0.3)]"
                                   : "border-emerald-500 bg-emerald-50 shadow-xl shadow-emerald-500/10"
                                 : theme === "dark"
-                                  ? "border-white/5 bg-white/[0.02] hover:border-white/10"
-                                  : "border-gray-100 bg-gray-50/50 hover:border-emerald-200 hover:bg-white hover:shadow-lg"
+                                ? "border-white/5 bg-white/[0.02] hover:border-white/10"
+                                : "border-gray-100 bg-gray-50/50 hover:border-emerald-200 hover:bg-white hover:shadow-lg"
                             }`}
                           >
                             <div className="flex items-center gap-4">
-                              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl transition-colors duration-500 ${
-                                address.is_default 
-                                  ? "bg-emerald-500 text-white" 
-                                  : theme === "dark" ? "bg-white/5 text-gray-400" : "bg-white text-gray-500 shadow-sm"
-                              }`}>
+                              <div
+                                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl transition-colors duration-500 ${
+                                  address.is_default
+                                    ? "bg-emerald-500 text-white"
+                                    : theme === "dark"
+                                    ? "bg-white/5 text-gray-400"
+                                    : "bg-white text-gray-500 shadow-sm"
+                                }`}
+                              >
                                 {address.type === "home" ? (
-                                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                  <svg
+                                    className="h-5 w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                    />
                                   </svg>
                                 ) : (
-                                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <svg
+                                    className="h-5 w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
                                   </svg>
                                 )}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h4 className={`truncate text-sm font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                                <h4
+                                  className={`truncate text-sm font-black tracking-tight ${
+                                    theme === "dark"
+                                      ? "text-white"
+                                      : "text-gray-900"
+                                  }`}
+                                >
                                   {address.street}
                                 </h4>
-                                <p className={`truncate text-[10px] font-bold uppercase tracking-widest opacity-40 ${theme === "dark" ? "text-white" : "text-gray-600"}`}>
+                                <p
+                                  className={`truncate text-[10px] font-bold uppercase tracking-widest opacity-40 ${
+                                    theme === "dark"
+                                      ? "text-white"
+                                      : "text-gray-600"
+                                  }`}
+                                >
                                   {address.city}
                                 </p>
                               </div>
@@ -391,22 +481,40 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                               // Optionally link to the main AddAddressModal if available
                             }}
                             className={`group w-full rounded-[2rem] border-2 border-dashed p-6 transition-all duration-500 active:scale-95 ${
-                              theme === "dark" 
-                                ? "border-white/10 bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/[0.05]" 
+                              theme === "dark"
+                                ? "border-white/10 bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/[0.05]"
                                 : "border-gray-200 bg-gray-50/50 hover:border-emerald-500/40 hover:bg-emerald-50/50"
                             }`}
                           >
                             <div className="flex flex-col items-center gap-3">
-                              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-500 group-hover:rotate-90 ${
-                                theme === "dark" ? "bg-white/5 text-gray-400" : "bg-white text-gray-400 shadow-sm"
-                              }`}>
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                              <div
+                                className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-500 group-hover:rotate-90 ${
+                                  theme === "dark"
+                                    ? "bg-white/5 text-gray-400"
+                                    : "bg-white text-gray-400 shadow-sm"
+                                }`}
+                              >
+                                <svg
+                                  className="h-6 w-6"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 4v16m8-8H4"
+                                  />
                                 </svg>
                               </div>
-                              <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${
-                                theme === "dark" ? "text-white/40 group-hover:text-emerald-400" : "text-gray-400 group-hover:text-emerald-600"
-                              }`}>
+                              <span
+                                className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${
+                                  theme === "dark"
+                                    ? "text-white/40 group-hover:text-emerald-400"
+                                    : "text-gray-400 group-hover:text-emerald-600"
+                                }`}
+                              >
                                 Add New Location
                               </span>
                             </div>
@@ -416,7 +524,13 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                     </div>
 
                     {/* Footer */}
-                    <div className={`mt-auto border-t px-6 py-5 ${theme === "dark" ? "border-white/5 bg-[#0A0A0A]" : "border-gray-100 bg-white"}`}>
+                    <div
+                      className={`mt-auto border-t px-6 py-5 ${
+                        theme === "dark"
+                          ? "border-white/5 bg-[#0A0A0A]"
+                          : "border-gray-100 bg-white"
+                      }`}
+                    >
                       <button
                         onClick={() => setIsDropdownOpen(false)}
                         className="w-full rounded-[2rem] bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:translate-y-[-1px] active:scale-95"

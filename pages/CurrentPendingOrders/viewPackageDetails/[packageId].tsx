@@ -165,23 +165,23 @@ const PackageDetailsSkeleton = () => (
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
 
       {/* Back Button Skeleton */}
-      <div className="absolute left-6 top-10 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-primary)]/20 backdrop-blur-md">
-        <div className="h-5 w-5 rounded-full bg-[var(--bg-primary)]/30" />
+      <div className="bg-[var(--bg-primary)]/20 absolute left-6 top-10 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md">
+        <div className="bg-[var(--bg-primary)]/30 h-5 w-5 rounded-full" />
       </div>
 
       {/* Floating Pill Skeleton */}
       <div className="absolute left-1/2 top-10 -translate-x-1/2">
-        <Skeleton className="h-10 w-40 rounded-full bg-[var(--bg-primary)]/20 backdrop-blur-md" />
+        <Skeleton className="bg-[var(--bg-primary)]/20 h-10 w-40 rounded-full backdrop-blur-md" />
       </div>
 
       {/* Title & Badge Skeleton */}
       <div className="absolute bottom-10 left-6 right-6">
         <div className="flex items-end justify-between gap-4">
           <div className="space-y-2">
-            <Skeleton className="h-10 w-48 bg-[var(--bg-primary)]/30" />
-            <Skeleton className="h-4 w-32 bg-[var(--bg-primary)]/20" />
+            <Skeleton className="bg-[var(--bg-primary)]/30 h-10 w-48" />
+            <Skeleton className="bg-[var(--bg-primary)]/20 h-4 w-32" />
           </div>
-          <Skeleton className="h-12 w-24 rounded-2xl bg-[var(--bg-primary)]/20 md:h-16 md:w-40" />
+          <Skeleton className="bg-[var(--bg-primary)]/20 h-12 w-24 rounded-2xl md:h-16 md:w-40" />
         </div>
       </div>
     </div>
@@ -284,8 +284,6 @@ function PackageDetailsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-
-
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -336,7 +334,6 @@ function PackageDetailsPage() {
   };
 
   const handleCancelPackage = async () => {
-
     if (!pkg?.id) {
       return;
     }
@@ -348,7 +345,6 @@ function PackageDetailsPage() {
         body: JSON.stringify({ orderId: pkg.id, orderType: "package" }),
       });
       const data = await res.json();
-
 
       if (res.ok) {
         toaster.push(
@@ -464,7 +460,7 @@ function PackageDetailsPage() {
               {/* Back Button */}
               <button
                 onClick={() => router.back()}
-                className="absolute left-6 top-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-primary)]/20 backdrop-blur-xl transition-all hover:scale-110 hover:bg-white/30 active:scale-95"
+                className="bg-[var(--bg-primary)]/20 absolute left-6 top-6 z-20 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-xl transition-all hover:scale-110 hover:bg-white/30 active:scale-95"
               >
                 <ChevronLeft className="h-6 w-6 text-white" />
               </button>
@@ -515,7 +511,7 @@ function PackageDetailsPage() {
                           pkg.DeliveryCode || pkg.id.slice(0, 8).toUpperCase()
                         )
                       }
-                      className="group relative inline-flex transform items-center gap-2 rounded-2xl bg-[var(--bg-primary)]/10 px-3 py-1.5 text-sm font-bold tracking-widest !text-white shadow-2xl ring-1 ring-white/30 backdrop-blur-xl transition-all hover:scale-105 active:scale-95 md:px-6 md:py-3 md:text-xl"
+                      className="bg-[var(--bg-primary)]/10 group relative inline-flex transform items-center gap-2 rounded-2xl px-3 py-1.5 text-sm font-bold tracking-widest !text-white shadow-2xl ring-1 ring-white/30 backdrop-blur-xl transition-all hover:scale-105 active:scale-95 md:px-6 md:py-3 md:text-xl"
                     >
                       {pkg.DeliveryCode || pkg.id.slice(0, 8).toUpperCase()}
                       {copied ? (
@@ -716,7 +712,9 @@ function PackageDetailsPage() {
 
                 {/* Receiver Info */}
                 <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-sm">
-                  <h3 className="mb-4 text-lg font-bold text-[var(--text-primary)]">Receiver</h3>
+                  <h3 className="mb-4 text-lg font-bold text-[var(--text-primary)]">
+                    Receiver
+                  </h3>
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-secondary)]">
                       <User className="h-6 w-6 text-gray-400" />
@@ -736,7 +734,9 @@ function PackageDetailsPage() {
                   <h3 className="mb-4 text-lg font-bold">Payment Summary</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-[var(--text-secondary)]">Delivery Fee</span>
+                      <span className="text-[var(--text-secondary)]">
+                        Delivery Fee
+                      </span>
                       <span className="font-medium">
                         {pkg.delivery_fee.toLocaleString()} RWF
                       </span>
@@ -827,7 +827,10 @@ function PackageDetailsPage() {
           className="premium-redesign-modal"
         >
           <Modal.Body className="!p-0">
-            <div className="flex flex-col items-center px-8 py-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
+            <div
+              className="flex flex-col items-center px-8 py-10"
+              style={{ backgroundColor: "var(--bg-primary)" }}
+            >
               {/* Icon with pulse effect */}
               <div className="relative mb-6">
                 <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20 dark:bg-red-900/30"></div>
@@ -843,7 +846,7 @@ function PackageDetailsPage() {
                 Are you sure you want to cancel this package delivery?
               </p>
 
-              <div className="mb-8 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 bg-[var(--bg-primary)]/50 p-4 dark:border-gray-800 dark:bg-gray-800/20">
+              <div className="bg-[var(--bg-primary)]/50 mb-8 flex w-full flex-col gap-2 rounded-2xl border border-gray-100 p-4 dark:border-gray-800 dark:bg-gray-800/20">
                 <div className="flex justify-between text-xs text-[var(--text-secondary)] dark:text-gray-400">
                   <span>Refund to Wallet</span>
                   <span className="font-bold text-green-600 dark:text-green-400">

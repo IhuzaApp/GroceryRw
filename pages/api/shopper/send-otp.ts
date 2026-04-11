@@ -18,28 +18,28 @@ export default async function handler(
   // Basic phone cleaning (same as registration)
   const cleanPhone = phone.replace(/\D/g, "");
   let formattedPhone = phone;
-  if (!phone.startsWith('+')) {
-      if (cleanPhone.startsWith('0')) {
-          formattedPhone = '+250' + cleanPhone.substring(1);
-      } else if (!cleanPhone.startsWith('250')) {
-          formattedPhone = '+250' + cleanPhone;
-      } else {
-          formattedPhone = '+' + cleanPhone;
-      }
+  if (!phone.startsWith("+")) {
+    if (cleanPhone.startsWith("0")) {
+      formattedPhone = "+250" + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith("250")) {
+      formattedPhone = "+250" + cleanPhone;
+    } else {
+      formattedPhone = "+" + cleanPhone;
+    }
   }
 
   try {
     const message = `Plas Grocery: Your verification code is ${otp}.`;
     await sendSMS(formattedPhone, message);
 
-    return res.status(200).json({ 
-      success: true, 
-      message: "OTP sent successfully to " + formattedPhone 
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully to " + formattedPhone,
     });
   } catch (error: any) {
     console.error("Error sending shopper OTP:", error);
-    return res.status(500).json({ 
-      error: "Failed to send SMS. Please check the phone number." 
+    return res.status(500).json({
+      error: "Failed to send SMS. Please check the phone number.",
     });
   }
 }

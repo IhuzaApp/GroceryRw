@@ -166,24 +166,24 @@ const RecipesLanding: React.FC = () => {
 
           {/* Header content */}
           <div className="relative z-10 flex h-full flex-col justify-end px-6 pb-10">
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400 opacity-90 mb-1">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400 opacity-90">
               Easy Home Cooking
             </p>
             <h1
-              className="text-4xl font-black tracking-tighter text-white leading-none"
+              className="text-4xl font-black leading-none tracking-tighter text-white"
               style={{ color: "#ffffff" }}
             >
-              Over 200+ <br/> Recipes
+              Over 200+ <br /> Recipes
             </h1>
-            
-            <div className="group mt-6 flex items-center gap-2 rounded-2xl bg-white/10 p-1.5 pl-4 pr-1.5 backdrop-blur-2xl border border-white/20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] transition-all duration-500 focus-within:scale-[1.03] focus-within:bg-white/[0.15] focus-within:shadow-2xl focus-within:border-emerald-500/50">
+
+            <div className="group mt-6 flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 p-1.5 pl-4 pr-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] backdrop-blur-2xl transition-all duration-500 focus-within:scale-[1.03] focus-within:border-emerald-500/50 focus-within:bg-white/[0.15] focus-within:shadow-2xl">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search recipes..."
                 onKeyPress={handleKeyPress}
-                className="w-full flex-1 bg-transparent border-none outline-none p-0 text-sm text-white placeholder:text-white/30"
+                className="w-full flex-1 border-none bg-transparent p-0 text-sm text-white outline-none placeholder:text-white/30"
               />
               <button
                 onClick={handleSearch}
@@ -222,7 +222,7 @@ const RecipesLanding: React.FC = () => {
 
         {/* All API categories as subtle pills (optional) */}
         {categories.length > 0 && (
-          <section className="mt-8 -mx-4 sm:mx-0">
+          <section className="-mx-4 mt-8 sm:mx-0">
             <div className="flex flex-nowrap gap-3 overflow-x-auto px-3 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
               {categories.map((category) => {
                 const isActive = activeCategory === category.strCategory;
@@ -238,7 +238,7 @@ const RecipesLanding: React.FC = () => {
                           : "border-emerald-600 bg-emerald-600 text-white shadow-lg"
                         : isDark
                         ? "border-white/5 bg-white/5 text-gray-400 hover:border-white/10 hover:text-gray-300"
-                        : "border-black/5 bg-white text-gray-600 hover:border-emerald-200 hover:text-emerald-700 shadow-sm"
+                        : "border-black/5 bg-white text-gray-600 shadow-sm hover:border-emerald-200 hover:text-emerald-700"
                     } active:scale-95`}
                   >
                     {category.strCategory}
@@ -268,32 +268,40 @@ const RecipesLanding: React.FC = () => {
         )}
 
         {/* Latest Recipes */}
-        <section className="mt-12 -mx-4 sm:mx-0">
+        <section className="-mx-4 mt-12 sm:mx-0">
           <div className="mb-8 flex items-center justify-between gap-2 px-4 sm:px-0">
             <div>
-               <h2
+              <h2
                 className={`text-2xl font-black tracking-tight sm:text-4xl ${
                   isDark ? "text-white" : "text-gray-900"
                 }`}
               >
                 Featured Recipes
               </h2>
-              <p className={`mt-1 text-sm font-medium ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+              <p
+                className={`mt-1 text-sm font-medium ${
+                  isDark ? "text-gray-500" : "text-gray-500"
+                }`}
+              >
                 Hand-picked recipes for the best home cooking experience.
               </p>
             </div>
-            <div className="h-0.5 flex-1 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent ml-8 hidden lg:block" />
+            <div className="ml-8 hidden h-0.5 flex-1 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent lg:block" />
           </div>
 
           {loading ? (
             <div className="flex h-64 flex-col items-center justify-center gap-4">
               <Loader size="lg" />
-              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-gray-600" : "text-gray-400"}`}>
+              <p
+                className={`text-xs font-bold uppercase tracking-widest ${
+                  isDark ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
                 Curating your feed...
               </p>
             </div>
           ) : meals.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 px-0">
+            <div className="grid grid-cols-1 gap-6 px-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {meals.map((meal) => (
                 <RecipeCard
                   key={meal.idMeal}
@@ -309,18 +317,21 @@ const RecipesLanding: React.FC = () => {
           ) : (
             !error && (
               <div
-                className={`flex h-80 flex-col items-center justify-center rounded-[3rem] text-center border-2 border-dashed ${
-                  isDark ? "border-white/5 bg-white/5 text-slate-200" : "border-black/5 bg-white"
+                className={`flex h-80 flex-col items-center justify-center rounded-[3rem] border-2 border-dashed text-center ${
+                  isDark
+                    ? "border-white/5 bg-white/5 text-slate-200"
+                    : "border-black/5 bg-white"
                 }`}
               >
                 <div className="mb-4 text-4xl opacity-50">🍽️</div>
                 <h3 className="mb-1 text-xl font-bold">No results found</h3>
                 <p
-                  className={`text-sm max-w-xs ${
+                  className={`max-w-xs text-sm ${
                     isDark ? "text-slate-500" : "text-slate-400"
                   }`}
                 >
-                  We couldn't find a match. Try exploring our mood categories instead.
+                  We couldn't find a match. Try exploring our mood categories
+                  instead.
                 </p>
               </div>
             )

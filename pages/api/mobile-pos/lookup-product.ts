@@ -41,15 +41,13 @@ export default async function handler(
 
     // If no search term, just return suppliers
     if (!hasSearchTerm) {
-      return res
-        .status(200)
-        .json({
-          found: false,
-          matches: [],
-          productName: null,
-          existingStock: null,
-          suppliers,
-        });
+      return res.status(200).json({
+        found: false,
+        matches: [],
+        productName: null,
+        existingStock: null,
+        suppliers,
+      });
     }
 
     // Build search conditions for global product names

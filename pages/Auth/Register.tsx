@@ -41,15 +41,18 @@ export default function RegisterPage() {
                   {isOtpSent ? "Verify your phone" : "Create an account"}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 lg:text-base">
-                  {isOtpSent 
-                    ? "Enter the code sent to your mobile device" 
+                  {isOtpSent
+                    ? "Enter the code sent to your mobile device"
                     : "Sign up to start shopping for groceries"}
                 </p>
               </div>
 
               {/* Registration Form */}
               <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-[#171717]/80 dark:text-white lg:p-8">
-                <UserRegistration isOtpSent={isOtpSent} setIsOtpSent={setIsOtpSent} />
+                <UserRegistration
+                  isOtpSent={isOtpSent}
+                  setIsOtpSent={setIsOtpSent}
+                />
               </div>
 
               {/* Footer Links */}

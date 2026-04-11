@@ -47,14 +47,14 @@ export default async function handler(
   const cleanPhone = phone.replace(/\D/g, "");
   // Ensure it starts with country code for Pindo (Rwandan numbers if missing prefix)
   let formattedPhone = phone;
-  if (!phone.startsWith('+')) {
-      if (cleanPhone.startsWith('0')) {
-          formattedPhone = '+250' + cleanPhone.substring(1);
-      } else if (!cleanPhone.startsWith('250')) {
-          formattedPhone = '+250' + cleanPhone;
-      } else {
-          formattedPhone = '+' + cleanPhone;
-      }
+  if (!phone.startsWith("+")) {
+    if (cleanPhone.startsWith("0")) {
+      formattedPhone = "+250" + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith("250")) {
+      formattedPhone = "+250" + cleanPhone;
+    } else {
+      formattedPhone = "+" + cleanPhone;
+    }
   }
 
   try {
@@ -119,6 +119,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error sending registration OTP:", error);
-    return res.status(500).json({ error: "Failed to send OTP. Please try again." });
+    return res
+      .status(500)
+      .json({ error: "Failed to send OTP. Please try again." });
   }
 }

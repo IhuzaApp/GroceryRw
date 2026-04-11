@@ -33,11 +33,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             alt={title}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-40" />
+
           <div className="absolute left-4 top-4 flex gap-2">
             {category && (
-              <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/20">
+              <span className="rounded-full border border-white/20 bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
                 {category}
               </span>
             )}
@@ -45,7 +45,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
           <button
             type="button"
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md border border-white/20 shadow-lg transition-all duration-300 hover:scale-110 hover:bg-emerald-500 hover:text-white"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-emerald-500 hover:text-white"
           >
             <svg
               className="h-5 w-5"
@@ -62,34 +62,52 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         </div>
 
         <div className="flex flex-1 flex-col p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+          <div className="mb-2 flex items-center gap-2">
+            <span
+              className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
+                isDark ? "text-emerald-400" : "text-emerald-600"
+              }`}
+            >
               {area || "Global"} Cuisine
             </span>
           </div>
-          
+
           <h3
             className={`line-clamp-2 text-lg font-bold leading-tight transition-colors duration-300 ${
-              isDark ? "text-white group-hover:text-emerald-400" : "text-gray-900 group-hover:text-emerald-600"
+              isDark
+                ? "text-white group-hover:text-emerald-400"
+                : "text-gray-900 group-hover:text-emerald-600"
             }`}
           >
             {title}
           </h3>
-          
+
           <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4">
-            <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            <span
+              className={`text-xs font-medium ${
+                isDark ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               View details →
             </span>
             <div className="flex -space-x-2">
-               {/* Decorative avatars for 'premium' feel */}
-               {[1,2].map(i => (
-                 <div key={i} className="h-6 w-6 rounded-full border-2 border-[#171717] bg-gray-500 flex items-center justify-center text-[8px] text-white overflow-hidden">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i * 10}`} alt="user" />
-                 </div>
-               ))}
-               <div className="h-6 w-6 rounded-full border-2 border-[#171717] bg-emerald-500 flex items-center justify-center text-[8px] text-white">
-                  +1k
-               </div>
+              {/* Decorative avatars for 'premium' feel */}
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-[#171717] bg-gray-500 text-[8px] text-white"
+                >
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                      i * 10
+                    }`}
+                    alt="user"
+                  />
+                </div>
+              ))}
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#171717] bg-emerald-500 text-[8px] text-white">
+                +1k
+              </div>
             </div>
           </div>
         </div>
