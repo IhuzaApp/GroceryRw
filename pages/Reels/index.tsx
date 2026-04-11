@@ -1851,9 +1851,7 @@ export default function FoodReelsApp({
   if (error) {
     return (
       <div
-        className={`flex min-h-screen items-center justify-center ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
+        className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] text-[var(--text-primary)]"
       >
         <div className="text-center">
           <p className="mb-4 text-red-500">Error: {error}</p>
@@ -1872,15 +1870,9 @@ export default function FoodReelsApp({
   if (posts.length === 0) {
     return (
       <RootLayout>
-        <div
-          className={`flex min-h-screen items-center justify-center ${
-            theme === "dark"
-              ? "bg-gray-900 text-white"
-              : "bg-white text-gray-900"
-          }`}
-        >
+        <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] text-[var(--text-primary)]">
           <div className="text-center">
-            <p className="mb-4 text-gray-500">No reels available</p>
+            <p className="mb-4 text-[var(--text-secondary)]">No reels available</p>
             <p className="text-sm text-gray-400">
               Check back later for new content
             </p>

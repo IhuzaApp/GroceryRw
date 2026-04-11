@@ -36,11 +36,13 @@ import { PortalSkeleton } from "../../../src/components/business/PortalSkeleton"
 import { ContractDetailDrawer } from "../../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
 import { getOrCreateBusinessConversation } from "../../../src/services/chatService";
+import { useTheme } from "../../../src/context/ThemeContext";
 
 // Data moved to individual components
 
 export default function PlasBusinessPage() {
   const { role, isLoggedIn, authReady } = useAuth();
+  const { theme } = useTheme();
   const router = useRouter();
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
@@ -95,7 +97,7 @@ export default function PlasBusinessPage() {
   if (!authReady || checkingAccount) {
     return (
       <RootLayout>
-        <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+        <div className="min-h-screen bg-[var(--bg-primary)] md:ml-16">
           <div className="max-w-8xl container mx-auto">
             <PortalSkeleton />
           </div>
@@ -120,7 +122,7 @@ export default function PlasBusinessPage() {
 
   return (
     <RootLayout>
-      <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+      <div className="min-h-screen bg-[var(--bg-primary)] md:ml-16">
         <div className="max-w-8xl container mx-auto">
           <BuyerDashboardContent
             selectedQuote={selectedQuote}
@@ -276,7 +278,7 @@ function BuyerDashboardContent({
 
       {/* Main Content Tabs */}
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
-        <div className="rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-2">
+        <div className="rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-1.5 shadow-lg sm:rounded-2xl sm:p-2">
           <div className="scrollbar-hide -mx-1 flex snap-x snap-mandatory space-x-1.5 overflow-x-auto scroll-smooth px-1 pb-1 sm:mx-0 sm:space-x-2 sm:px-0 sm:pb-0">
             {[
               // Service Provider tabs (only visible for business accounts that are service providers)

@@ -724,18 +724,12 @@ export default function PackageDeliveryModal({
         : "bg-gradient-to-br from-green-100 to-green-50",
     iconColor: theme === "dark" ? "text-green-400" : "text-green-600",
     button:
-      theme === "dark"
-        ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-900/20"
-        : "bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 shadow-lg shadow-green-500/20",
+      "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-900/20",
     focus: "focus:ring-green-500",
     border: "focus:border-green-500",
   };
 
-  const inputStyle = `w-full rounded-xl p-5 text-sm transition-all duration-200 focus:outline-none border-2 ${
-    theme === "dark"
-      ? "border-gray-700/50 bg-gray-900/40 text-white placeholder-gray-500/70 focus:border-green-600 focus:bg-gray-900/60 focus:shadow-lg focus:shadow-gray-900/20"
-      : "border-gray-200 bg-gray-50/80 text-gray-900 placeholder-gray-400 focus:border-green-300 focus:bg-white focus:shadow-lg focus:shadow-gray-200/50"
-  } ${colors.border} ${colors.focus}`;
+  const inputStyle = `w-full rounded-xl p-5 text-sm transition-all duration-200 focus:outline-none border-2 border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:border-green-500 focus:bg-[var(--bg-primary)] focus:shadow-lg`;
 
   return (
     <>
@@ -774,19 +768,11 @@ export default function PackageDeliveryModal({
 
         {/* Modal Container */}
         <div
-          className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl transition-all sm:rounded-2xl sm:border ${
-            theme === "dark"
-              ? "bg-gray-800 sm:border-gray-700"
-              : "bg-white sm:border-gray-200"
-          } duration-300 animate-in slide-in-from-bottom-8`}
+          className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl transition-all sm:rounded-2xl sm:border border-[var(--bg-secondary)] bg-[var(--bg-primary)] duration-300 animate-in slide-in-from-bottom-8`}
         >
           {/* Header */}
           <div
-            className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
-              theme === "dark"
-                ? "border-b border-gray-700/50"
-                : "border-b border-gray-100"
-            }`}
+            className={`flex items-center justify-between px-6 py-6 sm:px-8 border-b border-[var(--bg-secondary)]`}
           >
             <div className="flex items-center gap-4">
               <div
@@ -806,16 +792,12 @@ export default function PackageDeliveryModal({
               </div>
               <div>
                 <h2
-                  className={`text-xl font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-xl font-bold text-[var(--text-primary)]`}
                 >
                   Express Plas Package
                 </h2>
                 <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className={`text-sm text-[var(--text-secondary)]`}
                 >
                   Step {step} of 5:{" "}
                   {step === 1
@@ -832,11 +814,7 @@ export default function PackageDeliveryModal({
             </div>
             <button
               onClick={handleClose}
-              className={`hidden rounded-xl p-2 transition-all hover:scale-105 active:scale-95 sm:flex ${
-                theme === "dark"
-                  ? "text-gray-400 hover:bg-gray-700/50 hover:text-white"
-                  : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              }`}
+              className={`hidden rounded-xl p-2 transition-all hover:scale-105 active:scale-95 sm:flex text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
             >
               <svg
                 className="h-5 w-5"
@@ -856,18 +834,14 @@ export default function PackageDeliveryModal({
 
           {/* Body */}
           <div
-            className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
+            className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 bg-[var(--bg-primary)]`}
           >
             <div className="space-y-6">
               {step === 1 && (
                 <div className="space-y-6 duration-300 animate-in slide-in-from-right-4">
                   <div className="space-y-4">
                     <label
-                      className={`block text-base font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                      className={`block text-base font-semibold text-[var(--text-primary)]`}
                     >
                       Where is it going?
                     </label>
@@ -915,9 +889,7 @@ export default function PackageDeliveryModal({
                                   className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                                     formData.pickupType === type
                                       ? "bg-green-600 text-white shadow-md shadow-green-900/10"
-                                      : theme === "dark"
-                                      ? "bg-gray-800 text-gray-400 hover:text-white"
-                                      : "border border-gray-100 bg-white text-gray-500 hover:text-green-600"
+                                      : "border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                   }`}
                                 >
                                   {type === "Home" && (
@@ -1104,11 +1076,7 @@ export default function PackageDeliveryModal({
                       {userAddresses.length > 0 && (
                         <div className="mt-3 space-y-2 duration-500 animate-in fade-in slide-in-from-top-2">
                           <p
-                            className={`text-[10px] font-bold uppercase tracking-wider ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-400"
-                            }`}
+                            className={`text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]`}
                           >
                             Or use a saved location:
                           </p>
@@ -1117,11 +1085,7 @@ export default function PackageDeliveryModal({
                               <button
                                 key={addr.id}
                                 onClick={() => applyAddressToForm(addr, true)}
-                                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium transition-all hover:scale-105 active:scale-95 ${
-                                  theme === "dark"
-                                    ? "border border-gray-600/50 bg-gray-700/50 text-gray-300 hover:bg-gray-700 hover:text-white"
-                                    : "border border-transparent bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700"
-                                }`}
+                                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium transition-all hover:scale-105 active:scale-95 border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]`}
                               >
                                 <svg
                                   className="h-3 w-3"
@@ -1193,9 +1157,7 @@ export default function PackageDeliveryModal({
                                   className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                                     formData.dropoffType === type
                                       ? "bg-green-600 text-white shadow-md shadow-green-900/10"
-                                      : theme === "dark"
-                                      ? "bg-gray-800 text-gray-400 hover:text-white"
-                                      : "border border-gray-100 bg-white text-gray-500 hover:text-green-600"
+                                      : "border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                   }`}
                                 >
                                   {type === "Home" && (
@@ -1401,9 +1363,7 @@ export default function PackageDeliveryModal({
                     </p>
                     <div className="mt-2 flex items-center justify-center gap-3">
                       <span
-                        className={`text-3xl font-black tracking-widest ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`text-3xl font-black tracking-widest text-[var(--text-primary)]`}
                       >
                         {formData.deliveryId}
                       </span>
@@ -1411,11 +1371,7 @@ export default function PackageDeliveryModal({
                         onClick={() =>
                           navigator.clipboard.writeText(formData.deliveryId)
                         }
-                        className={`rounded-lg p-1.5 transition-all hover:scale-110 active:scale-95 ${
-                          theme === "dark"
-                            ? "text-gray-400 hover:bg-gray-700/50 hover:text-white"
-                            : "text-gray-400 hover:bg-white hover:text-gray-600"
-                        }`}
+                        className={`rounded-lg p-1.5 transition-all hover:scale-110 active:scale-95 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
                       >
                         <svg
                           className="h-4 w-4"
@@ -1433,9 +1389,7 @@ export default function PackageDeliveryModal({
                       </button>
                     </div>
                     <p
-                      className={`mt-3 text-xs leading-relaxed ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
+                      className={`mt-3 text-xs leading-relaxed text-[var(--text-secondary)]`}
                     >
                       Share this code with the receiver. They must provide it to
                       the delivery person to confirm the Plas Package has been
@@ -1445,9 +1399,7 @@ export default function PackageDeliveryModal({
 
                   <div className="space-y-4">
                     <label
-                      className={`block text-base font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                      className={`block text-base font-semibold text-[var(--text-primary)]`}
                     >
                       Who is receiving it?
                     </label>
@@ -1481,9 +1433,7 @@ export default function PackageDeliveryModal({
                 <div className="space-y-6 duration-300 animate-in slide-in-from-right-4">
                   <div className="space-y-4">
                     <label
-                      className={`block text-base font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                      className={`block text-base font-semibold text-[var(--text-primary)]`}
                     >
                       Item Details & Photo
                     </label>
@@ -1494,9 +1444,7 @@ export default function PackageDeliveryModal({
                       className={`group relative flex h-48 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 ${
                         formData.capturedImage
                           ? "border-green-500 bg-green-50/10"
-                          : theme === "dark"
-                          ? "border-gray-700 bg-gray-900/40 hover:border-green-500/50 hover:bg-gray-900/60"
-                          : "border-gray-200 bg-gray-50/80 shadow-gray-200/50 hover:border-green-300 hover:bg-white hover:shadow-lg"
+                          : "border-[var(--bg-secondary)] bg-[var(--bg-secondary)] hover:border-green-500/50 hover:bg-[var(--bg-primary)]"
                       }`}
                     >
                       {formData.capturedImage ? (
@@ -1556,11 +1504,7 @@ export default function PackageDeliveryModal({
                             </svg>
                           </div>
                           <span
-                            className={`mt-3 text-sm font-bold uppercase tracking-widest ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-400"
-                            } group-hover:${colors.iconColor}`}
+                            className={`mt-3 text-sm font-bold uppercase tracking-widest text-[var(--text-secondary)] group-hover:${colors.iconColor}`}
                           >
                             Add a Photo
                           </span>
@@ -1598,16 +1542,12 @@ export default function PackageDeliveryModal({
                     {/* Delivery Type Toggle */}
                     <div className="space-y-3">
                       <label
-                        className={`block text-base font-semibold ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`block text-base font-semibold text-[var(--text-primary)]`}
                       >
                         Delivery Timing
                       </label>
                       <div
-                        className={`flex rounded-2xl p-1.5 ${
-                          theme === "dark" ? "bg-gray-900/40" : "bg-gray-100"
-                        }`}
+                        className={`flex rounded-2xl p-1.5 bg-[var(--bg-secondary)]`}
                       >
                         {["instant", "scheduled"].map((type) => (
                           <button
@@ -1620,12 +1560,8 @@ export default function PackageDeliveryModal({
                             }
                             className={`flex-1 rounded-xl py-3 text-sm font-bold transition-all ${
                               formData.deliveryType === type
-                                ? "bg-white text-green-600 shadow-md"
-                                : "text-gray-500 hover:text-gray-700"
-                            } ${
-                              theme === "dark" && formData.deliveryType === type
-                                ? "bg-gray-700 text-white"
-                                : ""
+                                ? "bg-[var(--bg-primary)] text-green-600 shadow-md"
+                                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             }`}
                           >
                             {type === "instant"
@@ -1666,9 +1602,7 @@ export default function PackageDeliveryModal({
                     {/* Transportation Method */}
                     <div className="space-y-4">
                       <label
-                        className={`block text-base font-semibold ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        className={`block text-base font-semibold text-[var(--text-primary)]`}
                       >
                         Transportation Method
                       </label>
@@ -1813,18 +1747,14 @@ export default function PackageDeliveryModal({
                               className={`group flex flex-col items-center justify-center rounded-2xl border-2 p-5 transition-all duration-300 ${
                                 formData.transportMethod === method.id
                                   ? "scale-[1.02] border-green-500 bg-green-50/50 shadow-sm shadow-green-900/10"
-                                  : theme === "dark"
-                                  ? "border-gray-700 bg-gray-900/40 hover:border-gray-600 hover:bg-gray-900/60"
-                                  : "border-gray-100 bg-gray-50 hover:border-green-200 hover:bg-white"
+                                  : "border-[var(--bg-secondary)] bg-[var(--bg-secondary)] hover:border-green-200 hover:bg-[var(--bg-primary)]"
                               }`}
                             >
                               <div
                                 className={`transition-all duration-300 ${
                                   formData.transportMethod === method.id
                                     ? "scale-110 text-green-600"
-                                    : theme === "dark"
-                                    ? "text-gray-500 group-hover:text-gray-300"
-                                    : "text-gray-400 group-hover:text-green-500"
+                                    : "text-[var(--text-secondary)] group-hover:text-green-500"
                                 }`}
                               >
                                 {method.icon}
@@ -1836,20 +1766,12 @@ export default function PackageDeliveryModal({
 
                     {/* Pricing Summary */}
                     <div
-                      className={`mt-6 rounded-2xl p-6 transition-all ${
-                        theme === "dark"
-                          ? "bg-gray-900/60"
-                          : "bg-green-600 shadow-xl shadow-green-500/20"
-                      }`}
+                      className={`mt-6 rounded-2xl p-6 transition-all bg-green-600 shadow-xl shadow-green-500/20`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <p
-                            className={`text-[10px] font-black uppercase tracking-widest ${
-                              theme === "dark"
-                                ? "text-green-400"
-                                : "text-green-200 opacity-80"
-                            }`}
+                            className={`text-[10px] font-black uppercase tracking-widest text-green-200 opacity-80`}
                           >
                             Estimated Distance
                           </p>
@@ -1903,11 +1825,7 @@ export default function PackageDeliveryModal({
 
                     {/* Detailed Location Summary */}
                     <div
-                      className={`space-y-5 rounded-2xl border p-5 ${
-                        theme === "dark"
-                          ? "border-gray-700 bg-gray-900/40"
-                          : "border-gray-100 bg-gray-50/50"
-                      }`}
+                      className={`space-y-5 rounded-2xl border p-5 border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/50`}
                     >
                       <div className="flex items-start gap-4">
                         <div
@@ -1921,30 +1839,18 @@ export default function PackageDeliveryModal({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-[10px] font-black uppercase tracking-widest ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-400"
-                            }`}
+                            className={`text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                           >
                             Pickup Location
                           </p>
                           <p
-                            className={`truncate text-sm font-bold ${
-                              theme === "dark"
-                                ? "text-gray-200"
-                                : "text-gray-700"
-                            }`}
+                            className={`truncate text-sm font-bold text-[var(--text-primary)]`}
                           >
                             {formData.pickup}
                           </p>
                           <div className="mt-1 flex flex-wrap gap-2">
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                theme === "dark"
-                                  ? "bg-gray-800 text-gray-400"
-                                  : "border border-gray-100 bg-white text-gray-500"
-                              }`}
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-secondary)]`}
                             >
                               {formData.pickupType}
                             </span>
@@ -1969,11 +1875,7 @@ export default function PackageDeliveryModal({
 
                       <div className="flex items-start gap-4">
                         <div
-                          className={`mt-1 rounded-full p-2.5 ${
-                            theme === "dark"
-                              ? "bg-green-500/10 text-green-400"
-                              : "bg-green-50 text-green-600"
-                          }`}
+                          className={`mt-1 rounded-full p-2.5 bg-green-500/10 text-green-400`}
                         >
                           <div className="flex h-4 w-4 items-center justify-center text-[10px] font-bold leading-none">
                             TO
@@ -1981,30 +1883,18 @@ export default function PackageDeliveryModal({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-[10px] font-black uppercase tracking-widest ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-400"
-                            }`}
+                            className={`text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                           >
                             Dropoff Location
                           </p>
                           <p
-                            className={`truncate text-sm font-bold ${
-                              theme === "dark"
-                                ? "text-gray-200"
-                                : "text-gray-700"
-                            }`}
+                            className={`truncate text-sm font-bold text-[var(--text-primary)]`}
                           >
                             {formData.dropoff}
                           </p>
                           <div className="mt-1 flex flex-wrap gap-2">
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                theme === "dark"
-                                  ? "bg-gray-800 text-gray-400"
-                                  : "border border-gray-100 bg-white text-gray-500"
-                              }`}
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-secondary)]`}
                             >
                               {formData.dropoffType}
                             </span>
@@ -2029,34 +1919,22 @@ export default function PackageDeliveryModal({
 
                       <div className="flex items-start gap-4">
                         <div
-                          className={`mt-1 rounded-full p-2.5 ${
-                            theme === "dark"
-                              ? "bg-green-500/10 text-green-400"
-                              : "bg-green-50 text-green-600"
-                          }`}
+                          className={`mt-1 rounded-full p-2.5 bg-green-500/10 text-green-400`}
                         >
                           <User className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-[10px] font-black uppercase tracking-widest ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-400"
-                            }`}
+                            className={`text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                           >
                             Receiver Details
                           </p>
                           <p
-                            className={`text-sm font-bold ${
-                              theme === "dark"
-                                ? "text-gray-200"
-                                : "text-gray-700"
-                            }`}
+                            className={`text-sm font-bold text-[var(--text-primary)]`}
                           >
                             {formData.receiverName}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-[var(--text-secondary)]">
                             {formData.receiverPhone}
                           </p>
                         </div>
@@ -2065,30 +1943,18 @@ export default function PackageDeliveryModal({
                       {formData.instructions && (
                         <div className="flex items-start gap-4">
                           <div
-                            className={`mt-1 rounded-full p-2.5 ${
-                              theme === "dark"
-                                ? "bg-blue-500/10 text-blue-400"
-                                : "bg-blue-50 text-blue-600"
-                            }`}
+                            className={`mt-1 rounded-full p-2.5 bg-blue-500/10 text-blue-400`}
                           >
                             <Info className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p
-                              className={`text-[10px] font-black uppercase tracking-widest ${
-                                theme === "dark"
-                                  ? "text-gray-500"
-                                  : "text-gray-400"
-                              }`}
+                              className={`text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                             >
                               Delivery Comment
                             </p>
                             <p
-                              className={`text-sm leading-relaxed ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
+                              className={`text-sm leading-relaxed text-[var(--text-secondary)]`}
                             >
                               {formData.instructions}
                             </p>
@@ -2099,20 +1965,12 @@ export default function PackageDeliveryModal({
 
                     {/* Payment Breakdown Card */}
                     <div
-                      className={`rounded-2xl p-5 ${
-                        theme === "dark"
-                          ? "border border-gray-700 bg-gray-900/40"
-                          : "bg-green-600 text-white shadow-xl shadow-green-500/20"
-                      }`}
+                      className={`rounded-2xl p-5 bg-green-600 text-white shadow-xl shadow-green-500/20`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <p
-                            className={`text-[10px] font-black uppercase tracking-widest ${
-                              theme === "dark"
-                                ? "text-green-500"
-                                : "text-green-200/80"
-                            }`}
+                            className={`text-[10px] font-black uppercase tracking-widest text-green-200/80`}
                           >
                             Amount To Pay
                           </p>
@@ -2121,11 +1979,7 @@ export default function PackageDeliveryModal({
                           </p>
                         </div>
                         <div
-                          className={`rounded-xl p-3 ${
-                            theme === "dark"
-                              ? "bg-green-500/10 text-green-500"
-                              : "bg-white/20 text-white"
-                          }`}
+                          className={`rounded-xl p-3 bg-white/20 text-white`}
                         >
                           <CreditCard className="h-6 w-6" />
                         </div>
@@ -2135,9 +1989,7 @@ export default function PackageDeliveryModal({
                     {/* Payment Selection Dropdown */}
                     <div className="space-y-3">
                       <label
-                        className={`block text-[10px] font-black uppercase tracking-widest ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}
+                        className={`block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                       >
                         Select Payment Method
                       </label>
@@ -2147,11 +1999,7 @@ export default function PackageDeliveryModal({
                           onChange={(e) =>
                             setSelectedPaymentValue(e.target.value)
                           }
-                          className={`w-full appearance-none rounded-2xl border-2 p-5 pr-12 text-sm font-bold outline-none transition-all ${
-                            theme === "dark"
-                              ? "border-gray-700 bg-gray-900/60 text-white hover:bg-gray-900/80 focus:border-green-600"
-                              : "border-gray-100 bg-white text-gray-900 hover:border-gray-200 focus:border-green-300"
-                          }`}
+                          className={`w-full appearance-none rounded-2xl border-2 p-5 pr-12 text-sm font-bold outline-none transition-all border-[var(--bg-secondary)] bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--bg-primary)] focus:border-green-500`}
                         >
                           <option value="" disabled>
                             Choose a payment method...
@@ -2170,11 +2018,7 @@ export default function PackageDeliveryModal({
                         </select>
                         <div className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 transition-transform group-hover:translate-y-[-40%]">
                           <svg
-                            className={`h-5 w-5 ${
-                              theme === "dark"
-                                ? "text-gray-500"
-                                : "text-gray-400"
-                            }`}
+                            className={`h-5 w-5 text-[var(--text-secondary)]`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2194,9 +2038,7 @@ export default function PackageDeliveryModal({
                     {selectedPaymentValue === "other" && (
                       <div className="space-y-3 duration-300 animate-in slide-in-from-top-2">
                         <label
-                          className={`block text-[10px] font-black uppercase tracking-widest ${
-                            theme === "dark" ? "text-gray-500" : "text-gray-400"
-                          }`}
+                          className={`block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]`}
                         >
                           MTN Phone Number
                         </label>
@@ -2214,11 +2056,7 @@ export default function PackageDeliveryModal({
 
                     {/* Security Badge */}
                     <div
-                      className={`flex items-center gap-3 rounded-2xl p-4 transition-all ${
-                        theme === "dark"
-                          ? "bg-blue-500/10 text-blue-400"
-                          : "bg-blue-50 text-blue-700"
-                      } duration-500 animate-in fade-in slide-in-from-top-2`}
+                      className={`flex items-center gap-3 rounded-2xl p-4 transition-all bg-blue-500/10 text-blue-400 duration-500 animate-in fade-in slide-in-from-top-2`}
                     >
                       <ShieldCheck className="h-5 w-5 shrink-0" />
                       <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest">
@@ -2234,31 +2072,19 @@ export default function PackageDeliveryModal({
 
           {/* Footer */}
           <div
-            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
-              theme === "dark"
-                ? "border-t border-gray-700/50"
-                : "border-t border-gray-100"
-            }`}
+            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 border-t border-[var(--bg-secondary)]`}
           >
             {step === 1 ? (
               <button
                 onClick={handleClose}
-                className={`hidden rounded-xl px-8 py-3.5 text-sm font-medium transition-all sm:inline-block ${
-                  theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-700/50 hover:text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`hidden rounded-xl px-8 py-3.5 text-sm font-medium transition-all sm:inline-block text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]`}
               >
                 Cancel
               </button>
             ) : (
               <button
                 onClick={prevStep}
-                className={`flex-1 rounded-xl py-4 text-sm font-bold transition-all active:scale-95 ${
-                  theme === "dark"
-                    ? "bg-gray-700 text-white hover:bg-gray-600"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                className={`flex-1 rounded-xl py-4 text-sm font-bold transition-all active:scale-95 bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:opacity-80`}
               >
                 Back
               </button>
