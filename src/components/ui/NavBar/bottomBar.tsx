@@ -351,6 +351,7 @@ export default function BottomBar() {
       {!hideFloatingUI &&
         router.pathname !== "/Cart" &&
         router.pathname !== "/Reels" &&
+        router.pathname !== "/Myprofile/become-shopper" &&
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
         router.pathname !== "/plasBusiness/store/[storeId]" && (
@@ -418,7 +419,7 @@ export default function BottomBar() {
 
       {/* Desktop Floating Buttons */}
       <div className="notranslate fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
-        {open && (
+        {open && router.pathname !== "/Myprofile/become-shopper" && (
           <div className="mb-2 flex flex-col items-end gap-2">
             {/* AI Support - Only show for non-guest users */}
             {session?.user && !isGuest && (

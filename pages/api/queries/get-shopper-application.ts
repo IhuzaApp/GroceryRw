@@ -130,7 +130,7 @@ export default async function handler(
       const shopper = shopperData.shoppers[0];
       return res.status(200).json({ shopper });
     } else {
-      return res.status(404).json({ error: "No shopper application found" });
+      return res.status(200).json({ shopper: null });
     }
   } catch (error: any) {
     console.error("Error getting shopper application:", error);

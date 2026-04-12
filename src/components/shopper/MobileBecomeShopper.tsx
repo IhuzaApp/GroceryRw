@@ -115,7 +115,7 @@ export const MobileBecomeShopper = () => {
   return (
     <div className={`flex min-h-screen flex-col ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
       {/* Dynamic Header */}
-      <header className={`sticky top-0 z-20 flex flex-col px-6 pt-12 pb-6 ${theme === 'dark' ? 'bg-black/80' : 'bg-white/80'} backdrop-blur-xl border-b border-gray-100 dark:border-gray-900`}>
+      <header className={`sticky top-0 z-[10000] flex flex-col px-6 pt-12 pb-6 ${theme === 'dark' ? 'bg-black/80' : 'bg-white/80'} backdrop-blur-xl border-b border-gray-100 dark:border-gray-900`}>
         <div className="flex items-center justify-between mb-6">
           <button onClick={prevStep} disabled={currentStep === 0} className={`p-2 rounded-xl transition-colors ${currentStep === 0 ? 'opacity-0' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
             <ChevronLeft className="h-6 w-6" />
@@ -141,7 +141,7 @@ export const MobileBecomeShopper = () => {
       </main>
 
       {/* Sticky Bottom Actions */}
-      <footer className={`fixed bottom-0 left-0 right-0 z-30 px-6 py-6 pb-8 ${theme === 'dark' ? 'bg-black/80' : 'bg-white/80'} backdrop-blur-xl border-t border-gray-100 dark:border-gray-900`}>
+      <footer className={`fixed bottom-0 left-0 right-0 z-[10001] px-6 py-6 pb-8 ${theme === 'dark' ? 'bg-black/80' : 'bg-white/80'} backdrop-blur-xl border-t border-gray-100 dark:border-gray-900`}>
         <button 
           onClick={currentStep === steps.length - 1 ? handleSubmit : nextStep}
           disabled={loading}
@@ -157,7 +157,7 @@ export const MobileBecomeShopper = () => {
 
       {/* Camera Modal - Minimal Overlays */}
       {showCamera && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-black">
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
           <div className="absolute inset-0 border-[40px] border-black/60 pointer-events-none flex items-center justify-center">
              <div className="w-full aspect-[3/4] border-2 border-white/50 rounded-3xl" />

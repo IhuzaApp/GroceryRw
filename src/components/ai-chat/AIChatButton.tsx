@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 interface AIChatButtonProps {
   onClick: () => void;
@@ -10,13 +11,25 @@ export default function AIChatButton({
   onClick,
   hideOnMobile,
 }: AIChatButtonProps) {
+  const router = useRouter();
   const [showTooltip, setShowTooltip] = useState(true);
+
+  // Synchronize visibility with Cart button logic in BottomBar
+  const isHiddenPage = 
+    router.pathname === "/Cart" || 
+    router.pathname === "/Reels" || 
+    router.pathname === "/Myprofile/become-shopper" || 
+    router.pathname === "/stores/[id]" || 
+    router.pathname === "/stores/[id]/checkout" || 
+    router.pathname === "/plasBusiness/store/[storeId]";
 
   // Auto-hide the "Need help?" tooltip after 6 seconds to be minimally intrusive
   useEffect(() => {
     const timer = setTimeout(() => setShowTooltip(false), 6000);
     return () => clearTimeout(timer);
   }, []);
+
+  if (isHiddenPage) return null;
 
   return (
     <div
