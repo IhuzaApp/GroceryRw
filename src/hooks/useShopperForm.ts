@@ -9,6 +9,7 @@ export type Step = {
 };
 
 export const steps: Step[] = [
+  { title: "Welcome", description: "Get started as a Plasa" },
   { title: "Personal Info", description: "Basic information" },
   { title: "Contact Details", description: "Phone & Telegram" },
   { title: "Address & Location", description: "Residence details" },
@@ -163,7 +164,8 @@ export const useShopperForm = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Load existing shopper application data
+  // Removed automatic pre-filling from session to allow users to provide 
+  // accurate legal information which might differ from their account profile.
   useEffect(() => {
     const loadExistingApplication = async () => {
       if (!session?.user?.id) return;
@@ -287,15 +289,15 @@ export const useShopperForm = () => {
 
   const nextStep = () => {
     const newErrors: Record<string, string> = {};
-    if (currentStep === 0) {
+    if (currentStep === 1) {
       ["full_name", "national_id", "transport_mode"].forEach(f => {
         const err = validateField(f, formValue[f]);
         if (err) newErrors[f] = err;
       });
-    } else if (currentStep === 1) {
+    } else if (currentStep === 2) {
       const err = validateField("phone_number", formValue.phone_number);
       if (err) newErrors.phone_number = err;
-    } else if (currentStep === 2 && !formValue.address) {
+    } else if (currentStep === 3 && !formValue.address) {
       newErrors.address = "Address is required";
     }
 
@@ -358,6 +360,7 @@ export const useShopperForm = () => {
   };
 
   return {
+    router,
     formValue, currentStep, errors, loading, registrationSuccess, apiError,
     capturedPhoto, capturedLicense, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
