@@ -80,13 +80,20 @@ export const DesktopBecomeShopper = () => {
                 case 0:
                   return (
                     <div className="col-span-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                       <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[48px] bg-green-600 shadow-2xl">
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                          <div className="absolute bottom-12 left-12 right-12">
-                             <h2 className="text-5xl font-black text-white tracking-tighter mb-4">The Future of Delivery <br/> starts with You.</h2>
-                             <p className="text-xl text-white/80 font-medium max-w-2xl">Join Rwanda's most advanced delivery network. Earn on your own terms with full transparency and support.</p>
-                          </div>
-                       </div>
+                        <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[48px] shadow-2xl">
+                           <Image 
+                             src="/images/shopper/welcome_hero.png" 
+                             fill 
+                             className="object-cover object-[center_30%]" 
+                             alt="Welcome to Plasa"
+                             priority
+                           />
+                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                           <div className="absolute bottom-12 left-12 right-12">
+                              <h2 className="text-5xl font-black text-white tracking-tighter mb-4">The Future of Delivery <br/> starts with You.</h2>
+                              <p className="text-xl text-white/80 font-medium max-w-2xl">Join Rwanda's most advanced delivery network. Earn on your own terms with full transparency and support.</p>
+                           </div>
+                        </div>
                        
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           {[
