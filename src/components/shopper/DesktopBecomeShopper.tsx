@@ -170,19 +170,33 @@ export const DesktopBecomeShopper = () => {
                             </button>
                           </div>
                           <div className="space-y-4">
-                            <label className="text-[13px] font-bold uppercase tracking-wider text-gray-500">ID Document Front</label>
-                            <button onClick={() => startCamera('national_id_front')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedNationalIdFront ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
-                              {capturedNationalIdFront ? (
-                                 <Image src={capturedNationalIdFront} fill className="object-cover" alt="ID Front" />
-                              ) : (
-                                <>
-                                  <div className="p-5 rounded-full bg-gray-50 dark:bg-gray-900 mb-3 group-hover:scale-110 transition-transform">
-                                     <Camera className="h-8 w-8 text-green-600" />
-                                  </div>
-                                  <span className="text-sm font-bold">Capture ID Photo</span>
-                                </>
-                              )}
-                            </button>
+                            <label className="text-[13px] font-bold uppercase tracking-wider text-gray-500">National ID Documents</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <button onClick={() => startCamera('national_id_front')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedNationalIdFront ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
+                                {capturedNationalIdFront ? (
+                                   <Image src={capturedNationalIdFront} fill className="object-cover" alt="ID Front" />
+                                ) : (
+                                  <>
+                                    <div className="p-4 rounded-full bg-gray-50 dark:bg-gray-900 mb-2 group-hover:scale-110 transition-transform">
+                                       <Camera className="h-6 w-6 text-green-600" />
+                                    </div>
+                                    <span className="text-xs font-bold">ID Front Photo</span>
+                                  </>
+                                )}
+                              </button>
+                              <button onClick={() => startCamera('national_id_back')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedNationalIdBack ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
+                                {capturedNationalIdBack ? (
+                                   <Image src={capturedNationalIdBack} fill className="object-cover" alt="ID Back" />
+                                ) : (
+                                  <>
+                                    <div className="p-4 rounded-full bg-gray-50 dark:bg-gray-900 mb-2 group-hover:scale-110 transition-transform">
+                                       <Camera className="h-6 w-6 text-green-600" />
+                                    </div>
+                                    <span className="text-xs font-bold">ID Back Photo</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="max-w-xl">

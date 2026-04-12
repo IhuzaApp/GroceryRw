@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, transportOptions, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
 import { CustomInput, FileUploadInput } from "./ShopperUIComponents";
-import { ChevronLeft, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
 
 export const MobileBecomeShopper = () => {
   const { theme } = useTheme();
@@ -34,67 +34,69 @@ export const MobileBecomeShopper = () => {
     switch (currentStep) {
       case 0:
         return (
-          <>
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-green-600">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                 <h2 className="text-xl font-black text-white leading-tight">Start Earning <br/> as a Plasa Partner</h2>
+          <div className="space-y-8 animate-in fade-in duration-1000">
+            <div className="relative aspect-[4/5] w-full overflow-hidden">
+              <Image 
+                src="/images/shopper/welcome_hero.png" 
+                fill 
+                className="object-cover" 
+                alt="Welcome to Plasa"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8">
+                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-widest mb-4">
+                    <Zap className="h-3 w-3" />
+                    <span>Instant Approval</span>
+                 </div>
+                 <h2 className="text-4xl font-black text-white leading-[0.9] tracking-tighter">Start Earning <br/> as a Partner.</h2>
+                 <p className="text-white/70 text-sm mt-4 font-medium max-w-[240px]">Rwanda's most advanced delivery network is waiting for you.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 rounded-xl bg-green-500/10 text-green-500">
-                    <Clock className="h-5 w-5" />
+            <div className="px-6 grid grid-cols-1 gap-4">
+              <div className={`p-5 rounded-[32px] border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-2xl bg-green-500/10 text-green-500">
+                    <Clock className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold mb-0.5">Flexible Schedule</h4>
-                    <p className="text-[10px] text-gray-500">Work whenever you want.</p>
+                    <h4 className="text-base font-black">Flexible Schedule</h4>
+                    <p className="text-xs text-gray-500 font-medium">Work on your own terms.</p>
                   </div>
                 </div>
               </div>
 
-              <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                    <Wallet className="h-5 w-5" />
+              <div className={`p-5 rounded-[32px] border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
+                    <Wallet className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold mb-0.5">Competitive Earnings</h4>
-                    <p className="text-[10px] text-gray-500">Weekly payouts to your wallet.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
-                    <Shield className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold mb-0.5">Safety First</h4>
-                    <p className="text-[10px] text-gray-500">Live tracking & support.</p>
+                    <h4 className="text-base font-black">Weekly Payouts</h4>
+                    <p className="text-xs text-gray-500 font-medium">Get paid every single week.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className={`p-4 rounded-3xl border-2 border-dashed ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 text-center">Requirements</h4>
-               <div className="flex flex-wrap justify-center gap-2">
-                  {['Valid ID', 'Smartphone', '18+ Years', 'Reliable Transport'].map(item => (
-                    <span key={item} className={`px-2 py-1 rounded-full text-[9px] font-bold ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-100 text-gray-600'}`}>
-                       {item}
-                    </span>
-                  ))}
-               </div>
+            <div className="px-6 pb-10">
+              <div className={`p-6 rounded-[32px] border-2 border-dashed ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
+                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 text-center">Identity Requirements</h4>
+                 <div className="flex flex-wrap justify-center gap-2">
+                    {['Valid ID', 'Smartphone', '18+ Years', 'Reliable Transport'].map(item => (
+                      <span key={item} className={`px-3 py-1.5 rounded-full text-[10px] font-bold ${theme === 'dark' ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                         {item}
+                      </span>
+                    ))}
+                 </div>
+              </div>
             </div>
-          </>
+          </div>
         );
       case 1:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
             <CustomInput label="Full Name" name="full_name" value={formValue.full_name} onChange={handleInputChange} error={errors.full_name} required placeholder="Your full legal name" />
             <CustomInput label="National ID Number" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="16-digit ID number" />
             <CustomInput label="Transport Mode" name="transport_mode" type="select" options={transportOptions} value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} required />
@@ -102,20 +104,20 @@ export const MobileBecomeShopper = () => {
         );
       case 2:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
             <CustomInput label="Phone Number" name="phone_number" value={formValue.phone_number} onChange={handleInputChange} error={errors.phone_number} required placeholder="e.g., 0788829084" />
           </div>
         );
       case 3:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
             <CustomInput label="Physical Address" name="address" type="textarea" rows={3} value={formValue.address} onChange={handleInputChange} error={errors.address} required placeholder="District, Sector, Cell, Village" />
             <CustomInput label="Marital Status" name="mutual_status" type="select" options={mutualStatusOptions} value={formValue.mutual_status} onChange={handleInputChange} />
           </div>
         );
       case 4:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
             <CustomInput label="Guarantor Name" name="guarantor" value={formValue.guarantor} onChange={handleInputChange} placeholder="Name of someone who knows you" />
             <CustomInput label="Guarantor Phone" name="guarantorPhone" value={formValue.guarantorPhone} onChange={handleInputChange} placeholder="Their phone number" />
             <CustomInput label="Relationship" name="guarantorRelationship" type="select" options={guarantorRelationshipOptions} value={formValue.guarantorRelationship} onChange={handleInputChange} />
@@ -123,7 +125,7 @@ export const MobileBecomeShopper = () => {
         );
       case 5:
         return (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right duration-500">
+          <div className="px-6 space-y-8 animate-in fade-in slide-in-from-right duration-500">
             <div className="space-y-4">
               <label className="text-sm font-bold dark:text-gray-300">Identity Photos</label>
               <div className="grid grid-cols-2 gap-4">
@@ -131,14 +133,22 @@ export const MobileBecomeShopper = () => {
                   onClick={() => startCamera("profile")} 
                   className={`relative flex flex-col items-center justify-center h-48 rounded-[32px] border-2 border-dashed transition-all overflow-hidden ${capturedPhoto ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}
                 >
-                  {capturedPhoto ? <Image src={capturedPhoto} fill className="object-cover" alt="Profile" /> : <><Camera className="mb-2 h-6 w-6 text-gray-400" /><span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Selfie Photo</span></>}
+                  {capturedPhoto ? <Image src={capturedPhoto} fill className="object-cover" alt="Profile" /> : <><Camera className="mb-2 h-6 w-6 text-gray-400" /><span className="text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Selfie Photo</span></>}
                 </button>
-                <button 
-                  onClick={() => startCamera("national_id_front")} 
-                  className={`relative flex flex-col items-center justify-center h-48 rounded-[32px] border-2 border-dashed transition-all overflow-hidden ${capturedNationalIdFront ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}
-                >
-                  {capturedNationalIdFront ? <Image src={capturedNationalIdFront} fill className="object-cover" alt="ID Front" /> : <><Camera className="mb-2 h-6 w-6 text-gray-400" /><span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">ID Card Front</span></>}
-                </button>
+                <div className="grid grid-rows-2 gap-4 h-48">
+                  <button 
+                    onClick={() => startCamera("national_id_front")} 
+                    className={`relative flex flex-col items-center justify-center rounded-[24px] border-2 border-dashed transition-all overflow-hidden ${capturedNationalIdFront ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}
+                  >
+                    {capturedNationalIdFront ? <Image src={capturedNationalIdFront} fill className="object-cover" alt="ID Front" /> : <><Camera className="mb-1 h-4 w-4 text-gray-400" /><span className="text-[8px] font-black uppercase text-gray-400 tracking-widest">ID Front</span></>}
+                  </button>
+                  <button 
+                    onClick={() => startCamera("national_id_back")} 
+                    className={`relative flex flex-col items-center justify-center rounded-[24px] border-2 border-dashed transition-all overflow-hidden ${capturedNationalIdBack ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}
+                  >
+                    {capturedNationalIdBack ? <Image src={capturedNationalIdBack} fill className="object-cover" alt="ID Back" /> : <><Camera className="mb-1 h-4 w-4 text-gray-400" /><span className="text-[8px] font-black uppercase text-gray-400 tracking-widest">ID Back</span></>}
+                  </button>
+                </div>
               </div>
             </div>
             <div className="space-y-4">
@@ -156,7 +166,7 @@ export const MobileBecomeShopper = () => {
         );
       case 6:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-500">
+          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
             <div className={`p-8 rounded-[40px] ${theme === 'dark' ? 'bg-[#111]' : 'bg-gray-50'}`}>
               <h4 className="font-black tracking-tight text-xl flex items-center mb-6"><CheckCircle2 className="mr-2 h-6 w-6 text-green-500" /> Confirm Details</h4>
               <div className="space-y-4 text-sm font-medium">
@@ -217,7 +227,7 @@ export const MobileBecomeShopper = () => {
       </header>
 
       {/* Content Area */}
-      <main className="flex-1 px-6 py-10 pb-40">
+      <main className="flex-1 pb-40">
         {renderCurrentStep()}
       </main>
 
@@ -261,8 +271,3 @@ export const MobileBecomeShopper = () => {
     </div>
   );
 };
-
-// Re-using same style as MobileBecomeShopper for icons in renderCurrentStep if needed or adding local icons
-const ChevronRight = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>
-);
