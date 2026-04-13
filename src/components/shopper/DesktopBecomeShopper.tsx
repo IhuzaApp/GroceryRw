@@ -11,7 +11,7 @@ export const DesktopBecomeShopper = () => {
   const {
     router,
     formValue, currentStep, errors, loading, registrationSuccess,
-    capturedPhoto, capturedLicense, capturedNationalIdFront, capturedNationalIdBack,
+    capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, videoRef, canvasRef, handleInputChange, startCamera, stopCamera, 
     capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile,
@@ -208,7 +208,7 @@ export const DesktopBecomeShopper = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-4">
                             <label className="text-[13px] font-bold uppercase tracking-wider text-gray-500">Live Profile Capture</label>
-                            <button onClick={() => startCamera('profile')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedPhoto ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
+                            <button onClick={() => startCamera('profile_photo')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedPhoto ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
                               {capturedPhoto ? (
                                  <Image src={capturedPhoto} fill className="object-cover" alt="Profile" />
                               ) : (
@@ -251,6 +251,53 @@ export const DesktopBecomeShopper = () => {
                             </div>
                           </div>
                         </div>
+
+                        {(formValue.transport_mode === 'car' || formValue.transport_mode === 'motorcycle') && (
+                          <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-white/5">
+                            <label className="text-[13px] font-bold uppercase tracking-wider text-gray-500">Vehicle Documents</label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                              <div className="col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <button onClick={() => startCamera('plate_number')} className={`group relative w-full aspect-[5/2] rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedPlateNumber ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
+                                  {capturedPlateNumber ? (
+                                    <Image src={capturedPlateNumber} fill className="object-cover" alt="Plate Number" />
+                                  ) : (
+                                    <>
+                                      <div className="p-4 rounded-full bg-gray-50 dark:bg-gray-900 mb-2 group-hover:scale-110 transition-transform">
+                                        <Camera className="h-6 w-6 text-green-600" />
+                                      </div>
+                                      <span className="text-xs font-bold text-center">Vehicle Plate<br/>Number</span>
+                                    </>
+                                  )}
+                                </button>
+                                <button onClick={() => startCamera('license_front')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedLicenseFront ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
+                                  {capturedLicenseFront ? (
+                                    <Image src={capturedLicenseFront} fill className="object-cover" alt="License Front" />
+                                  ) : (
+                                    <>
+                                      <div className="p-4 rounded-full bg-gray-50 dark:bg-gray-900 mb-2 group-hover:scale-110 transition-transform">
+                                        <Camera className="h-6 w-6 text-green-600" />
+                                      </div>
+                                      <span className="text-xs font-bold text-center">Driving License<br/>Front</span>
+                                    </>
+                                  )}
+                                </button>
+                                <button onClick={() => startCamera('license_back')} className={`group relative w-full aspect-video rounded-[32px] border-2 border-dashed overflow-hidden flex flex-col items-center justify-center transition-all ${capturedLicenseBack ? 'border-green-500' : 'border-gray-200 dark:border-gray-800 hover:border-green-500/50'}`}>
+                                  {capturedLicenseBack ? (
+                                    <Image src={capturedLicenseBack} fill className="object-cover" alt="License Back" />
+                                  ) : (
+                                    <>
+                                      <div className="p-4 rounded-full bg-gray-50 dark:bg-gray-900 mb-2 group-hover:scale-110 transition-transform">
+                                        <Camera className="h-6 w-6 text-green-600" />
+                                      </div>
+                                      <span className="text-xs font-bold text-center">Driving License<br/>Back</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="max-w-xl">
                           <FileUploadInput label="Police Clearance (Optional)" file={policeClearanceFile} onChange={(e:any) => setPoliceClearanceFile(e.target.files[0])} onRemove={() => setPoliceClearanceFile(null)} description="Upload certificate from Irembo site" />
                         </div>

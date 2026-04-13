@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import { ref, uploadString, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../lib/firebase";
 
 export type Step = {
   title: string;
@@ -191,7 +193,9 @@ export const useShopperForm = () => {
 
   // Document states
   const [capturedPhoto, setCapturedPhoto] = useState("");
-  const [capturedLicense, setCapturedLicense] = useState("");
+  const [capturedLicenseFront, setCapturedLicenseFront] = useState("");
+  const [capturedLicenseBack, setCapturedLicenseBack] = useState("");
+  const [capturedPlateNumber, setCapturedPlateNumber] = useState("");
   const [capturedNationalIdFront, setCapturedNationalIdFront] = useState("");
   const [capturedNationalIdBack, setCapturedNationalIdBack] = useState("");
   const [capturedSignature, setCapturedSignature] = useState("");
@@ -253,7 +257,9 @@ export const useShopperForm = () => {
             if (shopper.profile_photo) setCapturedPhoto(shopper.profile_photo);
             if (shopper.national_id_photo_front) setCapturedNationalIdFront(shopper.national_id_photo_front);
             if (shopper.national_id_photo_back) setCapturedNationalIdBack(shopper.national_id_photo_back);
-            if (shopper.drivingLicense_Image) setCapturedLicense(shopper.drivingLicense_Image);
+            if (shopper.driving_license_front) setCapturedLicenseFront(shopper.driving_license_front);
+            if (shopper.driving_license_back) setCapturedLicenseBack(shopper.driving_license_back);
+            if (shopper.plate_number && shopper.plate_number.startsWith("http")) setCapturedPlateNumber(shopper.plate_number);
             if (shopper.signature) setCapturedSignature(shopper.signature);
 
             // Load files
@@ -322,6 +328,7 @@ export const useShopperForm = () => {
     frameCountRef.current = 0;
     
     const runLiveness = async () => {
+      // Only run liveness for the initial 'profile' mode (verification), NOT the 'profile_photo' mode (document)
       if (showCamera && captureMode === 'profile' && videoRef.current && !faceVerified) {
         frameCountRef.current++;
         const frameCount = frameCountRef.current;
@@ -426,7 +433,7 @@ export const useShopperForm = () => {
         trackerRef.current = faceTracker;
         await trackerRef.current.init();
       }
-      if (showCamera && captureMode === 'profile') {
+      if (showCamera && captureMode === 'profile' && !faceVerified) {
         runLiveness();
       }
     };
@@ -498,6 +505,12 @@ export const useShopperForm = () => {
 
         sx = (videoWidth - sWidth) / 2;
         sy = (videoHeight - sHeight) / 2;
+      } else if (captureMode === "profile" || captureMode === "profile_photo") {
+        // Square crop for passport-style headshots
+        sWidth = Math.min(videoWidth, videoHeight);
+        sHeight = sWidth;
+        sx = (videoWidth - sWidth) / 2;
+        sy = (videoHeight - sHeight) / 2;
       }
 
       canvas.width = sWidth;
@@ -516,8 +529,11 @@ export const useShopperForm = () => {
       // Note: ocr_scan has been removed at user request. Face verification is now the primary step.
 
       switch (captureMode) {
-        case "profile": setCapturedPhoto(compressed); break;
-        case "license": setCapturedLicense(compressed); break;
+        case "profile_photo": setCapturedPhoto(compressed); break;
+        case "profile": setCapturedPhoto(compressed); break; // Fallback
+        case "license_front": setCapturedLicenseFront(compressed); break;
+        case "license_back": setCapturedLicenseBack(compressed); break;
+        case "plate_number": setCapturedPlateNumber(compressed); break;
         case "national_id_front": setCapturedNationalIdFront(compressed); break;
         case "national_id_back": setCapturedNationalIdBack(compressed); break;
       }
@@ -562,12 +578,55 @@ export const useShopperForm = () => {
 
     setLoading(true);
     try {
-      const convert = (file: File | null): Promise<string> => new Promise((res) => {
-        if (!file) return res("");
-        const reader = new FileReader();
-        reader.onload = () => res(reader.result as string);
-        reader.readAsDataURL(file);
-      });
+      const uploadToFirebase = async (data: string | File | null, path: string): Promise<string> => {
+        if (!data || !storage) return "";
+        let fireRef = ref(storage, path);
+        try {
+          let snapshot;
+          if (typeof data === "string" && data.startsWith("data:")) {
+            // It's a base64 string
+            snapshot = await uploadString(fireRef, data, "data_url");
+          } else if (data instanceof File) {
+            // It's a binary File
+            snapshot = await uploadBytes(fireRef, data);
+          } else {
+            return "";
+          }
+          return await getDownloadURL(snapshot.ref);
+        } catch (error) {
+          console.error(`Upload failed for ${path}`, error);
+          return "";
+        }
+      };
+
+      const cleanName = `${formValue.first_name}_${formValue.last_name}`.replace(/\s+/g, '_').toLowerCase();
+      const basePath = `plas_shoppers/${cleanName}`;
+
+      toast.loading("Uploading documents securely...", { id: "uploadToast" });
+
+      const [
+        profilePhotoUrl,
+        nationalIdFrontUrl,
+        nationalIdBackUrl,
+        licenseFrontUrl,
+        licenseBackUrl,
+        plateNumberUrl,
+        policeClearanceUrl,
+        residencyUrl,
+        mutualStatusUrl
+      ] = await Promise.all([
+        uploadToFirebase(capturedPhoto, `${basePath}/profile_photo.jpg`),
+        uploadToFirebase(capturedNationalIdFront, `${basePath}/national_id_front.jpg`),
+        uploadToFirebase(capturedNationalIdBack, `${basePath}/national_id_back.jpg`),
+        uploadToFirebase(capturedLicenseFront, `${basePath}/driving_license_front.jpg`),
+        uploadToFirebase(capturedLicenseBack, `${basePath}/driving_license_back.jpg`),
+        uploadToFirebase(capturedPlateNumber, `${basePath}/plate_number.jpg`),
+        uploadToFirebase(policeClearanceFile, `${basePath}/police_clearance.pdf`),
+        uploadToFirebase(proofOfResidencyFile, `${basePath}/residency.pdf`),
+        uploadToFirebase(maritalStatusFile, `${basePath}/marital_status.pdf`),
+      ]);
+
+      toast.success("Documents uploaded!", { id: "uploadToast" });
 
       const payload = {
         ...formValue,
@@ -580,14 +639,16 @@ export const useShopperForm = () => {
           platform: "Web",
           completedAt: new Date().toISOString()
         },
-        profile_photo: capturedPhoto,
-        national_id_photo_front: capturedNationalIdFront,
-        national_id_photo_back: capturedNationalIdBack,
-        drivingLicense_Image: capturedLicense,
-        signature: capturedSignature,
-        Police_Clearance_Cert: await convert(policeClearanceFile),
-        proofOfResidency: await convert(proofOfResidencyFile),
-        mutual_StatusCertificate: await convert(maritalStatusFile),
+        profile_photo: profilePhotoUrl,
+        national_id_photo_front: nationalIdFrontUrl,
+        national_id_photo_back: nationalIdBackUrl,
+        driving_license_front: licenseFrontUrl,
+        driving_license_back: licenseBackUrl,
+        plate_number: plateNumberUrl,
+        signature: capturedSignature, // Keeps base64 for digital signature unless changed
+        Police_Clearance_Cert: policeClearanceUrl,
+        proofOfResidency: residencyUrl,
+        mutual_StatusCertificate: mutualStatusUrl,
         user_id: (session?.user as any).id,
         force_update: isUpdating,
         face_verified: faceVerified,
@@ -616,14 +677,14 @@ export const useShopperForm = () => {
   return {
     router,
     formValue, currentStep, errors, loading, registrationSuccess, apiError,
-    capturedPhoto, capturedLicense, capturedNationalIdFront, capturedNationalIdBack,
+    capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, captureMode, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
     faceVerified, verificationStatus,
     livenessStep, livenessProgress, lowLight,
     handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
-    setCapturedSignature, setFormValue, setCapturedPhoto, setCapturedLicense,
+    setCapturedSignature, setFormValue, setCapturedPhoto, setCapturedLicenseFront, setCapturedLicenseBack, setCapturedPlateNumber,
     setCapturedNationalIdFront, setCapturedNationalIdBack, setIsUpdating,
     setIdVerified: () => {},
     setFaceVerified, setVerificationStatus, setLivenessStep,

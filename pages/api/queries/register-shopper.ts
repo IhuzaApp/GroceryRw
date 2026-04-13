@@ -12,6 +12,10 @@ const REGISTER_SHOPPER = gql`
     $address: String = ""
     $driving_license: String = ""
     $drivingLicense_Image: String = ""
+    $driving_license_front: String = ""
+    $driving_license_back: String = ""
+    $plate_number: String = ""
+    $email: String = ""
     $full_name: String = ""
     $guarantor: String = ""
     $guarantorPhone: String = ""
@@ -44,6 +48,10 @@ const REGISTER_SHOPPER = gql`
         background_check_completed: false
         driving_license: $driving_license
         drivingLicense_Image: $drivingLicense_Image
+        driving_license_front: $driving_license_front
+        driving_license_back: $driving_license_back
+        plate_number: $plate_number
+        email: $email
         full_name: $full_name
         guarantor: $guarantor
         guarantorPhone: $guarantorPhone
@@ -85,6 +93,10 @@ const UPDATE_SHOPPER = gql`
     $national_id: String!
     $driving_license: String
     $drivingLicense_Image: String
+    $driving_license_front: String
+    $driving_license_back: String
+    $plate_number: String
+    $email: String
     $transport_mode: String!
     $profile_photo: String
     $Police_Clearance_Cert: String
@@ -114,6 +126,10 @@ const UPDATE_SHOPPER = gql`
         national_id: $national_id
         driving_license: $driving_license
         drivingLicense_Image: $drivingLicense_Image
+        driving_license_front: $driving_license_front
+        driving_license_back: $driving_license_back
+        plate_number: $plate_number
+        email: $email
         transport_mode: $transport_mode
         profile_photo: $profile_photo
         Police_Clearance_Cert: $Police_Clearance_Cert
@@ -170,6 +186,10 @@ interface RegisterShopperInput {
   national_id: string;
   driving_license?: string;
   drivingLicense_Image?: string;
+  driving_license_front?: string;
+  driving_license_back?: string;
+  plate_number?: string;
+  email?: string;
   transport_mode: string;
   profile_photo?: string;
   user_id: string;
@@ -399,6 +419,10 @@ export default async function handler(
             national_id,
             driving_license: driving_license || "",
             drivingLicense_Image: drivingLicense_Image || "",
+            driving_license_front: driving_license_front || "",
+            driving_license_back: driving_license_back || "",
+            plate_number: plate_number || "",
+            email: email || "",
             transport_mode,
             profile_photo: profile_photo || "",
             Police_Clearance_Cert: Police_Clearance_Cert || "",
@@ -449,6 +473,10 @@ export default async function handler(
         address,
         driving_license: driving_license || "",
         drivingLicense_Image: drivingLicense_Image || "",
+        driving_license_front: driving_license_front || "",
+        driving_license_back: driving_license_back || "",
+        plate_number: plate_number || "",
+        email: email || "",
         full_name,
         guarantor: guarantor || "",
         guarantorPhone: guarantorPhone || "",

@@ -38,10 +38,10 @@ export const BiometricCameraModal: React.FC<BiometricCameraModalProps> = ({
         <header className={`flex items-center justify-between text-white translate-y-0 animate-in slide-in-from-top duration-700 ${isMobile ? 'p-6' : 'mb-10'}`}>
           <div>
             <h2 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black tracking-tight uppercase`}>
-              {captureMode === 'profile' ? 'Biometric Check' : 'Document Scan'}
+              {captureMode === 'profile' ? 'Biometric Check' : captureMode === 'profile_photo' ? 'Shopper Profile' : 'Document Scan'}
             </h2>
             <p className="text-gray-400 text-xs font-medium uppercase tracking-widest opacity-60">
-              {captureMode === 'profile' ? 'Liveness Verification' : 'Position clearly'}
+              {captureMode === 'profile' ? 'Liveness Verification' : captureMode === 'profile_photo' ? 'Secure Profile Photo' : 'Position clearly'}
             </p>
           </div>
           <button 
@@ -68,19 +68,21 @@ export const BiometricCameraModal: React.FC<BiometricCameraModalProps> = ({
           {/* Scanner Overlay */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className={`relative transition-all duration-700 ${
-              captureMode === 'profile' 
-                ? (isMobile ? 'w-[75%] aspect-square rounded-full' : 'w-[40%] aspect-square rounded-full')
-                : (isMobile ? 'w-[90%] aspect-[3/4] rounded-3xl' : 'w-[70%] aspect-video rounded-[40px]')
-            } border-2 border-green-500/50 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]`}>
+              (captureMode === 'profile' || captureMode === 'profile_photo')
+                ? (isMobile ? 'w-[75%] aspect-square rounded-full' : 'w-[45%] aspect-square rounded-full')
+                : (isMobile ? 'w-[90%] aspect-[3/4] rounded-2xl' : 'w-[75%] aspect-video rounded-[40px]')
+            } ${ (captureMode === 'profile' || captureMode === 'profile_photo') ? 'border-2 border-green-500/50' : 'border-2 border-white/20'} shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]`}>
                
-               {/* Corners */}
-               <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-3xl" />
-               <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-3xl" />
-               <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-3xl" />
-               <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-3xl" />
-               
-               {/* Animated Scan Line */}
-               <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent animate-scan" />
+               {/* Corners - Only for automated scanning */}
+               {captureMode === 'profile' && (
+                 <>
+                   <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-3xl" />
+                   <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-3xl" />
+                   <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-3xl" />
+                   <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-3xl" />
+                   <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent animate-scan" />
+                 </>
+               )}
                
                {/* Liveness Progress Ring */}
                {captureMode === 'profile' && (
@@ -114,8 +116,9 @@ export const BiometricCameraModal: React.FC<BiometricCameraModalProps> = ({
                     livenessProgress >= 100 ? 'bg-green-600' : 
                     livenessProgress > 0 ? 'bg-green-600/60' : 'bg-black/60'
                   }`}>
-                    {livenessStep === 'success' ? 'Verification Complete!' : 
-                     captureMode === 'profile' ? `Action: Turn ${livenessStep.charAt(0).toUpperCase() + livenessStep.slice(1)}` : 'Position clearly'}
+                    {livenessStep === 'success' && captureMode === 'profile' ? 'Verification Complete!' : 
+                     captureMode === 'profile' ? `Action: Turn ${livenessStep.charAt(0).toUpperCase() + livenessStep.slice(1)}` : 
+                     captureMode === 'profile_photo' ? 'Center your face' : 'Position clearly'}
                   </span>
                </div>
 
@@ -141,9 +144,9 @@ export const BiometricCameraModal: React.FC<BiometricCameraModalProps> = ({
           )}
         </div>
 
-        {/* Footer / Shutter Button */}
-        {captureMode !== 'profile' && (
-          <footer className={`${isMobile ? 'pb-20' : 'mt-12'} flex justify-center animate-in slide-in-from-bottom duration-700`}>
+        {/* Footer / Shutter Button - Always for documents and manual profile photos */}
+        {(captureMode !== 'profile' || livenessStep === 'success') && (
+          <footer className={`${isMobile ? 'pb-24' : 'mt-12'} flex justify-center animate-in slide-in-from-bottom duration-700`}>
              <button onClick={capturePhoto} className={`group relative rounded-full border-8 border-white/10 flex items-center justify-center transition-all hover:border-white/30 active:scale-90 ${isMobile ? 'w-24 h-24' : 'w-32 h-32'}`}>
                 <div className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} rounded-full bg-white shadow-[0_0_30px_rgba(255,255,255,0.5)] group-hover:scale-95 transition-transform`} />
                 <div className="absolute -inset-4 border-2 border-green-500 rounded-full animate-ping opacity-20" />
