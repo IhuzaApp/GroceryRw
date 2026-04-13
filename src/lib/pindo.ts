@@ -7,7 +7,7 @@ export const sendSMS = async (to: string, text: string) => {
     const payload: SMSPayload = {
       to,
       text,
-      sender: "plas", // Default sender ID
+      sender: "PindoTest", // Default sender ID
     };
 
     const response = await pindo.sendSMS(payload);

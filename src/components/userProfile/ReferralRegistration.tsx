@@ -22,9 +22,17 @@ export default function ReferralRegistration({
   });
 
   // OTP verification
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [otpVerified, setOtpVerified] = useState(false);
+  const digitRefs = [
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+  ];
 
   // Get device fingerprint on mount
   useEffect(() => {
@@ -66,6 +74,28 @@ export default function ReferralRegistration({
     getFingerprint();
   }, []);
 
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("/api/user");
+        const data = await response.json();
+        if (data.user) {
+          setFormData((prev) => ({
+            ...prev,
+            name: data.user.name || "",
+            email: data.user.email || "",
+            phone: data.user.phone || prev.phone,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -84,38 +114,80 @@ export default function ReferralRegistration({
 
     setLoading(true);
     try {
-      // Simulate OTP sending (replace with actual API call)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setOtpSent(true);
-      toast.success("OTP sent to your phone");
-    } catch (error) {
-      toast.error("Failed to send OTP. Please try again.");
+      const response = await fetch("/api/referrals/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: formData.phone }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send OTP");
+      }
+
+      setShowOTPModal(true);
+      toast.success("Verification code sent!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDigitChange = (index: number, value: string) => {
+    if (value.length > 1) value = value.slice(-1);
+    if (!/^\d*$/.test(value)) return;
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = value;
+    setOtpDigits(newDigits);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      digitRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      digitRefs[index - 1].current?.focus();
+    }
+  };
+
   const handleVerifyOTP = async () => {
-    if (!otpCode || otpCode.length !== 6) {
+    const code = otpDigits.join("");
+    if (code.length !== 6) {
       toast.error("Please enter the 6-digit OTP code");
       return;
     }
 
     setLoading(true);
     try {
-      // Simulate OTP verification (replace with actual API call)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/referrals/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: formData.phone,
+          code: code,
+        }),
+      });
 
-      // For demo: accept any 6-digit code starting with 1
-      if (otpCode.startsWith("1")) {
-        setOtpVerified(true);
-        toast.success("Phone number verified!");
-        setStep(2);
-      } else {
-        toast.error("Invalid OTP code. Please try again.");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "OTP verification failed");
       }
-    } catch (error) {
-      toast.error("OTP verification failed. Please try again.");
+
+      setOtpVerified(true);
+      setShowOTPModal(false);
+      toast.success("Phone number verified!");
+      setStep(2);
+    } catch (error: any) {
+      toast.error(error.message || "OTP verification failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -240,7 +312,8 @@ export default function ReferralRegistration({
                 onChange={handleInputChange}
                 placeholder="Enter your full name"
                 required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+                disabled // Pull information for user from the database cause we already have them
+                className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-500 placeholder-gray-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
               />
             </div>
 
@@ -259,59 +332,108 @@ export default function ReferralRegistration({
                   maxLength={10}
                   className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                 />
-                {!otpSent ? (
+                {!otpVerified && (
                   <button
                     type="button"
                     onClick={handleSendOTP}
                     disabled={loading || !formData.phone}
                     className="rounded-xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Send OTP
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleSendOTP}
-                    disabled={loading}
-                    className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  >
-                    Resend
+                    {!otpVerified ? "Verify" : "Change"}
                   </button>
                 )}
               </div>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                We'll send a verification code to this number
+                {!otpVerified
+                  ? "We'll send a verification code to this number"
+                  : "Phone number verified successfully"}
               </p>
             </div>
 
-            {otpSent && !otpVerified && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-                <label className="mb-2 block text-sm font-medium text-blue-900 dark:text-blue-200">
-                  Enter OTP Code <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={otpCode}
-                    onChange={(e) =>
-                      setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
-                    placeholder="123456"
-                    maxLength={6}
-                    className="flex-1 rounded-lg border border-blue-300 bg-white px-4 py-2 text-center text-lg font-semibold tracking-widest text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleVerifyOTP}
-                    disabled={loading || otpCode.length !== 6}
-                    className="rounded-lg bg-blue-500 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Verify
-                  </button>
+            {/* OTP Modal */}
+            {showOTPModal && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setShowOTPModal(false)}
+                />
+
+                {/* Modal Content */}
+                <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-800">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-center text-white">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
+                      <svg
+                        className="h-8 w-8 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold">Verify Phone</h3>
+                    <p className="mt-1 text-sm text-green-50/80">
+                      Enter the 6-digit code sent to
+                      <span className="block font-semibold">
+                        {formData.phone}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="p-8">
+                    <div className="mb-8 flex justify-between gap-2">
+                      {otpDigits.map((digit, index) => (
+                        <input
+                          key={index}
+                          ref={digitRefs[index]}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) =>
+                            handleDigitChange(index, e.target.value)
+                          }
+                          onKeyDown={(e) => handleKeyDown(index, e)}
+                          className="h-12 w-full rounded-xl border-2 border-gray-200 bg-gray-50 text-center text-xl font-bold text-gray-900 transition-all focus:border-green-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                        />
+                      ))}
+                    </div>
+
+                    <div className="space-y-4">
+                      <button
+                        type="button"
+                        onClick={handleVerifyOTP}
+                        disabled={loading || otpDigits.join("").length !== 6}
+                        className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {loading ? "Verifying..." : "Verify Code"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        disabled={loading}
+                        className="text-primary-600 hover:text-primary-700 w-full text-center text-sm font-medium transition-colors dark:text-green-400 dark:hover:text-green-300"
+                      >
+                        Didn't receive code? Resend
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowOTPModal(false)}
+                        className="w-full text-center text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-2 text-xs text-blue-700 dark:text-blue-300">
-                  Enter the 6-digit code sent to {formData.phone}
-                </p>
               </div>
             )}
 
@@ -346,7 +468,8 @@ export default function ReferralRegistration({
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="your@email.com"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+                disabled // Pull information for user from the database cause we already have them
+                className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-sm text-gray-500 placeholder-gray-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 For important updates and notifications
