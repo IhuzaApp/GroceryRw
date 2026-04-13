@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
-import { CustomInput, FileUploadInput, TransportModeSelector, SignaturePad } from "./ShopperUIComponents";
+import { CustomInput, FileUploadInput, TransportModeSelector, SignaturePad, AddressAutocomplete } from "./ShopperUIComponents";
 import { ChevronLeft, ChevronRight, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
 
@@ -14,7 +14,7 @@ export const MobileBecomeShopper = () => {
     capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
-    handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
+    handleInputChange, handleLocationSelect, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
     setCapturedSignature,
     faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
@@ -141,7 +141,7 @@ export const MobileBecomeShopper = () => {
       case 3:
         return (
           <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
-            <CustomInput label="Physical Address" name="address" type="textarea" rows={3} value={formValue.address} onChange={handleInputChange} error={errors.address} required placeholder="District, Sector, Cell, Village" />
+            <AddressAutocomplete label="Physical Address" value={formValue.address} onSelect={handleLocationSelect} error={errors.address} required />
             <CustomInput label="Marital Status" name="mutual_status" type="select" options={mutualStatusOptions} value={formValue.mutual_status} onChange={handleInputChange} />
           </div>
         );

@@ -1,6 +1,8 @@
 import React, { memo, useRef, useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import { Check, Car, Bike, Truck, User } from "lucide-react";
+import { Check, Car, Bike, Truck, User, Search, MapPin } from "lucide-react";
+import { Autocomplete } from "@react-google-maps/api";
+import { useGoogleMap } from "../../context/GoogleMapProvider";
 
 export const CustomInput = memo(({ 
   label, 
@@ -299,3 +301,64 @@ export const SignaturePad = memo(({ onSign, error }: { onSign: (val: string) => 
   );
 });
 SignaturePad.displayName = "SignaturePad";
+
+export const AddressAutocomplete = memo(({ label, value, onSelect, error, required = false }: any) => {
+  const { theme } = useTheme();
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+
+  const { isLoaded } = useGoogleMap();
+
+  const onLoad = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocompleteInstance);
+  };
+
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace();
+      if (place.geometry && place.geometry.location) {
+        const address = place.formatted_address || "";
+        const lat = place.geometry.location.lat().toString();
+        const lng = place.geometry.location.lng().toString();
+        onSelect(address, lat, lng);
+      }
+    }
+  };
+
+  const baseClasses = `w-full rounded-xl border px-4 py-3 md:px-5 md:py-4 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-500/10 shadow-sm hover:shadow-md ${
+    error 
+      ? "border-red-300 bg-red-50 dark:border-red-600/50 dark:bg-red-900/10" 
+      : theme === "dark" 
+        ? "border-[#222] bg-[#111] text-gray-100 hover:border-green-500/30 focus:border-green-500" 
+        : "border-gray-200 bg-white text-gray-900 hover:border-green-400 focus:border-green-500"
+  }`;
+
+  if (!isLoaded) return <CustomInput label={label} value={value} disabled placeholder="Loading maps..." />;
+
+  return (
+    <div className="space-y-1.5 md:space-y-2.5 group">
+      <label className={`block text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-colors ${
+        error ? "text-red-500" : theme === "dark" ? "text-gray-500 group-focus-within:text-green-500" : "text-gray-500 group-focus-within:text-green-600"
+      }`}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+        <div className="relative">
+          <input
+            type="text"
+            defaultValue={value}
+            placeholder="Search for your address..."
+            className={`${baseClasses} pl-10 md:pl-12`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+          />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40">
+            <Search className="h-4 w-4 md:h-5 md:w-5" />
+          </div>
+        </div>
+      </Autocomplete>
+      {error && <p className="text-xs font-semibold text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-top-1">{error}</p>}
+    </div>
+  );
+});
+AddressAutocomplete.displayName = "AddressAutocomplete";

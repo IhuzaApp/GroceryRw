@@ -301,6 +301,22 @@ export const useShopperForm = () => {
     });
   }, []);
 
+  const handleLocationSelect = useCallback((address: string, lat: string, lng: string) => {
+    setFormValue((prev) => ({ 
+      ...prev, 
+      address, 
+      latitude: lat, 
+      longitude: lng 
+    }));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.address;
+      const error = validateField("address", address);
+      if (error) newErrors.address = error;
+      return newErrors;
+    });
+  }, []);
+
   const startCamera = async (mode: string) => {
     try {
       setCameraLoading(true);
@@ -376,13 +392,13 @@ export const useShopperForm = () => {
 
           const pose = await trackerRef.current.detect(video);
           if (pose && !isProcessingStepRef.current) {
-            if (frameCount % 30 === 0) {
+            if (frameCount % 60 === 0) {
               console.log(`[Biometrics] Scanning -> Yaw: ${pose.yaw.toFixed(3)} | Target: ${livenessStep}`);
             }
 
             if (trackerRef.current.isMatching(pose, livenessStep)) {
-              // Increase progress
-              progressRef.current += 25;
+              // Faster capture: 3 accurate frames (3*35 > 100) instead of 4
+              progressRef.current += 35;
               setLivenessProgress(progressRef.current);
 
               // Handle Success Transition
@@ -416,7 +432,8 @@ export const useShopperForm = () => {
                 return;
               }
             } else if (!isProcessingStepRef.current) {
-              progressRef.current = Math.max(0, progressRef.current - 2);
+              // Slower drain: make it easier to keep progress if tracking is jittery
+              progressRef.current = Math.max(0, progressRef.current - 1.5);
               setLivenessProgress(progressRef.current);
             }
           }
@@ -704,7 +721,7 @@ export const useShopperForm = () => {
     stream, showCamera, captureMode, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
     faceVerified, verificationStatus,
     livenessStep, livenessProgress, lowLight,
-    handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
+    handleInputChange, handleLocationSelect, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
     setCapturedSignature, setFormValue, setCapturedPhoto, setCapturedLicenseFront, setCapturedLicenseBack, setCapturedPlateNumber,
     setCapturedNationalIdFront, setCapturedNationalIdBack, setIsUpdating,

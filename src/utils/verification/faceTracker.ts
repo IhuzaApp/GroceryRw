@@ -26,13 +26,13 @@ export class FaceTracker {
   async detect(video: HTMLVideoElement): Promise<{ yaw: number; pitch: number; roll: number } | null> {
     if (!this.detector || !video) return null;
 
-    // Internal downscaling for much faster & more robust detection on 1080p PC cameras
+    // Internal downscaling - targeted at 800px for better profile robustness
     if (!this.offscreenCanvas) {
       this.offscreenCanvas = document.createElement('canvas');
     }
     
-    // Set detection resolution to a stable 480p-ish
-    const scale = Math.min(1, 640 / video.videoWidth);
+    // Higher resolution (800p-ish) helps detect faces at sharper side angles
+    const scale = Math.min(1, 800 / video.videoWidth);
     const width = video.videoWidth * scale;
     const height = video.videoHeight * scale;
     
@@ -44,16 +44,11 @@ export class FaceTracker {
     
     ctx.drawImage(video, 0, 0, width, height);
 
-    // Fast estimation
-    const faces = await this.detector.estimateFaces(this.offscreenCanvas, { flipHorizontal: false });
+    // flipHorizontal: true matches the mirrored UI view, making logic more intuitive
+    const faces = await this.detector.estimateFaces(this.offscreenCanvas, { flipHorizontal: true });
     
     if (!faces || faces.length === 0) {
-      if (Math.random() < 0.02) console.warn("[FaceTracker] estimateFaces returned 0 faces.");
       return null;
-    }
-
-    if (faces.length > 1) {
-      console.warn(`[FaceTracker] ${faces.length} faces detected. Using the dominant one.`);
     }
 
     const face = faces[0];
@@ -62,13 +57,15 @@ export class FaceTracker {
     const nose = keypoints[1];
     const leftEye = keypoints[33];
     const rightEye = keypoints[263];
-    const mouthLeft = keypoints[61];
-    const mouthRight = keypoints[291];
     
     const eyeDist = Math.abs(rightEye.x - leftEye.x);
     const eyeCenter = (leftEye.x + rightEye.x) / 2;
+    
+    // In flipped coords: Positive yaw = Right, Negative yaw = Left
     const yaw = (nose.x - eyeCenter) / (eyeDist * 0.5);
 
+    const mouthLeft = keypoints[61];
+    const mouthRight = keypoints[291];
     const eyeY = (leftEye.y + rightEye.y) / 2;
     const mouthY = (mouthLeft.y + mouthRight.y) / 2;
     const faceHeight = Math.abs(mouthY - eyeY);
@@ -79,17 +76,16 @@ export class FaceTracker {
   }
 
   isMatching(pose: { yaw: number; pitch: number }, step: LivenessStep): boolean {
-    const threshold = 0.25; // Even more relaxed
-    const centerThreshold = 0.2; 
+    const sideThreshold = 0.22; // Slightly more relaxed for quicker capture
+    const centerThreshold = 0.18; 
     
     switch (step) {
       case 'center':
         return Math.abs(pose.yaw) < centerThreshold && Math.abs(pose.pitch) < centerThreshold;
       case 'left':
-        return pose.yaw < -threshold;
+        return pose.yaw < -sideThreshold;
       case 'right':
-        return pose.yaw > threshold;
-      // top/bottom removed from logic for 3-pose speed flow
+        return pose.yaw > sideThreshold;
       default:
         return false;
     }

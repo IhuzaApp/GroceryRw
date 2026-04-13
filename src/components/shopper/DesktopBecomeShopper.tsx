@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
-import { CustomInput, FileUploadInput, HorizontalStepper, TransportModeSelector, SignaturePad } from "./ShopperUIComponents";
+import { CustomInput, FileUploadInput, HorizontalStepper, TransportModeSelector, SignaturePad, AddressAutocomplete } from "./ShopperUIComponents";
 import { CheckCircle2, LayoutDashboard, MapPin, Truck, ChevronRight, ChevronLeft, Shield, Clock, Wallet, X, Camera, ArrowRight, ShieldCheck } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
 
@@ -13,7 +13,7 @@ export const DesktopBecomeShopper = () => {
     formValue, currentStep, errors, loading, registrationSuccess,
     capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
-    stream, showCamera, videoRef, canvasRef, handleInputChange, startCamera, stopCamera, 
+    stream, showCamera, videoRef, canvasRef, handleInputChange, handleLocationSelect, startCamera, stopCamera, 
     capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
     setCapturedSignature,
     faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
@@ -182,7 +182,7 @@ export const DesktopBecomeShopper = () => {
                   return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                       <div className="col-span-full">
-                        <CustomInput label="Residential Address" name="address" type="textarea" rows={3} value={formValue.address} onChange={handleInputChange} error={errors.address} required placeholder="Province, District, Sector, Cell, Village" />
+                        <AddressAutocomplete label="Residential Address" value={formValue.address} onSelect={handleLocationSelect} error={errors.address} required />
                       </div>
                       <div className="col-span-full md:col-span-1 lg:col-span-1">
                         <CustomInput label="Marital Status" name="mutual_status" type="select" options={mutualStatusOptions} value={formValue.mutual_status} onChange={handleInputChange} />
