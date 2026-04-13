@@ -43,6 +43,10 @@ export const mutualStatusOptions = [
 
 export const validateField = (name: string, value: string): string | null => {
   switch (name) {
+    case "first_name":
+      return !value.trim() ? "First name is required" : null;
+    case "last_name":
+      return !value.trim() ? "Last name is required" : null;
     case "full_name":
       return !value.trim() ? "Full name is required" : null;
     case "address":
@@ -133,11 +137,13 @@ export const useShopperForm = () => {
   const { data: session, status: sessionStatus } = useSession();
 
   const [formValue, setFormValue] = useState<Record<string, string>>({
+    first_name: "",
+    last_name: "",
     full_name: "",
     address: "",
     phone_number: "",
     national_id: "",
-    transport_mode: "on_foot",
+    transport_mode: "motorcycle",
     driving_license: "",
     guarantor: "",
     guarantorPhone: "",
@@ -148,12 +154,17 @@ export const useShopperForm = () => {
     dob: "",
   });
 
-  const [idVerified, setIdVerified] = useState(false);
   const [faceVerified, setFaceVerified] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "scanning" | "verifying" | "success" | "failed">("idle");
   const [livenessStep, setLivenessStep] = useState<any>('center');
   const [livenessProgress, setLivenessProgress] = useState(0);
   const [lowLight, setLowLight] = useState(false);
+
+  const [livenessImages, setLivenessImages] = useState<Record<string, string>>({});
+  const [livenessMetadata, setLivenessMetadata] = useState<any>({
+    startTime: Date.now(),
+    poses: []
+  });
 
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -366,28 +377,28 @@ export const useShopperForm = () => {
             }
 
             if (tracker.isMatching(pose, livenessStep)) {
-              setLivenessProgress(prev => {
-                const next = prev + 25; // Snappy feedback (4 frames to lock)
-                if (next >= 100) {
-                  const steps: any[] = ['center', 'left', 'right'];
-                  const currentIndex = steps.indexOf(livenessStep);
-                  
-                  if (currentIndex < steps.length - 1) {
-                    const nextStep = steps[currentIndex + 1];
-                    console.log(`[Biometrics] STEP COMPLETE: ${livenessStep} -> Moving to ${nextStep}`);
-                    setLivenessStep(nextStep);
-                    return 0;
-                  } else {
-                    console.log("[Biometrics] FLOW COMPLETE!");
-                    setLivenessStep('success');
-                    setFaceVerified(true);
-                    setIdVerified(true); 
-                    capturePhoto();
-                    return 100;
-                  }
+              if (livenessProgress + 25 >= 100) {
+                // LOCK IN SUCCESS
+                captureLivenessSnapshot(livenessStep);
+
+                const steps: any[] = ['center', 'left', 'right'];
+                const currentIndex = steps.indexOf(livenessStep);
+                
+                if (currentIndex < steps.length - 1) {
+                  const nextStep = steps[currentIndex + 1];
+                  console.log(`[Biometrics] STEP COMPLETE: ${livenessStep} -> Moving to ${nextStep}`);
+                  setLivenessStep(nextStep);
+                  setLivenessProgress(0);
+                } else {
+                  console.log("[Biometrics] FLOW COMPLETE!");
+                  setLivenessStep('success');
+                  setFaceVerified(true);
+                  capturePhoto();
+                  setLivenessProgress(100);
                 }
-                return next;
-              });
+              } else {
+                setLivenessProgress(prev => prev + 25);
+              }
             } else {
               setLivenessProgress(prev => Math.max(0, prev - 2)); 
             }
@@ -411,6 +422,28 @@ export const useShopperForm = () => {
     setStream(null);
     setShowCamera(false);
   };
+
+  const captureLivenessSnapshot = useCallback(async (step: string) => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      
+      const data = canvas.toDataURL("image/jpeg", 0.7);
+      const compressed = await compressImage(data, 150); // Keep liveness frames small
+      
+      setLivenessImages(prev => ({ ...prev, [step]: compressed }));
+      setLivenessMetadata((prev: any) => ({
+        ...prev,
+        poses: [...prev.poses, { step, timestamp: Date.now() }]
+      }));
+    }
+  }, [videoRef, canvasRef]);
 
   const capturePhoto = async () => {
     if (verificationStatus === "verifying") return;
@@ -481,7 +514,7 @@ export const useShopperForm = () => {
         toast.error("Please complete face verification to continue");
         return;
       }
-      ["full_name", "national_id", "transport_mode", "dob"].forEach(f => {
+      ["first_name", "last_name", "national_id", "transport_mode", "dob"].forEach(f => {
         const err = validateField(f, formValue[f]);
         if (err) newErrors[f] = err;
       });
@@ -518,6 +551,15 @@ export const useShopperForm = () => {
 
       const payload = {
         ...formValue,
+        full_name: `${formValue.first_name} ${formValue.last_name}`.trim(),
+        face_verified: faceVerified,
+        face_liveness_images: livenessImages, // JSONB compatible
+        verification_metadata: {
+          ...livenessMetadata,
+          resolution: `${videoRef.current?.videoWidth}x${videoRef.current?.videoHeight}`,
+          platform: "Web",
+          completedAt: new Date().toISOString()
+        },
         profile_photo: capturedPhoto,
         national_id_photo_front: capturedNationalIdFront,
         national_id_photo_back: capturedNationalIdBack,
@@ -528,7 +570,6 @@ export const useShopperForm = () => {
         mutual_StatusCertificate: await convert(maritalStatusFile),
         user_id: (session?.user as any).id,
         force_update: isUpdating,
-        id_verified: idVerified,
         face_verified: faceVerified,
       };
 
@@ -558,13 +599,14 @@ export const useShopperForm = () => {
     capturedPhoto, capturedLicense, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, captureMode, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
-    idVerified, faceVerified, verificationStatus,
+    faceVerified, verificationStatus,
     livenessStep, livenessProgress, lowLight,
     handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
     setCapturedSignature, setFormValue, setCapturedPhoto, setCapturedLicense,
     setCapturedNationalIdFront, setCapturedNationalIdBack, setIsUpdating,
-    setIdVerified, setFaceVerified, setVerificationStatus, setLivenessStep,
+    setIdVerified: () => {},
+    setFaceVerified, setVerificationStatus, setLivenessStep,
     sessionStatus, loadingExistingData
   };
 };

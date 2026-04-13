@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
-import { useShopperForm, steps, transportOptions, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
+import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
 import { CustomInput, FileUploadInput, HorizontalStepper, TransportModeSelector } from "./ShopperUIComponents";
 import { CheckCircle2, LayoutDashboard, MapPin, Truck, ChevronRight, ChevronLeft, Shield, Clock, Wallet, X, Camera, ArrowRight, ShieldCheck } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
@@ -15,7 +15,7 @@ export const DesktopBecomeShopper = () => {
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, videoRef, canvasRef, handleInputChange, startCamera, stopCamera, 
     capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile,
-    idVerified, faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
+    faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
   } = useShopperForm() as any;
 
   if (registrationSuccess) {
@@ -116,7 +116,10 @@ export const DesktopBecomeShopper = () => {
                   return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                       <div className="col-span-full md:col-span-1">
-                        <CustomInput label="Full Legal Name" name="full_name" value={formValue.full_name} onChange={handleInputChange} error={errors.full_name} required placeholder="As shown on ID" />
+                        <CustomInput label="First Name" name="first_name" value={formValue.first_name} onChange={handleInputChange} error={errors.first_name} required placeholder="Legal first name" />
+                      </div>
+                      <div className="col-span-full md:col-span-1">
+                        <CustomInput label="Last Name / Surname" name="last_name" value={formValue.last_name} onChange={handleInputChange} error={errors.last_name} required placeholder="Surname" />
                       </div>
                       <div className="col-span-full md:col-span-1">
                         <CustomInput label="National ID / Passport" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="Enter number" />
@@ -151,7 +154,7 @@ export const DesktopBecomeShopper = () => {
                             </div>
                             <button 
                               onClick={() => startCamera('profile')}
-                              disabled={faceVerified || !formValue.full_name || !formValue.national_id || !formValue.dob}
+                              disabled={faceVerified || !formValue.first_name || !formValue.last_name || !formValue.national_id || !formValue.dob}
                               className={`px-8 py-4 rounded-2xl font-black transition-all active:scale-95 disabled:opacity-50 ${
                                 faceVerified ? 'bg-green-500/10 text-green-500' : 'bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-600/20'
                               }`}
@@ -256,7 +259,7 @@ export const DesktopBecomeShopper = () => {
                         <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 p-10 rounded-[32px] ${theme === 'dark' ? 'bg-[#111]/50' : 'bg-green-50/30'}`}>
                           <div className="space-y-2">
                              <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Full Name</p>
-                             <p className="text-xl font-bold">{formValue.full_name}</p>
+                             <p className="text-xl font-bold">{formValue.first_name} {formValue.last_name}</p>
                           </div>
                           <div className="space-y-2">
                              <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Transport</p>

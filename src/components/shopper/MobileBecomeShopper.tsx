@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
-import { useShopperForm, steps, transportOptions, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
+import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
 import { CustomInput, FileUploadInput, TransportModeSelector } from "./ShopperUIComponents";
 import { ChevronLeft, ChevronRight, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
@@ -17,7 +17,7 @@ export const MobileBecomeShopper = () => {
     handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
     setCapturedSignature, setShowSignaturePad, showSignaturePad,
-    idVerified, faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
+    faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
   } = useShopperForm() as any;
 
   if (registrationSuccess) {
@@ -99,7 +99,8 @@ export const MobileBecomeShopper = () => {
       case 1:
         return (
            <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
-            <CustomInput label="Full Name" name="full_name" value={formValue.full_name} onChange={handleInputChange} error={errors.full_name} required placeholder="Your full legal name" />
+            <CustomInput label="First Name" name="first_name" value={formValue.first_name} onChange={handleInputChange} error={errors.first_name} required placeholder="Legal first name" />
+            <CustomInput label="Last Name / Surname" name="last_name" value={formValue.last_name} onChange={handleInputChange} error={errors.last_name} required placeholder="Surname" />
             <CustomInput label="National ID Number" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="16-digit ID number" />
             <CustomInput 
               label="Date of Birth" 
@@ -120,7 +121,7 @@ export const MobileBecomeShopper = () => {
                </div>
                <button 
                 onClick={() => startCamera('profile')}
-                disabled={faceVerified || !formValue.full_name || !formValue.national_id || !formValue.dob}
+                disabled={faceVerified || !formValue.first_name || !formValue.last_name || !formValue.national_id || !formValue.dob}
                 className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
                   faceVerified ? 'bg-green-500/10 text-green-500' : 'bg-green-600 text-white shadow-lg shadow-green-600/20'
                 }`}
@@ -198,7 +199,7 @@ export const MobileBecomeShopper = () => {
             <div className={`p-8 rounded-[40px] ${theme === 'dark' ? 'bg-[#111]' : 'bg-gray-50'}`}>
               <h4 className="font-black tracking-tight text-xl flex items-center mb-6"><CheckCircle2 className="mr-2 h-6 w-6 text-green-500" /> Confirm Details</h4>
               <div className="space-y-4 text-sm font-medium">
-                <div className="flex justify-between items-center"><span className="text-gray-500">Legal Name</span><span>{formValue.full_name}</span></div>
+                <div className="flex justify-between items-center"><span className="text-gray-500">Legal Name</span><span>{formValue.first_name} {formValue.last_name}</span></div>
                 <div className="flex justify-between items-center"><span className="text-gray-500">Transport</span><span className="capitalize">{formValue.transport_mode}</span></div>
                 <div className="flex justify-between items-center"><span className="text-gray-500">Phone</span><span className="">{formValue.phone_number}</span></div>
                 <div className="h-px w-full bg-gray-200 dark:bg-gray-800 my-4" />
