@@ -759,16 +759,44 @@ export default function MobileProfile({
             </button>
           )}
 
-        {/* Wallet */}
-        <button
-          onClick={() => handleNavigation("wallet")}
-          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+        {/* Wallet - Shopper only */}
+        {shopperStatus?.active && (
+          <button
+            onClick={() => handleNavigation("wallet")}
+            className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+                  <svg
+                    className="h-6 w-6 !text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Wallet
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Manage your wallet balance
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                  {formatCurrency(walletBalance)}
+                </span>
                 <svg
-                  className="h-6 w-6 !text-white"
+                  className="h-5 w-5 !text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -777,39 +805,13 @@ export default function MobileProfile({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    d="M9 5l7 7-7 7"
                   />
                 </svg>
               </div>
-              <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Wallet
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Manage your wallet balance
-                </p>
-              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                {formatCurrency(walletBalance)}
-              </span>
-              <svg
-                className="h-5 w-5 !text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
+          </button>
+        )}
       </div>
 
       {/* Bottom Action Buttons */}
