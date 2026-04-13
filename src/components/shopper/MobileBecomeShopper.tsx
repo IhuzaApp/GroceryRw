@@ -134,7 +134,8 @@ export const MobileBecomeShopper = () => {
       case 2:
         return (
           <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
-            <CustomInput label="Phone Number" name="phone_number" value={formValue.phone_number} onChange={handleInputChange} error={errors.phone_number} required placeholder="e.g., 0788829084" />
+            <CustomInput label="Verified Phone Number" name="phone_number" value={formValue.phone_number} onChange={handleInputChange} error={errors.phone_number} required placeholder="e.g. 078XXXXXXX" />
+            <CustomInput label="Email Address" name="email" type="email" value={formValue.email} onChange={handleInputChange} error={errors.email} required placeholder="name@example.com" />
           </div>
         );
       case 3:

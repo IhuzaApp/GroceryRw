@@ -172,6 +172,9 @@ export const DesktopBecomeShopper = () => {
                       <div className="col-span-full md:col-span-1">
                         <CustomInput label="Verified Phone Number" name="phone_number" value={formValue.phone_number} onChange={handleInputChange} error={errors.phone_number} required placeholder="e.g. 078XXXXXXX" />
                       </div>
+                      <div className="col-span-full md:col-span-1">
+                        <CustomInput label="Email Address" name="email" type="email" value={formValue.email} onChange={handleInputChange} error={errors.email} required placeholder="name@example.com" />
+                      </div>
                     </div>
                   );
                 case 3:

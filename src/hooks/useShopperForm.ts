@@ -142,6 +142,7 @@ export const useShopperForm = () => {
     full_name: "",
     address: "",
     phone_number: "",
+    email: "",
     national_id: "",
     transport_mode: "motorcycle",
     driving_license: "",
