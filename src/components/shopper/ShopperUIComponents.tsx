@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import { Check } from "lucide-react";
+import { Check, Car, Bike, Truck, User } from "lucide-react";
 
 export const CustomInput = memo(({ 
   label, 
@@ -12,7 +12,8 @@ export const CustomInput = memo(({
   onChange, 
   error = "", 
   options = null, 
-  rows = 1 
+  rows = 1,
+  ...props 
 }: any) => {
   const { theme } = useTheme();
   const baseClasses = `w-full rounded-xl border px-4 py-3 md:px-5 md:py-4 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-500/10 shadow-sm hover:shadow-md ${
@@ -32,17 +33,74 @@ export const CustomInput = memo(({
       </label>
 
       {type === "select" && options ? (
-        <select value={value} onChange={(e) => onChange(name, e.target.value)} className={baseClasses}>
+        <select value={value} onChange={(e) => onChange(name, e.target.value)} className={baseClasses} {...props}>
           <option value="">Select an option</option>
           {options.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       ) : type === "textarea" ? (
-        <textarea value={value} onChange={(e) => onChange(name, e.target.value)} placeholder={placeholder} rows={rows} className={baseClasses} />
+        <textarea value={value} onChange={(e) => onChange(name, e.target.value)} placeholder={placeholder} rows={rows} className={baseClasses} {...props} />
       ) : (
-        <input type={type} value={value} onChange={(e) => onChange(name, e.target.value)} placeholder={placeholder} className={baseClasses} />
+        <input type={type} value={value} onChange={(e) => onChange(name, e.target.value)} placeholder={placeholder} className={baseClasses} {...props} />
       )}
 
       {error && <p className="text-xs font-semibold text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-top-1">{error}</p>}
+    </div>
+  );
+});
+
+export const TransportModeSelector = memo(({ value, onChange, error }: any) => {
+  const { theme } = useTheme();
+  
+  const options = [
+    { label: "Car", value: "car", icon: <Car className="h-6 w-6" /> },
+    { label: "Motorcycle", value: "motorcycle", icon: <Truck className="h-6 w-6" /> },
+    { label: "Bicycle", value: "bicycle", icon: <Bike className="h-6 w-6" /> },
+    { label: "On Foot", value: "on_foot", icon: <User className="h-6 w-6" /> },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <label className={`block text-[11px] md:text-[13px] font-bold uppercase tracking-wider ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+        Mode of Transport
+      </label>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {options.map((option) => {
+          const isSelected = value === option.value;
+          return (
+            <button
+              key={option.value}
+              onClick={() => onChange("transport_mode", option.value)}
+              className={`relative flex flex-col items-center justify-center p-6 rounded-[32px] border-2 transition-all duration-300 group hover:scale-105 active:scale-95 ${
+                isSelected
+                  ? "border-green-500 bg-green-500/10 shadow-lg shadow-green-500/20"
+                  : theme === "dark"
+                  ? "border-gray-800 bg-[#0a0a0a] hover:border-green-500/50"
+                  : "border-gray-100 bg-gray-50/50 hover:border-green-400 hover:bg-white hover:shadow-xl hover:shadow-green-500/5"
+              }`}
+            >
+              <div className={`mb-4 p-4 rounded-2xl transition-all duration-500 ${
+                isSelected 
+                  ? "bg-green-500 text-white" 
+                  : theme === "dark" ? "bg-white/5 text-gray-500" : "bg-white text-gray-400 shadow-sm"
+              }`}>
+                {option.icon}
+              </div>
+              <span className={`text-sm font-black transition-colors ${
+                isSelected ? "text-green-600 dark:text-green-500" : "text-gray-500"
+              }`}>
+                {option.label}
+              </span>
+              
+              {isSelected && (
+                <div className="absolute top-4 right-4 h-6 w-6 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg animate-in zoom-in duration-300">
+                  <Check className="h-3 w-3" />
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {error && <p className="text-xs font-bold text-red-600 mt-2">{error}</p>}
     </div>
   );
 });

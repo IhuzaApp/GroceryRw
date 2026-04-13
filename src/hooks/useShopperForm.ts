@@ -54,6 +54,17 @@ export const validateField = (name: string, value: string): string | null => {
       return null;
     case "national_id":
       return !value.trim() ? "National ID is required" : null;
+    case "dob": {
+      if (!value) return "Date of birth is required";
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age < 18 ? "You must be at least 18 years old" : null;
+    }
     case "transport_mode":
       return !value.trim() ? "Transport mode is required" : null;
     case "guarantorPhone":
@@ -134,7 +145,15 @@ export const useShopperForm = () => {
     mutual_status: "",
     latitude: "",
     longitude: "",
+    dob: "",
   });
+
+  const [idVerified, setIdVerified] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<"idle" | "scanning" | "verifying" | "success" | "failed">("idle");
+  const [livenessStep, setLivenessStep] = useState<any>('center');
+  const [livenessProgress, setLivenessProgress] = useState(0);
+  const [lowLight, setLowLight] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -160,9 +179,19 @@ export const useShopperForm = () => {
   const [captureMode, setCaptureMode] = useState<string>("");
   const [cameraLoading, setCameraLoading] = useState(false);
 
+  // Persistent AI State (prevents re-initialization on step changes)
+  const trackerRef = useRef<any>(null);
+  const frameCountRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Attach stream to video element
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, showCamera]);
 
   // Removed automatic pre-filling from session to allow users to provide 
   // accurate legal information which might differ from their account profile.
@@ -196,7 +225,11 @@ export const useShopperForm = () => {
               latitude: shopper.latitude || "",
               longitude: shopper.longitude || "",
               mutual_status: shopper.mutual_status || "",
+              dob: shopper.dob || "",
             });
+
+            if (shopper.id_verified) setIdVerified(true);
+            if (shopper.face_verified) setFaceVerified(true);
 
             if (shopper.profile_photo) setCapturedPhoto(shopper.profile_photo);
             if (shopper.national_id_photo_front) setCapturedNationalIdFront(shopper.national_id_photo_front);
@@ -261,6 +294,118 @@ export const useShopperForm = () => {
     }
   };
 
+  // Face Liveness Loop
+  useEffect(() => {
+    let frameId: number;
+    
+    const runLiveness = async () => {
+      if (showCamera && captureMode === 'profile' && videoRef.current && !faceVerified) {
+        frameCountRef.current++;
+        const frameCount = frameCountRef.current;
+        
+        // Skip frames to save CPU (Run detection every 3rd frame)
+        if (frameCount % 3 !== 0 && livenessProgress < 100) {
+          frameId = requestAnimationFrame(runLiveness);
+          return;
+        }
+
+        try {
+          // Guard against video not being ready
+          const video = videoRef.current;
+          if (video.videoWidth === 0 || video.readyState < 2) {
+            frameId = requestAnimationFrame(runLiveness);
+            return;
+          }
+
+          // Pre-initialize tracker if not already done
+          if (!trackerRef.current) {
+            console.log("[Biometrics] Initializing FaceTracker (Persistent)...");
+            const { faceTracker } = await import("../utils/verification/faceTracker");
+            trackerRef.current = faceTracker;
+            await trackerRef.current.init();
+            console.log("[Biometrics] Tracker Initialized.");
+          }
+          
+          const tracker = trackerRef.current;
+
+          // Periodic Brightness Check (More stable)
+          if (frameCount % 60 === 0 && canvasRef.current) {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (ctx) {
+              canvas.width = 40;
+              canvas.height = 40;
+              ctx.drawImage(video, 0, 0, 40, 40);
+              const pixels = ctx.getImageData(0, 0, 40, 40).data;
+              let brightness = 0;
+              for (let i = 0; i < pixels.length; i += 4) {
+                brightness += (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+              }
+              const avg = brightness / (pixels.length / 4);
+              if (frameCount % 180 === 0) console.log(`[Biometrics] Local Brightness: ${avg.toFixed(1)}`);
+              
+              // Guard against intermittent black frames (common on webcams)
+              if (avg < 5 && frameCount > 10) {
+                frameId = requestAnimationFrame(runLiveness);
+                return;
+              }
+              setLowLight(avg < 25);
+            }
+          }
+
+          // Warm-up logic
+          if (frameCount < 15) {
+            frameId = requestAnimationFrame(runLiveness);
+            return;
+          }
+
+          const pose = await tracker.detect(video);
+          if (pose) {
+            if (frameCount % 30 === 0) {
+              console.log(`[Biometrics] Scanning -> Yaw: ${pose.yaw.toFixed(3)} | Target: ${livenessStep}`);
+            }
+
+            if (tracker.isMatching(pose, livenessStep)) {
+              setLivenessProgress(prev => {
+                const next = prev + 25; // Snappy feedback (4 frames to lock)
+                if (next >= 100) {
+                  const steps: any[] = ['center', 'left', 'right'];
+                  const currentIndex = steps.indexOf(livenessStep);
+                  
+                  if (currentIndex < steps.length - 1) {
+                    const nextStep = steps[currentIndex + 1];
+                    console.log(`[Biometrics] STEP COMPLETE: ${livenessStep} -> Moving to ${nextStep}`);
+                    setLivenessStep(nextStep);
+                    return 0;
+                  } else {
+                    console.log("[Biometrics] FLOW COMPLETE!");
+                    setLivenessStep('success');
+                    setFaceVerified(true);
+                    setIdVerified(true); 
+                    capturePhoto();
+                    return 100;
+                  }
+                }
+                return next;
+              });
+            } else {
+              setLivenessProgress(prev => Math.max(0, prev - 2)); 
+            }
+          }
+        } catch (err) {
+          console.error("[Biometrics] Loop error:", err);
+        }
+      }
+      frameId = requestAnimationFrame(runLiveness);
+    };
+
+    if (showCamera && captureMode === 'profile') {
+      runLiveness();
+    }
+
+    return () => cancelAnimationFrame(frameId);
+  }, [showCamera, captureMode, livenessStep]);
+
   const stopCamera = () => {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     setStream(null);
@@ -268,15 +413,57 @@ export const useShopperForm = () => {
   };
 
   const capturePhoto = async () => {
+    if (verificationStatus === "verifying") return;
+    
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext("2d")?.drawImage(video, 0, 0);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      
+      // Determine crop region based on mode and device
+      let sWidth = videoWidth;
+      let sHeight = videoHeight;
+      let sx = 0;
+      let sy = 0;
+
+      if (captureMode === "ocr_scan") {
+        // Mocking the UI frame (70% on desktop, 90% on mobile)
+        const isMobile = window.innerWidth < 768;
+        const frameWidthPercent = isMobile ? 0.9 : 0.7;
+        const aspectRatio = isMobile ? (3/4) : (16/9);
+
+        sWidth = videoWidth * frameWidthPercent;
+        sHeight = sWidth / aspectRatio;
+
+        // Ensure we don't exceed video dimensions
+        if (sHeight > videoHeight) {
+          sHeight = videoHeight * 0.8;
+          sWidth = sHeight * aspectRatio;
+        }
+
+        sx = (videoWidth - sWidth) / 2;
+        sy = (videoHeight - sHeight) / 2;
+      }
+
+      canvas.width = sWidth;
+      canvas.height = sHeight;
+
+      // Apply filters for OCR
+      if (captureMode === "ocr_scan") {
+        ctx.filter = 'grayscale(100%) contrast(1.2) brightness(1.1)';
+      }
+      
+      ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+      
       const data = canvas.toDataURL("image/jpeg");
       const compressed = await compressImage(data);
       
+      // Note: ocr_scan has been removed at user request. Face verification is now the primary step.
+
       switch (captureMode) {
         case "profile": setCapturedPhoto(compressed); break;
         case "license": setCapturedLicense(compressed); break;
@@ -290,7 +477,11 @@ export const useShopperForm = () => {
   const nextStep = () => {
     const newErrors: Record<string, string> = {};
     if (currentStep === 1) {
-      ["full_name", "national_id", "transport_mode"].forEach(f => {
+      if (!faceVerified) {
+        toast.error("Please complete face verification to continue");
+        return;
+      }
+      ["full_name", "national_id", "transport_mode", "dob"].forEach(f => {
         const err = validateField(f, formValue[f]);
         if (err) newErrors[f] = err;
       });
@@ -337,6 +528,8 @@ export const useShopperForm = () => {
         mutual_StatusCertificate: await convert(maritalStatusFile),
         user_id: (session?.user as any).id,
         force_update: isUpdating,
+        id_verified: idVerified,
+        face_verified: faceVerified,
       };
 
       const res = await fetch("/api/queries/register-shopper", {
@@ -365,10 +558,13 @@ export const useShopperForm = () => {
     capturedPhoto, capturedLicense, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, captureMode, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
+    idVerified, faceVerified, verificationStatus,
+    livenessStep, livenessProgress, lowLight,
     handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
     setCapturedSignature, setFormValue, setCapturedPhoto, setCapturedLicense,
     setCapturedNationalIdFront, setCapturedNationalIdBack, setIsUpdating,
+    setIdVerified, setFaceVerified, setVerificationStatus, setLivenessStep,
     sessionStatus, loadingExistingData
   };
 };

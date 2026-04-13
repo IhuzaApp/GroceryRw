@@ -2,8 +2,9 @@ import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, transportOptions, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
-import { CustomInput, FileUploadInput } from "./ShopperUIComponents";
+import { CustomInput, FileUploadInput, TransportModeSelector } from "./ShopperUIComponents";
 import { ChevronLeft, ChevronRight, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
+import { BiometricCameraModal } from "./BiometricCameraModal";
 
 export const MobileBecomeShopper = () => {
   const { theme } = useTheme();
@@ -15,7 +16,8 @@ export const MobileBecomeShopper = () => {
     stream, showCamera, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
     handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
-    setCapturedSignature, setShowSignaturePad, showSignaturePad
+    setCapturedSignature, setShowSignaturePad, showSignaturePad,
+    idVerified, faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
   } = useShopperForm() as any;
 
   if (registrationSuccess) {
@@ -96,10 +98,36 @@ export const MobileBecomeShopper = () => {
         );
       case 1:
         return (
-          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
+           <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
             <CustomInput label="Full Name" name="full_name" value={formValue.full_name} onChange={handleInputChange} error={errors.full_name} required placeholder="Your full legal name" />
             <CustomInput label="National ID Number" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="16-digit ID number" />
-            <CustomInput label="Transport Mode" name="transport_mode" type="select" options={transportOptions} value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} required />
+            <CustomInput 
+              label="Date of Birth" 
+              name="dob" 
+              type="date" 
+              value={formValue.dob} 
+              onChange={handleInputChange} 
+              error={errors.dob} 
+              required 
+              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+            />
+            <TransportModeSelector value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} />
+            
+            <div className={`p-6 rounded-[32px] border-2 border-dashed transition-all ${faceVerified ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}>
+               <div className="flex items-center space-x-3 mb-4">
+                  <Shield className={`h-5 w-5 ${faceVerified ? 'text-green-500' : 'text-gray-400'}`} />
+                  <span className="text-sm font-bold">Face Verification</span>
+               </div>
+               <button 
+                onClick={() => startCamera('profile')}
+                disabled={faceVerified || !formValue.full_name || !formValue.national_id || !formValue.dob}
+                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                  faceVerified ? 'bg-green-500/10 text-green-500' : 'bg-green-600 text-white shadow-lg shadow-green-600/20'
+                }`}
+               >
+                 {faceVerified ? "Face Verified" : "Verify Face (Liveness)"}
+               </button>
+            </div>
           </div>
         );
       case 2:
@@ -251,23 +279,20 @@ export const MobileBecomeShopper = () => {
       </footer>
 
       {/* Camera/Signature Modals would go here */}
-      {showCamera && (
-        <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-black">
-          <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
-          <div className="absolute inset-0 border-[40px] border-black/60 pointer-events-none flex items-center justify-center">
-             <div className="w-full aspect-[3/4] border-2 border-white/50 rounded-[40px] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
-          </div>
-          <div className="absolute bottom-16 left-0 right-0 flex items-center justify-around px-12">
-            <button onClick={stopCamera} className="w-16 h-16 flex items-center justify-center rounded-3xl bg-white/10 text-white backdrop-blur-xl border border-white/10">
-              <ChevronLeft className="h-8 w-8" />
-            </button>
-            <button onClick={capturePhoto} className="w-24 h-24 rounded-full border-8 border-white/20 flex items-center justify-center transition-all active:scale-90">
-              <div className="w-16 h-16 rounded-full bg-white shadow-xl" />
-            </button>
-            <div className="w-16" />
-          </div>
-        </div>
-      )}
+      {/* Biometric/Document Camera Modal */}
+      <BiometricCameraModal 
+        show={showCamera}
+        captureMode={captureMode}
+        livenessStep={livenessStep}
+        livenessProgress={livenessProgress}
+        lowLight={lowLight}
+        verificationStatus={verificationStatus}
+        videoRef={videoRef}
+        canvasRef={canvasRef}
+        stopCamera={stopCamera}
+        capturePhoto={capturePhoto}
+        isMobile={true}
+      />
     </div>
   );
 };

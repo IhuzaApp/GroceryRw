@@ -2,8 +2,9 @@ import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, transportOptions, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
-import { CustomInput, FileUploadInput, HorizontalStepper } from "./ShopperUIComponents";
-import { CheckCircle2, Camera, PenTool, LayoutDashboard, UserCheck, ShieldCheck, MapPin, Truck, ChevronRight, ChevronLeft, X, ArrowRight, Shield, Clock, Wallet } from "lucide-react";
+import { CustomInput, FileUploadInput, HorizontalStepper, TransportModeSelector } from "./ShopperUIComponents";
+import { CheckCircle2, LayoutDashboard, MapPin, Truck, ChevronRight, ChevronLeft, Shield, Clock, Wallet, X, Camera, ArrowRight, ShieldCheck } from "lucide-react";
+import { BiometricCameraModal } from "./BiometricCameraModal";
 
 export const DesktopBecomeShopper = () => {
   const { theme } = useTheme();
@@ -12,8 +13,9 @@ export const DesktopBecomeShopper = () => {
     formValue, currentStep, errors, loading, registrationSuccess,
     capturedPhoto, capturedLicense, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
-    stream, showCamera, videoRef, handleInputChange, startCamera, stopCamera, 
-    capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile
+    stream, showCamera, videoRef, canvasRef, handleInputChange, startCamera, stopCamera, 
+    capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile,
+    idVerified, faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
   } = useShopperForm() as any;
 
   if (registrationSuccess) {
@@ -71,9 +73,9 @@ export const DesktopBecomeShopper = () => {
           }`}>
             {/* Section Indicator */}
             <div className="flex items-center space-x-3 mb-10 opacity-60">
-               <div className="h-[2px] w-8 bg-green-500" />
-               <span className="text-[10px] font-black uppercase tracking-widest">{steps[currentStep].title}</span>
-            </div>
+                <div className="h-[2px] w-8 bg-green-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">{steps[currentStep].title}</span>
+             </div>
 
             {(() => {
               switch (currentStep) {
@@ -120,7 +122,44 @@ export const DesktopBecomeShopper = () => {
                         <CustomInput label="National ID / Passport" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="Enter number" />
                       </div>
                       <div className="col-span-full md:col-span-1">
-                        <CustomInput label="Mode of Transport" name="transport_mode" type="select" options={transportOptions} value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} required />
+                        <CustomInput 
+                          label="Date of Birth" 
+                          name="dob" 
+                          type="date" 
+                          value={formValue.dob} 
+                          onChange={handleInputChange} 
+                          error={errors.dob} 
+                          required 
+                          max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                        />
+                      </div>
+                      <div className="col-span-full">
+                         <TransportModeSelector value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} />
+                      </div>
+                      
+                      <div className="col-span-full">
+                        <div className={`p-8 rounded-[32px] border-2 border-dashed transition-all ${faceVerified ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}>
+                          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center space-x-4">
+                              <div className={`p-4 rounded-2xl ${faceVerified ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-400'}`}>
+                                <ShieldCheck className="h-8 w-8" />
+                              </div>
+                              <div>
+                                <h4 className="text-xl font-black">Face Verification</h4>
+                                <p className="text-sm text-gray-500">Fast biometric liveness security check</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => startCamera('profile')}
+                              disabled={faceVerified || !formValue.full_name || !formValue.national_id || !formValue.dob}
+                              className={`px-8 py-4 rounded-2xl font-black transition-all active:scale-95 disabled:opacity-50 ${
+                                faceVerified ? 'bg-green-500/10 text-green-500' : 'bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-600/20'
+                              }`}
+                            >
+                              {faceVerified ? "Face Verified Successfully" : "Verify Face (Liveness)"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -271,57 +310,19 @@ export const DesktopBecomeShopper = () => {
           </div>
         </div>
 
-        {/* Cinematic Modal Capture */}
-        {showCamera && (
-          <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-12 animate-in fade-in duration-500">
-            <div className="relative max-w-5xl w-full h-full flex flex-col">
-              <header className="flex items-center justify-between text-white mb-10 translate-y-0 animate-in slide-in-from-top duration-700">
-                <div>
-                  <h2 className="text-3xl font-black tracking-tight">Biometric Capture</h2>
-                  <p className="text-gray-400 text-sm font-medium">Keep your face/document within the indicated frame.</p>
-                </div>
-                <button onClick={stopCamera} className="p-4 bg-white/10 hover:bg-white/20 rounded-full transition-all active:scale-90">
-                  <X className="h-8 w-8" />
-                </button>
-              </header>
-              
-              <div className="flex-1 relative rounded-[60px] overflow-hidden border-8 border-white/5 shadow-[0_0_100px_rgba(34,197,94,0.15)] bg-black animate-in zoom-in duration-1000">
-                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-                
-                {/* Cinematic Scanner Lines */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="relative w-[50%] aspect-square md:aspect-video border-2 border-green-500/50 rounded-full md:rounded-[40px] shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]">
-                     <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-3xl" />
-                     <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-3xl" />
-                     <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-3xl" />
-                     <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-3xl" />
-                     
-                     <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent animate-scan" />
-                  </div>
-                </div>
-              </div>
-
-              <footer className="mt-12 flex justify-center animate-in slide-in-from-bottom duration-700">
-                 <button onClick={capturePhoto} className="group relative w-32 h-32 rounded-full border-8 border-white/10 flex items-center justify-center transition-all hover:border-white/30 active:scale-90">
-                    <div className="w-20 h-20 rounded-full bg-white shadow-[0_0_30px_rgba(255,255,255,0.5)] group-hover:scale-95 transition-transform" />
-                    <div className="absolute -inset-4 border-2 border-green-500 rounded-full animate-ping opacity-20" />
-                 </button>
-              </footer>
-            </div>
-          </div>
-        )}
-
-        <style jsx>{`
-          @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-          }
-          .animate-scan {
-            animation: scan 3s linear infinite;
-          }
-        `}</style>
+        {/* Biometric/Document Camera Modal */}
+        <BiometricCameraModal 
+          show={showCamera}
+          captureMode={captureMode}
+          livenessStep={livenessStep}
+          livenessProgress={livenessProgress}
+          lowLight={lowLight}
+          verificationStatus={verificationStatus}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          stopCamera={stopCamera}
+          capturePhoto={capturePhoto}
+        />
     </>
   );
 };

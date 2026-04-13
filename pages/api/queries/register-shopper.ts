@@ -32,6 +32,9 @@ const REGISTER_SHOPPER = gql`
     $status: String = ""
     $transport_mode: String = ""
     $user_id: uuid = ""
+    $dob: String = ""
+    $id_verified: Boolean = false
+    $face_verified: Boolean = false
   ) {
     insert_shoppers(
       objects: {
@@ -62,6 +65,9 @@ const REGISTER_SHOPPER = gql`
         status: $status
         transport_mode: $transport_mode
         user_id: $user_id
+        dob: $dob
+        id_verified: $id_verified
+        face_verified: $face_verified
       }
     ) {
       affected_rows
@@ -95,6 +101,9 @@ const UPDATE_SHOPPER = gql`
     $signature: String
     $collection_comment: String
     $needCollection: Boolean
+    $dob: String
+    $id_verified: Boolean
+    $face_verified: Boolean
   ) {
     update_shoppers_by_pk(
       pk_columns: { id: $shopper_id }
@@ -121,6 +130,9 @@ const UPDATE_SHOPPER = gql`
         signature: $signature
         collection_comment: $collection_comment
         needCollection: $needCollection
+        dob: $dob
+        id_verified: $id_verified
+        face_verified: $face_verified
         status: "pending"
         updated_at: "now()"
       }
@@ -176,6 +188,9 @@ interface RegisterShopperInput {
   signature?: string;
   collection_comment?: string;
   needCollection?: boolean;
+  dob?: string;
+  id_verified?: boolean;
+  face_verified?: boolean;
 }
 
 interface RegisterShopperResponse {
@@ -297,6 +312,9 @@ export default async function handler(
       signature,
       collection_comment,
       needCollection,
+      dob,
+      id_verified,
+      face_verified,
     } = req.body as RegisterShopperInput;
     userId = user_id;
 
@@ -397,6 +415,9 @@ export default async function handler(
             signature: signature || "",
             collection_comment: "", // Clear the collection comment after update
             needCollection: false, // Set needCollection to false after update
+            dob: dob || "",
+            id_verified: id_verified ?? false,
+            face_verified: face_verified ?? false,
           }
         );
 
@@ -448,6 +469,9 @@ export default async function handler(
         status: "pending",
         transport_mode,
         user_id,
+        dob: dob || "",
+        id_verified: id_verified ?? false,
+        face_verified: face_verified ?? false,
       }
     );
 
