@@ -108,14 +108,14 @@ export const BiometricCameraModal: React.FC<BiometricCameraModalProps> = ({
                  </svg>
                )}
 
-               {/* Guidance Text */}
                <div className={`absolute left-0 right-0 text-center ${isMobile ? '-bottom-24' : '-bottom-16'}`}>
-                  <span className={`${isMobile ? 'text-sm' : 'text-xl'} font-black text-white uppercase tracking-widest px-8 py-3 rounded-full backdrop-blur-xl transition-all duration-500 ${
+                  <span className={`${isMobile ? 'text-sm' : 'text-xl'} font-black text-white uppercase tracking-widest px-8 py-3 rounded-full border border-white/10 backdrop-blur-xl transition-all duration-150 ${
                     livenessStep === 'success' ? 'bg-green-500 scale-110 shadow-[0_0_40px_rgba(34,197,94,0.5)]' : 
-                    livenessProgress > 0 ? 'bg-green-600/80 scale-105' : 'bg-black/60'
+                    livenessProgress >= 100 ? 'bg-green-600' : 
+                    livenessProgress > 0 ? 'bg-green-600/60' : 'bg-black/60'
                   }`}>
                     {livenessStep === 'success' ? 'Verification Complete!' : 
-                     captureMode === 'profile' ? `Action: Turn ${livenessStep}` : 'Position clearly'}
+                     captureMode === 'profile' ? `Action: Turn ${livenessStep.charAt(0).toUpperCase() + livenessStep.slice(1)}` : 'Position clearly'}
                   </span>
                </div>
 

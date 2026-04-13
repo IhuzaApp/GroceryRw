@@ -58,6 +58,11 @@ export const validateField = (name: string, value: string): string | null => {
       return null;
     case "national_id":
       return !value.trim() ? "National ID is required" : null;
+    case "email":
+      if (!value.trim()) return "Email address is required";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+        return "Please enter a valid email address";
+      return null;
     case "dob": {
       if (!value) return "Date of birth is required";
       const birthDate = new Date(value);
@@ -175,6 +180,15 @@ export const useShopperForm = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [apiError, setApiError] = useState<{ title: string; message: string; details?: any } | null>(null);
 
+  // Persistent Refs (Grouped for stability)
+  const isProcessingStepRef = useRef(false);
+  const progressRef = useRef(0);
+  const trackerRef = useRef<any>(null);
+  const frameCountRef = useRef(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
+
   // Document states
   const [capturedPhoto, setCapturedPhoto] = useState("");
   const [capturedLicense, setCapturedLicense] = useState("");
@@ -190,13 +204,6 @@ export const useShopperForm = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [captureMode, setCaptureMode] = useState<string>("");
   const [cameraLoading, setCameraLoading] = useState(false);
-
-  // Persistent AI State (prevents re-initialization on step changes)
-  const trackerRef = useRef<any>(null);
-  const frameCountRef = useRef(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Attach stream to video element
   useEffect(() => {
@@ -309,6 +316,10 @@ export const useShopperForm = () => {
   // Face Liveness Loop
   useEffect(() => {
     let frameId: number;
+    // Reset locks and progress strictly on step change
+    isProcessingStepRef.current = false;
+    progressRef.current = 0;
+    frameCountRef.current = 0;
     
     const runLiveness = async () => {
       if (showCamera && captureMode === 'profile' && videoRef.current && !faceVerified) {
@@ -324,26 +335,15 @@ export const useShopperForm = () => {
         try {
           // Guard against video not being ready
           const video = videoRef.current;
-          if (video.videoWidth === 0 || video.readyState < 2) {
+          if (!video || video.videoWidth === 0 || video.readyState < 2) {
             frameId = requestAnimationFrame(runLiveness);
             return;
           }
-
-          // Pre-initialize tracker if not already done
-          if (!trackerRef.current) {
-            console.log("[Biometrics] Initializing FaceTracker (Persistent)...");
-            const { faceTracker } = await import("../utils/verification/faceTracker");
-            trackerRef.current = faceTracker;
-            await trackerRef.current.init();
-            console.log("[Biometrics] Tracker Initialized.");
-          }
           
-          const tracker = trackerRef.current;
-
-          // Periodic Brightness Check (More stable)
+          // Basic Brightness/Stability Check
           if (frameCount % 60 === 0 && canvasRef.current) {
             const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
             if (ctx) {
               canvas.width = 40;
               canvas.height = 40;
@@ -351,12 +351,9 @@ export const useShopperForm = () => {
               const pixels = ctx.getImageData(0, 0, 40, 40).data;
               let brightness = 0;
               for (let i = 0; i < pixels.length; i += 4) {
-                brightness += (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+                brightness += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
               }
               const avg = brightness / (pixels.length / 4);
-              if (frameCount % 180 === 0) console.log(`[Biometrics] Local Brightness: ${avg.toFixed(1)}`);
-              
-              // Guard against intermittent black frames (common on webcams)
               if (avg < 5 && frameCount > 10) {
                 frameId = requestAnimationFrame(runLiveness);
                 return;
@@ -365,43 +362,55 @@ export const useShopperForm = () => {
             }
           }
 
-          // Warm-up logic
           if (frameCount < 15) {
             frameId = requestAnimationFrame(runLiveness);
             return;
           }
 
-          const pose = await tracker.detect(video);
-          if (pose) {
+          const pose = await trackerRef.current.detect(video);
+          if (pose && !isProcessingStepRef.current) {
             if (frameCount % 30 === 0) {
               console.log(`[Biometrics] Scanning -> Yaw: ${pose.yaw.toFixed(3)} | Target: ${livenessStep}`);
             }
 
-            if (tracker.isMatching(pose, livenessStep)) {
-              if (livenessProgress + 25 >= 100) {
-                // LOCK IN SUCCESS
+            if (trackerRef.current.isMatching(pose, livenessStep)) {
+              // Increase progress
+              progressRef.current += 25;
+              setLivenessProgress(progressRef.current);
+
+              // Handle Success Transition
+              if (progressRef.current >= 100 && !isProcessingStepRef.current) {
+                isProcessingStepRef.current = true; // LOCK
+                console.log(`[Biometrics] Pose Verified: ${livenessStep}. Capturing evidence...`);
+                
+                // 1. Capture snapshots immediately
                 captureLivenessSnapshot(livenessStep);
 
+                // 2. Determine next step
                 const steps: any[] = ['center', 'left', 'right'];
                 const currentIndex = steps.indexOf(livenessStep);
                 
                 if (currentIndex < steps.length - 1) {
                   const nextStep = steps[currentIndex + 1];
-                  console.log(`[Biometrics] STEP COMPLETE: ${livenessStep} -> Moving to ${nextStep}`);
+                  console.log(`[Biometrics] → Transitioning to next step: ${nextStep}`);
+                  
+                  // 3. Update states
                   setLivenessStep(nextStep);
+                  progressRef.current = 0;
                   setLivenessProgress(0);
                 } else {
-                  console.log("[Biometrics] FLOW COMPLETE!");
+                  console.log("[Biometrics] → All poses verified. Finalizing...");
                   setLivenessStep('success');
                   setFaceVerified(true);
-                  capturePhoto();
+                  progressRef.current = 100;
                   setLivenessProgress(100);
                 }
-              } else {
-                setLivenessProgress(prev => prev + 25);
+                
+                return;
               }
-            } else {
-              setLivenessProgress(prev => Math.max(0, prev - 2)); 
+            } else if (!isProcessingStepRef.current) {
+              progressRef.current = Math.max(0, progressRef.current - 2);
+              setLivenessProgress(progressRef.current);
             }
           }
         } catch (err) {
@@ -411,10 +420,18 @@ export const useShopperForm = () => {
       frameId = requestAnimationFrame(runLiveness);
     };
 
-    if (showCamera && captureMode === 'profile') {
-      runLiveness();
-    }
+    const initTracker = async () => {
+      if (!trackerRef.current) {
+        const { faceTracker } = await import("../utils/verification/faceTracker");
+        trackerRef.current = faceTracker;
+        await trackerRef.current.init();
+      }
+      if (showCamera && captureMode === 'profile') {
+        runLiveness();
+      }
+    };
 
+    initTracker();
     return () => cancelAnimationFrame(frameId);
   }, [showCamera, captureMode, livenessStep]);
 
@@ -520,8 +537,10 @@ export const useShopperForm = () => {
         if (err) newErrors[f] = err;
       });
     } else if (currentStep === 2) {
-      const err = validateField("phone_number", formValue.phone_number);
-      if (err) newErrors.phone_number = err;
+      ["phone_number", "email"].forEach(f => {
+        const err = validateField(f, formValue[f]);
+        if (err) newErrors[f] = err;
+      });
     } else if (currentStep === 3 && !formValue.address) {
       newErrors.address = "Address is required";
     }

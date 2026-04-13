@@ -259,7 +259,7 @@ export const DesktopBecomeShopper = () => {
                 case 6:
                   return (
                      <div className="col-span-full space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 p-10 rounded-[32px] ${theme === 'dark' ? 'bg-[#111]/50' : 'bg-green-50/30'}`}>
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 p-10 rounded-[32px] ${theme === 'dark' ? 'bg-[#111]/50' : 'bg-green-50/30'}`}>
                           <div className="space-y-2">
                              <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Full Name</p>
                              <p className="text-xl font-bold">{formValue.first_name} {formValue.last_name}</p>
@@ -272,8 +272,12 @@ export const DesktopBecomeShopper = () => {
                              </div>
                           </div>
                           <div className="space-y-2">
-                             <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Contact</p>
+                             <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Phone</p>
                              <p className="text-xl font-bold">{formValue.phone_number}</p>
+                          </div>
+                          <div className="space-y-2">
+                             <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Email</p>
+                             <p className="text-xl font-bold truncate">{formValue.email}</p>
                           </div>
                         </div>
                         <p className="text-sm text-gray-400 font-medium text-center">By clicking finish, you confirm that all provided information is accurate and you agree to our partner terms.</p>

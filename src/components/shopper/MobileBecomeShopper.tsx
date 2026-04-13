@@ -203,6 +203,7 @@ export const MobileBecomeShopper = () => {
                 <div className="flex justify-between items-center"><span className="text-gray-500">Legal Name</span><span>{formValue.first_name} {formValue.last_name}</span></div>
                 <div className="flex justify-between items-center"><span className="text-gray-500">Transport</span><span className="capitalize">{formValue.transport_mode}</span></div>
                 <div className="flex justify-between items-center"><span className="text-gray-500">Phone</span><span className="">{formValue.phone_number}</span></div>
+                <div className="flex justify-between items-center"><span className="text-gray-500">Email</span><span className="">{formValue.email}</span></div>
                 <div className="h-px w-full bg-gray-200 dark:bg-gray-800 my-4" />
                 <div className="flex justify-between items-center"><span className="text-gray-500 text-xs">Steps Competed</span><span className="text-green-500 font-black">7 of 7</span></div>
               </div>
