@@ -43,8 +43,8 @@ export const DesktopBecomeShopper = () => {
 
   return (
     <>
-      <div className={`min-h-screen py-20 px-6 ${theme === 'dark' ? 'bg-[#000] text-white' : 'bg-[#fafafa] text-gray-900'}`}>
-        <div className="max-w-4xl mx-auto">
+      <div className={`min-h-screen py-20 px-8 md:pl-32 md:pr-12 ${theme === 'dark' ? 'bg-[#000] text-white' : 'bg-[#fafafa] text-gray-900'}`}>
+        <div className="max-w-4xl lg:max-w-6xl xl:max-w-7xl mx-auto">
           {/* New Centered Header */}
           <header className="relative text-center mb-16">
             <button 
@@ -84,16 +84,16 @@ export const DesktopBecomeShopper = () => {
                     <div className="col-span-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                         <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[48px] shadow-2xl">
                            <Image 
-                             src="/images/shopper/welcome_hero.png" 
+                             src="/images/shopper/welcome_hero_v2.png" 
                              fill 
-                             className="object-cover object-[center_30%]" 
+                             className="object-cover object-center" 
                              alt="Welcome to Plasa"
                              priority
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                            <div className="absolute bottom-12 left-12 right-12">
-                              <h2 className="text-5xl font-black text-white tracking-tighter mb-4">The Future of Delivery <br/> starts with You.</h2>
-                              <p className="text-xl text-white/80 font-medium max-w-2xl">Join Rwanda's most advanced delivery network. Earn on your own terms with full transparency and support.</p>
+                              <h2 className="text-5xl font-black text-white tracking-tighter mb-4">Empowering <br/> Every Journey.</h2>
+                              <p className="text-xl text-white/80 font-medium max-w-2xl">Join Rwanda's premier delivery community. Drive change, earn with flexibility, and lead the future of local commerce.</p>
                            </div>
                         </div>
                        
@@ -114,7 +114,7 @@ export const DesktopBecomeShopper = () => {
                   );
                 case 1:
                   return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-12 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                       <div className="col-span-full md:col-span-1">
                         <CustomInput label="First Name" name="first_name" value={formValue.first_name} onChange={handleInputChange} error={errors.first_name} required placeholder="Legal first name" />
                       </div>
@@ -180,21 +180,21 @@ export const DesktopBecomeShopper = () => {
                       <div className="col-span-full">
                         <CustomInput label="Residential Address" name="address" type="textarea" rows={3} value={formValue.address} onChange={handleInputChange} error={errors.address} required placeholder="Province, District, Sector, Cell, Village" />
                       </div>
-                      <div className="col-span-full md:col-span-1">
+                      <div className="col-span-full md:col-span-1 lg:col-span-1">
                         <CustomInput label="Marital Status" name="mutual_status" type="select" options={mutualStatusOptions} value={formValue.mutual_status} onChange={handleInputChange} />
                       </div>
                     </div>
                   );
                 case 4:
                   return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                      <div className="col-span-full md:col-span-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                      <div className="col-span-full lg:col-span-1">
                         <CustomInput label="Guarantor Full Name" name="guarantor" value={formValue.guarantor} onChange={handleInputChange} placeholder="Name" />
                       </div>
-                      <div className="col-span-full md:col-span-1">
+                      <div className="col-span-full lg:col-span-1">
                         <CustomInput label="Guarantor Contact" name="guarantorPhone" value={formValue.guarantorPhone} onChange={handleInputChange} placeholder="Phone" />
                       </div>
-                      <div className="col-span-full md:col-span-1">
+                      <div className="col-span-full lg:col-span-1">
                          <CustomInput label="Relationship" name="guarantorRelationship" type="select" options={guarantorRelationshipOptions} value={formValue.guarantorRelationship} onChange={handleInputChange} />
                       </div>
                     </div>

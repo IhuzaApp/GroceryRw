@@ -39,7 +39,7 @@ export const MobileBecomeShopper = () => {
           <div className="space-y-8 animate-in fade-in duration-1000">
             <div className="relative aspect-[4/5] w-full overflow-hidden">
               <Image 
-                src="/images/shopper/welcome_hero.png" 
+                src="/images/shopper/welcome_hero_v2.png" 
                 fill 
                 className="object-cover" 
                 alt="Welcome to Plasa"
@@ -51,8 +51,8 @@ export const MobileBecomeShopper = () => {
                     <Zap className="h-3 w-3" />
                     <span>Instant Approval</span>
                  </div>
-                 <h2 className="text-4xl font-black text-white leading-[0.9] tracking-tighter">Start Earning <br/> as a Partner.</h2>
-                 <p className="text-white/70 text-sm mt-4 font-medium max-w-[240px]">Rwanda's most advanced delivery network is waiting for you.</p>
+                 <h2 className="text-4xl font-black text-white leading-[0.9] tracking-tighter">Empowering <br/> Every Journey.</h2>
+                 <p className="text-white/70 text-sm mt-4 font-medium max-w-[240px]">Join Rwanda's premier delivery community. Drive change and earn with total flexibility.</p>
               </div>
             </div>
 
