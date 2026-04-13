@@ -209,21 +209,33 @@ export default async function handler(
       duplicateCheck.Referral_window &&
       duplicateCheck.Referral_window.length > 0
     ) {
-      const duplicate = duplicateCheck.Referral_window[0];
-      if (duplicate.user_id === session.user.id) {
+      const isDev = process.env.NODE_ENV === "development";
+      
+      const userIdConflict = duplicateCheck.Referral_window.find(r => r.user_id === session.user.id);
+      const phoneConflict = duplicateCheck.Referral_window.find(r => r.phone === phone);
+      const deviceConflict = duplicateCheck.Referral_window.find(r => r.deviceFingerprint === deviceFingerprint);
+
+      if (userIdConflict) {
         return res.status(400).json({
-          error: "You already have a referral account",
+          error: "You are already registered for the referral program.",
         });
       }
-      if (duplicate.phone === phone) {
+
+      if (phoneConflict) {
         return res.status(400).json({
-          error: "Phone number already registered",
+          error: `The phone number ${phone} is already registered for the referral program.`,
         });
       }
-      if (duplicate.deviceFingerprint === deviceFingerprint) {
+
+      // Only block device fingerprint if not in development
+      if (deviceConflict && !isDev) {
         return res.status(400).json({
-          error: "This device already has a referral account",
+          error: "This device is already associated with an existing referral account.",
         });
+      }
+      
+      if (deviceConflict && isDev) {
+        console.log("[Dev Register] Device fingerprint collision detected, allowing for testing.");
       }
     }
 
