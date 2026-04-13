@@ -10,12 +10,12 @@ const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
     $Police_Clearance_Cert: String = ""
     $address: String = ""
-    $driving_license: String = ""
-    $drivingLicense_Image: String = ""
-    $driving_license_front: String = ""
-    $driving_license_back: String = ""
-    $plate_number: String = ""
-    $email: String = ""
+    $driving_license: String
+    $drivingLicense_Image: String
+    $driving_license_front: String
+    $driving_license_back: String
+    $plate_number: String
+    $email: String
     $full_name: String = ""
     $guarantor: String = ""
     $guarantorPhone: String = ""
@@ -28,17 +28,18 @@ const REGISTER_SHOPPER = gql`
     $national_id_photo_back: String = ""
     $national_id_photo_front: String = ""
     $onboarding_step: String = ""
-    $phone: String = ""
     $phone_number: String = ""
     $profile_photo: String = ""
     $proofOfResidency: String = ""
     $signature: String = ""
+    $SignaturePad: String = ""
     $status: String = ""
     $transport_mode: String = ""
     $user_id: uuid = ""
     $dob: String = ""
-    $id_verified: Boolean = false
     $face_verified: Boolean = false
+    $face_liveness_images: jsonb
+    $verification_metadata: jsonb
   ) {
     insert_shoppers(
       objects: {
@@ -65,17 +66,19 @@ const REGISTER_SHOPPER = gql`
         national_id_photo_front: $national_id_photo_front
         needCollection: false
         onboarding_step: $onboarding_step
-        phone: $phone
+        phone: $phone_number
         phone_number: $phone_number
         profile_photo: $profile_photo
         proofOfResidency: $proofOfResidency
         signature: $signature
+        SignaturePad: $SignaturePad
         status: $status
         transport_mode: $transport_mode
         user_id: $user_id
         dob: $dob
-        id_verified: $id_verified
         face_verified: $face_verified
+        face_liveness_images: $face_liveness_images
+        verification_metadata: $verification_metadata
       }
     ) {
       affected_rows
@@ -111,11 +114,13 @@ const UPDATE_SHOPPER = gql`
     $national_id_photo_front: String
     $proofOfResidency: String
     $signature: String
+    $SignaturePad: String
     $collection_comment: String
     $needCollection: Boolean
     $dob: String
-    $id_verified: Boolean
     $face_verified: Boolean
+    $face_liveness_images: jsonb
+    $verification_metadata: jsonb
   ) {
     update_shoppers_by_pk(
       pk_columns: { id: $shopper_id }
@@ -144,11 +149,13 @@ const UPDATE_SHOPPER = gql`
         national_id_photo_front: $national_id_photo_front
         proofOfResidency: $proofOfResidency
         signature: $signature
+        SignaturePad: $SignaturePad
         collection_comment: $collection_comment
         needCollection: $needCollection
         dob: $dob
-        id_verified: $id_verified
         face_verified: $face_verified
+        face_liveness_images: $face_liveness_images
+        verification_metadata: $verification_metadata
         status: "pending"
         updated_at: "now()"
       }
@@ -209,8 +216,9 @@ interface RegisterShopperInput {
   collection_comment?: string;
   needCollection?: boolean;
   dob?: string;
-  id_verified?: boolean;
   face_verified?: boolean;
+  face_liveness_images?: Record<string, string>;
+  verification_metadata?: Record<string, any>;
 }
 
 interface RegisterShopperResponse {
@@ -314,6 +322,10 @@ export default async function handler(
       national_id,
       driving_license,
       drivingLicense_Image,
+      driving_license_front,
+      driving_license_back,
+      plate_number,
+      email,
       transport_mode,
       profile_photo,
       user_id,
@@ -333,8 +345,9 @@ export default async function handler(
       collection_comment,
       needCollection,
       dob,
-      id_verified,
       face_verified,
+      face_liveness_images,
+      verification_metadata,
     } = req.body as RegisterShopperInput;
     userId = user_id;
 
@@ -417,12 +430,12 @@ export default async function handler(
             address,
             phone_number: existingShopper.phone_number || phone_number, // Use existing phone number or new one
             national_id,
-            driving_license: driving_license || "",
-            drivingLicense_Image: drivingLicense_Image || "",
-            driving_license_front: driving_license_front || "",
-            driving_license_back: driving_license_back || "",
-            plate_number: plate_number || "",
-            email: email || "",
+            driving_license: driving_license || null,
+            drivingLicense_Image: drivingLicense_Image || null,
+            driving_license_front: driving_license_front || null,
+            driving_license_back: driving_license_back || null,
+            plate_number: plate_number || null,
+            email: email || null,
             transport_mode,
             profile_photo: profile_photo || "",
             Police_Clearance_Cert: Police_Clearance_Cert || "",
@@ -440,8 +453,10 @@ export default async function handler(
             collection_comment: "", // Clear the collection comment after update
             needCollection: false, // Set needCollection to false after update
             dob: dob || "",
-            id_verified: id_verified ?? false,
+            SignaturePad: signature || "",
             face_verified: face_verified ?? false,
+            face_liveness_images: face_liveness_images || null,
+            verification_metadata: verification_metadata || null,
           }
         );
 
@@ -471,12 +486,12 @@ export default async function handler(
       {
         Police_Clearance_Cert: Police_Clearance_Cert || "",
         address,
-        driving_license: driving_license || "",
-        drivingLicense_Image: drivingLicense_Image || "",
-        driving_license_front: driving_license_front || "",
-        driving_license_back: driving_license_back || "",
-        plate_number: plate_number || "",
-        email: email || "",
+        driving_license: driving_license || null,
+        drivingLicense_Image: drivingLicense_Image || null,
+        driving_license_front: driving_license_front || null,
+        driving_license_back: driving_license_back || null,
+        plate_number: plate_number || null,
+        email: email || null,
         full_name,
         guarantor: guarantor || "",
         guarantorPhone: guarantorPhone || "",
@@ -489,7 +504,6 @@ export default async function handler(
         national_id_photo_back: national_id_photo_back || "",
         national_id_photo_front: national_id_photo_front || "",
         onboarding_step: "application_submitted",
-        phone: "",
         phone_number,
         profile_photo: profile_photo || "",
         proofOfResidency: proofOfResidency || "",
@@ -498,8 +512,10 @@ export default async function handler(
         transport_mode,
         user_id,
         dob: dob || "",
-        id_verified: id_verified ?? false,
+        SignaturePad: signature || "",
         face_verified: face_verified ?? false,
+        face_liveness_images: face_liveness_images || null,
+        verification_metadata: verification_metadata || null,
       }
     );
 

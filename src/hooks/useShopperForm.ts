@@ -571,8 +571,17 @@ export const useShopperForm = () => {
   const prevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
 
   const handleSubmit = async () => {
-    if (!capturedPhoto || !capturedNationalIdFront || !capturedNationalIdBack) {
-      toast.error("Required photos are missing");
+    if (!capturedPhoto || !capturedNationalIdFront || !capturedNationalIdBack || !policeClearanceFile) {
+      toast.error("Required documents are missing. Please upload the police clearance.");
+      return;
+    }
+    if (!formValue.agreedToBackgroundCheck) {
+      toast.error("You must agree to the background check to proceed.");
+      return;
+    }
+    if (!capturedSignature) {
+      setErrors(prev => ({ ...prev, signature: "Digital signature is required" }));
+      toast.error("Please sign the document before submitting");
       return;
     }
 
@@ -613,7 +622,11 @@ export const useShopperForm = () => {
         plateNumberUrl,
         policeClearanceUrl,
         residencyUrl,
-        mutualStatusUrl
+        mutualStatusUrl,
+        signatureUrl,
+        faceCenterUrl,
+        faceLeftUrl,
+        faceRightUrl,
       ] = await Promise.all([
         uploadToFirebase(capturedPhoto, `${basePath}/profile_photo.jpg`),
         uploadToFirebase(capturedNationalIdFront, `${basePath}/national_id_front.jpg`),
@@ -624,6 +637,11 @@ export const useShopperForm = () => {
         uploadToFirebase(policeClearanceFile, `${basePath}/police_clearance.pdf`),
         uploadToFirebase(proofOfResidencyFile, `${basePath}/residency.pdf`),
         uploadToFirebase(maritalStatusFile, `${basePath}/marital_status.pdf`),
+        uploadToFirebase(capturedSignature, `${basePath}/signature.png`),
+        // Upload face liveness snapshots
+        uploadToFirebase(livenessImages?.center || null, `${basePath}/face_center.jpg`),
+        uploadToFirebase(livenessImages?.left || null, `${basePath}/face_left.jpg`),
+        uploadToFirebase(livenessImages?.right || null, `${basePath}/face_right.jpg`),
       ]);
 
       toast.success("Documents uploaded!", { id: "uploadToast" });
@@ -632,7 +650,11 @@ export const useShopperForm = () => {
         ...formValue,
         full_name: `${formValue.first_name} ${formValue.last_name}`.trim(),
         face_verified: faceVerified,
-        face_liveness_images: livenessImages, // JSONB compatible
+        face_liveness_images: {
+          center: faceCenterUrl,
+          left: faceLeftUrl,
+          right: faceRightUrl,
+        },
         verification_metadata: {
           ...livenessMetadata,
           resolution: `${videoRef.current?.videoWidth}x${videoRef.current?.videoHeight}`,
@@ -645,7 +667,7 @@ export const useShopperForm = () => {
         driving_license_front: licenseFrontUrl,
         driving_license_back: licenseBackUrl,
         plate_number: plateNumberUrl,
-        signature: capturedSignature, // Keeps base64 for digital signature unless changed
+        signature: signatureUrl,
         Police_Clearance_Cert: policeClearanceUrl,
         proofOfResidency: residencyUrl,
         mutual_StatusCertificate: mutualStatusUrl,

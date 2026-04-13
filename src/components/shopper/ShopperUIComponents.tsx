@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useRef, useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { Check, Car, Bike, Truck, User } from "lucide-react";
 
@@ -194,3 +194,108 @@ export const HorizontalStepper = ({ steps, currentStep, theme }: any) => {
 
 CustomInput.displayName = "CustomInput";
 FileUploadInput.displayName = "FileUploadInput";
+
+export const SignaturePad = memo(({ onSign, error }: { onSign: (val: string) => void, error?: string }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const { theme } = useTheme();
+
+  const getCoordinates = (event: any, canvas: HTMLCanvasElement) => {
+    if (event.touches && event.touches.length > 0) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        offsetX: (event.touches[0].clientX - rect.left) * scaleX,
+        offsetY: (event.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
+    return {
+      offsetX: event.nativeEvent.offsetX,
+      offsetY: event.nativeEvent.offsetY,
+    };
+  };
+
+  const startDrawing = (e: any) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.beginPath();
+    const { offsetX, offsetY } = getCoordinates(e, canvas);
+    ctx.moveTo(offsetX, offsetY);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: any) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const { offsetX, offsetY } = getCoordinates(e, canvas);
+    ctx.lineTo(offsetX, offsetY);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    if (canvasRef.current) {
+      onSign(canvasRef.current.toDataURL("image/png"));
+    }
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onSign("");
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const parent = canvas.parentElement;
+      if (parent) {
+         canvas.width = parent.clientWidth;
+         canvas.height = 200;
+      }
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = theme === 'dark' ? "white" : "black";
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      }
+    }
+  }, [theme]);
+
+  return (
+    <div className="space-y-2 relative">
+      <div className={`relative rounded-2xl border-2 transition-all w-full h-[200px] overflow-hidden ${error ? 'border-red-400 bg-red-50 dark:bg-red-900/10' : theme === 'dark' ? 'border-gray-800 bg-[#0a0a0a]' : 'border-gray-200 bg-gray-50'}`}>
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          style={{ touchAction: "none" }}
+          className="cursor-crosshair w-full h-full"
+        />
+        <button 
+          onClick={(e) => { e.preventDefault(); clear(); }} 
+          className="absolute top-2 right-2 px-3 py-1 bg-gray-200 dark:bg-gray-800 text-[10px] font-bold rounded-lg uppercase tracking-wider text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+        >
+          Clear
+        </button>
+      </div>
+      {error && <p className="text-xs font-bold text-red-600 ml-1">{error}</p>}
+    </div>
+  );
+});
+SignaturePad.displayName = "SignaturePad";

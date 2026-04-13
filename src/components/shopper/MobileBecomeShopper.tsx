@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
-import { CustomInput, FileUploadInput, TransportModeSelector } from "./ShopperUIComponents";
+import { CustomInput, FileUploadInput, TransportModeSelector, SignaturePad } from "./ShopperUIComponents";
 import { ChevronLeft, ChevronRight, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
 
@@ -16,7 +16,7 @@ export const MobileBecomeShopper = () => {
     stream, showCamera, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
     handleInputChange, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
     handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
-    setCapturedSignature, setShowSignaturePad, showSignaturePad,
+    setCapturedSignature,
     faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
   } = useShopperForm() as any;
 
@@ -214,32 +214,68 @@ export const MobileBecomeShopper = () => {
 
             <div className="space-y-4">
               <label className="text-sm font-bold dark:text-gray-300">Official Certificates</label>
-              <FileUploadInput label="Police Clearance" file={policeClearanceFile} onChange={(e:any) => setPoliceClearanceFile(e.target.files[0])} onRemove={() => setPoliceClearanceFile(null)} description="Optional: Certificate from Irembo" />
-              <button 
-                onClick={() => {}} // Open signature logic handle
-                className={`w-full flex items-center justify-center py-5 rounded-[24px] border-2 border-dashed ${capturedSignature ? 'border-green-500 text-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}
-              >
-                <PenTool className="mr-2 h-5 w-5" />
-                <span className="text-sm font-bold">{capturedSignature ? 'Change Signature' : 'Add Digital Signature'}</span>
-              </button>
+              <FileUploadInput name="police_clearance" label="Police Clearance *" file={policeClearanceFile} onChange={(e:any) => setPoliceClearanceFile(e.target.files[0])} onRemove={() => setPoliceClearanceFile(null)} description="Certificate from Irembo site (required)" />
+              <FileUploadInput name="proof_of_residency" label="Proof of Residency" file={proofOfResidencyFile} onChange={(e:any) => setProofOfResidencyFile(e.target.files[0])} onRemove={() => setProofOfResidencyFile(null)} description="Utility bill, lease, or official letter" />
+              <FileUploadInput name="marital_status_cert" label="Marital Status Certificate" file={maritalStatusFile} onChange={(e:any) => setMaritalStatusFile(e.target.files[0])} onRemove={() => setMaritalStatusFile(null)} description="Official marital status document" />
             </div>
           </div>
         );
       case 6:
         return (
-          <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
-            <div className={`p-8 rounded-[40px] ${theme === 'dark' ? 'bg-[#111]' : 'bg-gray-50'}`}>
-              <h4 className="font-black tracking-tight text-xl flex items-center mb-6"><CheckCircle2 className="mr-2 h-6 w-6 text-green-500" /> Confirm Details</h4>
-              <div className="space-y-4 text-sm font-medium">
-                <div className="flex justify-between items-center"><span className="text-gray-500">Legal Name</span><span>{formValue.first_name} {formValue.last_name}</span></div>
-                <div className="flex justify-between items-center"><span className="text-gray-500">Transport</span><span className="capitalize">{formValue.transport_mode}</span></div>
-                <div className="flex justify-between items-center"><span className="text-gray-500">Phone</span><span className="">{formValue.phone_number}</span></div>
-                <div className="flex justify-between items-center"><span className="text-gray-500">Email</span><span className="">{formValue.email}</span></div>
-                <div className="h-px w-full bg-gray-200 dark:bg-gray-800 my-4" />
-                <div className="flex justify-between items-center"><span className="text-gray-500 text-xs">Steps Competed</span><span className="text-green-500 font-black">7 of 7</span></div>
+          <div className="px-6 space-y-8 animate-in fade-in slide-in-from-right duration-500 pb-10">
+            <div className={`space-y-6 p-6 rounded-[24px] ${theme === 'dark' ? 'bg-[#111]' : 'bg-gray-50'}`}>
+              <div className="flex justify-between items-center border-b border-gray-200 dark:border-white/5 pb-4">
+                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Full Name</p>
+                 <p className="text-sm font-bold">{formValue.first_name} {formValue.last_name}</p>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-200 dark:border-white/5 pb-4">
+                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Transport</p>
+                 <p className="text-sm font-bold capitalize">{formValue.transport_mode}</p>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-200 dark:border-white/5 pb-4">
+                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</p>
+                 <p className="text-sm font-bold">{formValue.phone_number}</p>
               </div>
             </div>
-            <p className="text-[11px] text-gray-500 text-center px-10 leading-relaxed font-medium">By submitting, you agree to our terms of service for delivery partners and privacy policy.</p>
+
+            <div className="space-y-4">
+              <p className="text-[11px] font-black uppercase text-gray-400 tracking-widest">Captured Photos</p>
+              <div className="flex items-center space-x-3 overflow-x-auto pb-4">
+                {[
+                  { label: 'Profile', src: capturedPhoto },
+                  { label: 'ID Front', src: capturedNationalIdFront },
+                  { label: 'ID Back', src: capturedNationalIdBack },
+                  (formValue.transport_mode === 'car' || formValue.transport_mode === 'motorcycle') ? { label: 'License', src: capturedLicenseFront } : null,
+                ].filter(Boolean).map((doc: any, idx) => (
+                  <div key={idx} className="flex-shrink-0 relative h-16 w-16 rounded-2xl overflow-hidden border-2 border-green-500">
+                    <Image src={doc.src} fill className="object-cover" alt={doc.label} />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <CheckCircle2 className="text-white h-5 w-5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 space-y-6">
+              <div className="flex items-start space-x-3">
+                <input 
+                   type="checkbox" 
+                   id="backgroundCheckMobile" 
+                   checked={formValue.agreedToBackgroundCheck || false}
+                   onChange={(e) => handleInputChange("agreedToBackgroundCheck", e.target.checked)}
+                   className="mt-1 h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                <label htmlFor="backgroundCheckMobile" className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                   I agree to a background check and certify that the information I have provided is accurate and true.
+                </label>
+              </div>
+              
+              <div className="space-y-4">
+                <label className="text-[12px] font-bold uppercase tracking-wider text-gray-500">Digital Signature</label>
+                <SignaturePad onSign={setCapturedSignature} error={errors.signature} />
+              </div>
+            </div>
           </div>
         );
       default:

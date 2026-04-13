@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOptions } from "../../hooks/useShopperForm";
-import { CustomInput, FileUploadInput, HorizontalStepper, TransportModeSelector } from "./ShopperUIComponents";
+import { CustomInput, FileUploadInput, HorizontalStepper, TransportModeSelector, SignaturePad } from "./ShopperUIComponents";
 import { CheckCircle2, LayoutDashboard, MapPin, Truck, ChevronRight, ChevronLeft, Shield, Clock, Wallet, X, Camera, ArrowRight, ShieldCheck } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
 
@@ -14,7 +14,8 @@ export const DesktopBecomeShopper = () => {
     capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, videoRef, canvasRef, handleInputChange, startCamera, stopCamera, 
-    capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile,
+    capturePhoto, nextStep, prevStep, handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
+    setCapturedSignature,
     faceVerified, verificationStatus, livenessStep, captureMode, livenessProgress, lowLight
   } = useShopperForm() as any;
 
@@ -298,36 +299,77 @@ export const DesktopBecomeShopper = () => {
                           </div>
                         )}
 
-                        <div className="max-w-xl">
-                          <FileUploadInput label="Police Clearance (Optional)" file={policeClearanceFile} onChange={(e:any) => setPoliceClearanceFile(e.target.files[0])} onRemove={() => setPoliceClearanceFile(null)} description="Upload certificate from Irembo site" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <FileUploadInput name="police_clearance" label="Police Clearance Certificate *" file={policeClearanceFile} onChange={(e:any) => setPoliceClearanceFile(e.target.files[0])} onRemove={() => setPoliceClearanceFile(null)} description="Upload certificate from Irembo site (required)" />
+                          <FileUploadInput name="proof_of_residency" label="Proof of Residency" file={proofOfResidencyFile} onChange={(e:any) => setProofOfResidencyFile(e.target.files[0])} onRemove={() => setProofOfResidencyFile(null)} description="Utility bill, lease, or official letter" />
+                          <FileUploadInput name="marital_status_cert" label="Marital Status Certificate" file={maritalStatusFile} onChange={(e:any) => setMaritalStatusFile(e.target.files[0])} onRemove={() => setMaritalStatusFile(null)} description="Official marital status document" />
                         </div>
                      </div>
                   );
                 case 6:
                   return (
                      <div className="col-span-full space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 p-10 rounded-[32px] ${theme === 'dark' ? 'bg-[#111]/50' : 'bg-green-50/30'}`}>
-                          <div className="space-y-2">
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-8 rounded-[32px] ${theme === 'dark' ? 'bg-[#111]/50' : 'bg-gray-50/50'}`}>
+                          <div className="space-y-1">
                              <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Full Name</p>
-                             <p className="text-xl font-bold">{formValue.first_name} {formValue.last_name}</p>
+                             <p className="text-lg font-bold">{formValue.first_name} {formValue.last_name}</p>
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                              <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Transport</p>
                              <div className="flex items-center space-x-2">
-                                <Truck className="h-5 w-5 text-green-600" />
-                                <p className="text-xl font-bold capitalize">{formValue.transport_mode}</p>
+                                <Truck className="h-4 w-4 text-green-600" />
+                                <p className="text-lg font-bold capitalize">{formValue.transport_mode}</p>
                              </div>
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                              <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Phone</p>
-                             <p className="text-xl font-bold">{formValue.phone_number}</p>
+                             <p className="text-lg font-bold">{formValue.phone_number}</p>
                           </div>
-                          <div className="space-y-2">
-                             <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Email</p>
-                             <p className="text-xl font-bold truncate">{formValue.email}</p>
+                          <div className="space-y-1">
+                             <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Address</p>
+                             <p className="text-lg font-bold truncate">{formValue.address}</p>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-400 font-medium text-center">By clicking finish, you confirm that all provided information is accurate and you agree to our partner terms.</p>
+
+                        <div className="space-y-4">
+                          <p className="text-[12px] font-black uppercase text-gray-400 tracking-widest">Captured Documents</p>
+                          <div className="flex items-center space-x-4 overflow-x-auto pb-4">
+                            {[
+                              { label: 'Profile', src: capturedPhoto },
+                              { label: 'ID Front', src: capturedNationalIdFront },
+                              { label: 'ID Back', src: capturedNationalIdBack },
+                              (formValue.transport_mode === 'car' || formValue.transport_mode === 'motorcycle') ? { label: 'License', src: capturedLicenseFront } : null,
+                              (formValue.transport_mode === 'car' || formValue.transport_mode === 'motorcycle') ? { label: 'Plate', src: capturedPlateNumber } : null,
+                            ].filter(Boolean).map((doc: any, idx) => (
+                              <div key={idx} className="flex-shrink-0 relative h-16 w-16 md:h-20 md:w-20 rounded-2xl overflow-hidden border-2 border-green-500">
+                                <Image src={doc.src} fill className="object-cover" alt={doc.label} />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <CheckCircle2 className="text-white h-6 w-6" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-gray-100 dark:border-white/5 pt-8 space-y-8">
+                          <div className="flex items-start space-x-4">
+                            <input 
+                               type="checkbox" 
+                               id="backgroundCheck" 
+                               checked={formValue.agreedToBackgroundCheck || false}
+                               onChange={(e) => handleInputChange("agreedToBackgroundCheck", e.target.checked)}
+                               className="mt-1 h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                            />
+                            <label htmlFor="backgroundCheck" className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed cursor-pointer">
+                               I agree to a background check and certify that the information I have provided is accurate and true. I authorize Plasa to verify my details including criminal records and driving history if applicable.
+                            </label>
+                          </div>
+                          
+                          <div className="space-y-4 max-w-xl">
+                            <label className="text-[13px] font-bold uppercase tracking-wider text-gray-500">Digital Signature</label>
+                            <SignaturePad onSign={setCapturedSignature} error={errors.signature} />
+                          </div>
+                        </div>
                      </div>
                   );
                 default:
