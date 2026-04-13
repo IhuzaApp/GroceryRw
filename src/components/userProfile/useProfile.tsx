@@ -63,6 +63,8 @@ export default function UserProfile() {
     status?: string;
   } | null>(null);
   const [loadingReferral, setLoadingReferral] = useState<boolean>(true);
+  // AI Subscription status
+  const [isAISubscribed, setIsAISubscribed] = useState<boolean>(false);
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
@@ -147,6 +149,25 @@ export default function UserProfile() {
         setShopperStatus(null);
       })
       .finally(() => setLoadingShopper(false));
+  }, [user?.id]);
+
+  // Check AI Subscription status
+  useEffect(() => {
+    if (!user?.id) return;
+
+    fetch("/api/ai/usage-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ p256dh: "" }) // Passing empty as we just need subscription status
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setIsAISubscribed(data.isSubscribed || false);
+      })
+      .catch((err) => {
+        console.error("Failed to check AI status:", err);
+        setIsAISubscribed(false);
+      });
   }, [user?.id]);
 
   // Handle click on "Become a Plasa" button
@@ -339,6 +360,7 @@ export default function UserProfile() {
         refreshOrders={refreshOrders}
         referralStatus={referralStatus}
         loadingReferral={loadingReferral}
+        isAISubscribed={isAISubscribed}
         onAvatarChange={handleAvatarChange}
       />
     );
@@ -365,6 +387,7 @@ export default function UserProfile() {
       refreshOrders={refreshOrders}
       referralStatus={referralStatus}
       loadingReferral={loadingReferral}
+      isAISubscribed={isAISubscribed}
       onAvatarChange={handleAvatarChange}
     />
   );

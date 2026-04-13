@@ -69,6 +69,7 @@ interface DesktopProfileProps {
   } | null;
   loadingReferral: boolean;
   onAvatarChange: (newUrl: string) => void;
+  isAISubscribed: boolean;
 }
 
 export default function DesktopProfile({
@@ -92,6 +93,7 @@ export default function DesktopProfile({
   referralStatus,
   loadingReferral,
   onAvatarChange,
+  isAISubscribed,
 }: DesktopProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
@@ -262,9 +264,13 @@ export default function DesktopProfile({
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-orange-700 dark:bg-orange-950/30 dark:text-orange-400">
                       <User className="h-3 w-3" /> Guest
                     </span>
-                  ) : (
+                  ) : isAISubscribed && shopperStatus?.active ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-green-700 dark:bg-green-950/30 dark:text-green-400">
                       <ShieldCheck className="h-3 w-3" /> Premium
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
+                      <ShieldCheck className="h-3 w-3" /> Regular
                     </span>
                   )}
                 </div>

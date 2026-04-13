@@ -55,6 +55,7 @@ interface MobileProfileProps {
   } | null;
   loadingReferral: boolean;
   onAvatarChange: (newUrl: string) => void;
+  isAISubscribed: boolean;
 }
 
 export default function MobileProfile({
@@ -78,6 +79,7 @@ export default function MobileProfile({
   referralStatus,
   loadingReferral,
   onAvatarChange,
+  isAISubscribed,
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
@@ -328,9 +330,17 @@ export default function MobileProfile({
               {user?.email || "Loading..."}
             </p>
             <div className="mt-1 flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                Premium
-              </span>
+              {!user ? (
+                <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
+              ) : isAISubscribed && shopperStatus?.active ? (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  Premium
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  Regular
+                </span>
+              )}
               <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
                 {orderCount} Orders
               </span>
