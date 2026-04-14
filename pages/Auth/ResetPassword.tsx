@@ -9,33 +9,35 @@ import { useTheme } from "../../src/context/ThemeContext";
 
 export default function ResetPassword() {
   const router = useRouter();
-  const { email: queryEmail } = router.query;
+  const { token } = router.query;
   const { theme } = useTheme();
 
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // If we have an email in the query but no OTP, we might want to auto-focus OTP field
-  }, [queryEmail]);
+    // If we have a token in the query, we can assume the session is valid for now
+  }, [token]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (!otp.trim() || otp.length !== 6) {
-      toast.error("Please enter the 6-digit verification code");
+      setError("Please enter the 6-digit verification code");
       return;
     }
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long");
+      setError("Password must be at least 8 characters long");
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
 
@@ -45,7 +47,7 @@ export default function ResetPassword() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: queryEmail,
+          token,
           otp,
           newPassword,
         }),
@@ -65,7 +67,7 @@ export default function ResetPassword() {
       }, 3000);
     } catch (err: any) {
       console.error("Reset password error:", err);
-      toast.error(err.message || "Invalid code or session expired.");
+      setError(err.message || "Invalid code or session expired.");
     } finally {
       setIsLoading(false);
     }
@@ -89,6 +91,31 @@ export default function ResetPassword() {
             className="inline-flex items-center justify-center rounded-2xl bg-green-600 py-4 px-12 text-sm font-black text-white hover:bg-green-700 transition-all shadow-xl shadow-green-600/20 active:scale-95"
           >
             Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle Missing or Invalid Token
+  if (!token && router.isReady) {
+    return (
+      <div className={`min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'bg-[#000]' : 'bg-[#fafafa]'}`}>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+          <div className={`inline-flex items-center justify-center p-6 rounded-3xl mb-8 ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
+            <Lock className="h-12 w-12 text-red-600" />
+          </div>
+          <h2 className={`text-4xl font-black tracking-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            Session Invalid
+          </h2>
+          <p className="text-gray-500 font-medium mb-12 max-w-sm mx-auto">
+            This password reset link is invalid, expired, or has already been used. Please request a new one.
+          </p>
+          <Link
+            href="/Auth/ForgotPassword"
+            className="inline-flex items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-white dark:text-black py-4 px-12 text-sm font-black hover:opacity-90 transition-all shadow-xl active:scale-95"
+          >
+            Request New Link
           </Link>
         </div>
       </div>
@@ -119,9 +146,21 @@ export default function ResetPassword() {
               New Password
             </h2>
             <p className="mt-3 text-sm text-gray-500 font-medium">
-              Resetting password for <span className="text-green-600">{queryEmail}</span>
+              Enter the verification code sent to your email to set a new password.
             </p>
           </div>
+
+          {error && (
+            <div className="mb-6 animate-in fade-in zoom-in duration-300">
+              <div className="p-4 rounded-2xl bg-red-50 border border-red-100 flex items-start space-x-3 text-red-600">
+                <span className="text-xl">⚠️</span>
+                <div>
+                   <p className="text-sm font-bold">Verification Error</p>
+                   <p className="text-xs font-medium opacity-90">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleResetPassword} className="space-y-6">
             {/* OTP Input */}

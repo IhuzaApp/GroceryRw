@@ -560,9 +560,10 @@ export const useShopperForm = () => {
 
   const nextStep = () => {
     const newErrors: Record<string, string> = {};
+    setApiError(null);
     if (currentStep === 1) {
       if (!faceVerified) {
-        toast.error("Please complete face verification to continue");
+        setApiError({ title: "Verification Required", message: "Please complete face verification to continue" });
         return;
       }
       ["first_name", "last_name", "national_id", "transport_mode", "dob"].forEach(f => {
@@ -588,17 +589,18 @@ export const useShopperForm = () => {
   const prevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
 
   const handleSubmit = async () => {
+    setApiError(null);
     if (!capturedPhoto || !capturedNationalIdFront || !capturedNationalIdBack || !policeClearanceFile) {
-      toast.error("Required documents are missing. Please upload the police clearance.");
+      setApiError({ title: "Missing Documents", message: "Required documents are missing. Please upload the police clearance certificate." });
       return;
     }
     if (!formValue.agreedToBackgroundCheck) {
-      toast.error("You must agree to the background check to proceed.");
+      setApiError({ title: "Agreements Required", message: "You must agree to the background check to proceed." });
       return;
     }
     if (!capturedSignature) {
       setErrors(prev => ({ ...prev, signature: "Digital signature is required" }));
-      toast.error("Please sign the document before submitting");
+      setApiError({ title: "Signature Required", message: "Please sign the document before submitting." });
       return;
     }
 

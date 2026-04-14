@@ -12,7 +12,7 @@ export const DesktopBecomeShopper = () => {
   const { theme } = useTheme();
   const {
     router,
-    formValue, currentStep, errors, loading, registrationSuccess,
+    formValue, currentStep, errors, loading, registrationSuccess, apiError,
     capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, videoRef, canvasRef, handleInputChange, handleLocationSelect, startCamera, stopCamera, 
@@ -88,6 +88,18 @@ export const DesktopBecomeShopper = () => {
                 <div className="h-[2px] w-8 bg-green-500" />
                 <span className="text-[10px] font-black uppercase tracking-widest">{steps[currentStep].title}</span>
              </div>
+
+            {apiError && (
+              <div className="mb-10 animate-in fade-in zoom-in duration-300">
+                <div className="p-6 rounded-[32px] bg-red-50 border border-red-100 flex items-start space-x-4 text-red-600">
+                  <span className="text-2xl mt-1">⚠️</span>
+                  <div>
+                    <h4 className="text-lg font-black">{apiError.title}</h4>
+                    <p className="text-sm font-medium opacity-90">{apiError.message}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {(() => {
               switch (currentStep) {

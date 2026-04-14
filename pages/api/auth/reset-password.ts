@@ -19,27 +19,29 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email, otp, newPassword } = req.body;
+  const { token, otp, newPassword } = req.body;
 
-  if (!email || !otp || !newPassword) {
+  if (!token || !otp || !newPassword) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // 1. Verify OTP
-  const storedData = otpStore.get(email);
+  // 1. Verify OTP using Token
+  const storedData = otpStore.get(token);
 
   if (!storedData) {
     return res.status(400).json({ error: "Reset code expired or not found. Please request a new one." });
   }
 
   if (Date.now() > storedData.expiresAt) {
-    otpStore.delete(email);
+    otpStore.delete(token);
     return res.status(400).json({ error: "Reset code expired. Please request a new one." });
   }
 
   if (storedData.otp !== otp) {
     return res.status(400).json({ error: "Invalid verification code" });
   }
+
+  const { email } = storedData;
 
   try {
     // 2. Hash New Password
@@ -65,8 +67,8 @@ export default async function handler(
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 4. Cleanup OTP
-    otpStore.delete(email);
+    // 4. Cleanup Token
+    otpStore.delete(token);
 
     return res.status(200).json({ success: true, message: "Password updated successfully" });
   } catch (error: any) {

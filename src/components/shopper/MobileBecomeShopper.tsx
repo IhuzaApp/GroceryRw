@@ -12,7 +12,7 @@ export const MobileBecomeShopper = () => {
   const { theme } = useTheme();
   const {
     router,
-    formValue, currentStep, errors, loading, registrationSuccess,
+    formValue, currentStep, errors, loading, registrationSuccess, apiError,
     capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
     capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
     stream, showCamera, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
@@ -35,95 +35,109 @@ export const MobileBecomeShopper = () => {
   }
 
   const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <div className="space-y-8 animate-in fade-in duration-1000">
-            <div className="relative aspect-[4/5] w-full overflow-hidden">
-              <Image 
-                src="/images/shopper/welcome_hero_v2.png" 
-                fill 
-                className="object-cover" 
-                alt="Welcome to Plasa"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-              <div className="absolute top-8 left-8">
-                 <Image 
-                   src="/assets/logos/PlasLogoPNG.png" 
-                   width={120} 
-                   height={40} 
-                   alt="Plas Logo" 
-                   className="object-contain"
-                 />
-              </div>
-              <div className="absolute bottom-8 left-8 right-8">
-                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-widest mb-4">
-                    <Zap className="h-3 w-3" />
-                    <span>Instant Approval</span>
-                 </div>
-                 <h2 className="text-4xl font-black text-white leading-[0.9] tracking-tighter">Empowering <br/> Every Journey.</h2>
-                 <p className="text-white/70 text-sm mt-4 font-medium max-w-[240px]">Join Rwanda's premier delivery community. Drive change and earn with total flexibility.</p>
-              </div>
-            </div>
-
-            <div className="px-6 grid grid-cols-1 gap-4">
-              <div className={`p-5 rounded-[32px] border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-2xl bg-green-500/10 text-green-500">
-                    <Clock className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black">Flexible Schedule</h4>
-                    <p className="text-xs text-gray-500 font-medium">Work on your own terms.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`p-5 rounded-[32px] border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
-                    <Wallet className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-black">Weekly Payouts</h4>
-                    <p className="text-xs text-gray-500 font-medium">Get paid every single week.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 pb-10">
-              <div className={`p-6 rounded-[32px] border-2 border-dashed ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 text-center">Identity Requirements</h4>
-                 <div className="flex flex-wrap justify-center gap-2">
-                    {['Valid ID', 'Smartphone', '18+ Years', 'Reliable Transport'].map(item => (
-                      <span key={item} className={`px-3 py-1.5 rounded-full text-[10px] font-bold ${theme === 'dark' ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                         {item}
-                      </span>
-                    ))}
-                 </div>
+    return (
+      <div className="flex flex-col">
+        {apiError && (
+          <div className="mx-6 mt-4 animate-in fade-in zoom-in duration-300">
+            <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-600'} flex items-start space-x-3`}>
+              <span className="text-xl">⚠️</span>
+              <div>
+                <h4 className="text-sm font-black">{apiError.title}</h4>
+                <p className="text-[11px] font-medium opacity-90">{apiError.message}</p>
               </div>
             </div>
           </div>
-        );
-      case 1:
-        return (
-           <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
-            <CustomInput label="First Name" name="first_name" value={formValue.first_name} onChange={handleInputChange} error={errors.first_name} required placeholder="Legal first name" />
-            <CustomInput label="Last Name / Surname" name="last_name" value={formValue.last_name} onChange={handleInputChange} error={errors.last_name} required placeholder="Surname" />
-            <CustomInput label="National ID Number" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="16-digit ID number" />
-            <CustomInput 
-              label="Date of Birth" 
-              name="dob" 
-              type="date" 
-              value={formValue.dob} 
-              onChange={handleInputChange} 
-              error={errors.dob} 
-              required 
-              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-            />
-            <TransportModeSelector value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} />
+        )}
+        {(() => {
+          switch (currentStep) {
+            case 0:
+              return (
+                <div className="space-y-8 animate-in fade-in duration-1000">
+                  <div className="relative aspect-[4/5] w-full overflow-hidden">
+                    <Image 
+                      src="/images/shopper/welcome_hero_v2.png" 
+                      fill 
+                      className="object-cover" 
+                      alt="Welcome to Plasa"
+                      priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                    <div className="absolute top-8 left-8">
+                       <Image 
+                         src="/assets/logos/PlasLogoPNG.png" 
+                         width={120} 
+                         height={40} 
+                         alt="Plas Logo" 
+                         className="object-contain"
+                       />
+                    </div>
+                    <div className="absolute bottom-8 left-8 right-8">
+                       <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-widest mb-4">
+                          <Zap className="h-3 w-3" />
+                          <span>Instant Approval</span>
+                       </div>
+                       <h2 className="text-4xl font-black text-white leading-[0.9] tracking-tighter">Empowering <br/> Every Journey.</h2>
+                       <p className="text-white/70 text-sm mt-4 font-medium max-w-[240px]">Join Rwanda's premier delivery community. Drive change and earn with total flexibility.</p>
+                    </div>
+                  </div>
+
+                  <div className="px-6 grid grid-cols-1 gap-4">
+                    <div className={`p-5 rounded-[32px] border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3 rounded-2xl bg-green-500/10 text-green-500">
+                          <Clock className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black">Flexible Schedule</h4>
+                          <p className="text-xs text-gray-500 font-medium">Work on your own terms.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`p-5 rounded-[32px] border ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
+                          <Wallet className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black">Weekly Payouts</h4>
+                          <p className="text-xs text-gray-500 font-medium">Get paid every single week.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="px-6 pb-10">
+                    <div className={`p-6 rounded-[32px] border-2 border-dashed ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
+                       <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 text-center">Identity Requirements</h4>
+                       <div className="flex flex-wrap justify-center gap-2">
+                          {['Valid ID', 'Smartphone', '18+ Years', 'Reliable Transport'].map(item => (
+                            <span key={item} className={`px-3 py-1.5 rounded-full text-[10px] font-bold ${theme === 'dark' ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                               {item}
+                            </span>
+                          ))}
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            case 1:
+              return (
+                 <div className="px-6 space-y-6 animate-in fade-in slide-in-from-right duration-500">
+                  <CustomInput label="First Name" name="first_name" value={formValue.first_name} onChange={handleInputChange} error={errors.first_name} required placeholder="Legal first name" />
+                  <CustomInput label="Last Name / Surname" name="last_name" value={formValue.last_name} onChange={handleInputChange} error={errors.last_name} required placeholder="Surname" />
+                  <CustomInput label="National ID Number" name="national_id" value={formValue.national_id} onChange={handleInputChange} error={errors.national_id} required placeholder="16-digit ID number" />
+                  <CustomInput 
+                    label="Date of Birth" 
+                    name="dob" 
+                    type="date" 
+                    value={formValue.dob} 
+                    onChange={handleInputChange} 
+                    error={errors.dob} 
+                    required 
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                  />
+                  <TransportModeSelector value={formValue.transport_mode} onChange={handleInputChange} error={errors.transport_mode} />
             
             <div className={`p-6 rounded-[32px] border-2 border-dashed transition-all ${faceVerified ? 'border-green-500 bg-green-500/5' : 'border-gray-200 dark:border-gray-800'}`}>
                <div className="flex items-center space-x-3 mb-4">
