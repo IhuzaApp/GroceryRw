@@ -48,6 +48,15 @@ export const MobileBecomeShopper = () => {
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute top-8 left-8">
+                 <Image 
+                   src="/assets/logos/PlasLogoPNG.png" 
+                   width={120} 
+                   height={40} 
+                   alt="Plas Logo" 
+                   className="object-contain"
+                 />
+              </div>
               <div className="absolute bottom-8 left-8 right-8">
                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-widest mb-4">
                     <Zap className="h-3 w-3" />

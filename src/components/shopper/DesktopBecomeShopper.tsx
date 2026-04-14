@@ -57,6 +57,15 @@ export const DesktopBecomeShopper = () => {
             >
               <X className="h-6 w-6 text-gray-500" />
             </button>
+            <div className="flex justify-center mb-8">
+               <Image 
+                 src="/assets/logos/PlasLogoPNG.png" 
+                 width={160} 
+                 height={60} 
+                 alt="Plas Logo" 
+                 className="object-contain"
+               />
+            </div>
             <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-[11px] font-black uppercase tracking-widest mb-6">
               <Shield className="h-3 w-3" />
               <span>Secure Plasa Onboarding</span>

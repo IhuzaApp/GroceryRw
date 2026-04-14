@@ -121,10 +121,10 @@ export default async function handler(
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
           <div style="background-color: #00D9A5; padding: 30px; text-align: center;">
             <img src="https://www.plas.rw/assets/logos/PlasLogoPNG.png" alt="Plas Logo" style="width: 140px; margin-bottom: 5px;">
-            <div style="margin-bottom: 10px;">
-              <img src="https://www.plas.rw/assets/logos/PlasIcon.png" alt="Plas Icon" style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            </div>
-            <h1 style="color: #fff; margin: 0; font-size: 26px;">Welcome to Plasa, ${fullName}!</h1>
+       
+            <h1 style="color: #fff; margin: 0; font-size: 26px;">Welcome , ${fullName}!</h1>
+            <b style="color: #fff; margin: 0; font-size: 26px;">Plas Me to make your life easy</b>
+
           </div>
           
           <div style="padding: 30px;">
