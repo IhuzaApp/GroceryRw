@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendNewReferralRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
 
 // GraphQL mutation to insert referral registration
 const INSERT_REFERRAL_WINDOW = gql`
@@ -262,6 +263,19 @@ export default async function handler(
       return res.status(500).json({
         error: "Failed to create referral registration",
       });
+    }
+
+    // Send Slack notification
+    try {
+      await sendNewReferralRegistrationToSlack({
+        name,
+        phone,
+        email: email || "",
+        referralCode,
+      });
+    } catch (slackError) {
+      // Don't fail the registration if Slack fails, just log it
+      console.error("Slack notification failed for referral registration:", slackError);
     }
 
     return res.status(200).json({

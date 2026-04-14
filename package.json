@@ -74,6 +74,7 @@
     "react-to-print": "^3.1.0",
     "react-webcam": "^7.2.0",
     "recharts": "^2.15.3",
+    "resend": "^6.11.0",
     "rsuite": "^5.79.1",
     "swr": "^2.3.3",
     "tailwind": "^4.0.0",

@@ -5,6 +5,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import { sendNewShopperRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
+import { resend } from "../../../src/lib/resend";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { ShopperContractPDF } from "../../../src/components/shopper/ShopperContractPDF";
+import React from 'react';
 
 const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
@@ -558,6 +562,75 @@ export default async function handler(
         { user_id, full_name, phone_number }
       );
     }
+
+    // --- Start: Send Welcome Email via Resend ---
+    try {
+      const dateStr = new Date().toLocaleDateString('en-RW', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      // Generate PDF Contract
+      const pdfBuffer = await renderToBuffer(
+        React.createElement(ShopperContractPDF, { data: req.body, date: dateStr })
+      );
+
+      // Email Content with "How to Earn" info
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+          <div style="background-color: #00D9A5; padding: 30px; text-align: center;">
+            <img src="https://www.plas.rw/favicon.ico" alt="Plas Logo" style="width: 60px; height: 60px; margin-bottom: 10px;">
+            <h1 style="color: #fff; margin: 0; font-size: 24px;">Welcome to the Plasa Family!</h1>
+          </div>
+          
+          <div style="padding: 30px;">
+            <p style="font-size: 16px;">Dear <strong>${full_name}</strong>,</p>
+            <p>Congratulations! Your application to join Rwanda's premium delivery network has been received and is now pending verification. We are thrilled to have you onboard.</p>
+            
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #00D9A5; margin-top: 0;">🚀 How to Earn as a Plasa</h3>
+              <ul style="padding-left: 20px;">
+                <li style="margin-bottom: 10px;"><strong>Flexible Earnings:</strong> For regular and reel orders, you earn <strong>100% of the delivery fee + the service fee</strong>. For restaurant orders, you earn the <strong>delivery fee</strong>.</li>
+                <li style="margin-bottom: 10px;"><strong>Smart Assignment:</strong> Our system sends you personalized offers based on your proximity. No need to compete; if you see an offer, it's exclusively for you while you review it!</li>
+                <li style="margin-bottom: 10px;"><strong>Manage Your Load:</strong> You can work on up to <strong>2 active orders</strong> at a time to maximize your efficiency.</li>
+                <li style="margin-bottom: 10px;"><strong>Weekly Payouts:</strong> Get your earnings settled directly to your wallet with regular withdrawal options.</li>
+              </ul>
+            </div>
+
+            <p><strong>Next Steps:</strong> Our security team will verify your documents (National ID and Police Clearance) within 48 hours. Once verified, you'll be able to "Go-Live" and start accepting orders.</p>
+            
+            <p>Attached to this email is your <strong>Digital Shopper Agreement</strong> for your records.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              <p style="margin: 0;">Warm regards,</p>
+              <p style="margin: 5px 0; font-weight: bold; color: #00D9A5;">Plas Support Team</p>
+              <p style="margin: 0; font-size: 12px; color: #999;">Kigali, Rwanda | www.plas.rw</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      await resend.emails.send({
+        from: 'Plas Business <onboarding@plas.rw>',
+        to: [email || session.user.email || ''],
+        subject: 'Welcome to Plasa Business - Your Application & Agreement',
+        html: emailHtml,
+        attachments: [
+          {
+            filename: 'Shopper_Agreement_Plas.pdf',
+            content: pdfBuffer,
+          },
+        ],
+      });
+
+      console.log(`[Resend] Welcome email sent to ${email || session.user.email}`);
+    } catch (emailErr) {
+      console.error("[Resend] Failed to send welcome email:", emailErr);
+      // We don't throw here as the database registration was successful
+      await logErrorToSlack("RegisterShopperAPI:EmailNotification", emailErr, { user_id: userId, email });
+    }
+    // --- End: Send Welcome Email ---
 
     res.status(200).json({
       success: true,

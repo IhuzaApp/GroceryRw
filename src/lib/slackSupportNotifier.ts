@@ -830,6 +830,79 @@ export async function sendBusinessRegistrationNoticeToSlack(
       "Failed to send business registration notice to Slack",
       error
     );
+  }
+}
+
+// --- New referral program registration (waiting for review) ---
+
+export interface NewReferralRegistrationPayload {
+  name: string;
+  phone: string;
+  email?: string;
+  referralCode: string;
+}
+
+/**
+ * Notify Slack that a new user has registered for the referral program.
+ */
+export async function sendNewReferralRegistrationToSlack(
+  payload: NewReferralRegistrationPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const emailDisplay = payload.email?.trim() || "—";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🤝 New referral program registration",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Name*\n${payload.name}` },
+        { type: "mrkdwn", text: `*Phone*\n${payload.phone}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Email*\n${emailDisplay}` },
+        {
+          type: "mrkdwn",
+          text: `*Referral Code*\n\`${payload.referralCode}\``,
+        },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `🕒 ${new Date().toISOString()} · _Review this application in the admin panel._`,
+        },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New referral registration: ${payload.name} (Code: ${payload.referralCode})`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send referral registration notice to Slack", error);
     throw error;
   }
 }

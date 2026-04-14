@@ -5,6 +5,8 @@ import { useShopperForm, steps, guarantorRelationshipOptions, mutualStatusOption
 import { CustomInput, FileUploadInput, TransportModeSelector, SignaturePad, AddressAutocomplete } from "./ShopperUIComponents";
 import { ChevronLeft, ChevronRight, Camera, PenTool, CheckCircle2, User, Phone, MapPin, Users, FileText, Check, X, Shield, Wallet, Clock, Zap } from "lucide-react";
 import { BiometricCameraModal } from "./BiometricCameraModal";
+// @ts-ignore
+import { Resend } from "resend"; 
 
 export const MobileBecomeShopper = () => {
   const { theme } = useTheme();
