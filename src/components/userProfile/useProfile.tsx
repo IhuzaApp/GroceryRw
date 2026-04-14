@@ -13,6 +13,7 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
@@ -20,6 +21,7 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 export default function UserProfile() {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("account");
   const isMobile = useMediaQuery("(max-width: 768px)");
   // User data state
@@ -297,21 +299,31 @@ export default function UserProfile() {
   // Show loading state while determining screen size
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 md:bg-transparent">
+      <div 
+        className="flex min-h-screen flex-col md:bg-transparent"
+        style={{ backgroundColor: 'var(--bg-primary)' }}
+      >
         {/* Mobile Header Background Space */}
-        <div className="h-32 w-full animate-pulse rounded-b-3xl bg-gray-200 dark:bg-gray-800 md:hidden" />
+        <div className="h-32 w-full animate-pulse rounded-b-3xl md:hidden bg-gray-300/30 dark:bg-white/5" />
 
         <div className="mx-auto w-full max-w-4xl px-4 py-6 md:mt-8">
           {/* Profile Details Skeleton */}
-          <div className="-mt-16 mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800/50 md:mt-0">
+          <div className="-mt-16 mb-6 rounded-2xl border p-6 shadow-sm md:mt-0 transition-colors duration-300"
+            style={{ 
+              backgroundColor: 'var(--bg-secondary)',
+              borderColor: theme === 'dark' ? '#262626' : '#e5e7eb'
+            }}
+          >
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-              <div className="h-20 w-20 shrink-0 animate-pulse rounded-full border-4 border-white bg-gray-200 shadow-md dark:border-gray-800 dark:bg-gray-700 md:h-24 md:w-24" />
+              <div className="h-20 w-20 shrink-0 animate-pulse rounded-full border-4 shadow-md md:h-24 md:w-24 bg-gray-300/50 dark:bg-white/10"
+                style={{ borderColor: 'var(--bg-secondary)' }}
+              />
               <div className="w-full space-y-2 text-center sm:text-left">
-                <div className="mx-auto mt-2 h-6 w-48 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:mx-0 sm:mt-0" />
-                <div className="mx-auto h-4 w-32 animate-pulse rounded-md bg-gray-100 dark:bg-gray-800 sm:mx-0" />
+                <div className="mx-auto mt-2 h-6 w-48 animate-pulse rounded-lg bg-gray-300/40 dark:bg-white/10 sm:mx-0 sm:mt-0" />
+                <div className="mx-auto h-4 w-32 animate-pulse rounded-md bg-gray-300/20 dark:bg-white/5 sm:mx-0" />
                 <div className="mt-4 flex justify-center gap-2 sm:justify-start">
-                  <div className="h-6 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-6 w-24 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-gray-300/40 dark:bg-white/10" />
+                  <div className="h-6 w-24 animate-pulse rounded-full bg-gray-300/40 dark:bg-white/10" />
                 </div>
               </div>
             </div>
@@ -322,12 +334,16 @@ export default function UserProfile() {
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800/50"
+                className="flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-colors duration-300"
+                style={{ 
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderColor: theme === 'dark' ? '#262626' : '#e5e7eb'
+                }}
               >
-                <div className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />
+                <div className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-gray-300/50 dark:bg-white/10" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 w-32 animate-pulse rounded-md bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-3 w-48 animate-pulse rounded-md bg-gray-100 dark:bg-gray-800" />
+                  <div className="h-5 w-32 animate-pulse rounded-md bg-gray-300/40 dark:bg-white/10" />
+                  <div className="h-3 w-48 animate-pulse rounded-md bg-gray-300/20 dark:bg-white/5" />
                 </div>
               </div>
             ))}
