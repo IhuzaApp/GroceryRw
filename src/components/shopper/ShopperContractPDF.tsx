@@ -116,7 +116,7 @@ export const ShopperContractPDF = ({ data, date }: ShopperContractPDFProps) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Image src="/favicon.ico" style={styles.logo} />
+          <Image src="/assets/logos/PlasLogoPNG.png" style={styles.logo} />
           <View style={styles.titleContainer}>
             <Text style={styles.mainTitle}>Shopper Agreement</Text>
             <Text style={styles.subTitle}>Plas Business Network</Text>
@@ -196,7 +196,7 @@ export const ShopperContractPDF = ({ data, date }: ShopperContractPDFProps) => {
             <Text style={styles.signatureLabel}>Shopper Digital Signature</Text>
           </View>
           <View style={styles.signatureBox}>
-            <Image src="/favicon.ico" style={styles.signatureImage} />
+            <Image src="/assets/logos/PlasLogoPNG.png" style={styles.signatureImage} />
             <Text style={styles.value}>Plas Support Team</Text>
             <Text style={styles.signatureLabel}>Authorized Representative</Text>
           </View>

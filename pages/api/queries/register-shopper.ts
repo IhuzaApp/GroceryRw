@@ -580,8 +580,11 @@ export default async function handler(
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
           <div style="background-color: #00D9A5; padding: 30px; text-align: center;">
-            <img src="https://www.plas.rw/favicon.ico" alt="Plas Logo" style="width: 60px; height: 60px; margin-bottom: 10px;">
-            <h1 style="color: #fff; margin: 0; font-size: 24px;">Welcome to the Plasa Family!</h1>
+            <img src="https://www.plas.rw/assets/logos/PlasLogoPNG.png" alt="Plas Logo" style="width: 140px; margin-bottom: 10px;">
+            <div style="margin-top: 10px;">
+              <img src="https://www.plas.rw/assets/logos/PlasIcon.png" alt="Plas Icon" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff;">
+            </div>
+            <h1 style="color: #fff; margin: 10px 0 0; font-size: 24px;">Welcome to the Plasa Family!</h1>
           </div>
           
           <div style="padding: 30px;">
