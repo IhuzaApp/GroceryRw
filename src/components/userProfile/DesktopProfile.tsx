@@ -70,6 +70,8 @@ interface DesktopProfileProps {
   loadingReferral: boolean;
   onAvatarChange: (newUrl: string) => void;
   isAISubscribed: boolean;
+  isLoggingOut: boolean;
+  onLogout: () => void;
 }
 
 export default function DesktopProfile({
@@ -94,6 +96,8 @@ export default function DesktopProfile({
   loadingReferral,
   onAvatarChange,
   isAISubscribed,
+  isLoggingOut,
+  onLogout,
 }: DesktopProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
@@ -380,14 +384,16 @@ export default function DesktopProfile({
 
                 {/* Logout Button */}
                 <button
-                  onClick={async () => {
-                    toast.success("Logging out...");
-                    await logout();
-                  }}
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3.5 text-xs font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-500 hover:text-white active:scale-95 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
+                  onClick={onLogout}
+                  disabled={isLoggingOut}
+                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3.5 text-xs font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-500 hover:text-white active:scale-95 disabled:opacity-50 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>{t("nav.logout")}</span>
+                  {isLoggingOut ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  <span>{isLoggingOut ? "Exiting..." : t("nav.logout")}</span>
                 </button>
               </div>
 

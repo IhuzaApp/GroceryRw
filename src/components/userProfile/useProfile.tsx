@@ -13,6 +13,7 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
+import { LogOut, RefreshCw } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
@@ -67,6 +68,7 @@ export default function UserProfile() {
   const [loadingReferral, setLoadingReferral] = useState<boolean>(true);
   // AI Subscription status
   const [isAISubscribed, setIsAISubscribed] = useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
@@ -296,6 +298,91 @@ export default function UserProfile() {
     );
   };
 
+  // Handle premium logout with takeover
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    toast.success("Logging out...");
+    // Give time for the "See you soon" takeover to show and progress to start
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoggingOut(false);
+      toast.error("Logout failed. Please try again.");
+    }
+  };
+
+  const [logoutProgress, setLogoutProgress] = useState(0);
+
+  useEffect(() => {
+    if (isLoggingOut) {
+      const interval = setInterval(() => {
+        setLogoutProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 30);
+      return () => clearInterval(interval);
+    } else {
+      setLogoutProgress(0);
+    }
+  }, [isLoggingOut]);
+
+  // If logging out, show the takeover IMMEDIATELY and stop rendering other content
+  if (isLoggingOut) {
+    return (
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
+        <div className="max-w-md w-full space-y-8">
+          {/* Logo / Branding */}
+          <div className="flex justify-center mb-8">
+            <div className="p-4 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl animate-in zoom-in duration-700">
+              <LogOut className="h-16 w-16 text-red-500" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+              See you soon, <span className="text-red-500">{user?.name || "there"}</span>!
+            </h1>
+            <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+              We're securely closing your session.
+            </p>
+          </div>
+
+          {/* Progress Bar Container */}
+          <div className="relative mt-12 w-full max-w-sm mx-auto h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+              style={{ width: `${logoutProgress}%` }}
+            />
+          </div>
+
+          <div className="flex flex-col items-center gap-2 mt-4">
+            <span className="text-sm font-black tracking-widest uppercase text-gray-400 dark:text-gray-500">
+              {logoutProgress}% Securely Logged Out
+            </span>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="pt-12 flex justify-center opacity-30">
+            <div className="flex gap-4">
+              <div className="h-1 w-8 rounded-full bg-red-400" />
+              <div className="h-1 w-12 rounded-full bg-red-500" />
+              <div className="h-1 w-8 rounded-full bg-red-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading state while determining screen size
   if (loading) {
     return (
@@ -378,6 +465,8 @@ export default function UserProfile() {
         loadingReferral={loadingReferral}
         isAISubscribed={isAISubscribed}
         onAvatarChange={handleAvatarChange}
+        isLoggingOut={isLoggingOut}
+        onLogout={handleLogout}
       />
     );
   }
@@ -405,6 +494,8 @@ export default function UserProfile() {
       loadingReferral={loadingReferral}
       isAISubscribed={isAISubscribed}
       onAvatarChange={handleAvatarChange}
+      isLoggingOut={isLoggingOut}
+      onLogout={handleLogout}
     />
   );
 }

@@ -17,6 +17,7 @@ import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useLanguage } from "../../context/LanguageContext";
+import { LogOut, RefreshCw } from "lucide-react";
 
 interface MobileProfileProps {
   user: {
@@ -56,6 +57,8 @@ interface MobileProfileProps {
   loadingReferral: boolean;
   onAvatarChange: (newUrl: string) => void;
   isAISubscribed: boolean;
+  isLoggingOut: boolean;
+  onLogout: () => void;
 }
 
 export default function MobileProfile({
@@ -80,6 +83,8 @@ export default function MobileProfile({
   loadingReferral,
   onAvatarChange,
   isAISubscribed,
+  isLoggingOut,
+  onLogout,
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
@@ -940,34 +945,33 @@ export default function MobileProfile({
 
         {/* Logout Button */}
         <button
-          className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
-          onClick={async () => {
-            try {
-              toast.success("Logging out...");
-              await logout();
-            } catch (error) {
-              console.error("Logout error:", error);
-              toast.error("Failed to logout");
-            }
-          }}
+          disabled={isLoggingOut}
+          className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-4 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+          onClick={onLogout}
         >
           <div className="flex items-center space-x-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-              <svg
-                className="h-5 w-5 !text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
+              {isLoggingOut ? (
+                <RefreshCw className="h-5 w-5 !text-white animate-spin" />
+              ) : (
+                <svg
+                  className="h-5 w-5 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              )}
             </div>
-            <span className="!text-white">{t("nav.logout")}</span>
+            <span className="!text-white">
+              {isLoggingOut ? "Exiting..." : t("nav.logout")}
+            </span>
           </div>
         </button>
       </div>
