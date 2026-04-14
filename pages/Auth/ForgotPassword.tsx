@@ -3,7 +3,6 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import toast from "react-hot-toast";
 import { Mail, ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useTheme } from "../../src/context/ThemeContext";
 
@@ -37,8 +36,7 @@ export default function ForgotPassword() {
       }
 
       setIsSent(true);
-      toast.success("Reset link sent to your email!");
-      // router.push(`/Auth/ResetPassword?token=${data.token}`);
+      // toast.success("Reset link sent to your email!");
     } catch (err: any) {
       console.error("Forgot password error:", err);
       setError(err.message || "Something went wrong. Please try again.");

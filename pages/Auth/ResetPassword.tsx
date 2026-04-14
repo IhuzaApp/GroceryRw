@@ -3,7 +3,6 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import toast from "react-hot-toast";
 import { Lock, Key, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "../../src/context/ThemeContext";
 
@@ -59,7 +58,7 @@ export default function ResetPassword() {
       }
 
       setIsSuccess(true);
-      toast.success("Password reset successfully!");
+      // toast.success("Password reset successfully!");
       
       // Auto-redirect to login after 3 seconds
       setTimeout(() => {
@@ -76,15 +75,18 @@ export default function ResetPassword() {
   if (isSuccess) {
     return (
       <div className={`min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'bg-[#000]' : 'bg-[#fafafa]'}`}>
-        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-          <div className="flex justify-center mb-10 text-green-500">
-            <CheckCircle2 className="h-20 w-20" />
+        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center animate-in fade-in zoom-in duration-500">
+          <div className="flex justify-center mb-10">
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-500/20 blur-2xl rounded-full scale-150 animate-pulse" />
+              <CheckCircle2 className="h-20 w-20 text-green-500 relative z-10" />
+            </div>
           </div>
           <h2 className={`text-4xl font-black tracking-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Password Updated!
           </h2>
-          <p className="text-gray-500 font-medium mb-10">
-            Your password has been successfully reset. You will be redirected to the login page momentarily.
+          <p className="text-gray-500 font-medium mb-10 max-w-sm mx-auto">
+            Your password has been successfully reset. We're taking you back to the login page in just a moment.
           </p>
           <Link
             href="/Auth/Login"

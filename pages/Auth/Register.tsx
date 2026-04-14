@@ -27,51 +27,62 @@ function ThemeAwareLogo() {
 
 export default function RegisterPage() {
   const [isOtpSent, setIsOtpSent] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
 
   return (
     <ThemeProvider>
       <div className="h-screen overflow-hidden bg-white dark:bg-black">
         <div className="flex h-full lg:h-screen">
           {/* Left Side - Registration Form */}
-          <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-4 py-8 lg:w-1/2 lg:px-16 lg:py-8">
+          <div className={`${isSuccess ? 'w-full' : 'w-full lg:w-1/2'} flex flex-col items-center justify-center overflow-y-auto px-4 py-8 lg:px-16 lg:py-8`}>
             <div className="w-full max-w-md">
-              {/* Heading */}
-              <div className="mb-4 text-center lg:mb-8 lg:text-left">
-                <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white lg:text-4xl">
-                  {isOtpSent ? "Verify your phone" : "Create an account"}
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 lg:text-base">
-                  {isOtpSent
-                    ? "Enter the code sent to your mobile device"
-                    : "Sign up to start shopping for groceries"}
-                </p>
-              </div>
+              {!isSuccess && (
+                <>
+                  {/* Heading */}
+                  <div className="mb-4 text-center lg:mb-8 lg:text-left">
+                    <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white lg:text-4xl">
+                      {isOtpSent ? "Verify your phone" : "Create an account"}
+                    </h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 lg:text-base">
+                      {isOtpSent
+                        ? "Enter the code sent to your mobile device"
+                        : "Sign up to start shopping for groceries"}
+                    </p>
+                  </div>
+                </>
+              )}
 
               {/* Registration Form */}
-              <div className="rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-[#171717]/80 dark:text-white lg:p-8">
+              <div className={!isSuccess ? "rounded-2xl bg-white/80 p-4 text-black shadow-xl backdrop-blur-sm dark:bg-[#171717]/80 dark:text-white lg:p-8" : ""}>
                 <UserRegistration
                   isOtpSent={isOtpSent}
                   setIsOtpSent={setIsOtpSent}
+                  onSuccess={() => setIsSuccess(true)}
                 />
               </div>
 
-              {/* Footer Links */}
-              <div className="mt-4 text-center lg:mt-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Already have an account?{" "}
-                  <Link
-                    href="/Auth/Login"
-                    className="font-semibold text-green-600 transition-colors duration-200 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                  >
-                    Sign in
-                  </Link>
-                </p>
-              </div>
+              {!isSuccess && (
+                <>
+                  {/* Footer Links */}
+                  <div className="mt-4 text-center lg:mt-6">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Already have an account?{" "}
+                      <Link
+                        href="/Auth/Login"
+                        className="font-semibold text-green-600 transition-colors duration-200 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                      >
+                        Sign in
+                      </Link>
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Right Side - Image with Gradient Overlay */}
-          <div className="relative hidden bg-gray-100 lg:block lg:w-1/2">
+          {/* Right Side - Image with Gradient Overlay - HIDDEN ON SUCCESS */}
+          {!isSuccess && (
+            <div className="relative hidden bg-gray-100 lg:block lg:w-1/2">
             {/* Multiple Gradient Overlays for Depth - Darkened for better readability */}
             <div className="absolute inset-0 bg-gradient-to-br from-green-600/60 via-green-500/50 to-blue-600/60"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
@@ -179,8 +190,9 @@ export default function RegisterPage() {
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
+    </div>
     </ThemeProvider>
   );
 }
