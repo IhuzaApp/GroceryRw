@@ -381,7 +381,7 @@ export default function RegisterPage() {
           invoiceNumber,
         }),
       });
-      console.log("✅ Registration notifications sent");
+ 
     } catch (err) {
       console.error("❌ Failed to send registration notifications:", err);
     }
@@ -448,9 +448,7 @@ export default function RegisterPage() {
     }
 
     try {
-      console.log(
-        `🚀 [POS Registration] Phase Execution - Starting at Step ${startAt}`
-      );
+ 
 
       // STEP 1: Create Business
       if (startAt <= 1) {
@@ -497,7 +495,7 @@ export default function RegisterPage() {
         if (businessResult?.errors)
           throw new Error(businessResult.errors[0].message);
         setRegisteredBusinessId(businessId);
-        console.log("✅ Step 1: Business created");
+ 
       }
 
       // STEP 2: Create Employee
@@ -530,7 +528,7 @@ export default function RegisterPage() {
         });
         if (employeeResult?.errors)
           throw new Error(employeeResult.errors[0].message);
-        console.log("✅ Step 2: Employee created");
+ 
       }
 
       // STEP 3: AI Usage (MOVED UP - Dependency for Invoice)
@@ -550,7 +548,7 @@ export default function RegisterPage() {
         });
         if (aiUsageResult?.errors)
           throw new Error(aiUsageResult.errors[0].message);
-        console.log("✅ Step 3: AI Usage created");
+ 
       }
 
       // STEP 4: Reel Usage (MOVED UP - Dependency for Invoice)
@@ -569,7 +567,7 @@ export default function RegisterPage() {
         });
         if (reelUsageResult?.errors)
           throw new Error(reelUsageResult.errors[0].message);
-        console.log("✅ Step 4: Reel Usage created");
+ 
       }
 
       // STEP 5: Create Subscription
@@ -591,7 +589,7 @@ export default function RegisterPage() {
         });
         if (subResult?.errors) throw new Error(subResult.errors[0].message);
         setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-        console.log("✅ Step 5: Subscription created");
+ 
       }
 
       // STEP 6: Create Invoice
@@ -626,7 +624,7 @@ export default function RegisterPage() {
         });
         if (invoiceResult?.errors)
           throw new Error(invoiceResult.errors[0].message);
-        console.log("✅ Step 6: Invoice created");
+ 
       }
 
       // BREAK POINT: Trigger Payment if this is the initial shell setup
@@ -656,17 +654,15 @@ export default function RegisterPage() {
             if (
               walletResult.errors[0].message.includes("Uniqueness violation")
             ) {
-              console.log("ℹ️ Step 7: Wallet already exists, skipping...");
+ 
             } else {
               throw new Error(walletResult.errors[0].message);
             }
           }
-          console.log("✅ Step 7: Wallet created/verified");
+ 
         } catch (walletErr: any) {
           if (walletErr.message?.includes("Uniqueness violation")) {
-            console.log(
-              "ℹ️ Step 7: Wallet already exists (catch), skipping..."
-            );
+ 
           } else {
             throw walletErr;
           }
