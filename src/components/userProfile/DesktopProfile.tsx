@@ -357,7 +357,7 @@ export default function DesktopProfile({
           <div className="lg:col-span-3">
             <div className="flex h-full flex-col justify-between gap-4">
               <div className="space-y-3">
-                {/* Become a Shopper Button */}
+                {/* Become a Plasa Button */}
                 {!loadingShopper && (
                   <button
                     onClick={(e) => {
@@ -378,7 +378,7 @@ export default function DesktopProfile({
                       } else {
                         if (isGuest) {
                           toast.error(
-                            "Please create a full account to become a shopper"
+                            "Please create a full account to become a plasa"
                           );
                           return;
                         }
@@ -409,7 +409,7 @@ export default function DesktopProfile({
                         ? "Switching..."
                         : shopperStatus?.active
                         ? "Switch Service"
-                        : "Become Shopper"}
+                        : "Become a Plasa"}
                     </span>
                   </button>
                 )}

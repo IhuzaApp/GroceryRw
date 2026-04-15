@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { useTheme } from "../../context/ThemeContext";
 import { useLanguage } from "../../context/LanguageContext";
 import toast from "react-hot-toast";
@@ -111,41 +112,42 @@ const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
           {/* Method Selection */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {(["Visa", "Mastercard", "MTN MoMo", "Airtel"] as const).map(
-              (m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMethod(m)}
-                  className={`flex flex-col items-center justify-center rounded-2xl border-2 py-4 transition-all ${
-                    method === m
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-gray-800 dark:bg-gray-800/50"
-                  }`}
-                >
-                  <div
-                    className={`mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-[10px] font-black !text-white shadow-lg ${
-                      m === "Visa"
-                        ? "bg-blue-600"
-                        : m === "Mastercard"
-                        ? "bg-orange-500"
-                        : m === "MTN MoMo"
-                        ? "bg-yellow-500 !text-black"
-                        : "bg-red-600"
+              (m) => {
+                const logo =
+                  m === "Visa"
+                    ? "/assets/logos/visa.svg"
+                    : m === "Mastercard"
+                    ? "/assets/logos/mastercard.svg"
+                    : m === "MTN MoMo"
+                    ? "/assets/logos/mtn.svg"
+                    : "/assets/logos/airtel.svg";
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMethod(m)}
+                    className={`flex flex-col items-center justify-center rounded-2xl border-2 py-4 transition-all ${
+                      method === m
+                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-gray-800 dark:bg-gray-800/50"
                     }`}
                   >
-                    {m === "Visa"
-                      ? "VISA"
-                      : m === "Mastercard"
-                      ? "MC"
-                      : m === "MTN MoMo"
-                      ? "MTN"
-                      : "AIRTEL"}
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    {m.split(" ")[0]}
-                  </span>
-                </button>
-              )
+                    <div className="mb-2 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white shadow-md">
+                      <Image
+                        src={logo}
+                        alt={m}
+                        width={44}
+                        height={44}
+                        className="h-10 w-10 object-contain"
+                        unoptimized
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                      {m.split(" ")[0]}
+                    </span>
+                  </button>
+                );
+              }
             )}
           </div>
 

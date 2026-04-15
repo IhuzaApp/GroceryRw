@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import toast from "react-hot-toast";
 import CryptoJS from "crypto-js";
 import { useLanguage } from "../../context/LanguageContext";
@@ -9,21 +10,21 @@ import AddPaymentMethodModal from "./AddPaymentMethodModal";
 const ENCRYPTION_KEY =
   process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-secret-key";
 
-// Helper to map methods to background colors
-const getMethodBg = (method: string) => {
+// Helper to map methods to their logo path
+const getMethodLogo = (method: string) => {
   switch (method.toLowerCase()) {
     case "visa":
-      return "bg-blue-600";
+      return "/assets/logos/visa.svg";
     case "mastercard":
     case "mc":
-      return "bg-orange-500";
+      return "/assets/logos/mastercard.svg";
     case "mtn momo":
-      return "bg-yellow-500 text-black";
+      return "/assets/logos/mtn.svg";
     case "airtel":
     case "airtel money":
-      return "bg-red-600";
+      return "/assets/logos/airtel.svg";
     default:
-      return "bg-gray-500";
+      return null;
   }
 };
 
@@ -143,17 +144,18 @@ export default function UserPayment() {
             {/* Main Content Container */}
             <div className="flex flex-col items-center gap-6 p-6 sm:flex-row">
               {/* Payment Method Icon Container */}
-              <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xs font-bold !text-white shadow-lg transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 ${getMethodBg(
-                  pm.method
-                )}`}
-              >
-                {pm.method === "Visa" ? (
-                  <span className="text-base tracking-tighter">VISA</span>
-                ) : pm.method === "Mastercard" || pm.method === "MC" ? (
-                  <span className="text-base tracking-tighter">MC</span>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-500 group-hover:rotate-6 group-hover:scale-110">
+                {getMethodLogo(pm.method) ? (
+                  <Image
+                    src={getMethodLogo(pm.method)!}
+                    alt={pm.method}
+                    width={44}
+                    height={44}
+                    className="h-10 w-10 object-contain"
+                    unoptimized
+                  />
                 ) : (
-                  <span className="text-xs">MTN</span>
+                  <span className="text-xs font-bold text-gray-700">{pm.method.slice(0, 2).toUpperCase()}</span>
                 )}
               </div>
 

@@ -937,7 +937,7 @@ export default function MobileProfile({
                         ? "Pending"
                         : "Under Review"
                     }`
-                  : "Become a Shopper"}
+                  : "Become a Plasa"}
               </span>
             </div>
           </button>
