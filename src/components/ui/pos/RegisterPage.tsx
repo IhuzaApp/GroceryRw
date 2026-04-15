@@ -369,6 +369,24 @@ export default function RegisterPage() {
     return partyId;
   };
 
+  const sendRegistrationNotifications = async (invoiceNumber: string) => {
+    try {
+      await fetch("/api/pos/registration-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formData,
+          selectedPlan,
+          billingCycle: cycle,
+          invoiceNumber,
+        }),
+      });
+      console.log("✅ Registration notifications sent");
+    } catch (err) {
+      console.error("❌ Failed to send registration notifications:", err);
+    }
+  };
+
   const handleCompleteSetup = async () => {
     const validationError = validateStep(step);
     if (validationError) {
@@ -577,6 +595,7 @@ export default function RegisterPage() {
       }
 
       // STEP 6: Create Invoice
+      const invNum = `INV-${Date.now()}`;
       if (startAt <= 6) {
         setRegistrationSubStep(6);
         const invoiceResult = await createInvoice({
@@ -585,7 +604,7 @@ export default function RegisterPage() {
             currency: "RWF",
             discount_amount: "0",
             due_date: dueDate.toISOString(),
-            invoice_number: `INV-${Date.now()}`,
+            invoice_number: invNum,
             issued_at: now,
             paid_at: isShell ? null : now,
             payment_method: isShell ? "UNPAID" : "MoMo",
@@ -665,6 +684,8 @@ export default function RegisterPage() {
       } else {
         setIsSuccess(true);
         setProcessingStep("success");
+        // Trigger Registration Notifications
+        sendRegistrationNotifications(invNum);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (err: any) {

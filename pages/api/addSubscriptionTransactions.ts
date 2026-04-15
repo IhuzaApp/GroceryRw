@@ -11,6 +11,7 @@ const ADD_SUBSCRIPTION_TRANSACTION = gql`
     $reference_id: String = ""
     $status: String = ""
     $subscription_id: uuid = ""
+    $user_id: uuid = null
     $type: String = ""
   ) {
     insert_subscription_transactions(
@@ -22,6 +23,7 @@ const ADD_SUBSCRIPTION_TRANSACTION = gql`
         reference_id: $reference_id
         status: $status
         subscription_id: $subscription_id
+        user_id: $user_id
         type: $type
       }
     ) {
@@ -46,6 +48,7 @@ export default async function handler(
     reference_id,
     status,
     subscription_id,
+    user_id,
     type,
   } = req.body;
 
@@ -62,6 +65,7 @@ export default async function handler(
       reference_id,
       status,
       subscription_id,
+      user_id,
       type,
     });
 

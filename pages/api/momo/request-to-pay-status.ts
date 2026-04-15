@@ -96,7 +96,7 @@ const UPDATE_SUBSCRIPTION_STATUS = gql`
     $id: uuid!
     $status: String!
     $mtn_response: String!
-    $update_at: String!
+    $update_at: timestamptz!
   ) {
     update_subscription_transactions_by_pk(
       pk_columns: { id: $id }
@@ -274,7 +274,7 @@ const UPDATE_ORDER_TRANSACTION_STATUS = gql`
     $id: uuid!
     $status: String!
     $mtn_response: String!
-    $updated_at: String!
+    $updated_at: timestamptz!
   ) {
     update_order_transactions(
       where: { id: { _eq: $id }, status: { _neq: "SUCCESSFUL" } }
