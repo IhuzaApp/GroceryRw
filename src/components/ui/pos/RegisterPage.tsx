@@ -489,6 +489,7 @@ export default function RegisterPage() {
               tin: formData.tin,
               shop_id: businessId,
               is_active: false,
+              rdb_certificate: formData.rdb_cert_url,
             },
           });
         }

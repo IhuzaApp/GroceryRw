@@ -122,20 +122,12 @@ const ACTIVATE_SUBSCRIPTION = gql`
   }
 `;
 
-const ACTIVATE_RESTAURANT = gql`
-  mutation ActivateRestaurant($id: uuid!) {
+const VERIFY_RESTAURANT = gql`
+  mutation VerifyRestaurant($id: uuid!) {
     update_Restaurants_by_pk(
       pk_columns: { id: $id }
-      _set: { is_active: true, verified: true }
+      _set: { verified: true }
     ) {
-      id
-    }
-  }
-`;
-
-const ACTIVATE_SHOP = gql`
-  mutation ActivateShop($id: uuid!) {
-    update_Shops_by_pk(pk_columns: { id: $id }, _set: { is_active: true }) {
       id
     }
   }
@@ -883,15 +875,12 @@ export default async function handler(
                 restaurantId &&
                 restaurantId !== "00000000-0000-0000-0000-000000000000"
               ) {
-                await hasuraClient.request(ACTIVATE_RESTAURANT, {
+                await hasuraClient.request(VERIFY_RESTAURANT, {
                   id: restaurantId,
                 });
-              } else if (
-                shopId &&
-                shopId !== "00000000-0000-0000-0000-000000000000"
-              ) {
-                await hasuraClient.request(ACTIVATE_SHOP, { id: shopId });
               }
+              // We intentionally do NOT activate the Shop or Restaurant (is_active) 
+              // so it remains false, awaiting manual admin approval.
 
               await hasuraClient.request(ACTIVATE_INVOICE, {
                 subscription_id: subscription.subscription_id,
