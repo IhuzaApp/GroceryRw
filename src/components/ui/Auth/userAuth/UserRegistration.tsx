@@ -153,48 +153,44 @@ export default function UserRegistration({
     }
   }, [isSuccess]);
 
-  if (isSuccess) {
-    return (
-      <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 animate-in fade-in duration-500 ${
-        theme === 'dark' ? 'bg-[#000]' : 'bg-white'
-      }`}>
-        <div className="w-full max-w-sm text-center">
-          <div className="flex justify-center mb-10">
-            <div className="relative">
-              <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-[2.5] animate-pulse" />
-              <CheckCircle2 className="h-24 w-24 text-green-500 relative z-10" />
-            </div>
+  return isSuccess ? (
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 animate-in fade-in duration-500 ${
+      theme === 'dark' ? 'bg-[#000]' : 'bg-white'
+    }`}>
+      <div className="w-full max-w-sm text-center">
+        <div className="flex justify-center mb-10">
+          <div className="relative">
+            <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-[2.5] animate-pulse" />
+            <CheckCircle2 className="h-24 w-24 text-green-500 relative z-10" />
           </div>
-          
-          <h2 className={`text-4xl font-black mb-2 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            Account Created!
-          </h2>
-          <p className="text-gray-500 font-medium mb-12">
-            Verification successful. Finalizing your account setup...
-          </p>
+        </div>
+        
+        <h2 className={`text-4xl font-black mb-2 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          Account Created!
+        </h2>
+        <p className="text-gray-500 font-medium mb-12">
+          Verification successful. Finalizing your account setup...
+        </p>
 
-          <div className="space-y-4">
-            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-              <div 
-                className="absolute inset-y-0 left-0 bg-green-500 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(34,197,94,0.6)]"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center text-sm font-bold">
-              <span className="text-green-500">
-                {progress < 100 ? 'Setting things up...' : 'Ready!'}
-              </span>
-              <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                {progress}%
-              </span>
-            </div>
+        <div className="space-y-4">
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+            <div 
+              className="absolute inset-y-0 left-0 bg-green-500 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(34,197,94,0.6)]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex justify-between items-center text-sm font-bold">
+            <span className="text-green-500">
+              {progress < 100 ? 'Setting things up...' : 'Ready!'}
+            </span>
+            <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+              {progress}%
+            </span>
           </div>
         </div>
       </div>
-    );
-  }
-
-  return (
+    </div>
+  ) : (
     <div className="space-y-6">
       {error && (
         <div className="animate-in fade-in slide-in-from-top-1 duration-300">
@@ -532,6 +528,7 @@ export default function UserRegistration({
           </div>
         </>
       )}
-    </form>
+      </form>
+    </div>
   );
 }

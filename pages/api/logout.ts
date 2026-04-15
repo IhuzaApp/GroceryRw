@@ -11,8 +11,8 @@ export default async function handler(
   }
 
   try {
-    // Get the session to verify it exists
-    const session = await getServerSession(req, res, authOptions);
+    // We no longer wait for getServerSession here because we want to clear cookies
+    // even if the session is problematic or the database is down.
 
     // Get the hostname to properly clear cookies
     const hostname = req.headers.host?.split(":")[0] || "localhost";

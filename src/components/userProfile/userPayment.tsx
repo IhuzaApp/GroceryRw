@@ -128,7 +128,7 @@ export default function UserPayment() {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          {t("payment.addMethod") || "Add New Method"}
+          Add New Method
         </button>
       </div>
       <div className="space-y-4">

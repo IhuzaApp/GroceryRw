@@ -123,14 +123,13 @@ export default function LoginPage() {
 
               {/* Background Image */}
               <Image
-                src="/assets/images/shopping.jpg"
-                alt="Grocery shopping"
+                src="/assets/images/auth/login_bg.png"
+                alt="Plas Premium Shopping"
                 fill
                 className="object-cover"
-                quality={75}
+                quality={90}
                 sizes="(max-width: 768px) 0vw, 50vw"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                priority
               />
 
               {/* Content Overlay */}
