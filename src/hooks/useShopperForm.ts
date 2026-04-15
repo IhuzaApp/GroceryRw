@@ -2,7 +2,12 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
-import { ref, uploadString, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadString,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import { storage } from "../lib/firebase";
 
 export type Step = {
@@ -103,7 +108,10 @@ export const base64ToFile = async (
   return new File([bytes], filename, { type: mimeType });
 };
 
-export const compressImage = (base64: string, maxSizeKB = 100): Promise<string> => {
+export const compressImage = (
+  base64: string,
+  maxSizeKB = 100
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = base64;
@@ -163,15 +171,19 @@ export const useShopperForm = () => {
   });
 
   const [faceVerified, setFaceVerified] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<"idle" | "scanning" | "verifying" | "success" | "failed">("idle");
-  const [livenessStep, setLivenessStep] = useState<any>('center');
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "scanning" | "verifying" | "success" | "failed"
+  >("idle");
+  const [livenessStep, setLivenessStep] = useState<any>("center");
   const [livenessProgress, setLivenessProgress] = useState(0);
   const [lowLight, setLowLight] = useState(false);
 
-  const [livenessImages, setLivenessImages] = useState<Record<string, string>>({});
+  const [livenessImages, setLivenessImages] = useState<Record<string, string>>(
+    {}
+  );
   const [livenessMetadata, setLivenessMetadata] = useState<any>({
     startTime: Date.now(),
-    poses: []
+    poses: [],
   });
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -180,7 +192,11 @@ export const useShopperForm = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [loadingExistingData, setLoadingExistingData] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [apiError, setApiError] = useState<{ title: string; message: string; details?: any } | null>(null);
+  const [apiError, setApiError] = useState<{
+    title: string;
+    message: string;
+    details?: any;
+  } | null>(null);
 
   // Persistent Refs (Grouped for stability)
   const isProcessingStepRef = useRef(false);
@@ -199,8 +215,12 @@ export const useShopperForm = () => {
   const [capturedNationalIdFront, setCapturedNationalIdFront] = useState("");
   const [capturedNationalIdBack, setCapturedNationalIdBack] = useState("");
   const [capturedSignature, setCapturedSignature] = useState("");
-  const [policeClearanceFile, setPoliceClearanceFile] = useState<File | null>(null);
-  const [proofOfResidencyFile, setProofOfResidencyFile] = useState<File | null>(null);
+  const [policeClearanceFile, setPoliceClearanceFile] = useState<File | null>(
+    null
+  );
+  const [proofOfResidencyFile, setProofOfResidencyFile] = useState<File | null>(
+    null
+  );
   const [maritalStatusFile, setMaritalStatusFile] = useState<File | null>(null);
 
   // Camera state
@@ -216,7 +236,7 @@ export const useShopperForm = () => {
     }
   }, [stream, showCamera]);
 
-  // Removed automatic pre-filling from session to allow users to provide 
+  // Removed automatic pre-filling from session to allow users to provide
   // accurate legal information which might differ from their account profile.
   useEffect(() => {
     const loadExistingApplication = async () => {
@@ -232,7 +252,9 @@ export const useShopperForm = () => {
 
             if (shopper.needCollection) {
               setIsUpdating(true);
-              toast("Loading your existing application for updates...", { icon: "ℹ️" });
+              toast("Loading your existing application for updates...", {
+                icon: "ℹ️",
+              });
             }
 
             setFormValue({
@@ -255,26 +277,51 @@ export const useShopperForm = () => {
             if (shopper.face_verified) setFaceVerified(true);
 
             if (shopper.profile_photo) setCapturedPhoto(shopper.profile_photo);
-            if (shopper.national_id_photo_front) setCapturedNationalIdFront(shopper.national_id_photo_front);
-            if (shopper.national_id_photo_back) setCapturedNationalIdBack(shopper.national_id_photo_back);
-            if (shopper.driving_license_front) setCapturedLicenseFront(shopper.driving_license_front);
-            if (shopper.driving_license_back) setCapturedLicenseBack(shopper.driving_license_back);
-            if (shopper.plate_number && shopper.plate_number.startsWith("http")) setCapturedPlateNumber(shopper.plate_number);
+            if (shopper.national_id_photo_front)
+              setCapturedNationalIdFront(shopper.national_id_photo_front);
+            if (shopper.national_id_photo_back)
+              setCapturedNationalIdBack(shopper.national_id_photo_back);
+            if (shopper.driving_license_front)
+              setCapturedLicenseFront(shopper.driving_license_front);
+            if (shopper.driving_license_back)
+              setCapturedLicenseBack(shopper.driving_license_back);
+            if (shopper.plate_number && shopper.plate_number.startsWith("http"))
+              setCapturedPlateNumber(shopper.plate_number);
             if (shopper.signature) setCapturedSignature(shopper.signature);
 
             // Load files
             if (shopper.Police_Clearance_Cert) {
-              setPoliceClearanceFile(await base64ToFile(shopper.Police_Clearance_Cert, "police_clearance.pdf", "application/pdf"));
+              setPoliceClearanceFile(
+                await base64ToFile(
+                  shopper.Police_Clearance_Cert,
+                  "police_clearance.pdf",
+                  "application/pdf"
+                )
+              );
             }
             if (shopper.proofOfResidency) {
-              setProofOfResidencyFile(await base64ToFile(shopper.proofOfResidency, "proof_of_residency.pdf", "application/pdf"));
+              setProofOfResidencyFile(
+                await base64ToFile(
+                  shopper.proofOfResidency,
+                  "proof_of_residency.pdf",
+                  "application/pdf"
+                )
+              );
             }
             if (shopper.mutual_StatusCertificate) {
-              setMaritalStatusFile(await base64ToFile(shopper.mutual_StatusCertificate, "marital_status_certificate.pdf", "application/pdf"));
+              setMaritalStatusFile(
+                await base64ToFile(
+                  shopper.mutual_StatusCertificate,
+                  "marital_status_certificate.pdf",
+                  "application/pdf"
+                )
+              );
             }
 
             if (shopper.collection_comment) {
-              toast.error(`Feedback: ${shopper.collection_comment}`, { duration: 6000 });
+              toast.error(`Feedback: ${shopper.collection_comment}`, {
+                duration: 6000,
+              });
             }
           }
         }
@@ -301,21 +348,24 @@ export const useShopperForm = () => {
     });
   }, []);
 
-  const handleLocationSelect = useCallback((address: string, lat: string, lng: string) => {
-    setFormValue((prev) => ({ 
-      ...prev, 
-      address, 
-      latitude: lat, 
-      longitude: lng 
-    }));
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.address;
-      const error = validateField("address", address);
-      if (error) newErrors.address = error;
-      return newErrors;
-    });
-  }, []);
+  const handleLocationSelect = useCallback(
+    (address: string, lat: string, lng: string) => {
+      setFormValue((prev) => ({
+        ...prev,
+        address,
+        latitude: lat,
+        longitude: lng,
+      }));
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.address;
+        const error = validateField("address", address);
+        if (error) newErrors.address = error;
+        return newErrors;
+      });
+    },
+    []
+  );
 
   const startCamera = async (mode: string) => {
     try {
@@ -342,13 +392,18 @@ export const useShopperForm = () => {
     isProcessingStepRef.current = false;
     progressRef.current = 0;
     frameCountRef.current = 0;
-    
+
     const runLiveness = async () => {
       // Only run liveness for the initial 'profile' mode (verification), NOT the 'profile_photo' mode (document)
-      if (showCamera && captureMode === 'profile' && videoRef.current && !faceVerified) {
+      if (
+        showCamera &&
+        captureMode === "profile" &&
+        videoRef.current &&
+        !faceVerified
+      ) {
         frameCountRef.current++;
         const frameCount = frameCountRef.current;
-        
+
         // Skip frames to save CPU (Run detection every 3rd frame)
         if (frameCount % 3 !== 0 && livenessProgress < 100) {
           frameId = requestAnimationFrame(runLiveness);
@@ -362,7 +417,7 @@ export const useShopperForm = () => {
             frameId = requestAnimationFrame(runLiveness);
             return;
           }
-          
+
           // Basic Brightness/Stability Check
           if (frameCount % 60 === 0 && canvasRef.current) {
             const canvas = canvasRef.current;
@@ -393,7 +448,11 @@ export const useShopperForm = () => {
           const pose = await trackerRef.current.detect(video);
           if (pose && !isProcessingStepRef.current) {
             if (frameCount % 60 === 0) {
-              console.log(`[Biometrics] Scanning -> Yaw: ${pose.yaw.toFixed(3)} | Target: ${livenessStep}`);
+              console.log(
+                `[Biometrics] Scanning -> Yaw: ${pose.yaw.toFixed(
+                  3
+                )} | Target: ${livenessStep}`
+              );
             }
 
             if (trackerRef.current.isMatching(pose, livenessStep)) {
@@ -404,31 +463,37 @@ export const useShopperForm = () => {
               // Handle Success Transition
               if (progressRef.current >= 100 && !isProcessingStepRef.current) {
                 isProcessingStepRef.current = true; // LOCK
-                console.log(`[Biometrics] Pose Verified: ${livenessStep}. Capturing evidence...`);
-                
+                console.log(
+                  `[Biometrics] Pose Verified: ${livenessStep}. Capturing evidence...`
+                );
+
                 // 1. Capture snapshots immediately
                 captureLivenessSnapshot(livenessStep);
 
                 // 2. Determine next step
-                const steps: any[] = ['center', 'left', 'right'];
+                const steps: any[] = ["center", "left", "right"];
                 const currentIndex = steps.indexOf(livenessStep);
-                
+
                 if (currentIndex < steps.length - 1) {
                   const nextStep = steps[currentIndex + 1];
-                  console.log(`[Biometrics] → Transitioning to next step: ${nextStep}`);
-                  
+                  console.log(
+                    `[Biometrics] → Transitioning to next step: ${nextStep}`
+                  );
+
                   // 3. Update states
                   setLivenessStep(nextStep);
                   progressRef.current = 0;
                   setLivenessProgress(0);
                 } else {
-                  console.log("[Biometrics] → All poses verified. Finalizing...");
-                  setLivenessStep('success');
+                  console.log(
+                    "[Biometrics] → All poses verified. Finalizing..."
+                  );
+                  setLivenessStep("success");
                   setFaceVerified(true);
                   progressRef.current = 100;
                   setLivenessProgress(100);
                 }
-                
+
                 return;
               }
             } else if (!isProcessingStepRef.current) {
@@ -446,11 +511,13 @@ export const useShopperForm = () => {
 
     const initTracker = async () => {
       if (!trackerRef.current) {
-        const { faceTracker } = await import("../utils/verification/faceTracker");
+        const { faceTracker } = await import(
+          "../utils/verification/faceTracker"
+        );
         trackerRef.current = faceTracker;
         await trackerRef.current.init();
       }
-      if (showCamera && captureMode === 'profile' && !faceVerified) {
+      if (showCamera && captureMode === "profile" && !faceVerified) {
         runLiveness();
       }
     };
@@ -465,31 +532,34 @@ export const useShopperForm = () => {
     setShowCamera(false);
   };
 
-  const captureLivenessSnapshot = useCallback(async (step: string) => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+  const captureLivenessSnapshot = useCallback(
+    async (step: string) => {
+      if (videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      
-      const data = canvas.toDataURL("image/jpeg", 0.7);
-      const compressed = await compressImage(data, 150); // Keep liveness frames small
-      
-      setLivenessImages(prev => ({ ...prev, [step]: compressed }));
-      setLivenessMetadata((prev: any) => ({
-        ...prev,
-        poses: [...prev.poses, { step, timestamp: Date.now() }]
-      }));
-    }
-  }, [videoRef, canvasRef]);
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+
+        const data = canvas.toDataURL("image/jpeg", 0.7);
+        const compressed = await compressImage(data, 150); // Keep liveness frames small
+
+        setLivenessImages((prev) => ({ ...prev, [step]: compressed }));
+        setLivenessMetadata((prev: any) => ({
+          ...prev,
+          poses: [...prev.poses, { step, timestamp: Date.now() }],
+        }));
+      }
+    },
+    [videoRef, canvasRef]
+  );
 
   const capturePhoto = async () => {
     if (verificationStatus === "verifying") return;
-    
+
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -498,7 +568,7 @@ export const useShopperForm = () => {
 
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
-      
+
       // Determine crop region based on mode and device
       let sWidth = videoWidth;
       let sHeight = videoHeight;
@@ -509,7 +579,7 @@ export const useShopperForm = () => {
         // Mocking the UI frame (70% on desktop, 90% on mobile)
         const isMobile = window.innerWidth < 768;
         const frameWidthPercent = isMobile ? 0.9 : 0.7;
-        const aspectRatio = isMobile ? (3/4) : (16/9);
+        const aspectRatio = isMobile ? 3 / 4 : 16 / 9;
 
         sWidth = videoWidth * frameWidthPercent;
         sHeight = sWidth / aspectRatio;
@@ -535,24 +605,38 @@ export const useShopperForm = () => {
 
       // Apply filters for OCR
       if (captureMode === "ocr_scan") {
-        ctx.filter = 'grayscale(100%) contrast(1.2) brightness(1.1)';
+        ctx.filter = "grayscale(100%) contrast(1.2) brightness(1.1)";
       }
-      
+
       ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
-      
+
       const data = canvas.toDataURL("image/jpeg");
       const compressed = await compressImage(data);
-      
+
       // Note: ocr_scan has been removed at user request. Face verification is now the primary step.
 
       switch (captureMode) {
-        case "profile_photo": setCapturedPhoto(compressed); break;
-        case "profile": setCapturedPhoto(compressed); break; // Fallback
-        case "license_front": setCapturedLicenseFront(compressed); break;
-        case "license_back": setCapturedLicenseBack(compressed); break;
-        case "plate_number": setCapturedPlateNumber(compressed); break;
-        case "national_id_front": setCapturedNationalIdFront(compressed); break;
-        case "national_id_back": setCapturedNationalIdBack(compressed); break;
+        case "profile_photo":
+          setCapturedPhoto(compressed);
+          break;
+        case "profile":
+          setCapturedPhoto(compressed);
+          break; // Fallback
+        case "license_front":
+          setCapturedLicenseFront(compressed);
+          break;
+        case "license_back":
+          setCapturedLicenseBack(compressed);
+          break;
+        case "plate_number":
+          setCapturedPlateNumber(compressed);
+          break;
+        case "national_id_front":
+          setCapturedNationalIdFront(compressed);
+          break;
+        case "national_id_back":
+          setCapturedNationalIdBack(compressed);
+          break;
       }
       stopCamera();
     }
@@ -563,15 +647,24 @@ export const useShopperForm = () => {
     setApiError(null);
     if (currentStep === 1) {
       if (!faceVerified) {
-        setApiError({ title: "Verification Required", message: "Please complete face verification to continue" });
+        setApiError({
+          title: "Verification Required",
+          message: "Please complete face verification to continue",
+        });
         return;
       }
-      ["first_name", "last_name", "national_id", "transport_mode", "dob"].forEach(f => {
+      [
+        "first_name",
+        "last_name",
+        "national_id",
+        "transport_mode",
+        "dob",
+      ].forEach((f) => {
         const err = validateField(f, formValue[f]);
         if (err) newErrors[f] = err;
       });
     } else if (currentStep === 2) {
-      ["phone_number", "email"].forEach(f => {
+      ["phone_number", "email"].forEach((f) => {
         const err = validateField(f, formValue[f]);
         if (err) newErrors[f] = err;
       });
@@ -583,30 +676,51 @@ export const useShopperForm = () => {
       setErrors(newErrors);
       return;
     }
-    setCurrentStep(s => Math.min(s + 1, steps.length - 1));
+    setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
   };
 
-  const prevStep = () => setCurrentStep(s => Math.max(s - 1, 0));
+  const prevStep = () => setCurrentStep((s) => Math.max(s - 1, 0));
 
   const handleSubmit = async () => {
     setApiError(null);
-    if (!capturedPhoto || !capturedNationalIdFront || !capturedNationalIdBack || !policeClearanceFile) {
-      setApiError({ title: "Missing Documents", message: "Required documents are missing. Please upload the police clearance certificate." });
+    if (
+      !capturedPhoto ||
+      !capturedNationalIdFront ||
+      !capturedNationalIdBack ||
+      !policeClearanceFile
+    ) {
+      setApiError({
+        title: "Missing Documents",
+        message:
+          "Required documents are missing. Please upload the police clearance certificate.",
+      });
       return;
     }
     if (!formValue.agreedToBackgroundCheck) {
-      setApiError({ title: "Agreements Required", message: "You must agree to the background check to proceed." });
+      setApiError({
+        title: "Agreements Required",
+        message: "You must agree to the background check to proceed.",
+      });
       return;
     }
     if (!capturedSignature) {
-      setErrors(prev => ({ ...prev, signature: "Digital signature is required" }));
-      setApiError({ title: "Signature Required", message: "Please sign the document before submitting." });
+      setErrors((prev) => ({
+        ...prev,
+        signature: "Digital signature is required",
+      }));
+      setApiError({
+        title: "Signature Required",
+        message: "Please sign the document before submitting.",
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const uploadToFirebase = async (data: string | File | null, path: string): Promise<string> => {
+      const uploadToFirebase = async (
+        data: string | File | null,
+        path: string
+      ): Promise<string> => {
         if (!data || !storage) return "";
         let fireRef = ref(storage, path);
         try {
@@ -627,7 +741,9 @@ export const useShopperForm = () => {
         }
       };
 
-      const cleanName = `${formValue.first_name}_${formValue.last_name}`.replace(/\s+/g, '_').toLowerCase();
+      const cleanName = `${formValue.first_name}_${formValue.last_name}`
+        .replace(/\s+/g, "_")
+        .toLowerCase();
       const basePath = `plas_shoppers/${cleanName}`;
 
       toast.loading("Uploading documents securely...", { id: "uploadToast" });
@@ -648,19 +764,43 @@ export const useShopperForm = () => {
         faceRightUrl,
       ] = await Promise.all([
         uploadToFirebase(capturedPhoto, `${basePath}/profile_photo.jpg`),
-        uploadToFirebase(capturedNationalIdFront, `${basePath}/national_id_front.jpg`),
-        uploadToFirebase(capturedNationalIdBack, `${basePath}/national_id_back.jpg`),
-        uploadToFirebase(capturedLicenseFront, `${basePath}/driving_license_front.jpg`),
-        uploadToFirebase(capturedLicenseBack, `${basePath}/driving_license_back.jpg`),
+        uploadToFirebase(
+          capturedNationalIdFront,
+          `${basePath}/national_id_front.jpg`
+        ),
+        uploadToFirebase(
+          capturedNationalIdBack,
+          `${basePath}/national_id_back.jpg`
+        ),
+        uploadToFirebase(
+          capturedLicenseFront,
+          `${basePath}/driving_license_front.jpg`
+        ),
+        uploadToFirebase(
+          capturedLicenseBack,
+          `${basePath}/driving_license_back.jpg`
+        ),
         uploadToFirebase(capturedPlateNumber, `${basePath}/plate_number.jpg`),
-        uploadToFirebase(policeClearanceFile, `${basePath}/police_clearance.pdf`),
+        uploadToFirebase(
+          policeClearanceFile,
+          `${basePath}/police_clearance.pdf`
+        ),
         uploadToFirebase(proofOfResidencyFile, `${basePath}/residency.pdf`),
         uploadToFirebase(maritalStatusFile, `${basePath}/marital_status.pdf`),
         uploadToFirebase(capturedSignature, `${basePath}/signature.png`),
         // Upload face liveness snapshots
-        uploadToFirebase(livenessImages?.center || null, `${basePath}/face_center.jpg`),
-        uploadToFirebase(livenessImages?.left || null, `${basePath}/face_left.jpg`),
-        uploadToFirebase(livenessImages?.right || null, `${basePath}/face_right.jpg`),
+        uploadToFirebase(
+          livenessImages?.center || null,
+          `${basePath}/face_center.jpg`
+        ),
+        uploadToFirebase(
+          livenessImages?.left || null,
+          `${basePath}/face_left.jpg`
+        ),
+        uploadToFirebase(
+          livenessImages?.right || null,
+          `${basePath}/face_right.jpg`
+        ),
       ]);
 
       toast.success("Documents uploaded!", { id: "uploadToast" });
@@ -678,7 +818,7 @@ export const useShopperForm = () => {
           ...livenessMetadata,
           resolution: `${videoRef.current?.videoWidth}x${videoRef.current?.videoHeight}`,
           platform: "Web",
-          completedAt: new Date().toISOString()
+          completedAt: new Date().toISOString(),
         },
         profile_photo: profilePhotoUrl,
         national_id_photo_front: nationalIdFrontUrl,
@@ -717,18 +857,59 @@ export const useShopperForm = () => {
 
   return {
     router,
-    formValue, currentStep, errors, loading, registrationSuccess, apiError,
-    capturedPhoto, capturedLicenseFront, capturedLicenseBack, capturedPlateNumber, capturedNationalIdFront, capturedNationalIdBack,
-    capturedSignature, policeClearanceFile, proofOfResidencyFile, maritalStatusFile,
-    stream, showCamera, captureMode, cameraLoading, videoRef, canvasRef, signatureCanvasRef,
-    faceVerified, verificationStatus,
-    livenessStep, livenessProgress, lowLight,
-    handleInputChange, handleLocationSelect, startCamera, stopCamera, capturePhoto, nextStep, prevStep,
-    handleSubmit, setPoliceClearanceFile, setProofOfResidencyFile, setMaritalStatusFile,
-    setCapturedSignature, setFormValue, setCapturedPhoto, setCapturedLicenseFront, setCapturedLicenseBack, setCapturedPlateNumber,
-    setCapturedNationalIdFront, setCapturedNationalIdBack, setIsUpdating,
+    formValue,
+    currentStep,
+    errors,
+    loading,
+    registrationSuccess,
+    apiError,
+    capturedPhoto,
+    capturedLicenseFront,
+    capturedLicenseBack,
+    capturedPlateNumber,
+    capturedNationalIdFront,
+    capturedNationalIdBack,
+    capturedSignature,
+    policeClearanceFile,
+    proofOfResidencyFile,
+    maritalStatusFile,
+    stream,
+    showCamera,
+    captureMode,
+    cameraLoading,
+    videoRef,
+    canvasRef,
+    signatureCanvasRef,
+    faceVerified,
+    verificationStatus,
+    livenessStep,
+    livenessProgress,
+    lowLight,
+    handleInputChange,
+    handleLocationSelect,
+    startCamera,
+    stopCamera,
+    capturePhoto,
+    nextStep,
+    prevStep,
+    handleSubmit,
+    setPoliceClearanceFile,
+    setProofOfResidencyFile,
+    setMaritalStatusFile,
+    setCapturedSignature,
+    setFormValue,
+    setCapturedPhoto,
+    setCapturedLicenseFront,
+    setCapturedLicenseBack,
+    setCapturedPlateNumber,
+    setCapturedNationalIdFront,
+    setCapturedNationalIdBack,
+    setIsUpdating,
     setIdVerified: () => {},
-    setFaceVerified, setVerificationStatus, setLivenessStep,
-    sessionStatus, loadingExistingData
+    setFaceVerified,
+    setVerificationStatus,
+    setLivenessStep,
+    sessionStatus,
+    loadingExistingData,
   };
 };

@@ -31,7 +31,7 @@ export default async function handler(
 
     // Clean phone number (remove non-digits)
     const cleanPhone = phone.replace(/\D/g, "");
-    
+
     // Format for Pindo (Rwandan numbers if missing prefix)
     let formattedPhone = phone;
     if (!phone.startsWith("+")) {

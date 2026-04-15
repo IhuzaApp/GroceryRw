@@ -8,12 +8,12 @@ export default function BecomeShopperPage() {
   return (
     <RootLayout>
       {/* Mobile View */}
-      <div className="block md:hidden min-h-screen bg-white dark:bg-black">
+      <div className="block min-h-screen bg-white dark:bg-black md:hidden">
         <MobileBecomeShopper />
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block min-h-screen">
+      <div className="hidden min-h-screen md:block">
         <DesktopBecomeShopper />
       </div>
     </RootLayout>

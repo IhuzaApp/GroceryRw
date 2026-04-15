@@ -1,20 +1,28 @@
-import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import React from "react";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Image,
+  Font,
+} from "@react-pdf/renderer";
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
     padding: 50,
-    backgroundColor: '#ffffff',
-    fontFamily: 'Helvetica',
+    backgroundColor: "#ffffff",
+    fontFamily: "Helvetica",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 40,
     borderBottomWidth: 2,
-    borderBottomColor: '#00D9A5',
+    borderBottomColor: "#00D9A5",
     paddingBottom: 20,
   },
   logo: {
@@ -22,18 +30,18 @@ const styles = StyleSheet.create({
     height: 60,
   },
   titleContainer: {
-    textAlign: 'right',
+    textAlign: "right",
   },
   mainTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontWeight: "bold",
+    color: "#1a1a1a",
   },
   subTitle: {
     fontSize: 10,
-    color: '#666666',
+    color: "#666666",
     marginTop: 5,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   section: {
@@ -41,68 +49,68 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#00D9A5',
+    fontWeight: "bold",
+    color: "#00D9A5",
     marginBottom: 10,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 6,
   },
   label: {
     width: 140,
     fontSize: 10,
-    color: '#666666',
-    fontWeight: 'bold',
+    color: "#666666",
+    fontWeight: "bold",
   },
   value: {
     flex: 1,
     fontSize: 10,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
   },
   content: {
     fontSize: 9,
     lineHeight: 1.6,
-    color: '#333333',
-    textAlign: 'justify',
+    color: "#333333",
+    textAlign: "justify",
     marginBottom: 15,
   },
   signatureContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 50,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   signatureBox: {
-    width: '45%',
+    width: "45%",
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: "#e0e0e0",
     paddingTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   signatureImage: {
     width: 120,
     height: 60,
     marginBottom: 10,
-    objectFit: 'contain',
+    objectFit: "contain",
   },
   signatureLabel: {
     fontSize: 9,
-    color: '#999999',
-    textTransform: 'uppercase',
+    color: "#999999",
+    textTransform: "uppercase",
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
     left: 50,
     right: 50,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 8,
-    color: '#999999',
+    color: "#999999",
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: "#f0f0f0",
     paddingTop: 10,
-  }
+  },
 });
 
 interface ShopperContractPDFProps {
@@ -125,7 +133,9 @@ export const ShopperContractPDF = ({ data, date }: ShopperContractPDFProps) => {
 
         {/* Personal Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Independent Contractor Information</Text>
+          <Text style={styles.sectionTitle}>
+            1. Independent Contractor Information
+          </Text>
           <View style={styles.row}>
             <Text style={styles.label}>Full Name:</Text>
             <Text style={styles.value}>{data.full_name}</Text>
@@ -179,10 +189,19 @@ export const ShopperContractPDF = ({ data, date }: ShopperContractPDFProps) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>3. Terms of Engagement</Text>
           <Text style={styles.content}>
-            By signing this agreement, the Independent Contractor (the "Shopper") agrees to represent Plas Business (the "Company") in a professional manner. The Shopper acknowledges that they are an independent contractor and not an employee of the Company. The Shopper is responsible for their own transportation, insurance, and equipment necessary to perform delivery services.
+            By signing this agreement, the Independent Contractor (the
+            "Shopper") agrees to represent Plas Business (the "Company") in a
+            professional manner. The Shopper acknowledges that they are an
+            independent contractor and not an employee of the Company. The
+            Shopper is responsible for their own transportation, insurance, and
+            equipment necessary to perform delivery services.
           </Text>
           <Text style={styles.content}>
-            The Shopper agrees to adhere to the Company's quality standards, safety protocols, and delivery timeliness. The Shopper certifies that all information provided during the registration process, including the uploaded documents (National ID, Police Clearance, etc.), is accurate and authentic.
+            The Shopper agrees to adhere to the Company's quality standards,
+            safety protocols, and delivery timeliness. The Shopper certifies
+            that all information provided during the registration process,
+            including the uploaded documents (National ID, Police Clearance,
+            etc.), is accurate and authentic.
           </Text>
         </View>
 
@@ -196,7 +215,10 @@ export const ShopperContractPDF = ({ data, date }: ShopperContractPDFProps) => {
             <Text style={styles.signatureLabel}>Shopper Digital Signature</Text>
           </View>
           <View style={styles.signatureBox}>
-            <Image src="/assets/logos/PlasLogoPNG.png" style={styles.signatureImage} />
+            <Image
+              src="/assets/logos/PlasLogoPNG.png"
+              style={styles.signatureImage}
+            />
             <Text style={styles.value}>Plas Support Team</Text>
             <Text style={styles.signatureLabel}>Authorized Representative</Text>
           </View>
@@ -204,7 +226,10 @@ export const ShopperContractPDF = ({ data, date }: ShopperContractPDFProps) => {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>Signed on {date} • Plas Business Network • Rwanda • onboarding@plas.rw</Text>
+          <Text>
+            Signed on {date} • Plas Business Network • Rwanda •
+            onboarding@plas.rw
+          </Text>
         </View>
       </Page>
     </Document>

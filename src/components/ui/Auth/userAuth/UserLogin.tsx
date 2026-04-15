@@ -3,7 +3,15 @@ import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useAuth } from "../../../../context/AuthContext";
-import { CheckCircle2, AlertCircle, Eye, EyeOff, LogIn, User, Lock } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  LogIn,
+  User,
+  Lock,
+} from "lucide-react";
 import { useTheme } from "../../../../context/ThemeContext";
 
 export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
@@ -99,36 +107,44 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
 
   if (isSuccess) {
     return (
-      <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 animate-in fade-in duration-500 ${
-        theme === 'dark' ? 'bg-[#000]' : 'bg-white'
-      }`}>
+      <div
+        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 duration-500 animate-in fade-in ${
+          theme === "dark" ? "bg-[#000]" : "bg-white"
+        }`}
+      >
         <div className="w-full max-w-sm text-center">
-          <div className="flex justify-center mb-10">
+          <div className="mb-10 flex justify-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-[2.5] animate-pulse" />
-              <CheckCircle2 className="h-24 w-24 text-green-500 relative z-10" />
+              <div className="absolute inset-0 scale-[2.5] animate-pulse rounded-full bg-green-500/20 blur-3xl" />
+              <CheckCircle2 className="relative z-10 h-24 w-24 text-green-500" />
             </div>
           </div>
-          
-          <h2 className={`text-4xl font-black mb-2 tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+
+          <h2
+            className={`mb-2 text-4xl font-black tracking-tight ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
             Welcome Back!
           </h2>
-          <p className="text-gray-500 font-medium mb-12">
+          <p className="mb-12 font-medium text-gray-500">
             Signing you in. Preparing your dashboard...
           </p>
 
           <div className="space-y-4">
             <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-              <div 
-                className="absolute inset-y-0 left-0 bg-green-500 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(34,197,94,0.6)]"
+              <div
+                className="absolute inset-y-0 left-0 bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)] transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <div className="flex justify-between items-center text-sm font-bold">
+            <div className="flex items-center justify-between text-sm font-bold">
               <span className="text-green-500">
-                {progress < 100 ? 'Security Check...' : 'Ready!'}
+                {progress < 100 ? "Security Check..." : "Ready!"}
               </span>
-              <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
+              <span
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 {progress}%
               </span>
             </div>
@@ -141,14 +157,16 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-          <div className={`p-4 rounded-2xl border flex items-start space-x-3 ${
-            theme === 'dark' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-red-50 border-red-100 text-red-600'
-          }`}>
-            <AlertCircle className="h-5 w-5 mt-0.5" />
-            <div className="text-sm font-bold">
-              {error}
-            </div>
+        <div className="duration-300 animate-in fade-in slide-in-from-top-1">
+          <div
+            className={`flex items-start space-x-3 rounded-2xl border p-4 ${
+              theme === "dark"
+                ? "border-red-500/20 bg-red-500/10 text-red-400"
+                : "border-red-100 bg-red-50 text-red-600"
+            }`}
+          >
+            <AlertCircle className="mt-0.5 h-5 w-5" />
+            <div className="text-sm font-bold">{error}</div>
           </div>
         </div>
       )}
@@ -252,7 +270,7 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
         >
           <span className="absolute inset-y-0 left-0 flex items-center pl-3">
             {isLoading ? (
-              <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : (
               <LogIn className="h-5 w-5 text-white/70" />
             )}

@@ -78,12 +78,20 @@ export default async function handler(
       duplicateCheck.Referral_window.length > 0
     ) {
       const isDev = process.env.NODE_ENV === "development";
-      
+
       // Filter results to find specific conflicts
-      const userIdConflict = duplicateCheck.Referral_window.find(r => r.user_id === session.user.id);
-      const phoneConflict = duplicateCheck.Referral_window.find(r => r.phone === phone);
-      const emailConflict = email ? duplicateCheck.Referral_window.find(r => r.email === email) : null;
-      const deviceConflict = duplicateCheck.Referral_window.find(r => r.deviceFingerprint === deviceFingerprint);
+      const userIdConflict = duplicateCheck.Referral_window.find(
+        (r) => r.user_id === session.user.id
+      );
+      const phoneConflict = duplicateCheck.Referral_window.find(
+        (r) => r.phone === phone
+      );
+      const emailConflict = email
+        ? duplicateCheck.Referral_window.find((r) => r.email === email)
+        : null;
+      const deviceConflict = duplicateCheck.Referral_window.find(
+        (r) => r.deviceFingerprint === deviceFingerprint
+      );
 
       if (userIdConflict) {
         return res.status(200).json({
@@ -110,13 +118,16 @@ export default async function handler(
       if (deviceConflict && !isDev) {
         return res.status(200).json({
           isDuplicate: true,
-          reason: "This device is already associated with an existing referral account. Please contact support if you believe this is an error.",
+          reason:
+            "This device is already associated with an existing referral account. Please contact support if you believe this is an error.",
         });
       }
-      
+
       // In development, if it's only a device conflict, log it but don't block
       if (deviceConflict && isDev) {
-        console.log("[Dev] Device fingerprint collision detected, but allowing for testing.");
+        console.log(
+          "[Dev] Device fingerprint collision detected, but allowing for testing."
+        );
       }
     }
 

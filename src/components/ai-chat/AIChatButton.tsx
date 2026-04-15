@@ -15,12 +15,12 @@ export default function AIChatButton({
   const [showTooltip, setShowTooltip] = useState(true);
 
   // Synchronize visibility with Cart button logic in BottomBar
-  const isHiddenPage = 
-    router.pathname === "/Cart" || 
-    router.pathname === "/Reels" || 
-    router.pathname === "/Myprofile/become-shopper" || 
-    router.pathname === "/stores/[id]" || 
-    router.pathname === "/stores/[id]/checkout" || 
+  const isHiddenPage =
+    router.pathname === "/Cart" ||
+    router.pathname === "/Reels" ||
+    router.pathname === "/Myprofile/become-shopper" ||
+    router.pathname === "/stores/[id]" ||
+    router.pathname === "/stores/[id]/checkout" ||
     router.pathname === "/plasBusiness/store/[storeId]";
 
   // Auto-hide the "Need help?" tooltip after 6 seconds to be minimally intrusive

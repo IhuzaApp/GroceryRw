@@ -952,7 +952,7 @@ export default function MobileProfile({
           <div className="flex items-center space-x-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
               {isLoggingOut ? (
-                <RefreshCw className="h-5 w-5 !text-white animate-spin" />
+                <RefreshCw className="h-5 w-5 animate-spin !text-white" />
               ) : (
                 <svg
                   className="h-5 w-5 !text-white"

@@ -39,7 +39,9 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ### 16. **Order Cancellation & Refund System** ⭐ NEW
 
 ### 17. **Modern Payment Modal & Flow (React Portals)** ⭐ NEW
+
 ### 18. **Notification & Communication Systems (Resend & Pindo)** ⭐ NEW
+
 ### 19. **Password Recovery System (Email & SMS)** ⭐ NEW
 
 ---
@@ -808,49 +810,53 @@ The Landing Page and Desktop User Dashboard System provides a seamless user expe
 The platform integrates premium third-party services to handle high-deliverability emails and regional SMS notifications.
 
 ## 1. Resend (Email Service)
+
 Resend is used as the primary transactional email provider for critical user communications.
 
 - **Implementation**: [src/lib/resend.ts](file:///Users/apple/Documents/Projects/grocery/src/lib/resend.ts)
 - **Primary Uses**:
-    - Password Reset Links
-    - Account Verification
-    - Order Success Notifications
+  - Password Reset Links
+  - Account Verification
+  - Order Success Notifications
 - **Configuration**:
-    Add the following to your `.env`:
-    ```env
-    RESEND_API_KEY=re_your_api_key
-    ```
+  Add the following to your `.env`:
+  ```env
+  RESEND_API_KEY=re_your_api_key
+  ```
 - **Usage Example**:
-    ```typescript
-    import { resend } from "@lib/resend";
 
-    await resend.emails.send({
-      from: 'Plas Security <onboarding@plas.rw>',
-      to: [userEmail],
-      subject: 'Reset your Plas Password',
-      html: emailHtml,
-    });
-    ```
+  ```typescript
+  import { resend } from "@lib/resend";
+
+  await resend.emails.send({
+    from: "Plas Security <onboarding@plas.rw>",
+    to: [userEmail],
+    subject: "Reset your Plas Password",
+    html: emailHtml,
+  });
+  ```
 
 ## 2. Pindo (SMS Service)
+
 Pindo is integrated for regional SMS deliverability (Rwanda), primarily used for OTP verification.
 
 - **Implementation**: [src/lib/pindo.ts](file:///Users/apple/Documents/Projects/grocery/src/lib/pindo.ts)
 - **Primary Uses**:
-    - Registration OTP
-    - Phone Number Verification
-    - Urgent Delivery Alerts
+  - Registration OTP
+  - Phone Number Verification
+  - Urgent Delivery Alerts
 - **Configuration**:
-    Add the following to your `.env`:
-    ```env
-    PINDO_API_TOKEN=your_pindo_token
-    ```
+  Add the following to your `.env`:
+  ```env
+  PINDO_API_TOKEN=your_pindo_token
+  ```
 - **Usage Example**:
-    ```typescript
-    import { sendSMS } from "@lib/pindo";
 
-    await sendSMS(phoneNumber, `Your Plas verification code is: ${otp}`);
-    ```
+  ```typescript
+  import { sendSMS } from "@lib/pindo";
+
+  await sendSMS(phoneNumber, `Your Plas verification code is: ${otp}`);
+  ```
 
 ---
 
@@ -859,30 +865,32 @@ Pindo is integrated for regional SMS deliverability (Rwanda), primarily used for
 A secure, two-factor authenticated password recovery flow that leverages both unique tokens and 6-digit verification codes.
 
 ## 1. The Forgot Password Flow
+
 The process starts when a user requests a reset via [ForgotPassword.tsx](file:///Users/apple/Documents/Projects/grocery/pages/Auth/ForgotPassword.tsx).
 
 1. **Identification**: User enters their email.
 2. **Token Generation**: The [forgot-password](file:///Users/apple/Documents/Projects/grocery/pages/api/auth/forgot-password.ts) API verifies the user in Hasura and generates:
-    - A unique **Reset Token** (UUID).
-    - A 6-digit **OTP**.
+   - A unique **Reset Token** (UUID).
+   - A 6-digit **OTP**.
 3. **Secure Storage**: Both are stored in the temporary `otpStore` (in-memory) with a 10-minute expiry.
 4. **Delivery**: An email is sent via **Resend** containing both the OTP and a "Magic Link" embedded with the unique token.
 
 ## 2. The Reset Password Flow
+
 Users arrive at the [ResetPassword.tsx](file:///Users/apple/Documents/Projects/grocery/pages/Auth/ResetPassword.tsx) page either via the email link or by manually entering the OTP.
 
 1. **Token Validation**: The page extracts the token from the URL.
 2. **OTP Verification**: The user enters the 6-digit code.
 3. **Password Update**: The [reset-password](file:///Users/apple/Documents/Projects/grocery/pages/api/auth/reset-password.ts) API performs the following:
-    - Validates the Token + OTP combination against `otpStore`.
-    - Hashes the new password (BCrypt).
-    - Updates the user record in Hasura.
-    - Invalidates the token immediately upon success.
+   - Validates the Token + OTP combination against `otpStore`.
+   - Hashes the new password (BCrypt).
+   - Updates the user record in Hasura.
+   - Invalidates the token immediately upon success.
 
-> [!IMPORTANT]
-> **Token Expiry**: All reset tokens and OTP codes are strictly valid for **10 minutes** to prevent session hijacking and brute-force attempts.
+> [!IMPORTANT] > **Token Expiry**: All reset tokens and OTP codes are strictly valid for **10 minutes** to prevent session hijacking and brute-force attempts.
 
 ---
+
 - **Location Selection**: Google Maps Places Autocomplete for address input
 - **Current Location Support**: One-click location detection using browser geolocation
 - **Animated Illustrations**: Rotating product illustrations with fade/zoom effects

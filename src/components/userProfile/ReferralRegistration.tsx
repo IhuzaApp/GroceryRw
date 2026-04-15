@@ -187,7 +187,9 @@ export default function ReferralRegistration({
       toast.success("Phone number verified!");
       setStep(2);
     } catch (error: any) {
-      toast.error(error.message || "OTP verification failed. Please try again.");
+      toast.error(
+        error.message || "OTP verification failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }

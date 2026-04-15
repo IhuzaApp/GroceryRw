@@ -902,7 +902,10 @@ export async function sendNewReferralRegistrationToSlack(
       }),
     });
   } catch (error) {
-    console.error("Failed to send referral registration notice to Slack", error);
+    console.error(
+      "Failed to send referral registration notice to Slack",
+      error
+    );
     throw error;
   }
 }

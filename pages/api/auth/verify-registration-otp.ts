@@ -174,16 +174,20 @@ export default async function handler(
       `;
 
       await resend.emails.send({
-        from: 'Plas App <onboarding@plas.rw>',
+        from: "Plas App <onboarding@plas.rw>",
         to: [email],
-        subject: 'Welcome to Plas - Your Account is Ready!',
+        subject: "Welcome to Plas - Your Account is Ready!",
         html: emailHtml,
       });
 
       console.log(`[Resend] Welcome email sent to ${email}`);
     } catch (emailErr) {
       console.error("[Resend] Failed to send welcome email:", emailErr);
-      await logErrorToSlack("VerifyRegistrationOTP:EmailNotification", emailErr, { email, fullName });
+      await logErrorToSlack(
+        "VerifyRegistrationOTP:EmailNotification",
+        emailErr,
+        { email, fullName }
+      );
     }
     // --- End: Send Welcome Email ---
 

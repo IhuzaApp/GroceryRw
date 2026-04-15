@@ -29,12 +29,18 @@ export default async function handler(
   const storedData = otpStore.get(token);
 
   if (!storedData) {
-    return res.status(400).json({ error: "Reset code expired or not found. Please request a new one." });
+    return res
+      .status(400)
+      .json({
+        error: "Reset code expired or not found. Please request a new one.",
+      });
   }
 
   if (Date.now() > storedData.expiresAt) {
     otpStore.delete(token);
-    return res.status(400).json({ error: "Reset code expired. Please request a new one." });
+    return res
+      .status(400)
+      .json({ error: "Reset code expired. Please request a new one." });
   }
 
   if (storedData.otp !== otp) {
@@ -70,10 +76,14 @@ export default async function handler(
     // 4. Cleanup Token
     otpStore.delete(token);
 
-    return res.status(200).json({ success: true, message: "Password updated successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully" });
   } catch (error: any) {
     console.error("Reset password error:", error);
     await logErrorToSlack("ResetPassword:API", error, { email });
-    return res.status(500).json({ error: "Failed to update password. Please try again." });
+    return res
+      .status(500)
+      .json({ error: "Failed to update password. Please try again." });
   }
 }

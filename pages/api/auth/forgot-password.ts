@@ -42,7 +42,9 @@ export default async function handler(
     }>(checkUserQuery, { email });
 
     if (userData.Users.length === 0) {
-      return res.status(404).json({ error: "No account found with this email address" });
+      return res
+        .status(404)
+        .json({ error: "No account found with this email address" });
     }
 
     const user = userData.Users[0];
@@ -104,20 +106,22 @@ export default async function handler(
     `;
 
     await resend.emails.send({
-      from: 'Plas Security <onboarding@plas.rw>',
+      from: "Plas Security <onboarding@plas.rw>",
       to: [email],
-      subject: 'Reset your Plas Password',
+      subject: "Reset your Plas Password",
       html: emailHtml,
     });
 
     return res.status(200).json({
       success: true,
       message: "Reset code sent to your email",
-      token: resetToken
+      token: resetToken,
     });
   } catch (error: any) {
     console.error("Forgot password error:", error);
     await logErrorToSlack("ForgotPassword:API", error, { email });
-    return res.status(500).json({ error: "Failed to process request. Please try again." });
+    return res
+      .status(500)
+      .json({ error: "Failed to process request. Please try again." });
   }
 }

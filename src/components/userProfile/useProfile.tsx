@@ -162,7 +162,7 @@ export default function UserProfile() {
     fetch("/api/ai/usage-status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ p256dh: "" }) // Passing empty as we just need subscription status
+      body: JSON.stringify({ p256dh: "" }), // Passing empty as we just need subscription status
     })
       .then((res) => res.json())
       .then((data) => {
@@ -336,20 +336,21 @@ export default function UserProfile() {
   if (isLoggingOut) {
     return (
       <div
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 text-center duration-500 animate-in fade-in"
         style={{ backgroundColor: "var(--bg-primary)" }}
       >
-        <div className="max-w-md w-full space-y-8">
+        <div className="w-full max-w-md space-y-8">
           {/* Logo / Branding */}
-          <div className="flex justify-center mb-8">
-            <div className="p-4 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl animate-in zoom-in duration-700">
+          <div className="mb-8 flex justify-center">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-md duration-700 animate-in zoom-in">
               <LogOut className="h-16 w-16 text-red-500" />
             </div>
           </div>
 
           <div className="space-y-4">
             <h1 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-              See you soon, <span className="text-red-500">{user?.name || "there"}</span>!
+              See you soon,{" "}
+              <span className="text-red-500">{user?.name || "there"}</span>!
             </h1>
             <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
               We're securely closing your session.
@@ -357,21 +358,21 @@ export default function UserProfile() {
           </div>
 
           {/* Progress Bar Container */}
-          <div className="relative mt-12 w-full max-w-sm mx-auto h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
+          <div className="relative mx-auto mt-12 h-2 w-full max-w-sm overflow-hidden rounded-full bg-gray-200 shadow-inner dark:bg-gray-800">
             <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300 ease-out shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-500 to-orange-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300 ease-out"
               style={{ width: `${logoutProgress}%` }}
             />
           </div>
 
-          <div className="flex flex-col items-center gap-2 mt-4">
-            <span className="text-sm font-black tracking-widest uppercase text-gray-400 dark:text-gray-500">
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <span className="text-sm font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">
               {logoutProgress}% Securely Logged Out
             </span>
           </div>
 
           {/* Decorative elements */}
-          <div className="pt-12 flex justify-center opacity-30">
+          <div className="flex justify-center pt-12 opacity-30">
             <div className="flex gap-4">
               <div className="h-1 w-8 rounded-full bg-red-400" />
               <div className="h-1 w-12 rounded-full bg-red-500" />
@@ -386,24 +387,26 @@ export default function UserProfile() {
   // Show loading state while determining screen size
   if (loading) {
     return (
-      <div 
+      <div
         className="flex min-h-screen flex-col md:bg-transparent"
-        style={{ backgroundColor: 'var(--bg-primary)' }}
+        style={{ backgroundColor: "var(--bg-primary)" }}
       >
         {/* Mobile Header Background Space */}
-        <div className="h-32 w-full animate-pulse rounded-b-3xl md:hidden bg-gray-300/30 dark:bg-white/5" />
+        <div className="h-32 w-full animate-pulse rounded-b-3xl bg-gray-300/30 dark:bg-white/5 md:hidden" />
 
         <div className="mx-auto w-full max-w-4xl px-4 py-6 md:mt-8">
           {/* Profile Details Skeleton */}
-          <div className="-mt-16 mb-6 rounded-2xl border p-6 shadow-sm md:mt-0 transition-colors duration-300"
-            style={{ 
-              backgroundColor: 'var(--bg-secondary)',
-              borderColor: theme === 'dark' ? '#262626' : '#e5e7eb'
+          <div
+            className="-mt-16 mb-6 rounded-2xl border p-6 shadow-sm transition-colors duration-300 md:mt-0"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              borderColor: theme === "dark" ? "#262626" : "#e5e7eb",
             }}
           >
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-              <div className="h-20 w-20 shrink-0 animate-pulse rounded-full border-4 shadow-md md:h-24 md:w-24 bg-gray-300/50 dark:bg-white/10"
-                style={{ borderColor: 'var(--bg-secondary)' }}
+              <div
+                className="h-20 w-20 shrink-0 animate-pulse rounded-full border-4 bg-gray-300/50 shadow-md dark:bg-white/10 md:h-24 md:w-24"
+                style={{ borderColor: "var(--bg-secondary)" }}
               />
               <div className="w-full space-y-2 text-center sm:text-left">
                 <div className="mx-auto mt-2 h-6 w-48 animate-pulse rounded-lg bg-gray-300/40 dark:bg-white/10 sm:mx-0 sm:mt-0" />
@@ -422,9 +425,9 @@ export default function UserProfile() {
               <div
                 key={i}
                 className="flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-colors duration-300"
-                style={{ 
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderColor: theme === 'dark' ? '#262626' : '#e5e7eb'
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: theme === "dark" ? "#262626" : "#e5e7eb",
                 }}
               >
                 <div className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-gray-300/50 dark:bg-white/10" />

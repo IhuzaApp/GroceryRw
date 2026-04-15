@@ -59,7 +59,7 @@ export default function ResetPassword() {
 
       setIsSuccess(true);
       // toast.success("Password reset successfully!");
-      
+
       // Auto-redirect to login after 3 seconds
       setTimeout(() => {
         router.push("/Auth/Login");
@@ -74,23 +74,32 @@ export default function ResetPassword() {
 
   if (isSuccess) {
     return (
-      <div className={`min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'bg-[#000]' : 'bg-[#fafafa]'}`}>
-        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center animate-in fade-in zoom-in duration-500">
-          <div className="flex justify-center mb-10">
+      <div
+        className={`flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 ${
+          theme === "dark" ? "bg-[#000]" : "bg-[#fafafa]"
+        }`}
+      >
+        <div className="text-center duration-500 animate-in fade-in zoom-in sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="mb-10 flex justify-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-green-500/20 blur-2xl rounded-full scale-150 animate-pulse" />
-              <CheckCircle2 className="h-20 w-20 text-green-500 relative z-10" />
+              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-green-500/20 blur-2xl" />
+              <CheckCircle2 className="relative z-10 h-20 w-20 text-green-500" />
             </div>
           </div>
-          <h2 className={`text-4xl font-black tracking-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <h2
+            className={`mb-4 text-4xl font-black tracking-tight ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
             Password Updated!
           </h2>
-          <p className="text-gray-500 font-medium mb-10 max-w-sm mx-auto">
-            Your password has been successfully reset. We're taking you back to the login page in just a moment.
+          <p className="mx-auto mb-10 max-w-sm font-medium text-gray-500">
+            Your password has been successfully reset. We're taking you back to
+            the login page in just a moment.
           </p>
           <Link
             href="/Auth/Login"
-            className="inline-flex items-center justify-center rounded-2xl bg-green-600 py-4 px-12 text-sm font-black text-white hover:bg-green-700 transition-all shadow-xl shadow-green-600/20 active:scale-95"
+            className="inline-flex items-center justify-center rounded-2xl bg-green-600 px-12 py-4 text-sm font-black text-white shadow-xl shadow-green-600/20 transition-all hover:bg-green-700 active:scale-95"
           >
             Go to Login
           </Link>
@@ -102,20 +111,33 @@ export default function ResetPassword() {
   // Handle Missing or Invalid Token
   if (!token && router.isReady) {
     return (
-      <div className={`min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'bg-[#000]' : 'bg-[#fafafa]'}`}>
-        <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-          <div className={`inline-flex items-center justify-center p-6 rounded-3xl mb-8 ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
+      <div
+        className={`flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 ${
+          theme === "dark" ? "bg-[#000]" : "bg-[#fafafa]"
+        }`}
+      >
+        <div className="text-center sm:mx-auto sm:w-full sm:max-w-md">
+          <div
+            className={`mb-8 inline-flex items-center justify-center rounded-3xl p-6 ${
+              theme === "dark" ? "bg-red-500/10" : "bg-red-50"
+            }`}
+          >
             <Lock className="h-12 w-12 text-red-600" />
           </div>
-          <h2 className={`text-4xl font-black tracking-tight mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <h2
+            className={`mb-4 text-4xl font-black tracking-tight ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
             Session Invalid
           </h2>
-          <p className="text-gray-500 font-medium mb-12 max-w-sm mx-auto">
-            This password reset link is invalid, expired, or has already been used. Please request a new one.
+          <p className="mx-auto mb-12 max-w-sm font-medium text-gray-500">
+            This password reset link is invalid, expired, or has already been
+            used. Please request a new one.
           </p>
           <Link
             href="/Auth/ForgotPassword"
-            className="inline-flex items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-white dark:text-black py-4 px-12 text-sm font-black hover:opacity-90 transition-all shadow-xl active:scale-95"
+            className="inline-flex items-center justify-center rounded-2xl bg-gray-900 px-12 py-4 text-sm font-black text-white shadow-xl transition-all hover:opacity-90 active:scale-95 dark:bg-white dark:text-black"
           >
             Request New Link
           </Link>
@@ -125,40 +147,57 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 ${theme === 'dark' ? 'bg-[#000]' : 'bg-[#fafafa]'}`}>
+    <div
+      className={`flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 ${
+        theme === "dark" ? "bg-[#000]" : "bg-[#fafafa]"
+      }`}
+    >
       <Head>
         <title>Reset Password | Plas</title>
       </Head>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
+        <div className="mb-8 flex justify-center">
           <Image
             src="/assets/logos/PlasLogoPNG.png"
             alt="Plas Logo"
             width={180}
             height={70}
-            className={`object-contain ${theme === 'dark' ? 'brightness-0 invert' : ''}`}
+            className={`object-contain ${
+              theme === "dark" ? "brightness-0 invert" : ""
+            }`}
           />
         </div>
 
-        <div className={`py-10 px-6 sm:px-10 rounded-[32px] shadow-2xl ${theme === 'dark' ? 'bg-[#0a0a0a] border border-gray-900 shadow-black' : 'bg-white border border-gray-100 shadow-gray-200/50'}`}>
-          <div className="text-center mb-10">
-            <h2 className={`text-3xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <div
+          className={`rounded-[32px] px-6 py-10 shadow-2xl sm:px-10 ${
+            theme === "dark"
+              ? "border border-gray-900 bg-[#0a0a0a] shadow-black"
+              : "border border-gray-100 bg-white shadow-gray-200/50"
+          }`}
+        >
+          <div className="mb-10 text-center">
+            <h2
+              className={`text-3xl font-black tracking-tight ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               New Password
             </h2>
-            <p className="mt-3 text-sm text-gray-500 font-medium">
-              Enter the verification code sent to your email to set a new password.
+            <p className="mt-3 text-sm font-medium text-gray-500">
+              Enter the verification code sent to your email to set a new
+              password.
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 animate-in fade-in zoom-in duration-300">
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-100 flex items-start space-x-3 text-red-600">
+            <div className="mb-6 duration-300 animate-in fade-in zoom-in">
+              <div className="flex items-start space-x-3 rounded-2xl border border-red-100 bg-red-50 p-4 text-red-600">
                 <span className="text-xl">⚠️</span>
                 <div>
-                   <p className="text-sm font-bold">Verification Error</p>
-                   <p className="text-xs font-medium opacity-90">{error}</p>
+                  <p className="text-sm font-bold">Verification Error</p>
+                  <p className="text-xs font-medium opacity-90">{error}</p>
                 </div>
               </div>
             </div>
@@ -167,7 +206,12 @@ export default function ResetPassword() {
           <form onSubmit={handleResetPassword} className="space-y-6">
             {/* OTP Input */}
             <div className="space-y-2">
-              <label htmlFor="otp" className={`block text-sm font-semibold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <label
+                htmlFor="otp"
+                className={`block text-sm font-semibold ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 Verification Code
               </label>
               <div className="relative">
@@ -181,10 +225,10 @@ export default function ResetPassword() {
                   placeholder="6-digit code from your email"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  className={`block w-full rounded-2xl border py-4 pl-12 pr-4 text-sm tracking-[5px] font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    theme === 'dark'
-                      ? 'bg-gray-800/50 border-gray-700 text-white placeholder-gray-500'
-                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+                  className={`block w-full rounded-2xl border py-4 pl-12 pr-4 text-sm font-bold tracking-[5px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-800/50 text-white placeholder-gray-500"
+                      : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400"
                   }`}
                   required
                 />
@@ -193,7 +237,12 @@ export default function ResetPassword() {
 
             {/* New Password */}
             <div className="space-y-2">
-              <label htmlFor="p1" className={`block text-sm font-semibold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <label
+                htmlFor="p1"
+                className={`block text-sm font-semibold ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 New Password
               </label>
               <div className="relative">
@@ -207,25 +256,34 @@ export default function ResetPassword() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className={`block w-full rounded-2xl border py-4 pl-12 pr-12 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    theme === 'dark'
-                      ? 'bg-gray-800/50 border-gray-700 text-white placeholder-gray-500'
-                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-800/50 text-white placeholder-gray-500"
+                      : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400"
                   }`}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 transition-colors hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Confirm New Password */}
             <div className="space-y-2">
-              <label htmlFor="p2" className={`block text-sm font-semibold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <label
+                htmlFor="p2"
+                className={`block text-sm font-semibold ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
                 Confirm New Password
               </label>
               <div className="relative">
@@ -239,9 +297,9 @@ export default function ResetPassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`block w-full rounded-2xl border py-4 pl-12 pr-4 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    theme === 'dark'
-                      ? 'bg-gray-800/50 border-gray-700 text-white placeholder-gray-500'
-                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-800/50 text-white placeholder-gray-500"
+                      : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400"
                   }`}
                   required
                 />
@@ -251,10 +309,10 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center items-center rounded-2xl bg-green-600 py-4 px-4 text-sm font-black text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-green-600/20 active:scale-[0.98]"
+              className="group relative flex w-full items-center justify-center rounded-2xl bg-green-600 px-4 py-4 text-sm font-black text-white shadow-xl shadow-green-600/20 transition-all duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
-                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               ) : (
                 "Update Password"
               )}
@@ -264,7 +322,7 @@ export default function ResetPassword() {
           <div className="mt-8 text-center">
             <Link
               href="/Auth/Login"
-              className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-green-600 transition-colors"
+              className="inline-flex items-center text-sm font-bold text-gray-500 transition-colors hover:text-green-600"
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Cancel reset
             </Link>

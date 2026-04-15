@@ -8,7 +8,7 @@ import { sendNewShopperRegistrationToSlack } from "../../../src/lib/slackSupport
 import { resend } from "../../../src/lib/resend";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { ShopperContractPDF } from "../../../src/components/shopper/ShopperContractPDF";
-import React from 'react';
+import React from "react";
 
 const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
@@ -565,15 +565,18 @@ export default async function handler(
 
     // --- Start: Send Welcome Email via Resend ---
     try {
-      const dateStr = new Date().toLocaleDateString('en-RW', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      const dateStr = new Date().toLocaleDateString("en-RW", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
 
       // Generate PDF Contract
       const pdfBuffer = await renderToBuffer(
-        React.createElement(ShopperContractPDF, { data: req.body, date: dateStr })
+        React.createElement(ShopperContractPDF, {
+          data: req.body,
+          date: dateStr,
+        })
       );
 
       // Email Content with "How to Earn" info
@@ -615,23 +618,28 @@ export default async function handler(
       `;
 
       await resend.emails.send({
-        from: 'Plas Business <onboarding@plas.rw>',
-        to: [email || session.user.email || ''],
-        subject: 'Welcome to Plasa Business - Your Application & Agreement',
+        from: "Plas Business <onboarding@plas.rw>",
+        to: [email || session.user.email || ""],
+        subject: "Welcome to Plasa Business - Your Application & Agreement",
         html: emailHtml,
         attachments: [
           {
-            filename: 'Shopper_Agreement_Plas.pdf',
+            filename: "Shopper_Agreement_Plas.pdf",
             content: pdfBuffer,
           },
         ],
       });
 
-      console.log(`[Resend] Welcome email sent to ${email || session.user.email}`);
+      console.log(
+        `[Resend] Welcome email sent to ${email || session.user.email}`
+      );
     } catch (emailErr) {
       console.error("[Resend] Failed to send welcome email:", emailErr);
       // We don't throw here as the database registration was successful
-      await logErrorToSlack("RegisterShopperAPI:EmailNotification", emailErr, { user_id: userId, email });
+      await logErrorToSlack("RegisterShopperAPI:EmailNotification", emailErr, {
+        user_id: userId,
+        email,
+      });
     }
     // --- End: Send Welcome Email ---
 

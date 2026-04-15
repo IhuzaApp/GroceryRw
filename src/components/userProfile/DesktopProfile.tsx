@@ -17,19 +17,19 @@ import { useAuth as useAuthHook } from "../../hooks/useAuth";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useLanguage } from "../../context/LanguageContext";
-import { 
-  User, 
-  MapPin, 
-  ShoppingBag, 
-  Wallet, 
-  LogOut, 
-  Camera, 
+import {
+  User,
+  MapPin,
+  ShoppingBag,
+  Wallet,
+  LogOut,
+  Camera,
   Calendar,
   ShieldCheck,
   Zap,
   Plus,
   ArrowRightLeft,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 
 interface DesktopProfileProps {
@@ -258,7 +258,7 @@ export default function DesktopProfile({
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-              
+
               <div className="flex-1 space-y-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-3xl font-black text-gray-900 dark:text-white">
@@ -278,11 +278,19 @@ export default function DesktopProfile({
                     </span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm font-medium text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4 opacity-50" />
-                    <span>Member since {user ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}</span>
+                    <span>
+                      Member since{" "}
+                      {user
+                        ? new Date(user.created_at).toLocaleDateString(
+                            "en-US",
+                            { month: "short", year: "numeric" }
+                          )
+                        : ""}
+                    </span>
                   </div>
                 </div>
 
@@ -295,7 +303,10 @@ export default function DesktopProfile({
                     </span>
                   ) : shopperStatus ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                      <RefreshCw className="h-3 w-3" /> {shopperStatus.status === "pending" ? "Application Pending" : shopperStatus.status}
+                      <RefreshCw className="h-3 w-3" />{" "}
+                      {shopperStatus.status === "pending"
+                        ? "Application Pending"
+                        : shopperStatus.status}
                     </span>
                   ) : null}
                 </div>
@@ -309,7 +320,9 @@ export default function DesktopProfile({
               <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 p-5 text-white shadow-xl shadow-green-500/20 transition-all hover:-translate-y-1">
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-white/70">Total Orders</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                      Total Orders
+                    </p>
                     <h3 className="text-3xl font-black">{orderCount}</h3>
                   </div>
                   <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
@@ -323,8 +336,12 @@ export default function DesktopProfile({
                 <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
                   <div className="relative z-10 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-white/70">Wallet Balance</p>
-                      <h3 className="text-3xl font-black">{formatCurrency(walletBalance)}</h3>
+                      <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                        Wallet Balance
+                      </p>
+                      <h3 className="text-3xl font-black">
+                        {formatCurrency(walletBalance)}
+                      </h3>
                     </div>
                     <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
                       <Wallet className="h-6 w-6" />
@@ -338,7 +355,7 @@ export default function DesktopProfile({
 
           {/* Action Buttons & Address Section */}
           <div className="lg:col-span-3">
-            <div className="flex flex-col h-full justify-between gap-4">
+            <div className="flex h-full flex-col justify-between gap-4">
               <div className="space-y-3">
                 {/* Become a Shopper Button */}
                 {!loadingShopper && (
@@ -350,23 +367,34 @@ export default function DesktopProfile({
                         initiateRoleSwitch(nextRole as "user" | "shopper")
                           .then(() => {
                             toggleRole();
-                            toast.success(`Switched to ${nextRole === "user" ? "User" : "Shopper"}`);
+                            toast.success(
+                              `Switched to ${
+                                nextRole === "user" ? "User" : "Shopper"
+                              }`
+                            );
                           })
                           .catch(() => toast.error("Failed to switch account"))
                           .finally(() => setIsSwitchingRole(false));
                       } else {
                         if (isGuest) {
-                          toast.error("Please create a full account to become a shopper");
+                          toast.error(
+                            "Please create a full account to become a shopper"
+                          );
                           return;
                         }
                         handleBecomePlasa(e);
                       }
                     }}
-                    disabled={isSwitchingRole || (!shopperStatus?.active && (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review"))}
+                    disabled={
+                      isSwitchingRole ||
+                      (!shopperStatus?.active &&
+                        (shopperStatus?.status === "pending" ||
+                          shopperStatus?.status === "under_review"))
+                    }
                     className={`relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-4 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
-                      shopperStatus?.active 
-                        ? "bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200" 
-                        : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-green-500/20"
+                      shopperStatus?.active
+                        ? "bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                        : "bg-gradient-to-r from-green-500 to-emerald-600 shadow-green-500/20 hover:from-green-600 hover:to-emerald-700"
                     }`}
                   >
                     {isSwitchingRole ? (
@@ -377,7 +405,11 @@ export default function DesktopProfile({
                       <Zap className="h-4 w-4" />
                     )}
                     <span>
-                      {isSwitchingRole ? "Switching..." : shopperStatus?.active ? "Switch Service" : "Become Shopper"}
+                      {isSwitchingRole
+                        ? "Switching..."
+                        : shopperStatus?.active
+                        ? "Switch Service"
+                        : "Become Shopper"}
                     </span>
                   </button>
                 )}
@@ -404,16 +436,21 @@ export default function DesktopProfile({
                     <MapPin className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Default Location</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Default Location
+                    </p>
                     <div className="mt-1">
                       {loadingAddr ? (
                         <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
                       ) : selectedAddr || defaultAddr ? (
                         <p className="truncate text-xs font-bold text-gray-700 dark:text-gray-200">
-                          {(selectedAddr || defaultAddr).street}, {(selectedAddr || defaultAddr).city}
+                          {(selectedAddr || defaultAddr).street},{" "}
+                          {(selectedAddr || defaultAddr).city}
                         </p>
                       ) : (
-                        <p className="text-xs font-bold text-gray-400">No address set</p>
+                        <p className="text-xs font-bold text-gray-400">
+                          No address set
+                        </p>
                       )}
                     </div>
                   </div>

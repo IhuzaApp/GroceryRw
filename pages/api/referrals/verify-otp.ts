@@ -20,17 +20,21 @@ export default async function handler(
     const { phone, code } = req.body;
 
     if (!phone || !code) {
-      return res.status(400).json({ error: "Phone number and code are required" });
+      return res
+        .status(400)
+        .json({ error: "Phone number and code are required" });
     }
 
     // Clean phone number
     const cleanPhone = phone.replace(/\D/g, "");
-    
+
     // Get stored OTP data
     const storedData = otpStore.get(cleanPhone);
 
     if (!storedData) {
-      return res.status(400).json({ error: "No OTP sent to this number or OTP has expired" });
+      return res
+        .status(400)
+        .json({ error: "No OTP sent to this number or OTP has expired" });
     }
 
     // Check if expired
@@ -49,7 +53,7 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      message: "Phone number verified successfully"
+      message: "Phone number verified successfully",
     });
   } catch (error: any) {
     console.error("Error verifying referral OTP:", error);

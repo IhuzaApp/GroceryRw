@@ -211,10 +211,16 @@ export default async function handler(
       duplicateCheck.Referral_window.length > 0
     ) {
       const isDev = process.env.NODE_ENV === "development";
-      
-      const userIdConflict = duplicateCheck.Referral_window.find(r => r.user_id === session.user.id);
-      const phoneConflict = duplicateCheck.Referral_window.find(r => r.phone === phone);
-      const deviceConflict = duplicateCheck.Referral_window.find(r => r.deviceFingerprint === deviceFingerprint);
+
+      const userIdConflict = duplicateCheck.Referral_window.find(
+        (r) => r.user_id === session.user.id
+      );
+      const phoneConflict = duplicateCheck.Referral_window.find(
+        (r) => r.phone === phone
+      );
+      const deviceConflict = duplicateCheck.Referral_window.find(
+        (r) => r.deviceFingerprint === deviceFingerprint
+      );
 
       if (userIdConflict) {
         return res.status(400).json({
@@ -231,12 +237,15 @@ export default async function handler(
       // Only block device fingerprint if not in development
       if (deviceConflict && !isDev) {
         return res.status(400).json({
-          error: "This device is already associated with an existing referral account.",
+          error:
+            "This device is already associated with an existing referral account.",
         });
       }
-      
+
       if (deviceConflict && isDev) {
-        console.log("[Dev Register] Device fingerprint collision detected, allowing for testing.");
+        console.log(
+          "[Dev Register] Device fingerprint collision detected, allowing for testing."
+        );
       }
     }
 
@@ -275,7 +284,10 @@ export default async function handler(
       });
     } catch (slackError) {
       // Don't fail the registration if Slack fails, just log it
-      console.error("Slack notification failed for referral registration:", slackError);
+      console.error(
+        "Slack notification failed for referral registration:",
+        slackError
+      );
     }
 
     return res.status(200).json({

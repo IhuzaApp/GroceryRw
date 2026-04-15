@@ -18,7 +18,10 @@ export default async function handler(
   }
 
   try {
-    const amount = billingCycle === "yearly" ? selectedPlan.price_yearly : selectedPlan.price_monthly;
+    const amount =
+      billingCycle === "yearly"
+        ? selectedPlan.price_yearly
+        : selectedPlan.price_monthly;
     const features = selectedPlan.modules?.map((m: any) => m.name) || [];
 
     // 1. Generate PDF Invoice
@@ -33,7 +36,9 @@ export default async function handler(
       amount: amount,
       features: features,
       issuedAt: new Date().toLocaleDateString(),
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      dueDate: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString(),
     });
 
     // Extract base64 from Data URI
@@ -46,7 +51,9 @@ export default async function handler(
       subject: `Welcome to PLAS POS - Application Received: ${formData.name}`,
       attachments: [
         {
-          filename: `invoice-${formData.name.replace(/\s+/g, "-").toLowerCase()}.pdf`,
+          filename: `invoice-${formData.name
+            .replace(/\s+/g, "-")
+            .toLowerCase()}.pdf`,
           content: base64Content,
         },
       ],
@@ -123,6 +130,8 @@ export default async function handler(
     return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error("Error sending POS registration notifications:", error);
-    return res.status(500).json({ error: "Failed to send notifications", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Failed to send notifications", details: error.message });
   }
 }
