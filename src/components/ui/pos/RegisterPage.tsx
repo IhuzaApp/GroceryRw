@@ -760,6 +760,9 @@ export default function RegisterPage() {
               setPaymentStatus("success");
               toast.success("Payment successful! Finalizing setup...");
 
+              // Close the payment modal
+              setShowPaymentModal(false);
+
               // RESUME PHASE 2: Final Completion (Step 7+)
               performMutation(false, 7);
             } else if (
