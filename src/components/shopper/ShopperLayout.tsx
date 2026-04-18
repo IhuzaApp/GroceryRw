@@ -7,6 +7,7 @@ import FCMStatusIndicator from "@components/shopper/FCMStatusIndicator";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 import { logger } from "../../utils/logger";
+import ShopperBottomNav from "@components/shopper/ShopperBottomNav";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const [isOnline, setIsOnline] = useState(false);
 
   useEffect(() => {
-    const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkIfMobile = () => setIsMobile(window.innerWidth < 1024);
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
@@ -263,24 +264,27 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
-      className={`h-screen ${
+      className={`h-screen overflow-hidden ${
         theme === "dark" ? "bg-[var(--bg-primary)]" : "bg-gray-50"
       }`}
     >
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
-      <div className="flex h-full">
+      <div className="flex h-[calc(100vh-4rem)]">
         <ShopperSidebar />
         <main
-          className={`relative flex-1 transition-colors duration-200 ${
+          className={`relative flex-1 overflow-y-auto transition-colors duration-200 ${
             theme === "dark"
               ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
               : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-3 pb-24" : "p-4 pl-64"}`}
+          } ${isMobile ? "p-4 pb-28" : "p-6"}`}
         >
-          <div className="relative z-0 h-full">{children}</div>
+          <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Navigation */}
+      {isMobile && <ShopperBottomNav />}
 
       {/* 
         NotificationSystem - Single instance for all Plasa pages
