@@ -316,6 +316,18 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
           </svg>
           Sign in with Google
         </button>
+
+        {/* Apple Sign In Button */}
+        <button
+          type="button"
+          onClick={() => signIn("apple", { callbackUrl: redirect || "/" })}
+          className="mt-3 inline-flex w-full justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 dark:border-gray-600 dark:bg-black dark:text-gray-200 dark:hover:bg-gray-900 dark:focus:ring-offset-gray-800"
+        >
+          <svg className="mr-2 h-5 w-5 fill-current" viewBox="0 0 384 512">
+            <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.1-44.6-35.9-2.8-74.3 22.7-93.1 22.7-18.9 0-50.5-22.1-79.6-21.5-38.3.7-73.4 22.1-93.5 56.6-40.4 69.2-10.4 171.7 28.5 228.3 19 27.5 41.5 58.7 71.9 57.5 29.1-1.3 40.5-19.1 75.3-19.1 34.7 0 45.4 19.1 75.6 18.6 31.4-.5 50.8-30.2 69.6-57.5 21.6-31.4 30.6-61.9 31.1-63.5-.7-.3-59.2-22.6-58.8-92.7zM245.5 107.5c16.1-19.6 27-46.7 24-73.8-23.4 1-52.1 15.6-69.2 35.2-13.8 15.6-26.7 43.6-22.9 69.7 26.2 2 52.1-11.5 68.1-31.1z" />
+          </svg>
+          Sign in with Apple
+        </button>
       </form>
     </div>
   );

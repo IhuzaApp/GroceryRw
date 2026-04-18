@@ -306,7 +306,7 @@ export default function UserProfile() {
     // Set a safety fallback to refresh the page if logout takes too long (> 5 seconds)
     const fallbackTimeout = setTimeout(() => {
       if (typeof window !== "undefined") {
-        window.location.replace("/");
+        window.location.replace("/Auth/Login");
       }
     }, 5000);
 

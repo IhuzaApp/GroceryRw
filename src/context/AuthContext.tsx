@@ -157,18 +157,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 4. NextAuth SignOut (Handles cookies and redirect)
       await signOut({
-        callbackUrl: "/",
+        callbackUrl: "/Auth/Login",
         redirect: true,
       });
 
       // Fallback redirect if signOut doesn't trigger it
       if (typeof window !== "undefined") {
-        window.location.replace("/");
+        window.location.replace("/Auth/Login");
       }
     } catch (error) {
       console.error("Logout error:", error);
       if (typeof window !== "undefined") {
-        window.location.replace("/");
+        window.location.replace("/Auth/Login");
       }
     }
   };
