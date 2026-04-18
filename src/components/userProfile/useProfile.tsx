@@ -302,13 +302,22 @@ export default function UserProfile() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     toast.success("Logging out...");
-    // Give time for the "See you soon" takeover to show and progress to start
-    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Set a safety fallback to refresh the page if logout takes too long (> 5 seconds)
+    const fallbackTimeout = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      }
+    }, 5000);
+
     try {
+      // Start the progress transition then immediately call logout
       await logout();
+      clearTimeout(fallbackTimeout);
     } catch (error) {
       console.error("Logout error:", error);
       setIsLoggingOut(false);
+      clearTimeout(fallbackTimeout);
       toast.error("Logout failed. Please try again.");
     }
   };

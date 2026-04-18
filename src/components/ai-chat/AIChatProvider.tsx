@@ -16,6 +16,7 @@ export default function AIChatProvider() {
   const isStoreOrCheckout =
     router.pathname === "/stores/[id]" ||
     router.pathname === "/stores/[id]/checkout" ||
+    router.pathname === "/Myprofile" ||
     router.pathname === "/plasBusiness/store/[storeId]";
 
   const hideOnMobile = isStoreOrCheckout || hideFloatingUI;

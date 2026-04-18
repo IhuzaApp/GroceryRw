@@ -16,6 +16,7 @@ import PackageDeliveryModal from "./PackageDeliveryModal";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import { useHideBottomBar } from "../../../context/HideBottomBarContext";
+import { useAnyModalOpen } from "../../../hooks/useAnyModalOpen";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -181,6 +182,7 @@ export default function BottomBar() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [showHomeActions, setShowHomeActions] = useState(false);
+  const isModalOpen = useAnyModalOpen();
 
   const homePressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressActive = useRef(false);
@@ -349,8 +351,10 @@ export default function BottomBar() {
 
       {/* Floating Cart Button (Lifted) - hidden on store & checkout pages */}
       {!hideFloatingUI &&
+        !isModalOpen &&
         router.pathname !== "/Cart" &&
         router.pathname !== "/Reels" &&
+        router.pathname !== "/Myprofile" &&
         router.pathname !== "/Myprofile/become-shopper" &&
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
@@ -418,7 +422,8 @@ export default function BottomBar() {
         )}
 
       {/* Desktop Floating Buttons */}
-      <div className="notranslate fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
+      {!isModalOpen && (
+        <div className="notranslate fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
         {open && router.pathname !== "/Myprofile/become-shopper" && (
           <div className="mb-2 flex flex-col items-end gap-2">
             {/* AI Support - Only show for non-guest users */}
@@ -622,6 +627,7 @@ export default function BottomBar() {
           </svg>
         </button>
       </div>
+      )}
 
       {/* Bottom Navigation Bar */}
       {router.pathname !== "/Reels" && (

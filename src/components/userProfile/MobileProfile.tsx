@@ -833,10 +833,10 @@ export default function MobileProfile({
       <div className="mb-6 mt-4 space-y-4">
         {/* Switch Account Button */}
         {loadingShopper ? (
-          <div className="h-12 w-full animate-pulse rounded-none bg-gray-200 dark:bg-gray-700" />
+          <div className="h-12 w-full animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
         ) : shopperStatus?.active ? (
           <button
-            className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+            className="group relative flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
             onClick={async () => {
               const nextRole = role === "user" ? "shopper" : "user";
               setIsSwitchingRole(true);
@@ -855,32 +855,30 @@ export default function MobileProfile({
             }}
             disabled={isSwitchingRole}
           >
-            <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg
-                  className="h-5 w-5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                  />
-                </svg>
-              </div>
-              <span className="!text-white">
-                {isSwitchingRole
-                  ? "Switching..."
-                  : `Switch to ${role === "user" ? "Shopper" : "User"}`}
-              </span>
+            <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <svg
+                className="h-5 w-5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
             </div>
+            <span className="!text-white">
+              {isSwitchingRole
+                ? "Switching..."
+                : `Switch to ${role === "user" ? "Shopper" : "User"}`}
+            </span>
           </button>
         ) : (
           <button
-            className={`flex w-full items-center justify-center rounded-none px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${
+            className={`group relative flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${
               shopperStatus?.needCollection
                 ? "bg-gradient-to-r from-orange-500 to-orange-600"
                 : shopperStatus?.status === "pending" ||
@@ -894,85 +892,81 @@ export default function MobileProfile({
               shopperStatus?.status === "under_review"
             }
           >
-            <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg
-                  className="h-5 w-5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {shopperStatus?.needCollection ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  ) : shopperStatus?.status === "pending" ||
-                    shopperStatus?.status === "under_review" ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  )}
-                </svg>
-              </div>
-              <span className="!text-white">
-                {shopperStatus?.needCollection
-                  ? "Update Application"
-                  : shopperStatus?.status === "pending" ||
-                    shopperStatus?.status === "under_review"
-                  ? `Application ${
-                      shopperStatus.status === "pending"
-                        ? "Pending"
-                        : "Under Review"
-                    }`
-                  : "Become a Plasa"}
-              </span>
+            <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <svg
+                className="h-5 w-5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {shopperStatus?.needCollection ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                ) : shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review" ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                )}
+              </svg>
             </div>
+            <span className="!text-white">
+              {shopperStatus?.needCollection
+                ? "Update Application"
+                : shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review"
+                ? `Application ${
+                    shopperStatus.status === "pending"
+                      ? "Pending"
+                      : "Under Review"
+                  }`
+                : "Become a Plasa"}
+            </span>
           </button>
         )}
 
         {/* Logout Button */}
         <button
           disabled={isLoggingOut}
-          className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-4 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+          className="group relative flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
           onClick={onLogout}
         >
-          <div className="flex items-center space-x-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-              {isLoggingOut ? (
-                <RefreshCw className="h-5 w-5 animate-spin !text-white" />
-              ) : (
-                <svg
-                  className="h-5 w-5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              )}
-            </div>
-            <span className="!text-white">
-              {isLoggingOut ? "Exiting..." : t("nav.logout")}
-            </span>
+          <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+            {isLoggingOut ? (
+              <RefreshCw className="h-5 w-5 animate-spin !text-white" />
+            ) : (
+              <svg
+                className="h-5 w-5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+            )}
           </div>
+          <span className="!text-white">
+            {isLoggingOut ? "Exiting..." : t("nav.logout")}
+          </span>
         </button>
       </div>
 

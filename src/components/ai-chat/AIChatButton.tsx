@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { useAnyModalOpen } from "../../hooks/useAnyModalOpen";
 
 interface AIChatButtonProps {
   onClick: () => void;
@@ -29,7 +30,9 @@ export default function AIChatButton({
     return () => clearTimeout(timer);
   }, []);
 
-  if (isHiddenPage) return null;
+  const isModalOpen = useAnyModalOpen();
+
+  if (isHiddenPage || isModalOpen) return null;
 
   return (
     <div
