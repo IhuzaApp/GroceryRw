@@ -3408,11 +3408,7 @@ export default function MapSection({
       {/* Daily Earnings Badge */}
       {!isExpanded && (
         <div
-          className={`absolute left-1/2 top-4 z-[1001] -translate-x-1/2 transform rounded-full px-4 py-2 shadow-lg ${
-            theme === "dark"
-              ? "bg-gray-800 bg-opacity-90 text-white backdrop-blur-lg"
-              : "bg-white bg-opacity-90 text-gray-900 backdrop-blur-lg"
-          }`}
+          className="absolute left-1/2 top-4 z-[1001] -translate-x-1/2 transform rounded-full px-5 py-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] backdrop-blur-xl bg-white/80 dark:bg-black/60 border border-white/20 dark:border-white/10 text-[var(--text-primary)] transition-all duration-300"
         >
           <div className="flex items-center gap-2">
             <svg
@@ -3495,11 +3491,7 @@ export default function MapSection({
           }}
         />
         {!mapLoaded && (
-          <div
-            className={`absolute inset-0 z-10 flex items-center justify-center ${
-              theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
-            }`}
-          >
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm transition-opacity duration-300">
             <Loader
               size="lg"
               content="Loading map..."
@@ -3513,14 +3505,10 @@ export default function MapSection({
         <>
           <button
             onClick={handleGoLive}
-            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-xl px-6 py-3 font-bold shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 md:block md:w-auto ${
+            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-2xl px-6 py-3.5 font-bold shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] md:block md:w-auto ${
               isOnline
-                ? theme === "dark"
-                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-500/30 hover:shadow-red-500/40"
-                  : "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-500/30 hover:shadow-red-500/40"
-                : theme === "dark"
-                ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
-                : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
+                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border border-red-400/30"
+                : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border border-green-400/30"
             }`}
           >
             <span className="flex items-center justify-center gap-2">
@@ -3566,14 +3554,10 @@ export default function MapSection({
           {isOnline && (
             <button
               onClick={() => setShowBusyAreas(!showBusyAreas)}
-              className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-lg px-4 py-2.5 font-semibold shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 ${
+              className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-xl px-4 py-2.5 font-semibold shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
                 showBusyAreas
-                  ? theme === "dark"
-                    ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
-                    : "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
-                  : theme === "dark"
-                  ? "border border-gray-700/50 bg-gray-800/90 text-gray-100 hover:bg-gray-700/90"
-                  : "border border-gray-200/50 bg-white/90 text-gray-900 hover:bg-gray-50/90"
+                  ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border border-purple-400/30"
+                  : "bg-white/80 dark:bg-black/60 backdrop-blur-xl border border-white/20 dark:border-white/10 text-[var(--text-primary)] hover:bg-white/90 dark:hover:bg-black/80"
               }`}
               title={showBusyAreas ? "Hide busy areas" : "Show busy areas"}
             >
@@ -3600,11 +3584,7 @@ export default function MapSection({
           {/* Add tracking mode indicator - hidden on mobile */}
           {isOnline && (
             <div
-              className={`absolute bottom-20 left-1/2 z-[1000] hidden -translate-x-1/2 transform rounded-xl px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-lg transition-all duration-200 md:block ${
-                theme === "dark"
-                  ? "border border-gray-700/50 bg-gray-800/90 text-gray-100"
-                  : "border border-gray-200/50 bg-white/90 text-gray-900"
-              }`}
+              className={`absolute bottom-24 left-1/2 z-[1000] hidden -translate-x-1/2 transform rounded-xl px-4 py-2 text-sm font-medium shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all duration-300 md:block bg-white/80 dark:bg-black/60 backdrop-blur-xl border border-white/20 dark:border-white/10 text-[var(--text-primary)]`}
             >
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -3684,14 +3664,10 @@ export default function MapSection({
             <button
               onClick={refreshLocation}
               disabled={isRefreshingLocation}
-              className={`absolute bottom-36 right-5 z-[1001] h-10 w-10 rounded-xl shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 md:bottom-5 md:h-10 md:w-10 ${
-                theme === "dark"
-                  ? isRefreshingLocation
-                    ? "bg-gradient-to-r from-green-700 to-green-800 text-gray-300 shadow-green-700/30"
-                    : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
-                  : isRefreshingLocation
-                  ? "bg-gradient-to-r from-green-300 to-green-400 text-white shadow-green-300/30"
-                  : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
+              className={`absolute bottom-36 right-5 z-[1001] h-12 w-12 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-1 active:scale-95 md:bottom-5 md:h-12 md:w-12 border border-white/20 ${
+                isRefreshingLocation
+                  ? "bg-[var(--bg-secondary)] text-[var(--text-secondary)] opacity-80 cursor-not-allowed"
+                  : "bg-white/90 dark:bg-black/80 backdrop-blur-xl text-[var(--text-primary)] hover:bg-white dark:hover:bg-black"
               }`}
               title="Refresh location"
             >

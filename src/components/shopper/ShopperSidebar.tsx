@@ -455,28 +455,20 @@ export default function ShopperSidebar() {
     <>
       {/* Desktop sidebar */}
       <div
-        className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] w-64 border-r md:block ${
-          theme === "dark"
-            ? "border-gray-700 bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 shadow-2xl"
-            : "border-gray-200 bg-gradient-to-b from-white to-gray-50 text-gray-900 shadow-xl"
-        }`}
+        className="fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] w-64 border-r border-[var(--bg-secondary)] md:block bg-[var(--bg-primary)]/80 backdrop-blur-2xl text-[var(--text-primary)] shadow-sm transition-all duration-300"
       >
         <div className="flex h-full flex-col">
           <div className="flex-1 overflow-y-auto p-4">
             <nav className="space-y-1">
               <Link href="/" passHref>
                 <div
-                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-300 ${
                     isActive("/") &&
                     !isActive("/Plasa/active-batches") &&
                     !isActive("/Plasa/Earnings") &&
                     !isActive("/Plasa/Settings")
-                      ? theme === "dark"
-                        ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/25"
-                        : "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25"
-                      : theme === "dark"
-                      ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                      : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)] hover:-translate-y-0.5"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   <div className="mr-3 p-1.5">
@@ -498,14 +490,10 @@ export default function ShopperSidebar() {
               </Link>
               <Link href="/Plasa/active-batches" passHref>
                 <div
-                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-300 ${
                     isActive("/Plasa/active-batches")
-                      ? theme === "dark"
-                        ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/25"
-                        : "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25"
-                      : theme === "dark"
-                      ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                      : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)] hover:-translate-y-0.5"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   <div className="mr-3 p-1.5">
@@ -529,14 +517,10 @@ export default function ShopperSidebar() {
               </Link>
               <Link href="/Plasa/Earnings" passHref>
                 <div
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200 ${
+                  className={`flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-300 ${
                     isActive("/Plasa/Earnings")
-                      ? theme === "dark"
-                        ? "bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-lg shadow-yellow-500/25"
-                        : "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/25"
-                      : theme === "dark"
-                      ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                      : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-[0_4px_15px_rgb(234,179,8,0.3)] hover:-translate-y-0.5"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   <div className="flex items-center">
@@ -584,14 +568,10 @@ export default function ShopperSidebar() {
               </Link>
               <Link href="/Plasa/chat" passHref>
                 <div
-                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-300 ${
                     isActive("/Plasa/chat")
-                      ? theme === "dark"
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
-                        : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25"
-                      : theme === "dark"
-                      ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                      : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-[0_4px_15px_rgb(59,130,246,0.3)] hover:-translate-y-0.5"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   <div className="relative mr-3 p-1.5">
@@ -615,14 +595,10 @@ export default function ShopperSidebar() {
               </Link>
               <Link href="/Plasa/invoices" passHref>
                 <div
-                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                  className={`flex items-center rounded-xl px-4 py-3 transition-all duration-300 ${
                     isActive("/Plasa/invoices")
-                      ? theme === "dark"
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
-                        : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25"
-                      : theme === "dark"
-                      ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                      : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-[0_4px_15px_rgb(99,102,241,0.3)] hover:-translate-y-0.5"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   <div className="mr-3 p-1.5">
@@ -647,21 +623,13 @@ export default function ShopperSidebar() {
           </div>
 
           {/* Bottom section with Settings and Logout */}
-          <div
-            className={`border-t p-4 ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
+          <div className="border-t border-[var(--bg-secondary)] p-4">
             <Link href="/Plasa/ShopperProfile" passHref>
               <div
-                className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                className={`flex items-center rounded-xl px-4 py-3 transition-all duration-300 ${
                   isActive("/Plasa/ShopperProfile")
-                    ? theme === "dark"
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
-                      : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                    : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-[0_4px_15px_rgb(168,85,247,0.3)] hover:-translate-y-0.5"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 <div className="mr-3 p-1.5">
@@ -681,14 +649,10 @@ export default function ShopperSidebar() {
             </Link>
             <Link href="/Plasa/Settings" passHref>
               <div
-                className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                className={`flex items-center rounded-xl px-4 py-3 transition-all duration-300 ${
                   isActive("/Plasa/Settings")
-                    ? theme === "dark"
-                      ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg shadow-gray-500/25"
-                      : "bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-500/25"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                    : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                    ? "bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-[0_4px_15px_rgb(0,0,0,0.1)] hover:-translate-y-0.5"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 <div className="mr-3 p-1.5">
@@ -708,11 +672,7 @@ export default function ShopperSidebar() {
             </Link>
             <div
               onClick={handleSwitchToCustomer}
-              className={`mt-2 flex cursor-pointer items-center rounded-xl px-4 py-3 transition-all duration-200 ${
-                theme === "dark"
-                  ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
-                  : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
-              }`}
+              className="mt-2 flex cursor-pointer items-center rounded-xl px-4 py-3 transition-all duration-300 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
             >
               <div className="mr-3 p-1.5">
                 <svg
@@ -733,11 +693,7 @@ export default function ShopperSidebar() {
             </div>
             <div
               onClick={handleLogout}
-              className={`mt-2 flex cursor-pointer items-center rounded-xl px-4 py-3 transition-all duration-200 ${
-                theme === "dark"
-                  ? "text-gray-300 hover:bg-red-900/20 hover:text-red-300 hover:shadow-md"
-                  : "text-gray-700 hover:bg-red-50 hover:text-red-600 hover:shadow-md"
-              }`}
+              className="mt-2 flex cursor-pointer items-center rounded-xl px-4 py-3 transition-all duration-300 text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-500"
             >
               <div className="mr-3 p-1.5">
                 <svg
@@ -760,11 +716,7 @@ export default function ShopperSidebar() {
 
       {/* Mobile Bottom Navigation */}
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden ${
-          theme === "dark"
-            ? "border-t border-gray-700 bg-gray-900/95 backdrop-blur-lg"
-            : "border-t border-gray-200 bg-white/95 backdrop-blur-lg"
-        }`}
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-transparent dark:border-white/5 bg-[var(--bg-primary)]/80 backdrop-blur-2xl transition-all duration-300"
       >
         <div className="mx-auto flex max-w-md items-center justify-around px-2 py-3">
           {/* Get home item and other items separately */}
@@ -793,11 +745,7 @@ export default function ShopperSidebar() {
                     onClick={item.onClick || handleNavigation(item.path)}
                   >
                     <div
-                      className={`relative flex items-center justify-center rounded-xl px-3 py-2 transition-all duration-300 ${
-                        theme === "dark"
-                          ? "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                          : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900"
-                      }`}
+                      className="relative flex items-center justify-center rounded-xl px-3 py-2 transition-all duration-300 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                     >
                       {/* Active indicator dot */}
                       {isActive(item.path) && (
@@ -814,13 +762,7 @@ export default function ShopperSidebar() {
                       <div className="flex items-center justify-center">
                         {React.cloneElement(item.icon, {
                           className: `h-7 w-7 transition-all duration-300 ${
-                            isActive(item.path)
-                              ? theme === "dark"
-                                ? "text-emerald-400 scale-110"
-                                : "text-emerald-500 scale-110"
-                              : theme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-500"
+                            isActive(item.path) ? "text-emerald-500 scale-110" : "text-[var(--text-secondary)]"
                           }`,
                           strokeWidth: "1.5",
                         })}
@@ -834,25 +776,15 @@ export default function ShopperSidebar() {
                   <div className="z-50 -mt-12">
                     <Link href="/" passHref onClick={handleNavigation("/")}>
                       <div
-                        className={`flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300 ${
+                        className={`flex h-16 w-16 flex-col items-center justify-center rounded-full border-[3px] shadow-lg transition-all duration-300 ${
                           homeIsActive
-                            ? theme === "dark"
-                              ? "border-emerald-400 bg-emerald-500/20 text-emerald-400"
-                              : "border-emerald-500 bg-white text-emerald-500 dark:bg-gray-800"
-                            : theme === "dark"
-                            ? "border-gray-600 bg-gray-800 text-gray-400"
-                            : "border-gray-300 bg-white text-gray-500 dark:bg-gray-800"
+                            ? "border-[var(--bg-primary)] bg-emerald-500 text-white shadow-emerald-500/30 -translate-y-1"
+                            : "border-[var(--bg-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                         }`}
                       >
                         {React.cloneElement(homeItem.icon, {
-                          className: `h-7 w-7 transition-all duration-300 ${
-                            homeIsActive
-                              ? theme === "dark"
-                                ? "text-emerald-400"
-                                : "text-emerald-500"
-                              : theme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-500"
+                          className: `h-7 w-7 transition-all duration-300 text-inherit ${
+                            homeIsActive ? "scale-110" : ""
                           }`,
                           strokeWidth: "1.5",
                         })}
@@ -870,11 +802,7 @@ export default function ShopperSidebar() {
                     onClick={item.onClick || handleNavigation(item.path)}
                   >
                     <div
-                      className={`relative flex items-center justify-center rounded-xl px-3 py-2 transition-all duration-300 ${
-                        theme === "dark"
-                          ? "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                          : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900"
-                      }`}
+                      className="relative flex items-center justify-center rounded-xl px-3 py-2 transition-all duration-300 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                     >
                       {/* Active indicator dot */}
                       {isActive(item.path) && (
@@ -891,13 +819,7 @@ export default function ShopperSidebar() {
                       <div className="flex items-center justify-center">
                         {React.cloneElement(item.icon, {
                           className: `h-7 w-7 transition-all duration-300 ${
-                            isActive(item.path)
-                              ? theme === "dark"
-                                ? "text-emerald-400 scale-110"
-                                : "text-emerald-500 scale-110"
-                              : theme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-500"
+                            isActive(item.path) ? "text-emerald-500 scale-110" : "text-[var(--text-secondary)]"
                           }`,
                           strokeWidth: "1.5",
                         })}
@@ -913,11 +835,7 @@ export default function ShopperSidebar() {
         {/* More Menu */}
         {showMoreMenu && (
           <div
-            className={`fixed bottom-16 left-0 right-0 z-50 p-4 ${
-              theme === "dark"
-                ? "border-t border-gray-700 bg-gray-900/95 backdrop-blur-lg"
-                : "border-t border-gray-200 bg-white/95 backdrop-blur-lg"
-            }`}
+            className="fixed bottom-16 left-0 right-0 z-50 p-4 border-t border-transparent dark:border-white/5 bg-[var(--bg-primary)]/80 backdrop-blur-2xl transition-all duration-300"
           >
             <div className="mx-auto max-w-md space-y-2">
               {/* Telegram Connect/Disconnect Button for mobile - Hidden on mobile */}
@@ -939,14 +857,10 @@ export default function ShopperSidebar() {
                       handleNavigation(item.path)(e);
                     }
                   }}
-                  className={`relative flex cursor-pointer items-center rounded-2xl px-4 py-4 text-sm font-medium transition-all duration-300 ${
+                  className={`group relative flex cursor-pointer items-center rounded-2xl px-4 py-4 text-sm font-medium transition-all duration-300 ${
                     isActive(item.path)
-                      ? theme === "dark"
-                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                        : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                      : theme === "dark"
-                      ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)] hover:-translate-y-0.5"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {/* Active indicator */}
@@ -959,18 +873,14 @@ export default function ShopperSidebar() {
                     className={`mr-4 rounded-xl p-2 transition-all duration-300 ${
                       isActive(item.path)
                         ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-800/50"
-                        : "bg-gray-100/50"
+                        : "bg-[var(--bg-primary)] shadow-sm group-hover:scale-105"
                     }`}
                   >
                     {React.cloneElement(item.icon, {
                       className: `h-6 w-6 flex-shrink-0 transition-all duration-300 ${
                         isActive(item.path)
                           ? "text-white scale-110"
-                          : theme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-500"
+                          : "text-inherit"
                       }`,
                       strokeWidth: "2.5",
                     })}
@@ -982,9 +892,7 @@ export default function ShopperSidebar() {
                   {/* Arrow indicator for non-active items */}
                   {!isActive(item.path) && (
                     <svg
-                      className={`h-4 w-4 transition-all duration-300 ${
-                        theme === "dark" ? "text-gray-500" : "text-gray-400"
-                      }`}
+                      className="h-4 w-4 transition-all duration-300 text-inherit opacity-50 group-hover:translate-x-1 group-hover:opacity-100"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
