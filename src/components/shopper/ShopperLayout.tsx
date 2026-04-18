@@ -270,14 +270,14 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     >
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]">
         <ShopperSidebar />
         <main
           className={`relative flex-1 overflow-y-auto transition-colors duration-200 ${
             theme === "dark"
               ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
               : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-4 pb-28" : "p-6"}`}
+          } ${isMobile ? "p-4 pb-28" : "md:ml-64 p-6"}`}
         >
           <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
         </main>
