@@ -7,165 +7,108 @@ interface BatchTableSkeletonProps {
 
 export function BatchTableSkeleton({ rows = 25 }: BatchTableSkeletonProps) {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  /* Glass surface style to match real table */
+  const surfaceStyle = {
+    background: isDark ? "rgba(23,23,23,0.9)" : "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(24px)",
+    WebkitBackdropFilter: "blur(24px)",
+    border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
+    boxShadow: isDark 
+      ? "0 8px 40px rgba(0,0,0,0.45)" 
+      : "0 8px 40px rgba(0,0,0,0.07)",
+  };
+
+  const skeletonColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+  const headerBg = isDark ? "rgba(255,255,255,0.025)" : "rgba(0,0,0,0.02)";
 
   return (
-    <div
-      className={`overflow-hidden rounded-lg border ${
-        theme === "dark"
-          ? "border-gray-700 bg-gray-800"
-          : "border-gray-200 bg-white"
-      }`}
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead
-            className={`border-b text-left text-xs font-medium uppercase ${
-              theme === "dark"
-                ? "border-gray-700 bg-gray-900/50 text-gray-400"
-                : "border-gray-200 bg-gray-50 text-gray-600"
-            }`}
-          >
-            <tr>
-              <th className="w-12 px-6 py-3">
-                <div
-                  className={`h-4 w-4 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-              </th>
-              <th className="px-6 py-3">Order No</th>
-              <th className="px-6 py-3">Order Type</th>
-              <th className="px-6 py-3">Name</th>
-              <th className="px-6 py-3">Units</th>
-              <th className="px-6 py-3">Earnings</th>
-              <th className="px-6 py-3">Shop/Store</th>
-              <th className="px-6 py-3">Time</th>
-              <th className="px-6 py-3">Address</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="w-12 px-6 py-3"></th>
-            </tr>
-          </thead>
-          <tbody
-            className={`text-sm ${
-              theme === "dark" ? "text-gray-300" : "text-gray-900"
-            }`}
-          >
-            {Array.from({ length: rows }).map((_, index) => (
-              <tr
-                key={index}
-                className={`border-b ${
-                  theme === "dark" ? "border-gray-700" : "border-gray-200"
-                }`}
+    <div className="flex flex-col gap-4">
+      <div 
+        className="overflow-hidden rounded-2xl"
+        style={surfaceStyle}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr 
+                style={{ 
+                  background: headerBg,
+                  borderBottom: isDark ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(0,0,0,0.05)"
+                }}
               >
-                {/* Checkbox */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-4 w-4 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Order Number */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-4 w-16 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Order Type */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-6 w-20 rounded-full ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Name with Avatar */}
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-8 w-8 rounded-full ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      } animate-pulse`}
-                    />
-                    <div
-                      className={`h-4 w-24 rounded ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      } animate-pulse`}
-                    />
-                  </div>
-                </td>
-
-                {/* Units */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-4 w-16 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Earnings */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-4 w-20 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Shop/Store */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-6 w-32 rounded-full ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Time */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-4 w-28 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Address */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-4 w-40 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Status */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-6 w-20 rounded-full ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
-
-                {/* Actions */}
-                <td className="px-6 py-4">
-                  <div
-                    className={`h-5 w-5 rounded ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </td>
+                {[
+                  "Order", "Type", "Customer", "Shop", "Earnings", 
+                  "Delivery Time", "Address", "Status", "Action"
+                ].map((col, i) => (
+                  <th 
+                    key={i}
+                    className="whitespace-nowrap px-5 py-3.5 text-left text-[10px] font-bold uppercase tracking-[0.08em]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {col}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <tr 
+                  key={idx}
+                  style={{ 
+                    borderBottom: isDark 
+                      ? "1px solid rgba(255,255,255,0.035)" 
+                      : "1px solid rgba(0,0,0,0.035)" 
+                  }}
+                >
+                  {/* Order */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-6 w-16 animate-pulse rounded-lg" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Type */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-6 w-20 animate-pulse rounded-full" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Customer */}
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 animate-pulse rounded-full" style={{ background: skeletonColor }} />
+                      <div className="h-4 w-24 animate-pulse rounded" style={{ background: skeletonColor }} />
+                    </div>
+                  </td>
+                  {/* Shop */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-4 w-28 animate-pulse rounded" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Earnings */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-4 w-16 animate-pulse rounded" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Delivery Time */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-10 w-24 animate-pulse rounded-xl" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Address */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-4 w-32 animate-pulse rounded" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Status */}
+                  <td className="px-5 py-3.5">
+                    <div className="h-6 w-20 animate-pulse rounded-full" style={{ background: skeletonColor }} />
+                  </td>
+                  {/* Action */}
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-16 animate-pulse rounded-xl" style={{ background: skeletonColor }} />
+                      <div className="h-8 w-8 animate-pulse rounded-lg" style={{ background: skeletonColor }} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

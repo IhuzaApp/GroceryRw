@@ -280,64 +280,9 @@ export default function ActiveBatches({
         {/* Mobile Header - Only show on mobile */}
         {isMobile && (
           <div className="mb-4">
-            {/* Header with Title and Profile Icon */}
-            <div className="mb-4 flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-                Active Batches
-              </h1>
-            </div>
-
-            {/* Search Bar and Refresh Button */}
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search batches..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-transparent dark:border-white/5 bg-[var(--bg-secondary)] py-3.5 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] placeholder-[var(--text-secondary)] shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <svg
-                    className="h-5 w-5 text-[var(--text-secondary)]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Refresh Button */}
-              <button
-                onClick={() => refetchActiveBatches(false)}
-                disabled={isRefreshing}
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-sm transition-all duration-300 hover:shadow-md active:scale-90 ${
-                  isRefreshing ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                title="Refresh batches"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </button>
-            </div>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+              Active Batches
+            </h1>
           </div>
         )}
 
@@ -397,22 +342,7 @@ export default function ActiveBatches({
         {/* Show orders or loading skeletons */}
         {(isLoading || (fetchSuccess && activeOrders.length > 0)) && (
           <ResponsiveBatchView
-            orders={
-              isMobile && searchQuery
-                ? activeOrders.filter(
-                    (order) =>
-                      order.OrderID.toString()
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                      (order.customerName || "")
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                      (order.shopName || "")
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase())
-                  )
-                : activeOrders
-            }
+            orders={activeOrders}
             isLoading={isLoading}
             onRefresh={() => refetchActiveBatches(false)}
             isRefreshing={isRefreshing}

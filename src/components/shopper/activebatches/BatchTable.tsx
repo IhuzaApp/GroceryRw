@@ -127,6 +127,25 @@ function StatusPill({ status }: { status: string }) {
 }
 
 /* ── Delivery Time ── */
+/* ── Human-readable relative time ── */
+function relativeTime(diffMs: number): string {
+  const abs = Math.abs(diffMs);
+  const mins  = Math.floor(abs / 60_000);
+  const hours = Math.floor(abs / 3_600_000);
+  const days  = Math.floor(abs / 86_400_000);
+  const weeks = Math.floor(days / 7);
+  const months= Math.floor(days / 30.4375);
+  const years = Math.floor(days / 365.25);
+
+  if (years >= 1)  return years === 1  ? "1 year"   : `${years} years`;
+  if (months >= 1) return months === 1 ? "1 month"  : `${months} months`;
+  if (weeks >= 1)  return weeks === 1  ? "1 week"   : `${weeks} weeks`;
+  if (days >= 1)   return days === 1   ? "1 day"    : `${days} days`;
+  if (hours >= 1)  return hours === 1  ? "1 hour"   : `${hours} hours`;
+  if (mins >= 1)   return mins === 1   ? "1 min"    : `${mins} mins`;
+  return "now";
+}
+
 function DeliveryTimeCell({
   deliveryTime,
   orderType,
@@ -145,32 +164,74 @@ function DeliveryTimeCell({
   }
 
   const delivery = new Date(deliveryTime);
-  const diff = delivery.getTime() - currentTime.getTime();
+  const diff     = delivery.getTime() - currentTime.getTime();
   const isOverdue = diff < 0;
 
   const fmt = (d: Date) =>
     d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
+  const timeLabel = relativeTime(diff);
+
   if (isOverdue) {
-    const mins = Math.abs(Math.floor(diff / 60000));
-    const hrs = Math.floor(mins / 60);
-    const label = hrs > 0 ? `${hrs}h ${mins % 60}m late` : `${mins}m late`;
+    const days = Math.floor(Math.abs(diff) / 86_400_000);
+
+    const severity =
+      days >= 7
+        ? { bg: "bg-red-900/20", text: "text-red-400", ring: "ring-red-700/30" }
+        : days >= 1
+        ? { bg: "bg-red-600/15", text: "text-red-500", ring: "ring-red-500/25" }
+        : { bg: "bg-red-500/10", text: "text-red-500", ring: "ring-red-400/20" };
+
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2.5 py-1 text-[11px] font-semibold text-red-500 ring-1 ring-red-400/20">
-        <svg className="h-3 w-3 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        {label}
-      </span>
+      <div className="flex flex-col gap-1">
+        <span
+          className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${severity.bg} ${severity.text} ${severity.ring}`}
+        >
+          <svg className="h-3 w-3 animate-pulse flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          {timeLabel} late
+        </span>
+        <span className="whitespace-nowrap pl-1 text-[10px] tabular-nums" style={{ color: "var(--text-secondary)" }}>
+          Due {fmt(delivery)}
+        </span>
+      </div>
+    );
+  }
+
+  /* ── Upcoming ── */
+  const minsLeft = Math.floor(diff / 60_000);
+  const isUrgent = minsLeft <= 10;
+
+  if (isUrgent) {
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold text-orange-500 ring-1 ring-orange-400/20">
+          <svg className="h-3 w-3 animate-bounce flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {timeLabel} left
+        </span>
+        <span className="whitespace-nowrap pl-1 text-[10px] tabular-nums" style={{ color: "var(--text-secondary)" }}>
+          Due {fmt(delivery)}
+        </span>
+      </div>
     );
   }
 
   return (
-    <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-      {fmt(delivery)}
-    </span>
+    <div className="flex flex-col gap-0.5">
+      <span className="whitespace-nowrap text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+        {fmt(delivery)}
+      </span>
+      <span className="whitespace-nowrap text-[10px]" style={{ color: "var(--text-secondary)" }}>
+        in {timeLabel}
+      </span>
+    </div>
   );
 }
+
 
 /* ── Currency ── */
 const fmtCurrency = (v: number | string) =>
@@ -389,7 +450,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                   "Delivery Time",
                   "Address",
                   "Status",
-                  "",
+                  "Action",
                 ].map((col, i) => (
                   <th
                     key={i}
@@ -407,7 +468,7 @@ export function BatchTable({ orders }: BatchTableProps) {
               {currentOrders.map((order, idx) => (
                 <tr
                   key={order.id}
-                  className="group/row transition-colors duration-100"
+                  className="group/row cursor-pointer transition-colors duration-100"
                   style={{
                     background: idx % 2 !== 0 ? rowOdd : "transparent",
                     borderBottom: isDark
@@ -423,7 +484,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                   }
                 >
                   {/* Order ID */}
-                  <td className="px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5">
                     <Link href={`/Plasa/active-batches/batch/${order.id}`}>
                       <span
                         className="inline-flex cursor-pointer items-center rounded-lg px-2.5 py-1 text-xs font-bold transition-all hover:shadow-md"
@@ -439,7 +500,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                   </td>
 
                   {/* Type */}
-                  <td className="px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5">
                     <OrderTypePill
                       type={
                         order.orderType === "combined" &&
@@ -451,7 +512,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                   </td>
 
                   {/* Customer */}
-                  <td className="px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
                       {/* Avatar */}
                       <div
@@ -485,14 +546,14 @@ export function BatchTable({ orders }: BatchTableProps) {
                   </td>
 
                   {/* Earnings */}
-                  <td className="px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5">
                     <span className="text-sm font-bold text-emerald-500">
                       {fmtCurrency(order.estimatedEarnings)}
                     </span>
                   </td>
 
                   {/* Delivery Time */}
-                  <td className="px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5">
                     <DeliveryTimeCell
                       deliveryTime={order.deliveryTime}
                       orderType={order.orderType}
@@ -515,13 +576,47 @@ export function BatchTable({ orders }: BatchTableProps) {
                   </td>
 
                   {/* Status */}
-                  <td className="px-5 py-3.5">
+                  <td className="whitespace-nowrap px-5 py-3.5">
                     <StatusPill status={order.status} />
                   </td>
 
                   {/* Actions */}
                   <td className="px-5 py-3.5">
-                    <ActionsDropdown order={order} isDark={isDark} />
+                    <div className="flex items-center gap-2">
+                      {/* Prominent View button — always visible */}
+                      <Link href={`/Plasa/active-batches/batch/${order.id}`}>
+                        <button
+                          className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-95"
+                          style={{
+                            background: "linear-gradient(135deg,#10b981,#059669)",
+                            boxShadow: "0 2px 8px rgba(16,185,129,0.25)",
+                          }}
+                        >
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View
+                        </button>
+                      </Link>
+                      {/* More actions dropdown */}
+                      <ActionsDropdown order={order} isDark={isDark} />
+                    </div>
                   </td>
                 </tr>
               ))}
