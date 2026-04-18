@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, DollarSign, Clock, FileText, Send, Upload } from "lucide-react";
+import { X, DollarSign, Clock, FileText, Send, Upload, Package, Building, CheckCircle, ChevronRight, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { storage } from "../../lib/firebase";
@@ -396,413 +396,233 @@ export function QuoteSubmissionForm({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black bg-opacity-50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-md p-0 sm:items-center sm:p-4"
       onClick={onClose}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100vw",
-        height: "100vh",
-        zIndex: 10000,
-        overflow: "hidden",
-      }}
     >
       <div
-        className="relative flex h-screen w-full flex-col rounded-none bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-xl"
+        className="relative flex h-[98vh] w-full flex-col overflow-hidden rounded-t-[2.5rem] bg-[var(--bg-primary)] shadow-2xl transition-all duration-500 sm:h-auto sm:max-h-[92vh] sm:max-w-3xl sm:rounded-[2rem] sm:border sm:border-[var(--bg-secondary)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
-          <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-8">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Submit Quote
+              <h2 className="text-2xl font-black text-white sm:text-3xl">
+                Submit Formal Bid
               </h2>
               {rfqTitle && (
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  For: {rfqTitle}
+                <p className="mt-1 text-sm font-medium text-white/80">
+                  Ref: {rfqTitle}
                 </p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              className="rounded-full bg-white/10 p-2 text-white transition-all hover:bg-white/20 active:scale-95"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto p-5 sm:p-6">
-            <div className="space-y-6">
-              {/* Quote Amount */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Quote Amount <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--bg-primary)]">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-10">
+            <div className="mx-auto max-w-2xl space-y-10">
+              
+              {/* Core Bid Details */}
+              <section className="space-y-6">
+                <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                  <div className="h-1 w-4 rounded-full bg-green-500"></div>
+                  Financial Proposal
+                </h3>
+                
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                  <div className="sm:col-span-2">
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Bid Amount *</label>
+                    <div className="group relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-green-600">
+                        <DollarSign className="h-5 w-5" />
+                      </div>
                       <input
                         type="number"
                         name="quote_amount"
                         value={formData.quote_amount}
                         onChange={handleInputChange}
-                        step="0.01"
-                        min="0"
                         required
-                        className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-12 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+                        className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-4 pl-12 text-base font-black text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] placeholder:opacity-40 focus:bg-white focus:ring-4 focus:ring-green-500/10 dark:focus:bg-[var(--bg-secondary)]"
                         placeholder="0.00"
                       />
                     </div>
                   </div>
-                  <select
-                    name="currency"
-                    value={formData.currency}
-                    onChange={handleInputChange}
-                    className="rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                  >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="RWF">RWF</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Delivery Time & Validity */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Delivery Time
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <div>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Currency</label>
                     <select
-                      name="delivery_time"
-                      value={formData.delivery_time}
+                      name="currency"
+                      value={formData.currency}
                       onChange={handleInputChange}
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                      className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
                     >
-                      <option value="">Select delivery time</option>
-                      <option value="Same day">Same day</option>
-                      <option value="1-2 business days">
-                        1-2 business days
-                      </option>
-                      <option value="3-5 business days">
-                        3-5 business days
-                      </option>
-                      <option value="1 week">1 week</option>
-                      <option value="2 weeks">2 weeks</option>
-                      <option value="3-4 weeks">3-4 weeks</option>
-                      <option value="1-2 months">1-2 months</option>
-                      <option value="3+ months">3+ months</option>
+                      <option value="RWF">RWF</option>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Quote Validity
-                  </label>
-                  <select
-                    name="validity"
-                    value={formData.validity}
-                    onChange={handleInputChange}
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                  >
-                    <option value="">Select validity period</option>
-                    <option value="7 days">7 days</option>
-                    <option value="14 days">14 days</option>
-                    <option value="30 days">30 days</option>
-                    <option value="45 days">45 days</option>
-                    <option value="60 days">60 days</option>
-                    <option value="90 days">90 days</option>
-                    <option value="6 months">6 months</option>
-                    <option value="1 year">1 year</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* Message */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Message / Proposal
-                </label>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                   <div>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Delivery Timing</label>
+                    <div className="relative">
+                      <Clock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)] opacity-50" />
+                      <select
+                        name="delivery_time"
+                        value={formData.delivery_time}
+                        onChange={handleInputChange}
+                        className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 py-4 pl-12 pr-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
+                      >
+                        <option value="">Standard Lead Time</option>
+                        <option value="Same day">Immediate</option>
+                        <option value="1-2 business days">1-2 Days</option>
+                        <option value="3-5 business days">3-5 Days</option>
+                        <option value="1 week">1 Week</option>
+                        <option value="2 weeks">2 Weeks</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Bid Validity</label>
+                    <select
+                      name="validity"
+                      value={formData.validity}
+                      onChange={handleInputChange}
+                      className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
+                    >
+                      <option value="">Select period</option>
+                      <option value="7 days">7 Days</option>
+                      <option value="30 days">30 Days</option>
+                      <option value="90 days">90 Days</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              {/* Terms Section */}
+              <section className="space-y-6">
+                <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                  <div className="h-1 w-4 rounded-full bg-purple-500"></div>
+                  Commercial Terms
+                </h3>
+                <div className="rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 p-6 sm:p-8">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    {[
+                      { name: "payment_terms", label: "Payment Terms", icon: DollarSign, options: ["COD", "Net 30", "50% Advance"] },
+                      { name: "warranty", label: "Warranty Policy", icon: Clock, options: ["No Warranty", "1 Year", "2 Years", "Lifetime"] },
+                      { name: "delivery_terms", label: "Freight Terms", icon: Package, options: ["EXW", "DDP", "FOB", "Free Delivery"] },
+                      { name: "cancellation_terms", label: "Cancellation Policy", icon: FileText, options: ["None", "24h Notice", "Refundable"] }
+                    ].map((term) => (
+                      <div key={term.name}>
+                        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{term.label}</label>
+                        <select
+                          name={term.name}
+                          value={(formData as any)[term.name]}
+                          onChange={handleInputChange}
+                          className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:bg-white dark:focus:bg-[var(--bg-secondary)]"
+                        >
+                          <option value="">N/A</option>
+                          {term.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* Proposal Text */}
+              <section className="space-y-6">
+                 <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                  <div className="h-1 w-4 rounded-full bg-blue-500"></div>
+                  Message to Client
+                </h3>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                  placeholder="Describe your proposal, capabilities, and why you're the best fit..."
+                  className="w-full rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 p-6 text-base font-medium text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] placeholder:opacity-40 focus:bg-white focus:ring-4 focus:ring-green-500/10 dark:focus:bg-[var(--bg-secondary)]"
+                  placeholder="Detail your competitive advantages and specific approach for this RFQ..."
                 />
-              </div>
+              </section>
 
-              {/* Terms */}
-              <div className="space-y-4 rounded-xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 p-5 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Terms & Conditions
+              {/* Attachments UI */}
+              <section className="space-y-6 pb-10">
+                <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                  <div className="h-1 w-4 rounded-full bg-amber-500"></div>
+                  Supporting Documents
                 </h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Payment Terms
-                    </label>
-                    <select
-                      name="payment_terms"
-                      value={formData.payment_terms}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                    >
-                      <option value="">Select payment terms</option>
-                      <option value="Cash on Delivery (COD)">
-                        Cash on Delivery (COD)
-                      </option>
-                      <option value="Net 7 days">Net 7 days</option>
-                      <option value="Net 15 days">Net 15 days</option>
-                      <option value="Net 30 days">Net 30 days</option>
-                      <option value="Net 45 days">Net 45 days</option>
-                      <option value="Net 60 days">Net 60 days</option>
-                      <option value="50% advance, 50% on delivery">
-                        50% advance, 50% on delivery
-                      </option>
-                      <option value="100% advance payment">
-                        100% advance payment
-                      </option>
-                      <option value="Letter of Credit (L/C)">
-                        Letter of Credit (L/C)
-                      </option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Credit Card">Credit Card</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Warranty
-                    </label>
-                    <select
-                      name="warranty"
-                      value={formData.warranty}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                    >
-                      <option value="">Select warranty</option>
-                      <option value="No warranty">No warranty</option>
-                      <option value="30 days warranty">30 days warranty</option>
-                      <option value="90 days warranty">90 days warranty</option>
-                      <option value="6 months warranty">
-                        6 months warranty
-                      </option>
-                      <option value="1 year warranty">1 year warranty</option>
-                      <option value="2 years warranty">2 years warranty</option>
-                      <option value="3 years warranty">3 years warranty</option>
-                      <option value="5 years warranty">5 years warranty</option>
-                      <option value="Lifetime warranty">
-                        Lifetime warranty
-                      </option>
-                      <option value="Manufacturer warranty">
-                        Manufacturer warranty
-                      </option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Delivery Terms
-                    </label>
-                    <select
-                      name="delivery_terms"
-                      value={formData.delivery_terms}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                    >
-                      <option value="">Select delivery terms</option>
-                      <option value="FOB Origin (Free On Board)">
-                        FOB Origin (Free On Board)
-                      </option>
-                      <option value="FOB Destination">FOB Destination</option>
-                      <option value="CIF (Cost, Insurance, Freight)">
-                        CIF (Cost, Insurance, Freight)
-                      </option>
-                      <option value="EXW (Ex Works)">EXW (Ex Works)</option>
-                      <option value="DDP (Delivered Duty Paid)">
-                        DDP (Delivered Duty Paid)
-                      </option>
-                      <option value="Free delivery">Free delivery</option>
-                      <option value="Customer pickup">Customer pickup</option>
-                      <option value="Delivery charges apply">
-                        Delivery charges apply
-                      </option>
-                      <option value="Free delivery within city">
-                        Free delivery within city
-                      </option>
-                      <option value="Free delivery within 50km">
-                        Free delivery within 50km
-                      </option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Cancellation Terms
-                    </label>
-                    <select
-                      name="cancellation_terms"
-                      value={formData.cancellation_terms}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                    >
-                      <option value="">Select cancellation terms</option>
-                      <option value="No cancellation allowed">
-                        No cancellation allowed
-                      </option>
-                      <option value="24 hours notice required">
-                        24 hours notice required
-                      </option>
-                      <option value="48 hours notice required">
-                        48 hours notice required
-                      </option>
-                      <option value="7 days notice required">
-                        7 days notice required
-                      </option>
-                      <option value="14 days notice required">
-                        14 days notice required
-                      </option>
-                      <option value="30 days notice required">
-                        30 days notice required
-                      </option>
-                      <option value="50% cancellation fee">
-                        50% cancellation fee
-                      </option>
-                      <option value="Full refund if cancelled before delivery">
-                        Full refund if cancelled before delivery
-                      </option>
-                      <option value="Partial refund based on work completed">
-                        Partial refund based on work completed
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Attachments */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Attachments{" "}
-                  <span className="text-xs font-normal text-gray-500">
-                    (Max 3 files)
-                  </span>
-                </label>
-                <div className="space-y-2">
-                  <label
-                    className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-8 transition-all duration-200 ${
-                      attachments.length >= 3
-                        ? "cursor-not-allowed border-gray-300 bg-gray-100 opacity-50 dark:border-gray-600 dark:bg-gray-800"
-                        : "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-sm hover:border-green-400 hover:bg-gradient-to-br hover:from-green-50/50 hover:to-emerald-50/30 hover:shadow-md dark:border-gray-600 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-500"
-                    }`}
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30">
-                      <Upload className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="grid grid-cols-1 gap-4">
+                  <label className={`group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 transition-all active:scale-[0.98] ${
+                    attachments.length >= 3 
+                      ? "border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 opacity-50" 
+                      : "border-green-500/30 bg-green-500/5 hover:border-green-500 hover:bg-green-500/10"
+                  }`}>
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                       <Upload className="h-6 w-6" />
                     </div>
-                    <div className="text-center">
-                      <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {attachments.length >= 3
-                          ? "Maximum 3 attachments reached"
-                          : `Click to upload files (${
-                              3 - attachments.length
-                            } slot${
-                              3 - attachments.length > 1 ? "s" : ""
-                            } remaining)`}
-                      </span>
-                    </div>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                      className="hidden"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                      disabled={attachments.length >= 3}
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Max 1.5MB per file, 4MB total. Images will be
-                      automatically compressed. PDFs and other documents must be
-                      under 1.5MB.
-                    </p>
+                    <span className="text-sm font-black text-[var(--text-primary)]">
+                       {attachments.length >= 3 ? "Slot Limit Reached" : "Drop Proposals Here"}
+                    </span>
+                    <span className="mt-1 text-xs font-bold text-[var(--text-secondary)] opacity-60">
+                       Max 3 files (PDF, JPG, PNG)
+                    </span>
+                    <input type="file" multiple onChange={handleFileChange} className="hidden" disabled={attachments.length >= 3} />
                   </label>
+
                   {attachments.length > 0 && (
-                    <div className="space-y-2">
-                      {attachments.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-700 dark:hover:border-green-600"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30">
-                              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <div className="space-y-3">
+                       {attachments.map((file, i) => (
+                         <div key={i} className="flex items-center justify-between rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 p-4 transition-all hover:bg-[var(--bg-secondary)]/20">
+                            <div className="flex items-center gap-3">
+                               <FileText className="h-5 w-5 text-blue-500" />
+                               <div>
+                                  <p className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-sm font-black text-[var(--text-primary)]">{file.name}</p>
+                                  <p className="text-[10px] font-bold text-[var(--text-secondary)]">{(file.size/1024).toFixed(0)} KB</p>
+                               </div>
                             </div>
-                            <div>
-                              <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                                {file.name}
-                              </span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {(file.size / 1024).toFixed(2)} KB
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
-                        </div>
-                      ))}
+                            <button onClick={() => removeAttachment(i)} className="rounded-xl bg-red-500/10 p-2 text-red-500 transition-all hover:bg-red-500 hover:text-white">
+                               <X className="h-4 w-4" />
+                            </button>
+                         </div>
+                       ))}
                     </div>
                   )}
                 </div>
-              </div>
+              </section>
             </div>
           </div>
 
-          {/* Submit Button - Always visible at bottom */}
-          <div className="flex-shrink-0 border-t-2 border-gray-200 bg-white px-5 py-4 shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:mt-6 sm:border-t-0 sm:bg-transparent sm:px-6 sm:py-0 sm:shadow-none">
-            <div className="flex gap-3 sm:mt-0">
+          {/* Glowing Sticky Footer Actions */}
+          <div className="flex-shrink-0 border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 sm:px-10">
+            <div className="mx-auto flex max-w-2xl flex-col gap-4 sm:flex-row">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:py-2.5"
+                className="flex-1 rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-8 py-4 text-sm font-black text-[var(--text-primary)] transition-all hover:bg-[var(--bg-secondary)]"
               >
-                Cancel
+                Discard
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5"
+                className="group relative flex-[2] overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-4 text-sm font-black text-white shadow-xl shadow-green-500/30 transition-all active:scale-95 disabled:opacity-50"
                 style={{ color: "#ffffff" }}
               >
-                {isSubmitting ? (
-                  <>
-                    <div
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-                      style={{
-                        borderColor: "#ffffff",
-                        borderTopColor: "transparent",
-                      }}
-                    ></div>
-                    <span style={{ color: "#ffffff" }}>Submitting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send
-                      className="h-4 w-4"
-                      style={{ color: "#ffffff", stroke: "#ffffff" }}
-                    />
-                    <span style={{ color: "#ffffff" }}>Submit Quote</span>
-                  </>
-                )}
+                <div className="relative z-10 flex items-center justify-center gap-2">
+                  {isSubmitting ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : <Send className="h-4 w-4" />}
+                  <span style={{ color: "#ffffff" }}>{isSubmitting ? "Processing Bid..." : "Submit Formal Bid"}</span>
+                </div>
               </button>
             </div>
           </div>
@@ -811,3 +631,4 @@ export function QuoteSubmissionForm({
     </div>
   );
 }
+
