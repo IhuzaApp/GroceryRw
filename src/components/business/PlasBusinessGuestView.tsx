@@ -30,14 +30,25 @@ export default function PlasBusinessGuestView({
   const router = useRouter();
   const { theme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInternalModalOpen, setIsInternalModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"services" | "rfqs">("services");
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleModalEvent = (e: any) => {
+      setIsInternalModalOpen(e.detail);
+    };
+    window.addEventListener("business-modal-toggle", handleModalEvent);
+    return () => window.removeEventListener("business-modal-toggle", handleModalEvent);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const isAnyModalOpen = isModalOpen || isInternalModalOpen;
 
   const handleGuestAction = () => {
     setIsModalOpen(true);
@@ -75,9 +86,11 @@ export default function PlasBusinessGuestView({
               </span>
             </h1>
             
-            <p className="max-w-xl text-xl font-medium leading-relaxed text-[var(--text-secondary)] opacity-80">
-              A comprehensive ecosystem designed to bridge the gap between Rwandan enterprises and global standards. Discovery, trade, and management in one seamless interface.
-            </p>
+            {!isAnyModalOpen && (
+              <p className="max-w-xl text-xl font-medium leading-relaxed text-[var(--text-secondary)] opacity-80 transition-opacity duration-300">
+                A comprehensive ecosystem designed to bridge the gap between Rwandan enterprises and global standards. Discovery, trade, and management in one seamless interface.
+              </p>
+            )}
 
             <div className="flex flex-wrap gap-6 pt-6">
                <button 

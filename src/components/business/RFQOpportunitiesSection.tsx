@@ -58,6 +58,11 @@ export function RFQOpportunitiesSection({
   );
 
   useEffect(() => {
+    const anyOpen = isQuoteModalOpen || isQuoteFormOpen || isQuoteDetailsOpen;
+    window.dispatchEvent(new CustomEvent("business-modal-toggle", { detail: anyOpen }));
+  }, [isQuoteModalOpen, isQuoteFormOpen, isQuoteDetailsOpen]);
+
+  useEffect(() => {
     fetchRFQOpportunities();
   }, []);
 
@@ -557,9 +562,9 @@ export function RFQOpportunitiesSection({
 
       {/* RFQ Details Modal */}
       {isQuoteModalOpen && selectedRFQ && (
-        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-md p-0 sm:items-center sm:p-4">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]">
           <div 
-            className="relative flex h-[98vh] w-full flex-col overflow-hidden rounded-t-[2.5rem] bg-[var(--bg-primary)] shadow-2xl transition-all duration-500 sm:h-auto sm:max-h-[90vh] sm:max-w-5xl sm:rounded-[2rem] sm:border sm:border-[var(--bg-secondary)]"
+            className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Dynamic Modal Header */}

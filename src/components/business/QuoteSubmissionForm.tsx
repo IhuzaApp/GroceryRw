@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { X, DollarSign, Clock, FileText, Send, Upload, Package, Building, CheckCircle, ChevronRight, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
-import { storage } from "../../lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 interface QuoteSubmissionFormProps {
   isOpen: boolean;
@@ -314,10 +313,8 @@ export function QuoteSubmissionForm({
         for (const file of attachments) {
           try {
             const fileName = `${timestamp}_${file.name}`;
-            const storagePath = `plasbusiness/${bNameSlug}/quotes/${rfqId}/${fileName}`;
-            const storageRef = ref(storage!, storagePath);
-            await uploadBytes(storageRef, file);
-            const downloadUrl = await getDownloadURL(storageRef);
+            const storagePath = `rfq/${bNameSlug}/quotes/${fileName}`;
+            const downloadUrl = await uploadToFirebase(file, storagePath);
             uploadedUrls.push(downloadUrl);
           } catch (uploadError) {
             console.error(`Error uploading ${file.name}:`, uploadError);
@@ -396,11 +393,11 @@ export function QuoteSubmissionForm({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-md p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]"
       onClick={onClose}
     >
       <div
-        className="relative flex h-[98vh] w-full flex-col overflow-hidden rounded-t-[2.5rem] bg-[var(--bg-primary)] shadow-2xl transition-all duration-500 sm:h-auto sm:max-h-[92vh] sm:max-w-3xl sm:rounded-[2rem] sm:border sm:border-[var(--bg-secondary)]"
+        className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

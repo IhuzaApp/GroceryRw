@@ -41,6 +41,10 @@ export function ServicesSection({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    window.dispatchEvent(new CustomEvent("business-modal-toggle", { detail: isServiceModalOpen }));
+  }, [isServiceModalOpen]);
+
+  useEffect(() => {
     fetchServices();
   }, []);
 
@@ -282,9 +286,9 @@ export function ServicesSection({
 
       {/* Service Details Modal */}
       {isServiceModalOpen && selectedService && (
-        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-md p-0 sm:items-center sm:p-4">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]">
           <div 
-            className="relative flex max-h-[96vh] w-full flex-col overflow-hidden rounded-t-[2.5rem] bg-[var(--bg-primary)] shadow-2xl transition-all duration-500 sm:max-w-2xl sm:rounded-[2rem] sm:border sm:border-[var(--bg-secondary)]"
+            className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -310,8 +314,8 @@ export function ServicesSection({
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">
-              <div className="space-y-8 p-6 sm:p-8">
+            <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6 sm:p-10">
+              <div className="mx-auto max-w-4xl space-y-8">
                 
                 {/* Provider Card */}
                 <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 p-5">

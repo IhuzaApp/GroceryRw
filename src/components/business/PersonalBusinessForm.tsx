@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import CameraCapture from "../ui/CameraCapture";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 interface PersonalBusinessFormProps {
   onBack: () => void;
@@ -96,6 +97,29 @@ export default function PersonalBusinessForm({
     setLoading(true);
 
     try {
+      // Slugify business/brand name for storage path
+      const slugify = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      const bNameSlug = slugify(businessName);
+      const timestamp = Date.now();
+
+      // 1. Upload Face Photo
+      let faceUrl = faceImage;
+      if (typeof faceImage === "string" && faceImage.startsWith("data:")) {
+        const path = `businessAccount/${bNameSlug}/face_photo_${timestamp}.png`;
+        faceUrl = await uploadToFirebase(faceImage, path);
+      }
+
+      // 2. Upload ID Image
+      let idUrl = idImage;
+      if (typeof idImage === "string" && idImage.startsWith("data:")) {
+        const path = `businessAccount/${bNameSlug}/id_image_${timestamp}.png`;
+        idUrl = await uploadToFirebase(idImage, path);
+      }
+
       const response = await fetch("/api/mutations/create-business-account", {
         method: "POST",
         headers: {
@@ -104,8 +128,8 @@ export default function PersonalBusinessForm({
         body: JSON.stringify({
           account_type: "personal",
           business_name: businessName.trim(),
-          face_image: faceImage,
-          id_image: idImage,
+          face_image: faceUrl,
+          id_image: idUrl,
           business_location: businessLocation.trim(),
         }),
       });

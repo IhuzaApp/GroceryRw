@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import rfqTermsOptions from "../../lib/rfqTermsOptions.json";
-import { storage } from "../../lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 interface CreateRFQFormProps {
   isOpen: boolean;
@@ -226,10 +225,8 @@ export function CreateRFQForm({
         for (const file of formData.attachments) {
           try {
             const fileName = `${timestamp}_${file.name}`;
-            const storagePath = `plasbusiness/${bNameSlug}/rfqs/${rfqTitleSlug}/${fileName}`;
-            const storageRef = ref(storage!, storagePath);
-            await uploadBytes(storageRef, file);
-            const downloadUrl = await getDownloadURL(storageRef);
+            const storagePath = `rfq/${bNameSlug}/${rfqTitleSlug}/${fileName}`;
+            const downloadUrl = await uploadToFirebase(file, storagePath);
             uploadedUrls.push(downloadUrl);
           } catch (uploadError) {
             console.error(`Error uploading ${file.name}:`, uploadError);
