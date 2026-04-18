@@ -17,11 +17,28 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const { data: session, status } = useSession();
   const { theme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const [isOnline, setIsOnline] = useState(false);
+
+  // Initialize collapse state from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("shopper_sidebar_collapsed");
+    if (stored !== null) {
+      setIsSidebarCollapsed(stored === "true");
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(prev => {
+      const newState = !prev;
+      localStorage.setItem("shopper_sidebar_collapsed", String(newState));
+      return newState;
+    });
+  };
 
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -271,13 +288,13 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
       <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]">
-        <ShopperSidebar />
+        <ShopperSidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
         <main
-          className={`relative flex-1 overflow-y-auto transition-colors duration-200 ${
+          className={`relative flex-1 overflow-y-auto transition-all duration-300 ${
             theme === "dark"
               ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
               : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-4 pb-28" : "md:ml-64 p-6"}`}
+          } ${isMobile ? "p-4 pb-28" : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`}`}
         >
           <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
         </main>
