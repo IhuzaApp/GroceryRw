@@ -216,9 +216,8 @@ export function ResponsiveBatchView({
               <div key={day} className="mb-6">
                 {/* Day Header */}
                 <h2
-                  className={`mb-4 text-lg font-bold ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
+                  className="mb-4 text-lg font-bold"
+                  style={{ color: "var(--text-primary)" }}
                 >
                   {day}
                 </h2>
@@ -241,40 +240,36 @@ export function ResponsiveBatchView({
       {/* Empty State */}
       {!isLoading && filteredOrders.length === 0 && (
         <div
-          className={`rounded-xl border p-8 text-center ${
-            theme === "dark"
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
-          }`}
+          className="rounded-2xl border p-8 text-center"
+          style={{
+            background: "var(--bg-primary)",
+            borderColor: "var(--bg-secondary)",
+          }}
         >
           <div
-            className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-            }`}
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+            style={{ background: "var(--bg-secondary)" }}
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
-              className={`h-8 w-8 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
+              strokeWidth="1.5"
+              className="h-8 w-8"
+              style={{ color: "var(--text-secondary)" }}
             >
               <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
           <p
-            className={`mb-2 text-lg font-bold sm:text-xl ${
-              theme === "dark" ? "text-gray-100" : "text-gray-900"
-            }`}
+            className="mb-2 text-lg font-bold sm:text-xl"
+            style={{ color: "var(--text-primary)" }}
           >
             No Batches Found
           </p>
           <p
-            className={`text-sm sm:text-base ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className="text-sm sm:text-base"
+            style={{ color: "var(--text-secondary)" }}
           >
             No batches match your current filters.
           </p>

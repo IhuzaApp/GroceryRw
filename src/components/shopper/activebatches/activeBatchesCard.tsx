@@ -273,11 +273,7 @@ export default function ActiveBatches({
 
   return (
     <div
-      className={`min-h-screen ${
-        theme === "dark"
-          ? "bg-gray-900 text-gray-100"
-          : "bg-gray-50 text-gray-900"
-      } ${isMobile ? "pb-16" : ""}`}
+      className={`min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] ${isMobile ? "pb-16" : ""}`}
     >
       {/* Main Content */}
       <main className="mx-auto w-full max-w-[1920px] px-3 py-3 sm:px-6 sm:py-6">
@@ -286,11 +282,7 @@ export default function ActiveBatches({
           <div className="mb-4">
             {/* Header with Title and Profile Icon */}
             <div className="mb-4 flex items-center justify-between">
-              <h1
-                className={`text-2xl font-bold ${
-                  theme === "dark" ? "text-gray-100" : "text-gray-900"
-                }`}
-              >
+              <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                 Active Batches
               </h1>
             </div>
@@ -303,17 +295,11 @@ export default function ActiveBatches({
                   placeholder="Search batches..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full rounded-xl border-2 py-3.5 pl-12 pr-4 text-sm font-medium transition-all duration-200 ${
-                    theme === "dark"
-                      ? "focus:bg-gray-750 border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  }`}
+                  className="w-full rounded-xl border border-transparent dark:border-white/5 bg-[var(--bg-secondary)] py-3.5 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] placeholder-[var(--text-secondary)] shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
                   <svg
-                    className={`h-5 w-5 ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-400"
-                    }`}
+                    className="h-5 w-5 text-[var(--text-secondary)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -332,11 +318,9 @@ export default function ActiveBatches({
               <button
                 onClick={() => refetchActiveBatches(false)}
                 disabled={isRefreshing}
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-all duration-200 ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800 text-gray-200 hover:border-gray-600 hover:bg-gray-700 active:bg-gray-600"
-                    : "border-gray-200 bg-white text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100"
-                } ${isRefreshing ? "cursor-not-allowed opacity-50" : ""}`}
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-sm transition-all duration-300 hover:shadow-md active:scale-90 ${
+                  isRefreshing ? "cursor-not-allowed opacity-50" : ""
+                }`}
                 title="Refresh batches"
               >
                 <svg
@@ -360,11 +344,7 @@ export default function ActiveBatches({
         {/* Page Title - Desktop Only */}
         {!isMobile && (
           <div className="mb-4">
-            <p
-              className={`text-xl font-bold sm:text-2xl ${
-                theme === "dark" ? "text-gray-100" : "text-gray-900"
-              }`}
-            >
+            <p className="text-xl font-bold sm:text-2xl text-[var(--text-primary)]">
               Active Batches
             </p>
           </div>
@@ -442,40 +422,28 @@ export default function ActiveBatches({
         {/* Show "No Active Orders" when fetch is successful but no data */}
         {!isLoading && fetchSuccess && activeOrders.length === 0 && (
           <div
-            className={`rounded-xl border p-8 text-center ${
-              theme === "dark"
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
+            className="rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)]/80 backdrop-blur-xl p-8 text-center shadow-sm"
           >
             <div
-              className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-              }`}
+              className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bg-secondary)]"
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className={`h-8 w-8 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                className="h-8 w-8 text-[var(--text-secondary)]"
               >
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
             <p
-              className={`mb-2 text-lg font-bold sm:text-xl ${
-                theme === "dark" ? "text-gray-100" : "text-gray-900"
-              }`}
+              className="mb-2 text-lg font-bold sm:text-xl text-[var(--text-primary)]"
             >
               No Active Orders
             </p>
             <p
-              className={`mb-4 text-sm sm:text-base ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+              className="mb-4 text-sm sm:text-base text-[var(--text-secondary)]"
             >
               You don&apos;t have any active orders assigned to you at the
               moment. This includes orders in any state except
@@ -494,11 +462,7 @@ export default function ActiveBatches({
         {/* Show error state when fetch fails */}
         {!isLoading && !fetchSuccess && fetchAttempted && (
           <div
-            className={`rounded-xl border p-8 text-center ${
-              theme === "dark"
-                ? "border-red-700 bg-red-900/20"
-                : "border-red-200 bg-red-50"
-            }`}
+            className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center backdrop-blur-xl"
           >
             <div
               className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
@@ -544,11 +508,7 @@ export default function ActiveBatches({
               </button>
               <Link href="/Plasa">
                 <button
-                  className={`rounded-lg border px-4 py-2 font-medium transition-colors ${
-                    theme === "dark"
-                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className="rounded-lg border border-[var(--bg-secondary)] px-4 py-2 font-medium transition-colors text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                 >
                   Return to Dashboard
                 </button>
