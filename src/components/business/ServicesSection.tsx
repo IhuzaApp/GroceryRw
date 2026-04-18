@@ -22,9 +22,15 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface ServicesSectionProps {
   onRequestQuotation?: (serviceId: string) => void;
+  guestMode?: boolean;
+  onGuestAction?: () => void;
 }
 
-export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
+export function ServicesSection({
+  onRequestQuotation,
+  guestMode,
+  onGuestAction,
+}: ServicesSectionProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -102,48 +108,55 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-            Available Services
-          </h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Browse and request quotations from service providers
-          </p>
-        </div>
-      </div>
+    <div className="space-y-8">
+      {/* Header & Filter Card */}
+      <div className="rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-xl transition-all duration-500 hover:shadow-2xl">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
+              Available Services
+            </h2>
+            <p className="text-sm font-medium text-[var(--text-secondary)] opacity-60">
+              Browse and request quotations from verified service providers
+            </p>
+          </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:w-1/2">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+              />
+            </div>
+          </div>
         </div>
-        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
-                selectedCategory === category
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
-                  : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              }`}
-              style={
-                selectedCategory === category ? { color: "#ffffff" } : undefined
-              }
-            >
-              {category === "all" ? "All Categories" : category}
-            </button>
-          ))}
+
+        {/* Category Pill System */}
+        <div className="mt-8">
+          <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`group relative flex items-center justify-center whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-black transition-all duration-300 ${
+                  selectedCategory === category
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {selectedCategory === category && (
+                  <div className="absolute inset-0 rounded-xl bg-green-500/10 ring-1 ring-green-500/20"></div>
+                )}
+                <span className="relative z-10">
+                  {category === "all" ? "All Ecosystem" : category}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -191,7 +204,7 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
             return (
               <div
                 key={serviceId}
-                className="group relative rounded-xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+                className="group relative rounded-2xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
               >
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex-1">
@@ -240,10 +253,11 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     View Details
                   </button>
                   <button
-                    onClick={() => handleRequestQuotation(serviceId)}
+                    onClick={() => guestMode ? onGuestAction?.() : handleRequestQuotation(serviceId)}
                     className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
+                    style={{ color: "#ffffff" }}
                   >
-                    Request Quote
+                    {guestMode ? "Sign in to Request" : "Request Quote"}
                   </button>
                 </div>
               </div>
@@ -416,22 +430,22 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
 
               <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
                 <button
-                  onClick={() => handleContactProvider(selectedService)}
+                  onClick={() => guestMode ? onGuestAction?.() : handleContactProvider(selectedService)}
                   className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   <MessageSquare className="mr-1 inline h-4 w-4" />
-                  Contact Provider
+                  {guestMode ? "Sign in to Contact" : "Contact Provider"}
                 </button>
                 <button
-                  onClick={() => handleRequestQuotation(selectedService.id)}
+                  onClick={() => guestMode ? onGuestAction?.() : handleRequestQuotation(selectedService.id)}
                   className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600"
                   style={{ color: "#ffffff" }}
                 >
-                  <span style={{ color: "#ffffff" }}>Request Quotation</span>
-                  <ArrowRight
+                  <span style={{ color: "#ffffff" }}>{guestMode ? "Sign in to Request" : "Request Quotation"}</span>
+                  {!guestMode && <ArrowRight
                     className="ml-1 inline h-4 w-4"
                     style={{ color: "#ffffff" }}
-                  />
+                  />}
                 </button>
               </div>
             </div>

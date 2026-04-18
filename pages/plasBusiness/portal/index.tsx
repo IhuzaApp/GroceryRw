@@ -28,7 +28,7 @@ import { ProductsBidsSection } from "../../../src/components/business/ProductsBi
 import { RFQOpportunitiesSection } from "../../../src/components/business/RFQOpportunitiesSection";
 import { CreateRFQForm } from "../../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../../src/components/business/ContractsManagement";
-import PlasBusinessOnboarding from "../../../src/components/business/PlasBusinessOnboarding";
+import PlasBusinessGuestView from "../../../src/components/business/PlasBusinessGuestView";
 import { BusinessOverview } from "../../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../../src/components/business/ServicesSection";
 import { StoresSection } from "../../../src/components/business/StoresSection";
@@ -53,6 +53,7 @@ export default function PlasBusinessPage() {
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
+
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function PlasBusinessPage() {
   };
 
   // Show loading while auth is being determined
-  if (!authReady || checkingAccount) {
+  if (!authReady || (isLoggedIn && checkingAccount)) {
     return (
       <RootLayout>
         <div className="min-h-screen bg-[var(--bg-primary)] md:ml-16">
@@ -106,16 +107,22 @@ export default function PlasBusinessPage() {
     );
   }
 
-  // Don't render for shoppers
-  if (isLoggedIn && role === "shopper") {
+  // Redirect to login if not authenticated
+  if (!isLoggedIn) {
+    router.replace("/Auth/Login");
     return null;
   }
 
-  // Show onboarding if user doesn't have business account
+  // Don't render for shoppers
+  if (role === "shopper") {
+    return null;
+  }
+
+  // Show guest view if user doesn't have business account
   if (!hasBusinessAccount) {
     return (
       <RootLayout>
-        <PlasBusinessOnboarding onAccountCreated={handleAccountCreated} />
+        <PlasBusinessGuestView onAccountCreated={handleAccountCreated} />
       </RootLayout>
     );
   }

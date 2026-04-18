@@ -16,6 +16,8 @@ import {
   X,
   Building,
   Package,
+  TrendingUp,
+  Download,
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import toast from "react-hot-toast";
@@ -25,11 +27,15 @@ import { SubmittedQuoteDetails } from "./SubmittedQuoteDetails";
 interface RFQOpportunitiesSectionProps {
   onMessageCustomer?: (customerId: string) => void;
   businessAccount?: any;
+  guestMode?: boolean;
+  onGuestAction?: () => void;
 }
 
 export function RFQOpportunitiesSection({
   onMessageCustomer,
   businessAccount,
+  guestMode,
+  onGuestAction,
 }: RFQOpportunitiesSectionProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -334,41 +340,40 @@ export function RFQOpportunitiesSection({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
-          RFQ Opportunities
-        </h3>
-        <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-          {filteredRFQs.length}{" "}
-          {filteredRFQs.length === 1 ? "opportunity" : "opportunities"} found
-        </div>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search RFQ opportunities..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            />
+    <div className="space-y-8">
+      {/* Header & Filter Card */}
+      <div className="rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-xl transition-all duration-500 hover:shadow-2xl">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
+            <h3 className="text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
+              RFQ Opportunities
+            </h3>
+            <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] opacity-60">
+              <TrendingUp className="h-4 w-4 text-green-500" />
+              <span>{filteredRFQs.length} active opportunities found</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400" />
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:w-1/2">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search RFQs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+              />
+            </div>
+            
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-lg border border-gray-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:border-transparent focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
             >
               {categories.map((category) => (
                 <option key={category} value={category}>
-                  {category === "all" ? "All Categories" : category}
+                  {category === "all" ? "All Sectors" : category}
                 </option>
               ))}
             </select>
@@ -394,7 +399,7 @@ export function RFQOpportunitiesSection({
           filteredRFQs.map((rfq) => (
             <div
               key={rfq.id}
-              className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
             >
               <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 flex-1">
@@ -469,7 +474,7 @@ export function RFQOpportunitiesSection({
                 </div>
 
                 <button
-                  onClick={() => handleToggleInterest(rfq.id)}
+                  onClick={() => guestMode ? onGuestAction?.() : handleToggleInterest(rfq.id)}
                   className={`w-full rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-95 sm:w-auto sm:px-4 sm:py-2 sm:text-sm ${
                     rfq.isInterested
                       ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg hover:shadow-green-500/40"
@@ -477,7 +482,7 @@ export function RFQOpportunitiesSection({
                   }`}
                   style={rfq.isInterested ? { color: "#ffffff" } : undefined}
                 >
-                  {rfq.isInterested ? "✓ Interested" : "Mark Interest"}
+                  {guestMode ? "Sign in to Interest" : rfq.isInterested ? "✓ Interested" : "Mark Interest"}
                 </button>
               </div>
 
@@ -502,7 +507,7 @@ export function RFQOpportunitiesSection({
                   </span>
                 </button>
                 <button
-                  onClick={() => handleShareQuote(rfq)}
+                  onClick={() => guestMode ? onGuestAction?.() : handleShareQuote(rfq)}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm ${
                     submittedQuotes[rfq.id]
                       ? "bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40"
@@ -515,7 +520,9 @@ export function RFQOpportunitiesSection({
                     style={{ color: "#ffffff" }}
                   />
                   <span style={{ color: "#ffffff" }}>
-                    {submittedQuotes[rfq.id] ? (
+                    {guestMode ? (
+                      "Sign in to Submit"
+                    ) : submittedQuotes[rfq.id] ? (
                       <>
                         <span className="hidden sm:inline">View Quote</span>
                         <span className="sm:hidden">View Quote</span>
@@ -529,7 +536,7 @@ export function RFQOpportunitiesSection({
                   </span>
                 </button>
                 <button
-                  onClick={() => handleMessageCustomer(rfq.id)}
+                  onClick={() => guestMode ? onGuestAction?.() : handleMessageCustomer(rfq.id)}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-purple-500/30 transition-all duration-200 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
                   style={{ color: "#ffffff" }}
                 >
@@ -537,7 +544,7 @@ export function RFQOpportunitiesSection({
                     className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                     style={{ color: "#ffffff" }}
                   />
-                  <span style={{ color: "#ffffff" }}>Message</span>
+                  <span style={{ color: "#ffffff" }}>{guestMode ? "Sign in to Message" : "Message"}</span>
                 </button>
               </div>
             </div>
