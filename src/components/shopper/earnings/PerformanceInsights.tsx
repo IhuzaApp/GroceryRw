@@ -88,14 +88,20 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           const percentage = metric.max === 5 ? (metric.value / metric.max) * 100 : metric.value;
+          
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig = {
+            amber: isDark ? "bg-amber-500/10 text-amber-500" : "bg-amber-50 text-amber-600",
+            blue: isDark ? "bg-blue-500/10 text-blue-500" : "bg-blue-50 text-blue-600",
+            emerald: isDark ? "bg-emerald-500/10 text-emerald-500" : "bg-emerald-50 text-emerald-600",
+            indigo: isDark ? "bg-indigo-500/10 text-indigo-500" : "bg-indigo-50 text-indigo-600"
+          }[metric.accent as 'amber' | 'blue' | 'emerald' | 'indigo'] || (isDark ? "bg-gray-500/10 text-gray-400" : "bg-gray-50 text-gray-600");
 
           return (
             <div key={index} className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
-                    isDark ? `bg-${metric.accent}-500/10 ${metric.color}` : `bg-${metric.accent}-50 ${metric.color}`
-                  }`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${accentConfig}`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>

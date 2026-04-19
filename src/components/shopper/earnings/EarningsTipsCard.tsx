@@ -91,6 +91,16 @@ const EarningsTipsCard: React.FC<EarningsTipsCardProps> = ({
       <div className="space-y-4">
         {tips.map((tip, index) => {
           const Icon = tip.icon;
+          
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig = {
+            amber: isDark ? "bg-amber-500/10 text-amber-500" : "bg-amber-50 text-amber-600",
+            blue: isDark ? "bg-blue-500/10 text-blue-500" : "bg-blue-50 text-blue-600",
+            orange: isDark ? "bg-orange-500/10 text-orange-500" : "bg-orange-50 text-orange-600",
+            rose: isDark ? "bg-rose-500/10 text-rose-500" : "bg-rose-50 text-rose-600",
+            indigo: isDark ? "bg-indigo-500/10 text-indigo-500" : "bg-indigo-50 text-indigo-600"
+          }[tip.accent as 'amber' | 'blue' | 'orange' | 'rose' | 'indigo'] || (isDark ? "bg-gray-500/10 text-gray-400" : "bg-gray-50 text-gray-600");
+
           return (
             <div
               key={index}
@@ -98,9 +108,7 @@ const EarningsTipsCard: React.FC<EarningsTipsCardProps> = ({
                 isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-black/5 border-transparent hover:bg-black/[0.08]"
               }`}
             >
-              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
-                isDark ? `bg-${tip.accent}-500/10 ${tip.color}` : `bg-${tip.accent}-50 ${tip.color}`
-              }`}>
+              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${accentConfig}`}>
                 <Icon className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">

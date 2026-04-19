@@ -546,29 +546,31 @@ const EarningsPage: React.FC = () => {
             {/* Achievements Tab Content */}
             {activeTab === "achievements" && (
               <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
-                {/* Left Column - Working Towards Achievements */}
-                <div className="space-y-6">
-                  {/* Desktop View */}
-                  <div className="hidden lg:block">
-                    <AchievementBadges />
+                {/* Column 1 - Achievements & Pulse */}
+                <div className="space-y-10">
+                  <div className="space-y-6">
+                    {/* Desktop View */}
+                    <div className="hidden lg:block">
+                      <AchievementBadges />
+                    </div>
+                    {/* Mobile View */}
+                    <div className="block lg:hidden">
+                      <AchievementBadgesMobile />
+                    </div>
                   </div>
-                  {/* Mobile View */}
-                  <div className="block lg:hidden">
-                    <AchievementBadgesMobile />
-                  </div>
-                </div>
 
-                {/* Right Column - Insights & Tips */}
-                <div className="space-y-6">
-                  {/* Performance Insights */}
+                  {/* Performance Insights (Pulse) moved here for balance */}
                   {earningsStats.performance && (
                     <PerformanceInsights
                       performance={earningsStats.performance}
                       isLoading={loading}
                     />
                   )}
+                </div>
 
-                  {/* Delivery Stats */}
+                {/* Column 2 - Logistics, Milestones & Growth */}
+                <div className="space-y-10">
+                  {/* Delivery Stats (Logistics) */}
                   <DeliveryStatsCard
                     stats={{
                       totalKilometers: 0,
@@ -579,7 +581,7 @@ const EarningsPage: React.FC = () => {
                     isLoading={loading}
                   />
 
-                  {/* Earnings Goals */}
+                  {/* Earnings Goals (Milestones) */}
                   {earningsStats.goals && (
                     <EarningsGoalsProgress
                       goals={earningsStats.goals}
@@ -587,7 +589,7 @@ const EarningsPage: React.FC = () => {
                     />
                   )}
 
-                  {/* Tips to Boost Earnings */}
+                  {/* Tips to Boost Earnings (Growth OS) */}
                   <EarningsTipsCard
                     performance={earningsStats.performance}
                     completedOrders={earningsStats.completedOrders}

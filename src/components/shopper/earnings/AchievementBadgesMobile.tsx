@@ -35,11 +35,36 @@ const TierBadge: React.FC<{ level: string; type: string; isAchieved: boolean }> 
 
   const getTierConfig = (lvl: string) => {
     switch (lvl.toLowerCase()) {
-      case "bronze": return { color: "from-orange-400 to-orange-700", glow: "shadow-orange-500/20" };
-      case "silver": return { color: "from-slate-300 to-slate-500", glow: "shadow-slate-400/20" };
-      case "gold": return { color: "from-yellow-300 to-yellow-600", glow: "shadow-yellow-500/20" };
-      case "platinum": return { color: "from-cyan-300 to-cyan-500", glow: "shadow-cyan-400/20" };
-      default: return { color: "from-gray-400 to-gray-600", glow: "shadow-gray-400/10" };
+      case "bronze": 
+        return { 
+          color: "from-orange-400 to-orange-700", 
+          glow: "shadow-orange-500/20",
+          text: "text-orange-500"
+        };
+      case "silver": 
+        return { 
+          color: "from-slate-300 to-slate-500", 
+          glow: "shadow-slate-400/20",
+          text: "text-slate-400"
+        };
+      case "gold": 
+        return { 
+          color: "from-yellow-300 to-yellow-600", 
+          glow: "shadow-yellow-500/20",
+          text: "text-yellow-500"
+        };
+      case "platinum": 
+        return { 
+          color: "from-cyan-300 to-cyan-500", 
+          glow: "shadow-cyan-400/20",
+          text: "text-cyan-400"
+        };
+      default: 
+        return { 
+          color: "from-gray-400 to-gray-600", 
+          glow: "shadow-gray-400/10",
+          text: "text-gray-400"
+        };
     }
   };
 
@@ -47,28 +72,26 @@ const TierBadge: React.FC<{ level: string; type: string; isAchieved: boolean }> 
     const size = "h-4 w-4";
     switch (t.toLowerCase()) {
       case "earnings":
-        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
       case "orders":
-        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>;
+        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>;
       case "ratings":
-        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>;
+        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>;
       default:
-        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+        return <svg className={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
     }
   };
 
   const config = getTierConfig(level);
 
   return (
-    <div className={`relative flex h-10 w-10 items-center justify-center transition-all duration-300 ${!isAchieved ? "grayscale" : ""}`}>
+    <div className={`relative flex h-10 w-10 items-center justify-center transition-all duration-300 ${!isAchieved ? "opacity-30 grayscale" : ""}`}>
       <div className={`absolute inset-0 rounded-full bg-gradient-to-br opacity-20 blur-md ${config.color}`} />
       <div className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/20 shadow-lg backdrop-blur-md 
-        ${isDark ? "bg-white/10" : "bg-black/5"} 
-        ${isAchieved ? config.glow : "opacity-30"}`}
+        ${isDark ? "bg-white/10" : "bg-white"} 
+        ${isAchieved ? `${config.glow} ${config.text}` : "text-gray-400"}`}
       >
-        <div className={`bg-gradient-to-br bg-clip-text text-transparent ${config.color}`}>
-          {getIcon(type)}
-        </div>
+        {getIcon(type)}
       </div>
     </div>
   );

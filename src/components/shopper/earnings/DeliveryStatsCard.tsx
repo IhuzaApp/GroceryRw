@@ -74,6 +74,15 @@ const DeliveryStatsCard: React.FC<DeliveryStatsCardProps> = ({
       <div className="grid grid-cols-2 gap-4 text-left">
         {deliveryMetrics.map((metric, index) => {
           const Icon = metric.icon;
+
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig = {
+            blue: isDark ? "bg-blue-500/10 text-blue-500 shadow-blue-500" : "bg-blue-50 text-blue-600 shadow-blue-500",
+            emerald: isDark ? "bg-emerald-500/10 text-emerald-500 shadow-emerald-500" : "bg-emerald-50 text-emerald-600 shadow-emerald-500",
+            orange: isDark ? "bg-orange-500/10 text-orange-500 shadow-orange-500" : "bg-orange-50 text-orange-600 shadow-orange-500",
+            purple: isDark ? "bg-purple-500/10 text-purple-500 shadow-purple-500" : "bg-purple-50 text-purple-600 shadow-purple-500"
+          }[metric.accent as 'blue' | 'emerald' | 'orange' | 'purple'] || (isDark ? "bg-gray-500/10 text-gray-400 shadow-gray-400" : "bg-gray-50 text-gray-600 shadow-gray-400");
+
           return (
             <div
               key={index}
@@ -82,9 +91,7 @@ const DeliveryStatsCard: React.FC<DeliveryStatsCardProps> = ({
               }`}
             >
               <div className="mb-4">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
-                  isDark ? `bg-${metric.accent}-500/10 ${metric.color}` : `bg-${metric.accent}-50 ${metric.color}`
-                }`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${accentConfig.split(' shadow-')[0]}`}>
                   <Icon className="h-5 w-5" />
                 </div>
               </div>
@@ -99,7 +106,7 @@ const DeliveryStatsCard: React.FC<DeliveryStatsCardProps> = ({
               </div>
 
               {/* Individual Glow Decor */}
-              <div className={`absolute -right-4 -bottom-4 h-16 w-16 rounded-full blur-[30px] opacity-10 transition-all duration-500 group-hover:opacity-20 bg-${metric.accent}-500`} />
+              <div className={`absolute -right-4 -bottom-4 h-16 w-16 rounded-full blur-[30px] opacity-10 transition-all duration-500 group-hover:opacity-20 ${accentConfig.split('shadow-')[1] === 'blue-500' ? 'bg-blue-500' : accentConfig.split('shadow-')[1] === 'emerald-500' ? 'bg-emerald-500' : accentConfig.split('shadow-')[1] === 'orange-500' ? 'bg-orange-500' : 'bg-purple-500'}`} />
             </div>
           );
         })}

@@ -69,11 +69,20 @@ const EarningsGoalsProgress: React.FC<EarningsGoalsProgressProps> = ({
           const percentage = Math.min(goal.data.percentage, 100);
           const isComplete = percentage >= 100;
 
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig = {
+            blue: isDark ? "bg-blue-500/10 text-blue-400 bar-blue-500" : "bg-blue-50 text-blue-600 bar-blue-500",
+            emerald: isDark ? "bg-emerald-500/10 text-emerald-400 bar-emerald-500" : "bg-emerald-50 text-emerald-600 bar-emerald-500",
+            indigo: isDark ? "bg-indigo-500/10 text-indigo-400 bar-indigo-500" : "bg-indigo-50 text-indigo-600 bar-indigo-500"
+          }[goal.accent as 'blue' | 'emerald' | 'indigo'] || (isDark ? "bg-gray-500/10 text-gray-400 bar-gray-500" : "bg-gray-50 text-gray-600 bar-gray-500");
+
+          const barColor = accentConfig.includes('bar-blue-500') ? 'bg-blue-500' : accentConfig.includes('bar-emerald-500') ? 'bg-emerald-500' : 'bg-indigo-500';
+
           return (
             <div key={index} className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${isDark ? `bg-${goal.accent}-500/10 text-${goal.accent}-400` : `bg-${goal.accent}-50 text-${goal.accent}-600`}`}>
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${accentConfig.split(' bar-')[0]}`}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{goal.label}</span>
@@ -95,8 +104,7 @@ const EarningsGoalsProgress: React.FC<EarningsGoalsProgressProps> = ({
 
               <div className="relative h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
                 <div
-                  className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)] 
-                    ${goal.accent === 'blue' ? 'bg-blue-500' : goal.accent === 'emerald' ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                  className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)] ${barColor}`}
                   style={{ width: `${percentage}%` }}
                 />
               </div>
