@@ -1,6 +1,13 @@
 import { PindoSMS, SMSPayload } from "pindo-sms";
 
-const pindo = new PindoSMS(process.env.PINDO_API_TOKEN!);
+const pindoToken = process.env.PINDO_API_TOKEN;
+
+if (!pindoToken) {
+  console.warn("PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked.");
+}
+
+// Ensure constructor doesn't throw if token is missing
+const pindo = pindoToken ? new PindoSMS(pindoToken) : null;
 
 const formatPhoneForPindo = (phone: string) => {
   const cleanPhone = phone.replace(/\D/g, "");
@@ -17,6 +24,16 @@ const formatPhoneForPindo = (phone: string) => {
 };
 
 export const sendSMS = async (to: string, text: string) => {
+  if (!pindoToken || !pindo) {
+    console.warn(
+      "[MOCK] SMS sending disabled due to missing PINDO_API_TOKEN. To:",
+      to,
+      "Text:",
+      text
+    );
+    return { status: "mocked" };
+  }
+
   try {
     const formattedTo = formatPhoneForPindo(to);
     const payload: SMSPayload = {
