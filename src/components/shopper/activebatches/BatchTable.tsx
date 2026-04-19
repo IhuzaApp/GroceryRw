@@ -276,12 +276,12 @@ function ActionsDropdown({
   };
 
   const menuBg = isDark
-    ? "bg-[#1a1a1a] border border-white/8 shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
-    : "bg-white border border-black/8 shadow-[0_16px_48px_rgba(0,0,0,0.12)]";
+    ? "bg-[var(--bg-secondary)] border border-white/8 shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
+    : "bg-[var(--bg-secondary)] border border-black/8 shadow-[0_16px_48px_rgba(0,0,0,0.12)]";
 
   const itemCls = isDark
-    ? "text-zinc-200 hover:bg-white/5"
-    : "text-zinc-700 hover:bg-black/5";
+    ? "text-[var(--text-primary)] hover:bg-white/5"
+    : "text-[var(--text-primary)] hover:bg-black/5";
 
   return (
     <div className="relative">
@@ -409,13 +409,14 @@ export function BatchTable({ orders }: BatchTableProps) {
   };
 
   /* Glass surface helpers */
-  const surface = isDark
-    ? { background: "rgba(23,23,23,0.9)", border: "1px solid rgba(255,255,255,0.06)" }
-    : { background: "rgba(255,255,255,0.92)", border: "1px solid rgba(0,0,0,0.06)" };
+  const surface = {
+    background: isDark ? "rgba(23,23,23,0.85)" : "rgba(245,245,245,0.85)", // bg-secondary equivalents
+    border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)"
+  };
 
-  const headerBg = isDark ? "rgba(255,255,255,0.025)" : "rgba(0,0,0,0.02)";
-  const rowOdd   = isDark ? "rgba(255,255,255,0.018)" : "rgba(0,0,0,0.014)";
-  const rowHover = isDark ? "rgba(16,185,129,0.07)" : "rgba(16,185,129,0.055)";
+  const headerBg = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)";
+  const rowOdd   = isDark ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.015)";
+  const rowHover = isDark ? "rgba(16,185,129,0.08)" : "rgba(16,185,129,0.06)";
 
   return (
     <div className="flex flex-col gap-4">

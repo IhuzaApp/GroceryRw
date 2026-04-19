@@ -3,7 +3,8 @@
 import React from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../lib/formatCurrency";
-import { OrderItem } from "../../types/order";
+import { OrderItem } from "../../types";
+import { useTheme } from "../../../context/ThemeContext";
 
 /**
  * OrderItemCard Component
@@ -28,6 +29,9 @@ export default function OrderItemCard({
   onShowProductImage,
   isBusinessOrder = false,
 }: OrderItemCardProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const imgSrc =
     item.product.ProductName?.image ||
     item.product.image ||
@@ -35,19 +39,25 @@ export default function OrderItemCard({
   const productName = item.product.ProductName?.name || "Unknown Product";
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4">
+    <div className={`group flex items-center gap-3 rounded-2xl border transition-all duration-300 p-3 sm:gap-4 sm:p-4 ${
+      isDark 
+        ? "bg-white/5 border-white/5 hover:border-white/10" 
+        : "bg-black/5 border-black/5 hover:border-black/10"
+    }`}>
       {/* Product Image - small, clickable to expand */}
       <button
         type="button"
-        className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 shadow-sm transition-all hover:ring-2 hover:ring-emerald-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-slate-600 sm:h-12 sm:w-12"
+        className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border transition-all duration-300 group-hover:scale-105 ${
+          isDark ? "border-white/10 bg-white/5 shadow-inner" : "border-black/5 bg-black/5"
+        }`}
         onClick={() => onShowProductImage(item)}
         aria-label={`View larger image of ${productName}`}
       >
         <Image
           src={imgSrc}
           alt={productName}
-          width={48}
-          height={48}
+          width={64}
+          height={64}
           className="h-full w-full object-cover"
           unoptimized={typeof imgSrc === "string" && imgSrc.startsWith("data:")}
           onError={(e) => {
@@ -55,77 +65,72 @@ export default function OrderItemCard({
             target.src = "/images/groceryPlaceholder.png";
           }}
         />
+        {item.found && (
+          <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/20 backdrop-blur-[1px]">
+             <svg className="h-6 w-6 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+             </svg>
+          </div>
+        )}
       </button>
 
       {/* Product Details */}
       <div className="min-w-0 flex-1">
-        <p
-          className={`mb-1 font-semibold text-slate-900 dark:text-slate-100 ${
-            isBusinessOrder ? "text-sm sm:text-lg" : "sm:text-base"
-          }`}
-        >
+        <p className={`font-black text-gray-900 dark:text-white uppercase tracking-tight leading-tight truncate ${
+          isBusinessOrder ? "text-sm sm:text-base" : "text-xs sm:text-sm"
+        }`}>
           {productName}
         </p>
-        <p
-          className={`text-slate-500 dark:text-slate-400 ${
-            isBusinessOrder ? "text-xs sm:text-base" : "text-sm"
-          }`}
-        >
-          Quantity: {item.quantity}{" "}
-          {(item.product as any).measurement_unit || "pcs"}
-        </p>
-        <p
-          className={`mt-1 font-semibold text-slate-900 dark:text-slate-100 ${
-            isBusinessOrder ? "text-sm sm:text-base" : "text-sm"
-          }`}
-        >
-          {formatCurrency(item.price * item.quantity)}
-        </p>
-        {item.found &&
-          item.foundQuantity &&
-          item.foundQuantity < item.quantity && (
-            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-              Found: {item.foundQuantity} of {item.quantity}
-            </p>
-          )}
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className={`text-[10px] font-bold uppercase tracking-tight ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            QTY: <span className={isDark ? "text-gray-200" : "text-gray-900"}>{item.quantity} {(item.product as any).measurement_unit || "pcs"}</span>
+          </span>
+          <span className={`text-[10px] font-black uppercase tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+            {formatCurrency(item.price * item.quantity)}
+          </span>
+        </div>
+        
+        {item.found && item.foundQuantity && item.foundQuantity < item.quantity && (
+          <div className="mt-2 flex items-center gap-1.5">
+             <div className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+             <p className="text-[9px] font-black uppercase tracking-widest text-amber-500">
+               Partial: {item.foundQuantity} of {item.quantity}
+             </p>
+          </div>
+        )}
       </div>
 
       {/* Action Button */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {isBatchShopping && (
+      {isBatchShopping && (
+        <div className="flex-shrink-0">
           <button
             onClick={() => onToggleFound(item, !item.found)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold shadow-md transition-all duration-200 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
+            className={`flex h-10 items-center gap-2 rounded-xl px-4 transition-all duration-300 font-black uppercase tracking-widest text-[10px] sm:text-[11px] ${
               item.found
-                ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg dark:from-green-600 dark:to-emerald-600 dark:shadow-green-900/50"
-                : "border border-gray-300 bg-white text-gray-700 shadow-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:shadow-gray-900/50 dark:hover:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600"
+                : isDark
+                  ? "bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white"
+                  : "bg-white border border-gray-200 text-gray-500 hover:border-emerald-500 hover:text-emerald-600 shadow-sm"
             }`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 sm:h-4 sm:w-4"
-            >
-              {item.found ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              )}
-            </svg>
-            <span>{item.found ? "Found" : "Mark Found"}</span>
+            {item.found ? (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="hidden sm:inline">Found</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Find</span>
+              </>
+            )}
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

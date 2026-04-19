@@ -281,9 +281,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
-      className={`h-screen overflow-hidden ${
-        theme === "dark" ? "bg-[var(--bg-primary)]" : "bg-gray-50"
-      }`}
+      className={`h-screen overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300`}
     >
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
@@ -291,10 +289,8 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         <ShopperSidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
         <main
           className={`relative flex-1 overflow-y-auto transition-all duration-300 ${
-            theme === "dark"
-              ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
-              : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-4 pb-28" : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`}`}
+            isMobile ? "p-4 pb-28" : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`
+          }`}
         >
           <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
         </main>

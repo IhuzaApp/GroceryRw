@@ -3,7 +3,8 @@
 import React from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../../lib/formatCurrency";
-import { OrderDetailsType } from "../../types/order";
+import { OrderDetailsType } from "../../types";
+import { useTheme } from "../../../../context/ThemeContext";
 
 interface ShopInfoCardProps {
   order: OrderDetailsType;
@@ -16,290 +17,150 @@ export default function ShopInfoCard({
   uniqueShops,
   onDirectionsClick,
 }: ShopInfoCardProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
-      <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-        <span
-          className={`inline-block rounded-full p-1.5 sm:p-2 ${
-            order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"
-          }`}
-        >
+    <div 
+      className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+        isDark 
+          ? "bg-white/5 border-white/10" 
+          : "bg-black/2 border-black/5"
+      }`}
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
+    >
+      <div className={`flex items-center gap-3 px-5 py-3.5 border-b ${isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-black/5"}`}>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+          order.orderType === "reel" 
+            ? isDark ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-100 text-indigo-600"
+            : isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
+        }`}>
           {order.orderType === "reel" ? (
-            <svg
-              className="h-4 w-4 text-indigo-600 sm:h-5 sm:w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-4.553 2.276A2 2 0 016 17.618V19a2 2 0 002 2h8a2 2 0 002-2v-1.382a2 2 0 00-.447-1.342L15 14z"
-              />
-            </svg>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-4.553 2.276A2 2 0 016 17.618V19a2 2 0 002 2h8a2 2 0 002-2v-1.382a2 2 0 00-.447-1.342L15 14z" /></svg>
           ) : (
-            <svg
-              className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
-              />
-            </svg>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" /></svg>
           )}
-        </span>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-          {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
+        </div>
+        <h2 className="text-[11px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+          {order.orderType === "reel" ? "Reel Details" : "Shop Information"}
         </h2>
       </div>
 
-      {order.orderType === "reel" ? (
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-            <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
-              {order.reel?.video_url ? (
-                <video
-                  src={order.reel.video_url}
-                  className="h-full w-full object-cover"
-                  muted
-                  preload="metadata"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-slate-300">
-                  <svg
-                    className="h-6 w-6 text-slate-400 sm:h-8 sm:w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M14.828 14.828a4 4 0 01-5.656 0" />
-                  </svg>
+      <div className="p-5">
+        {order.orderType === "reel" ? (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <div className={`relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border ${isDark ? "border-white/10 bg-white/5" : "border-black/5 bg-black/5"}`}>
+                {order.reel?.video_url ? (
+                  <video src={order.reel.video_url} className="h-full w-full object-cover" muted preload="metadata" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-gray-400">
+                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" /><path d="M14.828 14.828a4 4 0 01-5.656 0" /></svg>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{order.reel?.title}</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{order.reel?.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-tight uppercase ${isDark ? "bg-white/10 text-gray-300" : "bg-black/5 text-gray-600"}`}>
+                    {order.reel?.type}
+                  </span>
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-tight uppercase ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>
+                    QTY: {order.quantity}
+                  </span>
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-tight uppercase ${isDark ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-50 text-indigo-700"}`}>
+                    {formatCurrency(parseFloat(order.reel?.Price || "0"))}
+                  </span>
                 </div>
-              )}
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                {order.reel?.title}
-              </h3>
-              <p className="mb-2 text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-                {order.reel?.description}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 text-sm sm:justify-start sm:gap-4 sm:text-base">
-                <span className="text-slate-500">Type: {order.reel?.type}</span>
-                <span className="text-slate-500">Qty: {order.quantity}</span>
-                <span className="font-semibold text-indigo-600">
-                  {formatCurrency(parseFloat(order.reel?.Price || "0"))}
-                </span>
               </div>
             </div>
+
+            {(order.reel?.Restaurant || order.reel?.Shops) && (
+              <div className={`p-4 rounded-xl border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+                {order.reel?.Restaurant ? (
+                  <>
+                    <p className="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-tight">{order.reel.Restaurant.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{order.reel.Restaurant.location}</p>
+                  </>
+                ) : order.reel?.Shops ? (
+                  <>
+                    <p className="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-tight">{order.reel.Shops.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{order.reel.Shops.address}</p>
+                  </>
+                ) : null}
+              </div>
+            )}
           </div>
-
-          {/* Show Restaurant or Shop information based on what's available */}
-          {(order.reel?.Restaurant || order.reel?.Shops) && (
-            <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
-              {order.reel?.Restaurant ? (
-                <>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
-                    {order.reel.Restaurant.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {order.reel.Restaurant.location}
-                  </p>
-                  {order.reel.Restaurant.phone && (
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      📞 {order.reel.Restaurant.phone}
-                    </p>
-                  )}
-                </>
-              ) : order.reel?.Shops ? (
-                <>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
-                    {order.reel.Shops.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {order.reel.Shops.address}
-                  </p>
-                  {order.reel.Shops.phone && (
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      📞 {order.reel.Shops.phone}
-                    </p>
-                  )}
-                </>
-              ) : null}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {/* Shop Image, Name, Address, and Contact Information */}
-          {uniqueShops.map((shop, index) => (
-            <div
-              key={shop.id || index}
-              className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:p-4"
-            >
-              <div className="flex gap-3 sm:gap-4">
-                {/* Shop Image */}
-                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
-                  {shop.image ? (
-                    <Image
-                      src={shop.image}
-                      alt={shop.name}
-                      width={80}
-                      height={80}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-6 w-6 sm:h-8 sm:w-8"
-                      >
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <path d="M16 8h.01M8 16h.01M16 16h.01" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Shop Name, Address, Description, Category, Working Hours */}
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                    {shop.name}
-                    {uniqueShops.length > 1 && (
-                      <span className="ml-2 text-xs font-normal text-slate-500">
-                        (Store {index + 1})
-                      </span>
+        ) : (
+          <div className="space-y-4">
+            {uniqueShops.map((shop, index) => (
+              <div key={shop.id || index} className={`space-y-4 rounded-2xl border p-4 transition-all duration-300 ${isDark ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5"}`}>
+                <div className="flex gap-4">
+                  <div className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border ${isDark ? "border-white/10 bg-white/5" : "border-black/5 bg-black/5"}`}>
+                    {shop.image ? (
+                      <Image src={shop.image} alt={shop.name} width={80} height={80} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-gray-400">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M16 8h.01M8 16h.01M16 16h.01" /></svg>
+                      </div>
                     )}
-                  </h3>
-                  {shop.address && (
-                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-                      {shop.address}
-                    </p>
-                  )}
-                  {/* Business store: description */}
-                  {shop.description && String(shop.description).trim() && (
-                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                      {shop.description}
-                    </p>
-                  )}
-                  {/* Business store: category (name and/or description) */}
-                  {shop.category &&
-                    (shop.category.name || shop.category.description) && (
-                      <div className="mt-1.5">
-                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                          Category:{" "}
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {[shop.category.name, shop.category.description]
-                            .filter(Boolean)
-                            .join(" – ")}
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                      {shop.name}
+                      {uniqueShops.length > 1 && <span className="ml-2 text-[10px] font-bold text-gray-400 opacity-60">(STORE {index + 1})</span>}
+                    </h3>
+                    {shop.address && <p className="mt-1 text-xs text-gray-500 tracking-tight leading-relaxed">{shop.address}</p>}
+                    {shop.category && (
+                      <div className="mt-2 flex">
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>
+                          {shop.category.name || "General"}
                         </span>
                       </div>
                     )}
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="space-y-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-600 sm:text-base">
-                {/* Phone Number - only show when we have a valid number (don't show N/A) */}
-                {shop.phone && String(shop.phone).trim() && (
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-slate-600 dark:text-slate-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="mr-2 h-4 w-4"
-                      >
-                        <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      Phone
-                    </span>
-                    <a
-                      href={`tel:${shop.phone}`}
-                      className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-                    >
-                      {shop.phone}
-                    </a>
                   </div>
-                )}
+                </div>
 
-                {/* Operating Hours - current date only */}
-                {shop.operating_hours &&
-                  typeof shop.operating_hours === "object" &&
-                  Object.keys(shop.operating_hours).length > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center text-slate-600 dark:text-slate-400">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="mr-2 h-4 w-4"
-                        >
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12,6 12,12 16,14" />
-                        </svg>
-                        Today
-                      </span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                <div className={`grid grid-cols-2 gap-3 pt-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
+                  {shop.phone && String(shop.phone).trim() && (
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 opacity-60">Phone</span>
+                      <a href={`tel:${shop.phone}`} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{shop.phone}</a>
+                    </div>
+                  )}
+                  {shop.operating_hours && (
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 opacity-60">Today</span>
+                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300 mt-0.5 truncate">
                         {(() => {
-                          const hoursObj = shop.operating_hours;
-                          if (hoursObj && typeof hoursObj === "object") {
-                            const now = new Date();
-                            const dayKey = now
-                              .toLocaleDateString("en-US", {
-                                weekday: "long",
-                              })
-                              .toLowerCase();
-                            const todaysHours = (hoursObj as any)[dayKey];
-                            if (todaysHours) {
-                              return String(todaysHours);
-                            }
-                          }
-                          return "Check store for hours";
+                          const now = new Date();
+                          const dayKey = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+                          return (shop.operating_hours as any)[dayKey] || "Open";
                         })()}
                       </span>
                     </div>
                   )}
-              </div>
+                </div>
 
-              {/* Shop Directions Button */}
-              {shop.address && (
-                <div className="border-t border-slate-200 pt-3 dark:border-slate-600">
+                {shop.address && (
                   <button
                     onClick={() => onDirectionsClick(shop.address || "")}
-                    className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    Directions to Shop
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                    Navigate
                   </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

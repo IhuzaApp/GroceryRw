@@ -154,7 +154,7 @@ export default function ShopperSidebar({ isCollapsed, onToggle }: ShopperSidebar
         } ${
           theme === "dark" 
             ? "border-white/10 bg-[#0A0A0A]/80 text-white" 
-            : "border-black/5 bg-white/80 text-gray-900"
+            : "border-black/5 bg-black/5 text-gray-900"
         }`}
       >
         <div className="flex h-full flex-col">

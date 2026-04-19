@@ -3787,11 +3787,7 @@ export default function BatchDetails({
       `}</style>
 
       <div
-        className={`min-h-screen ${
-          theme === "dark"
-            ? "bg-gray-900 text-gray-100"
-            : "bg-gray-50 text-gray-900"
-        }`}
+        className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300"
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
         }}

@@ -247,8 +247,8 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
         className="overflow-hidden rounded-2xl transition-all duration-300"
         style={{
           background: isDark
-            ? "rgba(23,23,23,0.8)"
-            : "rgba(255,255,255,0.85)",
+            ? "rgba(23,23,23,0.85)"
+            : "rgba(245,245,245,0.85)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           border: isDark
