@@ -19,71 +19,91 @@ const DeliveryStatsCard: React.FC<DeliveryStatsCardProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const deliveryMetrics = [
     {
-      label: "Total Distance",
-      value: `${stats.totalKilometers.toFixed(1)} km`,
+      label: "Pulse Distance",
+      value: `${stats.totalKilometers.toFixed(1)}`,
+      unit: "km",
       icon: Navigation,
       color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      accent: "blue",
     },
     {
-      label: "Items Delivered",
+      label: "Items Shared",
       value: stats.totalItems.toString(),
+      unit: "",
       icon: Package,
-      color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      color: "text-emerald-500",
+      accent: "emerald",
     },
     {
-      label: "Avg. Time/Order",
-      value: `${stats.avgTimePerOrder} min`,
+      label: "Execution Avg",
+      value: `${stats.avgTimePerOrder}`,
+      unit: "min",
       icon: Clock,
       color: "text-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      accent: "orange",
     },
     {
-      label: "Stores Visited",
+      label: "Nexus Points",
       value: stats.storesVisited.toString(),
+      unit: "",
       icon: MapPin,
       color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      accent: "purple",
     },
   ];
 
-  return (
-    <div
-      className={`rounded-2xl p-6 shadow-lg ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-      }`}
-    >
-      <h3 className="mb-4 text-lg font-bold">Delivery Stats</h3>
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    );
+  }
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {deliveryMetrics.map((metric, index) => {
-            const Icon = metric.icon;
-            return (
-              <div
-                key={index}
-                className={`rounded-xl p-4 ${metric.bgColor} border border-gray-200 dark:border-gray-700`}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <Icon className={`h-5 w-5 ${metric.color}`} />
+  return (
+    <div className={`relative overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-300 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+      <div className="mb-8">
+        <h3 className="text-xl font-black tracking-tight">Logistics DNA</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Delivery Stats</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 text-left">
+        {deliveryMetrics.map((metric, index) => {
+          const Icon = metric.icon;
+          return (
+            <div
+              key={index}
+              className={`group relative overflow-hidden rounded-3xl p-5 border transition-all duration-500 ${
+                isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-black/5 border-transparent hover:bg-black/[0.08]"
+              }`}
+            >
+              <div className="mb-4">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
+                  isDark ? `bg-${metric.accent}-500/10 ${metric.color}` : `bg-${metric.accent}-50 ${metric.color}`
+                }`}>
+                  <Icon className="h-5 w-5" />
                 </div>
-                <p className="text-2xl font-bold">{metric.value}</p>
-                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+              </div>
+              <div>
+                <p className="text-2xl font-black tracking-tight">
+                  {metric.value}
+                  <span className="text-xs font-bold opacity-40 ml-1">{metric.unit}</span>
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">
                   {metric.label}
                 </p>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              {/* Individual Glow Decor */}
+              <div className={`absolute -right-4 -bottom-4 h-16 w-16 rounded-full blur-[30px] opacity-10 transition-all duration-500 group-hover:opacity-20 bg-${metric.accent}-500`} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

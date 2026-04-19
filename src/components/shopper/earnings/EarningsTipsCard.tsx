@@ -19,120 +19,103 @@ const EarningsTipsCard: React.FC<EarningsTipsCardProps> = ({
   completedOrders = 0,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
-  // Generate personalized tips based on performance
   const generateTips = () => {
     const tips = [];
-
-    // Always show general tips
     tips.push({
       icon: Zap,
-      title: "Accept Orders Quickly",
-      description: "Fast acceptance increases your priority for future orders",
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+      title: "Fast Lane",
+      description: "Quick acceptance boosts your priority score",
+      color: "text-amber-500",
+      accent: "amber",
     });
 
     tips.push({
       icon: MapPin,
-      title: "Work During Peak Hours",
-      description: "Lunch (12-2pm) and dinner (6-8pm) have higher demand",
+      title: "Prime Cycles",
+      description: "Demand peaks: 12-2pm & 6-8pm",
       color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      accent: "blue",
     });
 
-    // Add performance-based tips
     if (performance) {
       if (performance.customerRating < 4.5) {
         tips.push({
           icon: Star,
-          title: "Improve Customer Rating",
-          description:
-            "Be friendly, communicate updates, and handle items carefully",
-          color: "text-purple-500",
-          bgColor: "bg-purple-50 dark:bg-purple-900/20",
+          title: "Rating Boost",
+          description: "Friendly service yields 5-star reviews",
+          color: "text-orange-500",
+          accent: "orange",
         });
       }
 
       if (performance.onTimeDelivery < 90) {
         tips.push({
           icon: Clock,
-          title: "Boost On-Time Delivery",
-          description: "Plan routes efficiently and start deliveries promptly",
-          color: "text-orange-500",
-          bgColor: "bg-orange-50 dark:bg-orange-900/20",
-        });
-      }
-
-      if (performance.acceptanceRate < 80) {
-        tips.push({
-          icon: TrendingUp,
-          title: "Increase Acceptance Rate",
-          description: "Higher acceptance rate = more order opportunities",
-          color: "text-green-500",
-          bgColor: "bg-green-50 dark:bg-green-900/20",
+          title: "Time Sync",
+          description: "Optimized routes save fuel and time",
+          color: "text-rose-500",
+          accent: "rose",
         });
       }
     }
 
-    // Show different tip if they're new
     if (completedOrders < 10) {
       tips.push({
         icon: Lightbulb,
-        title: "Complete Your First 10 Orders",
-        description: "Build your reputation to unlock better order assignments",
+        title: "Growth Phase",
+        description: "Complete 10 orders to unlock elite batches",
         color: "text-indigo-500",
-        bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
+        accent: "indigo",
       });
     }
 
-    // Return max 4 tips
     return tips.slice(0, 4);
   };
 
   const tips = generateTips();
 
   return (
-    <div
-      className={`rounded-2xl p-6 shadow-lg ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-      }`}
-    >
-      <div className="mb-4 flex items-center gap-2">
-        <Lightbulb className="h-5 w-5 text-yellow-500" />
-        <h3 className="text-lg font-bold">Tips to Boost Earnings</h3>
+    <div className={`relative overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-300 ${isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+      <div className="mb-8 flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20`}>
+          <Lightbulb className="h-5 w-5" />
+        </div>
+        <div>
+          <h3 className="text-xl font-black tracking-tight">Growth OS</h3>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Earnings Strategies</p>
+        </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {tips.map((tip, index) => {
           const Icon = tip.icon;
           return (
             <div
               key={index}
-              className={`rounded-xl p-4 transition-all hover:scale-[1.02] ${tip.bgColor} border border-gray-200 dark:border-gray-700`}
+              className={`group flex items-center gap-4 rounded-3xl p-4 border transition-all duration-500 ${
+                isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-black/5 border-transparent hover:bg-black/[0.08]"
+              }`}
             >
-              <div className="flex items-start gap-3">
-                <div className={`rounded-lg bg-white p-2 dark:bg-gray-800`}>
-                  <Icon className={`h-4 w-4 ${tip.color}`} />
-                </div>
-                <div className="flex-1">
-                  <h4 className="mb-1 font-semibold text-gray-900 dark:text-white">
-                    {tip.title}
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {tip.description}
-                  </p>
-                </div>
+              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
+                isDark ? `bg-${tip.accent}-500/10 ${tip.color}` : `bg-${tip.accent}-50 ${tip.color}`
+              }`}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-[13px] font-black tracking-tight truncate">{tip.title}</h4>
+                <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest truncate">{tip.description}</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Additional tip at the bottom */}
-      <div className="mt-4 rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-3 dark:border-green-700 dark:bg-green-900/20">
-        <p className="text-center text-sm font-medium text-green-700 dark:text-green-400">
-          💡 Pro Tip: Maintain excellent service to earn bonuses and tips!
+      {/* Pro Milestone Banner */}
+      <div className="mt-6 rounded-3xl border-2 border-dashed border-emerald-500/20 bg-emerald-500/5 p-4 text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 leading-relaxed">
+          💡 Nexus Tip: Premium service unlocks <span className="text-emerald-500">Elite Multipliers</span> & Priority Access!
         </p>
       </div>
     </div>

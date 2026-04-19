@@ -118,6 +118,7 @@ interface EarningsComponent {
 
 const EarningsPage: React.FC = () => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const [period, setPeriod] = useState("this-week");
   const [loading, setLoading] = useState(true);
@@ -473,24 +474,18 @@ const EarningsPage: React.FC = () => {
 
             {/* Breakdown Tab Content */}
             {activeTab === "breakdown" && (
-              <div
-                className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-white"
-                    : "bg-white text-gray-900"
-                }`}
-              >
+              <div className="space-y-6">
                 {loading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader size="md" content="Loading earnings data..." />
+                  <div className={`flex justify-center py-20 rounded-[2.5rem] ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5"}`}>
+                    <Loader size="md" content="Syncing Breakdown..." />
                   </div>
                 ) : !earningsStats.storeBreakdown ||
                   !earningsStats.earningsComponents ? (
-                  <div className="py-8 text-center opacity-60">
-                    <p>No earnings breakdown data available.</p>
+                  <div className={`py-20 text-center rounded-[2.5rem] ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5"}`}>
+                    <p className="text-sm font-bold opacity-20 uppercase tracking-widest">No detailed breakdown found.</p>
                   </div>
                 ) : (
-                  <>
+                  <div className="grid grid-cols-1 gap-6">
                     <EarningsBreakdown
                       storeBreakdown={earningsStats.storeBreakdown.map(
                         (store) => ({
@@ -504,25 +499,17 @@ const EarningsPage: React.FC = () => {
                           amount: parseFloat(component.amount.toFixed(2)),
                         })
                       )}
-                      hideEarningsComponents={true}
+                      hideEarningsComponents={false}
                     />
-                    <div className="mt-6">
-                      <ActivityHeatmap hideSummary={true} />
-                    </div>
-                  </>
+                    <ActivityHeatmap hideSummary={true} />
+                  </div>
                 )}
               </div>
             )}
 
             {/* Recent Orders Tab Content */}
             {activeTab === "recent-orders" && (
-              <div
-                className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-white"
-                    : "bg-white text-gray-900"
-                }`}
-              >
+              <div className="space-y-6">
                 <RecentOrdersList
                   orders={[]}
                   isLoading={false}
@@ -537,9 +524,9 @@ const EarningsPage: React.FC = () => {
 
             {/* Payments Tab Content */}
             {activeTab === "payments" && (
-              <div>
+              <div className="space-y-6">
                 {/* Desktop View - Table */}
-                <div className="hidden md:block">
+                <div className="hidden lg:block">
                   <TransactionTable
                     transactions={transactions}
                     isLoading={walletLoading}
@@ -547,7 +534,7 @@ const EarningsPage: React.FC = () => {
                 </div>
 
                 {/* Mobile View - Cards */}
-                <div className="block md:hidden">
+                <div className="block lg:hidden">
                   <TransactionCardsMobile
                     transactions={transactions}
                     isLoading={walletLoading}
@@ -558,23 +545,21 @@ const EarningsPage: React.FC = () => {
 
             {/* Achievements Tab Content */}
             {activeTab === "achievements" && (
-              <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
                 {/* Left Column - Working Towards Achievements */}
-                <div
-                  className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <h3 className="mb-3 text-base font-bold sm:mb-4 sm:text-lg">
-                    Working Towards
-                  </h3>
-                  <AchievementBadges />
+                <div className="space-y-6">
+                  {/* Desktop View */}
+                  <div className="hidden lg:block">
+                    <AchievementBadges />
+                  </div>
+                  {/* Mobile View */}
+                  <div className="block lg:hidden">
+                    <AchievementBadgesMobile />
+                  </div>
                 </div>
 
                 {/* Right Column - Insights & Tips */}
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-6">
                   {/* Performance Insights */}
                   {earningsStats.performance && (
                     <PerformanceInsights

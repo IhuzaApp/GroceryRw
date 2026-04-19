@@ -22,6 +22,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   hideSummary = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [activityData, setActivityData] = useState<number[][]>([]);
   const [summary, setSummary] = useState<ActivitySummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -66,34 +67,16 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
   if (loading) {
     return (
-      <div className="mt-8">
-        <h3
-          className={`mb-4 font-medium ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}
-        >
-          Busiest Times
-        </h3>
-        <div className="flex items-center justify-center py-8">
-          <Loader size="md" content="Loading activity data..." />
-        </div>
+      <div className="mt-8 flex items-center justify-center py-12">
+        <Loader size="md" content="Syncing Heatmap..." />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="mt-8">
-        <h3
-          className={`mb-4 font-medium ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}
-        >
-          Busiest Times
-        </h3>
-        <div className="py-4 text-center text-red-500">
-          Error loading activity data
-        </div>
+      <div className="mt-8 rounded-[2rem] border border-red-500/20 bg-red-500/5 p-8 text-center text-red-500">
+        <p className="font-black uppercase tracking-widest text-xs">Analysis Failed</p>
       </div>
     );
   }
@@ -106,158 +89,81 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
   return (
     <div className="mt-8">
-      <h3
-        className={`mb-4 font-medium ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}
-      >
-        Busiest Times
-      </h3>
-
-      {/* Summary Stats */}
-      {summary && !hideSummary && (
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <div
-            className={`rounded-lg p-3 ${
-              theme === "dark" ? "bg-gray-800" : "bg-green-50"
-            }`}
-          >
-            <div
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              Busiest Day
-            </div>
-            <div
-              className={`mt-1 text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {summary.busiestDay}
-            </div>
-            <div
-              className={`text-xs ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              {summary.busiestDayCount} orders (
-              {Math.round(
-                (summary.busiestDayCount / summary.totalOrders) * 100
-              )}
-              % of total)
-            </div>
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h3 className="text-xl font-black tracking-tight">Activity Patterns</h3>
+          <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">Heatmap Distribution</p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className={`h-2.5 w-2.5 rounded-full ${isDark ? "bg-white/10" : "bg-black/5"}`} />
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Low</span>
           </div>
-          <div
-            className={`rounded-lg p-3 ${
-              theme === "dark" ? "bg-gray-800" : "bg-green-50"
-            }`}
-          >
-            <div
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              Busiest Hour
-            </div>
-            <div
-              className={`mt-1 text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {summary.busiestHour}
-            </div>
-            <div
-              className={`text-xs ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              {summary.busiestHourCount} orders (
-              {Math.round(
-                (summary.busiestHourCount / summary.totalOrders) * 100
-              )}
-              % of total)
-            </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Peak</span>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Time labels (hours) */}
-      <div className="mb-2 flex">
-        <div className="w-10 pr-2 text-right text-xs"></div>
-        <div className="grid flex-1 grid-cols-7 gap-1">
-          {days.map((day, i) => (
-            <div
-              key={i}
-              className={`text-center text-xs font-medium ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              {day}
+      {/* Grid Container */}
+      <div className={`rounded-[2.5rem] p-6 lg:p-8 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5 shadow-sm"}`}>
+        {/* Day labels */}
+        <div className="mb-4 flex">
+          <div className="w-12 pr-4" />
+          <div className="grid flex-1 grid-cols-7 gap-2 lg:gap-3">
+            {days.map((day, i) => (
+              <div
+                key={i}
+                className="text-center text-[10px] font-black uppercase tracking-widest opacity-30"
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Heatmap Rows */}
+        <div className="space-y-2 lg:space-y-3">
+          {hours.map((hour, hourIndex) => (
+            <div key={hourIndex} className="flex items-center">
+              {/* Hour label */}
+              <div className="w-12 pr-4 text-right text-[10px] font-black tabular-nums opacity-30">
+                {hour}:00
+              </div>
+
+              {/* Intensity Pills */}
+              <div className="grid flex-1 grid-cols-7 gap-2 lg:gap-3">
+                {days.map((_, dayIndex) => {
+                  const activityLevel = finalActivityData[hourIndex][dayIndex];
+                  
+                  let cellClasses = "";
+                  if (activityLevel === 0) cellClasses = isDark ? "bg-white/[0.03]" : "bg-black/[0.03]";
+                  if (activityLevel === 1) cellClasses = "bg-emerald-500/20";
+                  if (activityLevel === 2) cellClasses = "bg-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]";
+                  if (activityLevel === 3) cellClasses = "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+
+                  return (
+                    <div
+                      key={`${hourIndex}-${dayIndex}`}
+                      className={`h-4 rounded-full transition-all duration-500 hover:scale-125 lg:h-5 ${cellClasses}`}
+                      title={`${days[dayIndex]} ${hour}:00 - Level ${activityLevel}`}
+                    />
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Heatmap grid with hour labels */}
-      {hours.map((hour, hourIndex) => (
-        <div key={hourIndex} className="mb-1 flex items-center">
-          {/* Hour label */}
-          <div
-            className={`w-10 pr-2 text-right text-xs ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            {hour}:00
-          </div>
-
-          {/* Day cells for this hour */}
-          <div className="grid flex-1 grid-cols-7 gap-1">
-            {days.map((_, dayIndex) => {
-              const activityLevel = finalActivityData[hourIndex][dayIndex];
-              let bgColor = theme === "dark" ? "bg-gray-800" : "bg-gray-100";
-              if (activityLevel === 1) bgColor = "bg-green-100";
-              if (activityLevel === 2) bgColor = "bg-green-300";
-              if (activityLevel === 3) bgColor = "bg-green-500";
-
-              return (
-                <div
-                  key={`${hourIndex}-${dayIndex}`}
-                  className={`h-4 ${bgColor} rounded-sm`}
-                  title={`${days[dayIndex]} ${hour}:00`}
-                ></div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
-      <div
-        className={`mt-2 flex items-center justify-between ${
-          theme === "dark" ? "text-gray-400" : "text-gray-600"
-        }`}
-      >
-        <div className="text-xs">Less active</div>
-        <div className="flex items-center gap-1">
-          <div
-            className={`h-3 w-3 rounded-sm ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-            }`}
-          ></div>
-          <div className="h-3 w-3 rounded-sm bg-green-100"></div>
-          <div className="h-3 w-3 rounded-sm bg-green-300"></div>
-          <div className="h-3 w-3 rounded-sm bg-green-500"></div>
-        </div>
-        <div className="text-xs">More active</div>
-      </div>
-
       {summary && (
-        <div
-          className={`mt-4 text-center text-xs ${
-            theme === "dark" ? "text-gray-400" : "text-gray-500"
-          }`}
-        >
-          Based on analysis of {summary.totalOrders} total orders
+        <div className="mt-8 flex items-center justify-center gap-2">
+          <div className={`h-1 w-1 rounded-full bg-emerald-500 animate-pulse`} />
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-30">
+            Insights based on {summary.totalOrders} total completed orders
+          </p>
         </div>
       )}
     </div>
