@@ -29,6 +29,8 @@ import {
   getBlockedMessage,
   sanitizeMessageForDisplay,
 } from "../../lib/chatPiiBlock";
+import { useTheme } from "../../context/ThemeContext";
+import { useShopperProfile } from "../../hooks/useShopperProfile";
 import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 
 // Helper to format date for messages
@@ -89,6 +91,7 @@ interface MessageProps {
   message: Message | PendingMessage;
   isCurrentUser: boolean;
   customerName: string;
+  shopperImage?: string;
   statusLabel?: "Sending..." | "Sent" | null;
 }
 
@@ -96,8 +99,11 @@ const ShopperMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
   customerName,
+  shopperImage,
   statusLabel,
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const rawContent =
     "text" in message
       ? message.text
@@ -106,47 +112,67 @@ const ShopperMessage: React.FC<MessageProps> = ({
 
   return (
     <div
-      className={`mb-3 flex gap-2 ${
-        isCurrentUser ? "justify-end" : "justify-start"
+      className={`mb-4 flex items-end gap-2.5 ${
+        isCurrentUser ? "flex-row-reverse" : "flex-row"
       }`}
     >
-      {!isCurrentUser && (
-        <div className="flex-shrink-0">
-          <Avatar color="green" circle size="sm" />
-        </div>
-      )}
+      <div className="flex-shrink-0 mb-1">
+        <Avatar
+          src={isCurrentUser ? shopperImage : "/images/userProfile.png"}
+          alt={isCurrentUser ? "Me" : customerName}
+          circle
+          size="sm"
+          className={
+            isCurrentUser
+              ? "ring-2 ring-emerald-500/20"
+              : "ring-2 ring-gray-400/20"
+          }
+        >
+          {isCurrentUser ? "ME" : customerName[0].toUpperCase()}
+        </Avatar>
+      </div>
+
       <div
-        className={`flex max-w-[82%] flex-col ${
+        className={`flex max-w-[85%] flex-col ${
           isCurrentUser ? "items-end" : "items-start"
         }`}
       >
         <div
-          className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+          className={`relative overflow-hidden rounded-[1.25rem] px-4 py-3 shadow-lg transition-all duration-300 ${
             isCurrentUser
-              ? "bg-emerald-500 text-white dark:bg-emerald-600"
-              : "bg-white text-gray-900 shadow-gray-200/50 dark:bg-gray-700 dark:text-gray-100 dark:shadow-none"
+              ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-br-none shadow-emerald-500/20"
+              : isDark
+              ? "bg-white/5 border border-white/5 text-gray-100 rounded-bl-none backdrop-blur-md"
+              : "bg-black/5 border border-black/5 text-gray-900 rounded-bl-none backdrop-blur-md"
           }`}
         >
           {!isCurrentUser && (
-            <div className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <div
+              className={`mb-1 text-[10px] font-black uppercase tracking-widest ${
+                isDark ? "text-emerald-400" : "text-emerald-600"
+              }`}
+            >
               {customerName}
             </div>
           )}
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+          <div className="whitespace-pre-wrap text-sm font-medium leading-[1.6]">
             {messageContent}
           </div>
         </div>
-        {isCurrentUser && statusLabel && (
-          <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {statusLabel}
-          </span>
-        )}
-      </div>
-      {isCurrentUser && (
-        <div className="flex-shrink-0">
-          <Avatar color="green" circle size="sm" />
+        
+        <div className="mt-1.5 flex items-center gap-2 px-1 opacity-40">
+           {isCurrentUser && statusLabel && (
+             <span className="text-[10px] font-bold uppercase tracking-tighter">
+               {statusLabel}
+             </span>
+           )}
+           <span className="text-[9px] font-bold">
+             {"timestamp" in message && message.timestamp
+               ? new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+               : ""}
+           </span>
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -171,6 +197,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   onClose,
 }) => {
   const { data: session } = useSession();
+  const { profileImage: databaseProfileImage } = useShopperProfile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -450,67 +477,69 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     }
   };
 
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-16 z-[1000] hidden flex-col overflow-hidden rounded-l-2xl border-l border-gray-200 bg-white shadow-2xl shadow-gray-300/30 transition-transform duration-300 ease-in-out dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/20 md:flex md:h-[calc(100vh-4rem)] md:w-[28rem]">
+    <div 
+      className={`fixed right-0 top-16 z-[1000] hidden flex-col overflow-hidden rounded-l-[2.5rem] border-0 transition-all duration-500 ease-in-out shadow-2xl md:flex md:h-[calc(100vh-4rem)] md:w-[42rem] ${
+        isDark 
+          ? "bg-[#0A0A0A]/80 border-l border-white/10" 
+          : "bg-white/80 border-l border-black/5"
+      } backdrop-blur-3xl`}
+    >
       {/* Header */}
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className={`flex flex-shrink-0 items-center justify-between px-6 py-5 border-b ${
+        isDark ? "border-white/10" : "border-black/5"
+      }`}>
+        <div className="flex min-w-0 flex-1 items-center gap-4">
           <button
             onClick={onClose}
-            className="flex-shrink-0 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            className={`flex-shrink-0 rounded-full p-2 transition-all hover:scale-110 active:scale-90 ${
+              isDark ? "bg-white/5 text-gray-400 hover:text-white" : "bg-black/5 text-gray-500 hover:text-gray-900"
+            }`}
             aria-label="Close chat"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
+          
           <div className="relative flex-shrink-0">
             <Avatar
               src={customer.avatar}
               alt={customer.name}
               circle
               size="md"
-              className="ring-2 ring-emerald-500/20 dark:ring-emerald-400/30"
+              className={`ring-2 ${isDark ? "ring-emerald-500/20" : "ring-emerald-600/20"}`}
             />
             <span
-              className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-800 dark:bg-emerald-400"
+              className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[var(--bg-primary)] bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
               title="Online"
-            />
+            >
+              <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75"></span>
+            </span>
           </div>
+          
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold text-gray-900 dark:text-white">
+            <h3 className="truncate text-base font-black tracking-tight text-[var(--text-primary)] uppercase tracking-widest">
               {customer.name}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Customer</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 opacity-80">
+              Customer
+            </p>
           </div>
         </div>
+        
         {customer.phone && (
           <a
             href={`tel:${customer.phone}`}
-            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            className="flex-shrink-0 rounded-full bg-emerald-500/10 p-3 text-emerald-500 transition-all hover:bg-emerald-500 hover:text-white hover:scale-110 active:scale-90 shadow-inner"
             aria-label="Call customer"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </a>
@@ -519,44 +548,35 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex-1 overflow-y-auto bg-gray-50/80 px-4 py-4 dark:bg-gray-900/80">
+        <div className={`flex-1 overflow-y-auto px-6 py-6 scroll-smooth ${isDark ? "bg-black/20" : "bg-white/10"}`}>
           {otherTypingName && (
-            <div className="mb-3 flex justify-start">
-              <div className="rounded-2xl bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 dark:text-gray-100">
-                <span className="text-sm text-gray-600 dark:text-gray-300">
+            <div className="mb-6 flex justify-start">
+              <div className={`rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 ${
+                isDark ? "bg-white/5 text-gray-300" : "bg-black/5 text-gray-600"
+              } backdrop-blur-md`}>
+                <span className="text-[11px] font-black uppercase tracking-widest">
                   {otherTypingName} is typing
                 </span>
-                <span className="typing-dots ml-1 inline-flex gap-0.5">
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                <span className="typing-dots flex gap-1">
+                  <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:0ms]" />
+                  <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:150ms]" />
+                  <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:300ms]" />
                 </span>
               </div>
             </div>
           )}
+          
           {displayMessages.length === 0 ? (
-            <div className="flex h-full min-h-[200px] items-center justify-center">
+            <div className="flex h-full min-h-[300px] items-center justify-center px-10">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/40">
-                  <svg
-                    className="h-7 w-7 text-emerald-600 dark:text-emerald-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-emerald-500/10 shadow-inner">
+                  <svg className="h-8 w-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Start chatting with your customer
-                </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Messages appear here
+                <h4 className="text-base font-black tracking-tight text-[var(--text-primary)] uppercase tracking-wide">Secure Channel</h4>
+                <p className="mt-2 text-xs font-medium text-[var(--text-secondary)] opacity-60 leading-relaxed">
+                  Start your conversation with {customer.name}. Messages are encrypted and safe.
                 </p>
               </div>
             </div>
@@ -577,6 +597,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
                     message={message}
                     isCurrentUser={isCurrentUser}
                     customerName={customer.name}
+                    shopperImage={databaseProfileImage || session?.user?.image || undefined}
                     statusLabel={statusLabel}
                   />
                 );
@@ -587,10 +608,14 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         </div>
 
         {/* Input area */}
-        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className={`flex-shrink-0 p-6 border-t ${
+          isDark ? "border-white/10" : "border-black/5"
+        }`}>
           <form
             onSubmit={handleSendMessage}
-            className="flex items-center gap-3"
+            className={`relative flex items-center gap-2 rounded-[1.5rem] p-1.5 transition-all duration-300 ${
+              isDark ? "bg-white/5 focus-within:bg-white/10" : "bg-black/5 focus-within:bg-black/10"
+            }`}
           >
             <input
               type="text"
@@ -601,37 +626,28 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               }}
               onBlur={clearTyping}
               onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"
+              placeholder="Message..."
+              className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none"
             />
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
+              className="flex-shrink-0 rounded-[1.2rem] bg-emerald-600 p-2.5 text-white shadow-lg transition-all duration-300 hover:bg-emerald-500 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:scale-100 disabled:shadow-none"
               aria-label="Send message"
             >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg className="h-5 w-5 rotate-45 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>
           </form>
+          
+          {error && (
+            <div className="mt-4 rounded-xl bg-red-500/10 px-4 py-2 border border-red-500/20">
+              <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{error}</p>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="flex-shrink-0 border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
-          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      )}
     </div>
   );
 };

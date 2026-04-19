@@ -280,16 +280,18 @@ export const markMessagesAsRead = async (
     );
     const q = query(
       messagesRef,
-      where("senderId", "!=", userId),
       where("isRead", "==", false)
     );
     const querySnapshot = await getDocs(q);
 
-    const updatePromises = querySnapshot.docs.map((doc) => {
-      return updateDoc(doc.ref, {
-        isRead: true,
+    // Filter by senderId locally to avoid needing a composite index for != combined with ==
+    const updatePromises = querySnapshot.docs
+      .filter(doc => doc.data().senderId !== userId)
+      .map((doc) => {
+        return updateDoc(doc.ref, {
+          isRead: true,
+        });
       });
-    });
 
     await Promise.all(updatePromises);
 

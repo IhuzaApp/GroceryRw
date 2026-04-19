@@ -21,11 +21,11 @@ export default function HeaderSection({
 
   return (
     <div
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+      className={`sticky top-0 sm:static z-[100] transition-all duration-300 ${
         isDark 
-          ? "bg-[#0A0A0A]/70 border-white/10" 
-          : "bg-black/5 border-black/5"
-      } border-b backdrop-blur-xl px-0 py-2.5 text-gray-900 dark:text-gray-100 sm:px-6 sm:py-4`}
+          ? "bg-[#0A0A0A]/80 border-white/10" 
+          : "bg-white/80 border-black/5 shadow-sm"
+      } border-b backdrop-blur-2xl px-0 py-3 text-[var(--text-primary)] sm:px-6 sm:py-4`}
     >
       <div className="mx-auto flex max-w-7xl flex-row items-center justify-between gap-3 px-4 sm:px-0">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">

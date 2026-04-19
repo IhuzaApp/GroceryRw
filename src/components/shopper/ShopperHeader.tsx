@@ -6,10 +6,15 @@ import Image from "next/image";
 import "rsuite/dist/rsuite.min.css";
 import { useRouter } from "next/router";
 import { useTheme } from "@context/ThemeContext";
-import { Button } from "rsuite";
+import { Avatar, Button } from "rsuite";
+import { useSession } from "next-auth/react";
+import { useShopperProfile } from "../../hooks/useShopperProfile";
 import TelegramStatusButton from "./TelegramStatusButton";
 import NotificationCenter from "./NotificationCenter";
+
 export default function ShopperHeader() {
+  const { data: session } = useSession();
+  const { profileImage, displayName, isLoading: isProfileLoading } = useShopperProfile();
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const router = useRouter();
@@ -197,15 +202,17 @@ export default function ShopperHeader() {
           </button>
         </div>
         <div className="flex items-center">
-          <div className="h-8 w-8 overflow-hidden rounded-full">
-            <Image
-              src="/placeholder.svg"
-              alt="Profile"
-              width={32}
-              height={32}
-              className="object-cover"
-            />
-          </div>
+          <Avatar
+            src={profileImage || undefined}
+            alt={displayName}
+            circle
+            size="sm"
+            className={`cursor-pointer border border-transparent hover:border-emerald-500 transition-all duration-300 ring-2 ring-emerald-500/10 ${
+              isProfileLoading ? "animate-pulse opacity-50" : ""
+            }`}
+          >
+            {displayName ? displayName[0].toUpperCase() : "U"}
+          </Avatar>
         </div>
       </div>
     </header>

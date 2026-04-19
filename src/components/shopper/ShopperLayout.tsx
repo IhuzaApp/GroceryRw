@@ -289,7 +289,9 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         <ShopperSidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
         <main
           className={`relative flex-1 overflow-y-auto transition-all duration-300 ${
-            isMobile ? "p-4 pb-28" : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`
+            isMobile 
+              ? `${isBatchDetailsPage ? "p-0" : "p-4"} pb-28` 
+              : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`
           }`}
         >
           <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
