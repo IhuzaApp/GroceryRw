@@ -32,6 +32,9 @@ import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetr
 import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
 import EarningsTabs from "@components/shopper/earnings/EarningsTabs";
 import TransactionCardsMobile from "@components/shopper/earnings/TransactionCardsMobile";
+import EarningsMobileMenu from "@components/shopper/earnings/EarningsMobileMenu";
+import EarningsMobileNav from "@components/shopper/earnings/EarningsMobileNav";
+import EarningsTabContent from "@components/shopper/earnings/EarningsTabContent";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import {
   formatCurrencySync,
@@ -126,6 +129,7 @@ const EarningsPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mobileView, setMobileView] = useState<"menu" | "content">("menu");
   const [earningsStats, setEarningsStats] = useState<EarningsStats>({
     totalEarnings: 0,
     completedOrders: 0,
@@ -294,6 +298,21 @@ const EarningsPage: React.FC = () => {
     fetchDailyEarnings(value);
   };
 
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (isMobile) {
+      setMobileView("content");
+      // Scroll to top when opening content
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleBackToMenu = () => {
+    setMobileView("menu");
+    // Scroll to top when returning to menu
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Format number with decimal places but no currency symbol
   const formatNumber = (amount: number) => {
     return new Intl.NumberFormat("en-RW", {
@@ -398,205 +417,61 @@ const EarningsPage: React.FC = () => {
         {/* New Dashboard Layout */}
         {isInitialized && (
           <div className="container mx-auto max-w-7xl">
-            {/* Tabs Navigation */}
-            <EarningsTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-            {/* Tab Content */}
-            {activeTab === "overview" && (
-              <>
-                {/* Top Grid - Stats Cards */}
-                <div className="mb-3 grid grid-cols-1 items-start gap-3 sm:mb-4 sm:gap-4 md:mb-6 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
-                  <TotalBalanceCard
-                    wallet={wallet}
-                    isLoading={walletLoading}
-                    onWithdraw={handleWithdrawal}
+            {/* MOBILE VIEW LOGIC */}
+            <div className="block md:hidden">
+              {mobileView === "menu" ? (
+                <EarningsMobileMenu onSelect={handleTabChange} />
+              ) : (
+                <>
+                  <EarningsMobileNav 
+                    activeTab={activeTab} 
+                    onBack={handleBackToMenu} 
                   />
-
-                  <TotalTransactionsCard
-                    transactions={transactions}
-                    completedOrders={earningsStats.completedOrders}
-                    isLoading={loading}
-                  />
-
-                  <TotalSpendCard
-                    earningsStats={earningsStats}
-                    isLoading={loading}
-                  />
-
-                  <ScheduleCard
-                    shopperSchedule={shopperSchedule}
-                    isLoading={loading}
-                  />
-                </div>
-
-                {/* Main Content Grid */}
-                <div className="mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:gap-4 md:mb-6 md:gap-6 lg:grid-cols-3">
-                  {/* Earning Overview Chart - Takes 2 columns */}
-                  <EarningOverviewChart
-                    totalEarnings={earningsStats.totalEarnings}
-                    period={period}
-                    onPeriodChange={handlePeriodChange}
-                    dailyEarnings={dailyEarnings}
-                    isLoading={dailyEarningsLoading}
-                  />
-
-                  {/* Top Stores by Earnings */}
-                  <TopStoresCard
-                    storeBreakdown={earningsStats.storeBreakdown}
-                    isLoading={loading}
-                  />
-                </div>
-
-                {/* Bottom Grid - Major Expenses, Asset Valuation, Promo */}
-                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
-                  {/* Earnings Components */}
-                  <EarningsComponentsCard
-                    earningsComponents={earningsStats.earningsComponents}
-                    totalEarnings={earningsStats.totalEarnings}
-                    isLoading={loading}
-                  />
-
-                  {/* Performance Metrics */}
-                  <PerformanceMetricsCard
-                    performance={earningsStats.performance}
-                    rating={earningsStats.rating}
-                    isLoading={loading}
-                  />
-
-                  {/* Busiest Times Card */}
-                  <BusiestTimesCard
-                    activitySummary={activitySummary}
-                    isLoading={loading}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Breakdown Tab Content */}
-            {activeTab === "breakdown" && (
-              <div className="space-y-6">
-                {loading ? (
-                  <div className={`flex justify-center py-20 rounded-[2.5rem] ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5"}`}>
-                    <Loader size="md" content="Syncing Breakdown..." />
-                  </div>
-                ) : !earningsStats.storeBreakdown ||
-                  !earningsStats.earningsComponents ? (
-                  <div className={`py-20 text-center rounded-[2.5rem] ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5"}`}>
-                    <p className="text-sm font-bold opacity-20 uppercase tracking-widest">No detailed breakdown found.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-6">
-                    <EarningsBreakdown
-                      storeBreakdown={earningsStats.storeBreakdown.map(
-                        (store) => ({
-                          ...store,
-                          amount: parseFloat(store.amount.toFixed(2)),
-                        })
-                      )}
-                      earningsComponents={earningsStats.earningsComponents.map(
-                        (component) => ({
-                          ...component,
-                          amount: parseFloat(component.amount.toFixed(2)),
-                        })
-                      )}
-                      hideEarningsComponents={false}
+                  <div className="pb-20">
+                    <EarningsTabContent 
+                      activeTab={activeTab}
+                      earningsStats={earningsStats}
+                      wallet={wallet}
+                      walletLoading={walletLoading}
+                      transactions={transactions}
+                      dailyEarnings={dailyEarnings}
+                      dailyEarningsLoading={dailyEarningsLoading}
+                      activitySummary={activitySummary}
+                      shopperSchedule={shopperSchedule}
+                      period={period}
+                      loading={loading}
+                      isDark={isDark}
+                      handlePeriodChange={handlePeriodChange}
+                      handleWithdrawal={handleWithdrawal}
                     />
-                    <ActivityHeatmap hideSummary={true} />
                   </div>
-                )}
-              </div>
-            )}
+                </>
+              )}
+            </div>
 
-            {/* Recent Orders Tab Content */}
-            {activeTab === "recent-orders" && (
-              <div className="space-y-6">
-                <RecentOrdersList
-                  orders={[]}
-                  isLoading={false}
-                  pageSize={10}
-                  currentPage={1}
-                  totalOrders={0}
-                  onPageChange={() => {}}
-                  serverPagination={false}
+            {/* DESKTOP VIEW LOGIC - Keep original grid/tabs */}
+            <div className="hidden md:block">
+              <EarningsTabs activeTab={activeTab} onTabChange={handleTabChange} />
+              
+              <div className="transition-all duration-500">
+                <EarningsTabContent 
+                  activeTab={activeTab}
+                  earningsStats={earningsStats}
+                  wallet={wallet}
+                  walletLoading={walletLoading}
+                  transactions={transactions}
+                  dailyEarnings={dailyEarnings}
+                  dailyEarningsLoading={dailyEarningsLoading}
+                  activitySummary={activitySummary}
+                  shopperSchedule={shopperSchedule}
+                  period={period}
+                  loading={loading}
+                  isDark={isDark}
+                  handlePeriodChange={handlePeriodChange}
+                  handleWithdrawal={handleWithdrawal}
                 />
               </div>
-            )}
-
-            {/* Payments Tab Content */}
-            {activeTab === "payments" && (
-              <div className="space-y-6">
-                {/* Desktop View - Table */}
-                <div className="hidden lg:block">
-                  <TransactionTable
-                    transactions={transactions}
-                    isLoading={walletLoading}
-                  />
-                </div>
-
-                {/* Mobile View - Cards */}
-                <div className="block lg:hidden">
-                  <TransactionCardsMobile
-                    transactions={transactions}
-                    isLoading={walletLoading}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Achievements Tab Content */}
-            {activeTab === "achievements" && (
-              <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2">
-                {/* Column 1 - Achievements & Pulse */}
-                <div className="space-y-10">
-                  <div className="space-y-6">
-                    {/* Desktop View */}
-                    <div className="hidden lg:block">
-                      <AchievementBadges />
-                    </div>
-                    {/* Mobile View */}
-                    <div className="block lg:hidden">
-                      <AchievementBadgesMobile />
-                    </div>
-                  </div>
-
-                  {/* Performance Insights (Pulse) moved here for balance */}
-                  {earningsStats.performance && (
-                    <PerformanceInsights
-                      performance={earningsStats.performance}
-                      isLoading={loading}
-                    />
-                  )}
-                </div>
-
-                {/* Column 2 - Logistics, Milestones & Growth */}
-                <div className="space-y-10">
-                  {/* Delivery Stats (Logistics) */}
-                  <DeliveryStatsCard
-                    stats={{
-                      totalKilometers: 0,
-                      totalItems: 0,
-                      avgTimePerOrder: 0,
-                      storesVisited: earningsStats.storeBreakdown?.length || 0,
-                    }}
-                    isLoading={loading}
-                  />
-
-                  {/* Earnings Goals (Milestones) */}
-                  {earningsStats.goals && (
-                    <EarningsGoalsProgress
-                      goals={earningsStats.goals}
-                      isLoading={loading}
-                    />
-                  )}
-
-                  {/* Tips to Boost Earnings (Growth OS) */}
-                  <EarningsTipsCard
-                    performance={earningsStats.performance}
-                    completedOrders={earningsStats.completedOrders}
-                  />
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         )}
       </ShopperLayout>

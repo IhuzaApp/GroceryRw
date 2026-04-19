@@ -115,6 +115,11 @@ const AchievementBadges: React.FC = () => {
   const isDark = theme === "dark";
   const [achievementData, setAchievementData] = useState<AchievementData | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination State
+  const [showAllAchieved, setShowAllAchieved] = useState(false);
+  const [showAllPending, setShowAllPending] = useState(false);
+  const INITIAL_LIMIT = 4;
 
   useEffect(() => {
     const fetchAchievements = async () => {
@@ -206,8 +211,11 @@ const AchievementBadges: React.FC = () => {
     );
   };
 
+  const visibleAchieved = showAllAchieved ? achieved : achieved.slice(0, INITIAL_LIMIT);
+  const visiblePending = showAllPending ? pending : pending.slice(0, INITIAL_LIMIT);
+
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-12 pb-10">
       {/* Header Stat Pills */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
@@ -227,31 +235,56 @@ const AchievementBadges: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-        {/* Achieved Section */}
+      <div className="space-y-12">
+        {/* Achieved Section - NOW ON TOP */}
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <h3 className="text-sm font-black uppercase tracking-widest opacity-40">Achieved</h3>
-            <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
-          </div>
-          <div className="space-y-4">
-            {achieved.map(a => renderAchievementCard(a, true))}
-            {achieved.length === 0 && (
-              <div className={`rounded-[2.5rem] border-2 border-dashed p-12 text-center ${isDark ? "border-white/5" : "border-black/5"}`}>
-                <p className="text-sm font-bold opacity-30 uppercase tracking-widest">No badges earned yet</p>
-              </div>
+          <div className="flex items-center gap-3 justify-between">
+            <div className="flex items-center gap-3 flex-1">
+              <h3 className="text-sm font-black uppercase tracking-widest opacity-40 whitespace-nowrap">Archives</h3>
+              <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
+            </div>
+            {achieved.length > INITIAL_LIMIT && (
+              <button 
+                onClick={() => setShowAllAchieved(!showAllAchieved)}
+                className={`flex h-8 items-center px-4 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-300
+                  ${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-black/5 border-transparent hover:bg-black/10"}`}
+              >
+                {showAllAchieved ? "View Less" : `View More (${achieved.length - INITIAL_LIMIT})`}
+              </button>
             )}
           </div>
+          
+          <div className="grid grid-cols-1 gap-4">
+            {visibleAchieved.map(a => renderAchievementCard(a, true))}
+          </div>
+
+          {achieved.length === 0 && (
+            <div className={`rounded-[2.5rem] border-2 border-dashed p-12 text-center ${isDark ? "border-white/5" : "border-black/5"}`}>
+              <p className="text-sm font-bold opacity-30 uppercase tracking-widest">No badges earned yet</p>
+            </div>
+          )}
         </div>
 
-        {/* In Progress Section */}
+        {/* In Progress Section - NOW BELOW */}
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <h3 className="text-sm font-black uppercase tracking-widest opacity-40">In Progress</h3>
-            <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
+          <div className="flex items-center gap-3 justify-between">
+            <div className="flex items-center gap-3 flex-1">
+              <h3 className="text-sm font-black uppercase tracking-widest opacity-40 whitespace-nowrap">Current Goals</h3>
+              <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
+            </div>
+            {pending.length > INITIAL_LIMIT && (
+              <button 
+                onClick={() => setShowAllPending(!showAllPending)}
+                className={`flex h-8 items-center px-4 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-300
+                  ${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-black/5 border-transparent hover:bg-black/10"}`}
+              >
+                {showAllPending ? "View Less" : `View More (${pending.length - INITIAL_LIMIT})`}
+              </button>
+            )}
           </div>
-          <div className="space-y-4">
-            {pending.map(a => renderAchievementCard(a, false))}
+
+          <div className="grid grid-cols-1 gap-4">
+            {visiblePending.map(a => renderAchievementCard(a, false))}
           </div>
         </div>
       </div>

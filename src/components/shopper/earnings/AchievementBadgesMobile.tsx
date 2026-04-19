@@ -103,6 +103,11 @@ const AchievementBadgesMobile: React.FC = () => {
   const [achievementData, setAchievementData] = useState<AchievementData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Pagination State
+  const [showAllAchieved, setShowAllAchieved] = useState(false);
+  const [showAllPending, setShowAllPending] = useState(false);
+  const INITIAL_LIMIT = 4;
+
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
@@ -178,8 +183,11 @@ const AchievementBadgesMobile: React.FC = () => {
     </div>
   );
 
+  const visibleAchieved = showAllAchieved ? achieved : achieved.slice(0, INITIAL_LIMIT);
+  const visiblePending = showAllPending ? pending : pending.slice(0, INITIAL_LIMIT);
+
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-8 pb-6">
       {/* Mobile Summary Row */}
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -195,11 +203,21 @@ const AchievementBadgesMobile: React.FC = () => {
         ))}
       </div>
 
-      {/* Achieved Section */}
+      {/* Achieved Section - NOW ON TOP */}
       <div className="space-y-4">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30 pl-1">Earned Rewards</h3>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Earned Rewards</h3>
+          {achieved.length > INITIAL_LIMIT && (
+            <button 
+              onClick={() => setShowAllAchieved(!showAllAchieved)}
+              className="text-[9px] font-black uppercase tracking-widest text-emerald-500"
+            >
+              {showAllAchieved ? "View Less" : `View More (${achieved.length - INITIAL_LIMIT})`}
+            </button>
+          )}
+        </div>
         <div className="space-y-3">
-          {achieved.map(a => renderAchievementCard(a, true))}
+          {visibleAchieved.map(a => renderAchievementCard(a, true))}
           {achieved.length === 0 && (
             <div className={`rounded-3xl border border-dashed p-8 text-center ${isDark ? "border-white/10" : "border-black/5"}`}>
               <p className="text-[10px] font-black opacity-30 uppercase tracking-widest text-center">First badge is waiting...</p>
@@ -208,11 +226,21 @@ const AchievementBadgesMobile: React.FC = () => {
         </div>
       </div>
 
-      {/* Pending Section */}
+      {/* Pending Section - NOW BELOW */}
       <div className="space-y-4">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30 pl-1">Current Goals</h3>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Current Goals</h3>
+          {pending.length > INITIAL_LIMIT && (
+            <button 
+              onClick={() => setShowAllPending(!showAllPending)}
+              className="text-[9px] font-black uppercase tracking-widest text-emerald-500"
+            >
+              {showAllPending ? "View Less" : `View More (${pending.length - INITIAL_LIMIT})`}
+            </button>
+          )}
+        </div>
         <div className="space-y-3">
-          {pending.map(a => renderAchievementCard(a, false))}
+          {visiblePending.map(a => renderAchievementCard(a, false))}
         </div>
       </div>
     </div>
