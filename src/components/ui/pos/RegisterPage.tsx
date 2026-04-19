@@ -20,21 +20,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
-import { useMutation, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Autocomplete } from "@react-google-maps/api";
 import { storage } from "../../../lib/firebase";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
-import {
-  CREATE_RESTAURANT,
-  CREATE_SHOP,
-  CREATE_WALLET,
-  CREATE_AI_USAGE,
-  CREATE_REEL_USAGE,
-  CREATE_SUBSCRIPTION,
-  CREATE_INVOICE,
-  CREATE_EMPLOYEE,
-} from "../../../graphql/mutations/posRegistration";
 import { usePlans, Plan } from "../../../hooks/usePlans";
 import { useCategories, Category } from "../../../hooks/useCategories";
 import { MODULE_DESCRIPTIONS } from "../../../types/moduleDescriptions";
@@ -114,6 +104,28 @@ export default function RegisterPage() {
       if (plan) setSelectedPlan(plan);
     }
   }, [plans, planId]);
+
+  // Handle Hydration & Persistence
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    // Hydrate state from sessionStorage on component mount
+    const savedData = sessionStorage.getItem("pos_registration_state");
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.step) setStep(parsed.step);
+        if (parsed.businessType) setBusinessType(parsed.businessType);
+        if (parsed.formData) setFormData((prev) => ({ ...prev, ...parsed.formData }));
+        if (parsed.commonIds) setCommonIds(parsed.commonIds);
+        if (parsed.registeredBusinessId) setRegisteredBusinessId(parsed.registeredBusinessId);
+        if (parsed.registeredSubscriptionId) setRegisteredSubscriptionId(parsed.registeredSubscriptionId);
+      } catch (e) {
+        console.error("Failed to parse saved registration state", e);
+      }
+    }
+    setIsHydrated(true);
+  }, []);
 
   const [formData, setFormData] = useState({
     // Step 1: Category
@@ -209,14 +221,30 @@ export default function RegisterPage() {
   >("idle");
   const [paymentReference, setPaymentReference] = useState("");
 
-  const [createRestaurant] = useMutation(CREATE_RESTAURANT);
-  const [createShop] = useMutation(CREATE_SHOP);
-  const [createWallet] = useMutation(CREATE_WALLET);
-  const [createAiUsage] = useMutation(CREATE_AI_USAGE);
-  const [createReelUsage] = useMutation(CREATE_REEL_USAGE);
-  const [createSubscription] = useMutation(CREATE_SUBSCRIPTION);
-  const [createInvoice] = useMutation(CREATE_INVOICE);
-  const [createEmployee] = useMutation(CREATE_EMPLOYEE);
+  useEffect(() => {
+    if (isHydrated) {
+      // Save state to sessionStorage whenever it changes
+      sessionStorage.setItem(
+        "pos_registration_state",
+        JSON.stringify({
+          step,
+          businessType,
+          formData,
+          commonIds,
+          registeredBusinessId,
+          registeredSubscriptionId,
+        })
+      );
+    }
+  }, [
+    isHydrated,
+    step,
+    businessType,
+    formData,
+    commonIds,
+    registeredBusinessId,
+    registeredSubscriptionId,
+  ]);
 
   const onPlaceChanged = () => {
     if (autocompleteRef.current !== null) {
@@ -444,235 +472,63 @@ export default function RegisterPage() {
         orgEmployeeID: crypto.randomUUID(),
       };
       setCommonIds(activeIds);
-    }
+    }    try {
+      let currentInvNum = `INV-${Date.now()}`;
 
-    try {
-      // STEP 1: Create Business
-      if (startAt <= 1) {
-        setRegistrationSubStep(1);
-        let businessResult;
-        if (businessType === "RESTAURANT") {
-          businessResult = await createRestaurant({
-            variables: {
-              email: formData.email,
-              lat: formData.lat,
-              location: formData.address,
-              logo: formData.logo,
-              long: formData.long,
-              name: formData.name,
-              phone: formData.phone,
-              profile: formData.profile,
-              tin: formData.tin,
-              ussd: formData.ussd,
-              rdb_cert: formData.rdb_cert_url,
-              restaurant_id: businessId,
-            },
-          });
-        } else {
-          businessResult = await createShop({
-            variables: {
-              address: formData.address,
-              category_id: formData.categoryId,
-              description: formData.description,
-              image: formData.profile,
-              latitude: formData.lat,
-              logo: formData.logo,
-              longitude: formData.long,
-              name: formData.name,
-              operating_hours: formData.operating_hours,
-              phone: formData.phone,
-              relatedTo: "NONE",
-              ssd: formData.ussd,
-              tin: formData.tin,
-              shop_id: businessId,
-              is_active: false,
-              rdb_certificate: formData.rdb_cert_url,
-            },
-          });
+      // Execute steps sequentially to keep the UI progress responsive
+      for (let currentStep = startAt; currentStep <= 7; currentStep++) {
+        // BREAK POINT: Pause at step 7 for payment collection if setting up shell
+        if (isShell && currentStep === 7) {
+          setRegisteredBusinessId(businessId);
+          setRegisteredSubscriptionId(activeIds.shopSubscription_id);
+          setMomoNumber(formData.phone);
+          setProcessingStep("idle");
+          setShowPaymentModal(true);
+          return; // Pause execution for user input
         }
-        if (businessResult?.errors)
-          throw new Error(businessResult.errors[0].message);
-        setRegisteredBusinessId(businessId);
-      }
 
-      // STEP 2: Create Employee
-      if (startAt <= 2) {
-        setRegistrationSubStep(2);
-        const employeeResult = await createEmployee({
-          variables: {
-            Address: formData.address,
-            Position: formData.position || "system Administrator",
-            active: true,
-            dob: formData.dob,
-            email: formData.ownerEmail,
-            employeeID: activeIds.employee_id,
-            fullnames: formData.fullnames,
-            gender: formData.gender,
-            last_login: now,
-            password: formData.password,
-            phone: formData.ownerPhone,
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-            roleType: "globalAdmin",
-            orgEmployeeID: activeIds.orgEmployeeID,
-            privillages: generatePrivileges(plan),
-            update_on: now,
-            generatePassword: false,
-            multAuthEnabled: false,
-            online: false,
-            twoFactorSecrets: "",
+        setRegistrationSubStep(currentStep);
+
+        const response = await fetch("/api/mutations/register-pos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            formData,
+            selectedPlan: plan,
+            businessType,
+            cycle,
+            businessId,
+            targetStep: currentStep,
+            commonIds: activeIds,
+            isShell,
+          }),
         });
-        if (employeeResult?.errors)
-          throw new Error(employeeResult.errors[0].message);
-      }
 
-      // STEP 3: AI Usage (MOVED UP - Dependency for Invoice)
-      if (startAt <= 3) {
-        setRegistrationSubStep(3);
-        const aiUsageResult = await createAiUsage({
-          variables: {
-            id: activeIds.aiUsage_id,
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-            request_count: plan.ai_request_limit,
-            month: new Date().toLocaleString("default", { month: "long" }),
-            year: new Date().getFullYear().toString(),
-            business_id: null,
-            user_id: null,
-          },
-        });
-        if (aiUsageResult?.errors)
-          throw new Error(aiUsageResult.errors[0].message);
-      }
+        const data = await response.json();
 
-      // STEP 4: Reel Usage (MOVED UP - Dependency for Invoice)
-      if (startAt <= 4) {
-        setRegistrationSubStep(4);
-        const reelUsageResult = await createReelUsage({
-          variables: {
-            id: activeIds.reelUsage_id,
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-            month: new Date().toLocaleString("default", { month: "long" }),
-            upload_count: plan.reel_limit,
-            year: new Date().getFullYear().toString(),
-            business_id: null,
-          },
-        });
-        if (reelUsageResult?.errors)
-          throw new Error(reelUsageResult.errors[0].message);
-      }
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "Registration failed");
+        }
 
-      // STEP 5: Create Subscription
-      if (startAt <= 5) {
-        setRegistrationSubStep(5);
-        const subResult = await createSubscription({
-          variables: {
-            id: activeIds.shopSubscription_id,
-            billing_cycle: billingCycle,
-            restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-            shop_id: businessType === "SHOP" ? businessId : null,
-            business_id: null,
-            start_date: now,
-            status: isShell ? "pending_payment" : "active",
-            updated_at: now,
-            end_date: endDate.toISOString(),
-            plan_id: plan.id,
-          },
-        });
-        if (subResult?.errors) throw new Error(subResult.errors[0].message);
-        setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-      }
-
-      // STEP 6: Create Invoice
-      const invNum = `INV-${Date.now()}`;
-      if (startAt <= 6) {
-        setRegistrationSubStep(6);
-        const invoiceResult = await createInvoice({
-          variables: {
-            aiUsage_id: activeIds.aiUsage_id,
-            currency: "RWF",
-            discount_amount: "0",
-            due_date: dueDate.toISOString(),
-            invoice_number: invNum,
-            issued_at: now,
-            paid_at: isShell ? null : now,
-            payment_method: isShell ? "UNPAID" : "MoMo",
-            plan_name: plan.name,
-            plan_price: (cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly
-            ).toString(),
-            reelUsage_id: activeIds.reelUsage_id,
-            shopSubscription_id: activeIds.shopSubscription_id,
-            status: "pending",
-            subtotal_amount: (cycle === "monthly"
-              ? plan.price_monthly
-              : plan.price_yearly
-            ).toString(),
-            tax_amount: "0",
-            updated_at: now,
-          },
-        });
-        if (invoiceResult?.errors)
-          throw new Error(invoiceResult.errors[0].message);
-      }
-
-      // BREAK POINT: Trigger Payment if this is the initial shell setup
-      if (isShell && startAt <= 6) {
-        setRegisteredBusinessId(businessId);
-        setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-        setMomoNumber(formData.phone);
-        setProcessingStep("idle");
-        setShowPaymentModal(true);
-        return; // Pause here for user payment
-      }
-
-      // STEP 7: Create Wallet
-      if (startAt <= 7) {
-        setRegistrationSubStep(7);
-        try {
-          const walletResult = await createWallet({
-            variables: {
-              active: false,
-              balance: "0",
-              restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-              shop_id: businessType === "SHOP" ? businessId : null,
-            },
-          });
-          if (walletResult?.errors) {
-            // If it's a uniqueness violation, we can safely ignore it as it means the wallet exists
-            if (
-              walletResult.errors[0].message.includes("Uniqueness violation")
-            ) {
-            } else {
-              throw new Error(walletResult.errors[0].message);
-            }
-          }
-        } catch (walletErr: any) {
-          if (walletErr.message?.includes("Uniqueness violation")) {
-          } else {
-            throw walletErr;
-          }
+        if (currentStep === 6 && data.invNum) {
+          currentInvNum = data.invNum; // Captures invoice generated by the backend
         }
       }
 
-      setRegistrationSubStep(8); // Completed all steps
+      // Registration completely successful
+      setRegisteredBusinessId(businessId);
+      setRegisteredSubscriptionId(activeIds.shopSubscription_id);
+      
+      setRegistrationSubStep(8); // Completed all API steps
 
-      if (isShell) {
-        setRegisteredBusinessId(businessId);
-        setRegisteredSubscriptionId(commonIds.shopSubscription_id);
-        setProcessingStep("idle");
-        setMomoNumber(formData.phone);
-        setShowPaymentModal(true);
-      } else {
-        setIsSuccess(true);
-        setProcessingStep("success");
-        // Trigger Registration Notifications
-        sendRegistrationNotifications(invNum);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+      setIsSuccess(true);
+      setProcessingStep("success");
+      sessionStorage.removeItem("pos_registration_state"); // Clear storage on success
+      // Trigger Registration Notifications
+      sendRegistrationNotifications(currentInvNum);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       console.error("❌ [POS Registration] Mutation Failure:", err);
       if (err.graphQLErrors)
