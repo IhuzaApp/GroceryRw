@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../../pages/api/auth/[...nextauth]";
+import { authOptions } from "../[...nextauth]";
 import { GraphQLClient, gql } from "graphql-request";
-import { otpStore } from "../../../lib/otpStore";
-import { resend } from "../../../src/lib/resend";
-import { sendSMS } from "../../../src/lib/pindo";
-import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { otpStore } from "../../../../lib/otpStore";
+import { resend } from "../../../../src/lib/resend";
+import { sendSMS } from "../../../../src/lib/pindo";
+import { logErrorToSlack } from "../../../../src/lib/slackErrorReporter";
 import crypto from "crypto";
 
 const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;

@@ -306,7 +306,10 @@ export const MobileBecomeShopper = () => {
       default:
         return null;
     }
-  };
+  })()}
+</div>
+);
+};
 
   return (
     <div className={`flex min-h-screen flex-col ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>

@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../../pages/api/auth/[...nextauth]";
+import { authOptions } from "../[...nextauth]";
 import { GraphQLClient, gql } from "graphql-request";
-import { otpStore } from "../../../lib/otpStore";
+import { otpStore } from "../../../../lib/otpStore";
 import bcrypt from "bcryptjs";
-import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { logErrorToSlack } from "../../../../src/lib/slackErrorReporter";
 
 const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;
 const HASURA_SECRET = process.env.HASURA_GRAPHQL_ADMIN_SECRET!;

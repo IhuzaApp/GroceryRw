@@ -112,7 +112,7 @@ const ShopperMessage: React.FC<MessageProps> = ({
 
   return (
     <div
-      className={`mb-4 flex items-end gap-2.5 ${
+      className={`mb-6 flex items-end gap-3 ${
         isCurrentUser ? "flex-row-reverse" : "flex-row"
       }`}
     >
@@ -122,11 +122,11 @@ const ShopperMessage: React.FC<MessageProps> = ({
           alt={isCurrentUser ? "Me" : customerName}
           circle
           size="sm"
-          className={
+          className={`ring-2 ${
             isCurrentUser
-              ? "ring-2 ring-emerald-500/20"
-              : "ring-2 ring-gray-400/20"
-          }
+              ? "ring-emerald-500/20"
+              : "ring-gray-400/20"
+          }`}
         >
           {isCurrentUser ? "ME" : customerName[0].toUpperCase()}
         </Avatar>
@@ -138,38 +138,36 @@ const ShopperMessage: React.FC<MessageProps> = ({
         }`}
       >
         <div
-          className={`relative overflow-hidden rounded-[1.25rem] px-4 py-3 shadow-lg transition-all duration-300 ${
+          className={`relative overflow-hidden rounded-[1.5rem] px-5 py-3.5 shadow-xl transition-all duration-300 ${
             isCurrentUser
               ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-br-none shadow-emerald-500/20"
               : isDark
               ? "bg-white/5 border border-white/5 text-gray-100 rounded-bl-none backdrop-blur-md"
-              : "bg-black/5 border border-black/5 text-gray-900 rounded-bl-none backdrop-blur-md"
+              : "bg-white border border-black/5 text-gray-900 rounded-bl-none shadow-sm shadow-black/5"
           }`}
         >
           {!isCurrentUser && (
             <div
-              className={`mb-1 text-[10px] font-black uppercase tracking-widest ${
+              className={`mb-1.5 text-[9px] font-black uppercase tracking-[0.2em] ${
                 isDark ? "text-emerald-400" : "text-emerald-600"
               }`}
             >
               {customerName}
             </div>
           )}
-          <div className="whitespace-pre-wrap text-sm font-medium leading-[1.6]">
+          <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed">
             {messageContent}
           </div>
         </div>
         
-        <div className="mt-1.5 flex items-center gap-2 px-1 opacity-40">
+        <div className="mt-2 flex items-center gap-2 px-1 opacity-40">
            {isCurrentUser && statusLabel && (
-             <span className="text-[10px] font-bold uppercase tracking-tighter">
+             <span className="text-[9px] font-black uppercase tracking-tighter">
                {statusLabel}
              </span>
            )}
-           <span className="text-[9px] font-bold">
-             {"timestamp" in message && message.timestamp
-               ? new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-               : ""}
+           <span className="text-[9px] font-black uppercase tracking-widest">
+             {message.timestamp && formatMessageTime(message.timestamp)}
            </span>
         </div>
       </div>

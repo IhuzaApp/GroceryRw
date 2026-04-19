@@ -270,18 +270,11 @@ export default function ShopperProfileComponent() {
     }
   };
 
-  // Get profile image - prioritize shopper profile_photo
-  const profileImage =
-    shopperData?.profile_photo ||
-    user?.profile_picture ||
-    "/assets/images/profile.jpg";
-
   // Get added date
   const addedDate = shopperData?.created_at || user?.created_at || "";
   const formattedAddedDate = formatDate(addedDate);
 
-  // Get full name for display
-  const displayName = shopperData?.full_name || user?.name || "";
+  // Check if national_id is a base64 image
 
   // Check if national_id is a base64 image
   const isNationalIdImage = (value: string | undefined | null): boolean => {
