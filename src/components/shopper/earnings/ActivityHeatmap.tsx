@@ -76,7 +76,9 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   if (error) {
     return (
       <div className="mt-8 rounded-[2rem] border border-red-500/20 bg-red-500/5 p-8 text-center text-red-500">
-        <p className="font-black uppercase tracking-widest text-xs">Analysis Failed</p>
+        <p className="text-xs font-black uppercase tracking-widest">
+          Analysis Failed
+        </p>
       </div>
     );
   }
@@ -91,24 +93,42 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
     <div className="mt-8">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h3 className="text-xl font-black tracking-tight">Activity Patterns</h3>
-          <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">Heatmap Distribution</p>
+          <h3 className="text-xl font-black tracking-tight">
+            Activity Patterns
+          </h3>
+          <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+            Heatmap Distribution
+          </p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className={`h-2.5 w-2.5 rounded-full ${isDark ? "bg-white/10" : "bg-black/5"}`} />
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Low</span>
+            <div
+              className={`h-2.5 w-2.5 rounded-full ${
+                isDark ? "bg-white/10" : "bg-black/5"
+              }`}
+            />
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Low
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Peak</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Peak
+            </span>
           </div>
         </div>
       </div>
 
       {/* Grid Container */}
-      <div className={`rounded-[2.5rem] p-6 lg:p-8 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5 shadow-sm"}`}>
+      <div
+        className={`rounded-[2.5rem] p-6 lg:p-8 ${
+          isDark
+            ? "border border-white/10 bg-white/5"
+            : "border border-black/5 bg-white shadow-sm"
+        }`}
+      >
         {/* Day labels */}
         <div className="mb-4 flex">
           <div className="w-12 pr-4" />
@@ -137,12 +157,19 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
               <div className="grid flex-1 grid-cols-7 gap-2 lg:gap-3">
                 {days.map((_, dayIndex) => {
                   const activityLevel = finalActivityData[hourIndex][dayIndex];
-                  
+
                   let cellClasses = "";
-                  if (activityLevel === 0) cellClasses = isDark ? "bg-white/[0.03]" : "bg-black/[0.03]";
+                  if (activityLevel === 0)
+                    cellClasses = isDark
+                      ? "bg-white/[0.03]"
+                      : "bg-black/[0.03]";
                   if (activityLevel === 1) cellClasses = "bg-emerald-500/20";
-                  if (activityLevel === 2) cellClasses = "bg-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]";
-                  if (activityLevel === 3) cellClasses = "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+                  if (activityLevel === 2)
+                    cellClasses =
+                      "bg-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]";
+                  if (activityLevel === 3)
+                    cellClasses =
+                      "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
 
                   return (
                     <div
@@ -160,7 +187,9 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
       {summary && (
         <div className="mt-8 flex items-center justify-center gap-2">
-          <div className={`h-1 w-1 rounded-full bg-emerald-500 animate-pulse`} />
+          <div
+            className={`h-1 w-1 animate-pulse rounded-full bg-emerald-500`}
+          />
           <p className="text-[10px] font-black uppercase tracking-widest opacity-30">
             Insights based on {summary.totalOrders} total completed orders
           </p>

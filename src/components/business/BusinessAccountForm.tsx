@@ -144,7 +144,10 @@ export default function BusinessAccountForm({
 
       // 1. Upload RDB Certificate
       let rdbUrl = rdbCertificate;
-      if (typeof rdbCertificate === "string" && rdbCertificate.startsWith("data:")) {
+      if (
+        typeof rdbCertificate === "string" &&
+        rdbCertificate.startsWith("data:")
+      ) {
         const path = `businessAccount/${bNameSlug}/rdb_certificate_${timestamp}.png`;
         rdbUrl = await uploadToFirebase(rdbCertificate, path);
       }

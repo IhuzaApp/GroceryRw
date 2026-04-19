@@ -32,7 +32,13 @@ export const generatePosInvoicePdf = async (
 
   // Header
   try {
-    const logoPath = path.join(process.cwd(), "public", "assets", "logos", "PlasLogoPNG.png");
+    const logoPath = path.join(
+      process.cwd(),
+      "public",
+      "assets",
+      "logos",
+      "PlasLogoPNG.png"
+    );
     if (fs.existsSync(logoPath)) {
       const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
       const logoDataUri = `data:image/png;base64,${logoBase64}`;
@@ -57,7 +63,6 @@ export const generatePosInvoicePdf = async (
   doc.text("Empowering Your Business", margin, yPos + 10);
 
   yPos += 25;
-
 
   // Invoice Title
   doc.setFontSize(18);

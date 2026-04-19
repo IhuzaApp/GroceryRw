@@ -33,7 +33,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   }, []);
 
   const toggleSidebar = () => {
-    setIsSidebarCollapsed(prev => {
+    setIsSidebarCollapsed((prev) => {
       const newState = !prev;
       localStorage.setItem("shopper_sidebar_collapsed", String(newState));
       return newState;
@@ -286,11 +286,14 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
       <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]">
-        <ShopperSidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
+        <ShopperSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={toggleSidebar}
+        />
         <main
           className={`relative flex-1 overflow-y-auto transition-all duration-300 ${
-            isMobile 
-              ? `${isBatchDetailsPage ? "p-0" : "p-4"} pb-28` 
+            isMobile
+              ? `${isBatchDetailsPage ? "p-0" : "p-4"} pb-28`
               : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`
           }`}
         >

@@ -57,7 +57,10 @@ export function useAnyModalOpen() {
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("business-modal-toggle", handleCustomModalEvent);
+      window.removeEventListener(
+        "business-modal-toggle",
+        handleCustomModalEvent
+      );
       window.addEventListener("modal-toggle", handleCustomModalEvent);
     };
   }, []);

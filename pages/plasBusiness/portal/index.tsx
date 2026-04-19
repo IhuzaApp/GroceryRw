@@ -54,7 +54,6 @@ export default function PlasBusinessPage() {
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
 
-
   // Redirect shoppers away from this page
   useEffect(() => {
     if (authReady && isLoggedIn && role === "shopper") {

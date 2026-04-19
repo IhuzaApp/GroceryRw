@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, DollarSign, Clock, FileText, Send, Upload, Package, Building, CheckCircle, ChevronRight, Sparkles } from "lucide-react";
+import {
+  X,
+  DollarSign,
+  Clock,
+  FileText,
+  Send,
+  Upload,
+  Package,
+  Building,
+  CheckCircle,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { uploadToFirebase } from "../../utils/firebaseUtils";
@@ -402,7 +414,12 @@ export function QuoteSubmissionForm({
       >
         {/* Header */}
         <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-8">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            }}
+          ></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-black text-white sm:text-3xl">
@@ -423,20 +440,24 @@ export function QuoteSubmissionForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--bg-primary)]">
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--bg-primary)]"
+        >
           <div className="flex-1 overflow-y-auto p-6 sm:p-10">
             <div className="mx-auto max-w-2xl space-y-10">
-              
               {/* Core Bid Details */}
               <section className="space-y-6">
                 <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
                   <div className="h-1 w-4 rounded-full bg-green-500"></div>
                   Financial Proposal
                 </h3>
-                
+
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                   <div className="sm:col-span-2">
-                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Bid Amount *</label>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                      Bid Amount *
+                    </label>
                     <div className="group relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-green-600">
                         <DollarSign className="h-5 w-5" />
@@ -447,18 +468,20 @@ export function QuoteSubmissionForm({
                         value={formData.quote_amount}
                         onChange={handleInputChange}
                         required
-                        className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-4 pl-12 text-base font-black text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] placeholder:opacity-40 focus:bg-white focus:ring-4 focus:ring-green-500/10 dark:focus:bg-[var(--bg-secondary)]"
+                        className="bg-[var(--bg-secondary)]/20 w-full rounded-2xl border border-[var(--bg-secondary)] px-4 py-4 pl-12 text-base font-black text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] placeholder:opacity-40 focus:bg-white focus:ring-4 focus:ring-green-500/10 dark:focus:bg-[var(--bg-secondary)]"
                         placeholder="0.00"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Currency</label>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                      Currency
+                    </label>
                     <select
                       name="currency"
                       value={formData.currency}
                       onChange={handleInputChange}
-                      className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
+                      className="bg-[var(--bg-secondary)]/20 w-full rounded-2xl border border-[var(--bg-secondary)] px-4 py-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
                     >
                       <option value="RWF">RWF</option>
                       <option value="USD">USD</option>
@@ -468,15 +491,17 @@ export function QuoteSubmissionForm({
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                   <div>
-                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Delivery Timing</label>
+                  <div>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                      Delivery Timing
+                    </label>
                     <div className="relative">
                       <Clock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)] opacity-50" />
                       <select
                         name="delivery_time"
                         value={formData.delivery_time}
                         onChange={handleInputChange}
-                        className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 py-4 pl-12 pr-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
+                        className="bg-[var(--bg-secondary)]/20 w-full rounded-2xl border border-[var(--bg-secondary)] py-4 pl-12 pr-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
                       >
                         <option value="">Standard Lead Time</option>
                         <option value="Same day">Immediate</option>
@@ -488,12 +513,14 @@ export function QuoteSubmissionForm({
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Bid Validity</label>
+                    <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                      Bid Validity
+                    </label>
                     <select
                       name="validity"
                       value={formData.validity}
                       onChange={handleInputChange}
-                      className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
+                      className="bg-[var(--bg-secondary)]/20 w-full rounded-2xl border border-[var(--bg-secondary)] px-4 py-4 text-sm font-black text-[var(--text-primary)] focus:ring-4 focus:ring-green-500/10"
                     >
                       <option value="">Select period</option>
                       <option value="7 days">7 Days</option>
@@ -510,24 +537,55 @@ export function QuoteSubmissionForm({
                   <div className="h-1 w-4 rounded-full bg-purple-500"></div>
                   Commercial Terms
                 </h3>
-                <div className="rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 p-6 sm:p-8">
+                <div className="bg-[var(--bg-secondary)]/10 rounded-3xl border border-[var(--bg-secondary)] p-6 sm:p-8">
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {[
-                      { name: "payment_terms", label: "Payment Terms", icon: DollarSign, options: ["COD", "Net 30", "50% Advance"] },
-                      { name: "warranty", label: "Warranty Policy", icon: Clock, options: ["No Warranty", "1 Year", "2 Years", "Lifetime"] },
-                      { name: "delivery_terms", label: "Freight Terms", icon: Package, options: ["EXW", "DDP", "FOB", "Free Delivery"] },
-                      { name: "cancellation_terms", label: "Cancellation Policy", icon: FileText, options: ["None", "24h Notice", "Refundable"] }
+                      {
+                        name: "payment_terms",
+                        label: "Payment Terms",
+                        icon: DollarSign,
+                        options: ["COD", "Net 30", "50% Advance"],
+                      },
+                      {
+                        name: "warranty",
+                        label: "Warranty Policy",
+                        icon: Clock,
+                        options: [
+                          "No Warranty",
+                          "1 Year",
+                          "2 Years",
+                          "Lifetime",
+                        ],
+                      },
+                      {
+                        name: "delivery_terms",
+                        label: "Freight Terms",
+                        icon: Package,
+                        options: ["EXW", "DDP", "FOB", "Free Delivery"],
+                      },
+                      {
+                        name: "cancellation_terms",
+                        label: "Cancellation Policy",
+                        icon: FileText,
+                        options: ["None", "24h Notice", "Refundable"],
+                      },
                     ].map((term) => (
                       <div key={term.name}>
-                        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{term.label}</label>
+                        <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                          {term.label}
+                        </label>
                         <select
                           name={term.name}
                           value={(formData as any)[term.name]}
                           onChange={handleInputChange}
-                          className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:bg-white dark:focus:bg-[var(--bg-secondary)]"
+                          className="bg-[var(--bg-secondary)]/20 w-full rounded-2xl border border-[var(--bg-secondary)] px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:bg-white dark:focus:bg-[var(--bg-secondary)]"
                         >
                           <option value="">N/A</option>
-                          {term.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          {term.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     ))}
@@ -537,7 +595,7 @@ export function QuoteSubmissionForm({
 
               {/* Proposal Text */}
               <section className="space-y-6">
-                 <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
                   <div className="h-1 w-4 rounded-full bg-blue-500"></div>
                   Message to Client
                 </h3>
@@ -546,7 +604,7 @@ export function QuoteSubmissionForm({
                   value={formData.message}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 p-6 text-base font-medium text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] placeholder:opacity-40 focus:bg-white focus:ring-4 focus:ring-green-500/10 dark:focus:bg-[var(--bg-secondary)]"
+                  className="bg-[var(--bg-secondary)]/20 w-full rounded-3xl border border-[var(--bg-secondary)] p-6 text-base font-medium text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] placeholder:opacity-40 focus:bg-white focus:ring-4 focus:ring-green-500/10 dark:focus:bg-[var(--bg-secondary)]"
                   placeholder="Detail your competitive advantages and specific approach for this RFQ..."
                 />
               </section>
@@ -558,39 +616,59 @@ export function QuoteSubmissionForm({
                   Supporting Documents
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
-                  <label className={`group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 transition-all active:scale-[0.98] ${
-                    attachments.length >= 3 
-                      ? "border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 opacity-50" 
-                      : "border-green-500/30 bg-green-500/5 hover:border-green-500 hover:bg-green-500/10"
-                  }`}>
+                  <label
+                    className={`group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 transition-all active:scale-[0.98] ${
+                      attachments.length >= 3
+                        ? "bg-[var(--bg-secondary)]/10 border-[var(--bg-secondary)] opacity-50"
+                        : "border-green-500/30 bg-green-500/5 hover:border-green-500 hover:bg-green-500/10"
+                    }`}
+                  >
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
-                       <Upload className="h-6 w-6" />
+                      <Upload className="h-6 w-6" />
                     </div>
                     <span className="text-sm font-black text-[var(--text-primary)]">
-                       {attachments.length >= 3 ? "Slot Limit Reached" : "Drop Proposals Here"}
+                      {attachments.length >= 3
+                        ? "Slot Limit Reached"
+                        : "Drop Proposals Here"}
                     </span>
                     <span className="mt-1 text-xs font-bold text-[var(--text-secondary)] opacity-60">
-                       Max 3 files (PDF, JPG, PNG)
+                      Max 3 files (PDF, JPG, PNG)
                     </span>
-                    <input type="file" multiple onChange={handleFileChange} className="hidden" disabled={attachments.length >= 3} />
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                      disabled={attachments.length >= 3}
+                    />
                   </label>
 
                   {attachments.length > 0 && (
                     <div className="space-y-3">
-                       {attachments.map((file, i) => (
-                         <div key={i} className="flex items-center justify-between rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 p-4 transition-all hover:bg-[var(--bg-secondary)]/20">
-                            <div className="flex items-center gap-3">
-                               <FileText className="h-5 w-5 text-blue-500" />
-                               <div>
-                                  <p className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-sm font-black text-[var(--text-primary)]">{file.name}</p>
-                                  <p className="text-[10px] font-bold text-[var(--text-secondary)]">{(file.size/1024).toFixed(0)} KB</p>
-                               </div>
+                      {attachments.map((file, i) => (
+                        <div
+                          key={i}
+                          className="bg-[var(--bg-secondary)]/10 hover:bg-[var(--bg-secondary)]/20 flex items-center justify-between rounded-2xl border border-[var(--bg-secondary)] p-4 transition-all"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-blue-500" />
+                            <div>
+                              <p className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-sm font-black text-[var(--text-primary)]">
+                                {file.name}
+                              </p>
+                              <p className="text-[10px] font-bold text-[var(--text-secondary)]">
+                                {(file.size / 1024).toFixed(0)} KB
+                              </p>
                             </div>
-                            <button onClick={() => removeAttachment(i)} className="rounded-xl bg-red-500/10 p-2 text-red-500 transition-all hover:bg-red-500 hover:text-white">
-                               <X className="h-4 w-4" />
-                            </button>
-                         </div>
-                       ))}
+                          </div>
+                          <button
+                            onClick={() => removeAttachment(i)}
+                            className="rounded-xl bg-red-500/10 p-2 text-red-500 transition-all hover:bg-red-500 hover:text-white"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -617,8 +695,12 @@ export function QuoteSubmissionForm({
                 <div className="relative z-10 flex items-center justify-center gap-2">
                   {isSubmitting ? (
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  ) : <Send className="h-4 w-4" />}
-                  <span style={{ color: "#ffffff" }}>{isSubmitting ? "Processing Bid..." : "Submit Formal Bid"}</span>
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  <span style={{ color: "#ffffff" }}>
+                    {isSubmitting ? "Processing Bid..." : "Submit Formal Bid"}
+                  </span>
                 </div>
               </button>
             </div>
@@ -628,4 +710,3 @@ export function QuoteSubmissionForm({
     </div>
   );
 }
-

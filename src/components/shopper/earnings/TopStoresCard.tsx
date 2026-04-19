@@ -35,19 +35,23 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
 
   const getAccentColor = (index: number) => {
     switch (index) {
-      case 0: return "emerald";
-      case 1: return "blue";
-      case 2: return "purple";
-      default: return "gray";
+      case 0:
+        return "emerald";
+      case 1:
+        return "blue";
+      case 2:
+        return "purple";
+      default:
+        return "gray";
     }
   };
 
   return (
     <div
       className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
-        isDark 
-          ? "bg-white/5 border border-white/10" 
-          : "bg-white border border-black/5 shadow-xl"
+        isDark
+          ? "border border-white/10 bg-white/5"
+          : "border border-black/5 bg-white shadow-xl"
       }`}
     >
       <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-emerald-500/5 blur-3xl" />
@@ -56,11 +60,29 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-black tracking-tight">Top Stores</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-0.5">Revenue Sources</p>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Revenue Sources
+            </p>
           </div>
-          <button className={`${isDark ? "text-white/20 hover:text-white/60" : "text-black/20 hover:text-black/60"} transition-colors`}>
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          <button
+            className={`${
+              isDark
+                ? "text-white/20 hover:text-white/60"
+                : "text-black/20 hover:text-black/60"
+            } transition-colors`}
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+              />
             </svg>
           </button>
         </div>
@@ -88,15 +110,23 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
-                        isDark ? `bg-${accent}-500/10` : `bg-${accent}-100`
-                      } transition-transform group-hover:scale-105`}>
-                        <ShoppingCart className={`h-5 w-5 text-${accent}-500`} />
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                          isDark ? `bg-${accent}-500/10` : `bg-${accent}-100`
+                        } transition-transform group-hover:scale-105`}
+                      >
+                        <ShoppingCart
+                          className={`h-5 w-5 text-${accent}-500`}
+                        />
                       </div>
                       <div>
-                        <p className="text-sm font-black tracking-tight">{storeName}</p>
+                        <p className="text-sm font-black tracking-tight">
+                          {storeName}
+                        </p>
                         <p className="text-xs font-bold opacity-40">
-                          {amount ? formatCurrencySync(amount) : `${percentage} Points`}
+                          {amount
+                            ? formatCurrencySync(amount)
+                            : `${percentage} Points`}
                         </p>
                       </div>
                     </div>
@@ -106,11 +136,13 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Progress Bar */}
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-1000 ${accentClasses.split(" ")[0]}`}
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ${
+                        accentClasses.split(" ")[0]
+                      }`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -122,7 +154,9 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
 
         {storeBreakdown.length === 0 && !isLoading && (
           <div className="py-8 text-center">
-            <p className="text-sm font-bold opacity-20 uppercase tracking-widest">No active sources</p>
+            <p className="text-sm font-bold uppercase tracking-widest opacity-20">
+              No active sources
+            </p>
           </div>
         )}
       </div>

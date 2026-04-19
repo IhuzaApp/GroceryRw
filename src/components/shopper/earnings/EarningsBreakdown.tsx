@@ -40,10 +40,18 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
       <div>
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-black tracking-tight">Income by Source</h3>
-            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">Store Distribution</p>
+            <h3 className="text-xl font-black tracking-tight">
+              Income by Source
+            </h3>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Store Distribution
+            </p>
           </div>
-          <div className={`rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest ${isDark ? "bg-white/5 text-white/40" : "bg-black/5 text-black/40"}`}>
+          <div
+            className={`rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
+              isDark ? "bg-white/5 text-white/40" : "bg-black/5 text-black/40"
+            }`}
+          >
             {storeBreakdown.length} Outlets
           </div>
         </div>
@@ -59,14 +67,20 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
               <div
                 key={index}
                 className={`relative overflow-hidden rounded-[2rem] p-5 transition-all duration-300 hover:scale-[1.02] ${
-                  isDark ? "bg-white/5 border border-white/10" : "bg-white border border-black/5 shadow-sm"
+                  isDark
+                    ? "border border-white/10 bg-white/5"
+                    : "border border-black/5 bg-white shadow-sm"
                 }`}
               >
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-black tracking-tight opacity-70">
                     {item.store}
                   </span>
-                  <span className={`text-sm font-black ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                  <span
+                    className={`text-sm font-black ${
+                      isDark ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                  >
                     {formatCurrencySync(item.amount)}
                   </span>
                 </div>
@@ -78,14 +92,16 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
                     <div
-                      className={`h-full rounded-full ${accentBar} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.1)]`}
+                      className={`h-full rounded-full ${accentBar} shadow-[0_0_8px_rgba(0,0,0,0.1)] transition-all duration-1000`}
                       style={{ width: `${item.percentage}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Decorative Accent Glow */}
-                <div className={`absolute -right-4 -top-4 h-12 w-12 rounded-full ${accentBg} blur-2xl opacity-50`} />
+                <div
+                  className={`absolute -right-4 -top-4 h-12 w-12 rounded-full ${accentBg} opacity-50 blur-2xl`}
+                />
               </div>
             );
           })}
@@ -94,23 +110,38 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
 
       {/* Earnings Components - Only shown if not hidden */}
       {!hideEarningsComponents && (
-        <div className={`rounded-[2.5rem] p-8 ${isDark ? "bg-white/5 border border-white/10 shadow-inner" : "bg-black/5 border border-black/5"}`}>
+        <div
+          className={`rounded-[2.5rem] p-8 ${
+            isDark
+              ? "border border-white/10 bg-white/5 shadow-inner"
+              : "border border-black/5 bg-black/5"
+          }`}
+        >
           <div className="mb-6">
-            <h3 className="text-xl font-black tracking-tight">Earnings Components</h3>
-            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">Fee Structure Breakdown</p>
+            <h3 className="text-xl font-black tracking-tight">
+              Earnings Components
+            </h3>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Fee Structure Breakdown
+            </p>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {earningsComponents.map((item, index) => {
-              const componentColor = 
-                item.type === "Delivery Fee" ? "emerald" :
-                item.type === "Service Fee" ? "blue" : "purple";
+              const componentColor =
+                item.type === "Delivery Fee"
+                  ? "emerald"
+                  : item.type === "Service Fee"
+                  ? "blue"
+                  : "purple";
 
               return (
                 <div key={index} className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className={`h-2.5 w-2.5 rounded-full bg-${componentColor}-500 shadow-[0_0_8px_rgba(0,0,0,0.2)]`} />
+                      <div
+                        className={`h-2.5 w-2.5 rounded-full bg-${componentColor}-500 shadow-[0_0_8px_rgba(0,0,0,0.2)]`}
+                      />
                       <span className="text-sm font-black uppercase tracking-widest opacity-80">
                         {item.type}
                       </span>
@@ -119,7 +150,7 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
                       {formatCurrencySync(item.amount)}
                     </span>
                   </div>
-                  
+
                   <div className="relative h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
                     <div
                       className={`h-full rounded-full bg-${componentColor}-500 transition-all duration-1000`}

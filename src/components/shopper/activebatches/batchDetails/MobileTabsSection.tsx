@@ -16,23 +16,26 @@ export default function MobileTabsSection({
   const isDark = theme === "dark";
 
   return (
-    <div 
+    <div
       className={`sticky top-[58px] z-40 border-b transition-all duration-300 sm:hidden ${
-        isDark ? "bg-[#0A0A0A]/70 border-white/5" : "bg-white/70 border-black/5"
+        isDark ? "border-white/5 bg-[#0A0A0A]/70" : "border-black/5 bg-white/70"
       }`}
-      style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
     >
       <div className="flex px-4 py-1">
-        <TabButton 
-          active={activeTab === "items"} 
-          onClick={() => onTabChange("items")} 
-          label="Items" 
+        <TabButton
+          active={activeTab === "items"}
+          onClick={() => onTabChange("items")}
+          label="Items"
           isDark={isDark}
         />
-        <TabButton 
-          active={activeTab === "details"} 
-          onClick={() => onTabChange("details")} 
-          label="Details" 
+        <TabButton
+          active={activeTab === "details"}
+          onClick={() => onTabChange("details")}
+          label="Details"
           isDark={isDark}
         />
       </div>
@@ -40,13 +43,23 @@ export default function MobileTabsSection({
   );
 }
 
-function TabButton({ active, onClick, label, isDark }: { active: boolean, onClick: () => void, label: string, isDark: boolean }) {
+function TabButton({
+  active,
+  onClick,
+  label,
+  isDark,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  isDark: boolean;
+}) {
   return (
     <button
       onClick={onClick}
       className={`relative flex-1 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${
-        active 
-          ? "text-emerald-500" 
+        active
+          ? "text-emerald-500"
           : "text-gray-500 opacity-60 hover:opacity-100"
       }`}
     >

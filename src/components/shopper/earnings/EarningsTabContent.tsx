@@ -97,7 +97,10 @@ const EarningsTabContent: React.FC<EarningsTabContentProps> = ({
             rating={earningsStats.rating}
             isLoading={loading}
           />
-          <BusiestTimesCard activitySummary={activitySummary} isLoading={loading} />
+          <BusiestTimesCard
+            activitySummary={activitySummary}
+            isLoading={loading}
+          />
         </div>
       </div>
     );
@@ -107,24 +110,43 @@ const EarningsTabContent: React.FC<EarningsTabContentProps> = ({
     return (
       <div className="space-y-6">
         {loading ? (
-          <div className={`flex justify-center py-20 rounded-[2.5rem] border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
+          <div
+            className={`flex justify-center rounded-[2.5rem] border py-20 ${
+              isDark
+                ? "border-white/10 bg-white/5"
+                : "border-black/5 bg-white shadow-sm"
+            }`}
+          >
             <Loader size="md" content="Syncing Breakdown..." />
           </div>
-        ) : !earningsStats.storeBreakdown || !earningsStats.earningsComponents ? (
-          <div className={`py-20 text-center rounded-[2.5rem] border ${isDark ? "bg-white/5 border-white/10" : "bg-white border-black/5 shadow-sm"}`}>
-            <p className="text-sm font-bold opacity-20 uppercase tracking-widest">No detailed breakdown found.</p>
+        ) : !earningsStats.storeBreakdown ||
+          !earningsStats.earningsComponents ? (
+          <div
+            className={`rounded-[2.5rem] border py-20 text-center ${
+              isDark
+                ? "border-white/10 bg-white/5"
+                : "border-black/5 bg-white shadow-sm"
+            }`}
+          >
+            <p className="text-sm font-bold uppercase tracking-widest opacity-20">
+              No detailed breakdown found.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
             <EarningsBreakdown
-              storeBreakdown={earningsStats.storeBreakdown.map((store: any) => ({
-                ...store,
-                amount: parseFloat(store.amount.toFixed(2)),
-              }))}
-              earningsComponents={earningsStats.earningsComponents.map((component: any) => ({
-                ...component,
-                amount: parseFloat(component.amount.toFixed(2)),
-              }))}
+              storeBreakdown={earningsStats.storeBreakdown.map(
+                (store: any) => ({
+                  ...store,
+                  amount: parseFloat(store.amount.toFixed(2)),
+                })
+              )}
+              earningsComponents={earningsStats.earningsComponents.map(
+                (component: any) => ({
+                  ...component,
+                  amount: parseFloat(component.amount.toFixed(2)),
+                })
+              )}
               hideEarningsComponents={false}
             />
             <ActivityHeatmap hideSummary={true} />
@@ -154,10 +176,16 @@ const EarningsTabContent: React.FC<EarningsTabContentProps> = ({
     return (
       <div className="space-y-6">
         <div className="hidden lg:block">
-          <TransactionTable transactions={transactions} isLoading={walletLoading} />
+          <TransactionTable
+            transactions={transactions}
+            isLoading={walletLoading}
+          />
         </div>
         <div className="block lg:hidden">
-          <TransactionCardsMobile transactions={transactions} isLoading={walletLoading} />
+          <TransactionCardsMobile
+            transactions={transactions}
+            isLoading={walletLoading}
+          />
         </div>
       </div>
     );

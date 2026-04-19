@@ -12,16 +12,18 @@ export default function PaymentProcessingOverlay({
 }: PaymentProcessingOverlayProps) {
   const { theme } = useTheme();
   const router = useRouter();
-  
+
   // Force light theme if on POS path to match POS UI
   const isPos = router.pathname.startsWith("/pos");
   const activeTheme = isPos ? "light" : theme;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm duration-300 animate-in fade-in">
       <div
         className={`mx-4 w-full max-w-lg overflow-hidden rounded-[2.5rem] shadow-2xl transition-all duration-500 animate-in zoom-in-95 ${
-          activeTheme === "dark" ? "border border-white/5 bg-gray-900" : "bg-white"
+          activeTheme === "dark"
+            ? "border border-white/5 bg-gray-900"
+            : "bg-white"
         }`}
       >
         <div
@@ -29,7 +31,7 @@ export default function PaymentProcessingOverlay({
             activeTheme === "dark" ? "bg-green-500" : "bg-[#022C22]"
           }`}
         />
-        <div className="p-8 md:p-12 text-center">
+        <div className="p-8 text-center md:p-12">
           <div className="mb-8 flex justify-center">
             <div
               className={`flex h-24 w-24 items-center justify-center rounded-2xl transition-all duration-500 ${

@@ -381,7 +381,6 @@ export default function RegisterPage() {
           invoiceNumber,
         }),
       });
- 
     } catch (err) {
       console.error("❌ Failed to send registration notifications:", err);
     }
@@ -448,8 +447,6 @@ export default function RegisterPage() {
     }
 
     try {
- 
-
       // STEP 1: Create Business
       if (startAt <= 1) {
         setRegistrationSubStep(1);
@@ -496,7 +493,6 @@ export default function RegisterPage() {
         if (businessResult?.errors)
           throw new Error(businessResult.errors[0].message);
         setRegisteredBusinessId(businessId);
- 
       }
 
       // STEP 2: Create Employee
@@ -529,7 +525,6 @@ export default function RegisterPage() {
         });
         if (employeeResult?.errors)
           throw new Error(employeeResult.errors[0].message);
- 
       }
 
       // STEP 3: AI Usage (MOVED UP - Dependency for Invoice)
@@ -549,7 +544,6 @@ export default function RegisterPage() {
         });
         if (aiUsageResult?.errors)
           throw new Error(aiUsageResult.errors[0].message);
- 
       }
 
       // STEP 4: Reel Usage (MOVED UP - Dependency for Invoice)
@@ -568,7 +562,6 @@ export default function RegisterPage() {
         });
         if (reelUsageResult?.errors)
           throw new Error(reelUsageResult.errors[0].message);
- 
       }
 
       // STEP 5: Create Subscription
@@ -590,7 +583,6 @@ export default function RegisterPage() {
         });
         if (subResult?.errors) throw new Error(subResult.errors[0].message);
         setRegisteredSubscriptionId(activeIds.shopSubscription_id);
- 
       }
 
       // STEP 6: Create Invoice
@@ -625,7 +617,6 @@ export default function RegisterPage() {
         });
         if (invoiceResult?.errors)
           throw new Error(invoiceResult.errors[0].message);
- 
       }
 
       // BREAK POINT: Trigger Payment if this is the initial shell setup
@@ -655,15 +646,12 @@ export default function RegisterPage() {
             if (
               walletResult.errors[0].message.includes("Uniqueness violation")
             ) {
- 
             } else {
               throw new Error(walletResult.errors[0].message);
             }
           }
- 
         } catch (walletErr: any) {
           if (walletErr.message?.includes("Uniqueness violation")) {
- 
           } else {
             throw walletErr;
           }

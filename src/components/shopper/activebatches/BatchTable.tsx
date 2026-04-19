@@ -78,11 +78,31 @@ function CustomerAddresses({ order }: { order: Order }) {
 
 /* ── Order Type Pill ── */
 const ORDER_TYPE = {
-  reel: { label: "Reel", gradient: "from-violet-500 to-purple-600", dot: "bg-violet-400" },
-  restaurant: { label: "Restaurant", gradient: "from-orange-500 to-red-500", dot: "bg-orange-400" },
-  business: { label: "Business", gradient: "from-blue-500 to-indigo-600", dot: "bg-blue-400" },
-  combined: { label: "Combined", gradient: "from-amber-500 to-yellow-500", dot: "bg-amber-400" },
-  regular: { label: "Regular", gradient: "from-emerald-500 to-green-600", dot: "bg-emerald-400" },
+  reel: {
+    label: "Reel",
+    gradient: "from-violet-500 to-purple-600",
+    dot: "bg-violet-400",
+  },
+  restaurant: {
+    label: "Restaurant",
+    gradient: "from-orange-500 to-red-500",
+    dot: "bg-orange-400",
+  },
+  business: {
+    label: "Business",
+    gradient: "from-blue-500 to-indigo-600",
+    dot: "bg-blue-400",
+  },
+  combined: {
+    label: "Combined",
+    gradient: "from-amber-500 to-yellow-500",
+    dot: "bg-amber-400",
+  },
+  regular: {
+    label: "Regular",
+    gradient: "from-emerald-500 to-green-600",
+    dot: "bg-emerald-400",
+  },
 } as const;
 
 function OrderTypePill({ type }: { type?: string }) {
@@ -102,12 +122,36 @@ function OrderTypePill({ type }: { type?: string }) {
 
 /* ── Status Badge ── */
 const STATUS_CFG: Record<string, { bg: string; text: string; ring: string }> = {
-  accepted:    { bg: "bg-emerald-400/10", text: "text-emerald-500", ring: "ring-emerald-400/20" },
-  shopping:    { bg: "bg-yellow-400/10",  text: "text-yellow-500",  ring: "ring-yellow-400/20"  },
-  picked:      { bg: "bg-orange-400/10",  text: "text-orange-500",  ring: "ring-orange-400/20"  },
-  on_the_way:  { bg: "bg-purple-400/10",  text: "text-purple-500",  ring: "ring-purple-400/20"  },
-  at_customer: { bg: "bg-indigo-400/10",  text: "text-indigo-500",  ring: "ring-indigo-400/20"  },
-  delivered:   { bg: "bg-green-400/10",   text: "text-green-500",   ring: "ring-green-400/20"   },
+  accepted: {
+    bg: "bg-emerald-400/10",
+    text: "text-emerald-500",
+    ring: "ring-emerald-400/20",
+  },
+  shopping: {
+    bg: "bg-yellow-400/10",
+    text: "text-yellow-500",
+    ring: "ring-yellow-400/20",
+  },
+  picked: {
+    bg: "bg-orange-400/10",
+    text: "text-orange-500",
+    ring: "ring-orange-400/20",
+  },
+  on_the_way: {
+    bg: "bg-purple-400/10",
+    text: "text-purple-500",
+    ring: "ring-purple-400/20",
+  },
+  at_customer: {
+    bg: "bg-indigo-400/10",
+    text: "text-indigo-500",
+    ring: "ring-indigo-400/20",
+  },
+  delivered: {
+    bg: "bg-green-400/10",
+    text: "text-green-500",
+    ring: "ring-green-400/20",
+  },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -130,19 +174,19 @@ function StatusPill({ status }: { status: string }) {
 /* ── Human-readable relative time ── */
 function relativeTime(diffMs: number): string {
   const abs = Math.abs(diffMs);
-  const mins  = Math.floor(abs / 60_000);
+  const mins = Math.floor(abs / 60_000);
   const hours = Math.floor(abs / 3_600_000);
-  const days  = Math.floor(abs / 86_400_000);
+  const days = Math.floor(abs / 86_400_000);
   const weeks = Math.floor(days / 7);
-  const months= Math.floor(days / 30.4375);
+  const months = Math.floor(days / 30.4375);
   const years = Math.floor(days / 365.25);
 
-  if (years >= 1)  return years === 1  ? "1 year"   : `${years} years`;
-  if (months >= 1) return months === 1 ? "1 month"  : `${months} months`;
-  if (weeks >= 1)  return weeks === 1  ? "1 week"   : `${weeks} weeks`;
-  if (days >= 1)   return days === 1   ? "1 day"    : `${days} days`;
-  if (hours >= 1)  return hours === 1  ? "1 hour"   : `${hours} hours`;
-  if (mins >= 1)   return mins === 1   ? "1 min"    : `${mins} mins`;
+  if (years >= 1) return years === 1 ? "1 year" : `${years} years`;
+  if (months >= 1) return months === 1 ? "1 month" : `${months} months`;
+  if (weeks >= 1) return weeks === 1 ? "1 week" : `${weeks} weeks`;
+  if (days >= 1) return days === 1 ? "1 day" : `${days} days`;
+  if (hours >= 1) return hours === 1 ? "1 hour" : `${hours} hours`;
+  if (mins >= 1) return mins === 1 ? "1 min" : `${mins} mins`;
   return "now";
 }
 
@@ -164,11 +208,15 @@ function DeliveryTimeCell({
   }
 
   const delivery = new Date(deliveryTime);
-  const diff     = delivery.getTime() - currentTime.getTime();
+  const diff = delivery.getTime() - currentTime.getTime();
   const isOverdue = diff < 0;
 
   const fmt = (d: Date) =>
-    d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
 
   const timeLabel = relativeTime(diff);
 
@@ -180,20 +228,36 @@ function DeliveryTimeCell({
         ? { bg: "bg-red-900/20", text: "text-red-400", ring: "ring-red-700/30" }
         : days >= 1
         ? { bg: "bg-red-600/15", text: "text-red-500", ring: "ring-red-500/25" }
-        : { bg: "bg-red-500/10", text: "text-red-500", ring: "ring-red-400/20" };
+        : {
+            bg: "bg-red-500/10",
+            text: "text-red-500",
+            ring: "ring-red-400/20",
+          };
 
     return (
       <div className="flex flex-col gap-1">
         <span
           className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${severity.bg} ${severity.text} ${severity.ring}`}
         >
-          <svg className="h-3 w-3 animate-pulse flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <svg
+            className="h-3 w-3 flex-shrink-0 animate-pulse"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
           </svg>
           {timeLabel} late
         </span>
-        <span className="whitespace-nowrap pl-1 text-[10px] tabular-nums" style={{ color: "var(--text-secondary)" }}>
+        <span
+          className="whitespace-nowrap pl-1 text-[10px] tabular-nums"
+          style={{ color: "var(--text-secondary)" }}
+        >
           Due {fmt(delivery)}
         </span>
       </div>
@@ -208,12 +272,25 @@ function DeliveryTimeCell({
     return (
       <div className="flex flex-col gap-1">
         <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold text-orange-500 ring-1 ring-orange-400/20">
-          <svg className="h-3 w-3 animate-bounce flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="h-3 w-3 flex-shrink-0 animate-bounce"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           {timeLabel} left
         </span>
-        <span className="whitespace-nowrap pl-1 text-[10px] tabular-nums" style={{ color: "var(--text-secondary)" }}>
+        <span
+          className="whitespace-nowrap pl-1 text-[10px] tabular-nums"
+          style={{ color: "var(--text-secondary)" }}
+        >
           Due {fmt(delivery)}
         </span>
       </div>
@@ -222,16 +299,21 @@ function DeliveryTimeCell({
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="whitespace-nowrap text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+      <span
+        className="whitespace-nowrap text-xs font-semibold"
+        style={{ color: "var(--text-primary)" }}
+      >
         {fmt(delivery)}
       </span>
-      <span className="whitespace-nowrap text-[10px]" style={{ color: "var(--text-secondary)" }}>
+      <span
+        className="whitespace-nowrap text-[10px]"
+        style={{ color: "var(--text-secondary)" }}
+      >
         in {timeLabel}
       </span>
     </div>
   );
 }
-
 
 /* ── Currency ── */
 const fmtCurrency = (v: number | string) =>
@@ -243,13 +325,7 @@ const fmtCurrency = (v: number | string) =>
   }).format(Number(v));
 
 /* ── Actions Dropdown ── */
-function ActionsDropdown({
-  order,
-  isDark,
-}: {
-  order: Order;
-  isDark: boolean;
-}) {
+function ActionsDropdown({ order, isDark }: { order: Order; isDark: boolean }) {
   const [open, setOpen] = useState(false);
   const btnRef = React.useRef<HTMLButtonElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -259,9 +335,12 @@ function ActionsDropdown({
     if (!open) return;
     const handler = (e: MouseEvent) => {
       if (
-        menuRef.current && !menuRef.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
-      ) setOpen(false);
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        btnRef.current &&
+        !btnRef.current.contains(e.target as Node)
+      )
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -290,7 +369,11 @@ function ActionsDropdown({
         onClick={toggle}
         className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150"
         style={{
-          background: open ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent",
+          background: open
+            ? isDark
+              ? "rgba(255,255,255,0.08)"
+              : "rgba(0,0,0,0.06)"
+            : "transparent",
           color: "var(--text-secondary)",
         }}
       >
@@ -302,7 +385,12 @@ function ActionsDropdown({
       {open && (
         <div
           ref={menuRef}
-          style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 9999 }}
+          style={{
+            position: "fixed",
+            top: pos.top,
+            right: pos.right,
+            zIndex: 9999,
+          }}
           className={`w-52 overflow-hidden rounded-xl ${menuBg}`}
         >
           <div className="py-1">
@@ -311,9 +399,24 @@ function ActionsDropdown({
               className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${itemCls}`}
               onClick={() => setOpen(false)}
             >
-              <svg className="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <svg
+                className="h-4 w-4 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
               View Batch Details
             </Link>
@@ -325,16 +428,35 @@ function ActionsDropdown({
               className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${itemCls}`}
               onClick={() => setOpen(false)}
             >
-              <svg className="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="h-4 w-4 text-emerald-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               Get Directions
             </a>
 
             <div
-              className="my-1 mx-4 border-t"
-              style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
+              className="mx-4 my-1 border-t"
+              style={{
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(0,0,0,0.06)",
+              }}
             />
 
             {order.status === "accepted" &&
@@ -345,26 +467,52 @@ function ActionsDropdown({
                   className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${itemCls}`}
                   onClick={() => setOpen(false)}
                 >
-                  <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <svg
+                    className="h-4 w-4 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
                   </svg>
                   Start Shopping
                 </button>
               )}
 
-            {["shopping", "on_the_way", "at_customer"].includes(order.status) && (
+            {["shopping", "on_the_way", "at_customer"].includes(
+              order.status
+            ) && (
               <button
-                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${itemCls} ${!order.invoiceUrl ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${itemCls} ${
+                  !order.invoiceUrl ? "cursor-not-allowed opacity-50" : ""
+                }`}
                 disabled={!order.invoiceUrl}
                 onClick={() => setOpen(false)}
                 title={!order.invoiceUrl ? "Invoice required" : undefined}
               >
-                <svg className="h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-4 w-4 text-purple-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 Confirm Delivery
                 {!order.invoiceUrl && (
-                  <span className="ml-auto text-[10px] text-red-400">Invoice req.</span>
+                  <span className="ml-auto text-[10px] text-red-400">
+                    Invoice req.
+                  </span>
                 )}
               </button>
             )}
@@ -399,10 +547,16 @@ export function BatchTable({ orders }: BatchTableProps) {
   const currentOrders = orders.slice(startIndex, startIndex + itemsPerPage);
 
   const getPageNumbers = (): (number | string)[] => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (totalPages <= 7)
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages: (number | string)[] = [1];
     if (currentPage > 3) pages.push("…");
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    )
+      pages.push(i);
     if (currentPage < totalPages - 2) pages.push("…");
     pages.push(totalPages);
     return pages;
@@ -411,11 +565,13 @@ export function BatchTable({ orders }: BatchTableProps) {
   /* Glass surface helpers */
   const surface = {
     background: isDark ? "rgba(23,23,23,0.85)" : "rgba(245,245,245,0.85)", // bg-secondary equivalents
-    border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)"
+    border: isDark
+      ? "1px solid rgba(255,255,255,0.06)"
+      : "1px solid rgba(0,0,0,0.06)",
   };
 
   const headerBg = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)";
-  const rowOdd   = isDark ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.015)";
+  const rowOdd = isDark ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.015)";
   const rowHover = isDark ? "rgba(16,185,129,0.08)" : "rgba(16,185,129,0.06)";
 
   return (
@@ -439,7 +595,9 @@ export function BatchTable({ orders }: BatchTableProps) {
               <tr
                 style={{
                   background: headerBg,
-                  borderBottom: isDark ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(0,0,0,0.05)",
+                  borderBottom: isDark
+                    ? "1px solid rgba(255,255,255,0.05)"
+                    : "1px solid rgba(0,0,0,0.05)",
                 }}
               >
                 {[
@@ -477,7 +635,8 @@ export function BatchTable({ orders }: BatchTableProps) {
                       : "1px solid rgba(0,0,0,0.035)",
                   }}
                   onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLElement).style.background = rowHover)
+                    ((e.currentTarget as HTMLElement).style.background =
+                      rowHover)
                   }
                   onMouseLeave={(e) =>
                     ((e.currentTarget as HTMLElement).style.background =
@@ -490,9 +649,13 @@ export function BatchTable({ orders }: BatchTableProps) {
                       <span
                         className="inline-flex cursor-pointer items-center rounded-lg px-2.5 py-1 text-xs font-bold transition-all hover:shadow-md"
                         style={{
-                          background: isDark ? "rgba(16,185,129,0.12)" : "rgba(16,185,129,0.1)",
+                          background: isDark
+                            ? "rgba(16,185,129,0.12)"
+                            : "rgba(16,185,129,0.1)",
                           color: isDark ? "#34d399" : "#059669",
-                          border: isDark ? "1px solid rgba(52,211,153,0.18)" : "1px solid rgba(5,150,105,0.15)",
+                          border: isDark
+                            ? "1px solid rgba(52,211,153,0.18)"
+                            : "1px solid rgba(5,150,105,0.15)",
                         }}
                       >
                         {formatOrderId(order)}
@@ -519,7 +682,10 @@ export function BatchTable({ orders }: BatchTableProps) {
                       <div
                         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                         style={{
-                          background: `hsl(${(order.customerName?.charCodeAt(0) ?? 65) * 7 % 360}, 55%, 50%)`,
+                          background: `hsl(${
+                            ((order.customerName?.charCodeAt(0) ?? 65) * 7) %
+                            360
+                          }, 55%, 50%)`,
                         }}
                       >
                         {(order.customerName ?? "?")[0].toUpperCase()}
@@ -589,7 +755,8 @@ export function BatchTable({ orders }: BatchTableProps) {
                         <button
                           className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-95"
                           style={{
-                            background: "linear-gradient(135deg,#10b981,#059669)",
+                            background:
+                              "linear-gradient(135deg,#10b981,#059669)",
                             boxShadow: "0 2px 8px rgba(16,185,129,0.25)",
                           }}
                         >
@@ -632,13 +799,34 @@ export function BatchTable({ orders }: BatchTableProps) {
               className="flex h-14 w-14 items-center justify-center rounded-2xl"
               style={{ background: "var(--bg-secondary)" }}
             >
-              <svg className="h-7 w-7" style={{ color: "var(--text-secondary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                className="h-7 w-7"
+                style={{ color: "var(--text-secondary)" }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
             </div>
             <div className="text-center">
-              <p className="font-semibold" style={{ color: "var(--text-primary)" }}>No orders to display</p>
-              <p className="mt-0.5 text-xs" style={{ color: "var(--text-secondary)" }}>Active batches will appear here</p>
+              <p
+                className="font-semibold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                No orders to display
+              </p>
+              <p
+                className="mt-0.5 text-xs"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Active batches will appear here
+              </p>
             </div>
           </div>
         )}
@@ -652,16 +840,25 @@ export function BatchTable({ orders }: BatchTableProps) {
             ...surface,
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            boxShadow: isDark ? "0 4px 20px rgba(0,0,0,0.3)" : "0 4px 20px rgba(0,0,0,0.05)",
+            boxShadow: isDark
+              ? "0 4px 20px rgba(0,0,0,0.3)"
+              : "0 4px 20px rgba(0,0,0,0.05)",
           }}
         >
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
             Showing{" "}
-            <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-              {startIndex + 1}–{Math.min(startIndex + itemsPerPage, orders.length)}
+            <span
+              className="font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {startIndex + 1}–
+              {Math.min(startIndex + itemsPerPage, orders.length)}
             </span>{" "}
             of{" "}
-            <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+            <span
+              className="font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
               {orders.length}
             </span>{" "}
             batches
@@ -673,16 +870,35 @@ export function BatchTable({ orders }: BatchTableProps) {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)" }}
+              style={{
+                background: "var(--bg-secondary)",
+                color: "var(--text-secondary)",
+              }}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
 
             {getPageNumbers().map((page, i) =>
               page === "…" ? (
-                <span key={`e${i}`} className="w-8 text-center text-xs" style={{ color: "var(--text-secondary)" }}>…</span>
+                <span
+                  key={`e${i}`}
+                  className="w-8 text-center text-xs"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  …
+                </span>
               ) : (
                 <button
                   key={page}
@@ -690,8 +906,15 @@ export function BatchTable({ orders }: BatchTableProps) {
                   className="flex h-8 min-w-[32px] items-center justify-center rounded-lg text-xs font-semibold transition-all hover:-translate-y-px"
                   style={
                     currentPage === page
-                      ? { background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", boxShadow: "0 4px 10px rgba(16,185,129,0.35)" }
-                      : { background: "var(--bg-secondary)", color: "var(--text-secondary)" }
+                      ? {
+                          background: "linear-gradient(135deg,#10b981,#059669)",
+                          color: "#fff",
+                          boxShadow: "0 4px 10px rgba(16,185,129,0.35)",
+                        }
+                      : {
+                          background: "var(--bg-secondary)",
+                          color: "var(--text-secondary)",
+                        }
                   }
                 >
                   {page}
@@ -704,10 +927,23 @@ export function BatchTable({ orders }: BatchTableProps) {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)" }}
+              style={{
+                background: "var(--bg-secondary)",
+                color: "var(--text-secondary)",
+              }}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>

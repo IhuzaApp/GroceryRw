@@ -41,7 +41,9 @@ export function ServicesSection({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent("business-modal-toggle", { detail: isServiceModalOpen }));
+    window.dispatchEvent(
+      new CustomEvent("business-modal-toggle", { detail: isServiceModalOpen })
+    );
   }, [isServiceModalOpen]);
 
   useEffect(() => {
@@ -135,7 +137,7 @@ export function ServicesSection({
                 placeholder="Search services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+                className="bg-[var(--bg-secondary)]/30 w-full rounded-2xl border border-[var(--bg-secondary)] py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
               />
             </div>
           </div>
@@ -259,7 +261,11 @@ export function ServicesSection({
                     View Details
                   </button>
                   <button
-                    onClick={() => guestMode ? onGuestAction?.() : handleRequestQuotation(serviceId)}
+                    onClick={() =>
+                      guestMode
+                        ? onGuestAction?.()
+                        : handleRequestQuotation(serviceId)
+                    }
                     className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
                     style={{ color: "#ffffff" }}
                   >
@@ -287,17 +293,24 @@ export function ServicesSection({
       {/* Service Details Modal */}
       {isServiceModalOpen && selectedService && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]">
-          <div 
+          <div
             className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-8">
-              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+              <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                }}
+              ></div>
               <div className="relative z-10 flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-black text-white sm:text-3xl">
-                    {selectedService.name || selectedService.service_name || "Service Details"}
+                    {selectedService.name ||
+                      selectedService.service_name ||
+                      "Service Details"}
                   </h3>
                   <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
                     <Star className="h-3 w-3 fill-white" />
@@ -316,17 +329,20 @@ export function ServicesSection({
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6 sm:p-10">
               <div className="mx-auto max-w-4xl space-y-8">
-                
                 {/* Provider Card */}
-                <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 p-5">
+                <div className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-5">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 text-green-600 dark:bg-green-400/10 dark:text-green-400">
                       <User className="h-6 w-6" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">Provider</h4>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                        Provider
+                      </h4>
                       <p className="text-sm font-black text-[var(--text-primary)]">
-                        {selectedService.provider_name || selectedService.business_name || "Enterprise Provider"}
+                        {selectedService.provider_name ||
+                          selectedService.business_name ||
+                          "Enterprise Provider"}
                       </p>
                     </div>
                   </div>
@@ -334,43 +350,74 @@ export function ServicesSection({
 
                 {/* Description */}
                 <div>
-                  <h4 className="mb-3 text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">Overview</h4>
+                  <h4 className="mb-3 text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                    Overview
+                  </h4>
                   <p className="text-base font-medium leading-relaxed text-[var(--text-primary)] opacity-80">
-                    {selectedService.description || selectedService.service_description || "No description available"}
+                    {selectedService.description ||
+                      selectedService.service_description ||
+                      "No description available"}
                   </p>
                 </div>
 
                 {/* Info Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { label: "Category", value: selectedService.category || "General", icon: Package },
-                    { label: "Budget Range", value: selectedService.price_range || "Contact", icon: DollarSign },
-                    { label: "Location", value: selectedService.location || "Rwanda Wide", icon: MapPin },
-                    { label: "Response", value: selectedService.response_time || "Fast", icon: Clock }
+                    {
+                      label: "Category",
+                      value: selectedService.category || "General",
+                      icon: Package,
+                    },
+                    {
+                      label: "Budget Range",
+                      value: selectedService.price_range || "Contact",
+                      icon: DollarSign,
+                    },
+                    {
+                      label: "Location",
+                      value: selectedService.location || "Rwanda Wide",
+                      icon: MapPin,
+                    },
+                    {
+                      label: "Response",
+                      value: selectedService.response_time || "Fast",
+                      icon: Clock,
+                    },
                   ].map((item, i) => (
-                    <div key={i} className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 p-4">
+                    <div
+                      key={i}
+                      className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-4"
+                    >
                       <div className="mb-2 flex items-center justify-between text-green-600 dark:text-green-400">
-                         <item.icon className="h-4 w-4" />
-                         <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">{item.label}</span>
+                        <item.icon className="h-4 w-4" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">
+                          {item.label}
+                        </span>
                       </div>
-                      <div className="text-sm font-black text-[var(--text-primary)]">{item.value}</div>
+                      <div className="text-sm font-black text-[var(--text-primary)]">
+                        {item.value}
+                      </div>
                     </div>
                   ))}
                 </div>
 
                 {/* Contact Area */}
-                {(selectedService.contact || selectedService.email || selectedService.phone) && (
+                {(selectedService.contact ||
+                  selectedService.email ||
+                  selectedService.phone) && (
                   <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">Direct Engagement</h4>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                      Direct Engagement
+                    </h4>
                     <div className="grid gap-3">
                       {selectedService.contact && (
-                        <div className="flex items-center gap-3 rounded-xl bg-[var(--bg-secondary)]/20 p-3 text-sm font-medium text-[var(--text-primary)]">
+                        <div className="bg-[var(--bg-secondary)]/20 flex items-center gap-3 rounded-xl p-3 text-sm font-medium text-[var(--text-primary)]">
                           <Phone className="h-4 w-4 text-blue-500" />
                           <span>{selectedService.contact}</span>
                         </div>
                       )}
                       {selectedService.email && (
-                        <div className="flex items-center gap-3 rounded-xl bg-[var(--bg-secondary)]/20 p-3 text-sm font-medium text-[var(--text-primary)]">
+                        <div className="bg-[var(--bg-secondary)]/20 flex items-center gap-3 rounded-xl p-3 text-sm font-medium text-[var(--text-primary)]">
                           <Mail className="h-4 w-4 text-purple-500" />
                           <span>{selectedService.email}</span>
                         </div>
@@ -385,19 +432,32 @@ export function ServicesSection({
             <div className="flex-shrink-0 border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 sm:px-8">
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
-                  onClick={() => guestMode ? onGuestAction?.() : handleContactProvider(selectedService)}
+                  onClick={() =>
+                    guestMode
+                      ? onGuestAction?.()
+                      : handleContactProvider(selectedService)
+                  }
                   className="group flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-6 py-4 text-sm font-bold text-[var(--text-primary)] transition-all hover:bg-[var(--bg-secondary)] active:scale-95"
                 >
                   <MessageSquare className="mr-2 inline h-4 w-4 text-green-600" />
                   {guestMode ? "Sign in to Contact" : "Contact Provider"}
                 </button>
                 <button
-                  onClick={() => guestMode ? onGuestAction?.() : handleRequestQuotation(selectedService.id)}
+                  onClick={() =>
+                    guestMode
+                      ? onGuestAction?.()
+                      : handleRequestQuotation(selectedService.id)
+                  }
                   className="group flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-green-500/30 transition-all hover:from-green-700 active:scale-95"
                   style={{ color: "#ffffff" }}
                 >
-                  <span style={{ color: "#ffffff" }}>{guestMode ? "Sign in to Request" : "Request Quotation"}</span>
-                  <ArrowRight className="ml-2 inline h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: "#ffffff" }} />
+                  <span style={{ color: "#ffffff" }}>
+                    {guestMode ? "Sign in to Request" : "Request Quotation"}
+                  </span>
+                  <ArrowRight
+                    className="ml-2 inline h-4 w-4 transition-transform group-hover:translate-x-1"
+                    style={{ color: "#ffffff" }}
+                  />
                 </button>
               </div>
             </div>

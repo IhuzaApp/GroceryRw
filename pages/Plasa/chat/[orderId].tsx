@@ -434,36 +434,59 @@ function ChatPage() {
     return (
       <ShopperLayout>
         <div className="flex h-[calc(100vh-200px)] flex-col items-center justify-center">
-          <div className="h-12 w-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center mb-4">
-             <div className="h-4 w-4 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[1.5rem] bg-emerald-500/10">
+            <div className="h-4 w-4 animate-pulse rounded-full bg-emerald-500" />
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 opacity-80">Establishing Secure Channel</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 opacity-80">
+            Establishing Secure Channel
+          </p>
         </div>
       </ShopperLayout>
     );
   }
 
   return (
-    <div className={`h-screen w-screen overflow-hidden flex flex-col transition-all duration-500 ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
+    <div
+      className={`flex h-screen w-screen flex-col overflow-hidden transition-all duration-500 ${
+        isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
+      }`}
+    >
       {/* Premium Floating Header */}
-      <div className={`sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b backdrop-blur-3xl transition-all duration-300 ${
-        isDark ? "bg-black/40 border-white/10" : "bg-white/40 border-black/5"
-      }`}>
+      <div
+        className={`sticky top-0 z-50 flex items-center justify-between border-b px-6 py-4 backdrop-blur-3xl transition-all duration-300 ${
+          isDark ? "border-white/10 bg-black/40" : "border-black/5 bg-white/40"
+        }`}
+      >
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
-              const id = typeof orderId === "string" ? orderId : Array.isArray(orderId) ? orderId[0] : "";
+              const id =
+                typeof orderId === "string"
+                  ? orderId
+                  : Array.isArray(orderId)
+                  ? orderId[0]
+                  : "";
               if (id) router.replace(`/Plasa/active-batches/batch/${id}`);
             }}
             className={`group flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 ${
               isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
             }`}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-0.5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="transition-transform group-hover:-translate-x-0.5"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-          
+
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar
@@ -471,82 +494,129 @@ function ChatPage() {
                 alt={customerData?.name || "Customer"}
                 circle
                 size="md"
-                className={`ring-2 ${isDark ? "ring-emerald-500/20" : "ring-emerald-600/20"}`}
+                className={`ring-2 ${
+                  isDark ? "ring-emerald-500/20" : "ring-emerald-600/20"
+                }`}
               />
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[var(--bg-primary)] bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
                 <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75"></span>
               </span>
             </div>
-            
+
             <div>
-              <h2 className="text-base font-black tracking-tight leading-none uppercase tracking-widest">{customerData?.name || "Customer"}</h2>
-              <div className="flex items-center gap-2 mt-1.5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 opacity-80">Order #{formatOrderID(orderId)}</p>
+              <h2 className="text-base font-black uppercase leading-none tracking-tight tracking-widest">
+                {customerData?.name || "Customer"}
+              </h2>
+              <div className="mt-1.5 flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 opacity-80">
+                  Order #{formatOrderID(orderId)}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         <Link href={`/Plasa/orders/${orderId}`}>
-          <button className={`h-10 w-10 flex items-center justify-center rounded-full transition-all ${
-            isDark ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white" : "bg-black/5 text-gray-500 hover:bg-black/10 hover:text-gray-900"
-          }`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <button
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${
+              isDark
+                ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                : "bg-black/5 text-gray-500 hover:bg-black/10 hover:text-gray-900"
+            }`}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M9 19V5l12 7-12 7z" />
             </svg>
           </button>
         </Link>
       </div>
 
-
       {/* Messages Stream */}
-      <div className={`flex-1 overflow-y-auto px-6 py-6 space-y-8 scroll-smooth ${isDark ? "bg-black/20" : "bg-white/10"}`}>
+      <div
+        className={`flex-1 space-y-8 overflow-y-auto scroll-smooth px-6 py-6 ${
+          isDark ? "bg-black/20" : "bg-white/10"
+        }`}
+      >
         {messageGroups.map((group, groupIndex) => (
           <div key={group.date} className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">{group.date}</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">
+                {group.date}
+              </span>
               <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
             </div>
 
             {group.messages.map((msg) => {
               const isShopper = msg.senderType === "shopper";
-              const isPending = "tempId" in msg && (msg as PendingMessage).tempId.startsWith("temp-");
-              const content = sanitizeMessageForDisplay(("text" in msg ? msg.text : (msg as Message).text || (msg as Message).message) ?? "");
+              const isPending =
+                "tempId" in msg &&
+                (msg as PendingMessage).tempId.startsWith("temp-");
+              const content = sanitizeMessageForDisplay(
+                ("text" in msg
+                  ? msg.text
+                  : (msg as Message).text || (msg as Message).message) ?? ""
+              );
 
               return (
-                <div key={msg.id} className={`flex items-end gap-2.5 ${isShopper ? "flex-row-reverse" : "flex-row"}`}>
-                  <div className="flex-shrink-0 mb-1">
+                <div
+                  key={msg.id}
+                  className={`flex items-end gap-2.5 ${
+                    isShopper ? "flex-row-reverse" : "flex-row"
+                  }`}
+                >
+                  <div className="mb-1 flex-shrink-0">
                     <Avatar
-                      src={isShopper ? (user?.profile_picture || "/images/userProfile.png") : (customerData?.avatar || "/images/userProfile.png")}
+                      src={
+                        isShopper
+                          ? user?.profile_picture || "/images/userProfile.png"
+                          : customerData?.avatar || "/images/userProfile.png"
+                      }
                       circle
                       size="sm"
-                      className={`ring-2 ${isShopper ? "ring-emerald-500/20" : "ring-gray-400/20"}`}
+                      className={`ring-2 ${
+                        isShopper ? "ring-emerald-500/20" : "ring-gray-400/20"
+                      }`}
                     />
                   </div>
 
-                  <div className={`flex max-w-[85%] flex-col ${isShopper ? "items-end" : "items-start"}`}>
-                    <div className={`relative overflow-hidden rounded-[1.5rem] px-4 py-3 shadow-lg transition-all duration-300 ${
-                      isShopper
-                        ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-br-none shadow-emerald-500/20"
-                        : isDark
-                        ? "bg-white/5 border border-white/5 text-gray-100 rounded-bl-none backdrop-blur-md"
-                        : "bg-white border border-black/5 text-gray-900 rounded-bl-none shadow-sm shadow-black/5"
-                    }`}>
+                  <div
+                    className={`flex max-w-[85%] flex-col ${
+                      isShopper ? "items-end" : "items-start"
+                    }`}
+                  >
+                    <div
+                      className={`relative overflow-hidden rounded-[1.5rem] px-4 py-3 shadow-lg transition-all duration-300 ${
+                        isShopper
+                          ? "rounded-br-none bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/20"
+                          : isDark
+                          ? "rounded-bl-none border border-white/5 bg-white/5 text-gray-100 backdrop-blur-md"
+                          : "rounded-bl-none border border-black/5 bg-white text-gray-900 shadow-sm shadow-black/5"
+                      }`}
+                    >
                       <div className="whitespace-pre-wrap text-sm font-medium leading-[1.6]">
                         {content}
                       </div>
                     </div>
-                    
+
                     <div className="mt-1.5 flex items-center gap-2 px-1 opacity-40">
-                       {isShopper && (
-                         <span className="text-[10px] font-bold uppercase tracking-tighter">
-                           {isPending ? "Sending..." : "Sent"}
-                         </span>
-                       )}
-                       <span className="text-[9px] font-bold">
-                         {formatMessageTime(msg.timestamp)}
-                       </span>
+                      {isShopper && (
+                        <span className="text-[10px] font-bold uppercase tracking-tighter">
+                          {isPending ? "Sending..." : "Sent"}
+                        </span>
+                      )}
+                      <span className="text-[9px] font-bold">
+                        {formatMessageTime(msg.timestamp)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -556,10 +626,12 @@ function ChatPage() {
         ))}
         {otherTypingName && (
           <div className="flex justify-start">
-            <div className={`rounded-2xl px-4 py-2.5 shadow-sm flex items-center gap-3 ${
-              isDark ? "bg-white/5 text-gray-300" : "bg-black/5 text-gray-600"
-            } backdrop-blur-md`}>
-              <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+            <div
+              className={`flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-sm ${
+                isDark ? "bg-white/5 text-gray-300" : "bg-black/5 text-gray-600"
+              } backdrop-blur-md`}
+            >
+              <span className="text-[10px] font-black uppercase leading-none tracking-widest">
                 {otherTypingName} is typing
               </span>
               <span className="typing-dots flex gap-0.5">
@@ -574,13 +646,17 @@ function ChatPage() {
       </div>
 
       {/* Floating Aura Input */}
-      <div className={`p-6 border-t backdrop-blur-xl transition-all duration-300 ${
-        isDark ? "bg-black/40 border-white/10" : "bg-white/40 border-black/5"
-      }`}>
+      <div
+        className={`border-t p-6 backdrop-blur-xl transition-all duration-300 ${
+          isDark ? "border-white/10 bg-black/40" : "border-black/5 bg-white/40"
+        }`}
+      >
         <form
           onSubmit={handleSendMessage}
           className={`group relative flex items-center gap-2 rounded-[2rem] p-1.5 transition-all duration-300 ${
-            isDark ? "bg-white/5 focus-within:bg-white/10" : "bg-black/5 focus-within:bg-black/10"
+            isDark
+              ? "bg-white/5 focus-within:bg-white/10"
+              : "bg-black/5 focus-within:bg-black/10"
           }`}
         >
           <input
@@ -598,18 +674,30 @@ function ChatPage() {
           <button
             type="submit"
             disabled={!message.trim()}
-            className="flex-shrink-0 rounded-full bg-emerald-600 p-3 text-white shadow-lg transition-all duration-300 hover:bg-emerald-500 hover:scale-110 active:scale-90 disabled:cursor-not-allowed disabled:opacity-30 disabled:scale-100 disabled:shadow-none"
+            className="flex-shrink-0 rounded-full bg-emerald-600 p-3 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-emerald-500 active:scale-90 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none"
             aria-label="Send message"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="rotate-45 transform">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="rotate-45 transform"
+            >
               <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>
         </form>
-        
+
         {piiError && (
-          <div className="mt-4 rounded-2xl bg-red-500/10 px-4 py-2.5 border border-red-500/20 animate-pulse">
-            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest text-center">{piiError}</p>
+          <div className="mt-4 animate-pulse rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2.5">
+            <p className="text-center text-[10px] font-black uppercase tracking-widest text-red-500">
+              {piiError}
+            </p>
           </div>
         )}
       </div>

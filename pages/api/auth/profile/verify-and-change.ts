@@ -37,7 +37,8 @@ export default async function handler(
 
   if (!storedData) {
     return res.status(400).json({
-      error: "Verification code expired or not found. Please request a new one.",
+      error:
+        "Verification code expired or not found. Please request a new one.",
     });
   }
 

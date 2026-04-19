@@ -246,9 +246,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
       <div
         className="overflow-hidden rounded-2xl transition-all duration-300"
         style={{
-          background: isDark
-            ? "rgba(23,23,23,0.85)"
-            : "rgba(245,245,245,0.85)",
+          background: isDark ? "rgba(23,23,23,0.85)" : "rgba(245,245,245,0.85)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           border: isDark
@@ -313,13 +311,16 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                         : "rgba(0,0,0,0.012)",
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                      isDark
-                        ? "rgba(16,185,129,0.06)"
-                        : "rgba(16,185,129,0.05)";
+                    (
+                      e.currentTarget as HTMLTableRowElement
+                    ).style.backgroundColor = isDark
+                      ? "rgba(16,185,129,0.06)"
+                      : "rgba(16,185,129,0.05)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
+                    (
+                      e.currentTarget as HTMLTableRowElement
+                    ).style.backgroundColor =
                       idx % 2 === 0
                         ? "transparent"
                         : isDark
@@ -458,7 +459,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                   <td className="px-5 py-4">
                     <Link href={`/Plasa/active-batches/batch/${order.id}`}>
                       <button
-                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white transition-all duration-200 active:scale-95 hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5"
+                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-95"
                         style={{
                           background:
                             "linear-gradient(135deg, #10b981, #059669)",
@@ -530,7 +531,9 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
         <div
           className="flex items-center justify-between rounded-2xl px-5 py-3.5 transition-all duration-300"
           style={{
-            background: isDark ? "rgba(23,23,23,0.8)" : "rgba(255,255,255,0.85)",
+            background: isDark
+              ? "rgba(23,23,23,0.8)"
+              : "rgba(255,255,255,0.85)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             border: isDark
@@ -623,9 +626,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
 
             {/* Next */}
             <button
-              onClick={() =>
-                setCurrentPage((p) => Math.min(totalPages, p + 1))
-              }
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
               style={{

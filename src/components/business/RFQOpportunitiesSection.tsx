@@ -59,7 +59,9 @@ export function RFQOpportunitiesSection({
 
   useEffect(() => {
     const anyOpen = isQuoteModalOpen || isQuoteFormOpen || isQuoteDetailsOpen;
-    window.dispatchEvent(new CustomEvent("business-modal-toggle", { detail: anyOpen }));
+    window.dispatchEvent(
+      new CustomEvent("business-modal-toggle", { detail: anyOpen })
+    );
   }, [isQuoteModalOpen, isQuoteFormOpen, isQuoteDetailsOpen]);
 
   useEffect(() => {
@@ -370,14 +372,14 @@ export function RFQOpportunitiesSection({
                 placeholder="Search RFQs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+                className="bg-[var(--bg-secondary)]/30 w-full rounded-2xl border border-[var(--bg-secondary)] py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
               />
             </div>
-            
+
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:border-transparent focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+              className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:border-transparent focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
             >
               {categories.map((category) => (
                 <option key={category} value={category}>
@@ -482,7 +484,9 @@ export function RFQOpportunitiesSection({
                 </div>
 
                 <button
-                  onClick={() => guestMode ? onGuestAction?.() : handleToggleInterest(rfq.id)}
+                  onClick={() =>
+                    guestMode ? onGuestAction?.() : handleToggleInterest(rfq.id)
+                  }
                   className={`w-full rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-95 sm:w-auto sm:px-4 sm:py-2 sm:text-sm ${
                     rfq.isInterested
                       ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg hover:shadow-green-500/40"
@@ -490,7 +494,11 @@ export function RFQOpportunitiesSection({
                   }`}
                   style={rfq.isInterested ? { color: "#ffffff" } : undefined}
                 >
-                  {guestMode ? "Sign in to Interest" : rfq.isInterested ? "✓ Interested" : "Mark Interest"}
+                  {guestMode
+                    ? "Sign in to Interest"
+                    : rfq.isInterested
+                    ? "✓ Interested"
+                    : "Mark Interest"}
                 </button>
               </div>
 
@@ -515,7 +523,9 @@ export function RFQOpportunitiesSection({
                   </span>
                 </button>
                 <button
-                  onClick={() => guestMode ? onGuestAction?.() : handleShareQuote(rfq)}
+                  onClick={() =>
+                    guestMode ? onGuestAction?.() : handleShareQuote(rfq)
+                  }
                   className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm ${
                     submittedQuotes[rfq.id]
                       ? "bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40"
@@ -544,7 +554,11 @@ export function RFQOpportunitiesSection({
                   </span>
                 </button>
                 <button
-                  onClick={() => guestMode ? onGuestAction?.() : handleMessageCustomer(rfq.id)}
+                  onClick={() =>
+                    guestMode
+                      ? onGuestAction?.()
+                      : handleMessageCustomer(rfq.id)
+                  }
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-purple-500/30 transition-all duration-200 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
                   style={{ color: "#ffffff" }}
                 >
@@ -552,7 +566,9 @@ export function RFQOpportunitiesSection({
                     className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                     style={{ color: "#ffffff" }}
                   />
-                  <span style={{ color: "#ffffff" }}>{guestMode ? "Sign in to Message" : "Message"}</span>
+                  <span style={{ color: "#ffffff" }}>
+                    {guestMode ? "Sign in to Message" : "Message"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -563,24 +579,33 @@ export function RFQOpportunitiesSection({
       {/* RFQ Details Modal */}
       {isQuoteModalOpen && selectedRFQ && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]">
-          <div 
+          <div
             className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Dynamic Modal Header */}
             <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-r from-green-800 to-green-950 px-6 py-8">
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                }}
+              ></div>
               <div className="relative z-10 flex items-start justify-between">
                 <div>
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
                     <FileText className="h-3 w-3" />
-                    <span>Official Request {selectedRFQ.id?.slice(0, 8).toUpperCase()}</span>
+                    <span>
+                      Official Request{" "}
+                      {selectedRFQ.id?.slice(0, 8).toUpperCase()}
+                    </span>
                   </div>
                   <h2 className="text-2xl font-black text-white sm:text-4xl">
                     Request for Quotation
                   </h2>
                   <p className="mt-2 text-sm font-medium text-white/70">
-                    Subject: {selectedRFQ.title || "Untitled Procurement Request"}
+                    Subject:{" "}
+                    {selectedRFQ.title || "Untitled Procurement Request"}
                   </p>
                 </div>
                 <button
@@ -595,26 +620,41 @@ export function RFQOpportunitiesSection({
             {/* Modal Content - Multi-Card Document Layout */}
             <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6 sm:p-10">
               <div className="mx-auto max-w-4xl space-y-10">
-                
                 {/* 1. Header Info Grid */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 p-5">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">Issue Date</span>
+                  <div className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                      Issue Date
+                    </span>
                     <p className="mt-1 text-sm font-black text-[var(--text-primary)]">
-                       {new Date(selectedRFQ.created_at || Date.now()).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                      {new Date(
+                        selectedRFQ.created_at || Date.now()
+                      ).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 p-5">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">Response Deadline</span>
+                  <div className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                      Response Deadline
+                    </span>
                     <p className="mt-1 text-sm font-black text-green-600 dark:text-green-400">
-                       {selectedRFQ.deadline || selectedRFQ.response_date || "Not set"}
+                      {selectedRFQ.deadline ||
+                        selectedRFQ.response_date ||
+                        "Not set"}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/30 p-5">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">Status</span>
+                  <div className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                      Status
+                    </span>
                     <div className="mt-1 flex items-center gap-2">
-                       <div className="h-2 w-2 animate-pulse rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]"></div>
-                       <p className="text-sm font-black text-[var(--text-primary)]">{selectedRFQ.status || "Open for Bids"}</p>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]"></div>
+                      <p className="text-sm font-black text-[var(--text-primary)]">
+                        {selectedRFQ.status || "Open for Bids"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -625,12 +665,13 @@ export function RFQOpportunitiesSection({
                     {/* RFQ Description */}
                     <section>
                       <h3 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-                         <div className="h-1 w-4 rounded-full bg-green-500"></div>
-                         Procurement Scope
+                        <div className="h-1 w-4 rounded-full bg-green-500"></div>
+                        Procurement Scope
                       </h3>
-                      <div className="rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10 p-6 sm:p-8">
+                      <div className="bg-[var(--bg-secondary)]/10 rounded-3xl border border-[var(--bg-secondary)] p-6 sm:p-8">
                         <p className="text-lg font-medium leading-relaxed text-[var(--text-primary)] opacity-90">
-                           {selectedRFQ.description || "The customer has not provided a detailed scope for this request."}
+                          {selectedRFQ.description ||
+                            "The customer has not provided a detailed scope for this request."}
                         </p>
                       </div>
                     </section>
@@ -639,28 +680,41 @@ export function RFQOpportunitiesSection({
                     {selectedRFQ.requirements && (
                       <section>
                         <h3 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-                           <div className="h-1 w-4 rounded-full bg-blue-500"></div>
-                           Technical Requirements
+                          <div className="h-1 w-4 rounded-full bg-blue-500"></div>
+                          Technical Requirements
                         </h3>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           {(() => {
-                             let reqs: string[] = [];
-                             try {
-                               if (typeof selectedRFQ.requirements === "string") {
-                                 reqs = selectedRFQ.requirements.startsWith("[") ? JSON.parse(selectedRFQ.requirements) : selectedRFQ.requirements.split(/[,;]\s*/);
-                               } else if (Array.isArray(selectedRFQ.requirements)) {
-                                 reqs = selectedRFQ.requirements;
-                               }
-                             } catch (e) { reqs = [String(selectedRFQ.requirements)]; }
+                            let reqs: string[] = [];
+                            try {
+                              if (
+                                typeof selectedRFQ.requirements === "string"
+                              ) {
+                                reqs = selectedRFQ.requirements.startsWith("[")
+                                  ? JSON.parse(selectedRFQ.requirements)
+                                  : selectedRFQ.requirements.split(/[,;]\s*/);
+                              } else if (
+                                Array.isArray(selectedRFQ.requirements)
+                              ) {
+                                reqs = selectedRFQ.requirements;
+                              }
+                            } catch (e) {
+                              reqs = [String(selectedRFQ.requirements)];
+                            }
 
-                             return reqs.map((req, i) => (
-                               <div key={i} className="flex items-center gap-3 rounded-2xl bg-[var(--bg-secondary)]/30 p-4 transition-all hover:bg-[var(--bg-secondary)]/50">
-                                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-600">
-                                    <CheckCircle className="h-4 w-4" />
-                                  </div>
-                                  <span className="text-sm font-bold text-[var(--text-primary)]">{req.trim()}</span>
-                               </div>
-                             ));
+                            return reqs.map((req, i) => (
+                              <div
+                                key={i}
+                                className="bg-[var(--bg-secondary)]/30 hover:bg-[var(--bg-secondary)]/50 flex items-center gap-3 rounded-2xl p-4 transition-all"
+                              >
+                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-600">
+                                  <CheckCircle className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold text-[var(--text-primary)]">
+                                  {req.trim()}
+                                </span>
+                              </div>
+                            ));
                           })()}
                         </div>
                       </section>
@@ -669,22 +723,49 @@ export function RFQOpportunitiesSection({
                     {/* Terms and Conditions */}
                     <section>
                       <h3 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-                         <div className="h-1 w-4 rounded-full bg-purple-500"></div>
-                         Engagement Terms
+                        <div className="h-1 w-4 rounded-full bg-purple-500"></div>
+                        Engagement Terms
                       </h3>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                         {[
-                           { label: "Payment Terms", value: selectedRFQ.payment_terms || "Contact Client", icon: DollarSign },
-                           { label: "Delivery Mode", value: selectedRFQ.delivery_terms || "Negotiable", icon: MapPin },
-                           { label: "Warranty Required", value: selectedRFQ.warranty_information || "Standard", icon: Clock },
-                           { label: "Contract Policy", value: selectedRFQ.cancellation_terms || "Enterprise Standard", icon: FileText }
-                         ].map((term, i) => (
-                           <div key={i} className="group rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/20 p-5 transition-all hover:bg-[var(--bg-secondary)]/40">
-                              <term.icon className="mb-3 h-5 w-5 text-[var(--text-secondary)] opacity-50 group-hover:text-green-500 group-hover:opacity-100" />
-                              <span className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">{term.label}</span>
-                              <p className="mt-1 text-sm font-black text-[var(--text-primary)]">{term.value}</p>
-                           </div>
-                         ))}
+                        {[
+                          {
+                            label: "Payment Terms",
+                            value:
+                              selectedRFQ.payment_terms || "Contact Client",
+                            icon: DollarSign,
+                          },
+                          {
+                            label: "Delivery Mode",
+                            value: selectedRFQ.delivery_terms || "Negotiable",
+                            icon: MapPin,
+                          },
+                          {
+                            label: "Warranty Required",
+                            value:
+                              selectedRFQ.warranty_information || "Standard",
+                            icon: Clock,
+                          },
+                          {
+                            label: "Contract Policy",
+                            value:
+                              selectedRFQ.cancellation_terms ||
+                              "Enterprise Standard",
+                            icon: FileText,
+                          },
+                        ].map((term, i) => (
+                          <div
+                            key={i}
+                            className="bg-[var(--bg-secondary)]/20 hover:bg-[var(--bg-secondary)]/40 group rounded-2xl border border-[var(--bg-secondary)] p-5 transition-all"
+                          >
+                            <term.icon className="mb-3 h-5 w-5 text-[var(--text-secondary)] opacity-50 group-hover:text-green-500 group-hover:opacity-100" />
+                            <span className="block text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                              {term.label}
+                            </span>
+                            <p className="mt-1 text-sm font-black text-[var(--text-primary)]">
+                              {term.value}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </section>
                   </div>
@@ -693,30 +774,44 @@ export function RFQOpportunitiesSection({
                   <div className="space-y-10">
                     {/* Originator Card */}
                     <section>
-                      <h3 className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Originator</h3>
-                      <div className="overflow-hidden rounded-3xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)]/10">
+                      <h3 className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+                        Originator
+                      </h3>
+                      <div className="bg-[var(--bg-secondary)]/10 overflow-hidden rounded-3xl border border-[var(--bg-secondary)]">
                         <div className="bg-[var(--bg-secondary)]/40 p-6">
-                           <div className="flex items-center gap-4">
-                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 font-black text-white">
-                                {selectedRFQ.contact_name?.[0] || selectedRFQ.business_account?.business_name?.[0] || "U"}
-                              </div>
-                              <div>
-                                <h4 className="text-base font-black text-[var(--text-primary)] leading-tight">
-                                  {selectedRFQ.contact_name || selectedRFQ.business_account?.business_name || "Enterprise Client"}
-                                </h4>
-                                <span className="text-xs font-bold text-green-600 dark:text-green-400">Verified Business</span>
-                              </div>
-                           </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 font-black text-white">
+                              {selectedRFQ.contact_name?.[0] ||
+                                selectedRFQ.business_account
+                                  ?.business_name?.[0] ||
+                                "U"}
+                            </div>
+                            <div>
+                              <h4 className="text-base font-black leading-tight text-[var(--text-primary)]">
+                                {selectedRFQ.contact_name ||
+                                  selectedRFQ.business_account?.business_name ||
+                                  "Enterprise Client"}
+                              </h4>
+                              <span className="text-xs font-bold text-green-600 dark:text-green-400">
+                                Verified Business
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         <div className="space-y-3 p-6">
-                           <div className="flex items-center gap-3 text-sm font-bold text-[var(--text-primary)] opacity-70">
-                              <MapPin className="h-4 w-4 shrink-0" />
-                              <span>{selectedRFQ.location || "Location Private"}</span>
-                           </div>
-                           <div className="flex items-center gap-3 text-sm font-bold text-[var(--text-primary)] opacity-70">
-                              <Building className="h-4 w-4 shrink-0" />
-                              <span>{selectedRFQ.business_account?.business_name || "Enterprise"}</span>
-                           </div>
+                          <div className="flex items-center gap-3 text-sm font-bold text-[var(--text-primary)] opacity-70">
+                            <MapPin className="h-4 w-4 shrink-0" />
+                            <span>
+                              {selectedRFQ.location || "Location Private"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm font-bold text-[var(--text-primary)] opacity-70">
+                            <Building className="h-4 w-4 shrink-0" />
+                            <span>
+                              {selectedRFQ.business_account?.business_name ||
+                                "Enterprise"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </section>
@@ -724,38 +819,47 @@ export function RFQOpportunitiesSection({
                     {/* Attachment List */}
                     {selectedRFQ.attachment && (
                       <section>
-                        <h3 className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">Reference Docs</h3>
+                        <h3 className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+                          Reference Docs
+                        </h3>
                         <div className="space-y-2">
-                          {selectedRFQ.attachment.split(",").map((att: string, i: number) => {
-                            const trimmed = att.trim();
-                            if (!trimmed) return null;
-                            return (
-                              <button
-                                key={i}
-                                onClick={() => handleDownloadAttachment(trimmed, i)}
-                                className="group flex w-full items-center justify-between rounded-2xl bg-[var(--bg-secondary)]/30 p-4 transition-all hover:bg-blue-500/10 hover:ring-1 hover:ring-blue-500/30"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <Download className="h-5 w-5 text-blue-500" />
-                                  <span className="text-sm font-bold text-[var(--text-primary)]">Document {i + 1}</span>
-                                </div>
-                                <ChevronRight className="h-4 w-4 opacity-0 transition-transform group-hover:translate-x-1 group-hover:opacity-100" />
-                              </button>
-                            );
-                          })}
+                          {selectedRFQ.attachment
+                            .split(",")
+                            .map((att: string, i: number) => {
+                              const trimmed = att.trim();
+                              if (!trimmed) return null;
+                              return (
+                                <button
+                                  key={i}
+                                  onClick={() =>
+                                    handleDownloadAttachment(trimmed, i)
+                                  }
+                                  className="bg-[var(--bg-secondary)]/30 group flex w-full items-center justify-between rounded-2xl p-4 transition-all hover:bg-blue-500/10 hover:ring-1 hover:ring-blue-500/30"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Download className="h-5 w-5 text-blue-500" />
+                                    <span className="text-sm font-bold text-[var(--text-primary)]">
+                                      Document {i + 1}
+                                    </span>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 opacity-0 transition-transform group-hover:translate-x-1 group-hover:opacity-100" />
+                                </button>
+                              );
+                            })}
                         </div>
                       </section>
                     )}
 
                     {/* Submission Guidelines */}
                     <div className="rounded-3xl border border-blue-500/20 bg-blue-500/5 p-6">
-                       <h4 className="mb-2 flex items-center gap-2 text-sm font-black text-blue-600 dark:text-blue-400">
-                          <Sparkles className="h-4 w-4" />
-                          Bid Guidelines
-                       </h4>
-                       <p className="text-xs font-bold leading-relaxed text-blue-600/70 dark:text-blue-400/70">
-                          Ensure your quotation includes detailed cost breakdowns, lead times, and valid certifications.
-                       </p>
+                      <h4 className="mb-2 flex items-center gap-2 text-sm font-black text-blue-600 dark:text-blue-400">
+                        <Sparkles className="h-4 w-4" />
+                        Bid Guidelines
+                      </h4>
+                      <p className="text-xs font-bold leading-relaxed text-blue-600/70 dark:text-blue-400/70">
+                        Ensure your quotation includes detailed cost breakdowns,
+                        lead times, and valid certifications.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -766,12 +870,20 @@ export function RFQOpportunitiesSection({
             <div className="flex-shrink-0 border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 sm:px-10">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">Budget Indication</span>
-                   <p className="text-xl font-black text-[var(--text-primary)]">{selectedRFQ.budget || "Confidential"}</p>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                    Budget Indication
+                  </span>
+                  <p className="text-xl font-black text-[var(--text-primary)]">
+                    {selectedRFQ.budget || "Confidential"}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
-                    onClick={() => guestMode ? onGuestAction?.() : handleMessageCustomer(selectedRFQ.id)}
+                    onClick={() =>
+                      guestMode
+                        ? onGuestAction?.()
+                        : handleMessageCustomer(selectedRFQ.id)
+                    }
                     className="flex items-center justify-center gap-2 rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-8 py-4 text-sm font-black text-[var(--text-primary)] transition-all hover:bg-[var(--bg-secondary)]"
                   >
                     <MessageSquare className="h-5 w-5 text-purple-500" />
@@ -779,15 +891,26 @@ export function RFQOpportunitiesSection({
                   </button>
                   <button
                     onClick={() => {
-                      if (guestMode) { onGuestAction?.(); }
-                      else { setIsQuoteModalOpen(false); handleShareQuote(selectedRFQ); }
+                      if (guestMode) {
+                        onGuestAction?.();
+                      } else {
+                        setIsQuoteModalOpen(false);
+                        handleShareQuote(selectedRFQ);
+                      }
                     }}
                     className="group flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-10 py-4 text-sm font-black text-white shadow-xl shadow-green-500/30 transition-all hover:from-green-700"
                     style={{ color: "#ffffff" }}
                   >
-                    <CheckCircle className="h-5 w-5" style={{ color: "#ffffff" }} />
+                    <CheckCircle
+                      className="h-5 w-5"
+                      style={{ color: "#ffffff" }}
+                    />
                     <span style={{ color: "#ffffff" }}>
-                      {guestMode ? "Sign in to Quote" : submittedQuotes[selectedRFQ.id] ? "View Active Quote" : "Submit Formal Bid"}
+                      {guestMode
+                        ? "Sign in to Quote"
+                        : submittedQuotes[selectedRFQ.id]
+                        ? "View Active Quote"
+                        : "Submit Formal Bid"}
                     </span>
                   </button>
                 </div>

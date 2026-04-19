@@ -29,11 +29,9 @@ export default async function handler(
   const storedData = otpStore.get(token);
 
   if (!storedData) {
-    return res
-      .status(400)
-      .json({
-        error: "Reset code expired or not found. Please request a new one.",
-      });
+    return res.status(400).json({
+      error: "Reset code expired or not found. Please request a new one.",
+    });
   }
 
   if (Date.now() > storedData.expiresAt) {

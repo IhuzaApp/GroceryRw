@@ -879,7 +879,7 @@ export default async function handler(
                   id: restaurantId,
                 });
               }
-              // We intentionally do NOT activate the Shop or Restaurant (is_active) 
+              // We intentionally do NOT activate the Shop or Restaurant (is_active)
               // so it remains false, awaiting manual admin approval.
 
               await hasuraClient.request(ACTIVATE_INVOICE, {

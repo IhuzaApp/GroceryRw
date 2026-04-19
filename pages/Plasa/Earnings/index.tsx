@@ -423,12 +423,12 @@ const EarningsPage: React.FC = () => {
                 <EarningsMobileMenu onSelect={handleTabChange} />
               ) : (
                 <>
-                  <EarningsMobileNav 
-                    activeTab={activeTab} 
-                    onBack={handleBackToMenu} 
+                  <EarningsMobileNav
+                    activeTab={activeTab}
+                    onBack={handleBackToMenu}
                   />
                   <div className="pb-20">
-                    <EarningsTabContent 
+                    <EarningsTabContent
                       activeTab={activeTab}
                       earningsStats={earningsStats}
                       wallet={wallet}
@@ -451,10 +451,13 @@ const EarningsPage: React.FC = () => {
 
             {/* DESKTOP VIEW LOGIC - Keep original grid/tabs */}
             <div className="hidden md:block">
-              <EarningsTabs activeTab={activeTab} onTabChange={handleTabChange} />
-              
+              <EarningsTabs
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+              />
+
               <div className="transition-all duration-500">
-                <EarningsTabContent 
+                <EarningsTabContent
                   activeTab={activeTab}
                   earningsStats={earningsStats}
                   wallet={wallet}

@@ -219,9 +219,18 @@ export default async function handler(
 
     // 2. Send SMS and Email notifications to the user
     try {
-      const targetEmail = (business_email?.trim() || session.user.email || "").trim();
-      const targetPhone = (business_phone?.trim() || (session.user as any).phone || "").trim();
-      const accountName = business_name?.trim() || session.user.name || "Business";
+      const targetEmail = (
+        business_email?.trim() ||
+        session.user.email ||
+        ""
+      ).trim();
+      const targetPhone = (
+        business_phone?.trim() ||
+        (session.user as any).phone ||
+        ""
+      ).trim();
+      const accountName =
+        business_name?.trim() || session.user.name || "Business";
 
       // Send SMS
       if (targetPhone && targetPhone !== "—") {

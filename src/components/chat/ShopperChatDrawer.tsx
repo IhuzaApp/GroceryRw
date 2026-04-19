@@ -116,16 +116,14 @@ const ShopperMessage: React.FC<MessageProps> = ({
         isCurrentUser ? "flex-row-reverse" : "flex-row"
       }`}
     >
-      <div className="flex-shrink-0 mb-1">
+      <div className="mb-1 flex-shrink-0">
         <Avatar
           src={isCurrentUser ? shopperImage : "/images/userProfile.png"}
           alt={isCurrentUser ? "Me" : customerName}
           circle
           size="sm"
           className={`ring-2 ${
-            isCurrentUser
-              ? "ring-emerald-500/20"
-              : "ring-gray-400/20"
+            isCurrentUser ? "ring-emerald-500/20" : "ring-gray-400/20"
           }`}
         >
           {isCurrentUser ? "ME" : customerName[0].toUpperCase()}
@@ -140,10 +138,10 @@ const ShopperMessage: React.FC<MessageProps> = ({
         <div
           className={`relative overflow-hidden rounded-[1.5rem] px-5 py-3.5 shadow-xl transition-all duration-300 ${
             isCurrentUser
-              ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-br-none shadow-emerald-500/20"
+              ? "rounded-br-none bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/20"
               : isDark
-              ? "bg-white/5 border border-white/5 text-gray-100 rounded-bl-none backdrop-blur-md"
-              : "bg-white border border-black/5 text-gray-900 rounded-bl-none shadow-sm shadow-black/5"
+              ? "rounded-bl-none border border-white/5 bg-white/5 text-gray-100 backdrop-blur-md"
+              : "rounded-bl-none border border-black/5 bg-white text-gray-900 shadow-sm shadow-black/5"
           }`}
         >
           {!isCurrentUser && (
@@ -159,16 +157,16 @@ const ShopperMessage: React.FC<MessageProps> = ({
             {messageContent}
           </div>
         </div>
-        
+
         <div className="mt-2 flex items-center gap-2 px-1 opacity-40">
-           {isCurrentUser && statusLabel && (
-             <span className="text-[9px] font-black uppercase tracking-tighter">
-               {statusLabel}
-             </span>
-           )}
-           <span className="text-[9px] font-black uppercase tracking-widest">
-             {message.timestamp && formatMessageTime(message.timestamp)}
-           </span>
+          {isCurrentUser && statusLabel && (
+            <span className="text-[9px] font-black uppercase tracking-tighter">
+              {statusLabel}
+            </span>
+          )}
+          <span className="text-[9px] font-black uppercase tracking-widest">
+            {message.timestamp && formatMessageTime(message.timestamp)}
+          </span>
         </div>
       </div>
     </div>
@@ -481,37 +479,52 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div 
-      className={`fixed right-0 top-16 z-[1000] hidden flex-col overflow-hidden rounded-l-[2.5rem] border-0 transition-all duration-500 ease-in-out shadow-2xl md:flex md:h-[calc(100vh-4rem)] md:w-[42rem] ${
-        isDark 
-          ? "bg-[#0A0A0A]/80 border-l border-white/10" 
-          : "bg-white/80 border-l border-black/5"
+    <div
+      className={`fixed right-0 top-16 z-[1000] hidden flex-col overflow-hidden rounded-l-[2.5rem] border-0 shadow-2xl transition-all duration-500 ease-in-out md:flex md:h-[calc(100vh-4rem)] md:w-[42rem] ${
+        isDark
+          ? "border-l border-white/10 bg-[#0A0A0A]/80"
+          : "border-l border-black/5 bg-white/80"
       } backdrop-blur-3xl`}
     >
       {/* Header */}
-      <div className={`flex flex-shrink-0 items-center justify-between px-6 py-5 border-b ${
-        isDark ? "border-white/10" : "border-black/5"
-      }`}>
+      <div
+        className={`flex flex-shrink-0 items-center justify-between border-b px-6 py-5 ${
+          isDark ? "border-white/10" : "border-black/5"
+        }`}
+      >
         <div className="flex min-w-0 flex-1 items-center gap-4">
           <button
             onClick={onClose}
             className={`flex-shrink-0 rounded-full p-2 transition-all hover:scale-110 active:scale-90 ${
-              isDark ? "bg-white/5 text-gray-400 hover:text-white" : "bg-black/5 text-gray-500 hover:text-gray-900"
+              isDark
+                ? "bg-white/5 text-gray-400 hover:text-white"
+                : "bg-black/5 text-gray-500 hover:text-gray-900"
             }`}
             aria-label="Close chat"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-          
+
           <div className="relative flex-shrink-0">
             <Avatar
               src={customer.avatar}
               alt={customer.name}
               circle
               size="md"
-              className={`ring-2 ${isDark ? "ring-emerald-500/20" : "ring-emerald-600/20"}`}
+              className={`ring-2 ${
+                isDark ? "ring-emerald-500/20" : "ring-emerald-600/20"
+              }`}
             />
             <span
               className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[var(--bg-primary)] bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
@@ -520,9 +533,9 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75"></span>
             </span>
           </div>
-          
+
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-base font-black tracking-tight text-[var(--text-primary)] uppercase tracking-widest">
+            <h3 className="truncate text-base font-black uppercase tracking-tight tracking-widest text-[var(--text-primary)]">
               {customer.name}
             </h3>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 opacity-80">
@@ -530,14 +543,23 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             </p>
           </div>
         </div>
-        
+
         {customer.phone && (
           <a
             href={`tel:${customer.phone}`}
-            className="flex-shrink-0 rounded-full bg-emerald-500/10 p-3 text-emerald-500 transition-all hover:bg-emerald-500 hover:text-white hover:scale-110 active:scale-90 shadow-inner"
+            className="flex-shrink-0 rounded-full bg-emerald-500/10 p-3 text-emerald-500 shadow-inner transition-all hover:scale-110 hover:bg-emerald-500 hover:text-white active:scale-90"
             aria-label="Call customer"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </a>
@@ -546,12 +568,20 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className={`flex-1 overflow-y-auto px-6 py-6 scroll-smooth ${isDark ? "bg-black/20" : "bg-white/10"}`}>
+        <div
+          className={`flex-1 overflow-y-auto scroll-smooth px-6 py-6 ${
+            isDark ? "bg-black/20" : "bg-white/10"
+          }`}
+        >
           {otherTypingName && (
             <div className="mb-6 flex justify-start">
-              <div className={`rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 ${
-                isDark ? "bg-white/5 text-gray-300" : "bg-black/5 text-gray-600"
-              } backdrop-blur-md`}>
+              <div
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 shadow-sm ${
+                  isDark
+                    ? "bg-white/5 text-gray-300"
+                    : "bg-black/5 text-gray-600"
+                } backdrop-blur-md`}
+              >
                 <span className="text-[11px] font-black uppercase tracking-widest">
                   {otherTypingName} is typing
                 </span>
@@ -563,18 +593,31 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               </div>
             </div>
           )}
-          
+
           {displayMessages.length === 0 ? (
             <div className="flex h-full min-h-[300px] items-center justify-center px-10">
               <div className="text-center">
                 <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-emerald-500/10 shadow-inner">
-                  <svg className="h-8 w-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg
+                    className="h-8 w-8 text-emerald-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
                 </div>
-                <h4 className="text-base font-black tracking-tight text-[var(--text-primary)] uppercase tracking-wide">Secure Channel</h4>
-                <p className="mt-2 text-xs font-medium text-[var(--text-secondary)] opacity-60 leading-relaxed">
-                  Start your conversation with {customer.name}. Messages are encrypted and safe.
+                <h4 className="text-base font-black uppercase tracking-tight tracking-wide text-[var(--text-primary)]">
+                  Secure Channel
+                </h4>
+                <p className="mt-2 text-xs font-medium leading-relaxed text-[var(--text-secondary)] opacity-60">
+                  Start your conversation with {customer.name}. Messages are
+                  encrypted and safe.
                 </p>
               </div>
             </div>
@@ -595,7 +638,9 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
                     message={message}
                     isCurrentUser={isCurrentUser}
                     customerName={customer.name}
-                    shopperImage={databaseProfileImage || session?.user?.image || undefined}
+                    shopperImage={
+                      databaseProfileImage || session?.user?.image || undefined
+                    }
                     statusLabel={statusLabel}
                   />
                 );
@@ -606,13 +651,17 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         </div>
 
         {/* Input area */}
-        <div className={`flex-shrink-0 p-6 border-t ${
-          isDark ? "border-white/10" : "border-black/5"
-        }`}>
+        <div
+          className={`flex-shrink-0 border-t p-6 ${
+            isDark ? "border-white/10" : "border-black/5"
+          }`}
+        >
           <form
             onSubmit={handleSendMessage}
             className={`relative flex items-center gap-2 rounded-[1.5rem] p-1.5 transition-all duration-300 ${
-              isDark ? "bg-white/5 focus-within:bg-white/10" : "bg-black/5 focus-within:bg-black/10"
+              isDark
+                ? "bg-white/5 focus-within:bg-white/10"
+                : "bg-black/5 focus-within:bg-black/10"
             }`}
           >
             <input
@@ -630,18 +679,28 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="flex-shrink-0 rounded-[1.2rem] bg-emerald-600 p-2.5 text-white shadow-lg transition-all duration-300 hover:bg-emerald-500 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:scale-100 disabled:shadow-none"
+              className="flex-shrink-0 rounded-[1.2rem] bg-emerald-600 p-2.5 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-emerald-500 active:scale-95 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none"
               aria-label="Send message"
             >
-              <svg className="h-5 w-5 rotate-45 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                className="h-5 w-5 rotate-45 transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>
           </form>
-          
+
           {error && (
-            <div className="mt-4 rounded-xl bg-red-500/10 px-4 py-2 border border-red-500/20">
-              <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{error}</p>
+            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">
+                {error}
+              </p>
             </div>
           )}
         </div>

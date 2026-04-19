@@ -482,7 +482,7 @@ export default function ShopperDashboard() {
           }
         >
           <div
-            className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:rounded-2xl shadow-sm bg-[var(--bg-secondary)]`}
+            className={`h-full w-full overflow-hidden rounded-none bg-[var(--bg-secondary)] shadow-sm md:h-[600px] md:rounded-2xl`}
           >
             {/* Map skeleton with animated shimmer */}
             <div className="relative h-full w-full overflow-hidden">
@@ -492,16 +492,16 @@ export default function ShopperDashboard() {
               <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent dark:via-white/5" />
               {/* Map controls skeleton */}
               <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
-                <div className="h-8 w-8 rounded bg-[var(--bg-primary)] opacity-50 animate-pulse" />
-                <div className="h-8 w-8 rounded bg-[var(--bg-primary)] opacity-50 animate-pulse" />
+                <div className="h-8 w-8 animate-pulse rounded bg-[var(--bg-primary)] opacity-50" />
+                <div className="h-8 w-8 animate-pulse rounded bg-[var(--bg-primary)] opacity-50" />
               </div>
               {/* Earnings badge skeleton */}
               <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2">
-                <div className="h-12 w-32 rounded-full bg-[var(--bg-primary)] opacity-50 animate-pulse" />
+                <div className="h-12 w-32 animate-pulse rounded-full bg-[var(--bg-primary)] opacity-50" />
               </div>
               {/* Map style button skeleton */}
               <div className="absolute right-4 top-4 z-10">
-                <div className="h-10 w-10 rounded bg-[var(--bg-primary)] opacity-50 animate-pulse" />
+                <div className="h-10 w-10 animate-pulse rounded bg-[var(--bg-primary)] opacity-50" />
               </div>
             </div>
           </div>
@@ -514,14 +514,14 @@ export default function ShopperDashboard() {
             style={{ height: "200px" }}
           >
             <div className="p-4">
-              <div className="mb-4 h-1.5 w-12 rounded-full bg-[var(--bg-secondary)] mx-auto opacity-50" />
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--bg-secondary)] opacity-50" />
               <div className="space-y-3">
-                <div className="h-4 w-24 rounded bg-[var(--bg-secondary)] animate-pulse" />
+                <div className="h-4 w-24 animate-pulse rounded bg-[var(--bg-secondary)]" />
                 <div className="flex gap-2">
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="h-20 flex-1 rounded-xl bg-[var(--bg-secondary)] animate-pulse"
+                      className="h-20 flex-1 animate-pulse rounded-xl bg-[var(--bg-secondary)]"
                     />
                   ))}
                 </div>

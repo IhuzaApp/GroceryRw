@@ -17,14 +17,16 @@ const Skeleton = ({
 }: React.HTMLAttributes<HTMLDivElement>) => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const boneBackground = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)";
+  const boneBackground = isDark
+    ? "rgba(255, 255, 255, 0.05)"
+    : "rgba(0, 0, 0, 0.05)";
 
   return (
     <div
       className={`animate-pulse rounded-md ${className}`}
       style={{
         background: boneBackground,
-        ...style
+        ...style,
       }}
       {...props}
     />
@@ -59,7 +61,7 @@ export const ProgressStepsSkeleton = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   return (
-    <div 
+    <div
       className="hidden rounded-xl border border-black/5 bg-black/5 p-4 dark:border-white/5 dark:bg-white/5 sm:block sm:p-6"
       style={{
         backdropFilter: "blur(12px)",
@@ -104,7 +106,7 @@ export const ShopInfoCardSkeleton = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   return (
-    <div 
+    <div
       className="rounded-none border border-black/5 bg-black/5 p-3 dark:border-white/5 dark:bg-white/5 sm:rounded-xl sm:p-6"
       style={{
         backdropFilter: "blur(12px)",
@@ -157,7 +159,7 @@ export const CustomerInfoCardSkeleton = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   return (
-    <div 
+    <div
       className="rounded-none border border-black/5 bg-black/5 p-3 dark:border-white/5 dark:bg-white/5 sm:rounded-xl sm:p-6"
       style={{
         backdropFilter: "blur(12px)",
@@ -256,7 +258,7 @@ export const OrderSummarySkeleton = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   return (
-    <div 
+    <div
       className="overflow-hidden border border-black/5 bg-white/40 dark:border-white/5 dark:bg-white/5 sm:rounded-2xl"
       style={{
         backdropFilter: "blur(12px)",

@@ -288,51 +288,78 @@ export default function ShopperChatPage() {
       <div className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-10 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black tracking-tight">Messaging Hub</h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 opacity-80">Syncing Secure Channel</p>
+            <h1 className="text-3xl font-black tracking-tight">
+              Messaging Hub
+            </h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 opacity-80">
+              Syncing Secure Channel
+            </p>
           </div>
-          <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <div className="h-4 w-4 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+            <div className="h-4 w-4 animate-pulse rounded-full bg-emerald-500" />
           </div>
         </div>
 
         {conversations.length === 0 ? (
-          <div className={`rounded-[3rem] border-2 border-dashed p-20 text-center transition-all duration-500 ${
-            isDark ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5"
-          }`}>
-            <div className="mx-auto mb-6 h-16 w-16 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center">
-              <svg className="h-8 w-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          <div
+            className={`rounded-[3rem] border-2 border-dashed p-20 text-center transition-all duration-500 ${
+              isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-black/5"
+            }`}
+          >
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-emerald-500/10">
+              <svg
+                className="h-8 w-8 text-emerald-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-black tracking-tight uppercase tracking-widest">No Signals Detected</h3>
-            <p className="mt-2 text-xs font-bold opacity-30 uppercase tracking-[0.2em] max-w-sm mx-auto">Active conversations will materialize here once you engage with customer orders.</p>
+            <h3 className="text-lg font-black uppercase tracking-tight tracking-widest">
+              No Signals Detected
+            </h3>
+            <p className="mx-auto mt-2 max-w-sm text-xs font-bold uppercase tracking-[0.2em] opacity-30">
+              Active conversations will materialize here once you engage with
+              customer orders.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {conversations.map((conversation) => {
               const orderStatus = conversation.order?.status || "pending";
-              
+
               // Status Color Logic
-              const statusConfig = {
-                delivered: "from-emerald-500 to-teal-600 shadow-emerald-500/20",
-                on_the_way: "from-blue-500 to-indigo-600 shadow-blue-500/20",
-                at_customer: "from-amber-500 to-orange-600 shadow-amber-500/20",
-                pending: "from-gray-500 to-slate-600 shadow-gray-500/20",
-              }[orderStatus as keyof typeof statusConfig] || "from-gray-500 to-slate-600 shadow-gray-500/20";
+              const statusConfig =
+                {
+                  delivered:
+                    "from-emerald-500 to-teal-600 shadow-emerald-500/20",
+                  on_the_way: "from-blue-500 to-indigo-600 shadow-blue-500/20",
+                  at_customer:
+                    "from-amber-500 to-orange-600 shadow-amber-500/20",
+                  pending: "from-gray-500 to-slate-600 shadow-gray-500/20",
+                }[orderStatus as keyof typeof statusConfig] ||
+                "from-gray-500 to-slate-600 shadow-gray-500/20";
 
               return (
                 <button
                   key={conversation.id}
                   onClick={() => handleConversationClick(conversation)}
                   className={`group relative flex w-full items-center gap-6 rounded-[2.5rem] border p-6 text-left transition-all duration-300 active:scale-[0.98] ${
-                    isDark 
-                      ? "bg-white/5 border-white/10 hover:bg-white/10" 
-                      : "bg-white border-black/5 shadow-sm hover:shadow-md"
+                    isDark
+                      ? "border-white/10 bg-white/5 hover:bg-white/10"
+                      : "border-black/5 bg-white shadow-sm hover:shadow-md"
                   }`}
                 >
                   {/* Backdrop Glow */}
-                  <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full blur-[80px] transition-all duration-700 opacity-0 group-hover:opacity-20 bg-gradient-to-br ${statusConfig}`} />
+                  <div
+                    className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br opacity-0 blur-[80px] transition-all duration-700 group-hover:opacity-20 ${statusConfig}`}
+                  />
 
                   {/* Avatar Section */}
                   <div className="relative flex-shrink-0">
@@ -341,33 +368,46 @@ export default function ShopperChatPage() {
                       alt={conversation.customerName}
                       circle
                       size="lg"
-                      className={`ring-2 ${isDark ? "ring-white/10" : "ring-black/5"}`}
+                      className={`ring-2 ${
+                        isDark ? "ring-white/10" : "ring-black/5"
+                      }`}
                     />
                     <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-[var(--bg-primary)] bg-emerald-500 shadow-lg shadow-emerald-500/20">
                       <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75"></span>
                     </div>
                     {conversation.unreadCount > 0 && (
                       <div className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-lg">
-                        {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+                        {conversation.unreadCount > 9
+                          ? "9+"
+                          : conversation.unreadCount}
                       </div>
                     )}
                   </div>
 
                   {/* Info Section */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="truncate text-lg font-black tracking-tight">{conversation.customerName}</h3>
+                    <div className="mb-1 flex items-center justify-between">
+                      <h3 className="truncate text-lg font-black tracking-tight">
+                        {conversation.customerName}
+                      </h3>
                       <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
                         {timeAgo(conversation.lastMessageTime)}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="mb-3 flex items-center gap-2">
                       <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                        Order {formatOrderID(conversation.order?.OrderID || conversation.order?.id || conversation.orderId)}
+                        Order{" "}
+                        {formatOrderID(
+                          conversation.order?.OrderID ||
+                            conversation.order?.id ||
+                            conversation.orderId
+                        )}
                       </p>
                       <div className="h-1 w-1 rounded-full bg-black/10 dark:bg-white/10" />
-                      <span className={`rounded-full bg-gradient-to-br px-3 py-0.5 text-[8px] font-black uppercase tracking-widest text-white shadow-lg ${statusConfig}`}>
+                      <span
+                        className={`rounded-full bg-gradient-to-br px-3 py-0.5 text-[8px] font-black uppercase tracking-widest text-white shadow-lg ${statusConfig}`}
+                      >
                         {orderStatus.replace("_", " ")}
                       </span>
                     </div>
@@ -378,9 +418,22 @@ export default function ShopperChatPage() {
                   </div>
 
                   {/* Action Arrow */}
-                  <div className="opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                    <div className={`h-10 w-10 flex items-center justify-center rounded-full ${isDark ? "bg-white/10" : "bg-black/5"}`}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="-translate-x-4 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        isDark ? "bg-white/10" : "bg-black/5"
+                      }`}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
                     </div>

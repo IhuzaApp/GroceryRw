@@ -89,9 +89,11 @@ export default function BottomActionButton({
   if (!defaultButton && !readyCustomerGroup) return null;
 
   return (
-    <div 
-      className={`fixed bottom-0 left-0 right-0 z-[9999] border-t px-5 pt-4 pb-8 transition-all duration-300 sm:hidden ${
-        isDark ? "bg-[#0A0A0A]/80 border-white/10" : "bg-white/80 border-black/5"
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-[9999] border-t px-5 pb-8 pt-4 transition-all duration-300 sm:hidden ${
+        isDark
+          ? "border-white/10 bg-[#0A0A0A]/80"
+          : "border-black/5 bg-white/80"
       }`}
       style={{
         backdropFilter: "blur(20px)",
@@ -112,13 +114,23 @@ export default function BottomActionButton({
             }}
             className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_10px_25px_rgba(16,185,129,0.4)] transition-all hover:bg-emerald-700 active:scale-95"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className="h-5 w-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
             Deliver {readyCustomerGroup[1].length} Orders
           </button>
         ) : (
-          <div className="[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!py-4 [&>button]:!text-[11px] [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!bg-emerald-600 [&>button]:!shadow-[0_10px_25px_rgba(16,185,129,0.3)] [&>button]:!border-none [&>button]:!transition-all [&>button]:active:scale-95">
+          <div className="[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!border-none [&>button]:!bg-emerald-600 [&>button]:!py-4 [&>button]:!text-[11px] [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!shadow-[0_10px_25px_rgba(16,185,129,0.3)] [&>button]:!transition-all [&>button]:active:scale-95">
             {defaultButton}
           </div>
         )}

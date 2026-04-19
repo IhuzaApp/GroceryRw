@@ -56,7 +56,13 @@ export default function ShopperProfileComponent() {
   const { theme } = useTheme();
   const toaster = useToaster();
 
-  const { shopper: databaseShopper, profileImage, displayName, isLoading: isProfileLoading, mutate } = useShopperProfile();
+  const {
+    shopper: databaseShopper,
+    profileImage,
+    displayName,
+    isLoading: isProfileLoading,
+    mutate,
+  } = useShopperProfile();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<{
@@ -69,23 +75,23 @@ export default function ShopperProfileComponent() {
   } | null>(null);
 
   const [shopperData, setShopperData] = useState<ShopperData | null>(null);
-  
+
   // Sync database data to local state
   useEffect(() => {
     if (databaseShopper) {
       setShopperData(databaseShopper as any);
-      
+
       // Update form fields
       const nameParts = splitName(databaseShopper.full_name);
       setFirstName(nameParts.firstName);
       setLastName(nameParts.lastName);
       setPhoneNumber(databaseShopper.phone_number || "");
       setPosition(databaseShopper.transport_mode || "");
-      
+
       if (databaseShopper.User?.email) {
         setEmail(databaseShopper.User.email);
       }
-      
+
       if (databaseShopper.created_at) {
         setOnboardingDate(new Date(databaseShopper.created_at));
       }

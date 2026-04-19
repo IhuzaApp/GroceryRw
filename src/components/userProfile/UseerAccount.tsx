@@ -101,7 +101,9 @@ export default function UserAccount() {
     otp: "",
     newPassword: "",
   });
-  const [passwordStep, setPasswordStep] = useState<"initial" | "otp">("initial");
+  const [passwordStep, setPasswordStep] = useState<"initial" | "otp">(
+    "initial"
+  );
   const [otpToken, setOtpToken] = useState("");
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {

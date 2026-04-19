@@ -155,7 +155,9 @@ export default function UserPayment() {
                     unoptimized
                   />
                 ) : (
-                  <span className="text-xs font-bold text-gray-700">{pm.method.slice(0, 2).toUpperCase()}</span>
+                  <span className="text-xs font-bold text-gray-700">
+                    {pm.method.slice(0, 2).toUpperCase()}
+                  </span>
                 )}
               </div>
 

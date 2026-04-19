@@ -273,7 +273,9 @@ export default function ActiveBatches({
 
   return (
     <div
-      className={`min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] ${isMobile ? "pb-16" : ""}`}
+      className={`min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] ${
+        isMobile ? "pb-16" : ""
+      }`}
     >
       {/* Main Content */}
       <main className="mx-auto w-full max-w-[1920px] px-3 py-3 sm:px-6 sm:py-6">
@@ -289,7 +291,7 @@ export default function ActiveBatches({
         {/* Page Title - Desktop Only */}
         {!isMobile && (
           <div className="mb-4">
-            <p className="text-xl font-bold sm:text-2xl text-[var(--text-primary)]">
+            <p className="text-xl font-bold text-[var(--text-primary)] sm:text-2xl">
               Active Batches
             </p>
           </div>
@@ -351,12 +353,8 @@ export default function ActiveBatches({
 
         {/* Show "No Active Orders" when fetch is successful but no data */}
         {!isLoading && fetchSuccess && activeOrders.length === 0 && (
-          <div
-            className="rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)]/80 backdrop-blur-xl p-8 text-center shadow-sm"
-          >
-            <div
-              className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bg-secondary)]"
-            >
+          <div className="bg-[var(--bg-primary)]/80 rounded-xl border border-[var(--bg-secondary)] p-8 text-center shadow-sm backdrop-blur-xl">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bg-secondary)]">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -367,14 +365,10 @@ export default function ActiveBatches({
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p
-              className="mb-2 text-lg font-bold sm:text-xl text-[var(--text-primary)]"
-            >
+            <p className="mb-2 text-lg font-bold text-[var(--text-primary)] sm:text-xl">
               No Active Orders
             </p>
-            <p
-              className="mb-4 text-sm sm:text-base text-[var(--text-secondary)]"
-            >
+            <p className="mb-4 text-sm text-[var(--text-secondary)] sm:text-base">
               You don&apos;t have any active orders assigned to you at the
               moment. This includes orders in any state except
               &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;.
@@ -391,9 +385,7 @@ export default function ActiveBatches({
 
         {/* Show error state when fetch fails */}
         {!isLoading && !fetchSuccess && fetchAttempted && (
-          <div
-            className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center backdrop-blur-xl"
-          >
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center backdrop-blur-xl">
             <div
               className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
                 theme === "dark" ? "bg-red-700" : "bg-red-100"
@@ -437,9 +429,7 @@ export default function ActiveBatches({
                 Try Again
               </button>
               <Link href="/Plasa">
-                <button
-                  className="rounded-lg border border-[var(--bg-secondary)] px-4 py-2 font-medium transition-colors text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
-                >
+                <button className="rounded-lg border border-[var(--bg-secondary)] px-4 py-2 font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]">
                   Return to Dashboard
                 </button>
               </Link>

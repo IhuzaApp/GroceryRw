@@ -2,7 +2,8 @@ import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "../lib/authenticatedFetch";
 
-const fetcher = (url: string) => authenticatedFetch(url).then((res) => res.json());
+const fetcher = (url: string) =>
+  authenticatedFetch(url).then((res) => res.json());
 
 export interface ShopperProfile {
   id: string;
@@ -19,7 +20,7 @@ export interface ShopperProfile {
 
 export const useShopperProfile = () => {
   const { data: session } = useSession();
-  
+
   const { data, error, isLoading, mutate } = useSWR(
     session?.user?.id ? "/api/queries/shopper-profile" : null,
     fetcher,
@@ -39,10 +40,10 @@ export const useShopperProfile = () => {
     null;
 
   // Logic for display name
-  const displayName = 
-    shopper?.full_name || 
-    shopper?.User?.name || 
-    session?.user?.name || 
+  const displayName =
+    shopper?.full_name ||
+    shopper?.User?.name ||
+    session?.user?.name ||
     "Shopper";
 
   return {

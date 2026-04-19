@@ -65,20 +65,28 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
   return (
     <div
       className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
-        isDark 
-          ? "bg-white/5 border border-white/10" 
-          : "bg-white border border-black/5 shadow-xl"
+        isDark
+          ? "border border-white/10 bg-white/5"
+          : "border border-black/5 bg-white shadow-xl"
       }`}
     >
-      <div className="absolute -right-12 -bottom-12 h-32 w-32 rounded-full bg-purple-500/5 blur-3xl opacity-50" />
+      <div className="absolute -bottom-12 -right-12 h-32 w-32 rounded-full bg-purple-500/5 opacity-50 blur-3xl" />
 
       <div className="relative z-10">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-black tracking-tight">Performance</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-0.5">Quality Metrics</p>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Quality Metrics
+            </p>
           </div>
-          <button className={`${isDark ? "text-white/20 hover:text-white/60" : "text-black/20 hover:text-black/60"} transition-colors`}>
+          <button
+            className={`${
+              isDark
+                ? "text-white/20 hover:text-white/60"
+                : "text-black/20 hover:text-black/60"
+            } transition-colors`}
+          >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
             </svg>
@@ -94,16 +102,16 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
             {metrics.map((metric, index) => (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-widest opacity-40 whitespace-nowrap">
+                  <span className="whitespace-nowrap text-[11px] font-black uppercase tracking-widest opacity-40">
                     {metric.label}
                   </span>
-                  <span className="text-sm font-black bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent dark:from-white dark:to-white/40">
+                  <span className="bg-gradient-to-br from-white to-white/60 bg-clip-text text-sm font-black text-transparent dark:from-white dark:to-white/40">
                     {metric.displayValue}
                   </span>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
                   <div
-                    className={`h-full rounded-full bg-gradient-to-r ${metric.color} transition-all duration-1000 shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
+                    className={`h-full rounded-full bg-gradient-to-r ${metric.color} shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-all duration-1000`}
                     style={{ width: `${metric.percentage}%` }}
                   />
                 </div>

@@ -240,14 +240,17 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error: any) {
           // Check if it's a Cloudflare 520 or other server error
-          const isNetworkError = error?.response?.status === 520 || error?.message?.includes("520");
-          
+          const isNetworkError =
+            error?.response?.status === 520 || error?.message?.includes("520");
+
           if (isNetworkError) {
-            console.warn("Hasura/Cloudflare 520 error encountered. Using cached token data.");
+            console.warn(
+              "Hasura/Cloudflare 520 error encountered. Using cached token data."
+            );
           } else {
             console.error("Error fetching user data in JWT callback:", error);
           }
-          
+
           // If Hasura is unavailable, ensure we have safe defaults
           token.role = token.role || "user";
           token.is_guest = token.is_guest || false;
