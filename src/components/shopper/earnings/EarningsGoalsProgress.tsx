@@ -25,96 +25,135 @@ const EarningsGoalsProgress: React.FC<EarningsGoalsProgressProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const goalPeriods = [
     {
-      label: "Weekly Goal",
+      label: "Weekly Sprint",
       data: goals.weekly,
       icon: Calendar,
-      color: "text-blue-500",
-      barColor: "bg-blue-500",
+      accent: "blue",
     },
     {
-      label: "Monthly Goal",
+      label: "Monthly Quest",
       data: goals.monthly,
       icon: Target,
-      color: "text-green-500",
-      barColor: "bg-green-500",
+      accent: "emerald",
     },
     {
-      label: "Quarterly Goal",
+      label: "Quarterly Nexus",
       data: goals.quarterly,
       icon: TrendingUp,
-      color: "text-purple-500",
-      barColor: "bg-purple-500",
+      accent: "indigo",
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`rounded-2xl p-6 shadow-lg ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      className={`relative overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-300 ${
+        isDark
+          ? "border-white/10 bg-white/5"
+          : "border-black/5 bg-white shadow-sm"
       }`}
     >
-      <h3 className="mb-4 text-lg font-bold">Earnings Goals</h3>
+      <div className="mb-8">
+        <h3 className="text-xl font-black tracking-tight">Milestones</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+          Earnings Goals
+        </p>
+      </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {goalPeriods.map((goal, index) => {
-            const Icon = goal.icon;
-            const percentage = Math.min(goal.data.percentage, 100);
-            const isComplete = percentage >= 100;
+      <div className="space-y-8">
+        {goalPeriods.map((goal, index) => {
+          const Icon = goal.icon;
+          const percentage = Math.min(goal.data.percentage, 100);
+          const isComplete = percentage >= 100;
 
-            return (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`h-4 w-4 ${goal.color}`} />
-                    <span className="text-sm font-medium">{goal.label}</span>
-                  </div>
-                  {isComplete && (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                      Completed
-                    </span>
-                  )}
-                </div>
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig =
+            {
+              blue: isDark
+                ? "bg-blue-500/10 text-blue-400 bar-blue-500"
+                : "bg-blue-50 text-blue-600 bar-blue-500",
+              emerald: isDark
+                ? "bg-emerald-500/10 text-emerald-400 bar-emerald-500"
+                : "bg-emerald-50 text-emerald-600 bar-emerald-500",
+              indigo: isDark
+                ? "bg-indigo-500/10 text-indigo-400 bar-indigo-500"
+                : "bg-indigo-50 text-indigo-600 bar-indigo-500",
+            }[goal.accent as "blue" | "emerald" | "indigo"] ||
+            (isDark
+              ? "bg-gray-500/10 text-gray-400 bar-gray-500"
+              : "bg-gray-50 text-gray-600 bar-gray-500");
 
-                <div className="flex items-baseline justify-between">
-                  <span className="text-lg font-bold">
-                    {formatCurrencySync(goal.data.current)}
-                  </span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    of {formatCurrencySync(goal.data.target)}
-                  </span>
-                </div>
+          const barColor = accentConfig.includes("bar-blue-500")
+            ? "bg-blue-500"
+            : accentConfig.includes("bar-emerald-500")
+            ? "bg-emerald-500"
+            : "bg-indigo-500";
 
-                <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          return (
+            <div key={index} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${goal.barColor}`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {percentage.toFixed(0)}% complete
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                      accentConfig.split(" bar-")[0]
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                    {goal.label}
                   </span>
-                  {!isComplete && (
-                    <span className="font-medium text-gray-700 dark:text-gray-300">
-                      {formatCurrencySync(goal.data.target - goal.data.current)}{" "}
-                      to go
-                    </span>
-                  )}
                 </div>
+                {isComplete && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[8px] font-black uppercase tracking-widest text-emerald-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
+                    Achieved
+                  </span>
+                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className="-mb-1 flex items-baseline justify-between">
+                <p className="text-2xl font-black tracking-tight">
+                  {formatCurrencySync(goal.data.current)}
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-30">
+                  Target: {formatCurrencySync(goal.data.target)}
+                </p>
+              </div>
+
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
+                <div
+                  className={`h-full rounded-full shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-1000 ease-out ${barColor}`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.2em]">
+                <span className="opacity-40">
+                  {Math.round(percentage)}% Track
+                </span>
+                {!isComplete && (
+                  <span className="text-emerald-500 opacity-60">
+                    {formatCurrencySync(goal.data.target - goal.data.current)}{" "}
+                    Balance
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

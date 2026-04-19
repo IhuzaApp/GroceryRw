@@ -20,14 +20,15 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const metrics = [
     {
       label: "Customer Rating",
       value: performance.customerRating,
       icon: Star,
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+      color: "text-amber-500",
+      accent: "amber",
       max: 5,
       suffix: "/5",
     },
@@ -36,7 +37,7 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({
       value: performance.onTimeDelivery,
       icon: Clock,
       color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      accent: "blue",
       max: 100,
       suffix: "%",
     },
@@ -44,8 +45,8 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({
       label: "Order Accuracy",
       value: performance.orderAccuracy,
       icon: CheckCircle,
-      color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      color: "text-emerald-500",
+      accent: "emerald",
       max: 100,
       suffix: "%",
     },
@@ -53,72 +54,116 @@ const PerformanceInsights: React.FC<PerformanceInsightsProps> = ({
       label: "Acceptance Rate",
       value: performance.acceptanceRate,
       icon: TrendingUp,
-      color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      color: "text-indigo-500",
+      accent: "indigo",
       max: 100,
       suffix: "%",
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`rounded-2xl p-6 shadow-lg ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      className={`relative overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-300 ${
+        isDark
+          ? "border-white/10 bg-white/5"
+          : "border-black/5 bg-white shadow-sm"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Performance Insights</h3>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-black tracking-tight">System Pulse</h3>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+            Performance Insights
+          </p>
+        </div>
         {performance.performanceScore && (
-          <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
-            Score: {performance.performanceScore}
-          </span>
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
+              Score
+            </span>
+            <span className="text-sm font-black text-emerald-500">
+              {performance.performanceScore}
+            </span>
+          </div>
         )}
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {metrics.map((metric, index) => {
-            const Icon = metric.icon;
-            const percentage =
-              metric.max === 5
-                ? (metric.value / metric.max) * 100
-                : metric.value;
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {metrics.map((metric, index) => {
+          const Icon = metric.icon;
+          const percentage =
+            metric.max === 5 ? (metric.value / metric.max) * 100 : metric.value;
 
-            return (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`rounded-lg p-2 ${metric.bgColor}`}>
-                      <Icon className={`h-4 w-4 ${metric.color}`} />
-                    </div>
-                    <span className="text-sm font-medium">{metric.label}</span>
-                  </div>
-                  <span className="text-sm font-bold">
-                    {metric.value.toFixed(metric.max === 5 ? 1 : 0)}
-                    {metric.suffix}
-                  </span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig =
+            {
+              amber: isDark
+                ? "bg-amber-500/10 text-amber-500"
+                : "bg-amber-50 text-amber-600",
+              blue: isDark
+                ? "bg-blue-500/10 text-blue-500"
+                : "bg-blue-50 text-blue-600",
+              emerald: isDark
+                ? "bg-emerald-500/10 text-emerald-500"
+                : "bg-emerald-50 text-emerald-600",
+              indigo: isDark
+                ? "bg-indigo-500/10 text-indigo-500"
+                : "bg-indigo-50 text-indigo-600",
+            }[metric.accent as "amber" | "blue" | "emerald" | "indigo"] ||
+            (isDark
+              ? "bg-gray-500/10 text-gray-400"
+              : "bg-gray-50 text-gray-600");
+
+          return (
+            <div key={index} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      percentage >= 80
-                        ? "bg-green-500"
-                        : percentage >= 60
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                  />
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${accentConfig}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-black uppercase tracking-widest opacity-40">
+                      {metric.label}
+                    </h4>
+                    <p className="text-lg font-black tracking-tight">
+                      {metric.value.toFixed(metric.max === 5 ? 1 : 0)}
+                      <span className="ml-0.5 text-xs opacity-50">
+                        {metric.suffix}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
+                <div
+                  className={`h-full rounded-full shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-1000 ease-out ${
+                    percentage >= 85
+                      ? "bg-emerald-500"
+                      : percentage >= 70
+                      ? "bg-amber-500"
+                      : "bg-rose-500"
+                  }`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Background Decor */}
+      <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-emerald-500/5 blur-[50px]" />
     </div>
   );
 };

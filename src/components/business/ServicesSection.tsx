@@ -16,21 +16,35 @@ import {
   Phone,
   Mail,
   ArrowRight,
+  X,
+  Package,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface ServicesSectionProps {
   onRequestQuotation?: (serviceId: string) => void;
+  guestMode?: boolean;
+  onGuestAction?: () => void;
 }
 
-export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
+export function ServicesSection({
+  onRequestQuotation,
+  guestMode,
+  onGuestAction,
+}: ServicesSectionProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedService, setSelectedService] = useState<any>(null);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("business-modal-toggle", { detail: isServiceModalOpen })
+    );
+  }, [isServiceModalOpen]);
 
   useEffect(() => {
     fetchServices();
@@ -102,48 +116,55 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-            Available Services
-          </h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Browse and request quotations from service providers
-          </p>
-        </div>
-      </div>
+    <div className="space-y-8">
+      {/* Header & Filter Card */}
+      <div className="rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-xl transition-all duration-500 hover:shadow-2xl">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
+              Available Services
+            </h2>
+            <p className="text-sm font-medium text-[var(--text-secondary)] opacity-60">
+              Browse and request quotations from verified service providers
+            </p>
+          </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:w-1/2">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-[var(--bg-secondary)]/30 w-full rounded-2xl border border-[var(--bg-secondary)] py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+              />
+            </div>
+          </div>
         </div>
-        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
-                selectedCategory === category
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
-                  : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              }`}
-              style={
-                selectedCategory === category ? { color: "#ffffff" } : undefined
-              }
-            >
-              {category === "all" ? "All Categories" : category}
-            </button>
-          ))}
+
+        {/* Category Pill System */}
+        <div className="mt-8">
+          <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`group relative flex items-center justify-center whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-black transition-all duration-300 ${
+                  selectedCategory === category
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {selectedCategory === category && (
+                  <div className="absolute inset-0 rounded-xl bg-green-500/10 ring-1 ring-green-500/20"></div>
+                )}
+                <span className="relative z-10">
+                  {category === "all" ? "All Ecosystem" : category}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -191,7 +212,7 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
             return (
               <div
                 key={serviceId}
-                className="group relative rounded-xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+                className="group relative rounded-2xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
               >
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex-1">
@@ -240,10 +261,15 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     View Details
                   </button>
                   <button
-                    onClick={() => handleRequestQuotation(serviceId)}
+                    onClick={() =>
+                      guestMode
+                        ? onGuestAction?.()
+                        : handleRequestQuotation(serviceId)
+                    }
                     className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
+                    style={{ color: "#ffffff" }}
                   >
-                    Request Quote
+                    {guestMode ? "Sign in to Request" : "Request Quote"}
                   </button>
                 </div>
               </div>
@@ -266,170 +292,170 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
 
       {/* Service Details Modal */}
       {isServiceModalOpen && selectedService && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800">
-            <div className="sticky top-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">
-                  {selectedService.name ||
-                    selectedService.service_name ||
-                    "Service Details"}
-                </h3>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]">
+          <div
+            className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-8">
+              <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                }}
+              ></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-black text-white sm:text-3xl">
+                    {selectedService.name ||
+                      selectedService.service_name ||
+                      "Service Details"}
+                  </h3>
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                    <Star className="h-3 w-3 fill-white" />
+                    <span>{selectedService.rating || "New Service"}</span>
+                  </div>
+                </div>
                 <button
                   onClick={() => setIsServiceModalOpen(false)}
-                  className="rounded-full p-1 text-white transition-colors hover:bg-white/20"
+                  className="rounded-full bg-white/10 p-2 text-white transition-all hover:bg-white/20 active:scale-95"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <X className="h-6 w-6" />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-6 p-6">
-              <div>
-                <h4 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Service Provider
-                </h4>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {selectedService.provider_name ||
-                    selectedService.business_name ||
-                    "Unknown Provider"}
-                </p>
-              </div>
-
-              <div>
-                <h4 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Description
-                </h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {selectedService.description ||
-                    selectedService.service_description ||
-                    "No description available"}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Category
-                  </h4>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.category ||
-                      selectedService.service_category ||
-                      "Uncategorized"}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Price Range
-                  </h4>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.price_range ||
-                      selectedService.priceRange ||
-                      "Contact for pricing"}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Location
-                  </h4>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.location ||
-                      selectedService.service_location ||
-                      "Not specified"}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Response Time
-                  </h4>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.response_time ||
-                      selectedService.responseTime ||
-                      "Contact provider"}
-                  </p>
-                </div>
-              </div>
-
-              {(selectedService.specialties || selectedService.skills) && (
-                <div>
-                  <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Specialties
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {(
-                      selectedService.specialties ||
-                      selectedService.skills ||
-                      []
-                    ).map((specialty: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      >
-                        {specialty}
-                      </span>
-                    ))}
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6 sm:p-10">
+              <div className="mx-auto max-w-4xl space-y-8">
+                {/* Provider Card */}
+                <div className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 text-green-600 dark:bg-green-400/10 dark:text-green-400">
+                      <User className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                        Provider
+                      </h4>
+                      <p className="text-sm font-black text-[var(--text-primary)]">
+                        {selectedService.provider_name ||
+                          selectedService.business_name ||
+                          "Enterprise Provider"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {(selectedService.contact ||
-                selectedService.email ||
-                selectedService.phone) && (
+                {/* Description */}
                 <div>
-                  <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Contact Information
+                  <h4 className="mb-3 text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                    Overview
                   </h4>
-                  <div className="space-y-2">
-                    {selectedService.contact && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Phone className="h-4 w-4" />
-                        <span>{selectedService.contact}</span>
-                      </div>
-                    )}
-                    {selectedService.phone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Phone className="h-4 w-4" />
-                        <span>{selectedService.phone}</span>
-                      </div>
-                    )}
-                    {selectedService.email && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Mail className="h-4 w-4" />
-                        <span>{selectedService.email}</span>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-base font-medium leading-relaxed text-[var(--text-primary)] opacity-80">
+                    {selectedService.description ||
+                      selectedService.service_description ||
+                      "No description available"}
+                  </p>
                 </div>
-              )}
 
-              <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+                {/* Info Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    {
+                      label: "Category",
+                      value: selectedService.category || "General",
+                      icon: Package,
+                    },
+                    {
+                      label: "Budget Range",
+                      value: selectedService.price_range || "Contact",
+                      icon: DollarSign,
+                    },
+                    {
+                      label: "Location",
+                      value: selectedService.location || "Rwanda Wide",
+                      icon: MapPin,
+                    },
+                    {
+                      label: "Response",
+                      value: selectedService.response_time || "Fast",
+                      icon: Clock,
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] p-4"
+                    >
+                      <div className="mb-2 flex items-center justify-between text-green-600 dark:text-green-400">
+                        <item.icon className="h-4 w-4" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">
+                          {item.label}
+                        </span>
+                      </div>
+                      <div className="text-sm font-black text-[var(--text-primary)]">
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Contact Area */}
+                {(selectedService.contact ||
+                  selectedService.email ||
+                  selectedService.phone) && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                      Direct Engagement
+                    </h4>
+                    <div className="grid gap-3">
+                      {selectedService.contact && (
+                        <div className="bg-[var(--bg-secondary)]/20 flex items-center gap-3 rounded-xl p-3 text-sm font-medium text-[var(--text-primary)]">
+                          <Phone className="h-4 w-4 text-blue-500" />
+                          <span>{selectedService.contact}</span>
+                        </div>
+                      )}
+                      {selectedService.email && (
+                        <div className="bg-[var(--bg-secondary)]/20 flex items-center gap-3 rounded-xl p-3 text-sm font-medium text-[var(--text-primary)]">
+                          <Mail className="h-4 w-4 text-purple-500" />
+                          <span>{selectedService.email}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex-shrink-0 border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 sm:px-8">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button
-                  onClick={() => handleContactProvider(selectedService)}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  onClick={() =>
+                    guestMode
+                      ? onGuestAction?.()
+                      : handleContactProvider(selectedService)
+                  }
+                  className="group flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-6 py-4 text-sm font-bold text-[var(--text-primary)] transition-all hover:bg-[var(--bg-secondary)] active:scale-95"
                 >
-                  <MessageSquare className="mr-1 inline h-4 w-4" />
-                  Contact Provider
+                  <MessageSquare className="mr-2 inline h-4 w-4 text-green-600" />
+                  {guestMode ? "Sign in to Contact" : "Contact Provider"}
                 </button>
                 <button
-                  onClick={() => handleRequestQuotation(selectedService.id)}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600"
+                  onClick={() =>
+                    guestMode
+                      ? onGuestAction?.()
+                      : handleRequestQuotation(selectedService.id)
+                  }
+                  className="group flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-green-500/30 transition-all hover:from-green-700 active:scale-95"
                   style={{ color: "#ffffff" }}
                 >
-                  <span style={{ color: "#ffffff" }}>Request Quotation</span>
+                  <span style={{ color: "#ffffff" }}>
+                    {guestMode ? "Sign in to Request" : "Request Quotation"}
+                  </span>
                   <ArrowRight
-                    className="ml-1 inline h-4 w-4"
+                    className="ml-2 inline h-4 w-4 transition-transform group-hover:translate-x-1"
                     style={{ color: "#ffffff" }}
                   />
                 </button>

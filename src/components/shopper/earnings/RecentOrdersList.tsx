@@ -32,93 +32,67 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
   pageSize = 5,
   onPageChange,
   totalOrders,
-  currentPage: externalCurrentPage,
+  externalCurrentPage,
   serverPagination = false,
 }) => {
   const { theme } = useTheme();
-  // Local pagination state (used when serverPagination is false)
+  const isDark = theme === "dark";
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
-
-  // Use external or local pagination state
   const currentPage = externalCurrentPage || localCurrentPage;
 
-  // Format currency in RWF
-  const formatCurrency = (amount: number) => {
-    return formatCurrencySync(amount);
-  };
-
-  // Handle pagination change
   const handlePageChange = (page: number) => {
     if (serverPagination && onPageChange) {
-      // Let parent component handle pagination (API call)
       onPageChange(page);
     } else {
-      // Handle pagination locally
       setLocalCurrentPage(page);
     }
   };
 
-  // Calculate total pages for local pagination
   const totalPages = serverPagination
     ? Math.ceil((totalOrders || 0) / pageSize)
     : Math.ceil(orders.length / pageSize);
 
-  // Get current page items for local pagination
   const displayedOrders = serverPagination
     ? orders
     : orders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div
-      className={`mt-8 border-t pt-4 ${
-        theme === "dark" ? "border-gray-700" : "border-gray-200"
-      }`}
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <h3
-          className={`font-medium ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}
-        >
-          Recent Orders
-        </h3>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-black tracking-tight">Order Logs</h3>
+          <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+            Historical Performance
+          </p>
+        </div>
         {!isLoading && orders.length > 0 && (
-          <span
-            className={`text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
+          <div
+            className={`rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
+              isDark ? "bg-white/5 text-white/40" : "bg-black/5 text-black/40"
             }`}
           >
-            {serverPagination
-              ? `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(
-                  currentPage * pageSize,
-                  totalOrders || 0
-                )} of ${totalOrders}`
-              : `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(
-                  currentPage * pageSize,
-                  orders.length
-                )} of ${orders.length}`}
-          </span>
+            Page {currentPage} of {totalPages}
+          </div>
         )}
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader size="md" content="Loading recent orders..." />
+        <div className="flex flex-col items-center justify-center space-y-4 py-20">
+          <Loader size="md" content="Syncing Orders..." />
         </div>
       ) : orders.length === 0 ? (
         <div
-          className={`rounded-lg p-6 text-center ${
-            theme === "dark" ? "bg-gray-800" : "bg-gray-50"
+          className={`rounded-[2.5rem] border-2 border-dashed p-12 text-center ${
+            isDark ? "border-white/5" : "border-black/5"
           }`}
         >
-          <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
-            No recent orders found
+          <p className="text-sm font-bold uppercase tracking-widest opacity-30">
+            No transaction records
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {displayedOrders.map((item, index) => {
-            // Calculate service fee and delivery fee if not provided directly
             const serviceFee =
               item.serviceFee !== undefined
                 ? item.serviceFee
@@ -131,52 +105,140 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
             return (
               <div
                 key={item.id || index}
-                className={`flex items-center justify-between rounded-lg p-3 ${
-                  theme === "dark"
-                    ? "border border-gray-700 bg-gray-800"
-                    : "bg-gray-50"
+                className={`group relative overflow-hidden rounded-[2rem] p-5 transition-all duration-300 hover:scale-[1.01] ${
+                  isDark
+                    ? "border border-white/10 bg-white/5 hover:bg-white/[0.08]"
+                    : "border border-black/5 bg-white shadow-sm hover:shadow-md"
                 }`}
               >
-                <div>
-                  <div
-                    className={`font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    {item.store} ({item.items} items)
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                        isDark
+                          ? "bg-indigo-500/10 text-indigo-400"
+                          : "bg-indigo-100 text-indigo-600"
+                      }`}
+                    >
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black tracking-tight">
+                          {item.store}
+                        </h4>
+                        {item.orderNumber && (
+                          <span
+                            className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${
+                              isDark
+                                ? "bg-white/5 text-white/40"
+                                : "bg-black/5 text-black/40"
+                            }`}
+                          >
+                            #{item.orderNumber}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest opacity-40">
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                          {item.date}
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest opacity-40">
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                          </svg>
+                          {item.items} Items
+                        </div>
+                        {item.minutesTaken && (
+                          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-500">
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={3}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {item.minutesTaken}m Execution
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div
-                    className={`text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    {item.date}
-                    {item.orderNumber && (
-                      <span
-                        className={`ml-2 text-xs ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
+
+                  <div className="flex items-center justify-between border-t border-black/5 pt-4 sm:flex-col sm:items-end sm:border-0 sm:pt-0">
+                    <div className="text-right">
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                        Earned
+                      </p>
+                      <p
+                        className={`text-lg font-black ${
+                          isDark ? "text-emerald-400" : "text-emerald-600"
                         }`}
                       >
-                        Order #{item.orderNumber}
-                      </span>
-                    )}
-                  </div>
-                  {item.minutesTaken && (
-                    <div className="text-xs text-blue-500">
-                      Completed in {item.minutesTaken} min
+                        {formatCurrencySync(serviceFee + deliveryFee)}
+                      </p>
                     </div>
-                  )}
-                </div>
-                <div className="text-right">
-                  <div
-                    className={`font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    {formatCurrency(serviceFee)}
-                  </div>
-                  <div className="text-sm text-blue-600">
-                    Delivery: {formatCurrency(deliveryFee)}
+                    <div className="flex gap-2 sm:mt-1">
+                      <span
+                        className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-tight ${
+                          isDark
+                            ? "bg-blue-500/10 text-blue-400"
+                            : "bg-blue-50 text-blue-600"
+                        }`}
+                      >
+                        Del: {formatCurrencySync(deliveryFee)}
+                      </span>
+                      <span
+                        className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-tight ${
+                          isDark
+                            ? "bg-purple-500/10 text-purple-400"
+                            : "bg-purple-50 text-purple-600"
+                        }`}
+                      >
+                        Svc: {formatCurrencySync(serviceFee)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -185,31 +247,21 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
         </div>
       )}
 
-      {/* Pagination controls */}
+      {/* Pagination */}
       {!isLoading && totalPages > 1 && (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <Pagination
             prev
             next
-            size="sm"
+            size="md"
             total={(serverPagination ? totalOrders : orders.length) || 0}
             limit={pageSize}
             activePage={currentPage}
             maxButtons={5}
             onChangePage={handlePageChange}
+            className="custom-glass-pagination"
           />
         </div>
-      )}
-
-      {/* Load more button as an alternative to pagination */}
-      {!isLoading && !serverPagination && currentPage < totalPages && (
-        <Button
-          appearance="ghost"
-          className="mt-4 w-full"
-          onClick={() => handlePageChange(currentPage + 1)}
-        >
-          Load More Orders
-        </Button>
       )}
     </div>
   );

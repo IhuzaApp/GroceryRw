@@ -2,6 +2,8 @@
 
 import React from "react";
 import { Button } from "rsuite";
+import { useTheme } from "../../../../context/ThemeContext";
+
 // OrderDetailsType is used for type safety
 interface OrderDetailsType {
   id: string;
@@ -35,6 +37,9 @@ export default function BottomActionButton({
   onCombinedDeliveryConfirmation,
   getActiveOrder,
 }: BottomActionButtonProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   // Check if we're in delivery phase and all orders for current customer are ready
   const allOrders = [order, ...(order?.combinedOrders || [])];
   const ordersByCustomer = new Map<string, any[]>();
@@ -80,32 +85,56 @@ export default function BottomActionButton({
 
   const defaultButton = getActionButton(actionOrder);
 
+  // If no action is needed, don't show the bar
+  if (!defaultButton && !readyCustomerGroup) return null;
+
   return (
-    <div className="pb-safe fixed bottom-0 left-0 right-0 z-[9999] border-t border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:hidden">
-      {readyCustomerGroup ? (
-        // Show unified delivery confirmation button for all orders in this customer group
-        <Button
-          appearance="primary"
-          color="green"
-          block
-          onClick={() => {
-            // Use combined delivery confirmation if available, otherwise fallback to direct status update
-            if (onCombinedDeliveryConfirmation) {
-              onCombinedDeliveryConfirmation(readyCustomerGroup[1]);
-            } else {
-              // Fallback to direct status update
-              readyCustomerGroup[1].forEach((o: any) => {
-                onUpdateStatus("delivered", o.id);
-              });
-            }
-          }}
-          className="rounded-lg py-4 text-xl font-bold"
-        >
-          Confirm Delivery for {readyCustomerGroup[1].length} Orders
-        </Button>
-      ) : (
-        defaultButton
-      )}
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-[9999] border-t px-5 pb-8 pt-4 transition-all duration-300 sm:hidden ${
+        isDark
+          ? "border-white/10 bg-[#0A0A0A]/80"
+          : "border-black/5 bg-white/80"
+      }`}
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
+    >
+      <div className="mx-auto max-w-lg">
+        {readyCustomerGroup ? (
+          <button
+            onClick={() => {
+              if (onCombinedDeliveryConfirmation) {
+                onCombinedDeliveryConfirmation(readyCustomerGroup[1]);
+              } else {
+                readyCustomerGroup[1].forEach((o: any) => {
+                  onUpdateStatus("delivered", o.id);
+                });
+              }
+            }}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_10px_25px_rgba(16,185,129,0.4)] transition-all hover:bg-emerald-700 active:scale-95"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className="h-5 w-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            Deliver {readyCustomerGroup[1].length} Orders
+          </button>
+        ) : (
+          <div className="[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!border-none [&>button]:!bg-emerald-600 [&>button]:!py-4 [&>button]:!text-[11px] [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!shadow-[0_10px_25px_rgba(16,185,129,0.3)] [&>button]:!transition-all [&>button]:active:scale-95">
+            {defaultButton}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

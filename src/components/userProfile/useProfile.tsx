@@ -13,6 +13,8 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
+import { LogOut, RefreshCw } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
@@ -20,6 +22,7 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 export default function UserProfile() {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("account");
   const isMobile = useMediaQuery("(max-width: 768px)");
   // User data state
@@ -63,6 +66,9 @@ export default function UserProfile() {
     status?: string;
   } | null>(null);
   const [loadingReferral, setLoadingReferral] = useState<boolean>(true);
+  // AI Subscription status
+  const [isAISubscribed, setIsAISubscribed] = useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
@@ -147,6 +153,25 @@ export default function UserProfile() {
         setShopperStatus(null);
       })
       .finally(() => setLoadingShopper(false));
+  }, [user?.id]);
+
+  // Check AI Subscription status
+  useEffect(() => {
+    if (!user?.id) return;
+
+    fetch("/api/ai/usage-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ p256dh: "" }), // Passing empty as we just need subscription status
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setIsAISubscribed(data.isSubscribed || false);
+      })
+      .catch((err) => {
+        console.error("Failed to check AI status:", err);
+        setIsAISubscribed(false);
+      });
   }, [user?.id]);
 
   // Handle click on "Become a Plasa" button
@@ -273,24 +298,131 @@ export default function UserProfile() {
     );
   };
 
+  // Handle premium logout with takeover
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    toast.success("Logging out...");
+
+    // Set a safety fallback to refresh the page if logout takes too long (> 5 seconds)
+    const fallbackTimeout = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.location.replace("/Auth/Login");
+      }
+    }, 5000);
+
+    try {
+      // Start the progress transition then immediately call logout
+      await logout();
+      clearTimeout(fallbackTimeout);
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoggingOut(false);
+      clearTimeout(fallbackTimeout);
+      toast.error("Logout failed. Please try again.");
+    }
+  };
+
+  const [logoutProgress, setLogoutProgress] = useState(0);
+
+  useEffect(() => {
+    if (isLoggingOut) {
+      const interval = setInterval(() => {
+        setLogoutProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 30);
+      return () => clearInterval(interval);
+    } else {
+      setLogoutProgress(0);
+    }
+  }, [isLoggingOut]);
+
+  // If logging out, show the takeover IMMEDIATELY and stop rendering other content
+  if (isLoggingOut) {
+    return (
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 text-center duration-500 animate-in fade-in"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
+        <div className="w-full max-w-md space-y-8">
+          {/* Logo / Branding */}
+          <div className="mb-8 flex justify-center">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-md duration-700 animate-in zoom-in">
+              <LogOut className="h-16 w-16 text-red-500" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+              See you soon,{" "}
+              <span className="text-red-500">{user?.name || "there"}</span>!
+            </h1>
+            <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+              We're securely closing your session.
+            </p>
+          </div>
+
+          {/* Progress Bar Container */}
+          <div className="relative mx-auto mt-12 h-2 w-full max-w-sm overflow-hidden rounded-full bg-gray-200 shadow-inner dark:bg-gray-800">
+            <div
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-500 to-orange-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300 ease-out"
+              style={{ width: `${logoutProgress}%` }}
+            />
+          </div>
+
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <span className="text-sm font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              {logoutProgress}% Securely Logged Out
+            </span>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="flex justify-center pt-12 opacity-30">
+            <div className="flex gap-4">
+              <div className="h-1 w-8 rounded-full bg-red-400" />
+              <div className="h-1 w-12 rounded-full bg-red-500" />
+              <div className="h-1 w-8 rounded-full bg-red-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading state while determining screen size
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 md:bg-transparent">
+      <div
+        className="flex min-h-screen flex-col md:bg-transparent"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
         {/* Mobile Header Background Space */}
-        <div className="h-32 w-full animate-pulse rounded-b-3xl bg-gray-200 dark:bg-gray-800 md:hidden" />
+        <div className="h-32 w-full animate-pulse rounded-b-3xl bg-gray-300/30 dark:bg-white/5 md:hidden" />
 
         <div className="mx-auto w-full max-w-4xl px-4 py-6 md:mt-8">
           {/* Profile Details Skeleton */}
-          <div className="-mt-16 mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800/50 md:mt-0">
+          <div
+            className="-mt-16 mb-6 rounded-2xl border p-6 shadow-sm transition-colors duration-300 md:mt-0"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              borderColor: theme === "dark" ? "#262626" : "#e5e7eb",
+            }}
+          >
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-              <div className="h-20 w-20 shrink-0 animate-pulse rounded-full border-4 border-white bg-gray-200 shadow-md dark:border-gray-800 dark:bg-gray-700 md:h-24 md:w-24" />
+              <div
+                className="h-20 w-20 shrink-0 animate-pulse rounded-full border-4 bg-gray-300/50 shadow-md dark:bg-white/10 md:h-24 md:w-24"
+                style={{ borderColor: "var(--bg-secondary)" }}
+              />
               <div className="w-full space-y-2 text-center sm:text-left">
-                <div className="mx-auto mt-2 h-6 w-48 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:mx-0 sm:mt-0" />
-                <div className="mx-auto h-4 w-32 animate-pulse rounded-md bg-gray-100 dark:bg-gray-800 sm:mx-0" />
+                <div className="mx-auto mt-2 h-6 w-48 animate-pulse rounded-lg bg-gray-300/40 dark:bg-white/10 sm:mx-0 sm:mt-0" />
+                <div className="mx-auto h-4 w-32 animate-pulse rounded-md bg-gray-300/20 dark:bg-white/5 sm:mx-0" />
                 <div className="mt-4 flex justify-center gap-2 sm:justify-start">
-                  <div className="h-6 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-6 w-24 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-gray-300/40 dark:bg-white/10" />
+                  <div className="h-6 w-24 animate-pulse rounded-full bg-gray-300/40 dark:bg-white/10" />
                 </div>
               </div>
             </div>
@@ -301,12 +433,16 @@ export default function UserProfile() {
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-800/50"
+                className="flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-colors duration-300"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: theme === "dark" ? "#262626" : "#e5e7eb",
+                }}
               >
-                <div className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />
+                <div className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-gray-300/50 dark:bg-white/10" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 w-32 animate-pulse rounded-md bg-gray-200 dark:bg-gray-700" />
-                  <div className="h-3 w-48 animate-pulse rounded-md bg-gray-100 dark:bg-gray-800" />
+                  <div className="h-5 w-32 animate-pulse rounded-md bg-gray-300/40 dark:bg-white/10" />
+                  <div className="h-3 w-48 animate-pulse rounded-md bg-gray-300/20 dark:bg-white/5" />
                 </div>
               </div>
             ))}
@@ -339,7 +475,10 @@ export default function UserProfile() {
         refreshOrders={refreshOrders}
         referralStatus={referralStatus}
         loadingReferral={loadingReferral}
+        isAISubscribed={isAISubscribed}
         onAvatarChange={handleAvatarChange}
+        isLoggingOut={isLoggingOut}
+        onLogout={handleLogout}
       />
     );
   }
@@ -365,7 +504,10 @@ export default function UserProfile() {
       refreshOrders={refreshOrders}
       referralStatus={referralStatus}
       loadingReferral={loadingReferral}
+      isAISubscribed={isAISubscribed}
       onAvatarChange={handleAvatarChange}
+      isLoggingOut={isLoggingOut}
+      onLogout={handleLogout}
     />
   );
 }

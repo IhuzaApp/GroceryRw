@@ -20,17 +20,33 @@ const EarningsComponentsCard: React.FC<EarningsComponentsCardProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const getComponentColor = (type: string) => {
     switch (type) {
       case "Delivery Fee":
-        return "bg-green-500";
+        return "from-emerald-400 to-emerald-600";
+      case "Service Fee":
+        return "from-blue-400 to-blue-600";
+      case "Tips":
+        return "from-purple-400 to-purple-600";
+      case "Bonus":
+        return "from-amber-400 to-amber-600";
+      default:
+        return "from-gray-400 to-gray-600";
+    }
+  };
+
+  const getDotsColor = (type: string) => {
+    switch (type) {
+      case "Delivery Fee":
+        return "bg-emerald-500";
       case "Service Fee":
         return "bg-blue-500";
       case "Tips":
         return "bg-purple-500";
       case "Bonus":
-        return "bg-orange-500";
+        return "bg-amber-500";
       default:
         return "bg-gray-500";
     }
@@ -38,80 +54,108 @@ const EarningsComponentsCard: React.FC<EarningsComponentsCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
+        isDark
+          ? "border border-white/10 bg-white/5"
+          : "border border-black/5 bg-white shadow-xl"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between sm:mb-6">
-        <h3 className="text-base font-bold sm:text-lg">Earnings Components</h3>
-        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-          </svg>
-        </button>
-      </div>
+      <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-blue-500/5 opacity-50 blur-3xl" />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-6 sm:py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+      <div className="relative z-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black tracking-tight">
+              Earnings Breakdown
+            </h3>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Component Analysis
+            </p>
+          </div>
+          <button
+            className={`${
+              isDark
+                ? "text-white/20 hover:text-white/60"
+                : "text-black/20 hover:text-black/60"
+            } transition-colors`}
+          >
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
         </div>
-      ) : earningsComponents.length > 0 ? (
-        <>
-          <div className="space-y-3 sm:space-y-4">
-            {earningsComponents.map((component, index) => (
-              <div key={index}>
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`h-3 w-3 rounded-full ${getComponentColor(
-                        component.type
-                      )}`}
-                    />
-                    <span className="text-sm font-medium">
-                      {component.type}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          </div>
+        ) : earningsComponents.length > 0 ? (
+          <div className="space-y-6">
+            <div className="space-y-5">
+              {earningsComponents.map((component, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`h-2 w-2 rounded-full ring-4 ring-opacity-20 ${getDotsColor(
+                          component.type
+                        ).replace("bg-", "ring-")} ${getDotsColor(
+                          component.type
+                        )}`}
+                      />
+                      <span className="whitespace-nowrap text-sm font-black uppercase tracking-tight opacity-80">
+                        {component.type}
+                      </span>
+                    </div>
+                    <span className="bg-gradient-to-br from-white to-white/60 bg-clip-text text-sm font-black text-transparent dark:from-white dark:to-white/40">
+                      {formatCurrencySync(component.amount)}
                     </span>
                   </div>
-                  <span className="text-sm font-bold">
-                    {formatCurrencySync(component.amount)}
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${getComponentColor(
+                        component.type
+                      )} shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-all duration-1000`}
+                      style={{ width: `${component.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Footer */}
+            <div
+              className={`mt-8 rounded-2xl p-4 transition-all duration-300 ${
+                isDark
+                  ? "border border-white/5 bg-white/5"
+                  : "border border-black/5 bg-black/5"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                    Net Earnings
+                  </p>
+                  <p className="mt-0.5 text-lg font-black tracking-tight">
+                    Summary Total
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl font-black text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+                    {formatCurrencySync(totalEarnings)}
                   </span>
                 </div>
-                <div
-                  className={`h-2 w-full rounded-full ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
-                >
-                  <div
-                    className={`h-2 rounded-full ${getComponentColor(
-                      component.type
-                    )}`}
-                    style={{ width: `${component.percentage}%` }}
-                  />
-                </div>
               </div>
-            ))}
-          </div>
-
-          {/* Total */}
-          <div
-            className={`mt-4 border-t pt-3 sm:mt-6 sm:pt-4 ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold sm:text-base">
-                Total Earnings
-              </span>
-              <span className="text-base font-bold text-green-600 dark:text-green-400 sm:text-lg">
-                {formatCurrencySync(totalEarnings)}
-              </span>
             </div>
           </div>
-        </>
-      ) : (
-        <div className="py-8 text-center text-sm opacity-60">
-          <p>No earnings components data available</p>
-        </div>
-      )}
+        ) : (
+          <div className="py-8 text-center">
+            <p className="text-sm font-bold uppercase tracking-widest opacity-20">
+              No segments found
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

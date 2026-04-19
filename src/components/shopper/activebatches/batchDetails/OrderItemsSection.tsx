@@ -4,8 +4,9 @@ import React from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../../lib/formatCurrency";
 import { resolveImageUrl } from "../../../../lib/imageUrl";
-import { OrderItem } from "../types";
+import { OrderItem } from "../../types";
 import OrderItemCard from "../OrderItemCard";
+import { useTheme } from "../../../../context/ThemeContext";
 
 interface OrderItemsSectionProps {
   order: any;
@@ -26,6 +27,9 @@ export default function OrderItemsSection({
   onShowProductImage,
   itemsLoading,
 }: OrderItemsSectionProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   // Check if we have same-shop combined orders (multiple orders from same shop)
   const hasCombinedOrders =
     order?.combinedOrders && order.combinedOrders.length > 0;
@@ -55,7 +59,6 @@ export default function OrderItemsSection({
     );
   };
 
-  // Check if combined orders are from the same customer
   const mainCustomerId = getCustomerId(order);
   const sameCustomerSameShopOrders = hasSameShopCombinedOrders
     ? [
@@ -69,32 +72,22 @@ export default function OrderItemsSection({
   const hasSameCustomerSameShopCombinedOrders =
     sameCustomerSameShopOrders.length > 1;
 
-  // For same-shop combined orders, create order-specific groups
+  // Active groups for same-shop combined orders
   const orderGroups = hasSameShopCombinedOrders
     ? [
-        // Main order first
         {
           orderId: order.OrderID || order.id,
           order: order,
           items: order.Order_Items || [],
-          customerName:
-            order.orderedBy?.name ||
-            order.user?.name ||
-            order.customer?.name ||
-            "Customer",
+          customerName: order.orderedBy?.name || order.user?.name || "Customer",
           customerId: mainCustomerId,
           isVisible: order.status === "accepted" || order.status === "shopping",
         },
-        // Then combined orders from same shop
         ...sameShopCombinedOrders.map((co: any) => ({
           orderId: co.OrderID || co.id,
           order: co,
           items: co.Order_Items || [],
-          customerName:
-            co.orderedBy?.name ||
-            co.user?.name ||
-            co.customer?.name ||
-            "Customer",
+          customerName: co.orderedBy?.name || co.user?.name || "Customer",
           customerId: getCustomerId(co),
           isVisible: co.status === "accepted" || co.status === "shopping",
         })),
@@ -106,48 +99,38 @@ export default function OrderItemsSection({
     const shopOrders = [order, ...(order.combinedOrders || [])].filter(
       (o) => (o.shop?.id || o.shop_id) === shopId
     );
-    // Hide shop tab if all its orders are on_the_way or finished
     return shopOrders.some(
       (o) => o.status === "accepted" || o.status === "shopping"
     );
   });
 
-  // Combined order rendering logic - determine split types early for useEffect
   const isSplit = groups.length > 1;
   const isSameShopCustomerSplit =
     hasSameShopCombinedOrders && orderGroups.length > 1;
 
-  // For same-shop customer tabs, use orderId instead of shopId
-  const isCurrentlyActiveOrderVisible = orderGroups.some(
-    (group) => group.orderId == activeShopId
-  ); // Use == for number/string comparison
-  const effectiveActiveOrderId = isCurrentlyActiveOrderVisible
+  const effectiveActiveOrderId = orderGroups.some(
+    (g) => g.orderId == activeShopId
+  )
     ? activeShopId
     : orderGroups.length > 0
     ? orderGroups[0].orderId
     : null;
 
-  // Use current activeShopId if it's still in the visible groups, otherwise default to first available
-  const isCurrentlyActiveVisible = groups.some(([sid]) => sid === activeShopId);
-  const effectiveActiveShopId = isCurrentlyActiveVisible
+  const effectiveActiveShopId = groups.some(([sid]) => sid === activeShopId)
     ? activeShopId
     : groups.length > 0
     ? groups[0][0]
     : null;
 
-  // Auto-set activeShopId to the only visible shop/order if there's only one
   React.useEffect(() => {
     if (isSameShopCustomerSplit) {
-      // For same-shop combined orders, set to first order if not already set
       if (
         orderGroups.length > 0 &&
-        !orderGroups.some((group) => group.orderId == activeShopId)
+        !orderGroups.some((g) => g.orderId == activeShopId)
       ) {
-        // Use == for number/string comparison
         onSetActiveShopId(orderGroups[0].orderId);
       }
     } else if (groups.length === 1 && activeShopId !== groups[0][0]) {
-      // For different shops, set to the only visible shop
       onSetActiveShopId(groups[0][0]);
     }
   }, [
@@ -160,518 +143,302 @@ export default function OrderItemsSection({
 
   if (itemsLoading) {
     return (
-      <div>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <div className="skeleton h-5 w-24 sm:h-6 sm:w-28" />
-        </div>
-        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-          <div className="skeleton h-4 w-48" />
-          <div className="space-y-2 sm:space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
-              >
-                <div className="skeleton h-12 w-12 flex-shrink-0 rounded-lg sm:h-14 sm:w-14" />
-                <div className="min-w-0 flex-1">
-                  <div className="skeleton mb-1 h-5 w-3/4 sm:h-6" />
-                  <div className="skeleton mb-1 h-4 w-1/2 sm:h-5" />
-                  <div className="skeleton h-4 w-20 sm:h-5" />
-                </div>
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="skeleton h-8 w-8 rounded sm:h-9 sm:w-9" />
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="space-y-4">
+        <div
+          className={`h-6 w-32 rounded-lg ${
+            isDark ? "bg-white/10" : "bg-black/5"
+          } animate-pulse`}
+        />
+        <div
+          className={`space-y-4 rounded-2xl border p-6 ${
+            isDark ? "border-white/5 bg-white/5" : "bg-black/2 border-black/5"
+          }`}
+        >
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className={`h-20 w-full rounded-2xl ${
+                isDark ? "bg-white/5" : "animate-pulse bg-black/5"
+              }`}
+            />
+          ))}
         </div>
       </div>
     );
   }
+
+  // Common Header helper
+  const SectionHeader = ({ title }: { title: string }) => (
+    <div className="mb-4 flex items-center gap-3 px-1">
+      <div
+        className={`h-8 w-1.5 rounded-full ${
+          isDark ? "bg-emerald-500" : "bg-emerald-600"
+        }`}
+      />
+      <h2 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white sm:text-lg">
+        {title}
+      </h2>
+    </div>
+  );
+
+  const ContentContainer = ({
+    children,
+    subtitle,
+  }: {
+    children: React.ReactNode;
+    subtitle: string;
+  }) => (
+    <div
+      className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
+        isDark ? "border-white/10 bg-white/5" : "bg-black/2 border-black/5"
+      }`}
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
+    >
+      <div
+        className={`border-b px-6 py-3.5 ${
+          isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-black/5"
+        }`}
+      >
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+          {subtitle}
+        </p>
+      </div>
+      <div className="space-y-3 p-4 sm:space-y-4 sm:p-6">{children}</div>
+    </div>
+  );
 
   if (order?.orderType === "reel") {
     return (
-      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-            Reel Details
-          </h2>
-        </div>
-        <div className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:p-4">
-          <div className="mb-1 font-semibold text-slate-900 dark:text-slate-100">
-            {order.reel?.Product}
+      <div className={activeTab === "items" ? "block" : "hidden sm:block"}>
+        <SectionHeader title="Reel Details" />
+        <ContentContainer subtitle={`${order.quantity} ITEMS`}>
+          <div
+            className={`rounded-xl border p-4 ${
+              isDark
+                ? "border-white/10 bg-white/5"
+                : "border-black/5 bg-black/5 shadow-sm"
+            }`}
+          >
+            <p className="font-black uppercase tracking-tight text-gray-900 dark:text-white">
+              {order.reel?.Product}
+            </p>
+            <p className="mt-1 text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              Quantity: {order.quantity} PCS
+            </p>
           </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">
-            Quantity: {order.quantity} pcs
-          </div>
-        </div>
+        </ContentContainer>
       </div>
     );
   }
 
-  // Business order: show store and products from Order_Items (mapped from allProducts)
   if (order?.orderType === "business") {
     const storeName = order.shop?.name ?? "Business Store";
     const items = order.Order_Items ?? [];
     return (
-      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-            Order Items
-          </h2>
-        </div>
-        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {storeName} • {items.length} {items.length === 1 ? "Item" : "Items"}
-          </h3>
-          <div className="space-y-2 sm:space-y-3">
-            {items.map((item: any) => {
-              const name =
-                item.name ??
-                item.product?.ProductName?.name ??
-                item.product?.name ??
-                "Item";
-              const qty = Number(item.quantity) ?? Number(item.qty) ?? 1;
-              const price = item.price ?? item.price_per_item ?? "0";
-              const imgSrc =
-                item.image ??
-                item.product?.image ??
-                item.product?.ProductName?.image ??
-                "/images/groceryPlaceholder.png";
-              const isDataUrl =
-                typeof imgSrc === "string" && imgSrc.startsWith("data:");
-              const resolvedImg = isDataUrl
-                ? imgSrc
-                : resolveImageUrl(imgSrc) ?? imgSrc;
-              const syntheticItem = {
-                id: item.id,
-                quantity: qty,
-                price: Number(price),
-                product: {
-                  id: item.id,
-                  name,
-                  image: resolvedImg || imgSrc,
-                  final_price: String(
-                    item.price_per_item ?? item.price ?? price ?? 0
-                  ),
-                  description: item.description ?? undefined,
-                  measurement_unit:
-                    item.product?.measurement_unit ??
-                    item.unit ??
-                    item.measurement_type ??
-                    undefined,
-                  measurement_type:
-                    item.product?.measurement_type ??
-                    item.measurement_type ??
-                    item.unit ??
-                    undefined,
-                  selectedDetails:
-                    item.product?.selectedDetails ??
-                    item.selectedDetails ??
-                    undefined,
-                  category: item.category ?? item.Category?.name ?? undefined,
-                  ProductName: { name },
-                },
-              };
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
-                >
-                  <button
-                    type="button"
-                    className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm transition-all hover:ring-2 hover:ring-emerald-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 sm:h-12 sm:w-12"
-                    onClick={() =>
-                      onShowProductImage(syntheticItem as OrderItem)
-                    }
-                    aria-label={`View larger image of ${name}`}
-                  >
-                    {isDataUrl ? (
-                      <img
-                        src={imgSrc}
-                        alt={name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : resolvedImg ? (
-                      <Image
-                        src={resolvedImg}
-                        alt={name}
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                        unoptimized={
-                          typeof resolvedImg === "string" &&
-                          resolvedImg.startsWith("data:")
-                        }
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                        <span className="text-xs">No image</span>
-                      </div>
-                    )}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {name}
-                    </p>
-                    {/* For business orders show Description and query_id from PlasBusinessProductsOrSerive; no item price */}
-                    {(
-                      item.product?.ProductName?.description ??
-                      item.description ??
-                      ""
-                    )?.trim() ? (
-                      <p className="mt-1 line-clamp-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
-                        {(
-                          item.product?.ProductName?.description ??
-                          item.description ??
-                          ""
-                        ).trim()}
-                      </p>
-                    ) : null}
-                    {item.query_id ?? item.product?.query_id ? (
-                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                        Ref: {item.query_id ?? item.product?.query_id}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <div className={activeTab === "items" ? "block" : "hidden sm:block"}>
+        <SectionHeader title="Order Items" />
+        <ContentContainer
+          subtitle={`${storeName} • ${items.length} ${
+            items.length === 1 ? "ITEM" : "ITEMS"
+          }`}
+        >
+          {items.map((item: any) => {
+            const name = item.name ?? item.product?.ProductName?.name ?? "Item";
+            return (
+              <OrderItemCard
+                key={item.id}
+                item={item}
+                isBatchShopping={false}
+                onToggleFound={onToggleItemFound}
+                onShowProductImage={onShowProductImage}
+                isBusinessOrder={true}
+              />
+            );
+          })}
+        </ContentContainer>
       </div>
     );
   }
 
-  // Restaurant order: show restaurant name and dish list from restaurant_order_items
   if (order?.orderType === "restaurant") {
     const restaurantName =
       order.shop?.name ?? order.Restaurant?.name ?? "Restaurant";
     const items = order.restaurant_order_items ?? [];
     return (
-      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-            Order Items
-          </h2>
-        </div>
-        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {restaurantName} • {items.length}{" "}
-            {items.length === 1 ? "Item" : "Items"}
-          </h3>
-          <div className="space-y-2 sm:space-y-3">
-            {items.map((row: any) => {
-              const dish = row.restaurant_dishes;
-              const name =
-                dish?.ProductNames?.name ?? dish?.dishes?.name ?? "Dish";
-              const description =
-                dish?.ProductNames?.description ??
-                dish?.dishes?.description ??
-                "";
-              const image =
-                dish?.ProductNames?.image ?? dish?.dishes?.image ?? null;
-              const qty = Number(row.quantity) || 1;
-              const price = row.price ?? dish?.price ?? "0";
-              return (
-                <div
-                  key={row.id}
-                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
-                >
-                  {image && (
-                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-14 sm:w-14">
-                      <img
-                        src={image}
-                        alt={name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-slate-900 dark:text-slate-100">
-                      {name}
-                    </p>
-                    {description && (
-                      <p className="line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
-                        {description}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                      Qty: {qty} × {formatCurrency(Number(price))}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 font-semibold text-slate-900 dark:text-slate-100">
-                    {formatCurrency(Number(price) * qty)}
-                  </div>
+      <div className={activeTab === "items" ? "block" : "hidden sm:block"}>
+        <SectionHeader title="Order Items" />
+        <ContentContainer
+          subtitle={`${restaurantName} • ${items.length} ${
+            items.length === 1 ? "ITEM" : "ITEMS"
+          }`}
+        >
+          {items.map((row: any) => {
+            const dish = row.restaurant_dishes;
+            const name =
+              dish?.ProductNames?.name ?? dish?.dishes?.name ?? "Dish";
+            return (
+              <div
+                key={row.id}
+                className={`flex items-center gap-4 rounded-2xl border p-4 ${
+                  isDark
+                    ? "border-white/5 bg-white/5"
+                    : "border-black/5 bg-black/5"
+                }`}
+              >
+                <div className="flex-1">
+                  <p className="text-xs font-black uppercase tracking-tight text-gray-900 dark:text-white">
+                    {name}
+                  </p>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                    {row.quantity} × {formatCurrency(Number(row.price || 0))}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                <div className="text-sm font-black text-gray-900 dark:text-white">
+                  {formatCurrency(Number(row.price || 0) * row.quantity)}
+                </div>
+              </div>
+            );
+          })}
+        </ContentContainer>
       </div>
     );
   }
 
-  // Helper to get shop name
-  const getShopName = (sid: string) => {
-    if (sid === order.shop?.id) return order.shop?.name;
-    const sub = order.combinedOrders?.find((o: any) => o.shop?.id === sid);
-    if (sub) return sub.shop?.name;
-    return "Unknown Shop";
-  };
+  // Shop navigation tabs for split orders
+  const ShopTabs = () => (
+    <div className="scrollbar-hide mb-6 flex flex-nowrap gap-3 overflow-x-auto px-1 pb-2">
+      {groups.map(([shopId], idx) => {
+        const isActive = effectiveActiveShopId === shopId;
+        const shopName =
+          shopId === order.shop?.id
+            ? order.shop?.name
+            : order.combinedOrders?.find((o: any) => o.shop?.id === shopId)
+                ?.shop?.name || "Other Shop";
 
-  // Same-shop combined orders: Show customer tabs
-  if (isSameShopCustomerSplit) {
-    return (
-      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-            Order Items
-          </h2>
-        </div>
-
-        {/* Customer/Order Tabs Navigation */}
-        <div className="scrollbar-hide mb-4 flex flex-nowrap gap-2 overflow-x-auto pb-2">
-          {orderGroups.map((group, idx) => (
-            <button
-              key={group.orderId}
-              onClick={() => onSetActiveShopId(group.orderId)}
-              className={`flex max-w-[200px] flex-shrink-0 items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                effectiveActiveOrderId == group.orderId // Use == for number/string comparison
-                  ? "border-green-600 bg-green-600 text-white shadow-lg shadow-green-200 dark:shadow-green-900/30"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-green-400 hover:text-green-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        return (
+          <button
+            key={shopId}
+            onClick={() => onSetActiveShopId(shopId)}
+            className={`flex flex-shrink-0 items-center gap-3 rounded-2xl border-2 px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+              isActive
+                ? "scale-105 border-emerald-500 bg-emerald-500 text-white shadow-xl shadow-emerald-500/30"
+                : isDark
+                ? "border-white/5 bg-white/5 text-gray-500 hover:border-white/20 hover:text-gray-300"
+                : "border-black/5 bg-black/5 text-gray-400 hover:border-emerald-500 hover:text-emerald-600"
+            }`}
+          >
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] ${
+                isActive ? "bg-white/20" : "bg-black/5 dark:bg-white/5"
               }`}
             >
+              {idx + 1}
+            </span>
+            {shopName}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const CustomerTabs = () => (
+    <div className="scrollbar-hide mb-6 flex flex-nowrap gap-3 overflow-x-auto px-1 pb-2">
+      {orderGroups.map((group, idx) => {
+        const isActive = effectiveActiveOrderId == group.orderId;
+        return (
+          <button
+            key={group.orderId}
+            onClick={() => onSetActiveShopId(group.orderId)}
+            className={`flex flex-shrink-0 items-center gap-3 rounded-2xl border-2 px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+              isActive
+                ? "scale-105 border-emerald-500 bg-emerald-500 text-white shadow-xl shadow-emerald-500/30"
+                : isDark
+                ? "border-white/5 bg-white/5 text-gray-500 hover:border-white/20 hover:text-gray-300"
+                : "border-black/5 bg-black/5 text-gray-400 hover:border-emerald-500 hover:text-emerald-600"
+            }`}
+          >
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] ${
+                isActive ? "bg-white/20" : "bg-black/5 dark:bg-white/5"
+              }`}
+            >
+              {idx + 1}
+            </span>
+            <div className="flex flex-col items-start leading-none">
+              <span>{group.customerName}</span>
               <span
-                className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] ${
-                  effectiveActiveOrderId == group.orderId // Use == for number/string comparison
-                    ? "bg-white/20"
-                    : "bg-slate-100 dark:bg-slate-700"
+                className={`mt-0.5 text-[9px] font-bold opacity-60 ${
+                  isActive ? "text-white" : "text-gray-500"
                 }`}
               >
-                {idx + 1}
+                #{group.orderId}
               </span>
-              <div className="min-w-0 flex-1 truncate text-left">
-                {group.customerName}{" "}
-                <span
-                  className={`text-xs ${
-                    effectiveActiveOrderId == group.orderId // Use == for number/string comparison
-                      ? "text-white/90"
-                      : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  #{group.orderId}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Active Order Items */}
-        {(() => {
-          const activeGroup = orderGroups.find(
-            (group) => group.orderId == effectiveActiveOrderId
-          ); // Use == for number/string comparison
-          if (!activeGroup) return null;
-
-          return (
-            <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                {activeGroup.customerName} • Order #{activeGroup.orderId} •{" "}
-                {activeGroup.items.length} Items
-              </h3>
-              <div className="space-y-2 sm:space-y-3">
-                {activeGroup.items.map((item: any) => {
-                  // Check if this order group is part of same-customer, same-shop combined orders
-                  const isSameCustomerSameShop =
-                    hasSameCustomerSameShopCombinedOrders &&
-                    activeGroup.customerId === mainCustomerId;
-
-                  let isBatchShopping = false;
-                  if (isSameCustomerSameShop) {
-                    // For same-customer, same-shop combined orders, show button if ANY order is shopping
-                    const allSameCustomerSameShopOrders = [
-                      order,
-                      ...(order.combinedOrders || []),
-                    ].filter(
-                      (o) =>
-                        (o.shop?.id || o.shop_id) === mainShopId &&
-                        getCustomerId(o) === mainCustomerId
-                    );
-                    isBatchShopping = allSameCustomerSameShopOrders.some(
-                      (o) => o.status === "shopping"
-                    );
-                  } else {
-                    // For different customers or different shops, only check the specific order
-                    isBatchShopping = activeGroup.order.status === "shopping";
-                  }
-
-                  return (
-                    <div key={item.id}>
-                      <OrderItemCard
-                        item={item}
-                        isBatchShopping={isBatchShopping}
-                        onToggleFound={onToggleItemFound}
-                        onShowProductImage={onShowProductImage}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
             </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className={activeTab === "items" ? "block" : "hidden sm:block"}>
+      <SectionHeader title="Order Items" />
+
+      {isSplit && <ShopTabs />}
+      {isSameShopCustomerSplit && <CustomerTabs />}
+
+      {isSameShopCustomerSplit ? (
+        (() => {
+          const activeGroup = orderGroups.find(
+            (g) => g.orderId == effectiveActiveOrderId
           );
-        })()}
-      </div>
-    );
-  }
-
-  if (isSplit) {
-    return (
-      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-            Order Items
-          </h2>
-        </div>
-
-        {/* Shop Tabs Navigation */}
-        <div className="scrollbar-hide mb-4 flex flex-nowrap gap-2 overflow-x-auto pb-2">
-          {groups.map(([shopId], idx) => (
-            <button
-              key={shopId}
-              onClick={() => onSetActiveShopId(shopId)}
-              className={`flex flex-shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-semibold transition-all duration-200 ${
-                effectiveActiveShopId === shopId
-                  ? "border-green-600 bg-green-600 text-white shadow-lg shadow-green-200 dark:shadow-green-900/30"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-green-400 hover:text-green-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
-              }`}
+          if (!activeGroup) return null;
+          return (
+            <ContentContainer
+              subtitle={`${activeGroup.customerName} • ORDER #${activeGroup.orderId} • ${activeGroup.items.length} ITEMS`}
             >
-              <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-                  effectiveActiveShopId === shopId
-                    ? "bg-white/20"
-                    : "bg-slate-100 dark:bg-slate-700"
-                }`}
-              >
-                {idx + 1}
-              </span>
-              {getShopName(shopId)}
-            </button>
-          ))}
-        </div>
-
-        {/* Active Shop Items */}
-        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {getShopName(effectiveActiveShopId || "")} •{" "}
-            {itemsByShop.get(effectiveActiveShopId || "")?.length || 0} Items
-          </h3>
-          <div className="space-y-2 sm:space-y-3">
-            {itemsByShop.get(effectiveActiveShopId || "")?.map((item) => {
-              // For different shops combined orders, check if ANY order from this shop is still shopping
-              // This allows marking items as found even if some orders from the same shop are already on_the_way
-              const shopOrders = [
-                order,
-                ...(order.combinedOrders || []),
-              ].filter(
-                (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
-              );
-              const hasAnyOrderShopping = shopOrders.some(
-                (o) => o.status === "shopping"
-              );
-
-              // Show Mark Found button if any order from this shop is still in shopping status
-              const isBatchShopping = hasAnyOrderShopping;
-
-              return (
-                <div key={item.id}>
-                  <OrderItemCard
-                    item={item}
-                    isBatchShopping={isBatchShopping}
-                    onToggleFound={onToggleItemFound}
-                    onShowProductImage={onShowProductImage}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  } else {
-    // Even in non-split mode, show only the active shop's/order's items
-    const activeShopItems = itemsByShop.get(effectiveActiveShopId || "") || [];
-
-    // For same-shop combined orders, show customer name instead of shop name
-    let displayName = getShopName(effectiveActiveShopId || "");
-    let displayItems = activeShopItems;
-
-    if (hasSameShopCombinedOrders && orderGroups.length === 1) {
-      // Single same-shop combined order visible
-      const singleGroup = orderGroups[0];
-      displayName = `${singleGroup.customerName} • Order #${singleGroup.orderId}`;
-      displayItems = singleGroup.items;
-    }
-
-    return (
-      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
-        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-            Order Items
-          </h2>
-        </div>
-        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {displayName} • {displayItems.length} Items
-          </h3>
-          <div className="space-y-2 sm:space-y-3">
-            {displayItems.map((item) => {
-              // Check if this is a same-customer, same-shop combined order scenario
-              const isSameCustomerSameShop =
-                hasSameCustomerSameShopCombinedOrders &&
-                effectiveActiveShopId === mainShopId;
-
-              let isBatchShopping = false;
-              if (isSameCustomerSameShop) {
-                // For same-customer, same-shop combined orders, show button if ANY order is shopping
-                const allSameCustomerSameShopOrders = [
-                  order,
-                  ...(order.combinedOrders || []),
-                ].filter(
-                  (o) =>
-                    (o.shop?.id || o.shop_id) === mainShopId &&
-                    getCustomerId(o) === mainCustomerId
-                );
-                isBatchShopping = allSameCustomerSameShopOrders.some(
-                  (o) => o.status === "shopping"
-                );
-              } else {
-                // For different customers or different shops, check if any order from this shop is still shopping
-                const shopOrders = [
-                  order,
-                  ...(order.combinedOrders || []),
-                ].filter(
-                  (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
-                );
-                isBatchShopping = shopOrders.some(
-                  (o) => o.status === "shopping"
-                );
-              }
-
-              return (
-                <div key={item.id}>
-                  <OrderItemCard
-                    item={item}
-                    isBatchShopping={isBatchShopping}
-                    onToggleFound={onToggleItemFound}
-                    onShowProductImage={onShowProductImage}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
+              {activeGroup.items.map((item: any) => (
+                <OrderItemCard
+                  key={item.id}
+                  item={item}
+                  isBatchShopping={activeGroup.order.status === "shopping"}
+                  onToggleFound={onToggleItemFound}
+                  onShowProductImage={onShowProductImage}
+                />
+              ))}
+            </ContentContainer>
+          );
+        })()
+      ) : (
+        <ContentContainer
+          subtitle={`${
+            effectiveActiveShopId === order.shop?.id ? order.shop?.name : "SHOP"
+          } • ${
+            itemsByShop.get(effectiveActiveShopId || "")?.length || 0
+          } ITEMS`}
+        >
+          {itemsByShop.get(effectiveActiveShopId || "")?.map((item) => {
+            const shopOrders = [order, ...(order.combinedOrders || [])].filter(
+              (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
+            );
+            const isBatchShopping = shopOrders.some(
+              (o) => o.status === "shopping"
+            );
+            return (
+              <OrderItemCard
+                key={item.id}
+                item={item}
+                isBatchShopping={isBatchShopping}
+                onToggleFound={onToggleItemFound}
+                onShowProductImage={onShowProductImage}
+              />
+            );
+          })}
+        </ContentContainer>
+      )}
+    </div>
+  );
 }

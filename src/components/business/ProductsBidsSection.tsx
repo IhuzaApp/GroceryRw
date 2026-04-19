@@ -297,7 +297,7 @@ export function ProductsBidsSection({
           "service";
 
         const extension = serviceData.image.name.split(".").pop() || "jpg";
-        const imagePath = `plasbusiness/${businessNameSlug}/services/${serviceNameSlug}_${timestamp}.${extension}`;
+        const imagePath = `services/${businessNameSlug}/${serviceNameSlug}_${timestamp}.${extension}`;
         imageUrl = await uploadToFirebase(serviceData.image, imagePath);
       } else if (
         typeof serviceData.image === "string" &&
@@ -312,7 +312,7 @@ export function ProductsBidsSection({
           serviceData.name?.toLowerCase().replace(/[^a-z0-9]/g, "_") ||
           "service";
 
-        const imagePath = `plasbusiness/${businessNameSlug}/services/${serviceNameSlug}_${timestamp}.png`;
+        const imagePath = `services/${businessNameSlug}/${serviceNameSlug}_${timestamp}.png`;
         imageUrl = await uploadToFirebase(serviceData.image, imagePath);
       } else if (editingService?.Image) {
         // Keep existing image if editing and no new image provided

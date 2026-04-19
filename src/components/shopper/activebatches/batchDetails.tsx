@@ -3787,11 +3787,7 @@ export default function BatchDetails({
       `}</style>
 
       <div
-        className={`min-h-screen ${
-          theme === "dark"
-            ? "bg-gray-900 text-gray-100"
-            : "bg-gray-50 text-gray-900"
-        }`}
+        className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300"
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
@@ -3939,7 +3935,7 @@ export default function BatchDetails({
 
         {/* Main Content */}
         <main className="mx-auto w-full px-0 py-2 pb-20 sm:p-6 sm:pb-6">
-          <div className="overflow-hidden rounded-none">
+          <div className="rounded-none">
             {/* Header Section */}
             <HeaderSection
               order={order}
@@ -3949,7 +3945,7 @@ export default function BatchDetails({
 
             {/* Content */}
             <div
-              className={`space-y-3 px-0 pb-3 pt-1 sm:space-y-8 sm:p-8 ${
+              className={`space-y-3 px-4 pb-3 pt-1 sm:space-y-8 sm:p-8 ${
                 // Add extra bottom margin on mobile when Order Summary is fixed at bottom
                 (() => {
                   const hasCombinedOrders = !!(

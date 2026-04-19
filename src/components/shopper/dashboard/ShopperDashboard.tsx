@@ -464,11 +464,7 @@ export default function ShopperDashboard() {
       <div
         className={`${
           isMobile ? "relative h-screen overflow-hidden" : "min-h-screen"
-        } ${
-          theme === "dark"
-            ? "bg-gray-900 text-gray-100"
-            : "bg-gray-50 text-gray-900"
-        }`}
+        } bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300`}
       >
         {/* Skeleton Map - Full screen on mobile */}
         <div
@@ -486,52 +482,26 @@ export default function ShopperDashboard() {
           }
         >
           <div
-            className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
-            }`}
+            className={`h-full w-full overflow-hidden rounded-none bg-[var(--bg-secondary)] shadow-sm md:h-[600px] md:rounded-2xl`}
           >
             {/* Map skeleton with animated shimmer */}
             <div className="relative h-full w-full overflow-hidden">
               {/* Animated background */}
-              <div
-                className={`absolute inset-0 ${
-                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
-                }`}
-              />
+              <div className="absolute inset-0 bg-[var(--bg-secondary)]" />
               {/* Shimmer effect */}
-              <div
-                className={`absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent ${
-                  theme === "dark" ? "via-white/5" : "via-gray-300/20"
-                }`}
-              />
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent dark:via-white/5" />
               {/* Map controls skeleton */}
               <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
-                <div
-                  className={`h-8 w-8 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                  } animate-pulse`}
-                />
-                <div
-                  className={`h-8 w-8 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                  } animate-pulse`}
-                />
+                <div className="h-8 w-8 animate-pulse rounded bg-[var(--bg-primary)] opacity-50" />
+                <div className="h-8 w-8 animate-pulse rounded bg-[var(--bg-primary)] opacity-50" />
               </div>
               {/* Earnings badge skeleton */}
               <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2">
-                <div
-                  className={`h-12 w-32 rounded-full ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                  } animate-pulse`}
-                />
+                <div className="h-12 w-32 animate-pulse rounded-full bg-[var(--bg-primary)] opacity-50" />
               </div>
               {/* Map style button skeleton */}
               <div className="absolute right-4 top-4 z-10">
-                <div
-                  className={`h-10 w-10 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                  } animate-pulse`}
-                />
+                <div className="h-10 w-10 animate-pulse rounded bg-[var(--bg-primary)] opacity-50" />
               </div>
             </div>
           </div>
@@ -540,32 +510,18 @@ export default function ShopperDashboard() {
         {/* Skeleton for Today's Completed Orders (mobile bottom sheet) */}
         {isMobile && (
           <div
-            className={`fixed bottom-0 left-0 right-0 z-10 rounded-t-lg border-t ${
-              theme === "dark"
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
+            className="fixed bottom-0 left-0 right-0 z-10 rounded-t-3xl border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] shadow-2xl backdrop-blur-xl"
             style={{ height: "200px" }}
           >
             <div className="p-4">
-              <div
-                className={`mb-4 h-1 w-12 rounded-full ${
-                  theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                } mx-auto`}
-              />
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--bg-secondary)] opacity-50" />
               <div className="space-y-3">
-                <div
-                  className={`h-4 w-24 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  } animate-pulse`}
-                />
+                <div className="h-4 w-24 animate-pulse rounded bg-[var(--bg-secondary)]" />
                 <div className="flex gap-2">
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className={`h-20 flex-1 rounded-lg ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      } animate-pulse`}
+                      className="h-20 flex-1 animate-pulse rounded-xl bg-[var(--bg-secondary)]"
                     />
                   ))}
                 </div>
@@ -587,11 +543,7 @@ export default function ShopperDashboard() {
       <div
         className={`${
           isMobile ? "relative h-screen overflow-hidden" : "min-h-screen"
-        } ${
-          theme === "dark"
-            ? "bg-gray-900 text-gray-100"
-            : "bg-gray-50 text-gray-900"
-        }`}
+        } bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300`}
       >
         {/* Map Section */}
         <div

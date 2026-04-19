@@ -171,33 +171,19 @@ export default function TodayCompletedOrders({
 
   // Order card component
   const OrderCard = ({ order }: { order: CompletedOrder }) => (
-    <div
-      className={`overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:shadow-md ${
-        theme === "dark"
-          ? "border-gray-700 bg-gray-800"
-          : "border-gray-200 bg-white"
-      }`}
-    >
-      <div className="p-4">
-        <div className="mb-3 flex items-start justify-between">
+    <div className="overflow-hidden rounded-2xl border border-transparent bg-[var(--bg-secondary)] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-white/5">
+      <div className="p-5">
+        <div className="mb-4 flex items-start justify-between">
           <div className="flex-1">
-            <h3
-              className={`text-lg font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
+            <h3 className="text-lg font-bold text-[var(--text-primary)]">
               {order.shopName}
             </h3>
-            <p
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
               {order.shopAddress}
             </p>
           </div>
           <div
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide ${
               order.orderType === "restaurant"
                 ? "bg-orange-100 text-orange-700"
                 : order.orderType === "reel"
@@ -213,23 +199,19 @@ export default function TodayCompletedOrders({
           </div>
         </div>
 
-        <div className="mb-3 space-y-2">
+        <div className="mb-4 space-y-3">
           <div className="flex items-center text-sm">
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth={2}
-              className={`mr-2 h-4 w-4 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
+              strokeWidth={2.5}
+              className="mr-3 h-4 w-4 text-[var(--text-secondary)] opacity-80"
             >
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span
-              className={theme === "dark" ? "text-gray-300" : "text-gray-700"}
-            >
+            <span className="font-medium text-[var(--text-primary)]">
               {order.customerAddress}
             </span>
           </div>
@@ -240,17 +222,13 @@ export default function TodayCompletedOrders({
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
-                className={`mr-2 h-4 w-4 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                strokeWidth={2.5}
+                className="mr-2 h-4 w-4 text-[var(--text-secondary)] opacity-80"
               >
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
-              <span
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
+              <span className="text-[var(--text-secondary)]">
                 {relativeTime(order.completedAt)}
               </span>
             </div>
@@ -259,41 +237,25 @@ export default function TodayCompletedOrders({
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
-                className={`mr-2 h-4 w-4 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                strokeWidth={2.5}
+                className="mr-2 h-4 w-4 text-[var(--text-secondary)] opacity-80"
               >
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                 <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
               </svg>
-              <span
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
+              <span className="font-medium text-[var(--text-secondary)]">
                 {order.items} items
               </span>
             </div>
           </div>
         </div>
 
-        <div
-          className={`flex items-center justify-between border-t pt-3 ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
-        >
+        <div className="mt-2 flex items-center justify-between border-t border-[var(--bg-primary)] pt-4 dark:border-white/5">
           <div>
-            <p
-              className={`text-xs ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
+            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
               Earnings
             </p>
-            <p
-              className={`text-xl font-bold ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-            >
+            <p className="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-xl font-black text-transparent">
               {formatCurrencySync(parseFloat(order.earnings))}
             </p>
           </div>
@@ -301,11 +263,7 @@ export default function TodayCompletedOrders({
             onClick={() =>
               router.push(`/Plasa/active-batches/batch/${order.id}`)
             }
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              theme === "dark"
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className="rounded-xl border border-transparent bg-[var(--bg-primary)] px-5 py-2.5 text-sm font-bold text-[var(--text-primary)] shadow-[0_4px_10px_rgb(0,0,0,0.05)] transition-all duration-300 hover:scale-[1.03] active:scale-95 dark:border-white/10"
           >
             View Details
           </button>
@@ -320,14 +278,14 @@ export default function TodayCompletedOrders({
       <div className="px-2 pb-2">
         <div className="flex items-center justify-between px-4 pt-4">
           <div>
-            <h1 className="text-2xl font-bold">Today's Completed Orders</h1>
-            <p
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              {completedOrders.length} orders • Total earnings:{" "}
-              {formatCurrencySync(totalEarnings)}
+            <h1 className="mb-1 text-3xl font-black text-[var(--text-primary)]">
+              Completed Orders
+            </h1>
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
+              {completedOrders.length} orders &bull; Total earnings:{" "}
+              <span className="font-bold text-emerald-500">
+                {formatCurrencySync(totalEarnings)}
+              </span>
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -352,10 +310,10 @@ export default function TodayCompletedOrders({
 
             <button
               onClick={toggleAutoRefresh}
-              className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                 isAutoRefreshing
-                  ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:-translate-y-0.5 hover:text-[var(--text-primary)]"
               }`}
             >
               <svg
@@ -372,7 +330,7 @@ export default function TodayCompletedOrders({
             </button>
 
             <button
-              className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
+              className="flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-sm font-bold text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_6px_20px_rgb(16,185,129,0.4)] active:scale-95"
               onClick={loadCompletedOrders}
             >
               <svg
@@ -397,26 +355,28 @@ export default function TodayCompletedOrders({
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
-              className="mr-2 h-4 w-4 text-gray-500"
+              className="mr-2 h-4 w-4 text-[var(--text-secondary)]"
             >
               <path d="M3 6h18M3 12h18M3 18h18" />
             </svg>
-            <span className="text-sm font-medium text-gray-500">Sort by:</span>
+            <span className="text-sm font-bold text-[var(--text-secondary)]">
+              Sort by:
+            </span>
           </div>
           <div className="flex space-x-3">
             <button
               onClick={() => handleSortChange("newest")}
-              className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 ${
                 sortBy === "newest"
-                  ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:-translate-y-0.5 hover:text-[var(--text-primary)]"
               }`}
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 className="mr-1.5 h-4 w-4"
               >
                 <circle cx="12" cy="12" r="10" />
@@ -426,17 +386,17 @@ export default function TodayCompletedOrders({
             </button>
             <button
               onClick={() => handleSortChange("earnings")}
-              className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 ${
                 sortBy === "earnings"
-                  ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:-translate-y-0.5 hover:text-[var(--text-primary)]"
               }`}
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 className="mr-1.5 h-4 w-4"
               >
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -445,17 +405,17 @@ export default function TodayCompletedOrders({
             </button>
             <button
               onClick={() => handleSortChange("distance")}
-              className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 ${
                 sortBy === "distance"
-                  ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:-translate-y-0.5 hover:text-[var(--text-primary)]"
               }`}
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 className="mr-1.5 h-4 w-4"
               >
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
@@ -491,16 +451,28 @@ export default function TodayCompletedOrders({
             ))}
           </div>
         ) : (
-          <div
-            className={`mx-4 rounded-lg border p-8 text-center ${
-              theme === "dark" ? "border-gray-700 bg-gray-800" : "bg-white"
-            }`}
-          >
-            <h3 className="mb-2 text-lg font-medium">
+          <div className="mx-4 rounded-2xl border border-transparent bg-[var(--bg-secondary)] p-10 text-center shadow-sm dark:border-white/5">
+            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bg-primary)] text-[var(--text-secondary)]">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="h-8 w-8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-xl font-bold text-[var(--text-primary)]">
               No Completed Orders Today
             </h3>
-            <p className="mb-4 text-gray-500">
-              You haven't completed any orders yet today.
+            <p className="mx-auto max-w-sm text-[var(--text-secondary)]">
+              You haven't completed any orders yet today. When you do, they will
+              appear here.
             </p>
           </div>
         )}
@@ -511,25 +483,17 @@ export default function TodayCompletedOrders({
   // Mobile view
   return (
     <div
-      className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
-        isExpanded ? "h-[calc(100%-16rem)]" : "h-[80px]"
-      } ${
-        theme === "dark"
-          ? "border-gray-800 bg-gray-900 text-gray-100"
-          : "border-gray-200 bg-white text-gray-900"
+      className={`ease-[cubic-bezier(0.32,0.72,0,1)] fixed bottom-16 left-0 right-0 z-[1000] rounded-t-3xl border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-[0_-10px_40px_rgb(0,0,0,0.1)] transition-all duration-500 dark:shadow-[0_-10px_40px_rgb(0,0,0,0.4)] ${
+        isExpanded ? "h-[calc(100%-16rem)]" : "h-[85px]"
       }`}
     >
       {/* Handle to expand/collapse */}
       <div className="relative">
         <div
-          className="flex cursor-pointer items-center justify-center p-2"
+          className="flex cursor-pointer items-center justify-center p-3"
           onClick={toggleExpanded}
         >
-          <div
-            className={`mx-auto h-1.5 w-10 rounded-full ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-            }`}
-          />
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-[var(--bg-secondary)]" />
         </div>
       </div>
 
@@ -537,38 +501,26 @@ export default function TodayCompletedOrders({
         <div className="h-full overflow-y-auto px-4 pb-4">
           <div className="mb-6 flex items-center justify-between pt-2">
             <div className="flex items-center">
-              <div
-                className={`mr-3 rounded-full p-2 ${
-                  theme === "dark" ? "bg-green-900/30" : "bg-green-100"
-                }`}
-              >
+              <div className="mr-3 rounded-full bg-emerald-500/10 p-2.5">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth={2}
-                  className={`h-5 w-5 ${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
-                  }`}
+                  strokeWidth={2.5}
+                  className="h-5 w-5 text-emerald-500"
                 >
                   <path d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h2
-                  className={`text-xl font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">
                   Today's Completed
                 </h2>
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
+                <p className="text-sm font-medium text-[var(--text-secondary)]">
                   {completedOrders.length} orders •{" "}
-                  {formatCurrencySync(totalEarnings)}
+                  <span className="font-bold text-emerald-500">
+                    {formatCurrencySync(totalEarnings)}
+                  </span>
                 </p>
               </div>
             </div>
@@ -577,14 +529,10 @@ export default function TodayCompletedOrders({
                 onClick={
                   isAutoRefreshing ? toggleAutoRefresh : loadCompletedOrders
                 }
-                className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                className={`flex items-center rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                   isAutoRefreshing
-                    ? theme === "dark"
-                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                      : "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                    : theme === "dark"
-                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                    : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 <svg
@@ -602,45 +550,33 @@ export default function TodayCompletedOrders({
             </div>
           </div>
 
-          <div className="mb-4 flex flex-wrap gap-1.5">
+          <div className="mb-5 flex flex-wrap gap-2">
             <button
               onClick={() => handleSortChange("newest")}
-              className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-lg px-4 py-2 text-xs font-bold transition-all duration-300 ${
                 sortBy === "newest"
-                  ? theme === "dark"
-                    ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                    : "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "hover:bg-[var(--bg-secondary)]/80 bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               Recent
             </button>
             <button
               onClick={() => handleSortChange("earnings")}
-              className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-lg px-4 py-2 text-xs font-bold transition-all duration-300 ${
                 sortBy === "earnings"
-                  ? theme === "dark"
-                    ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                    : "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "hover:bg-[var(--bg-secondary)]/80 bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               Earnings
             </button>
             <button
               onClick={() => handleSortChange("distance")}
-              className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+              className={`flex items-center rounded-lg px-4 py-2 text-xs font-bold transition-all duration-300 ${
                 sortBy === "distance"
-                  ? theme === "dark"
-                    ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                    : "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                  : theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_4px_15px_rgb(16,185,129,0.3)]"
+                  : "hover:bg-[var(--bg-secondary)]/80 bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               Distance
@@ -653,9 +589,7 @@ export default function TodayCompletedOrders({
                 <Panel
                   key={i}
                   bordered
-                  className={`h-[180px] ${
-                    theme === "dark" ? "bg-gray-800 text-gray-100" : ""
-                  }`}
+                  className="h-[180px] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                 >
                   <Placeholder.Paragraph rows={3} active />
                   <div className="mt-4 flex justify-between">
@@ -672,34 +606,49 @@ export default function TodayCompletedOrders({
               ))}
             </div>
           ) : (
-            <div
-              className={`py-8 text-center ${
-                theme === "dark" ? "text-gray-100" : ""
-              }`}
-            >
-              <p
-                className={theme === "dark" ? "text-gray-400" : "text-gray-500"}
-              >
-                No completed orders today.
-              </p>
+            <div className="py-12 text-center text-[var(--text-secondary)]">
+              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bg-secondary)]">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="h-8 w-8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </div>
+              <h3 className="mb-2 text-lg font-bold text-[var(--text-primary)]">
+                No completed orders
+              </h3>
+              <p>You haven't completed any orders yet.</p>
             </div>
           )}
         </div>
       ) : (
-        <div className="flex items-center justify-between px-4">
+        <div className="flex items-center justify-between px-5">
           <div className="flex w-full items-center justify-between">
-            <span
-              className={`text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              Today's Completed
-            </span>
-            <span
-              className={`text-xl font-bold ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-            >
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-emerald-500/10 p-2 text-emerald-500">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  className="h-4 w-4"
+                >
+                  <path d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-lg font-bold text-[var(--text-primary)]">
+                Today's Completed
+              </span>
+            </div>
+            <span className="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-2xl font-black text-transparent">
               {completedOrders.length}
             </span>
           </div>

@@ -21,6 +21,7 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   // Default data if no store breakdown
   const defaultStores = [
@@ -32,90 +33,133 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
   const stores =
     storeBreakdown.length > 0 ? storeBreakdown.slice(0, 3) : defaultStores;
 
-  const getColorClasses = (index: number) => {
+  const getAccentColor = (index: number) => {
     switch (index) {
       case 0:
-        return "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400";
+        return "emerald";
       case 1:
-        return "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400";
+        return "blue";
       case 2:
-        return "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400";
+        return "purple";
       default:
-        return "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400";
+        return "gray";
     }
   };
 
   return (
     <div
-      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
+        isDark
+          ? "border border-white/10 bg-white/5"
+          : "border border-black/5 bg-white shadow-xl"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between sm:mb-6">
-        <h3 className="text-base font-bold sm:text-lg">Top Stores</h3>
-        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-emerald-500/5 blur-3xl" />
+
+      <div className="relative z-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black tracking-tight">Top Stores</h3>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Revenue Sources
+            </p>
+          </div>
+          <button
+            className={`${
+              isDark
+                ? "text-white/20 hover:text-white/60"
+                : "text-black/20 hover:text-black/60"
+            } transition-colors`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-            />
-          </svg>
-        </button>
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {stores.map((item, index) => {
+              const storeName = item.store || item.name || `Store ${index + 1}`;
+              const amount = item.amount;
+              const percentage = item.percentage || item.points || 0;
+              const accent = getAccentColor(index);
+
+              const accentClasses = {
+                emerald: "bg-emerald-500 text-emerald-500",
+                blue: "bg-blue-500 text-blue-500",
+                purple: "bg-purple-500 text-purple-500",
+                gray: "bg-gray-500 text-gray-500",
+              }[accent];
+
+              return (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                          isDark ? `bg-${accent}-500/10` : `bg-${accent}-100`
+                        } transition-transform group-hover:scale-105`}
+                      >
+                        <ShoppingCart
+                          className={`h-5 w-5 text-${accent}-500`}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black tracking-tight">
+                          {storeName}
+                        </p>
+                        <p className="text-xs font-bold opacity-40">
+                          {amount
+                            ? formatCurrencySync(amount)
+                            : `${percentage} Points`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-black text-${accent}-500`}>
+                        {percentage ? `${Math.round(percentage)}%` : "0%"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ${
+                        accentClasses.split(" ")[0]
+                      }`}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {storeBreakdown.length === 0 && !isLoading && (
+          <div className="py-8 text-center">
+            <p className="text-sm font-bold uppercase tracking-widest opacity-20">
+              No active sources
+            </p>
+          </div>
+        )}
       </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-6 sm:py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-        </div>
-      ) : (
-        <div className="space-y-3 sm:space-y-4">
-          {stores.map((item, index) => {
-            const storeName = item.store || item.name || `Store ${index + 1}`;
-            const amount = item.amount;
-            const percentage = item.percentage || item.points || 0;
-
-            return (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${getColorClasses(
-                      index
-                    )}`}
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{storeName}</p>
-                    <p className="text-sm opacity-60">
-                      {amount
-                        ? formatCurrencySync(amount)
-                        : `${percentage} Points`}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-green-500">
-                    {percentage ? `${Math.round(percentage)}%` : ""}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {storeBreakdown.length === 0 && !isLoading && (
-        <div className="py-8 text-center text-sm opacity-60">
-          <p>No store data available yet</p>
-        </div>
-      )}
     </div>
   );
 };

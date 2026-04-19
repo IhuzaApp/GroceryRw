@@ -5,13 +5,21 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import { sendNewShopperRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
+import { resend } from "../../../src/lib/resend";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { ShopperContractPDF } from "../../../src/components/shopper/ShopperContractPDF";
+import React from "react";
 
 const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
     $Police_Clearance_Cert: String = ""
     $address: String = ""
-    $driving_license: String = ""
-    $drivingLicense_Image: String = ""
+    $driving_license: String
+    $drivingLicense_Image: String
+    $driving_license_front: String
+    $driving_license_back: String
+    $plate_number: String
+    $email: String
     $full_name: String = ""
     $guarantor: String = ""
     $guarantorPhone: String = ""
@@ -24,14 +32,18 @@ const REGISTER_SHOPPER = gql`
     $national_id_photo_back: String = ""
     $national_id_photo_front: String = ""
     $onboarding_step: String = ""
-    $phone: String = ""
     $phone_number: String = ""
     $profile_photo: String = ""
     $proofOfResidency: String = ""
     $signature: String = ""
+    $SignaturePad: String = ""
     $status: String = ""
     $transport_mode: String = ""
     $user_id: uuid = ""
+    $dob: String = ""
+    $face_verified: Boolean = false
+    $face_liveness_images: jsonb
+    $verification_metadata: jsonb
   ) {
     insert_shoppers(
       objects: {
@@ -41,6 +53,10 @@ const REGISTER_SHOPPER = gql`
         background_check_completed: false
         driving_license: $driving_license
         drivingLicense_Image: $drivingLicense_Image
+        driving_license_front: $driving_license_front
+        driving_license_back: $driving_license_back
+        plate_number: $plate_number
+        email: $email
         full_name: $full_name
         guarantor: $guarantor
         guarantorPhone: $guarantorPhone
@@ -54,14 +70,19 @@ const REGISTER_SHOPPER = gql`
         national_id_photo_front: $national_id_photo_front
         needCollection: false
         onboarding_step: $onboarding_step
-        phone: $phone
+        phone: $phone_number
         phone_number: $phone_number
         profile_photo: $profile_photo
         proofOfResidency: $proofOfResidency
         signature: $signature
+        SignaturePad: $SignaturePad
         status: $status
         transport_mode: $transport_mode
         user_id: $user_id
+        dob: $dob
+        face_verified: $face_verified
+        face_liveness_images: $face_liveness_images
+        verification_metadata: $verification_metadata
       }
     ) {
       affected_rows
@@ -79,6 +100,10 @@ const UPDATE_SHOPPER = gql`
     $national_id: String!
     $driving_license: String
     $drivingLicense_Image: String
+    $driving_license_front: String
+    $driving_license_back: String
+    $plate_number: String
+    $email: String
     $transport_mode: String!
     $profile_photo: String
     $Police_Clearance_Cert: String
@@ -93,8 +118,13 @@ const UPDATE_SHOPPER = gql`
     $national_id_photo_front: String
     $proofOfResidency: String
     $signature: String
+    $SignaturePad: String
     $collection_comment: String
     $needCollection: Boolean
+    $dob: String
+    $face_verified: Boolean
+    $face_liveness_images: jsonb
+    $verification_metadata: jsonb
   ) {
     update_shoppers_by_pk(
       pk_columns: { id: $shopper_id }
@@ -105,6 +135,10 @@ const UPDATE_SHOPPER = gql`
         national_id: $national_id
         driving_license: $driving_license
         drivingLicense_Image: $drivingLicense_Image
+        driving_license_front: $driving_license_front
+        driving_license_back: $driving_license_back
+        plate_number: $plate_number
+        email: $email
         transport_mode: $transport_mode
         profile_photo: $profile_photo
         Police_Clearance_Cert: $Police_Clearance_Cert
@@ -119,8 +153,13 @@ const UPDATE_SHOPPER = gql`
         national_id_photo_front: $national_id_photo_front
         proofOfResidency: $proofOfResidency
         signature: $signature
+        SignaturePad: $SignaturePad
         collection_comment: $collection_comment
         needCollection: $needCollection
+        dob: $dob
+        face_verified: $face_verified
+        face_liveness_images: $face_liveness_images
+        verification_metadata: $verification_metadata
         status: "pending"
         updated_at: "now()"
       }
@@ -158,6 +197,10 @@ interface RegisterShopperInput {
   national_id: string;
   driving_license?: string;
   drivingLicense_Image?: string;
+  driving_license_front?: string;
+  driving_license_back?: string;
+  plate_number?: string;
+  email?: string;
   transport_mode: string;
   profile_photo?: string;
   user_id: string;
@@ -176,6 +219,10 @@ interface RegisterShopperInput {
   signature?: string;
   collection_comment?: string;
   needCollection?: boolean;
+  dob?: string;
+  face_verified?: boolean;
+  face_liveness_images?: Record<string, string>;
+  verification_metadata?: Record<string, any>;
 }
 
 interface RegisterShopperResponse {
@@ -279,6 +326,10 @@ export default async function handler(
       national_id,
       driving_license,
       drivingLicense_Image,
+      driving_license_front,
+      driving_license_back,
+      plate_number,
+      email,
       transport_mode,
       profile_photo,
       user_id,
@@ -297,6 +348,10 @@ export default async function handler(
       signature,
       collection_comment,
       needCollection,
+      dob,
+      face_verified,
+      face_liveness_images,
+      verification_metadata,
     } = req.body as RegisterShopperInput;
     userId = user_id;
 
@@ -379,8 +434,12 @@ export default async function handler(
             address,
             phone_number: existingShopper.phone_number || phone_number, // Use existing phone number or new one
             national_id,
-            driving_license: driving_license || "",
-            drivingLicense_Image: drivingLicense_Image || "",
+            driving_license: driving_license || null,
+            drivingLicense_Image: drivingLicense_Image || null,
+            driving_license_front: driving_license_front || null,
+            driving_license_back: driving_license_back || null,
+            plate_number: plate_number || null,
+            email: email || null,
             transport_mode,
             profile_photo: profile_photo || "",
             Police_Clearance_Cert: Police_Clearance_Cert || "",
@@ -397,6 +456,11 @@ export default async function handler(
             signature: signature || "",
             collection_comment: "", // Clear the collection comment after update
             needCollection: false, // Set needCollection to false after update
+            dob: dob || "",
+            SignaturePad: signature || "",
+            face_verified: face_verified ?? false,
+            face_liveness_images: face_liveness_images || null,
+            verification_metadata: verification_metadata || null,
           }
         );
 
@@ -426,8 +490,12 @@ export default async function handler(
       {
         Police_Clearance_Cert: Police_Clearance_Cert || "",
         address,
-        driving_license: driving_license || "",
-        drivingLicense_Image: drivingLicense_Image || "",
+        driving_license: driving_license || null,
+        drivingLicense_Image: drivingLicense_Image || null,
+        driving_license_front: driving_license_front || null,
+        driving_license_back: driving_license_back || null,
+        plate_number: plate_number || null,
+        email: email || null,
         full_name,
         guarantor: guarantor || "",
         guarantorPhone: guarantorPhone || "",
@@ -440,7 +508,6 @@ export default async function handler(
         national_id_photo_back: national_id_photo_back || "",
         national_id_photo_front: national_id_photo_front || "",
         onboarding_step: "application_submitted",
-        phone: "",
         phone_number,
         profile_photo: profile_photo || "",
         proofOfResidency: proofOfResidency || "",
@@ -448,6 +515,11 @@ export default async function handler(
         status: "pending",
         transport_mode,
         user_id,
+        dob: dob || "",
+        SignaturePad: signature || "",
+        face_verified: face_verified ?? false,
+        face_liveness_images: face_liveness_images || null,
+        verification_metadata: verification_metadata || null,
       }
     );
 
@@ -490,6 +562,86 @@ export default async function handler(
         { user_id, full_name, phone_number }
       );
     }
+
+    // --- Start: Send Welcome Email via Resend ---
+    try {
+      const dateStr = new Date().toLocaleDateString("en-RW", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      // Generate PDF Contract
+      const pdfBuffer = await renderToBuffer(
+        React.createElement(ShopperContractPDF, {
+          data: req.body,
+          date: dateStr,
+        })
+      );
+
+      // Email Content with "How to Earn" info
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+          <div style="background-color: #00D9A5; padding: 30px; text-align: center;">
+            <img src="https://www.plas.rw/assets/logos/PlasLogoPNG.png" alt="Plas Logo" style="width: 140px; margin-bottom: 10px;">
+            <div style="margin-top: 10px;">
+              <img src="https://www.plas.rw/assets/logos/PlasIcon.png" alt="Plas Icon" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff;">
+            </div>
+            <h1 style="color: #fff; margin: 10px 0 0; font-size: 24px;">Welcome to the Plasa Family!</h1>
+          </div>
+          
+          <div style="padding: 30px;">
+            <p style="font-size: 16px;">Dear <strong>${full_name}</strong>,</p>
+            <p>Congratulations! Your application to join Rwanda's premium delivery network has been received and is now pending verification. We are thrilled to have you onboard.</p>
+            
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #00D9A5; margin-top: 0;">🚀 How to Earn as a Plasa</h3>
+              <ul style="padding-left: 20px;">
+                <li style="margin-bottom: 10px;"><strong>Flexible Earnings:</strong> For regular and reel orders, you earn <strong>100% of the delivery fee + the service fee</strong>. For restaurant orders, you earn the <strong>delivery fee</strong>.</li>
+                <li style="margin-bottom: 10px;"><strong>Smart Assignment:</strong> Our system sends you personalized offers based on your proximity. No need to compete; if you see an offer, it's exclusively for you while you review it!</li>
+                <li style="margin-bottom: 10px;"><strong>Manage Your Load:</strong> You can work on up to <strong>2 active orders</strong> at a time to maximize your efficiency.</li>
+                <li style="margin-bottom: 10px;"><strong>Weekly Payouts:</strong> Get your earnings settled directly to your wallet with regular withdrawal options.</li>
+              </ul>
+            </div>
+
+            <p><strong>Next Steps:</strong> Our security team will verify your documents (National ID and Police Clearance) within 48 hours. Once verified, you'll be able to "Go-Live" and start accepting orders.</p>
+            
+            <p>Attached to this email is your <strong>Digital Shopper Agreement</strong> for your records.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              <p style="margin: 0;">Warm regards,</p>
+              <p style="margin: 5px 0; font-weight: bold; color: #00D9A5;">Plas Support Team</p>
+              <p style="margin: 0; font-size: 12px; color: #999;">Kigali, Rwanda | www.plas.rw</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      await resend.emails.send({
+        from: "Plas Business <onboarding@plas.rw>",
+        to: [email || session.user.email || ""],
+        subject: "Welcome to Plasa Business - Your Application & Agreement",
+        html: emailHtml,
+        attachments: [
+          {
+            filename: "Shopper_Agreement_Plas.pdf",
+            content: pdfBuffer,
+          },
+        ],
+      });
+
+      console.log(
+        `[Resend] Welcome email sent to ${email || session.user.email}`
+      );
+    } catch (emailErr) {
+      console.error("[Resend] Failed to send welcome email:", emailErr);
+      // We don't throw here as the database registration was successful
+      await logErrorToSlack("RegisterShopperAPI:EmailNotification", emailErr, {
+        user_id: userId,
+        email,
+      });
+    }
+    // --- End: Send Welcome Email ---
 
     res.status(200).json({
       success: true,

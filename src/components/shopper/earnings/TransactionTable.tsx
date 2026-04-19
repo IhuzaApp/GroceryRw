@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Loader } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import * as XLSX from "xlsx";
@@ -26,12 +27,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Get initials from description/name
   const getInitials = (name: string) => {
-    const words = name.split(" ");
+    const safe = (name || "").trim();
+    if (!safe) return "TR";
+    const words = safe.split(" ").filter(Boolean);
     return words
       .map((word) => word[0])
       .join("")
@@ -39,30 +42,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       .slice(0, 2);
   };
 
-  // Get avatar color based on type
-  // Categorize transaction types
   const getTransactionCategory = (type: string) => {
     const typeLC = type.toLowerCase();
-
-    // Earnings/Income types
     const earningTypes = [
       "earning",
       "credit",
       "payment",
-      "payments",
       "income",
       "bonus",
       "tip",
-      "tips",
     ];
-
-    // Payout/Expense types
     const payoutTypes = [
       "payout",
-      "payouts",
       "debit",
       "expense",
-      "expenses",
       "reserve",
       "withdrawal",
       "fee",
@@ -71,37 +64,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
     if (earningTypes.some((t) => typeLC.includes(t))) return "earning";
     if (payoutTypes.some((t) => typeLC.includes(t))) return "payout";
-
     return "other";
   };
 
-  const getAvatarColor = (type: string) => {
-    const category = getTransactionCategory(type);
-    const colors = {
-      earning: "bg-green-100 text-green-600",
-      payout: "bg-red-100 text-red-600",
-      other: "bg-gray-100 text-gray-600",
-    };
-    return (
-      colors[category as keyof typeof colors] || "bg-gray-100 text-gray-600"
-    );
-  };
-
-  // Get account badge color
-  const getAccountBadgeColor = (type: string) => {
-    const category = getTransactionCategory(type);
-    const colors = {
-      earning: "bg-green-50 text-green-700 border-green-200",
-      payout: "bg-red-50 text-red-700 border-red-200",
-      other: "bg-gray-50 text-gray-700 border-gray-200",
-    };
-    return (
-      colors[category as keyof typeof colors] ||
-      "bg-gray-50 text-gray-700 border-gray-200"
-    );
-  };
-
-  // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -111,665 +76,263 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     });
   };
 
-  // Filter transactions
   const filteredTransactions = transactions.filter((transaction) => {
     const category = getTransactionCategory(transaction.type);
-
-    let matchesFilter = false;
-    if (filter === "all") {
-      matchesFilter = true;
-    } else if (filter === "earning") {
-      matchesFilter = category === "earning";
-    } else if (filter === "payout") {
-      matchesFilter = category === "payout";
-    }
-
+    let matchesFilter = filter === "all" || filter === category;
     const matchesSearch =
       transaction.description
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
-
     return matchesFilter && matchesSearch;
   });
 
-  // Export to Excel function
   const handleExportToExcel = () => {
     try {
-      toast.loading("Preparing Excel file...");
-
-      // Calculate summary statistics
+      toast.loading("Preparing Premium Report...");
       const totalEarnings = filteredTransactions
         .filter((t) => getTransactionCategory(t.type) === "earning")
         .reduce((sum, t) => sum + t.amount, 0);
-
       const totalPayouts = filteredTransactions
         .filter((t) => getTransactionCategory(t.type) === "payout")
         .reduce((sum, t) => sum + t.amount, 0);
 
-      const netAmount = totalEarnings - totalPayouts;
+      const exportData = filteredTransactions.map((t, index) => ({
+        "#": index + 1,
+        "Transaction ID": t.id,
+        Date: formatDate(t.date),
+        Description: t.description,
+        Type: t.type,
+        Amount: formatCurrencySync(t.amount),
+        Status: t.status,
+      }));
 
-      // Prepare transaction data for export
-      const exportData = filteredTransactions.map((transaction, index) => {
-        const category = getTransactionCategory(transaction.type);
-        return {
-          "#": index + 1,
-          "Transaction ID": transaction.id,
-          Date: formatDate(transaction.date),
-          Time: transaction.time || "N/A",
-          Description: transaction.description,
-          Type: transaction.type,
-          Category: category.charAt(0).toUpperCase() + category.slice(1),
-          Amount: transaction.amount,
-          "Amount (Formatted)": formatCurrencySync(transaction.amount),
-          Status: transaction.status,
-          "Order ID": transaction.orderId || "N/A",
-          "Order Number": transaction.orderNumber || "N/A",
-        };
-      });
-
-      // Create worksheet for transactions
-      const transactionsWorksheet = XLSX.utils.json_to_sheet(exportData);
-
-      // Set column widths for transactions
-      const transactionColumnWidths = [
-        { wch: 5 }, // #
-        { wch: 40 }, // Transaction ID
-        { wch: 15 }, // Date
-        { wch: 12 }, // Time
-        { wch: 35 }, // Description
-        { wch: 15 }, // Type
-        { wch: 12 }, // Category
-        { wch: 12 }, // Amount
-        { wch: 18 }, // Amount (Formatted)
-        { wch: 12 }, // Status
-        { wch: 40 }, // Order ID
-        { wch: 15 }, // Order Number
-      ];
-      transactionsWorksheet["!cols"] = transactionColumnWidths;
-
-      // Create summary data
-      const summaryData = [
-        {
-          Summary: "Report Type",
-          Value:
-            filter === "all"
-              ? "All Transactions"
-              : filter.charAt(0).toUpperCase() + filter.slice(1),
-        },
-        { Summary: "Total Transactions", Value: filteredTransactions.length },
-        { Summary: "Total Earnings", Value: formatCurrencySync(totalEarnings) },
-        { Summary: "Total Payouts", Value: formatCurrencySync(totalPayouts) },
-        { Summary: "Net Amount", Value: formatCurrencySync(netAmount) },
-        { Summary: "", Value: "" },
-        {
-          Summary: "Earnings Count",
-          Value: filteredTransactions.filter(
-            (t) => getTransactionCategory(t.type) === "earning"
-          ).length,
-        },
-        {
-          Summary: "Payouts Count",
-          Value: filteredTransactions.filter(
-            (t) => getTransactionCategory(t.type) === "payout"
-          ).length,
-        },
-        { Summary: "", Value: "" },
-        { Summary: "Generated On", Value: new Date().toLocaleString() },
-        { Summary: "Generated By", Value: "Plasa Earnings System" },
-      ];
-
-      // Create summary worksheet
-      const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
-      summaryWorksheet["!cols"] = [{ wch: 25 }, { wch: 30 }];
-
-      // Create workbook and add sheets
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, summaryWorksheet, "Summary");
-      XLSX.utils.book_append_sheet(
-        workbook,
-        transactionsWorksheet,
-        "Transactions"
-      );
-
-      // Generate filename with current date
-      const date = new Date();
-      const dateStr = `${date.getFullYear()}-${String(
-        date.getMonth() + 1
-      ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      const timeStr = `${String(date.getHours()).padStart(2, "0")}${String(
-        date.getMinutes()
-      ).padStart(2, "0")}`;
-      const filename = `Payment_History_${
-        filter === "all"
-          ? "All"
-          : filter.charAt(0).toUpperCase() + filter.slice(1)
-      }_${dateStr}_${timeStr}.xlsx`;
-
-      // Download file
-      XLSX.writeFile(workbook, filename);
-
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+      XLSX.writeFile(wb, `Payment_History_${new Date().getTime()}.xlsx`);
       toast.dismiss();
-      toast.success(
-        `Exported ${filteredTransactions.length} transactions to Excel!`,
-        {
-          duration: 3000,
-          icon: "📊",
-        }
-      );
+      toast.success("Report Generated Successfully");
     } catch (error) {
       toast.dismiss();
-      toast.error("Failed to export to Excel. Please try again.");
-      console.error("Export error:", error);
+      toast.error("Export Failed");
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+      <div className="flex items-center justify-center py-20">
+        <Loader size="md" content="Syncing Ledgers..." />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header with Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        {/* Filter Tabs */}
-        <div className="scrollbar-hide flex items-center gap-3 overflow-x-auto">
-          {(() => {
-            const earningsCount = transactions.filter(
-              (t) => getTransactionCategory(t.type) === "earning"
-            ).length;
-            const payoutsCount = transactions.filter(
-              (t) => getTransactionCategory(t.type) === "payout"
-            ).length;
-
-            return [
-              {
-                id: "all",
-                label: "All Transactions",
-                count: transactions.length,
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                id: "earning",
-                label: "Earnings",
-                count: earningsCount,
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                ),
-              },
-              {
-                id: "payout",
-                label: "Payouts",
-                count: payoutsCount,
-                icon: (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                ),
-              },
-            ];
-          })().map((tab) => (
+    <div className="space-y-6">
+      {/* Premium Header & Filters */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="scrollbar-hide flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0">
+          {[
+            {
+              id: "all",
+              label: "All Logs",
+              icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2",
+            },
+            {
+              id: "earning",
+              label: "Income",
+              icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1",
+            },
+            {
+              id: "payout",
+              label: "Outflow",
+              icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
+            },
+          ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`group relative flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 sm:gap-3 sm:rounded-xl sm:px-5 sm:py-3 sm:text-sm ${
+              className={`flex items-center gap-2.5 whitespace-nowrap rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                 filter === tab.id
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30"
-                  : theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
-                  : "border border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-gray-50"
+                  ? "bg-emerald-500 text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)]"
+                  : isDark
+                  ? "bg-white/5 text-white/40 hover:bg-white/10"
+                  : "bg-black/5 text-black/40 hover:bg-black/10"
               }`}
             >
-              <span
-                className={`transition-transform ${
-                  filter === tab.id ? "scale-110" : "group-hover:scale-110"
-                }`}
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                {tab.icon}
-              </span>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-                <span
-                  className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold sm:h-6 sm:min-w-[24px] sm:px-2 sm:text-xs ${
-                    filter === tab.id
-                      ? "bg-white/20 text-white"
-                      : theme === "dark"
-                      ? "bg-gray-700 text-gray-300"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              </div>
-              {filter === tab.id && (
-                <div className="absolute -bottom-1 left-1/2 hidden h-1 w-12 -translate-x-1/2 rounded-full bg-white sm:block"></div>
-              )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d={tab.icon}
+                />
+              </svg>
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            className={`hidden items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm md:flex ${
-              theme === "dark"
-                ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <svg
-              className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
-            </svg>
-            <span className="hidden sm:inline">Filter</span>
-          </button>
-          <button
-            className={`hidden items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm md:flex ${
-              theme === "dark"
-                ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <svg
-              className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-              />
-            </svg>
-            <span className="hidden sm:inline">Sort</span>
-          </button>
-          <button
-            onClick={handleExportToExcel}
-            disabled={filteredTransactions.length === 0}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:flex-none sm:gap-2 sm:px-4 sm:text-sm ${
-              filteredTransactions.length === 0
-                ? "cursor-not-allowed opacity-50"
-                : theme === "dark"
-                ? "bg-green-600 text-white shadow-lg shadow-green-600/30 hover:bg-green-700"
-                : "bg-green-500 text-white shadow-lg shadow-green-500/30 hover:bg-green-600"
-            }`}
-            title={
-              filteredTransactions.length === 0
-                ? "No transactions to export"
-                : "Export to Excel"
-            }
-          >
-            <svg
-              className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            <span className="hidden sm:inline">Export to Excel</span>
-            <span className="sm:hidden">Export</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Table View */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr
-                className={`border-b ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-900"
-                    : "border-gray-200 bg-gray-50"
-                }`}
-              >
-                <th className="w-20 px-4 py-4 text-left">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                    />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                      ID
-                    </span>
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                  Description
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                  Amount
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                  Type
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                  Date
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <svg
-                        className="h-12 w-12 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                        />
-                      </svg>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No transactions found
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredTransactions.map((transaction) => (
-                  <tr
-                    key={transaction.id}
-                    className={`transition-colors ${
-                      theme === "dark"
-                        ? "hover:bg-gray-700/50"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        />
-                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
-                          #{transaction.id.slice(-4)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${getAvatarColor(
-                            transaction.type
-                          )}`}
-                        >
-                          {getInitials(transaction.description)}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {transaction.description}
-                          </div>
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
-                            {transaction.orderId && (
-                              <span className="inline-flex items-center gap-1">
-                                <svg
-                                  className="h-3 w-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                                  />
-                                </svg>
-                                Order #{transaction.orderNumber}
-                              </span>
-                            )}
-                            <span className="inline-flex items-center gap-1">
-                              <svg
-                                className="h-3 w-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                              {transaction.type} Fee
-                            </span>
-                            {transaction.time && (
-                              <span className="inline-flex items-center gap-1">
-                                <svg
-                                  className="h-3 w-3"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-                                {transaction.time}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`text-sm font-semibold ${
-                          getTransactionCategory(transaction.type) === "earning"
-                            ? "text-green-600"
-                            : getTransactionCategory(transaction.type) ===
-                              "payout"
-                            ? "text-red-600"
-                            : "text-gray-900 dark:text-gray-100"
-                        }`}
-                      >
-                        {getTransactionCategory(transaction.type) === "payout"
-                          ? "-"
-                          : "+"}
-                        {formatCurrencySync(transaction.amount)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getAccountBadgeColor(
-                          transaction.type
-                        )}`}
-                      >
-                        {transaction.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 dark:text-gray-100">
-                        {formatDate(transaction.date)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                          transaction.status.toLowerCase() === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : transaction.status.toLowerCase() === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {transaction.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {filteredTransactions.length > 0 && (
-        <div
-          className={`mt-2 flex flex-col items-center justify-between gap-4 border-t pt-2 sm:flex-row ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
+        <button
+          onClick={handleExportToExcel}
+          className={`flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 ${
+            isDark ? "bg-white text-black" : "bg-black text-white shadow-xl"
           }`}
         >
-          <div className="order-2 text-center text-xs text-gray-500 dark:text-gray-400 sm:order-1 sm:text-left sm:text-sm">
-            Showing{" "}
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {filteredTransactions.length}
-            </span>{" "}
-            of{" "}
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {transactions.length}
-            </span>{" "}
-            transactions
-          </div>
-          <div className="order-1 flex items-center gap-2 sm:order-2">
-            <button
-              className={`flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-all active:scale-95 ${
-                theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span className="hidden sm:inline">Previous</span>
-              <span className="sm:hidden">Prev</span>
-            </button>
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={3}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Export Statement
+        </button>
+      </div>
 
-            <div className="flex items-center gap-1.5">
-              <button className="flex items-center justify-center rounded-lg bg-green-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-500/30 transition-all hover:bg-green-600 active:scale-95">
-                1
-              </button>
-              <button
-                className={`hidden items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all hover:scale-105 active:scale-95 sm:flex ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                2
-              </button>
-              <button
-                className={`hidden items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all hover:scale-105 active:scale-95 sm:flex ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                3
-              </button>
-            </div>
-
-            <button
-              className={`flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-all active:scale-95 ${
-                theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              <span className="hidden sm:inline">Next</span>
-              <span className="sm:hidden">Next</span>
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+      {/* Floating Glass Strips Container */}
+      <div className="space-y-3">
+        <div className="hidden grid-cols-6 px-8 py-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-30 lg:grid">
+          <div className="col-span-2">Transaction Details</div>
+          <div>Amount</div>
+          <div>Flow Type</div>
+          <div>Execution Date</div>
+          <div className="text-right">Status</div>
         </div>
-      )}
+
+        <div className="space-y-3">
+          {filteredTransactions.length === 0 ? (
+            <div
+              className={`rounded-[2.5rem] border-2 border-dashed py-20 text-center ${
+                isDark ? "border-white/5" : "border-black/5"
+              }`}
+            >
+              <p className="text-sm font-black uppercase tracking-widest opacity-20">
+                No matching records
+              </p>
+            </div>
+          ) : (
+            filteredTransactions.map((t) => {
+              const category = getTransactionCategory(t.type);
+              const isEarning = category === "earning";
+              const accentColor = isEarning
+                ? "emerald"
+                : category === "payout"
+                ? "rose"
+                : "indigo";
+
+              return (
+                <div
+                  key={t.id}
+                  className={`group relative overflow-hidden rounded-[2rem] p-4 transition-all duration-300 hover:scale-[1.01] lg:px-8 lg:py-5 ${
+                    isDark
+                      ? "border border-white/10 bg-white/5 hover:bg-white/[0.08]"
+                      : "border border-black/5 bg-white shadow-sm hover:shadow-md"
+                  }`}
+                >
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-6 lg:items-center">
+                    {/* Details */}
+                    <div className="col-span-2 flex items-center gap-4">
+                      <div
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xs font-black ${
+                          isDark
+                            ? `bg-${accentColor}-500/10 text-${accentColor}-400`
+                            : `bg-${accentColor}-50 text-${accentColor}-600`
+                        }`}
+                      >
+                        {getInitials(t.description)}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="truncate font-black tracking-tight">
+                          {t.description}
+                        </h4>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                          Ref: #{t.id.slice(-6)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="flex flex-col lg:block">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Amount
+                      </span>
+                      <span
+                        className={`text-lg font-black ${
+                          isEarning ? "text-emerald-500" : "text-rose-500"
+                        }`}
+                      >
+                        {isEarning ? "+" : "-"}
+                        {formatCurrencySync(t.amount)}
+                      </span>
+                    </div>
+
+                    {/* Type */}
+                    <div className="flex flex-col lg:block">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Category
+                      </span>
+                      <span
+                        className={`inline-flex rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-tight ${
+                          isDark
+                            ? "bg-white/5 text-white/60"
+                            : "bg-black/5 text-black/60"
+                        }`}
+                      >
+                        {t.type}
+                      </span>
+                    </div>
+
+                    {/* Date */}
+                    <div className="flex flex-col lg:block">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Date
+                      </span>
+                      <span className="text-sm font-bold tabular-nums opacity-60">
+                        {formatDate(t.date)}
+                      </span>
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex items-center justify-between lg:block lg:text-right">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Progress
+                      </span>
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] ${
+                          t.status.toLowerCase() === "completed"
+                            ? "bg-emerald-500/10 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                            : "bg-amber-500/10 text-amber-500"
+                        }`}
+                      >
+                        {t.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Flow Indicator Glow */}
+                  <div
+                    className={`absolute left-0 top-0 h-full w-1 ${
+                      isEarning ? "bg-emerald-500" : "bg-rose-500"
+                    } opacity-40 transition-opacity group-hover:opacity-100`}
+                  />
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
     </div>
   );
 };

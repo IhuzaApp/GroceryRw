@@ -17,6 +17,20 @@ import { useAuth as useAuthHook } from "../../hooks/useAuth";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useLanguage } from "../../context/LanguageContext";
+import {
+  User,
+  MapPin,
+  ShoppingBag,
+  Wallet,
+  LogOut,
+  Camera,
+  Calendar,
+  ShieldCheck,
+  Zap,
+  Plus,
+  ArrowRightLeft,
+  RefreshCw,
+} from "lucide-react";
 
 interface DesktopProfileProps {
   user: {
@@ -55,6 +69,9 @@ interface DesktopProfileProps {
   } | null;
   loadingReferral: boolean;
   onAvatarChange: (newUrl: string) => void;
+  isAISubscribed: boolean;
+  isLoggingOut: boolean;
+  onLogout: () => void;
 }
 
 export default function DesktopProfile({
@@ -78,6 +95,9 @@ export default function DesktopProfile({
   referralStatus,
   loadingReferral,
   onAvatarChange,
+  isAISubscribed,
+  isLoggingOut,
+  onLogout,
 }: DesktopProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
@@ -211,104 +231,81 @@ export default function DesktopProfile({
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* User Profile Section */}
-          <div className="lg:col-span-4">
-            <div className="flex flex-col items-center text-center sm:flex-row sm:text-left">
-              <div className="mb-4 sm:mb-0 sm:mr-4">
-                <div className="relative">
-                  <button
-                    onClick={() => setShowAvatarModal(true)}
-                    className="group relative h-20 w-20 overflow-hidden rounded-full border-4 border-green-100 bg-white shadow-lg transition-all hover:border-green-300 dark:border-green-900/30"
-                    aria-label="Change avatar"
-                  >
-                    <Image
-                      src={user?.profile_picture || "/images/userProfile.png"}
-                      alt="Profile"
-                      width={80}
-                      height={80}
-                      className="h-full w-full object-cover"
-                      unoptimized
-                    />
-                    {/* Camera edit overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
-                      <svg
-                        className="h-6 w-6 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                  </button>
-                  {/* Edit badge */}
-                  <button
-                    onClick={() => setShowAvatarModal(true)}
-                    className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green-500 transition-transform hover:scale-110 dark:border-gray-800"
-                    aria-label="Edit avatar"
-                  >
-                    <svg
-                      className="h-3 w-3 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                      />
-                    </svg>
-                  </button>
-                </div>
+          <div className="lg:col-span-5">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:text-left">
+              <div className="relative">
+                <button
+                  onClick={() => setShowAvatarModal(true)}
+                  className="group relative h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl ring-4 ring-green-500/10 transition-all hover:ring-green-500/30 dark:border-gray-800 dark:ring-green-500/5 sm:h-28 sm:w-28"
+                  aria-label="Change avatar"
+                >
+                  <Image
+                    src={user?.profile_picture || "/images/userProfile.png"}
+                    alt="Profile"
+                    width={112}
+                    height={112}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Camera className="h-7 w-7 text-white" />
+                  </div>
+                </button>
+                <button
+                  onClick={() => setShowAvatarModal(true)}
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-green-500 text-white shadow-lg transition-transform hover:scale-110 active:scale-95 dark:border-gray-800"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {user?.name}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Member since{" "}
-                  {user
-                    ? new Date(user.created_at).toLocaleString("default", {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : ""}
-                </p>
-                <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-3xl font-black text-gray-900 dark:text-white">
+                    {user?.name}
+                  </h2>
                   {isGuest ? (
-                    <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                      Guest User
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-orange-700 dark:bg-orange-950/30 dark:text-orange-400">
+                      <User className="h-3 w-3" /> Guest
+                    </span>
+                  ) : isAISubscribed && shopperStatus?.active ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-green-700 dark:bg-green-950/30 dark:text-green-400">
+                      <ShieldCheck className="h-3 w-3" /> Premium
                     </span>
                   ) : (
-                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                      Premium Member
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950/30 dark:text-blue-400">
+                      <ShieldCheck className="h-3 w-3" /> Regular
                     </span>
                   )}
-                  <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                    {orderCount} Orders
-                  </span>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4 opacity-50" />
+                    <span>
+                      Member since{" "}
+                      {user
+                        ? new Date(user.created_at).toLocaleDateString(
+                            "en-US",
+                            { month: "short", year: "numeric" }
+                          )
+                        : ""}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
                   {loadingShopper ? (
-                    <div className="h-5 w-20 animate-pulse rounded-full bg-gray-200" />
+                    <div className="h-6 w-24 animate-pulse rounded-full bg-gray-100 dark:bg-gray-800" />
                   ) : shopperStatus?.active ? (
-                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                      Active Plasa
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                      <Zap className="h-3 w-3" /> Active Plasa
                     </span>
                   ) : shopperStatus ? (
-                    <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      <RefreshCw className="h-3 w-3" />{" "}
                       {shopperStatus.status === "pending"
-                        ? "Pending Plasa"
+                        ? "Application Pending"
                         : shopperStatus.status}
                     </span>
                   ) : null}
@@ -319,261 +316,149 @@ export default function DesktopProfile({
 
           {/* Account Summary Section */}
           <div className="lg:col-span-4">
-            <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50/50 p-2 dark:from-green-900/20 dark:to-emerald-900/10">
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="h-4 w-4 text-green-600 dark:text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 p-5 text-white shadow-xl shadow-green-500/20 transition-all hover:-translate-y-1">
+                <div className="relative z-10 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/70">
                       Total Orders
-                    </span>
+                    </p>
+                    <h3 className="text-3xl font-black">{orderCount}</h3>
                   </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">
-                    {orderCount}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/50 p-2 dark:from-blue-900/20 dark:to-indigo-900/10">
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="h-4 w-4 text-blue-600 dark:text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                      Wallet Balance
-                    </span>
+                  <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
+                    <ShoppingBag className="h-6 w-6" />
                   </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(walletBalance)}
-                  </span>
                 </div>
+                <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
               </div>
+
+              {shopperStatus?.active && (
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                        Wallet Balance
+                      </p>
+                      <h3 className="text-3xl font-black">
+                        {formatCurrency(walletBalance)}
+                      </h3>
+                    </div>
+                    <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
+                      <Wallet className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Action Buttons Section */}
-          <div className="lg:col-span-4">
-            <div className="space-y-3">
-              {/* Action Buttons Row */}
-              <div className="grid grid-cols-2 gap-2">
-                {/* Switch to Shopper / Become Shopper Button */}
-                {loadingShopper ? (
-                  <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200" />
-                ) : shopperStatus?.active ? (
+          {/* Action Buttons & Address Section */}
+          <div className="lg:col-span-3">
+            <div className="flex h-full flex-col justify-between gap-4">
+              <div className="space-y-3">
+                {/* Become a Plasa Button */}
+                {!loadingShopper && (
                   <button
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                    onClick={async () => {
-                      const nextRole = role === "user" ? "shopper" : "user";
-                      setIsSwitchingRole(true);
-                      try {
-                        await initiateRoleSwitch(
-                          nextRole as "user" | "shopper"
-                        );
-                        toggleRole();
-                        toast.success(
-                          `Switched to ${
-                            nextRole === "user" ? "User" : "Shopper"
-                          }`
-                        );
-                      } catch (error) {
-                        console.error("Error updating role:", error);
-                        toast.error("Failed to switch account");
-                      } finally {
-                        setIsSwitchingRole(false);
+                    onClick={(e) => {
+                      if (shopperStatus?.active) {
+                        const nextRole = role === "user" ? "shopper" : "user";
+                        setIsSwitchingRole(true);
+                        initiateRoleSwitch(nextRole as "user" | "shopper")
+                          .then(() => {
+                            toggleRole();
+                            toast.success(
+                              `Switched to ${
+                                nextRole === "user" ? "User" : "Shopper"
+                              }`
+                            );
+                          })
+                          .catch(() => toast.error("Failed to switch account"))
+                          .finally(() => setIsSwitchingRole(false));
+                      } else {
+                        if (isGuest) {
+                          toast.error(
+                            "Please create a full account to become a plasa"
+                          );
+                          return;
+                        }
+                        handleBecomePlasa(e);
                       }
-                    }}
-                    disabled={isSwitchingRole}
-                  >
-                    <svg
-                      className="h-3.5 w-3.5 !text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                      />
-                    </svg>
-                    <span className="text-xs !text-white">
-                      {isSwitchingRole
-                        ? t("common.loading")
-                        : role === "user"
-                        ? t("nav.switchToShopper")
-                        : t("nav.switchToUser")}
-                    </span>
-                  </button>
-                ) : (
-                  <button
-                    className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                      isGuest
-                        ? "bg-gradient-to-r from-gray-400 to-gray-500"
-                        : shopperStatus?.needCollection
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                        : shopperStatus?.status === "pending" ||
-                          shopperStatus?.status === "under_review"
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                        : "bg-gradient-to-r from-green-500 to-emerald-600"
-                    }`}
-                    onClick={() => {
-                      if (isGuest) {
-                        toast.error(
-                          "Please create a full account to become a shopper"
-                        );
-                        return;
-                      }
-                      handleBecomePlasa({
-                        preventDefault: () => {},
-                      } as React.MouseEvent);
                     }}
                     disabled={
-                      isGuest ||
-                      shopperStatus?.status === "pending" ||
-                      shopperStatus?.status === "under_review"
+                      isSwitchingRole ||
+                      (!shopperStatus?.active &&
+                        (shopperStatus?.status === "pending" ||
+                          shopperStatus?.status === "under_review"))
                     }
+                    className={`relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-4 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
+                      shopperStatus?.active
+                        ? "bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                        : "bg-gradient-to-r from-green-500 to-emerald-600 shadow-green-500/20 hover:from-green-600 hover:to-emerald-700"
+                    }`}
                   >
-                    <svg
-                      className="h-3.5 w-3.5 !text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      {shopperStatus?.needCollection ? (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      ) : shopperStatus?.status === "pending" ||
-                        shopperStatus?.status === "under_review" ? (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      ) : (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      )}
-                    </svg>
-                    <span className="text-xs !text-white">
-                      {isGuest
-                        ? "Not Available"
-                        : shopperStatus?.needCollection
-                        ? "Update"
-                        : shopperStatus?.status === "pending" ||
-                          shopperStatus?.status === "under_review"
-                        ? "Pending"
-                        : "Become Shopper"}
+                    {isSwitchingRole ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : shopperStatus?.active ? (
+                      <ArrowRightLeft className="h-4 w-4" />
+                    ) : (
+                      <Zap className="h-4 w-4" />
+                    )}
+                    <span>
+                      {isSwitchingRole
+                        ? "Switching..."
+                        : shopperStatus?.active
+                        ? "Switch Service"
+                        : "Become a Plasa"}
                     </span>
                   </button>
                 )}
 
                 {/* Logout Button */}
                 <button
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
-                  onClick={async () => {
-                    try {
-                      toast.success("Logging out...");
-                      await logout();
-                    } catch (error) {
-                      console.error("Logout error:", error);
-                      toast.error("Failed to logout");
-                    }
-                  }}
+                  onClick={onLogout}
+                  disabled={isLoggingOut}
+                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3.5 text-xs font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-500 hover:text-white active:scale-95 disabled:opacity-50 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
                 >
-                  <svg
-                    className="h-3.5 w-3.5 !text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  <span className="text-xs !text-white">{t("nav.logout")}</span>
+                  {isLoggingOut ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  <span>{isLoggingOut ? "Exiting..." : t("nav.logout")}</span>
                 </button>
               </div>
 
               {/* Default Address Section */}
-              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-2.5 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
-                <div className="flex items-start gap-2.5">
-                  <svg
-                    className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
+              <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-green-500/30 dark:border-gray-800 dark:bg-gray-900/50">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-purple-500/10 p-2 text-purple-600 dark:text-purple-400">
+                    <MapPin className="h-4 w-4" />
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-1.5">
-                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        Default Address
-                      </h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Default Location
+                    </p>
+                    <div className="mt-1">
+                      {loadingAddr ? (
+                        <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+                      ) : selectedAddr || defaultAddr ? (
+                        <p className="truncate text-xs font-bold text-gray-700 dark:text-gray-200">
+                          {(selectedAddr || defaultAddr).street},{" "}
+                          {(selectedAddr || defaultAddr).city}
+                        </p>
+                      ) : (
+                        <p className="text-xs font-bold text-gray-400">
+                          No address set
+                        </p>
+                      )}
                     </div>
-                    {loadingAddr ? (
-                      <div className="h-3 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600" />
-                    ) : selectedAddr || defaultAddr ? (
-                      <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
-                        {(selectedAddr || defaultAddr).street},{" "}
-                        {(selectedAddr || defaultAddr).city}{" "}
-                        {(selectedAddr || defaultAddr).postal_code}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        No address selected
-                      </p>
-                    )}
                   </div>
                   <button
                     onClick={() => setShowAddrModal(true)}
-                    className="ml-1.5 shrink-0 rounded-md bg-gradient-to-r from-green-500 to-emerald-600 px-2.5 py-1 text-xs font-medium !text-white shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95 dark:from-green-600 dark:to-emerald-700"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm transition-all hover:scale-110 active:scale-95 dark:bg-gray-800"
                   >
-                    {selectedAddr || defaultAddr ? "Change" : "Select"}
+                    <RefreshCw className="h-3.5 w-3.5 text-gray-400 hover:text-green-500" />
                   </button>
                 </div>
               </div>

@@ -17,6 +17,7 @@ import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useLanguage } from "../../context/LanguageContext";
+import { LogOut, RefreshCw } from "lucide-react";
 
 interface MobileProfileProps {
   user: {
@@ -55,6 +56,9 @@ interface MobileProfileProps {
   } | null;
   loadingReferral: boolean;
   onAvatarChange: (newUrl: string) => void;
+  isAISubscribed: boolean;
+  isLoggingOut: boolean;
+  onLogout: () => void;
 }
 
 export default function MobileProfile({
@@ -78,6 +82,9 @@ export default function MobileProfile({
   referralStatus,
   loadingReferral,
   onAvatarChange,
+  isAISubscribed,
+  isLoggingOut,
+  onLogout,
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole, logout } = useAuth();
@@ -328,9 +335,17 @@ export default function MobileProfile({
               {user?.email || "Loading..."}
             </p>
             <div className="mt-1 flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                Premium
-              </span>
+              {!user ? (
+                <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
+              ) : isAISubscribed && shopperStatus?.active ? (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  Premium
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  Regular
+                </span>
+              )}
               <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
                 {orderCount} Orders
               </span>
@@ -759,16 +774,44 @@ export default function MobileProfile({
             </button>
           )}
 
-        {/* Wallet */}
-        <button
-          onClick={() => handleNavigation("wallet")}
-          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+        {/* Wallet - Shopper only */}
+        {shopperStatus?.active && (
+          <button
+            onClick={() => handleNavigation("wallet")}
+            className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+                  <svg
+                    className="h-6 w-6 !text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Wallet
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Manage your wallet balance
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                  {formatCurrency(walletBalance)}
+                </span>
                 <svg
-                  className="h-6 w-6 !text-white"
+                  className="h-5 w-5 !text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -777,49 +820,23 @@ export default function MobileProfile({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    d="M9 5l7 7-7 7"
                   />
                 </svg>
               </div>
-              <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Wallet
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Manage your wallet balance
-                </p>
-              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                {formatCurrency(walletBalance)}
-              </span>
-              <svg
-                className="h-5 w-5 !text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
+          </button>
+        )}
       </div>
 
       {/* Bottom Action Buttons */}
       <div className="mb-6 mt-4 space-y-4">
         {/* Switch Account Button */}
         {loadingShopper ? (
-          <div className="h-12 w-full animate-pulse rounded-none bg-gray-200 dark:bg-gray-700" />
+          <div className="h-12 w-full animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
         ) : shopperStatus?.active ? (
           <button
-            className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+            className="group relative flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
             onClick={async () => {
               const nextRole = role === "user" ? "shopper" : "user";
               setIsSwitchingRole(true);
@@ -838,32 +855,30 @@ export default function MobileProfile({
             }}
             disabled={isSwitchingRole}
           >
-            <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg
-                  className="h-5 w-5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                  />
-                </svg>
-              </div>
-              <span className="!text-white">
-                {isSwitchingRole
-                  ? "Switching..."
-                  : `Switch to ${role === "user" ? "Shopper" : "User"}`}
-              </span>
+            <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <svg
+                className="h-5 w-5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
             </div>
+            <span className="!text-white">
+              {isSwitchingRole
+                ? "Switching..."
+                : `Switch to ${role === "user" ? "Shopper" : "User"}`}
+            </span>
           </button>
         ) : (
           <button
-            className={`flex w-full items-center justify-center rounded-none px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${
+            className={`group relative flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${
               shopperStatus?.needCollection
                 ? "bg-gradient-to-r from-orange-500 to-orange-600"
                 : shopperStatus?.status === "pending" ||
@@ -877,70 +892,63 @@ export default function MobileProfile({
               shopperStatus?.status === "under_review"
             }
           >
-            <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                <svg
-                  className="h-5 w-5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {shopperStatus?.needCollection ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  ) : shopperStatus?.status === "pending" ||
-                    shopperStatus?.status === "under_review" ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  )}
-                </svg>
-              </div>
-              <span className="!text-white">
-                {shopperStatus?.needCollection
-                  ? "Update Application"
-                  : shopperStatus?.status === "pending" ||
-                    shopperStatus?.status === "under_review"
-                  ? `Application ${
-                      shopperStatus.status === "pending"
-                        ? "Pending"
-                        : "Under Review"
-                    }`
-                  : "Become a Shopper"}
-              </span>
+            <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+              <svg
+                className="h-5 w-5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {shopperStatus?.needCollection ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                ) : shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review" ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                )}
+              </svg>
             </div>
+            <span className="!text-white">
+              {shopperStatus?.needCollection
+                ? "Update Application"
+                : shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review"
+                ? `Application ${
+                    shopperStatus.status === "pending"
+                      ? "Pending"
+                      : "Under Review"
+                  }`
+                : "Become a Plasa"}
+            </span>
           </button>
         )}
 
         {/* Logout Button */}
         <button
-          className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
-          onClick={async () => {
-            try {
-              toast.success("Logging out...");
-              await logout();
-            } catch (error) {
-              console.error("Logout error:", error);
-              toast.error("Failed to logout");
-            }
-          }}
+          disabled={isLoggingOut}
+          className="group relative flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+          onClick={onLogout}
         >
-          <div className="flex items-center space-x-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+          <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+            {isLoggingOut ? (
+              <RefreshCw className="h-5 w-5 animate-spin !text-white" />
+            ) : (
               <svg
                 className="h-5 w-5 !text-white"
                 fill="none"
@@ -954,9 +962,11 @@ export default function MobileProfile({
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 />
               </svg>
-            </div>
-            <span className="!text-white">{t("nav.logout")}</span>
+            )}
           </div>
+          <span className="!text-white">
+            {isLoggingOut ? "Exiting..." : t("nav.logout")}
+          </span>
         </button>
       </div>
 

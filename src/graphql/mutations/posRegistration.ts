@@ -57,6 +57,7 @@ export const CREATE_SHOP = gql`
     $ssd: String = ""
     $tin: String = ""
     $shop_id: uuid = ""
+    $rdb_certificate: String = ""
   ) {
     insert_Shops(
       objects: {
@@ -75,6 +76,7 @@ export const CREATE_SHOP = gql`
         relatedTo: $relatedTo
         ssd: $ssd
         tin: $tin
+        rdb_certificate: $rdb_certificate
       }
     ) {
       affected_rows

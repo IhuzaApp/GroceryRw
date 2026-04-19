@@ -7,159 +7,108 @@ interface BatchCardSkeletonProps {
 
 export function BatchCardSkeleton({ count = 6 }: BatchCardSkeletonProps) {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  /* Glass surface style to match real mobile card */
+  const cardStyle = {
+    background: isDark ? "rgba(23,23,23,0.88)" : "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    border: `1px solid ${
+      isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
+    }`,
+    boxShadow: isDark
+      ? "0 8px 32px rgba(0,0,0,0.4)"
+      : "0 4px 24px rgba(0,0,0,0.07)",
+  };
+
+  const skeletonColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+  const divider = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
 
   return (
-    <>
+    <div className="grid grid-cols-1 gap-4 sm:gap-6">
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
-          className={`rounded-xl border-2 p-4 ${
-            theme === "dark"
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
-          }`}
+          className="overflow-hidden rounded-2xl"
+          style={cardStyle}
         >
-          {/* Batch Type Indicators */}
-          <div className="mb-3 flex items-center justify-center gap-2">
-            <div
-              className={`h-6 w-24 rounded-full ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-              } animate-pulse`}
-            />
-            <div
-              className={`h-6 w-20 rounded-full ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-              } animate-pulse`}
-            />
-          </div>
+          {/* Top accent strip skeleton */}
+          <div
+            className="h-1 w-full animate-pulse"
+            style={{ background: skeletonColor }}
+          />
 
-          {/* Header Section */}
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="p-4">
+            {/* Header row skeleton */}
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {/* Avatar skeleton */}
+                <div
+                  className="h-11 w-11 animate-pulse rounded-xl"
+                  style={{ background: skeletonColor }}
+                />
+                <div>
+                  <div
+                    className="h-4 w-24 animate-pulse rounded"
+                    style={{ background: skeletonColor }}
+                  />
+                  <div
+                    className="mt-2 h-3 w-16 animate-pulse rounded"
+                    style={{ background: skeletonColor }}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1.5">
+                <div
+                  className="h-5 w-12 animate-pulse rounded-lg"
+                  style={{ background: skeletonColor }}
+                />
+                <div
+                  className="h-4 w-20 animate-pulse rounded-full"
+                  style={{ background: skeletonColor }}
+                />
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="mb-3" style={{ height: 1, background: divider }} />
+
+            {/* Info grid skeleton */}
+            <div className="mb-3 grid grid-cols-2 gap-3">
               <div
-                className={`h-12 w-12 rounded-xl ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                } animate-pulse`}
+                className="h-16 animate-pulse rounded-xl"
+                style={{ background: skeletonColor }}
               />
-              <div className="space-y-2">
-                <div
-                  className={`h-4 w-24 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-                <div
-                  className={`h-3 w-16 rounded ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-              </div>
+              <div
+                className="h-16 animate-pulse rounded-xl"
+                style={{ background: skeletonColor }}
+              />
             </div>
 
+            {/* Address row skeleton */}
             <div
-              className={`rounded-lg p-3 ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-              }`}
-            >
-              <div className="space-y-2">
-                <div
-                  className={`h-5 w-16 rounded ${
-                    theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-                <div
-                  className={`h-3 w-20 rounded ${
-                    theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Status Badge */}
-          <div className="mb-4">
-            <div
-              className={`h-6 w-20 rounded-full ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-              } animate-pulse`}
+              className="mb-3 h-12 animate-pulse rounded-xl"
+              style={{ background: skeletonColor }}
             />
-          </div>
 
-          {/* Location Information */}
-          <div className="mb-4 space-y-3">
-            {/* Pickup Location */}
-            <div
-              className={`rounded-lg border p-3 ${
-                theme === "dark"
-                  ? "border-gray-700 bg-gray-700/30"
-                  : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className={`h-6 w-6 rounded-full ${
-                    theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-                <div className="flex-1 space-y-1">
-                  <div
-                    className={`h-3 w-24 rounded ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                  <div
-                    className={`h-3 w-40 rounded ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </div>
-              </div>
+            {/* Divider */}
+            <div className="mb-3" style={{ height: 1, background: divider }} />
+
+            {/* Footer skeleton */}
+            <div className="flex items-center justify-between gap-3">
+              <div
+                className="h-7 w-24 animate-pulse rounded-full"
+                style={{ background: skeletonColor }}
+              />
+              <div
+                className="h-9 w-32 animate-pulse rounded-xl"
+                style={{ background: skeletonColor }}
+              />
             </div>
-
-            {/* Delivery Location */}
-            <div
-              className={`rounded-lg border p-3 ${
-                theme === "dark"
-                  ? "border-gray-700 bg-gray-700/30"
-                  : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className={`h-6 w-6 rounded-full ${
-                    theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                  } animate-pulse`}
-                />
-                <div className="flex-1 space-y-1">
-                  <div
-                    className={`h-3 w-24 rounded ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                  <div
-                    className={`h-3 w-full rounded ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                    } animate-pulse`}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="flex items-center justify-between gap-2">
-            <div
-              className={`h-9 w-24 rounded-lg ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-              } animate-pulse`}
-            />
-            <div
-              className={`h-9 w-32 rounded-lg ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-              } animate-pulse`}
-            />
           </div>
         </div>
       ))}
-    </>
+    </div>
   );
 }

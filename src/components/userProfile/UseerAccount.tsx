@@ -97,11 +97,14 @@ export default function UserAccount() {
     }
   };
 
-  // Handle password change
   const [passwords, setPasswords] = useState({
-    currentPassword: "",
+    otp: "",
     newPassword: "",
   });
+  const [passwordStep, setPasswordStep] = useState<"initial" | "otp">(
+    "initial"
+  );
+  const [otpToken, setOtpToken] = useState("");
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -113,47 +116,69 @@ export default function UserAccount() {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
 
-    try {
-      const response = await fetch("/api/user/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentPassword: passwords.currentPassword,
-          newPassword: passwords.newPassword,
-        }),
-      });
-
-      // Get the full response for debugging
-      const responseText = await response.text();
-
-      let data;
+    if (passwordStep === "initial") {
+      setSaving(true);
       try {
-        // Try to parse as JSON
-        data = JSON.parse(responseText);
-      } catch (err) {
-        console.error("Failed to parse password response as JSON:", err);
-        // If not JSON, use the text as error message
-        toast.error(
-          "Server error: " + (responseText.substring(0, 100) || "Unknown error")
-        );
+        const response = await fetch("/api/auth/profile/request-otp", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          toast.success("Verification code sent!");
+          setOtpToken(data.token);
+          setPasswordStep("otp");
+        } else {
+          toast.error(data.error || "Failed to send verification code");
+        }
+      } catch (error) {
+        console.error("Error requesting OTP:", error);
+        toast.error("An error occurred. Please try again.");
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      if (!passwords.otp || !passwords.newPassword) {
+        toast.error("Please fill in all fields");
         return;
       }
+      setSaving(true);
 
-      if (response.ok) {
-        toast.success("Password updated successfully");
-        setPasswords({ currentPassword: "", newPassword: "" });
-      } else {
-        toast.error(data.message || "Failed to update password");
+      try {
+        const response = await fetch("/api/auth/profile/verify-and-change", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: otpToken,
+            otp: passwords.otp,
+            newPassword: passwords.newPassword,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          toast.success("Password updated successfully");
+          setPasswords({ otp: "", newPassword: "" });
+          setPasswordStep("initial");
+          setOtpToken("");
+          setIsPasswordExpanded(false);
+        } else {
+          toast.error(data.error || "Failed to update password");
+        }
+      } catch (error) {
+        console.error("Error updating password:", error);
+        toast.error("An error occurred while updating your password");
+      } finally {
+        setSaving(false);
       }
-    } catch (error) {
-      console.error("Error updating password:", error);
-      toast.error("An error occurred while updating your password");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -485,12 +510,65 @@ export default function UserAccount() {
                   <div className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
                   <div className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
                 </div>
+              ) : passwordStep === "initial" ? (
+                <div className="py-4">
+                  <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+                    To change your password, we'll need to verify your identity.
+                    A 6-digit verification code will be sent to your registered
+                    phone number (<strong>{user.phone}</strong>) and email (
+                    <strong>{user.email}</strong>).
+                  </p>
+                  <button
+                    onClick={handlePasswordSubmit}
+                    disabled={saving}
+                    className="inline-flex items-center rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 active:scale-95 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <svg
+                        className="mr-2 h-4 w-4 animate-spin !text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="mr-2 h-4 w-4 !text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                      </svg>
+                    )}
+                    <span className="!text-white">
+                      Request Verification Code
+                    </span>
+                  </button>
+                </div>
               ) : (
                 <form onSubmit={handlePasswordSubmit}>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Current Password
+                        Verification Code (OTP)
                       </label>
                       <div className="relative">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -504,18 +582,19 @@ export default function UserAccount() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                             />
                           </svg>
                         </div>
                         <input
                           className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm shadow-sm transition-all duration-200 placeholder:text-gray-400 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-green-400 dark:focus:ring-green-400/20"
-                          type="password"
-                          placeholder="Enter current password"
-                          name="currentPassword"
-                          value={passwords.currentPassword}
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          name="otp"
+                          value={passwords.otp}
                           onChange={handlePasswordChange}
-                          disabled={loading || saving}
+                          disabled={saving}
+                          maxLength={6}
                         />
                       </div>
                     </div>
@@ -553,55 +632,65 @@ export default function UserAccount() {
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading || saving}
-                    className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    {saving ? (
-                      <>
-                        <svg
-                          className="mr-2 h-4 w-4 animate-spin !text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      disabled={loading || saving}
+                      className="inline-flex items-center rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                      {saving ? (
+                        <>
+                          <svg
+                            className="mr-2 h-4 w-4 animate-spin !text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          <span className="!text-white">
+                            Resetting Password...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="mr-2 h-4 w-4 !text-white"
+                            fill="none"
                             stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        <span className="!text-white">
-                          Updating Password...
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="mr-2 h-4 w-4 !text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="!text-white">Update Password</span>
-                      </>
-                    )}
-                  </button>
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          <span className="!text-white">Reset Password</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPasswordStep("initial")}
+                      disabled={saving}
+                      className="inline-flex items-center rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-600 shadow-sm transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 active:scale-95 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               )}
             </>

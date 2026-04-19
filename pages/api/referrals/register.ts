@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendNewReferralRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
 
 // GraphQL mutation to insert referral registration
 const INSERT_REFERRAL_WINDOW = gql`
@@ -209,21 +210,42 @@ export default async function handler(
       duplicateCheck.Referral_window &&
       duplicateCheck.Referral_window.length > 0
     ) {
-      const duplicate = duplicateCheck.Referral_window[0];
-      if (duplicate.user_id === session.user.id) {
+      const isDev = process.env.NODE_ENV === "development";
+
+      const userIdConflict = duplicateCheck.Referral_window.find(
+        (r) => r.user_id === session.user.id
+      );
+      const phoneConflict = duplicateCheck.Referral_window.find(
+        (r) => r.phone === phone
+      );
+      const deviceConflict = duplicateCheck.Referral_window.find(
+        (r) => r.deviceFingerprint === deviceFingerprint
+      );
+
+      if (userIdConflict) {
         return res.status(400).json({
-          error: "You already have a referral account",
+          error: "You are already registered for the referral program.",
         });
       }
-      if (duplicate.phone === phone) {
+
+      if (phoneConflict) {
         return res.status(400).json({
-          error: "Phone number already registered",
+          error: `The phone number ${phone} is already registered for the referral program.`,
         });
       }
-      if (duplicate.deviceFingerprint === deviceFingerprint) {
+
+      // Only block device fingerprint if not in development
+      if (deviceConflict && !isDev) {
         return res.status(400).json({
-          error: "This device already has a referral account",
+          error:
+            "This device is already associated with an existing referral account.",
         });
+      }
+
+      if (deviceConflict && isDev) {
+        console.log(
+          "[Dev Register] Device fingerprint collision detected, allowing for testing."
+        );
       }
     }
 
@@ -250,6 +272,22 @@ export default async function handler(
       return res.status(500).json({
         error: "Failed to create referral registration",
       });
+    }
+
+    // Send Slack notification
+    try {
+      await sendNewReferralRegistrationToSlack({
+        name,
+        phone,
+        email: email || "",
+        referralCode,
+      });
+    } catch (slackError) {
+      // Don't fail the registration if Slack fails, just log it
+      console.error(
+        "Slack notification failed for referral registration:",
+        slackError
+      );
     }
 
     return res.status(200).json({

@@ -350,7 +350,6 @@ export default async function handler(
       restaurantOrders.length === 0 &&
       businessOrders.length === 0
     ) {
-      console.log("📭 No orders found for this user");
       return res.status(200).json({ orders: [] });
     }
 

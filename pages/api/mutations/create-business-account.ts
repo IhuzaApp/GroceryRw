@@ -4,6 +4,8 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { sendNewBusinessAccountRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
+import { sendSMS } from "../../../src/lib/pindo";
+import { resend } from "../../../src/lib/resend";
 
 const CREATE_BUSINESS_ACCOUNT = gql`
   mutation CreateBusinessAccount(
@@ -213,6 +215,60 @@ export default async function handler(
         "Failed to notify Slack of new business account registration:",
         notifyErr?.message || notifyErr
       );
+    }
+
+    // 2. Send SMS and Email notifications to the user
+    try {
+      const targetEmail = (
+        business_email?.trim() ||
+        session.user.email ||
+        ""
+      ).trim();
+      const targetPhone = (
+        business_phone?.trim() ||
+        (session.user as any).phone ||
+        ""
+      ).trim();
+      const accountName =
+        business_name?.trim() || session.user.name || "Business";
+
+      // Send SMS
+      if (targetPhone && targetPhone !== "—") {
+        try {
+          await sendSMS(
+            targetPhone,
+            `Hello ${accountName}, your registration for Plas Business is successful and is now under review. A Plas Agent will contact you soon.`
+          );
+        } catch (smsErr) {
+          console.warn("Failed to send registration SMS:", smsErr);
+        }
+      }
+
+      // Send Email
+      if (targetEmail && targetEmail !== "—" && targetEmail.includes("@")) {
+        try {
+          await resend.emails.send({
+            from: "PlasBusiness <PlasBusiness@plas.rw>",
+            to: targetEmail,
+            subject: "Business Registration Under Review - Plas",
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #10b981;">Registration Successful!</h2>
+                <p>Dear <strong>${accountName}</strong>,</p>
+                <p>Thank you for registering with <strong>Plas Business</strong>. We are excited to have you on board!</p>
+                <p>Your account is currently <strong>under review</strong> by our team. This is a standard procedure to ensure the safety and quality of our ecosystem.</p>
+                <p>A <strong>Plas Agent</strong> will contact you soon via phone or email to finalize the process.</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 12px; color: #666;">This is an automated message from Plas Business. If you have any questions, please contact our support team.</p>
+              </div>
+            `,
+          });
+        } catch (emailErr) {
+          console.warn("Failed to send registration Email:", emailErr);
+        }
+      }
+    } catch (notifyUserErr) {
+      console.warn("Critical failure in notification logic:", notifyUserErr);
     }
 
     return res.status(200).json({

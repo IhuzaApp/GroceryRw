@@ -19,71 +19,136 @@ const DeliveryStatsCard: React.FC<DeliveryStatsCardProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const deliveryMetrics = [
     {
-      label: "Total Distance",
-      value: `${stats.totalKilometers.toFixed(1)} km`,
+      label: "Pulse Distance",
+      value: `${stats.totalKilometers.toFixed(1)}`,
+      unit: "km",
       icon: Navigation,
       color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      accent: "blue",
     },
     {
-      label: "Items Delivered",
+      label: "Items Shared",
       value: stats.totalItems.toString(),
+      unit: "",
       icon: Package,
-      color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      color: "text-emerald-500",
+      accent: "emerald",
     },
     {
-      label: "Avg. Time/Order",
-      value: `${stats.avgTimePerOrder} min`,
+      label: "Execution Avg",
+      value: `${stats.avgTimePerOrder}`,
+      unit: "min",
       icon: Clock,
       color: "text-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      accent: "orange",
     },
     {
-      label: "Stores Visited",
+      label: "Nexus Points",
       value: stats.storesVisited.toString(),
+      unit: "",
       icon: MapPin,
       color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      accent: "purple",
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`rounded-2xl p-6 shadow-lg ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      className={`relative overflow-hidden rounded-[2.5rem] border p-8 transition-all duration-300 ${
+        isDark
+          ? "border-white/10 bg-white/5"
+          : "border-black/5 bg-white shadow-sm"
       }`}
     >
-      <h3 className="mb-4 text-lg font-bold">Delivery Stats</h3>
+      <div className="mb-8">
+        <h3 className="text-xl font-black tracking-tight">Logistics DNA</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+          Delivery Stats
+        </p>
+      </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {deliveryMetrics.map((metric, index) => {
-            const Icon = metric.icon;
-            return (
-              <div
-                key={index}
-                className={`rounded-xl p-4 ${metric.bgColor} border border-gray-200 dark:border-gray-700`}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <Icon className={`h-5 w-5 ${metric.color}`} />
+      <div className="grid grid-cols-2 gap-4 text-left">
+        {deliveryMetrics.map((metric, index) => {
+          const Icon = metric.icon;
+
+          // Map accents to static classes to ensure Tailwind JIT inclusion
+          const accentConfig =
+            {
+              blue: isDark
+                ? "bg-blue-500/10 text-blue-500 shadow-blue-500"
+                : "bg-blue-50 text-blue-600 shadow-blue-500",
+              emerald: isDark
+                ? "bg-emerald-500/10 text-emerald-500 shadow-emerald-500"
+                : "bg-emerald-50 text-emerald-600 shadow-emerald-500",
+              orange: isDark
+                ? "bg-orange-500/10 text-orange-500 shadow-orange-500"
+                : "bg-orange-50 text-orange-600 shadow-orange-500",
+              purple: isDark
+                ? "bg-purple-500/10 text-purple-500 shadow-purple-500"
+                : "bg-purple-50 text-purple-600 shadow-purple-500",
+            }[metric.accent as "blue" | "emerald" | "orange" | "purple"] ||
+            (isDark
+              ? "bg-gray-500/10 text-gray-400 shadow-gray-400"
+              : "bg-gray-50 text-gray-600 shadow-gray-400");
+
+          return (
+            <div
+              key={index}
+              className={`group relative overflow-hidden rounded-3xl border p-5 transition-all duration-500 ${
+                isDark
+                  ? "border-white/10 bg-white/5 hover:bg-white/10"
+                  : "border-transparent bg-black/5 hover:bg-black/[0.08]"
+              }`}
+            >
+              <div className="mb-4">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${
+                    accentConfig.split(" shadow-")[0]
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
                 </div>
-                <p className="text-2xl font-bold">{metric.value}</p>
-                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+              </div>
+              <div>
+                <p className="text-2xl font-black tracking-tight">
+                  {metric.value}
+                  <span className="ml-1 text-xs font-bold opacity-40">
+                    {metric.unit}
+                  </span>
+                </p>
+                <p className="mt-1 text-[10px] font-black uppercase tracking-widest opacity-40">
                   {metric.label}
                 </p>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              {/* Individual Glow Decor */}
+              <div
+                className={`absolute -bottom-4 -right-4 h-16 w-16 rounded-full opacity-10 blur-[30px] transition-all duration-500 group-hover:opacity-20 ${
+                  accentConfig.split("shadow-")[1] === "blue-500"
+                    ? "bg-blue-500"
+                    : accentConfig.split("shadow-")[1] === "emerald-500"
+                    ? "bg-emerald-500"
+                    : accentConfig.split("shadow-")[1] === "orange-500"
+                    ? "bg-orange-500"
+                    : "bg-purple-500"
+                }`}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

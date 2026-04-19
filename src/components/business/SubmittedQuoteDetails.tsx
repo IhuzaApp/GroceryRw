@@ -173,280 +173,215 @@ export function SubmittedQuoteDetails({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:bg-black/60 sm:p-4">
-      <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-gray-900 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-5xl sm:rounded-3xl sm:border sm:border-gray-200 dark:sm:border-gray-700">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--bg-primary)]">
+      <div className="relative flex h-screen w-screen flex-col overflow-hidden bg-[var(--bg-primary)] shadow-2xl transition-all duration-500">
         {/* Header */}
-        <div className="flex-shrink-0 bg-white p-6 dark:bg-gray-900">
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-              Proforma Invoice / Quotation
-            </h2>
+        <div className="relative flex-shrink-0 bg-gradient-to-r from-blue-700 to-indigo-800 p-6 sm:p-10">
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            }}
+          ></div>
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+            <div>
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                <FileText className="h-3 w-3" />
+                <span>Formal Document</span>
+              </div>
+              <h2 className="text-2xl font-black text-white sm:text-4xl">
+                Proforma Invoice
+              </h2>
+              <p className="mt-1 text-sm font-medium text-white/70">
+                REF: {quote.id?.slice(0, 8).toUpperCase() || "N/A"}
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+              className="rounded-full bg-white/10 p-3 text-white transition-all hover:bg-white/20 active:scale-95"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-          <div className="p-6 md:p-8">
-            {/* Supplier Information */}
-            <div className="mb-8">
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                {supplierInfo?.business_name || "[Your Company Name]"}
+        <div className="flex-1 overflow-y-auto bg-[var(--bg-primary)]">
+          <div className="mx-auto max-w-4xl p-6 sm:p-12">
+            {/* Header info grid */}
+            <div className="mb-12 grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <div className="bg-[var(--bg-secondary)]/10 rounded-3xl border border-[var(--bg-secondary)] p-8">
+                <h4 className="mb-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                  From (Supplied By)
+                </h4>
+                <div className="space-y-1">
+                  <p className="text-lg font-black text-[var(--text-primary)]">
+                    {supplierInfo?.business_name || "Enterprise Partner"}
+                  </p>
+                  <p className="text-xs font-bold text-[var(--text-secondary)]">
+                    {supplierInfo?.business_location || "Verified Location"}
+                  </p>
+                  <p className="text-xs font-bold text-blue-600">
+                    {supplierInfo?.business_email || "contact@enterprise.com"}
+                  </p>
+                </div>
               </div>
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {supplierInfo?.business_location || "[Your Company Address]"}
-              </div>
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {supplierInfo?.business_phone || "[Phone Number]"} |{" "}
-                {supplierInfo?.business_email || "[Email Address]"}
-              </div>
-            </div>
-
-            {/* Client Information */}
-            <div className="mb-8">
-              <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                To:
-              </div>
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                {clientInfo?.business_name ||
-                  clientInfo?.contact_name ||
-                  "[Client's Company Name]"}
-              </div>
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {clientInfo?.location ||
-                  clientInfo?.business_location ||
-                  "[Client's Address]"}
-              </div>
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {clientInfo?.phone ||
-                  clientInfo?.business_phone ||
-                  "[Client's Phone Number]"}{" "}
-                |{" "}
-                {clientInfo?.email ||
-                  clientInfo?.business_email ||
-                  "[Client's Email Address]"}
-              </div>
-            </div>
-
-            {/* Quote Header Info */}
-            <div className="mb-8 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Date:{" "}
-                </span>
-                <span className="text-gray-900 dark:text-white">
-                  {formatDateShort(quote.created_at)}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Quotation Number:{" "}
-                </span>
-                <span className="font-mono text-gray-900 dark:text-white">
-                  {quote.id?.slice(0, 8).toUpperCase() || "N/A"}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Validity Date:{" "}
-                </span>
-                <span className="text-gray-900 dark:text-white">
-                  {quote.quote_validity || "Not specified"}
-                </span>
+              <div className="bg-[var(--bg-secondary)]/10 rounded-3xl border border-[var(--bg-secondary)] p-8">
+                <h4 className="mb-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                  Bill To (Client)
+                </h4>
+                <div className="space-y-1">
+                  <p className="text-lg font-black text-[var(--text-primary)]">
+                    {clientInfo?.business_name ||
+                      clientInfo?.contact_name ||
+                      "Enterprise Client"}
+                  </p>
+                  <p className="text-xs font-bold text-[var(--text-secondary)]">
+                    {clientInfo?.location ||
+                      clientInfo?.business_location ||
+                      "Delivery Point"}
+                  </p>
+                  <p className="text-xs font-bold text-blue-600">
+                    {clientInfo?.email ||
+                      clientInfo?.business_email ||
+                      "procurement@client.com"}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Quote Summary Table */}
-            <div className="mb-8">
-              <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-                Quote Summary
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="pb-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                        Item Description
-                      </th>
-                      <th className="pb-2 text-right font-medium text-gray-700 dark:text-gray-300">
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="py-2 text-gray-900 dark:text-white">
-                        Quote Amount
-                      </td>
-                      <td className="py-2 text-right font-medium text-gray-900 dark:text-white">
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: quote.currency || "RWF",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        }).format(parseFloat(quote.qouteAmount))}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-gray-900 dark:text-white">
-                        Delivery Time
-                      </td>
-                      <td className="py-2 text-right text-gray-900 dark:text-white">
-                        {quote.delivery_time || "Not specified"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-gray-900 dark:text-white">
-                        Quote Validity
-                      </td>
-                      <td className="py-2 text-right text-gray-900 dark:text-white">
-                        {quote.quote_validity || "Not specified"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            {/* Document Details Grid */}
+            <div className="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {[
+                {
+                  label: "Issue Date",
+                  value: formatDateShort(quote.created_at),
+                  icon: Calendar,
+                },
+                {
+                  label: "Validity",
+                  value: quote.quote_validity || "N/A",
+                  icon: Calendar,
+                },
+                {
+                  label: "Delivery",
+                  value: quote.delivery_time || "Standard",
+                  icon: Calendar,
+                },
+                {
+                  label: "Status",
+                  value: quote.status || "Pending",
+                  icon: Calendar,
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-[var(--bg-secondary)]/10 rounded-2xl border border-[var(--bg-secondary)] p-4"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+                    {item.label}
+                  </p>
+                  <p className="mt-1 text-xs font-black text-[var(--text-primary)]">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Financial Summary */}
+            <div className="mb-12 rounded-3xl border-2 border-green-500/20 bg-green-500/5 p-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-green-600 dark:text-green-400">
+                    Total Bid Amount
+                  </h3>
+                  <p className="text-4xl font-black text-[var(--text-primary)]">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: quote.currency || "RWF",
+                      minimumFractionDigits: 0,
+                    }).format(parseFloat(quote.qouteAmount))}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl bg-green-500 px-4 py-2 font-black text-white">
+                  <span>GUARANTEED RATE</span>
+                </div>
               </div>
             </div>
 
-            {/* Terms & Conditions */}
-            <div className="mb-8">
-              <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-                Terms & Conditions
-              </h3>
-              <div className="space-y-3 text-sm">
-                {quote.PaymentTerms && quote.PaymentTerms.trim() !== "" && (
-                  <div>
-                    <div className="font-medium text-gray-700 dark:text-gray-300">
-                      Payment Terms:
-                    </div>
-                    <div className="mt-1 text-gray-900 dark:text-white">
-                      {quote.PaymentTerms}
-                    </div>
+            {/* Terms & Conditions Sections */}
+            <div className="mb-12 grid grid-cols-1 gap-8 sm:grid-cols-2">
+              {[
+                { title: "Payment Terms", value: quote.PaymentTerms },
+                { title: "Delivery Terms", value: quote.DeliveryTerms },
+                { title: "Warranty Policy", value: quote.warrantly },
+                { title: "Cancellation", value: quote.cancellatioinTerms },
+              ]
+                .filter((t) => t.value)
+                .map((term, i) => (
+                  <div key={i} className="space-y-2">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                      {term.title}
+                    </h3>
+                    <p className="bg-[var(--bg-secondary)]/10 rounded-2xl border border-[var(--bg-secondary)] p-4 text-sm font-bold text-[var(--text-primary)]">
+                      {term.value}
+                    </p>
                   </div>
-                )}
-
-                {quote.DeliveryTerms && quote.DeliveryTerms.trim() !== "" && (
-                  <div>
-                    <div className="font-medium text-gray-700 dark:text-gray-300">
-                      Delivery Terms:
-                    </div>
-                    <div className="mt-1 text-gray-900 dark:text-white">
-                      {quote.DeliveryTerms}
-                    </div>
-                  </div>
-                )}
-
-                {quote.warrantly && quote.warrantly.trim() !== "" && (
-                  <div>
-                    <div className="font-medium text-gray-700 dark:text-gray-300">
-                      Warranty:
-                    </div>
-                    <div className="mt-1 text-gray-900 dark:text-white">
-                      {quote.warrantly}
-                    </div>
-                  </div>
-                )}
-
-                {quote.cancellatioinTerms &&
-                  quote.cancellatioinTerms.trim() !== "" && (
-                    <div>
-                      <div className="font-medium text-gray-700 dark:text-gray-300">
-                        Cancellation Terms:
-                      </div>
-                      <div className="mt-1 text-gray-900 dark:text-white">
-                        {quote.cancellatioinTerms}
-                      </div>
-                    </div>
-                  )}
-              </div>
+                ))}
             </div>
 
-            {/* Message */}
-            {quote.message && quote.message.trim() !== "" && (
-              <div className="mb-8">
-                <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-                  Message
+            {/* Message Body */}
+            {quote.message && (
+              <div className="mb-12 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                  Additional Proposal Details
                 </h3>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                  We appreciate your request for a quotation. Below is the
-                  detailed information regarding the products/services as per
-                  your inquiry:
-                </p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-900 dark:text-white">
-                  {quote.message}
-                </p>
+                <div className="bg-[var(--bg-secondary)]/5 rounded-3xl border border-[var(--bg-secondary)] p-8">
+                  <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-[var(--text-primary)] opacity-80">
+                    {quote.message}
+                  </p>
+                </div>
               </div>
             )}
 
-            {/* Attachments */}
+            {/* Attachments UI */}
             {attachments.length > 0 && (
-              <div className="mb-8">
-                <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-                  Attachments:
+              <div className="mb-12 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-50">
+                  Supporting Documents
                 </h3>
-                <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
-                  Please find attached the necessary documents as per your
-                  request:
-                </p>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {attachments.map((attachment, index) => (
                     <button
                       key={index}
                       onClick={() => downloadAttachment(attachment, index)}
-                      className="flex w-full items-center gap-2 text-left text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="bg-[var(--bg-secondary)]/10 group flex flex-col items-center justify-center rounded-2xl border border-[var(--bg-secondary)] p-6 transition-all hover:bg-[var(--bg-secondary)] active:scale-95"
                     >
-                      <Download className="h-4 w-4" />
-                      <span>
-                        Attachment {index + 1}: [Download/View Attachment]
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg">
+                        <Download className="h-5 w-5" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)]">
+                        FILE {index + 1}
                       </span>
                     </button>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Closing */}
-            <div className="mt-8 text-sm text-gray-700 dark:text-gray-300">
-              <p className="mb-2">
-                We look forward to the opportunity to work with you. Should you
-                have any questions, please don't hesitate to contact us.
-              </p>
-              <div className="mt-4">
-                <div className="font-medium text-gray-900 dark:text-white">
-                  Kind regards,
-                </div>
-                <div className="mt-1">
-                  {supplierInfo?.business_name || "[Your Name]"}
-                </div>
-                <div className="mt-1">
-                  {supplierInfo?.business_email || "[Your Contact Information]"}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 bg-white p-4 dark:bg-gray-900 sm:p-6">
-          <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-            <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-              <span>
-                Quote ID:{" "}
-                <span className="font-mono">
-                  {quote.id?.slice(0, 8).toUpperCase() || "N/A"}
-                </span>
-              </span>
+        {/* Footer Actions */}
+        <div className="flex-shrink-0 border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 sm:px-12">
+          <div className="mx-auto flex max-w-4xl items-center justify-between">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-50">
+              Document Securely Transacted via Plas Business
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-8 py-3 text-sm font-black text-[var(--text-primary)] transition-all hover:bg-[var(--bg-secondary)]"
             >
-              Close
+              Close Document
             </button>
           </div>
         </div>

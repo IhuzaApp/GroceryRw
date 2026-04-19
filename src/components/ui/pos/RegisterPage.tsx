@@ -369,6 +369,23 @@ export default function RegisterPage() {
     return partyId;
   };
 
+  const sendRegistrationNotifications = async (invoiceNumber: string) => {
+    try {
+      await fetch("/api/pos/registration-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formData,
+          selectedPlan,
+          billingCycle: cycle,
+          invoiceNumber,
+        }),
+      });
+    } catch (err) {
+      console.error("❌ Failed to send registration notifications:", err);
+    }
+  };
+
   const handleCompleteSetup = async () => {
     const validationError = validateStep(step);
     if (validationError) {
@@ -430,10 +447,6 @@ export default function RegisterPage() {
     }
 
     try {
-      console.log(
-        `🚀 [POS Registration] Phase Execution - Starting at Step ${startAt}`
-      );
-
       // STEP 1: Create Business
       if (startAt <= 1) {
         setRegistrationSubStep(1);
@@ -473,13 +486,13 @@ export default function RegisterPage() {
               tin: formData.tin,
               shop_id: businessId,
               is_active: false,
+              rdb_certificate: formData.rdb_cert_url,
             },
           });
         }
         if (businessResult?.errors)
           throw new Error(businessResult.errors[0].message);
         setRegisteredBusinessId(businessId);
-        console.log("✅ Step 1: Business created");
       }
 
       // STEP 2: Create Employee
@@ -512,7 +525,6 @@ export default function RegisterPage() {
         });
         if (employeeResult?.errors)
           throw new Error(employeeResult.errors[0].message);
-        console.log("✅ Step 2: Employee created");
       }
 
       // STEP 3: AI Usage (MOVED UP - Dependency for Invoice)
@@ -532,7 +544,6 @@ export default function RegisterPage() {
         });
         if (aiUsageResult?.errors)
           throw new Error(aiUsageResult.errors[0].message);
-        console.log("✅ Step 3: AI Usage created");
       }
 
       // STEP 4: Reel Usage (MOVED UP - Dependency for Invoice)
@@ -551,7 +562,6 @@ export default function RegisterPage() {
         });
         if (reelUsageResult?.errors)
           throw new Error(reelUsageResult.errors[0].message);
-        console.log("✅ Step 4: Reel Usage created");
       }
 
       // STEP 5: Create Subscription
@@ -573,10 +583,10 @@ export default function RegisterPage() {
         });
         if (subResult?.errors) throw new Error(subResult.errors[0].message);
         setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-        console.log("✅ Step 5: Subscription created");
       }
 
       // STEP 6: Create Invoice
+      const invNum = `INV-${Date.now()}`;
       if (startAt <= 6) {
         setRegistrationSubStep(6);
         const invoiceResult = await createInvoice({
@@ -585,7 +595,7 @@ export default function RegisterPage() {
             currency: "RWF",
             discount_amount: "0",
             due_date: dueDate.toISOString(),
-            invoice_number: `INV-${Date.now()}`,
+            invoice_number: invNum,
             issued_at: now,
             paid_at: isShell ? null : now,
             payment_method: isShell ? "UNPAID" : "MoMo",
@@ -607,7 +617,6 @@ export default function RegisterPage() {
         });
         if (invoiceResult?.errors)
           throw new Error(invoiceResult.errors[0].message);
-        console.log("✅ Step 6: Invoice created");
       }
 
       // BREAK POINT: Trigger Payment if this is the initial shell setup
@@ -637,17 +646,12 @@ export default function RegisterPage() {
             if (
               walletResult.errors[0].message.includes("Uniqueness violation")
             ) {
-              console.log("ℹ️ Step 7: Wallet already exists, skipping...");
             } else {
               throw new Error(walletResult.errors[0].message);
             }
           }
-          console.log("✅ Step 7: Wallet created/verified");
         } catch (walletErr: any) {
           if (walletErr.message?.includes("Uniqueness violation")) {
-            console.log(
-              "ℹ️ Step 7: Wallet already exists (catch), skipping..."
-            );
           } else {
             throw walletErr;
           }
@@ -665,6 +669,8 @@ export default function RegisterPage() {
       } else {
         setIsSuccess(true);
         setProcessingStep("success");
+        // Trigger Registration Notifications
+        sendRegistrationNotifications(invNum);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (err: any) {
@@ -738,6 +744,9 @@ export default function RegisterPage() {
               pollIntervalRef.current = null;
               setPaymentStatus("success");
               toast.success("Payment successful! Finalizing setup...");
+
+              // Close the payment modal
+              setShowPaymentModal(false);
 
               // RESUME PHASE 2: Final Completion (Step 7+)
               performMutation(false, 7);

@@ -1,5 +1,8 @@
 "use client";
 
+import React from "react";
+import { useTheme } from "../../../../context/ThemeContext";
+
 interface DeliveryNotesSectionProps {
   order: any;
   activeTab: string;
@@ -9,38 +12,68 @@ export default function DeliveryNotesSection({
   order,
   activeTab,
 }: DeliveryNotesSectionProps) {
-  if (!(order.deliveryNotes || order.deliveryNote)) {
-    return null;
-  }
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const note = order.deliveryNotes || order.deliveryNote;
+  if (!note) return null;
 
   return (
     <div
       className={`${
         activeTab === "details" ? "block" : "hidden sm:block"
-      } mt-3`}
+      } mt-6 px-4 sm:px-0`}
     >
-      <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+      <div className="mb-4 flex items-center gap-3">
+        <div
+          className={`h-8 w-1.5 rounded-full ${
+            isDark ? "bg-amber-500" : "bg-amber-600"
+          }`}
+        />
+        <h2 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white sm:text-lg">
           Delivery Notes
         </h2>
       </div>
-      <div className="mx-3 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20 sm:mx-0 sm:p-4">
-        <div className="flex gap-2">
-          <svg
-            className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+
+      <div
+        className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
+          isDark
+            ? "border-amber-500/20 bg-amber-500/10"
+            : "border-amber-100 bg-amber-50"
+        }`}
+        style={{
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}
+      >
+        <div className="flex gap-4 p-5">
+          <div
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+              isDark
+                ? "bg-amber-500/20 text-amber-400"
+                : "bg-amber-100 text-amber-600"
+            }`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <p className="text-sm text-amber-900 dark:text-amber-100 sm:text-base">
-            {order.deliveryNotes || order.deliveryNote}
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <p
+            className={`text-sm font-bold leading-relaxed ${
+              isDark ? "text-amber-200" : "text-amber-900"
+            }`}
+          >
+            {note}
           </p>
         </div>
       </div>

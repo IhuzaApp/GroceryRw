@@ -45,6 +45,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     "/CurrentPendingOrders/viewPackageDetails/"
   );
   const isRecipesPage = router.pathname.startsWith("/Recipes");
+  const isBecomeShopperPage = router.pathname === "/Myprofile/become-shopper";
 
   return (
     <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">
@@ -53,6 +54,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isReelsPage &&
         !isPlasBusinessPage &&
         !isStoresPage &&
+        !isBecomeShopperPage &&
         (isOrderDetailsPage || isPackageDetailsPage ? (
           <div className="hidden md:block">
             <HeaderLayout />
@@ -69,11 +71,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-          isChatPage ||
           isReelsPage ||
           isPlasBusinessPage ||
           isStoresPage ||
-          isMessagesChat
+          isMessagesChat ||
+          isBecomeShopperPage
             ? ""
             : isMessagesList
             ? "pb-[60px] pt-0 md:pb-0"
@@ -107,7 +109,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             isMessagesList ||
             isMessagesChat ||
             isOrderDetailsPage ||
-            isPackageDetailsPage
+            isPackageDetailsPage ||
+            isBecomeShopperPage
               ? { height: "100%", width: "100%" }
               : {}
           }
@@ -118,6 +121,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           !isReelsPage &&
           !isMessagesChat &&
           !isStoresCheckoutPage &&
+          !isBecomeShopperPage &&
           !hideBottomBar && <BottomBar />}
       </main>
       {/* AI Chat - Available on all pages except chat pages */}

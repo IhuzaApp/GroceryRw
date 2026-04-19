@@ -19,6 +19,7 @@ import { formatCurrency } from "../../../src/lib/formatCurrency";
 import { AuthGuard } from "../../../src/components/AuthGuard";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import ShopperChatDrawer from "@components/chat/ShopperChatDrawer";
+import { useTheme } from "../../../src/context/ThemeContext";
 
 // Define message interface
 interface Message {
@@ -120,6 +121,8 @@ export default function ShopperChatPage() {
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   // Mobile detection
   useEffect(() => {
@@ -282,106 +285,162 @@ export default function ShopperChatPage() {
 
   return (
     <ShopperLayout>
-      <div className="mx-auto max-w-7xl p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Chat Conversations
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            Manage your conversations with customers
-          </p>
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <div className="mb-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight">
+              Messaging Hub
+            </h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 opacity-80">
+              Syncing Secure Channel
+            </p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+            <div className="h-4 w-4 animate-pulse rounded-full bg-emerald-500" />
+          </div>
         </div>
 
         {conversations.length === 0 ? (
-          <Panel
-            className="text-center"
-            style={{
-              background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-            }}
+          <div
+            className={`rounded-[3rem] border-2 border-dashed p-20 text-center transition-all duration-500 ${
+              isDark ? "border-white/5 bg-white/5" : "border-black/5 bg-black/5"
+            }`}
           >
-            <Placeholder.Graph
-              style={{ height: 200 }}
-              active
-              className="mb-4"
-            />
-            <Placeholder.Paragraph rows={2} />
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              No conversations yet
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              You'll see your chat conversations with customers here once you
-              start working on orders.
-            </p>
-          </Panel>
-        ) : (
-          <div className="space-y-4">
-            {conversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                onClick={() => handleConversationClick(conversation)}
-                className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-emerald-500/10">
+              <svg
+                className="h-8 w-8 text-emerald-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div className="flex items-start space-x-4">
-                  <div className="relative">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-black uppercase tracking-tight tracking-widest">
+              No Signals Detected
+            </h3>
+            <p className="mx-auto mt-2 max-w-sm text-xs font-bold uppercase tracking-[0.2em] opacity-30">
+              Active conversations will materialize here once you engage with
+              customer orders.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {conversations.map((conversation) => {
+              const orderStatus = conversation.order?.status || "pending";
+
+              // Status Color Logic
+              const statusConfig =
+                {
+                  delivered:
+                    "from-emerald-500 to-teal-600 shadow-emerald-500/20",
+                  on_the_way: "from-blue-500 to-indigo-600 shadow-blue-500/20",
+                  at_customer:
+                    "from-amber-500 to-orange-600 shadow-amber-500/20",
+                  pending: "from-gray-500 to-slate-600 shadow-gray-500/20",
+                }[orderStatus as keyof typeof statusConfig] ||
+                "from-gray-500 to-slate-600 shadow-gray-500/20";
+
+              return (
+                <button
+                  key={conversation.id}
+                  onClick={() => handleConversationClick(conversation)}
+                  className={`group relative flex w-full items-center gap-6 rounded-[2.5rem] border p-6 text-left transition-all duration-300 active:scale-[0.98] ${
+                    isDark
+                      ? "border-white/10 bg-white/5 hover:bg-white/10"
+                      : "border-black/5 bg-white shadow-sm hover:shadow-md"
+                  }`}
+                >
+                  {/* Backdrop Glow */}
+                  <div
+                    className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br opacity-0 blur-[80px] transition-all duration-700 group-hover:opacity-20 ${statusConfig}`}
+                  />
+
+                  {/* Avatar Section */}
+                  <div className="relative flex-shrink-0">
                     <Avatar
                       src={conversation.customerAvatar}
                       alt={conversation.customerName}
                       circle
                       size="lg"
+                      className={`ring-2 ${
+                        isDark ? "ring-white/10" : "ring-black/5"
+                      }`}
                     />
+                    <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-[var(--bg-primary)] bg-emerald-500 shadow-lg shadow-emerald-500/20">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75"></span>
+                    </div>
                     {conversation.unreadCount > 0 && (
-                      <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                      <div className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-lg">
                         {conversation.unreadCount > 9
                           ? "9+"
                           : conversation.unreadCount}
                       </div>
                     )}
                   </div>
+
+                  {/* Info Section */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <div className="mb-1 flex items-center justify-between">
+                      <h3 className="truncate text-lg font-black tracking-tight">
                         {conversation.customerName}
                       </h3>
-                      <div className="flex flex-col items-end">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {timeAgo(conversation.lastMessageTime)}
-                        </span>
-                        {conversation.order && (
-                          <span
-                            className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                              conversation.order.status === "delivered"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : conversation.order.status === "on_the_way"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                : conversation.order.status === "at_customer"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                : conversation.order.status === "pending"
-                                ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                            }`}
-                          >
-                            {conversation.order.status
-                              .replace("_", " ")
-                              .toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                        {timeAgo(conversation.lastMessageTime)}
+                      </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Order{" "}
-                      {formatOrderID(
-                        conversation.order?.OrderID ||
-                          conversation.order?.id ||
-                          conversation.orderId
-                      )}
-                    </p>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+
+                    <div className="mb-3 flex items-center gap-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                        Order{" "}
+                        {formatOrderID(
+                          conversation.order?.OrderID ||
+                            conversation.order?.id ||
+                            conversation.orderId
+                        )}
+                      </p>
+                      <div className="h-1 w-1 rounded-full bg-black/10 dark:bg-white/10" />
+                      <span
+                        className={`rounded-full bg-gradient-to-br px-3 py-0.5 text-[8px] font-black uppercase tracking-widest text-white shadow-lg ${statusConfig}`}
+                      >
+                        {orderStatus.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <p className="truncate text-sm font-medium leading-relaxed opacity-60">
                       {conversation.lastMessage}
                     </p>
                   </div>
-                </div>
-              </div>
-            ))}
+
+                  {/* Action Arrow */}
+                  <div className="-translate-x-4 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        isDark ? "bg-white/10" : "bg-black/5"
+                      }`}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

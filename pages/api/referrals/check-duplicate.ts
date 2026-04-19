@@ -77,34 +77,57 @@ export default async function handler(
       duplicateCheck.Referral_window &&
       duplicateCheck.Referral_window.length > 0
     ) {
-      const duplicate = duplicateCheck.Referral_window[0];
+      const isDev = process.env.NODE_ENV === "development";
 
-      if (duplicate.user_id === session.user.id) {
+      // Filter results to find specific conflicts
+      const userIdConflict = duplicateCheck.Referral_window.find(
+        (r) => r.user_id === session.user.id
+      );
+      const phoneConflict = duplicateCheck.Referral_window.find(
+        (r) => r.phone === phone
+      );
+      const emailConflict = email
+        ? duplicateCheck.Referral_window.find((r) => r.email === email)
+        : null;
+      const deviceConflict = duplicateCheck.Referral_window.find(
+        (r) => r.deviceFingerprint === deviceFingerprint
+      );
+
+      if (userIdConflict) {
         return res.status(200).json({
           isDuplicate: true,
-          reason: "You already have a referral account",
+          reason: "You are already registered for the referral program.",
         });
       }
 
-      if (duplicate.phone === phone) {
+      if (phoneConflict) {
         return res.status(200).json({
           isDuplicate: true,
-          reason: "Phone number already registered for referral program",
+          reason: `The phone number ${phone} is already registered for the referral program.`,
         });
       }
 
-      if (email && duplicate.email === email) {
+      if (emailConflict) {
         return res.status(200).json({
           isDuplicate: true,
-          reason: "Email already registered for referral program",
+          reason: `The email ${email} is already registered for the referral program.`,
         });
       }
 
-      if (duplicate.deviceFingerprint === deviceFingerprint) {
+      // Only block device fingerprint if not in development
+      if (deviceConflict && !isDev) {
         return res.status(200).json({
           isDuplicate: true,
-          reason: "This device already has a referral account",
+          reason:
+            "This device is already associated with an existing referral account. Please contact support if you believe this is an error.",
         });
+      }
+
+      // In development, if it's only a device conflict, log it but don't block
+      if (deviceConflict && isDev) {
+        console.log(
+          "[Dev] Device fingerprint collision detected, but allowing for testing."
+        );
       }
     }
 

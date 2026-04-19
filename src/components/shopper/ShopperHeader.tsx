@@ -6,10 +6,19 @@ import Image from "next/image";
 import "rsuite/dist/rsuite.min.css";
 import { useRouter } from "next/router";
 import { useTheme } from "@context/ThemeContext";
-import { Button } from "rsuite";
+import { Avatar, Button } from "rsuite";
+import { useSession } from "next-auth/react";
+import { useShopperProfile } from "../../hooks/useShopperProfile";
 import TelegramStatusButton from "./TelegramStatusButton";
 import NotificationCenter from "./NotificationCenter";
+
 export default function ShopperHeader() {
+  const { data: session } = useSession();
+  const {
+    profileImage,
+    displayName,
+    isLoading: isProfileLoading,
+  } = useShopperProfile();
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const router = useRouter();
@@ -55,13 +64,7 @@ export default function ShopperHeader() {
 
   if (isMobile) {
     return (
-      <header
-        className={`sticky top-0 z-[100] flex items-center justify-between border-b px-4 py-3 ${
-          theme === "dark"
-            ? "border-gray-800 bg-gray-900"
-            : "border-gray-200 bg-white"
-        }`}
-      >
+      <header className="bg-[var(--bg-primary)]/80 sticky top-0 z-[100] flex w-full items-center justify-between border-b border-transparent px-4 py-3 backdrop-blur-2xl transition-all duration-300 dark:border-white/5">
         {/* Logo Section - Mobile */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
@@ -86,14 +89,12 @@ export default function ShopperHeader() {
           <button
             onClick={async () => {
               if (isOnline) {
-                // Going offline - clear location cookies
                 document.cookie =
                   "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 document.cookie =
                   "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 setIsOnline(false);
               } else {
-                // Going online - get current location
                 if (navigator.geolocation) {
                   try {
                     const position = await new Promise<GeolocationPosition>(
@@ -109,17 +110,13 @@ export default function ShopperHeader() {
                         );
                       }
                     );
-
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-
-                    // Set location cookies
                     document.cookie = `user_latitude=${lat}; path=/; max-age=86400; SameSite=Lax`;
                     document.cookie = `user_longitude=${lng}; path=/; max-age=86400; SameSite=Lax`;
                     setIsOnline(true);
                   } catch (error) {
                     console.error("Error getting location:", error);
-                    // Show error toast
                     toast.error(
                       "Could not get your location. Please check your settings."
                     );
@@ -128,24 +125,17 @@ export default function ShopperHeader() {
                   console.error("Geolocation is not supported");
                 }
               }
-
-              // Dispatch event for other components to update
               window.dispatchEvent(new Event("toggleGoLive"));
             }}
-            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 active:scale-95 ${
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:shadow-lg active:scale-90 ${
               isOnline
-                ? theme === "dark"
-                  ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                  : "bg-red-500/10 text-red-600 hover:bg-red-500/20"
-                : theme === "dark"
-                ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                : "bg-green-500/10 text-green-600 hover:bg-green-500/20"
+                ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
+                : "bg-green-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white"
             }`}
             title={isOnline ? "Go Offline" : "Go Online"}
           >
-            {/* Status indicator ring */}
             {isOnline && (
-              <span className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-20" />
+              <span className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-30" />
             )}
 
             {/* Power icon - standard power symbol */}
@@ -169,13 +159,7 @@ export default function ShopperHeader() {
   }
 
   return (
-    <header
-      className={`sticky top-0 z-[100] flex items-center justify-between border-b px-6 py-4 ${
-        theme === "dark"
-          ? "border-gray-800 bg-gray-900"
-          : "border-gray-200 bg-white"
-      }`}
-    >
+    <header className="bg-[var(--bg-primary)]/80 sticky top-0 z-[100] flex items-center justify-between border-b border-transparent px-6 py-4 shadow-sm backdrop-blur-2xl transition-all duration-300 dark:border-white/5">
       {/* Logo Section */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
@@ -194,10 +178,10 @@ export default function ShopperHeader() {
 
       {/* Search Section */}
       <div className="mx-8 max-w-md flex-1">
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+        <div className="group relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
             <svg
-              className="h-5 w-5 text-gray-400"
+              className="h-4 w-4 text-[var(--text-secondary)] transition-colors group-focus-within:text-emerald-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -205,7 +189,7 @@ export default function ShopperHeader() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
@@ -213,11 +197,7 @@ export default function ShopperHeader() {
           <input
             type="text"
             placeholder="Search orders, products..."
-            className={`block w-full rounded-lg border py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
-                : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
-            }`}
+            className="block w-full rounded-2xl border border-transparent bg-[var(--bg-secondary)] py-2.5 pl-11 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:border-white/5"
           />
         </div>
       </div>
@@ -231,17 +211,16 @@ export default function ShopperHeader() {
             size="md"
             className="bg-blue-500 text-white hover:bg-blue-600"
           />
-          <Button
-            appearance="subtle"
+          <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex items-center rounded-md px-3 py-2"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-secondary)] text-[var(--text-secondary)] transition-all duration-300 hover:text-[var(--text-primary)] hover:shadow-md active:scale-90"
           >
             {theme === "dark" ? (
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 className="h-5 w-5 text-yellow-500"
               >
                 <circle cx="12" cy="12" r="5" />
@@ -252,24 +231,26 @@ export default function ShopperHeader() {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
-                className="h-5 w-5 text-gray-600"
+                strokeWidth="2.5"
+                className="h-5 w-5 text-indigo-500"
               >
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             )}
-          </Button>
+          </button>
         </div>
         <div className="flex items-center">
-          <div className="h-8 w-8 overflow-hidden rounded-full">
-            <Image
-              src="/placeholder.svg"
-              alt="Profile"
-              width={32}
-              height={32}
-              className="object-cover"
-            />
-          </div>
+          <Avatar
+            src={profileImage || undefined}
+            alt={displayName}
+            circle
+            size="sm"
+            className={`cursor-pointer border border-transparent ring-2 ring-emerald-500/10 transition-all duration-300 hover:border-emerald-500 ${
+              isProfileLoading ? "animate-pulse opacity-50" : ""
+            }`}
+          >
+            {displayName ? displayName[0].toUpperCase() : "U"}
+          </Avatar>
         </div>
       </div>
     </header>

@@ -21,89 +21,127 @@ const BusiestTimesCard: React.FC<BusiestTimesCardProps> = ({
   isLoading = false,
 }) => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <div
-      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
+        isDark
+          ? "border border-white/10 bg-white/5"
+          : "border border-black/5 bg-white shadow-xl"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between sm:mb-6">
-        <h3 className="text-base font-bold sm:text-lg">Busiest Times</h3>
-        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-          </svg>
-        </button>
+      <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-emerald-500/5 opacity-50 blur-3xl" />
+
+      <div className="relative z-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black tracking-tight">Active Hours</h3>
+            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
+              Peak Activity
+            </p>
+          </div>
+          <button
+            className={`${
+              isDark
+                ? "text-white/20 hover:text-white/60"
+                : "text-black/20 hover:text-black/60"
+            } transition-colors`}
+          >
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+            </svg>
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+          </div>
+        ) : activitySummary ? (
+          <div className="space-y-4">
+            {/* Busiest Day */}
+            <div
+              className={`group/item relative overflow-hidden rounded-3xl p-5 transition-all duration-300 ${
+                isDark
+                  ? "border border-white/5 bg-white/5"
+                  : "border border-emerald-100 bg-emerald-50/50"
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                    isDark
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-emerald-500 text-white"
+                  }`}
+                >
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                    Top Peak Day
+                  </p>
+                  <p className="text-xl font-black tracking-tight text-emerald-500">
+                    {activitySummary.busiestDay}
+                  </p>
+                  <p className="text-xs font-bold opacity-40">
+                    {activitySummary.busiestDayCount} orders (
+                    {Math.round(
+                      (activitySummary.busiestDayCount /
+                        activitySummary.totalOrders) *
+                        100
+                    )}
+                    %)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Busiest Hour */}
+            <div
+              className={`group/item relative overflow-hidden rounded-3xl p-5 transition-all duration-300 ${
+                isDark
+                  ? "border border-white/5 bg-white/5"
+                  : "border border-blue-100 bg-blue-50/50"
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                    isDark
+                      ? "bg-blue-500/10 text-blue-400"
+                      : "bg-blue-500 text-white"
+                  }`}
+                >
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                    Peak Hour
+                  </p>
+                  <p className="text-xl font-black tracking-tight text-blue-500">
+                    {activitySummary.busiestHour}
+                  </p>
+                  <p className="text-xs font-bold opacity-40">
+                    {activitySummary.busiestHourCount} orders (
+                    {Math.round(
+                      (activitySummary.busiestHourCount /
+                        activitySummary.totalOrders) *
+                        100
+                    )}
+                    %)
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-sm font-bold uppercase tracking-widest opacity-60">
+            <p>Gathering Insights...</p>
+          </div>
+        )}
       </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-6 sm:py-8">
-          <Loader size="sm" content="Loading activity data..." />
-        </div>
-      ) : activitySummary ? (
-        <div className="space-y-3 sm:space-y-4">
-          {/* Busiest Day */}
-          <div
-            className={`rounded-lg p-3 sm:p-4 ${
-              theme === "dark" ? "bg-gray-700/50" : "bg-green-50"
-            }`}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-green-500 sm:h-5 sm:w-5" />
-              <div className="text-xs font-medium opacity-70 sm:text-sm">
-                Busiest Day
-              </div>
-            </div>
-            <div className="ml-6 sm:ml-7">
-              <div className="text-lg font-bold text-green-600 dark:text-green-400 sm:text-xl">
-                {activitySummary.busiestDay}
-              </div>
-              <div className="text-sm opacity-60">
-                {activitySummary.busiestDayCount} orders (
-                {Math.round(
-                  (activitySummary.busiestDayCount /
-                    activitySummary.totalOrders) *
-                    100
-                )}
-                % of total)
-              </div>
-            </div>
-          </div>
-
-          {/* Busiest Hour */}
-          <div
-            className={`rounded-lg p-3 sm:p-4 ${
-              theme === "dark" ? "bg-gray-700/50" : "bg-green-50"
-            }`}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-green-500 sm:h-5 sm:w-5" />
-              <div className="text-xs font-medium opacity-70 sm:text-sm">
-                Busiest Hour
-              </div>
-            </div>
-            <div className="ml-6 sm:ml-7">
-              <div className="text-lg font-bold text-green-600 dark:text-green-400 sm:text-xl">
-                {activitySummary.busiestHour}
-              </div>
-              <div className="text-sm opacity-60">
-                {activitySummary.busiestHourCount} orders (
-                {Math.round(
-                  (activitySummary.busiestHourCount /
-                    activitySummary.totalOrders) *
-                    100
-                )}
-                % of total)
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="py-8 text-center text-sm opacity-60">
-          <p>No activity data available yet</p>
-        </div>
-      )}
     </div>
   );
 };

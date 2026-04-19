@@ -32,6 +32,9 @@ import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetr
 import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
 import EarningsTabs from "@components/shopper/earnings/EarningsTabs";
 import TransactionCardsMobile from "@components/shopper/earnings/TransactionCardsMobile";
+import EarningsMobileMenu from "@components/shopper/earnings/EarningsMobileMenu";
+import EarningsMobileNav from "@components/shopper/earnings/EarningsMobileNav";
+import EarningsTabContent from "@components/shopper/earnings/EarningsTabContent";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import {
   formatCurrencySync,
@@ -118,6 +121,7 @@ interface EarningsComponent {
 
 const EarningsPage: React.FC = () => {
   const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const [period, setPeriod] = useState("this-week");
   const [loading, setLoading] = useState(true);
@@ -125,6 +129,7 @@ const EarningsPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mobileView, setMobileView] = useState<"menu" | "content">("menu");
   const [earningsStats, setEarningsStats] = useState<EarningsStats>({
     totalEarnings: 0,
     completedOrders: 0,
@@ -293,6 +298,21 @@ const EarningsPage: React.FC = () => {
     fetchDailyEarnings(value);
   };
 
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (isMobile) {
+      setMobileView("content");
+      // Scroll to top when opening content
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleBackToMenu = () => {
+    setMobileView("menu");
+    // Scroll to top when returning to menu
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Format number with decimal places but no currency symbol
   const formatNumber = (amount: number) => {
     return new Intl.NumberFormat("en-RW", {
@@ -397,219 +417,64 @@ const EarningsPage: React.FC = () => {
         {/* New Dashboard Layout */}
         {isInitialized && (
           <div className="container mx-auto max-w-7xl">
-            {/* Tabs Navigation */}
-            <EarningsTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-            {/* Tab Content */}
-            {activeTab === "overview" && (
-              <>
-                {/* Top Grid - Stats Cards */}
-                <div className="mb-3 grid grid-cols-1 items-start gap-3 sm:mb-4 sm:gap-4 md:mb-6 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
-                  <TotalBalanceCard
-                    wallet={wallet}
-                    isLoading={walletLoading}
-                    onWithdraw={handleWithdrawal}
+            {/* MOBILE VIEW LOGIC */}
+            <div className="block md:hidden">
+              {mobileView === "menu" ? (
+                <EarningsMobileMenu onSelect={handleTabChange} />
+              ) : (
+                <>
+                  <EarningsMobileNav
+                    activeTab={activeTab}
+                    onBack={handleBackToMenu}
                   />
-
-                  <TotalTransactionsCard
-                    transactions={transactions}
-                    completedOrders={earningsStats.completedOrders}
-                    isLoading={loading}
-                  />
-
-                  <TotalSpendCard
-                    earningsStats={earningsStats}
-                    isLoading={loading}
-                  />
-
-                  <ScheduleCard
-                    shopperSchedule={shopperSchedule}
-                    isLoading={loading}
-                  />
-                </div>
-
-                {/* Main Content Grid */}
-                <div className="mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:gap-4 md:mb-6 md:gap-6 lg:grid-cols-3">
-                  {/* Earning Overview Chart - Takes 2 columns */}
-                  <EarningOverviewChart
-                    totalEarnings={earningsStats.totalEarnings}
-                    period={period}
-                    onPeriodChange={handlePeriodChange}
-                    dailyEarnings={dailyEarnings}
-                    isLoading={dailyEarningsLoading}
-                  />
-
-                  {/* Top Stores by Earnings */}
-                  <TopStoresCard
-                    storeBreakdown={earningsStats.storeBreakdown}
-                    isLoading={loading}
-                  />
-                </div>
-
-                {/* Bottom Grid - Major Expenses, Asset Valuation, Promo */}
-                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
-                  {/* Earnings Components */}
-                  <EarningsComponentsCard
-                    earningsComponents={earningsStats.earningsComponents}
-                    totalEarnings={earningsStats.totalEarnings}
-                    isLoading={loading}
-                  />
-
-                  {/* Performance Metrics */}
-                  <PerformanceMetricsCard
-                    performance={earningsStats.performance}
-                    rating={earningsStats.rating}
-                    isLoading={loading}
-                  />
-
-                  {/* Busiest Times Card */}
-                  <BusiestTimesCard
-                    activitySummary={activitySummary}
-                    isLoading={loading}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Breakdown Tab Content */}
-            {activeTab === "breakdown" && (
-              <div
-                className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-white"
-                    : "bg-white text-gray-900"
-                }`}
-              >
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader size="md" content="Loading earnings data..." />
-                  </div>
-                ) : !earningsStats.storeBreakdown ||
-                  !earningsStats.earningsComponents ? (
-                  <div className="py-8 text-center opacity-60">
-                    <p>No earnings breakdown data available.</p>
-                  </div>
-                ) : (
-                  <>
-                    <EarningsBreakdown
-                      storeBreakdown={earningsStats.storeBreakdown.map(
-                        (store) => ({
-                          ...store,
-                          amount: parseFloat(store.amount.toFixed(2)),
-                        })
-                      )}
-                      earningsComponents={earningsStats.earningsComponents.map(
-                        (component) => ({
-                          ...component,
-                          amount: parseFloat(component.amount.toFixed(2)),
-                        })
-                      )}
-                      hideEarningsComponents={true}
+                  <div className="pb-20">
+                    <EarningsTabContent
+                      activeTab={activeTab}
+                      earningsStats={earningsStats}
+                      wallet={wallet}
+                      walletLoading={walletLoading}
+                      transactions={transactions}
+                      dailyEarnings={dailyEarnings}
+                      dailyEarningsLoading={dailyEarningsLoading}
+                      activitySummary={activitySummary}
+                      shopperSchedule={shopperSchedule}
+                      period={period}
+                      loading={loading}
+                      isDark={isDark}
+                      handlePeriodChange={handlePeriodChange}
+                      handleWithdrawal={handleWithdrawal}
                     />
-                    <div className="mt-6">
-                      <ActivityHeatmap hideSummary={true} />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+                  </div>
+                </>
+              )}
+            </div>
 
-            {/* Recent Orders Tab Content */}
-            {activeTab === "recent-orders" && (
-              <div
-                className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-                  theme === "dark"
-                    ? "bg-gray-800 text-white"
-                    : "bg-white text-gray-900"
-                }`}
-              >
-                <RecentOrdersList
-                  orders={[]}
-                  isLoading={false}
-                  pageSize={10}
-                  currentPage={1}
-                  totalOrders={0}
-                  onPageChange={() => {}}
-                  serverPagination={false}
+            {/* DESKTOP VIEW LOGIC - Keep original grid/tabs */}
+            <div className="hidden md:block">
+              <EarningsTabs
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+              />
+
+              <div className="transition-all duration-500">
+                <EarningsTabContent
+                  activeTab={activeTab}
+                  earningsStats={earningsStats}
+                  wallet={wallet}
+                  walletLoading={walletLoading}
+                  transactions={transactions}
+                  dailyEarnings={dailyEarnings}
+                  dailyEarningsLoading={dailyEarningsLoading}
+                  activitySummary={activitySummary}
+                  shopperSchedule={shopperSchedule}
+                  period={period}
+                  loading={loading}
+                  isDark={isDark}
+                  handlePeriodChange={handlePeriodChange}
+                  handleWithdrawal={handleWithdrawal}
                 />
               </div>
-            )}
-
-            {/* Payments Tab Content */}
-            {activeTab === "payments" && (
-              <div>
-                {/* Desktop View - Table */}
-                <div className="hidden md:block">
-                  <TransactionTable
-                    transactions={transactions}
-                    isLoading={walletLoading}
-                  />
-                </div>
-
-                {/* Mobile View - Cards */}
-                <div className="block md:hidden">
-                  <TransactionCardsMobile
-                    transactions={transactions}
-                    isLoading={walletLoading}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Achievements Tab Content */}
-            {activeTab === "achievements" && (
-              <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2">
-                {/* Left Column - Working Towards Achievements */}
-                <div
-                  className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <h3 className="mb-3 text-base font-bold sm:mb-4 sm:text-lg">
-                    Working Towards
-                  </h3>
-                  <AchievementBadges />
-                </div>
-
-                {/* Right Column - Insights & Tips */}
-                <div className="space-y-4 sm:space-y-6">
-                  {/* Performance Insights */}
-                  {earningsStats.performance && (
-                    <PerformanceInsights
-                      performance={earningsStats.performance}
-                      isLoading={loading}
-                    />
-                  )}
-
-                  {/* Delivery Stats */}
-                  <DeliveryStatsCard
-                    stats={{
-                      totalKilometers: 0,
-                      totalItems: 0,
-                      avgTimePerOrder: 0,
-                      storesVisited: earningsStats.storeBreakdown?.length || 0,
-                    }}
-                    isLoading={loading}
-                  />
-
-                  {/* Earnings Goals */}
-                  {earningsStats.goals && (
-                    <EarningsGoalsProgress
-                      goals={earningsStats.goals}
-                      isLoading={loading}
-                    />
-                  )}
-
-                  {/* Tips to Boost Earnings */}
-                  <EarningsTipsCard
-                    performance={earningsStats.performance}
-                    completedOrders={earningsStats.completedOrders}
-                  />
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         )}
       </ShopperLayout>

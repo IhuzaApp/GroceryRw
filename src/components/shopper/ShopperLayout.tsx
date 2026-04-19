@@ -7,6 +7,7 @@ import FCMStatusIndicator from "@components/shopper/FCMStatusIndicator";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 import { logger } from "../../utils/logger";
+import ShopperBottomNav from "@components/shopper/ShopperBottomNav";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -16,14 +17,31 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const { data: session, status } = useSession();
   const { theme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const [isOnline, setIsOnline] = useState(false);
 
+  // Initialize collapse state from localStorage
   useEffect(() => {
-    const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
+    const stored = localStorage.getItem("shopper_sidebar_collapsed");
+    if (stored !== null) {
+      setIsSidebarCollapsed(stored === "true");
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const newState = !prev;
+      localStorage.setItem("shopper_sidebar_collapsed", String(newState));
+      return newState;
+    });
+  };
+
+  useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth < 1024);
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
@@ -263,24 +281,28 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
-      className={`h-screen ${
-        theme === "dark" ? "bg-[var(--bg-primary)]" : "bg-gray-50"
-      }`}
+      className={`h-screen overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300`}
     >
       {/* Hide header on mobile for batch details pages */}
       {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
-      <div className="flex h-full">
-        <ShopperSidebar />
+      <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]">
+        <ShopperSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={toggleSidebar}
+        />
         <main
-          className={`relative flex-1 transition-colors duration-200 ${
-            theme === "dark"
-              ? "bg-[var(--bg-primary)] text-[var(--text-primary)]"
-              : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-3 pb-24" : "p-4 pl-64"}`}
+          className={`relative flex-1 overflow-y-auto transition-all duration-300 ${
+            isMobile
+              ? `${isBatchDetailsPage ? "p-0" : "p-4"} pb-28`
+              : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`
+          }`}
         >
-          <div className="relative z-0 h-full">{children}</div>
+          <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Navigation */}
+      {isMobile && <ShopperBottomNav />}
 
       {/* 
         NotificationSystem - Single instance for all Plasa pages

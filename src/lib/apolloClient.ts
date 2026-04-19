@@ -6,11 +6,15 @@ import { getSession } from "next-auth/react";
 // Error handling link
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
-    graphQLErrors.forEach(({ message, locations, path }) =>
+    graphQLErrors.forEach(({ message, locations, path }) => {
+      // Suppress expected uniqueness violations (e.g., from POS wallet creation retries)
+      if (message.includes("Uniqueness violation")) {
+        return;
+      }
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-      )
-    );
+      );
+    });
   if (networkError) {
     console.error(`[Network error]: ${networkError}`);
     // Log more details for connection refused errors
