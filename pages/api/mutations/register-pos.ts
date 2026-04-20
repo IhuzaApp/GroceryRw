@@ -314,72 +314,107 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const invNum = `INV-${Date.now()}`;
 
-    // 1. Create Business
+    // 1. Create Business — if already exists, fetch real ID from DB
+    let actualBusinessId = businessId;
     if (targetStep === 1) {
-      if (businessType === "RESTAURANT") {
-        await hasuraClient.request(CREATE_RESTAURANT, {
-          email: formData.email,
-          lat: formData.lat,
-          location: formData.address,
-          logo: formData.logo,
-          long: formData.long,
-          name: formData.name,
-          phone: formData.phone,
-          profile: formData.profile,
-          tin: formData.tin,
-          ussd: formData.ussd,
-          rdb_cert: formData.rdb_cert_url,
-          restaurant_id: businessId,
-        });
-      } else {
-        await hasuraClient.request(CREATE_SHOP, {
-          address: formData.address,
-          category_id: formData.categoryId,
-          description: formData.description,
-          image: formData.profile,
-          latitude: formData.lat,
-          logo: formData.logo,
-          longitude: formData.long,
-          name: formData.name,
-          operating_hours: formData.operating_hours,
-          phone: formData.phone,
-          ssd: formData.ussd,
-          tin: formData.tin,
-          shop_id: businessId,
-          is_active: false,
-          rdb_certificate: formData.rdb_cert_url,
-        });
+      try {
+        if (businessType === "RESTAURANT") {
+          await hasuraClient.request(CREATE_RESTAURANT, {
+            email: formData.email,
+            lat: formData.lat,
+            location: formData.address,
+            logo: formData.logo,
+            long: formData.long,
+            name: formData.name,
+            phone: formData.phone,
+            profile: formData.profile,
+            tin: formData.tin,
+            ussd: formData.ussd,
+            rdb_cert: formData.rdb_cert_url,
+            restaurant_id: businessId,
+          });
+        } else {
+          await hasuraClient.request(CREATE_SHOP, {
+            address: formData.address,
+            category_id: formData.categoryId,
+            description: formData.description,
+            image: formData.profile,
+            latitude: formData.lat,
+            logo: formData.logo,
+            longitude: formData.long,
+            name: formData.name,
+            operating_hours: formData.operating_hours,
+            phone: formData.phone,
+            ssd: formData.ussd,
+            tin: formData.tin,
+            shop_id: businessId,
+            is_active: false,
+            rdb_certificate: formData.rdb_cert_url,
+          });
+        }
+      } catch (createErr: any) {
+        const errMsg = createErr.response?.errors?.[0]?.message || createErr.message || "";
+        if (errMsg.includes("Uniqueness violation") || errMsg.includes("duplicate key")) {
+          // Business already exists — look up its real ID
+          if (businessType === "RESTAURANT") {
+            const res: any = await hasuraClient.request(gql`
+              query GetRestaurantByName($name: String!) {
+                Restaurants(where: { name: { _eq: $name } }, limit: 1) { id }
+              }
+            `, { name: formData.name });
+            actualBusinessId = res?.Restaurants?.[0]?.id || businessId;
+          } else {
+            const res: any = await hasuraClient.request(gql`
+              query GetShopByName($name: String!) {
+                Shops(where: { name: { _eq: $name } }, limit: 1) { id }
+              }
+            `, { name: formData.name });
+            actualBusinessId = res?.Shops?.[0]?.id || businessId;
+          }
+          console.log(`[Step 1] Business already exists. Using real ID: ${actualBusinessId}`);
+        } else {
+          throw createErr; // Real error — propagate
+        }
       }
     }
 
-    // 2. Create Employee
+    // 2. Create Employee — swallow uniqueness errors (employee already created on previous attempt)
     if (targetStep === 2) {
-      await hasuraClient.request(CREATE_EMPLOYEE, {
-        Address: formData.address,
-        Position: formData.position || "System Administrator",
-        active: true,
-        dob: formData.dob,
-        email: formData.ownerEmail,
-        employeeID: commonIds.employee_id,
-        fullnames: formData.fullnames,
-        gender: formData.gender,
-        last_login: now,
-        password: formData.password, // Frontend should not hash if it has to match backend logic, wait, backend shouldn't hash it if it's plaintext here? Wait, Hasura orgEmployees uses plaintext or md5? The original code sent formData.password directly to the mutation. We will do the same.
-        phone: formData.ownerPhone,
-        restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-        shop_id: businessType === "SHOP" ? businessId : null,
-        roleType: "globalAdmin",
-        orgEmployeeID: commonIds.orgEmployeeID,
-        privillages: generatePrivileges(selectedPlan),
-      });
+      try {
+        await hasuraClient.request(CREATE_EMPLOYEE, {
+          Address: formData.address,
+          Position: formData.position || "System Administrator",
+          active: true,
+          dob: formData.dob,
+          email: formData.ownerEmail,
+          employeeID: commonIds.employee_id,
+          fullnames: formData.fullnames,
+          gender: formData.gender,
+          last_login: now,
+          password: formData.password,
+          phone: formData.ownerPhone,
+          restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+          shop_id: businessType === "SHOP" ? actualBusinessId : null,
+          roleType: "globalAdmin",
+          orgEmployeeID: commonIds.orgEmployeeID,
+          privillages: generatePrivileges(selectedPlan),
+        });
+      } catch (empErr: any) {
+        const empMsg = empErr.response?.errors?.[0]?.message || empErr.message || "";
+        if (empMsg.includes("Uniqueness violation") || empMsg.includes("duplicate key")) {
+          console.log("[Step 2] Employee already exists, skipping.");
+        } else {
+          throw empErr;
+        }
+      }
     }
 
     // 3. AI Usage
     if (targetStep === 3) {
       await hasuraClient.request(CREATE_AI_USAGE, {
         id: commonIds.aiUsage_id,
-        restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-        shop_id: businessType === "SHOP" ? businessId : null,
+        restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+        shop_id: businessType === "SHOP" ? actualBusinessId : null,
         request_count: selectedPlan.ai_request_limit,
         month: new Date().toLocaleString("default", { month: "long" }),
         year: new Date().getFullYear().toString(),
@@ -392,8 +427,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (targetStep === 4) {
       await hasuraClient.request(CREATE_REEL_USAGE, {
         id: commonIds.reelUsage_id,
-        restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-        shop_id: businessType === "SHOP" ? businessId : null,
+        restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+        shop_id: businessType === "SHOP" ? actualBusinessId : null,
         month: new Date().toLocaleString("default", { month: "long" }),
         upload_count: selectedPlan.reel_limit,
         year: new Date().getFullYear().toString(),
@@ -406,8 +441,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await hasuraClient.request(CREATE_SUBSCRIPTION, {
         id: commonIds.shopSubscription_id,
         billing_cycle: cycle,
-        restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-        shop_id: businessType === "SHOP" ? businessId : null,
+        restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+        shop_id: businessType === "SHOP" ? actualBusinessId : null,
         business_id: null,
         start_date: now,
         status: isShell ? "pending_payment" : "active",
@@ -442,8 +477,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (targetStep === 7) {
       try {
         await hasuraClient.request(CREATE_WALLET, {
-          restaurant_id: businessType === "RESTAURANT" ? businessId : null,
-          shop_id: businessType === "SHOP" ? businessId : null,
+          restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+          shop_id: businessType === "SHOP" ? actualBusinessId : null,
         });
       } catch (walletErr: any) {
         if (!walletErr.message?.includes("Uniqueness violation")) {
@@ -452,7 +487,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    return res.status(200).json({ success: true, invNum, businessId });
+    return res.status(200).json({ success: true, invNum, businessId: actualBusinessId });
   } catch (error: any) {
     console.error("API Route Error:", error);
     await logErrorToSlack("POSIX_REGISTRATION_API", error);
