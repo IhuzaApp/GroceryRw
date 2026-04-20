@@ -504,10 +504,8 @@ export default function RegisterPage() {
             businessId = statusData.actualBusinessId;
             activeIds = { ...activeIds, businessId };
             setCommonIds(activeIds);
-            console.log(`[Pre-check] Resolved real businessId: ${businessId}`);
           }
           dbCompletedSteps = statusData.completedSteps || [];
-          console.log(`[Pre-check] Already completed steps:`, dbCompletedSteps);
         }
       } catch (checkErr) {
         console.warn("[Pre-check] Status check failed, proceeding normally", checkErr);
@@ -528,7 +526,6 @@ export default function RegisterPage() {
 
         // Skip steps already confirmed complete by DB pre-check
         if (dbCompletedSteps.includes(currentStep)) {
-          console.log(`[Step ${currentStep}] Confirmed done in DB, skipping.`);
           setRegistrationSubStep(currentStep);
           continue;
         }
@@ -566,8 +563,7 @@ export default function RegisterPage() {
         if (currentStep === 1 && data.businessId && data.businessId !== businessId) {
           businessId = data.businessId;
           activeIds = { ...activeIds, businessId };
-          setCommonIds(activeIds); // persist the corrected ID for future retries
-          console.log(`[Frontend] Corrected businessId to: ${businessId}`);
+          setCommonIds(activeIds);
         }
 
         if (currentStep === 6 && data.invNum) {

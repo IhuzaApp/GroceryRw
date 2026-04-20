@@ -371,7 +371,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             `, { name: formData.name });
             actualBusinessId = res?.Shops?.[0]?.id || businessId;
           }
-          console.log(`[Step 1] Business already exists. Using real ID: ${actualBusinessId}`);
         } else {
           throw createErr; // Real error — propagate
         }
@@ -402,7 +401,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } catch (empErr: any) {
         const empMsg = empErr.response?.errors?.[0]?.message || empErr.message || "";
         if (empMsg.includes("Uniqueness violation") || empMsg.includes("duplicate key")) {
-          console.log("[Step 2] Employee already exists, skipping.");
+          // Employee already created, skip silently
         } else {
           throw empErr;
         }
