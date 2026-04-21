@@ -54,7 +54,10 @@ const CHECK_RESTAURANT = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -69,10 +72,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let business: any = null;
 
     if (businessType === "RESTAURANT") {
-      const data: any = await hasuraClient.request(CHECK_RESTAURANT, { name: businessName });
+      const data: any = await hasuraClient.request(CHECK_RESTAURANT, {
+        name: businessName,
+      });
       business = data?.Restaurants?.[0] || null;
     } else {
-      const data: any = await hasuraClient.request(CHECK_SHOP, { name: businessName });
+      const data: any = await hasuraClient.request(CHECK_SHOP, {
+        name: businessName,
+      });
       business = data?.Shops?.[0] || null;
     }
 
@@ -101,7 +108,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       completedSteps.push(5);
 
       // Step 6: Invoice exists
-      if (subscription.subscription_invoices?.length > 0) completedSteps.push(6);
+      if (subscription.subscription_invoices?.length > 0)
+        completedSteps.push(6);
     }
 
     // Step 7: Wallet exists

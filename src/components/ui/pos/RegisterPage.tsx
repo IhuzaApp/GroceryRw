@@ -116,10 +116,13 @@ export default function RegisterPage() {
         const parsed = JSON.parse(savedData);
         if (parsed.step) setStep(parsed.step);
         if (parsed.businessType) setBusinessType(parsed.businessType);
-        if (parsed.formData) setFormData((prev) => ({ ...prev, ...parsed.formData }));
+        if (parsed.formData)
+          setFormData((prev) => ({ ...prev, ...parsed.formData }));
         if (parsed.commonIds) setCommonIds(parsed.commonIds);
-        if (parsed.registeredBusinessId) setRegisteredBusinessId(parsed.registeredBusinessId);
-        if (parsed.registeredSubscriptionId) setRegisteredSubscriptionId(parsed.registeredSubscriptionId);
+        if (parsed.registeredBusinessId)
+          setRegisteredBusinessId(parsed.registeredBusinessId);
+        if (parsed.registeredSubscriptionId)
+          setRegisteredSubscriptionId(parsed.registeredSubscriptionId);
       } catch (e) {
         console.error("Failed to parse saved registration state", e);
       }
@@ -460,7 +463,8 @@ export default function RegisterPage() {
     }
 
     // Use the saved businessId if retrying, otherwise generate a new one
-    let businessId = commonIds.businessId || registeredBusinessId || crypto.randomUUID();
+    let businessId =
+      commonIds.businessId || registeredBusinessId || crypto.randomUUID();
     const billingCycle = cycle;
 
     // Persistent/Resumeable IDs — regenerate only if nothing has been saved yet
@@ -489,18 +493,24 @@ export default function RegisterPage() {
       // even across browser sessions where UUIDs may have changed.
       let dbCompletedSteps: number[] = [];
       try {
-        const statusRes = await fetch("/api/mutations/check-registration-status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            businessName: formData.name,
-            businessType,
-          }),
-        });
+        const statusRes = await fetch(
+          "/api/mutations/check-registration-status",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              businessName: formData.name,
+              businessType,
+            }),
+          }
+        );
         const statusData = await statusRes.json();
         if (statusData.found) {
           // Update businessId to the real one from DB
-          if (statusData.actualBusinessId && statusData.actualBusinessId !== businessId) {
+          if (
+            statusData.actualBusinessId &&
+            statusData.actualBusinessId !== businessId
+          ) {
             businessId = statusData.actualBusinessId;
             activeIds = { ...activeIds, businessId };
             setCommonIds(activeIds);
@@ -508,7 +518,10 @@ export default function RegisterPage() {
           dbCompletedSteps = statusData.completedSteps || [];
         }
       } catch (checkErr) {
-        console.warn("[Pre-check] Status check failed, proceeding normally", checkErr);
+        console.warn(
+          "[Pre-check] Status check failed, proceeding normally",
+          checkErr
+        );
       }
       // ────────────────────────────────────────────────────────────────────────
 
@@ -560,7 +573,11 @@ export default function RegisterPage() {
         }
 
         // Step 1 may return the real existing businessId if shop already existed in DB
-        if (currentStep === 1 && data.businessId && data.businessId !== businessId) {
+        if (
+          currentStep === 1 &&
+          data.businessId &&
+          data.businessId !== businessId
+        ) {
           businessId = data.businessId;
           activeIds = { ...activeIds, businessId };
           setCommonIds(activeIds);
@@ -574,7 +591,7 @@ export default function RegisterPage() {
       // Registration completely successful
       setRegisteredBusinessId(businessId);
       setRegisteredSubscriptionId(activeIds.shopSubscription_id);
-      
+
       setRegistrationSubStep(8); // Completed all API steps
 
       setIsSuccess(true);

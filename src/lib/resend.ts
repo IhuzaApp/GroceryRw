@@ -3,7 +3,9 @@ import { Resend } from "resend";
 const resendApiKey = process.env.RESEND_API_KEY;
 
 if (!resendApiKey) {
-  console.warn("RESEND_API_KEY is not set in environment variables. Email sending will be mocked.");
+  console.warn(
+    "RESEND_API_KEY is not set in environment variables. Email sending will be mocked."
+  );
 }
 
 // Fallback mock to prevent top-level crashes and API route failures

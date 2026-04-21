@@ -72,18 +72,21 @@ export default function AnimatedIllustrations() {
           <div
             key={illustration.id}
             className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${
-              isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+              isActive
+                ? "z-10 opacity-100"
+                : "pointer-events-none z-0 opacity-0"
             }`}
           >
             <div className="relative flex h-full w-full items-center justify-center">
-              <div className="relative h-64 w-64 md:h-80 md:w-80 lg:h-96 lg:w-96 flex items-center justify-center">
+              <div className="relative flex h-64 w-64 items-center justify-center md:h-80 md:w-80 lg:h-96 lg:w-96">
                 <Image
                   src={illustration.image}
                   alt={illustration.name}
                   width={400}
                   height={400}
                   className={`relative z-10 object-contain ${
-                    illustration.id === "payment-terminal" || illustration.id === "pet-shop"
+                    illustration.id === "payment-terminal" ||
+                    illustration.id === "pet-shop"
                       ? "max-h-[60%] max-w-[60%]"
                       : "max-h-full max-w-full"
                   }`}

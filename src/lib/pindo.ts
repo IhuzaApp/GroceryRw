@@ -3,7 +3,9 @@ import { PindoSMS, SMSPayload } from "pindo-sms";
 const pindoToken = process.env.PINDO_API_TOKEN;
 
 if (!pindoToken) {
-  console.warn("PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked.");
+  console.warn(
+    "PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked."
+  );
 }
 
 // Ensure constructor doesn't throw if token is missing

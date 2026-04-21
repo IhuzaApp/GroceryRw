@@ -5,12 +5,17 @@ import crypto from "crypto";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // Import Privileges logic directly to avoid client-side dependencies bleeding into API route
-import { DEFAULT_PRIVILEGES, UserPrivileges } from "../../../src/types/privileges";
+import {
+  DEFAULT_PRIVILEGES,
+  UserPrivileges,
+} from "../../../src/types/privileges";
 import { MODULE_DESCRIPTIONS } from "../../../src/types/moduleDescriptions";
 import { Plan } from "../../../src/hooks/usePlans";
 
 const generatePrivileges = (plan: Plan): UserPrivileges => {
-  const privileges: UserPrivileges = JSON.parse(JSON.stringify(DEFAULT_PRIVILEGES));
+  const privileges: UserPrivileges = JSON.parse(
+    JSON.stringify(DEFAULT_PRIVILEGES)
+  );
   if (privileges.pages) {
     privileges.pages.access = true;
     privileges.pages.view_pages = false;
@@ -66,7 +71,9 @@ const CREATE_RESTAURANT = gql`
         verified: false
         rdb_cert: $rdb_cert
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
@@ -106,7 +113,9 @@ const CREATE_SHOP = gql`
         tin: $tin
         rdb_certificate: $rdb_certificate
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
@@ -148,7 +157,9 @@ const CREATE_EMPLOYEE = gql`
         id: $orgEmployeeID
         orgEmployeeRoles: { data: { privillages: $privillages } }
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
@@ -174,7 +185,9 @@ const CREATE_AI_USAGE = gql`
         business_id: $business_id
         user_id: $user_id
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
@@ -198,7 +211,9 @@ const CREATE_REEL_USAGE = gql`
         year: $year
         business_id: $business_id
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
@@ -228,7 +243,9 @@ const CREATE_SUBSCRIPTION = gql`
         end_date: $end_date
         plan_id: $plan_id
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
@@ -269,15 +286,14 @@ const CREATE_INVOICE = gql`
         tax_amount: $tax_amount
         updated_at: $updated_at
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
 const CREATE_WALLET = gql`
-  mutation CreateWallet(
-    $restaurant_id: uuid = null
-    $shop_id: uuid = null
-  ) {
+  mutation CreateWallet($restaurant_id: uuid = null, $shop_id: uuid = null) {
     insert_merchant_wallets(
       objects: {
         active: false
@@ -285,17 +301,31 @@ const CREATE_WALLET = gql`
         restaurant_id: $restaurant_id
         shop_id: $shop_id
       }
-    ) { affected_rows }
+    ) {
+      affected_rows
+    }
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { targetStep, formData, selectedPlan, businessType, cycle, businessId, commonIds, isShell } = req.body;
+    const {
+      targetStep,
+      formData,
+      selectedPlan,
+      businessType,
+      cycle,
+      businessId,
+      commonIds,
+      isShell,
+    } = req.body;
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
@@ -353,22 +383,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
         }
       } catch (createErr: any) {
-        const errMsg = createErr.response?.errors?.[0]?.message || createErr.message || "";
-        if (errMsg.includes("Uniqueness violation") || errMsg.includes("duplicate key")) {
+        const errMsg =
+          createErr.response?.errors?.[0]?.message || createErr.message || "";
+        if (
+          errMsg.includes("Uniqueness violation") ||
+          errMsg.includes("duplicate key")
+        ) {
           // Business already exists — look up its real ID
           if (businessType === "RESTAURANT") {
-            const res: any = await hasuraClient.request(gql`
-              query GetRestaurantByName($name: String!) {
-                Restaurants(where: { name: { _eq: $name } }, limit: 1) { id }
-              }
-            `, { name: formData.name });
+            const res: any = await hasuraClient.request(
+              gql`
+                query GetRestaurantByName($name: String!) {
+                  Restaurants(where: { name: { _eq: $name } }, limit: 1) {
+                    id
+                  }
+                }
+              `,
+              { name: formData.name }
+            );
             actualBusinessId = res?.Restaurants?.[0]?.id || businessId;
           } else {
-            const res: any = await hasuraClient.request(gql`
-              query GetShopByName($name: String!) {
-                Shops(where: { name: { _eq: $name } }, limit: 1) { id }
-              }
-            `, { name: formData.name });
+            const res: any = await hasuraClient.request(
+              gql`
+                query GetShopByName($name: String!) {
+                  Shops(where: { name: { _eq: $name } }, limit: 1) {
+                    id
+                  }
+                }
+              `,
+              { name: formData.name }
+            );
             actualBusinessId = res?.Shops?.[0]?.id || businessId;
           }
         } else {
@@ -392,15 +436,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           last_login: now,
           password: formData.password,
           phone: formData.ownerPhone,
-          restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+          restaurant_id:
+            businessType === "RESTAURANT" ? actualBusinessId : null,
           shop_id: businessType === "SHOP" ? actualBusinessId : null,
           roleType: "globalAdmin",
           orgEmployeeID: commonIds.orgEmployeeID,
           privillages: generatePrivileges(selectedPlan),
         });
       } catch (empErr: any) {
-        const empMsg = empErr.response?.errors?.[0]?.message || empErr.message || "";
-        if (empMsg.includes("Uniqueness violation") || empMsg.includes("duplicate key")) {
+        const empMsg =
+          empErr.response?.errors?.[0]?.message || empErr.message || "";
+        if (
+          empMsg.includes("Uniqueness violation") ||
+          empMsg.includes("duplicate key")
+        ) {
           // Employee already created, skip silently
         } else {
           throw empErr;
@@ -462,21 +511,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         issued_at: now,
         payment_method: isShell ? "UNPAID" : "MoMo",
         plan_name: selectedPlan.name,
-        plan_price: (cycle === "monthly" ? selectedPlan.price_monthly : selectedPlan.price_yearly).toString(),
+        plan_price: (cycle === "monthly"
+          ? selectedPlan.price_monthly
+          : selectedPlan.price_yearly
+        ).toString(),
         reelUsage_id: commonIds.reelUsage_id,
         shopSubscription_id: commonIds.shopSubscription_id,
         status: "pending",
-        subtotal_amount: (cycle === "monthly" ? selectedPlan.price_monthly : selectedPlan.price_yearly).toString(),
+        subtotal_amount: (cycle === "monthly"
+          ? selectedPlan.price_monthly
+          : selectedPlan.price_yearly
+        ).toString(),
         tax_amount: "0",
         updated_at: now,
       });
     }
 
-    // 7. Wallet 
+    // 7. Wallet
     if (targetStep === 7) {
       try {
         await hasuraClient.request(CREATE_WALLET, {
-          restaurant_id: businessType === "RESTAURANT" ? actualBusinessId : null,
+          restaurant_id:
+            businessType === "RESTAURANT" ? actualBusinessId : null,
           shop_id: businessType === "SHOP" ? actualBusinessId : null,
         });
       } catch (walletErr: any) {
@@ -486,13 +542,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    return res.status(200).json({ success: true, invNum, businessId: actualBusinessId });
+    return res
+      .status(200)
+      .json({ success: true, invNum, businessId: actualBusinessId });
   } catch (error: any) {
     console.error("API Route Error:", error);
     await logErrorToSlack("POSIX_REGISTRATION_API", error);
     return res.status(500).json({
       error: "Registration failed",
-      message: error.response?.errors?.[0]?.message || error.message || "Unknown error",
+      message:
+        error.response?.errors?.[0]?.message ||
+        error.message ||
+        "Unknown error",
     });
   }
 }
