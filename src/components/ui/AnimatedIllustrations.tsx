@@ -7,36 +7,36 @@ const illustrations = [
   {
     id: "burger",
     name: "Burger",
-    image: "/images/mainPageIcons/burger.png",
+    image: "/images/mainPageIcons/burger_3d.png",
   },
   {
     id: "tomato",
     name: "Tomato",
-    image: "/images/mainPageIcons/tomato.png",
+    image: "/images/mainPageIcons/tomato_3d.png",
   },
   {
     id: "delivery-man",
     name: "Delivery Man",
-    image: "/images/mainPageIcons/delivery-man.png",
+    image: "/images/mainPageIcons/scooter_3d.png",
   },
   {
     id: "brand",
     name: "Brand",
-    image: "/images/mainPageIcons/brand.png",
+    image: "/images/mainPageIcons/brand_3d.png",
   },
   {
     id: "first-aid-kit",
     name: "First Aid Kit",
-    image: "/images/mainPageIcons/first-aid-kit.png",
+    image: "/images/mainPageIcons/pharmacy_3d.png",
   },
   {
     id: "payment-terminal",
-    name: "Payment Terminal",
+    name: "Payment",
     image: "/images/mainPageIcons/payment-terminal.png",
   },
   {
     id: "pet-shop",
-    name: "Pet Shop",
+    name: "Pet Area",
     image: "/images/mainPageIcons/pet-shop.png",
   },
 ];
@@ -65,54 +65,41 @@ export default function AnimatedIllustrations() {
   }
 
   return (
-    <div className="relative h-48 w-full md:h-64 lg:h-72">
-      <div
-        key={currentIndex}
-        className="h-full w-full"
-        style={{
-          animation: "fadeInZoom 1s ease-out",
-        }}
-      >
-        <div className="relative flex h-full w-full items-center justify-center">
-          <div className="relative">
-            {/* Outer glow ring */}
-            <div
-              className="absolute inset-0 opacity-25 blur-xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.15) 60%, transparent 100%)",
-                animation: "glow 3s ease-in-out infinite",
-                transform: "scale(1.1)",
-                zIndex: 0,
-              }}
-            />
-            {/* Inner rim light */}
-            <div
-              className="absolute inset-0 opacity-30 blur-md"
-              style={{
-                background:
-                  "radial-gradient(ellipse, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 40%, transparent 80%)",
-                animation: "glow 3s ease-in-out infinite 0.2s",
-                transform: "scale(1.05)",
-                zIndex: 1,
-              }}
-            />
-            <Image
-              src={currentIllustration.image}
-              alt={currentIllustration.name}
-              width={250}
-              height={250}
-              className="relative z-10 h-full w-auto max-w-[280px] object-contain"
-              style={{
-                animation:
-                  "float 3s ease-in-out infinite 0.5s, glow 3s ease-in-out infinite",
-                filter:
-                  "drop-shadow(0 0 4px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.2))",
-              }}
-            />
+    <div className="relative mx-auto h-64 w-64 md:h-80 md:w-80 lg:h-96 lg:w-96">
+      {illustrations.map((illustration, index) => {
+        const isActive = index === currentIndex;
+        return (
+          <div
+            key={illustration.id}
+            className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${
+              isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+            }`}
+          >
+            <div className="relative flex h-full w-full items-center justify-center">
+              <div className="relative h-64 w-64 md:h-80 md:w-80 lg:h-96 lg:w-96 flex items-center justify-center">
+                <Image
+                  src={illustration.image}
+                  alt={illustration.name}
+                  width={400}
+                  height={400}
+                  className={`relative z-10 object-contain ${
+                    illustration.id === "payment-terminal" || illustration.id === "pet-shop"
+                      ? "max-h-[60%] max-w-[60%]"
+                      : "max-h-full max-w-full"
+                  }`}
+                  style={{
+                    animation: isActive
+                      ? "float 3s ease-in-out infinite 0.5s"
+                      : "none",
+                    filter:
+                      "drop-shadow(0 20px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 10px 10px rgba(0, 0, 0, 0.2))",
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 }
