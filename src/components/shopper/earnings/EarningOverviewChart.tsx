@@ -39,14 +39,18 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
     <div
       className={`group relative overflow-hidden rounded-[3rem] p-8 transition-all duration-500 lg:col-span-2 ${
         isDark
-          ? "border border-white/5 bg-gray-900/40 backdrop-blur-3xl shadow-2xl shadow-black/20"
+          ? "border border-white/5 bg-gray-900/40 shadow-2xl shadow-black/20 backdrop-blur-3xl"
           : "border border-gray-100 bg-white shadow-2xl shadow-gray-200/50"
       }`}
     >
       <div className="relative z-10">
         <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center sm:gap-0">
           <div>
-            <h3 className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+            <h3
+              className={`text-2xl font-black tracking-tight ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
               Revenue Performance
             </h3>
             <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500/60">
@@ -69,12 +73,12 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           {/* Chart Stats */}
-          <div className="md:col-span-1 space-y-8">
+          <div className="space-y-8 md:col-span-1">
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
                 Net Period Revenue
               </p>
-              <p className="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-4xl font-black text-transparent tracking-tighter">
+              <p className="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-4xl font-black tracking-tighter text-transparent">
                 {formatCurrencySync(totalEarnings)}
               </p>
             </div>
@@ -82,17 +86,31 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
             <div className="space-y-4">
               <div
                 className={`group/metric rounded-3xl p-5 transition-all duration-300 ${
-                  isDark ? "bg-white/[0.03] border border-white/5 hover:bg-white/[0.06]" : "bg-gray-50 border border-gray-100 hover:bg-gray-100"
+                  isDark
+                    ? "border border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                    : "border border-gray-100 bg-gray-50 hover:bg-gray-100"
                 }`}
               >
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-2">Growth</p>
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                  Growth
+                </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black text-emerald-500 tracking-tight">
+                  <span className="text-2xl font-black tracking-tight text-emerald-500">
                     +67%
                   </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20 group-hover/metric:scale-110 transition-transform">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20 transition-transform group-hover/metric:scale-110">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -100,16 +118,32 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
 
               <div
                 className={`group/metric rounded-3xl p-5 transition-all duration-300 ${
-                  isDark ? "bg-white/[0.03] border border-white/5 hover:bg-white/[0.06]" : "bg-gray-50 border border-gray-100 hover:bg-gray-100"
+                  isDark
+                    ? "border border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                    : "border border-gray-100 bg-gray-50 hover:bg-gray-100"
                 }`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Target</p>
-                  <span className={`text-xs font-black ${isDark ? "text-white/60" : "text-gray-900"}`}>82%</span>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                    Target
+                  </p>
+                  <span
+                    className={`text-xs font-black ${
+                      isDark ? "text-white/60" : "text-gray-900"
+                    }`}
+                  >
+                    82%
+                  </span>
                 </div>
-                <div className={`h-2 w-full overflow-hidden rounded-full ${isDark ? "bg-white/5 shadow-inner" : "bg-gray-200 shadow-inner"}`}>
+                <div
+                  className={`h-2 w-full overflow-hidden rounded-full ${
+                    isDark
+                      ? "bg-white/5 shadow-inner"
+                      : "bg-gray-200 shadow-inner"
+                  }`}
+                >
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000 ease-out"
                     style={{ width: "82%" }}
                   />
                 </div>
@@ -121,8 +155,12 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
           </div>
 
           {/* Real Daily Earnings Chart */}
-          <div className="h-64 min-h-[320px] md:col-span-3 md:h-full relative">
-            <div className={`absolute inset-0 rounded-[2rem] ${isDark ? "bg-white/[0.02]" : "bg-gray-50/50"} border border-dashed border-white/5`} />
+          <div className="relative h-64 min-h-[320px] md:col-span-3 md:h-full">
+            <div
+              className={`absolute inset-0 rounded-[2rem] ${
+                isDark ? "bg-white/[0.02]" : "bg-gray-50/50"
+              } border border-dashed border-white/5`}
+            />
             <div className="relative h-full">
               <DailyEarningsChart
                 data={dailyEarnings}

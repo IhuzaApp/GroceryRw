@@ -385,45 +385,61 @@ export default function ShopperProfileComponent() {
   }
 
   return (
-    <div className="relative min-h-screen transition-colors duration-300 overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden transition-colors duration-300">
       {/* Background Decorative Gradients */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div
-          className={`absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[100px] animate-pulse ${
+          className={`absolute -left-[10%] -top-[10%] h-[40%] w-[40%] animate-pulse rounded-full blur-[100px] ${
             theme === "dark" ? "bg-emerald-500/10" : "bg-emerald-500/5"
           }`}
         ></div>
         <div
-          className={`absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[100px] animate-pulse delay-700 ${
+          className={`absolute -bottom-[10%] -right-[10%] h-[40%] w-[40%] animate-pulse rounded-full blur-[100px] delay-700 ${
             theme === "dark" ? "bg-blue-500/10" : "bg-blue-500/5"
           }`}
         ></div>
       </div>
 
-      <div className="relative z-10 w-full px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-2">
-            <p className={`text-xs font-black uppercase tracking-[0.3em] ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
+            <p
+              className={`text-xs font-black uppercase tracking-[0.3em] ${
+                theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+              }`}
+            >
               Member Dashboard
             </p>
-            <h1 className={`text-4xl sm:text-5xl font-black tracking-tighter ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            <h1
+              className={`text-4xl font-black tracking-tighter sm:text-5xl ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               Account Profile
             </h1>
             <div className="h-1.5 w-20 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"></div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {formattedAddedDate && (
-              <div className={`rounded-2xl border px-4 py-2 backdrop-blur-md ${theme === "dark" ? "border-white/5 bg-white/5 text-gray-400" : "border-gray-200 bg-white/50 text-gray-500"}`}>
-                <span className="text-xs font-bold uppercase tracking-wider">Joined {formattedAddedDate}</span>
+              <div
+                className={`rounded-2xl border px-4 py-2 backdrop-blur-md ${
+                  theme === "dark"
+                    ? "border-white/5 bg-white/5 text-gray-400"
+                    : "border-gray-200 bg-white/50 text-gray-500"
+                }`}
+              >
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Joined {formattedAddedDate}
+                </span>
               </div>
             )}
             <button
               onClick={handleSaveChanges}
               className="group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 px-6 py-3 text-sm font-black tracking-widest text-white shadow-xl shadow-emerald-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-95"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full"></div>
               <span className="relative uppercase">Save Changes</span>
             </button>
           </div>
@@ -434,16 +450,18 @@ export default function ShopperProfileComponent() {
           {/* Left Column */}
           <div className="space-y-8 lg:col-span-5">
             {/* PROFILE IMAGE Section */}
-            <div className={`relative overflow-hidden rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
-              theme === "dark"
-                ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
-                : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
-            }`}>
+            <div
+              className={`relative overflow-hidden rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
+                theme === "dark"
+                  ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
+                  : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
+              }`}
+            >
               <div className="p-8">
                 <div className="mb-6 flex justify-center">
-                  <div className="relative aspect-square w-full max-w-[280px] group">
-                    <div className="absolute -inset-4 bg-gradient-to-tr from-emerald-500/20 to-blue-500/20 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="relative h-full w-full overflow-hidden rounded-[2.5rem] border-4 border-white/50 dark:border-white/10 shadow-2xl">
+                  <div className="group relative aspect-square w-full max-w-[280px]">
+                    <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-emerald-500/20 to-blue-500/20 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"></div>
+                    <div className="relative h-full w-full overflow-hidden rounded-[2.5rem] border-4 border-white/50 shadow-2xl dark:border-white/10">
                       <Image
                         src={profileImage}
                         alt="Profile"
@@ -457,7 +475,9 @@ export default function ShopperProfileComponent() {
                 {showNationalIdUnderProfile &&
                   (nationalIdImage || shopperData?.national_id_photo_back) && (
                     <div className="mb-6 space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Verified Credentials</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                        Verified Credentials
+                      </p>
                       <div
                         className={`grid gap-4 ${
                           nationalIdImage && shopperData?.national_id_photo_back
@@ -473,7 +493,9 @@ export default function ShopperProfileComponent() {
                               className="h-full w-full object-contain p-2"
                             />
                             <div className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-white backdrop-blur-md">
-                              {shopperData?.national_id_photo_back ? "Front" : "ID"}
+                              {shopperData?.national_id_photo_back
+                                ? "Front"
+                                : "ID"}
                             </div>
                           </div>
                         )}
@@ -506,9 +528,24 @@ export default function ShopperProfileComponent() {
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
                   ) : (
                     <>
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                       Update Photo
                     </>
@@ -518,28 +555,38 @@ export default function ShopperProfileComponent() {
             </div>
 
             {/* EMPLOYEE DETAILS Section */}
-            <div className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
-              theme === "dark"
-                ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
-                : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
-            }`}>
+            <div
+              className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
+                theme === "dark"
+                  ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
+                  : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
+              }`}
+            >
               <div className="p-8">
                 <div className="mb-8">
-                  <h2 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h2
+                    className={`text-xl font-black tracking-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Personal Information
                   </h2>
-                  <p className="text-xs text-gray-500 font-medium mt-1">Manage your professional identity</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">
+                    Manage your professional identity
+                  </p>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">First Name</label>
+                      <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        First Name
+                      </label>
                       <input
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold transition-all outline-none ${
+                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold outline-none transition-all ${
                           theme === "dark"
                             ? "border-white/5 bg-white/5 text-white focus:border-emerald-500/50"
                             : "border-gray-100 bg-gray-50 text-gray-900 focus:border-emerald-500/50"
@@ -547,12 +594,14 @@ export default function ShopperProfileComponent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Last Name</label>
+                      <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Last Name
+                      </label>
                       <input
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold transition-all outline-none ${
+                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold outline-none transition-all ${
                           theme === "dark"
                             ? "border-white/5 bg-white/5 text-white focus:border-emerald-500/50"
                             : "border-gray-100 bg-gray-50 text-gray-900 focus:border-emerald-500/50"
@@ -562,59 +611,89 @@ export default function ShopperProfileComponent() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Professional Email</label>
-                    <div className="relative group">
+                    <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Professional Email
+                    </label>
+                    <div className="group relative">
                       <input
                         type="email"
                         value={email}
                         readOnly
-                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold opacity-70 cursor-not-allowed ${
-                          theme === "dark" ? "border-white/5 bg-white/5 text-white" : "border-gray-100 bg-gray-50 text-gray-900"
+                        className={`w-full cursor-not-allowed rounded-2xl border-2 px-5 py-4 text-sm font-bold opacity-70 ${
+                          theme === "dark"
+                            ? "border-white/5 bg-white/5 text-white"
+                            : "border-gray-100 bg-gray-50 text-gray-900"
                         }`}
                       />
                       <button
                         onClick={() => copyToClipboard(email, "Email")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl text-gray-400 hover:text-emerald-500 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-gray-400 transition-colors hover:text-emerald-500"
                       >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
                         </svg>
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Contact Number</label>
+                    <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Contact Number
+                    </label>
                     <div className="relative">
                       <input
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold transition-all outline-none ${
+                        className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold outline-none transition-all ${
                           theme === "dark"
                             ? "border-white/5 bg-white/5 text-white focus:border-emerald-500/50"
                             : "border-gray-100 bg-gray-50 text-gray-900 focus:border-emerald-500/50"
                         }`}
                       />
                       <button
-                        onClick={() => copyToClipboard(phoneNumber, "Phone number")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl text-gray-400 hover:text-emerald-500 transition-colors"
+                        onClick={() =>
+                          copyToClipboard(phoneNumber, "Phone number")
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-2 text-gray-400 transition-colors hover:text-emerald-500"
                       >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
                         </svg>
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Assigned Position</label>
+                    <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Assigned Position
+                    </label>
                     <input
                       type="text"
                       value={position}
                       onChange={(e) => setPosition(e.target.value)}
                       placeholder="e.g., Delivery Specialist"
-                      className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold transition-all outline-none ${
+                      className={`w-full rounded-2xl border-2 px-5 py-4 text-sm font-bold outline-none transition-all ${
                         theme === "dark"
                           ? "border-white/5 bg-white/5 text-white focus:border-emerald-500/50"
                           : "border-gray-100 bg-gray-50 text-gray-900 focus:border-emerald-500/50"
@@ -629,36 +708,62 @@ export default function ShopperProfileComponent() {
           {/* Right Column */}
           <div className="space-y-8 lg:col-span-7">
             {/* EMPLOYMENT METRICS Section */}
-            <div className={`relative overflow-hidden rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
-              theme === "dark"
-                ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
-                : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
-            }`}>
+            <div
+              className={`relative overflow-hidden rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
+                theme === "dark"
+                  ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
+                  : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
+              }`}
+            >
               <div className="p-8">
                 <div className="mb-8">
-                  <h2 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h2
+                    className={`text-xl font-black tracking-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Employment Credentials
                   </h2>
-                  <p className="text-xs text-gray-500 font-medium mt-1">Official platform identification</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">
+                    Official platform identification
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Shopper ID</label>
-                    <div className={`rounded-2xl border-2 px-5 py-4 text-sm font-black tracking-widest ${
-                      theme === "dark" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-emerald-100 bg-emerald-50 text-emerald-700"
-                    }`}>
+                    <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Shopper ID
+                    </label>
+                    <div
+                      className={`rounded-2xl border-2 px-5 py-4 text-sm font-black tracking-widest ${
+                        theme === "dark"
+                          ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                          : "border-emerald-100 bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
                       #{formattedEmployeeId}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Platform Status</label>
-                    <div className={`rounded-2xl border-2 px-5 py-4 text-sm font-black uppercase tracking-widest flex items-center gap-3 ${
-                      shopperData?.active 
-                        ? (theme === "dark" ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-emerald-100 bg-emerald-50 text-emerald-700")
-                        : (theme === "dark" ? "border-red-500/20 bg-red-500/5 text-red-400" : "border-red-100 bg-red-50 text-red-700")
-                    }`}>
-                      <div className={`h-2 w-2 rounded-full animate-pulse ${shopperData?.active ? "bg-emerald-500" : "bg-red-500"}`}></div>
+                    <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Platform Status
+                    </label>
+                    <div
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-4 text-sm font-black uppercase tracking-widest ${
+                        shopperData?.active
+                          ? theme === "dark"
+                            ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                            : "border-emerald-100 bg-emerald-50 text-emerald-700"
+                          : theme === "dark"
+                          ? "border-red-500/20 bg-red-500/5 text-red-400"
+                          : "border-red-100 bg-red-50 text-red-700"
+                      }`}
+                    >
+                      <div
+                        className={`h-2 w-2 animate-pulse rounded-full ${
+                          shopperData?.active ? "bg-emerald-500" : "bg-red-500"
+                        }`}
+                      ></div>
                       {shopperData?.active ? "Active" : "Inactive"}
                     </div>
                   </div>
@@ -667,71 +772,129 @@ export default function ShopperProfileComponent() {
             </div>
 
             {/* IDENTITY Section */}
-            <div className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
-              theme === "dark"
-                ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
-                : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
-            }`}>
+            <div
+              className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
+                theme === "dark"
+                  ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
+                  : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
+              }`}
+            >
               <div className="p-8">
                 <div className="mb-8">
-                  <h2 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h2
+                    className={`text-xl font-black tracking-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Identity Verification
                   </h2>
-                  <p className="text-xs text-gray-500 font-medium mt-1">Official government documentation</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">
+                    Official government documentation
+                  </p>
                 </div>
 
                 <div className="space-y-6">
                   {nationalIdImage || shopperData?.national_id_photo_back ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       {nationalIdImage && (
                         <div className="group relative aspect-[16/10] overflow-hidden rounded-[2rem] border-2 border-white/10 shadow-2xl">
-                          <img src={nationalIdImage} alt="ID Front" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => setShowNationalIdUnderProfile(!showNationalIdUnderProfile)} className="bg-white text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">
+                          <img
+                            src={nationalIdImage}
+                            alt="ID Front"
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                            <button
+                              onClick={() =>
+                                setShowNationalIdUnderProfile(
+                                  !showNationalIdUnderProfile
+                                )
+                              }
+                              className="rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-black"
+                            >
                               {showNationalIdUnderProfile ? "Hide" : "Expand"}
                             </button>
                           </div>
-                          <div className="absolute top-4 left-4 rounded-lg bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                          <div className="absolute left-4 top-4 rounded-lg bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
                             Front View
                           </div>
                         </div>
                       )}
                       {shopperData?.national_id_photo_back && (
                         <div className="group relative aspect-[16/10] overflow-hidden rounded-[2rem] border-2 border-white/10 shadow-2xl">
-                          <img src={shopperData.national_id_photo_back} alt="ID Back" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => setShowNationalIdUnderProfile(!showNationalIdUnderProfile)} className="bg-white text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">
+                          <img
+                            src={shopperData.national_id_photo_back}
+                            alt="ID Back"
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                            <button
+                              onClick={() =>
+                                setShowNationalIdUnderProfile(
+                                  !showNationalIdUnderProfile
+                                )
+                              }
+                              className="rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-black"
+                            >
                               {showNationalIdUnderProfile ? "Hide" : "Expand"}
                             </button>
                           </div>
-                          <div className="absolute top-4 left-4 rounded-lg bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                          <div className="absolute left-4 top-4 rounded-lg bg-black/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
                             Back View
                           </div>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className={`rounded-2xl border-2 px-5 py-4 text-sm font-bold ${
-                      theme === "dark" ? "border-white/5 bg-white/5 text-gray-400" : "border-gray-100 bg-gray-50 text-gray-600"
-                    }`}>
+                    <div
+                      className={`rounded-2xl border-2 px-5 py-4 text-sm font-bold ${
+                        theme === "dark"
+                          ? "border-white/5 bg-white/5 text-gray-400"
+                          : "border-gray-100 bg-gray-50 text-gray-600"
+                      }`}
+                    >
                       ID Number: {shopperData?.national_id || "Not Provided"}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                  <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Transport</label>
-                      <div className={`rounded-2xl px-5 py-4 text-sm font-bold ${theme === "dark" ? "bg-white/5 text-white" : "bg-gray-50 text-gray-900"}`}>
-                        {shopperData?.transport_mode?.replace("_", " ").toUpperCase() || "N/A"}
+                      <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Transport
+                      </label>
+                      <div
+                        className={`rounded-2xl px-5 py-4 text-sm font-bold ${
+                          theme === "dark"
+                            ? "bg-white/5 text-white"
+                            : "bg-gray-50 text-gray-900"
+                        }`}
+                      >
+                        {shopperData?.transport_mode
+                          ?.replace("_", " ")
+                          .toUpperCase() || "N/A"}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Verification Status</label>
-                      <div className={`rounded-2xl px-5 py-4 text-sm font-bold flex items-center gap-2 ${
-                        shopperData?.status === "verified" ? "text-emerald-500" : "text-amber-500"
-                      }`}>
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Verification Status
+                      </label>
+                      <div
+                        className={`flex items-center gap-2 rounded-2xl px-5 py-4 text-sm font-bold ${
+                          shopperData?.status === "verified"
+                            ? "text-emerald-500"
+                            : "text-amber-500"
+                        }`}
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         {shopperData?.status?.toUpperCase() || "PENDING"}
                       </div>
@@ -743,32 +906,57 @@ export default function ShopperProfileComponent() {
 
             {/* ADDITIONAL INFO Section */}
             {(shopperData?.guarantor || shopperData?.telegram_id) && (
-              <div className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
-                theme === "dark"
-                  ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
-                  : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
-              }`}>
+              <div
+                className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
+                  theme === "dark"
+                    ? "border-white/5 bg-gray-900/40 shadow-2xl shadow-black/40"
+                    : "border-gray-200/50 bg-white/70 shadow-2xl shadow-gray-200/30"
+                }`}
+              >
                 <div className="p-8">
                   <div className="mb-8">
-                    <h2 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    <h2
+                      className={`text-xl font-black tracking-tight ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
                       Emergency & Social
                     </h2>
-                    <p className="text-xs text-gray-500 font-medium mt-1">Supplementary contact information</p>
+                    <p className="mt-1 text-xs font-medium text-gray-500">
+                      Supplementary contact information
+                    </p>
                   </div>
 
                   <div className="space-y-6">
                     {shopperData?.guarantor && (
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Primary Guarantor</label>
-                        <div className={`rounded-2xl px-5 py-4 text-sm font-bold ${theme === "dark" ? "bg-white/5 text-white" : "bg-gray-50 text-gray-900"}`}>
-                          {shopperData.guarantor} {shopperData.guarantorRelationship ? `(${shopperData.guarantorRelationship})` : ""}
+                        <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          Primary Guarantor
+                        </label>
+                        <div
+                          className={`rounded-2xl px-5 py-4 text-sm font-bold ${
+                            theme === "dark"
+                              ? "bg-white/5 text-white"
+                              : "bg-gray-50 text-gray-900"
+                          }`}
+                        >
+                          {shopperData.guarantor}{" "}
+                          {shopperData.guarantorRelationship
+                            ? `(${shopperData.guarantorRelationship})`
+                            : ""}
                         </div>
                       </div>
                     )}
                     {shopperData?.telegram_id && (
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Telegram Handle</label>
-                        <div className={`rounded-2xl px-5 py-4 text-sm font-bold text-blue-500 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
+                        <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          Telegram Handle
+                        </label>
+                        <div
+                          className={`rounded-2xl px-5 py-4 text-sm font-bold text-blue-500 ${
+                            theme === "dark" ? "bg-white/5" : "bg-gray-50"
+                          }`}
+                        >
                           @{shopperData.telegram_id}
                         </div>
                       </div>
@@ -810,33 +998,50 @@ export default function ShopperProfileComponent() {
         className={theme === "dark" ? "dark-modal" : ""}
       >
         <Modal.Header>
-          <Modal.Title className="text-xl font-black tracking-tight">Security Protocol: Account Deletion</Modal.Title>
+          <Modal.Title className="text-xl font-black tracking-tight">
+            Security Protocol: Account Deletion
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div className="space-y-4 py-2">
-            <div className={`p-4 rounded-2xl border ${theme === "dark" ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-red-50 border-red-100 text-red-600"}`}>
+            <div
+              className={`rounded-2xl border p-4 ${
+                theme === "dark"
+                  ? "border-red-500/20 bg-red-500/10 text-red-400"
+                  : "border-red-100 bg-red-50 text-red-600"
+              }`}
+            >
               <p className="text-sm font-bold leading-relaxed">
-                Warning: This action is irreversible. Deleting this account will permanently remove all associated shopper data from the platform.
+                Warning: This action is irreversible. Deleting this account will
+                permanently remove all associated shopper data from the
+                platform.
               </p>
             </div>
-            <p className={`text-xs font-medium px-1 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-              Are you absolutely certain you wish to proceed with the termination of this shopper profile?
+            <p
+              className={`px-1 text-xs font-medium ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Are you absolutely certain you wish to proceed with the
+              termination of this shopper profile?
             </p>
           </div>
         </Modal.Body>
         <Modal.Footer className="pb-6">
-          <div className="flex gap-3 justify-end">
-            <button 
+          <div className="flex justify-end gap-3">
+            <button
               onClick={() => setShowDeleteModal(false)}
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                theme === "dark" ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              className={`rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${
+                theme === "dark"
+                  ? "bg-white/5 text-gray-400 hover:bg-white/10"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={handleDelete}
-              className="px-6 py-2.5 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all active:scale-95"
+              className="rounded-xl bg-red-600 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-700 active:scale-95"
             >
               Confirm Deletion
             </button>

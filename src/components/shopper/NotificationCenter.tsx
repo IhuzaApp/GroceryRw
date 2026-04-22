@@ -56,7 +56,7 @@ export default function NotificationCenter() {
   );
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  
+
   const router = useRouter();
   const isShopping = router.pathname.includes("/Plasa/active-batches");
   const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
@@ -129,38 +129,79 @@ export default function NotificationCenter() {
       const latest = notifications[0]; // notifications are sorted newest first
       if (latest.timestamp > lastSeenTimestamp && !latest.read) {
         setLastSeenTimestamp(latest.timestamp);
-        
+
         // Show small toast if shopping
         if (isShopping) {
-          toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-in slide-in-from-top-2 fade-in duration-300' : 'animate-out slide-out-to-top-2 fade-out duration-300'} max-w-sm w-full bg-white/90 dark:bg-[#1A1A1A]/90 backdrop-blur-xl shadow-2xl rounded-2xl pointer-events-auto flex border border-black/5 dark:border-white/10 overflow-hidden`}>
-              <div className="flex-1 w-0 p-4">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 pt-0.5">
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          toast.custom(
+            (t) => (
+              <div
+                className={`${
+                  t.visible
+                    ? "duration-300 animate-in fade-in slide-in-from-top-2"
+                    : "duration-300 animate-out fade-out slide-out-to-top-2"
+                } pointer-events-auto flex w-full max-w-sm overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A1A]/90`}
+              >
+                <div className="w-0 flex-1 p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          theme === "dark"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-emerald-100 text-emerald-600"
+                        }`}
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p
+                        className={`text-sm font-bold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {latest.title}
+                      </p>
+                      <p
+                        className={`mt-1 line-clamp-2 text-xs ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {latest.body}
+                      </p>
                     </div>
                   </div>
-                  <div className="ml-3 flex-1">
-                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                      {latest.title}
-                    </p>
-                    <p className={`mt-1 text-xs line-clamp-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {latest.body}
-                    </p>
-                  </div>
+                </div>
+                <div
+                  className={`flex border-l ${
+                    theme === "dark" ? "border-white/10" : "border-gray-200"
+                  }`}
+                >
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className={`flex w-full items-center justify-center rounded-none border border-transparent p-4 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
+                      theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-              <div className={`flex border-l ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                <button
-                  onClick={() => toast.dismiss(t.id)}
-                  className={`w-full border border-transparent rounded-none p-4 flex items-center justify-center text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          ), { duration: 5000, position: 'top-center' });
+            ),
+            { duration: 5000, position: "top-center" }
+          );
         }
       } else if (lastSeenTimestamp === 0) {
         // Initialize on first load
@@ -544,8 +585,8 @@ export default function NotificationCenter() {
         onClick={() => setIsOpen(!isOpen)}
         className={`group relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 ${
           theme === "dark"
-            ? "bg-gradient-to-br from-white/10 to-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] hover:from-white/15 hover:to-white/10 ring-1 ring-white/10"
-            : "bg-gradient-to-br from-white to-gray-50 text-emerald-600 shadow-md hover:shadow-lg ring-1 ring-black/5"
+            ? "bg-gradient-to-br from-white/10 to-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ring-1 ring-white/10 hover:from-white/15 hover:to-white/10"
+            : "bg-gradient-to-br from-white to-gray-50 text-emerald-600 shadow-md ring-1 ring-black/5 hover:shadow-lg"
         }`}
         title="Notifications"
       >
@@ -585,7 +626,7 @@ export default function NotificationCenter() {
             className={`${
               isMobile
                 ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[2.5rem] duration-500 animate-in slide-in-from-bottom"
-                : "absolute right-0 top-14 z-50 w-[24rem] overflow-hidden rounded-3xl duration-300 animate-in zoom-in-95 origin-top-right"
+                : "absolute right-0 top-14 z-50 w-[24rem] origin-top-right overflow-hidden rounded-3xl duration-300 animate-in zoom-in-95"
             } ${
               theme === "dark"
                 ? "border border-white/10 bg-[#0A0A0A]/80 shadow-[0_30px_100px_-15px_rgba(0,0,0,1)] backdrop-blur-3xl"

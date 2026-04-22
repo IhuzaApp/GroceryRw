@@ -52,14 +52,18 @@ const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
       <div
         className={`group relative overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(16,185,129,0.1)] ${
           isDark
-            ? "border border-white/5 bg-gray-900/40 backdrop-blur-2xl shadow-2xl shadow-black/20"
+            ? "border border-white/5 bg-gray-900/40 shadow-2xl shadow-black/20 backdrop-blur-2xl"
             : "border border-gray-100 bg-white shadow-2xl shadow-gray-200/50"
         }`}
       >
         {/* Background Decorative Glow */}
-        <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] transition-all duration-700 group-hover:scale-110 ${
-          isDark ? "bg-emerald-500/10 group-hover:bg-emerald-500/20" : "bg-emerald-500/5 group-hover:bg-emerald-500/10"
-        }`} />
+        <div
+          className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] transition-all duration-700 group-hover:scale-110 ${
+            isDark
+              ? "bg-emerald-500/10 group-hover:bg-emerald-500/20"
+              : "bg-emerald-500/5 group-hover:bg-emerald-500/10"
+          }`}
+        />
 
         <div className="relative z-10">
           <div className="mb-8 flex items-center justify-between">
@@ -71,12 +75,26 @@ const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
                     : "bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 ring-1 ring-emerald-100"
                 }`}
               >
-                <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-7 w-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className={`text-lg font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                <h3
+                  className={`text-lg font-black tracking-tight ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Wallet Summary
                 </h3>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500/60">
@@ -84,8 +102,14 @@ const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
                 </p>
               </div>
             </div>
-            
-            <button className={`p-2 rounded-xl transition-all duration-300 ${isDark ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white" : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900"}`}>
+
+            <button
+              className={`rounded-xl p-2 transition-all duration-300 ${
+                isDark
+                  ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
+                  : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+              }`}
+            >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
               </svg>
@@ -100,23 +124,32 @@ const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
             <div className="space-y-8">
               <div>
                 <div className="flex items-baseline gap-1">
-                  <span className="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-5xl font-black text-transparent tracking-tighter sm:text-6xl">
+                  <span className="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-5xl font-black tracking-tighter text-transparent sm:text-6xl">
                     {formatCurrencySync(totalBalance)}
                   </span>
                 </div>
-                
+
                 <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${
-                    isDark ? "bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20" : "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"
-                  }`}>
+                  <div
+                    className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${
+                      isDark
+                        ? "bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20"
+                        : "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"
+                    }`}
+                  >
                     <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-                    Available: {formatCurrencySync(wallet?.availableBalance || 0)}
+                    Available:{" "}
+                    {formatCurrencySync(wallet?.availableBalance || 0)}
                   </div>
-                  
+
                   {wallet && wallet.reservedBalance > 0 && (
-                    <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${
-                      isDark ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20" : "bg-amber-50 text-amber-600 ring-1 ring-amber-100"
-                    }`}>
+                    <div
+                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${
+                        isDark
+                          ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                          : "bg-amber-50 text-amber-600 ring-1 ring-amber-100"
+                      }`}
+                    >
                       <span className="h-2 w-2 rounded-full bg-amber-500" />
                       Reserved: {formatCurrencySync(wallet.reservedBalance)}
                     </div>

@@ -1661,7 +1661,9 @@ export default function MapSection({
         <div style="
           transform: translate(-50%, -50%);
           background: ${bgColor};
-          border: 2px solid ${theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'white'};
+          border: 2px solid ${
+            theme === "dark" ? "rgba(255,255,255,0.15)" : "white"
+          };
           border-radius: 50%;
           width: 48px;
           height: 48px;
@@ -1699,7 +1701,7 @@ export default function MapSection({
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            background: ${isActive ? '#10b981' : '#6b7280'};
+            background: ${isActive ? "#10b981" : "#6b7280"};
             border: 2px solid white;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             color: white;
@@ -1710,10 +1712,12 @@ export default function MapSection({
           <span style="
             font-size: 12px;
             font-weight: 800;
-            color: ${theme === 'dark' ? 'white' : 'black'};
-            text-shadow: 0 0 4px ${theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'}, 0 0 8px ${theme === 'dark' ? 'black' : 'white'};
+            color: ${theme === "dark" ? "white" : "black"};
+            text-shadow: 0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.9)"
+            }, 0 0 8px ${theme === "dark" ? "black" : "white"};
             white-space: nowrap;
-            opacity: ${isActive ? '1' : '0.7'};
+            opacity: ${isActive ? "1" : "0.7"};
           ">${shopName || "Shop"}</span>
         </div>
       `,
@@ -1738,7 +1742,7 @@ export default function MapSection({
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            background: ${isVerified ? '#f97316' : '#6b7280'};
+            background: ${isVerified ? "#f97316" : "#6b7280"};
             border: 2px solid white;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             color: white;
@@ -1749,10 +1753,12 @@ export default function MapSection({
           <span style="
             font-size: 12px;
             font-weight: 800;
-            color: ${theme === 'dark' ? 'white' : 'black'};
-            text-shadow: 0 0 4px ${theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'}, 0 0 8px ${theme === 'dark' ? 'black' : 'white'};
+            color: ${theme === "dark" ? "white" : "black"};
+            text-shadow: 0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.9)"
+            }, 0 0 8px ${theme === "dark" ? "black" : "white"};
             white-space: nowrap;
-            opacity: ${isVerified ? '1' : '0.7'};
+            opacity: ${isVerified ? "1" : "0.7"};
           ">${restaurantName || "Restaurant"}</span>
         </div>
       `,
@@ -3329,20 +3335,40 @@ export default function MapSection({
                 const newValue = !showBusyAreas;
                 setShowBusyAreas(newValue);
                 if (typeof window !== "undefined") {
-                  localStorage.setItem("shopper_show_busy_areas", String(newValue));
+                  localStorage.setItem(
+                    "shopper_show_busy_areas",
+                    String(newValue)
+                  );
                 }
               }}
               className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-full px-3 py-2 font-bold shadow-xl transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] ${
                 showBusyAreas
                   ? "border border-orange-500/50 bg-gradient-to-r from-orange-500 to-red-500 text-white"
-                  : "border border-black/5 dark:border-white/10 bg-white/90 dark:bg-[#1A1A1A]/90 text-gray-600 dark:text-gray-300 backdrop-blur-xl"
+                  : "border border-black/5 bg-white/90 text-gray-600 backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A1A]/90 dark:text-gray-300"
               }`}
               title={showBusyAreas ? "Turn off Heatmap" : "Turn on Heatmap"}
             >
-              <span className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors ${showBusyAreas ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'}`}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                  showBusyAreas
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                }`}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                </svg>
               </span>
-              <span className="text-[13px] tracking-wide pr-1">Heatmap</span>
+              <span className="pr-1 text-[13px] tracking-wide">Heatmap</span>
             </button>
           )}
 

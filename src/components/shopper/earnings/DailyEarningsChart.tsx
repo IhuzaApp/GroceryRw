@@ -56,10 +56,18 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className={`rounded-2xl p-4 shadow-2xl backdrop-blur-2xl ring-1 transition-all duration-300 ${
-          isDark ? "bg-gray-900/90 border-white/10 ring-white/10" : "bg-white/90 border-gray-100 ring-gray-100"
-        }`}>
-          <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-40 ${isDark ? "text-white" : "text-gray-900"}`}>
+        <div
+          className={`rounded-2xl p-4 shadow-2xl ring-1 backdrop-blur-2xl transition-all duration-300 ${
+            isDark
+              ? "border-white/10 bg-gray-900/90 ring-white/10"
+              : "border-gray-100 bg-white/90 ring-gray-100"
+          }`}
+        >
+          <p
+            className={`mb-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}
+          >
             {label}
           </p>
           <p className="text-xl font-black tracking-tighter text-emerald-500">
@@ -67,9 +75,21 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
           </p>
           {averageEarnings > 0 && (
             <div className="mt-2 flex items-center gap-1.5">
-              <div className={`h-1.5 w-1.5 rounded-full ${payload[0].value >= averageEarnings ? "bg-emerald-500" : "bg-amber-500"}`} />
-              <p className={`text-[9px] font-black uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                {payload[0].value >= averageEarnings ? "Peak Efficiency" : "Standard Flow"}
+              <div
+                className={`h-1.5 w-1.5 rounded-full ${
+                  payload[0].value >= averageEarnings
+                    ? "bg-emerald-500"
+                    : "bg-amber-500"
+                }`}
+              />
+              <p
+                className={`text-[9px] font-black uppercase tracking-widest ${
+                  isDark ? "text-white/30" : "text-gray-400"
+                }`}
+              >
+                {payload[0].value >= averageEarnings
+                  ? "Peak Efficiency"
+                  : "Standard Flow"}
               </p>
             </div>
           )}
@@ -81,25 +101,39 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 space-y-4">
+      <div className="flex flex-col items-center justify-center space-y-4 py-24">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Compiling Ledger Data...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+          Compiling Ledger Data...
+        </p>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div className={`flex h-[300px] items-center justify-center rounded-[2.5rem] border-2 border-dashed ${isDark ? "border-white/5" : "border-gray-100"}`}>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-20">No throughput records available</p>
+      <div
+        className={`flex h-[300px] items-center justify-center rounded-[2.5rem] border-2 border-dashed ${
+          isDark ? "border-white/5" : "border-gray-100"
+        }`}
+      >
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-20">
+          No throughput records available
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-56 w-full sm:h-64" style={{ minHeight: "220px" }}>
+    <div
+      className="relative h-56 w-full sm:h-64"
+      style={{ minHeight: "220px" }}
+    >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}>
+        <BarChart
+          data={data}
+          margin={{ top: 20, right: 10, left: 10, bottom: 10 }}
+        >
           <defs>
             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
@@ -110,22 +144,42 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
               <stop offset="100%" stopColor="#10B981" stopOpacity={0.9} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}
+          />
           <XAxis
             dataKey="day"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fontWeight: 900, fill: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)" }}
+            tick={{
+              fontSize: 10,
+              fontWeight: 900,
+              fill: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+            }}
             dy={10}
           />
           <YAxis
-            tickFormatter={(value) => formatCurrencySync(value).replace(/[^\d]/g, "")}
+            tickFormatter={(value) =>
+              formatCurrencySync(value).replace(/[^\d]/g, "")
+            }
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fontWeight: 900, fill: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)" }}
+            tick={{
+              fontSize: 10,
+              fontWeight: 900,
+              fill: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+            }}
             width={40}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)", radius: 10 }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{
+              fill: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+              radius: 10,
+            }}
+          />
           <ReferenceLine
             y={averageEarnings}
             stroke="#10B981"
@@ -138,10 +192,15 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
               fontSize: 8,
               fontWeight: 900,
               letterSpacing: 2,
-              opacity: 0.4
+              opacity: 0.4,
             }}
           />
-          <Bar dataKey="earnings" name="Earnings" radius={[8, 8, 0, 0]} barSize={32}>
+          <Bar
+            dataKey="earnings"
+            name="Earnings"
+            radius={[8, 8, 0, 0]}
+            barSize={32}
+          >
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}

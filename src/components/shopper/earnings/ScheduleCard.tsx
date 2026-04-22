@@ -23,7 +23,9 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
     const today = new Date();
     const date = new Date(today.getFullYear(), today.getMonth(), dayNumber);
     const dayOfWeek = date.getDay();
-    const scheduleForDay = shopperSchedule.find((s) => s.day_of_week === dayOfWeek);
+    const scheduleForDay = shopperSchedule.find(
+      (s) => s.day_of_week === dayOfWeek
+    );
     return scheduleForDay ? scheduleForDay.is_available : false;
   };
 
@@ -31,14 +33,18 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
     <div
       className={`group relative overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(245,158,11,0.05)] ${
         isDark
-          ? "border border-white/5 bg-gray-900/40 backdrop-blur-2xl shadow-2xl shadow-black/20"
+          ? "border border-white/5 bg-gray-900/40 shadow-2xl shadow-black/20 backdrop-blur-2xl"
           : "border border-gray-100 bg-white shadow-2xl shadow-gray-200/50"
       }`}
     >
       {/* Background Decorative Glow */}
-      <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] transition-all duration-700 group-hover:scale-110 ${
-        isDark ? "bg-amber-500/10 group-hover:bg-amber-500/20" : "bg-amber-500/5 group-hover:bg-amber-500/10"
-      }`} />
+      <div
+        className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] transition-all duration-700 group-hover:scale-110 ${
+          isDark
+            ? "bg-amber-500/10 group-hover:bg-amber-500/20"
+            : "bg-amber-500/5 group-hover:bg-amber-500/10"
+        }`}
+      />
 
       <div className="relative z-10">
         <div className="mb-8 flex items-center justify-between">
@@ -50,12 +56,26 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                   : "bg-gradient-to-br from-amber-50 to-orange-50 text-amber-600 ring-1 ring-amber-100"
               }`}
             >
-              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="h-7 w-7"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
             <div>
-              <h3 className={`text-lg font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+              <h3
+                className={`text-lg font-black tracking-tight ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Weekly Roster
               </h3>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500/60">
@@ -63,8 +83,14 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               </p>
             </div>
           </div>
-          
-          <button className={`p-2 rounded-xl transition-all duration-300 ${isDark ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white" : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900"}`}>
+
+          <button
+            className={`rounded-xl p-2 transition-all duration-300 ${
+              isDark
+                ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
+                : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+            }`}
+          >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
             </svg>
@@ -77,7 +103,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase tracking-widest text-amber-500/40 pb-4 border-b border-white/5 dark:border-white/5">
+            <div className="grid grid-cols-7 gap-1 border-b border-white/5 pb-4 text-center text-[10px] font-black uppercase tracking-widest text-amber-500/40 dark:border-white/5">
               <div>Su</div>
               <div>Mo</div>
               <div>Tu</div>
@@ -97,7 +123,9 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                 const cells = [];
 
                 for (let i = 0; i < firstDay; i++) {
-                  cells.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+                  cells.push(
+                    <div key={`empty-${i}`} className="h-8 w-8"></div>
+                  );
                 }
 
                 for (let day = 1; day <= daysInMonth; day++) {
@@ -109,7 +137,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                       key={day}
                       className={`relative flex h-8 w-8 items-center justify-center rounded-xl text-[11px] font-black transition-all duration-300 active:scale-90 ${
                         isToday
-                          ? "bg-emerald-500 text-white shadow-[0_5px_15px_rgba(16,185,129,0.4)] z-10"
+                          ? "z-10 bg-emerald-500 text-white shadow-[0_5px_15px_rgba(16,185,129,0.4)]"
                           : !isWorking
                           ? "bg-red-500/10 text-red-500/40"
                           : isDark
@@ -119,7 +147,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                     >
                       {day}
                       {isToday && (
-                        <div className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-900 shadow-lg" />
+                        <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 shadow-lg dark:border-gray-900" />
                       )}
                     </div>
                   );
@@ -129,14 +157,18 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
             </div>
 
             {/* Status Legend */}
-            <div className="mt-8 flex items-center justify-between px-2 pt-6 border-t border-white/5">
+            <div className="mt-8 flex items-center justify-between border-t border-white/5 px-2 pt-6">
               <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse"></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Today</span>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                  Today
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full bg-red-500/30"></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Resting</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                  Resting
+                </span>
               </div>
             </div>
           </div>
