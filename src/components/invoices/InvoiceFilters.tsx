@@ -69,14 +69,14 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
   return (
     <div
-      className={`rounded-xl border ${
+      className={`relative z-10 rounded-2xl border backdrop-blur-xl shadow-lg transition-colors duration-300 ${
         theme === "dark"
-          ? "border-gray-700 bg-gray-800/50"
-          : "border-gray-200 bg-white shadow-sm"
-      } mb-6`}
+          ? "border-gray-700/50 bg-gray-900/40 shadow-gray-900/50"
+          : "border-white/40 bg-white/60 shadow-gray-200/50"
+      } mb-8 overflow-hidden`}
     >
       {/* Mobile: Order Type Dropdown and Search */}
-      <div className="flex flex-col gap-3 p-4 md:hidden">
+      <div className="flex flex-col gap-4 p-5 md:hidden">
         {/* Order Type Dropdown */}
         <div className="relative" ref={typeFilterRef}>
           <button
@@ -155,55 +155,57 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               />
             </svg>
           </div>
-          <input
-            type="text"
-            placeholder="Search invoices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`block w-full rounded-lg border py-2.5 pl-10 pr-3 text-sm transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === "dark"
-                ? "border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400"
-                : "border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500"
-            }`}
-          />
-        </div>
-      </div>
-
-      {/* Desktop: Tabs and Actions */}
-      <div className="hidden flex-col gap-4 p-4 md:flex md:flex-row md:items-center md:justify-between">
-        {/* Tabs - Desktop Only */}
-        <div className="flex space-x-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setTypeFilter(tab.value)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                typeFilter === tab.value
-                  ? theme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
-                  : theme === "dark"
-                  ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            <input
+              type="text"
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`block w-full rounded-xl border py-3 pl-10 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/50 text-gray-100 placeholder-gray-500 focus:bg-gray-800"
+                  : "border-gray-200 bg-white/50 text-gray-900 placeholder-gray-400 focus:bg-white"
               }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            />
+          </div>
         </div>
+
+        {/* Desktop: Tabs and Actions */}
+        <div className="hidden flex-col gap-4 p-5 md:flex md:flex-row md:items-center md:justify-between border-b border-gray-200/50 dark:border-gray-700/50">
+          {/* Tabs - Desktop Segmented Control */}
+          <div className={`flex items-center space-x-1 rounded-xl p-1 ${
+            theme === "dark" ? "bg-gray-800/60" : "bg-gray-100/80"
+          }`}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setTypeFilter(tab.value)}
+                className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300 ${
+                  typeFilter === tab.value
+                    ? theme === "dark"
+                      ? "bg-gray-700 text-white shadow-sm"
+                      : "bg-white text-gray-900 shadow-sm"
+                    : theme === "dark"
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2">
-          {/* Filter Dropdown */}
-          <div className="relative" ref={statusFilterRef}>
-            <button
-              onClick={() => setShowFilterMenu(!showFilterMenu)}
-              className={`inline-flex items-center space-x-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                theme === "dark"
-                  ? "border-gray-600 bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-              }`}
-            >
+            {/* Filter Dropdown */}
+            <div className="relative" ref={statusFilterRef}>
+              <button
+                onClick={() => setShowFilterMenu(!showFilterMenu)}
+                className={`inline-flex items-center space-x-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:scale-[1.02] active:scale-95 ${
+                  theme === "dark"
+                    ? "border-gray-700 bg-gray-800/80 text-gray-200 hover:bg-gray-700 hover:shadow-lg"
+                    : "border-gray-200 bg-white shadow-sm text-gray-700 hover:bg-gray-50 hover:shadow-md"
+                }`}
+              >
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -253,15 +255,15 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             )}
           </div>
 
-          {/* Sort Button */}
-          <button
-            onClick={() => setShowSortMenu(!showSortMenu)}
-            className={`inline-flex items-center space-x-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-              theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-gray-200 hover:bg-gray-600"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
+            {/* Sort Button */}
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className={`inline-flex items-center space-x-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:scale-[1.02] active:scale-95 ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/80 text-gray-200 hover:bg-gray-700 hover:shadow-lg"
+                  : "border-gray-200 bg-white shadow-sm text-gray-700 hover:bg-gray-50 hover:shadow-md"
+              }`}
+            >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -278,42 +280,46 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             <span>Sort</span>
           </button>
 
-          {/* Export Button */}
-          <button
-            className={`inline-flex items-center space-x-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-              theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-gray-200 hover:bg-gray-600"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            {/* Export Button */}
+            <button
+              className={`inline-flex items-center space-x-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:scale-[1.02] active:scale-95 ${
+                theme === "dark"
+                  ? "border-emerald-500/30 bg-emerald-900/40 text-emerald-400 hover:bg-emerald-800/60 hover:shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+                  : "border-emerald-200 bg-emerald-50 shadow-sm text-emerald-700 hover:bg-emerald-100 hover:shadow-md"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            <span>Export</span>
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              <span>Export</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Desktop: Search Bar */}
-      <div className="hidden px-4 pb-4 md:block">
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+        {/* Desktop: Search Bar */}
+        <div className="hidden px-5 pb-5 md:block">
+          <div className="relative group">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+              <svg
+                className={`h-5 w-5 transition-colors duration-300 ${
+                  theme === "dark"
+                    ? "text-gray-500 group-focus-within:text-emerald-400"
+                    : "text-gray-400 group-focus-within:text-emerald-600"
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -322,19 +328,19 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               />
             </svg>
           </div>
-          <input
-            type="text"
-            placeholder="Search by invoice number, customer, shop..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`block w-full rounded-lg border py-2.5 pl-10 pr-3 text-sm transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === "dark"
-                ? "border-gray-600 bg-gray-700/50 text-gray-100 placeholder-gray-400"
-                : "border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500"
-            }`}
-          />
+            <input
+              type="text"
+              placeholder="Search by invoice number, customer, shop..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`block w-full rounded-xl border py-3 pl-11 pr-4 text-sm transition-all shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/20 ${
+                theme === "dark"
+                  ? "border-gray-700/50 bg-gray-800/40 text-gray-100 placeholder-gray-500 focus:border-emerald-500/50 focus:bg-gray-800/80"
+                  : "border-gray-200 bg-white/60 text-gray-900 placeholder-gray-400 focus:border-emerald-500/30 focus:bg-white"
+              }`}
+            />
+          </div>
         </div>
-      </div>
     </div>
   );
 };
