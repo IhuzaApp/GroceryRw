@@ -18,68 +18,53 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // Helper function to check if a day is a working day
   const isWorkingDay = (dayNumber: number) => {
     if (shopperSchedule.length === 0) return true;
-
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const date = new Date(year, month, dayNumber);
+    const date = new Date(today.getFullYear(), today.getMonth(), dayNumber);
     const dayOfWeek = date.getDay();
-
-    const scheduleForDay = shopperSchedule.find(
-      (s) => s.day_of_week === dayOfWeek
-    );
+    const scheduleForDay = shopperSchedule.find((s) => s.day_of_week === dayOfWeek);
     return scheduleForDay ? scheduleForDay.is_available : false;
   };
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-[2rem] p-6 transition-all duration-500 hover:shadow-2xl ${
+      className={`group relative overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(245,158,11,0.05)] ${
         isDark
-          ? "border border-white/10 bg-white/5 hover:bg-white/[0.08]"
-          : "border border-black/5 bg-white shadow-xl hover:shadow-amber-500/10"
+          ? "border border-white/5 bg-gray-900/40 backdrop-blur-2xl shadow-2xl shadow-black/20"
+          : "border border-gray-100 bg-white shadow-2xl shadow-gray-200/50"
       }`}
     >
       {/* Background Decorative Glow */}
-      <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-amber-500/10 opacity-50 blur-3xl transition-opacity group-hover:opacity-100" />
+      <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] transition-all duration-700 group-hover:scale-110 ${
+        isDark ? "bg-amber-500/10 group-hover:bg-amber-500/20" : "bg-amber-500/5 group-hover:bg-amber-500/10"
+      }`} />
 
       <div className="relative z-10">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <div
-              className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+              className={`flex h-14 w-14 items-center justify-center rounded-[1.25rem] shadow-inner transition-transform duration-500 group-hover:-rotate-6 ${
                 isDark
-                  ? "bg-amber-500/10 text-amber-400"
-                  : "bg-amber-100 text-amber-600"
+                  ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-amber-400 ring-1 ring-white/10"
+                  : "bg-gradient-to-br from-amber-50 to-orange-50 text-amber-600 ring-1 ring-amber-100"
               }`}
             >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
+              <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-sm font-black uppercase tracking-widest opacity-60">
-              Schedule
-            </h3>
+            <div>
+              <h3 className={`text-lg font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                Weekly Roster
+              </h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500/60">
+                Shift Availability
+              </p>
+            </div>
           </div>
-          <button
-            className={`${
-              isDark
-                ? "text-white/20 hover:text-white/60"
-                : "text-black/20 hover:text-black/60"
-            } transition-colors`}
-          >
+          
+          <button className={`p-2 rounded-xl transition-all duration-300 ${isDark ? "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white" : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900"}`}>
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
             </svg>
@@ -87,12 +72,12 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
+          <div className="flex h-48 items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent shadow-[0_0_15px_rgba(245,158,11,0.3)]"></div>
           </div>
         ) : (
-          <div className="text-[10px] sm:text-xs">
-            <div className="mb-4 grid grid-cols-7 gap-1 text-center font-black uppercase tracking-tighter opacity-30">
+          <div className="space-y-6">
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase tracking-widest text-amber-500/40 pb-4 border-b border-white/5 dark:border-white/5">
               <div>Su</div>
               <div>Mo</div>
               <div>Tu</div>
@@ -101,7 +86,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               <div>Fr</div>
               <div>Sa</div>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center">
+            <div className="grid grid-cols-7 gap-1.5 text-center">
               {(() => {
                 const today = new Date();
                 const currentDay = today.getDate();
@@ -111,12 +96,10 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const cells = [];
 
-                // Add empty cells for days before the month starts
                 for (let i = 0; i < firstDay; i++) {
-                  cells.push(<div key={`empty-${i}`} className="p-1"></div>);
+                  cells.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
                 }
 
-                // Add cells for each day of the month
                 for (let day = 1; day <= daysInMonth; day++) {
                   const isToday = day === currentDay;
                   const isWorking = isWorkingDay(day);
@@ -124,37 +107,36 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                   cells.push(
                     <div
                       key={day}
-                      className={`relative flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black transition-all ${
+                      className={`relative flex h-8 w-8 items-center justify-center rounded-xl text-[11px] font-black transition-all duration-300 active:scale-90 ${
                         isToday
-                          ? "scale-110 bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                          ? "bg-emerald-500 text-white shadow-[0_5px_15px_rgba(16,185,129,0.4)] z-10"
                           : !isWorking
-                          ? "bg-red-500/10 text-red-500/60"
+                          ? "bg-red-500/10 text-red-500/40"
                           : isDark
-                          ? "text-white/40 hover:bg-white/10 hover:text-white"
-                          : "text-black/40 hover:bg-black/5 hover:text-black"
+                          ? "bg-white/[0.03] text-white/40 hover:bg-white/10 hover:text-white"
+                          : "bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
                       {day}
                       {isToday && (
-                        <span className="absolute -bottom-1 h-1 w-1 animate-pulse rounded-full bg-white" />
+                        <div className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-900 shadow-lg" />
                       )}
                     </div>
                   );
                 }
-
                 return cells;
               })()}
             </div>
 
-            {/* Legend */}
-            <div className="mt-6 flex items-center justify-center gap-4 text-[10px] font-black uppercase tracking-widest">
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                <span className="opacity-40">Today</span>
+            {/* Status Legend */}
+            <div className="mt-8 flex items-center justify-between px-2 pt-6 border-t border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse"></div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Today</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-red-500/30"></div>
-                <span className="opacity-40">Off Day</span>
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-red-500/30"></div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Resting</span>
               </div>
             </div>
           </div>

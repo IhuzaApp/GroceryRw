@@ -35,16 +35,10 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   isLoading = false,
   period = "this-week",
   height = "100%",
-  mobileHeight = "220px", // 13.75rem = 220px
+  mobileHeight = "220px",
 }) => {
-  // Format currency in RWF
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: getCurrencySymbol(),
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   // Calculate average earnings
   const calculateAverage = () => {
@@ -62,23 +56,22 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="rounded bg-gray-800 p-3 text-white shadow-lg">
-          <p className="mb-1 text-sm font-medium">{label}</p>
-          <p className="text-base font-bold text-green-300">
-            {formatCurrency(payload[0].value)}
+        <div className={`rounded-2xl p-4 shadow-2xl backdrop-blur-2xl ring-1 transition-all duration-300 ${
+          isDark ? "bg-gray-900/90 border-white/10 ring-white/10" : "bg-white/90 border-gray-100 ring-gray-100"
+        }`}>
+          <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-40 ${isDark ? "text-white" : "text-gray-900"}`}>
+            {label}
+          </p>
+          <p className="text-xl font-black tracking-tighter text-emerald-500">
+            {formatCurrencySync(payload[0].value)}
           </p>
           {averageEarnings > 0 && (
-            <p className="mt-1 text-xs text-gray-300">
-              {payload[0].value > averageEarnings
-                ? `${Math.round(
-                    (payload[0].value / averageEarnings - 1) * 100
-                  )}% above average`
-                : payload[0].value < averageEarnings
-                ? `${Math.round(
-                    (1 - payload[0].value / averageEarnings) * 100
-                  )}% below average`
-                : "At average"}
-            </p>
+            <div className="mt-2 flex items-center gap-1.5">
+              <div className={`h-1.5 w-1.5 rounded-full ${payload[0].value >= averageEarnings ? "bg-emerald-500" : "bg-amber-500"}`} />
+              <p className={`text-[9px] font-black uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                {payload[0].value >= averageEarnings ? "Peak Efficiency" : "Standard Flow"}
+              </p>
+            </div>
           )}
         </div>
       );
@@ -86,105 +79,74 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
     return null;
   };
 
-  // If loading, show a loader
   if (isLoading) {
     return (
-      <div className="flex h-[300px] items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
-        <Loader size="md" content="Loading earnings data..." />
+      <div className="flex flex-col items-center justify-center py-24 space-y-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Compiling Ledger Data...</p>
       </div>
     );
   }
 
-  // If no data, show a message
   if (data.length === 0) {
     return (
-      <div className="flex h-[300px] items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
-        <p className="text-gray-500">
-          No earnings data available for this period
-        </p>
+      <div className={`flex h-[300px] items-center justify-center rounded-[2.5rem] border-2 border-dashed ${isDark ? "border-white/5" : "border-gray-100"}`}>
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-20">No throughput records available</p>
       </div>
     );
   }
 
-  // Determine chart title based on period
-  const getChartTitle = () => {
-    switch (period) {
-      case "today":
-        return "Hourly Earnings Today";
-      case "this-week":
-        return "Daily Earnings This Week";
-      case "last-week":
-        return "Daily Earnings Last Week";
-      case "this-month":
-        return "Weekly Earnings This Month";
-      case "last-month":
-        return "Weekly Earnings Last Month";
-      default:
-        return "Earnings";
-    }
-  };
-
-  // Colors for the bars - gradient from light to dark green
-  const barColors = [
-    "#10B981",
-    "#059669",
-    "#047857",
-    "#065F46",
-    "#064E3B",
-    "#022C22",
-    "#064E3B",
-  ];
-
   return (
-    <div
-      className="relative h-56 w-full sm:h-64"
-      style={{
-        minHeight: "220px",
-      }}
-    >
+    <div className="relative h-56 w-full sm:h-64" style={{ minHeight: "220px" }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data}
-          margin={{ top: 20, right: 10, left: 10, bottom: 10 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+        <BarChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}>
+          <defs>
+            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10B981" stopOpacity={1} />
+              <stop offset="100%" stopColor="#059669" stopOpacity={0.8} />
+            </linearGradient>
+            <linearGradient id="barGradientHover" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34D399" stopOpacity={1} />
+              <stop offset="100%" stopColor="#10B981" stopOpacity={0.9} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
           <XAxis
             dataKey="day"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10, fontWeight: 900, fill: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)" }}
+            dy={10}
           />
           <YAxis
-            tickFormatter={(value) =>
-              formatCurrency(value).replace(getCurrencySymbol(), "")
-            }
+            tickFormatter={(value) => formatCurrencySync(value).replace(/[^\d]/g, "")}
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10, fontWeight: 900, fill: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)" }}
             width={40}
           />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend formatter={() => getChartTitle()} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)", radius: 10 }} />
           <ReferenceLine
             y={averageEarnings}
-            stroke="#4B5563"
-            strokeDasharray="3 3"
+            stroke="#10B981"
+            strokeDasharray="5 5"
+            strokeOpacity={0.3}
             label={{
-              value: "Average",
+              value: "AVG",
               position: "insideBottomRight",
-              fill: "#4B5563",
-              fontSize: 10,
+              fill: "#10B981",
+              fontSize: 8,
+              fontWeight: 900,
+              letterSpacing: 2,
+              opacity: 0.4
             }}
           />
-          <Bar dataKey="earnings" name="Earnings" radius={[4, 4, 0, 0]}>
+          <Bar dataKey="earnings" name="Earnings" radius={[8, 8, 0, 0]} barSize={32}>
             {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={entry.earnings > averageEarnings ? "#059669" : "#10B981"}
-                stroke={
-                  entry.earnings > averageEarnings ? "#047857" : "#059669"
-                }
-                strokeWidth={1}
+                fill="url(#barGradient)"
+                className="transition-all duration-500 hover:opacity-80"
               />
             ))}
           </Bar>
