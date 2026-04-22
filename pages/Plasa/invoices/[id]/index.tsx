@@ -338,25 +338,25 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
 
           {/* Invoice Document Widget */}
           <div
-            className={`relative overflow-hidden rounded-3xl border backdrop-blur-2xl transition-all duration-300 ${
+            className={`relative overflow-hidden rounded-[2rem] sm:rounded-3xl border backdrop-blur-2xl transition-all duration-300 ${
               theme === "dark"
                 ? "border-gray-700/50 bg-gray-900/40 shadow-2xl shadow-black/40"
                 : "border-white/60 bg-white/70 shadow-2xl shadow-gray-200/50"
             }`}
           >
-            <div className="p-8 sm:p-14">
+            <div className="p-6 sm:p-14">
               {/* Header */}
-              <div className="mb-12 flex flex-col justify-between gap-8 sm:flex-row sm:items-start">
+              <div className="mb-10 flex flex-col justify-between gap-8 sm:mb-12 sm:flex-row sm:items-start">
                 <div className="space-y-1">
                   <p
-                    className={`text-xs font-black uppercase tracking-[0.2em] ${
+                    className={`text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] ${
                       theme === "dark" ? "text-emerald-400" : "text-emerald-600"
                     }`}
                   >
                     Invoice Issue Date
                   </p>
                   <h1
-                    className={`text-xl font-black ${
+                    className={`text-lg sm:text-xl font-black ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
@@ -364,13 +364,13 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
                   </h1>
                   <div className="pt-4">
                     <h2
-                      className={`text-5xl font-black tracking-tighter ${
+                      className={`text-4xl sm:text-5xl font-black tracking-tighter ${
                         theme === "dark" ? "text-white" : "text-gray-900"
                       }`}
                     >
                       INVOICE
                     </h2>
-                    <div className="mt-2 h-1.5 w-20 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"></div>
+                    <div className="mt-2 h-1.5 w-16 sm:w-20 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"></div>
                   </div>
                 </div>
 
@@ -537,117 +537,163 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
                 </div>
               </div>
 
-              {/* Items Table - Redesigned to Floating Rows */}
+              {/* Items Section - Responsive Table/Cards */}
               <div className="mb-12 overflow-hidden">
-                <table className="w-full border-separate border-spacing-y-3">
-                  <thead>
-                    <tr>
-                      <th
-                        className={`pb-4 text-left text-[10px] font-black uppercase tracking-[0.2em] ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}
-                      >
-                        Description
-                      </th>
-                      <th
-                        className={`pb-4 text-left text-[10px] font-black uppercase tracking-[0.2em] ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}
-                      >
-                        SKU ID
-                      </th>
-                      <th
-                        className={`pb-4 text-center text-[10px] font-black uppercase tracking-[0.2em] ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}
-                      >
-                        Quantity
-                      </th>
-                      <th
-                        className={`pb-4 text-right text-[10px] font-black uppercase tracking-[0.2em] ${
-                          theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        }`}
-                      >
-                        Line Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoiceData.items.map((item, index) => (
-                      <tr
-                        key={index}
-                        className={`group transition-all duration-300 ${
-                          theme === "dark"
-                            ? "bg-white/[0.03] hover:bg-white/[0.06]"
-                            : "bg-gray-50/80 hover:bg-gray-100/80"
-                        }`}
-                      >
-                        <td className="rounded-l-2xl py-5 pl-6">
-                          <div className="flex items-center gap-4">
-                            <div
-                              className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg shadow-black/5 transition-transform duration-300 group-hover:scale-110 ${
-                                theme === "dark"
-                                  ? "from-gray-700 to-gray-800"
-                                  : "from-gray-100 to-gray-200"
+                {/* Desktop Table View */}
+                <div className="hidden lg:block">
+                  <table className="w-full border-separate border-spacing-y-3">
+                    <thead>
+                      <tr>
+                        <th
+                          className={`pb-4 text-left text-[10px] font-black uppercase tracking-[0.2em] ${
+                            theme === "dark" ? "text-gray-500" : "text-gray-400"
+                          }`}
+                        >
+                          Description
+                        </th>
+                        <th
+                          className={`pb-4 text-left text-[10px] font-black uppercase tracking-[0.2em] ${
+                            theme === "dark" ? "text-gray-500" : "text-gray-400"
+                          }`}
+                        >
+                          SKU ID
+                        </th>
+                        <th
+                          className={`pb-4 text-center text-[10px] font-black uppercase tracking-[0.2em] ${
+                            theme === "dark" ? "text-gray-500" : "text-gray-400"
+                          }`}
+                        >
+                          Quantity
+                        </th>
+                        <th
+                          className={`pb-4 text-right text-[10px] font-black uppercase tracking-[0.2em] ${
+                            theme === "dark" ? "text-gray-500" : "text-gray-400"
+                          }`}
+                        >
+                          Line Total
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceData.items.map((item, index) => (
+                        <tr
+                          key={index}
+                          className={`group transition-all duration-300 ${
+                            theme === "dark"
+                              ? "bg-white/[0.03] hover:bg-white/[0.06]"
+                              : "bg-gray-50/80 hover:bg-gray-100/80"
+                          }`}
+                        >
+                          <td className="rounded-l-2xl py-5 pl-6">
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg shadow-black/5 transition-transform duration-300 group-hover:scale-110 ${
+                                  theme === "dark"
+                                    ? "from-gray-700 to-gray-800"
+                                    : "from-gray-100 to-gray-200"
+                                }`}
+                              >
+                                <svg
+                                  className={`h-6 w-6 ${
+                                    theme === "dark"
+                                      ? "text-emerald-400"
+                                      : "text-emerald-600"
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                  />
+                                </svg>
+                              </div>
+                              <div>
+                                <p
+                                  className={`font-black tracking-tight ${
+                                    theme === "dark"
+                                      ? "text-white"
+                                      : "text-gray-900"
+                                  }`}
+                                >
+                                  {item.name}
+                                </p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                                  Delivered: {invoiceData.dateCompleted}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-5">
+                            <span className={`text-xs font-black font-mono tracking-tighter ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                              #{String(index + 1).padStart(5, "0")}
+                            </span>
+                          </td>
+                          <td className="py-5 text-center">
+                            <span className={`text-sm font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                              {item.quantity}
+                            </span>
+                          </td>
+                          <td className="rounded-r-2xl py-5 pr-6 text-right">
+                            <span
+                              className={`text-base font-black tracking-tight ${
+                                theme === "dark" ? "text-emerald-400" : "text-emerald-600"
                               }`}
                             >
-                              <svg
-                                className={`h-6 w-6 ${
-                                  theme === "dark"
-                                    ? "text-emerald-400"
-                                    : "text-emerald-600"
-                                }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                />
-                              </svg>
-                            </div>
-                            <div>
-                              <p
-                                className={`font-black tracking-tight ${
-                                  theme === "dark"
-                                    ? "text-white"
-                                    : "text-gray-900"
-                                }`}
-                              >
-                                {item.name}
-                              </p>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
-                                Delivered: {invoiceData.dateCompleted}
-                              </p>
-                            </div>
+                              {formatCurrency(item.total)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards View */}
+                <div className="space-y-4 lg:hidden">
+                  <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                    Itemized Order Details
+                  </p>
+                  {invoiceData.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`rounded-2xl border p-4 backdrop-blur-md ${
+                        theme === "dark"
+                          ? "border-white/5 bg-white/[0.03]"
+                          : "border-gray-200/50 bg-gray-50/50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-3">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${theme === "dark" ? "from-gray-700 to-gray-800" : "from-gray-100 to-gray-200"}`}>
+                            <svg className={`h-5 w-5 ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
                           </div>
-                        </td>
-                        <td className="py-5">
-                          <span className={`text-xs font-black font-mono tracking-tighter ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                            #{String(index + 1).padStart(5, "0")}
-                          </span>
-                        </td>
-                        <td className="py-5 text-center">
-                          <span className={`text-sm font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                            {item.quantity}
-                          </span>
-                        </td>
-                        <td className="rounded-r-2xl py-5 pr-6 text-right">
-                          <span
-                            className={`text-base font-black tracking-tight ${
-                              theme === "dark" ? "text-emerald-400" : "text-emerald-600"
-                            }`}
-                          >
+                          <div>
+                            <p className={`text-sm font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                              {item.name}
+                            </p>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-500 mt-0.5">
+                              #{String(index + 1).padStart(5, "0")}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm font-black ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
                             {formatCurrency(item.total)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </p>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                            {item.quantity} units
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Totals Section */}
@@ -666,14 +712,14 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
                     </span>
                   </div>
                   <div className="pt-4">
-                    <div className="flex items-center justify-between rounded-3xl bg-emerald-500 p-8 text-white shadow-2xl shadow-emerald-500/30">
+                    <div className="flex flex-col sm:flex-row items-center justify-between rounded-3xl bg-emerald-500 p-6 sm:p-8 text-white shadow-2xl shadow-emerald-500/30">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Final Grand Total</p>
-                        <p className="mt-1 text-3xl font-black tracking-tighter">
+                        <p className="mt-1 text-2xl sm:text-3xl font-black tracking-tighter">
                           {formatCurrency(invoiceData.total)}
                         </p>
                       </div>
-                      <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                      <div className="mt-4 sm:mt-0 h-14 w-full sm:w-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
                         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>

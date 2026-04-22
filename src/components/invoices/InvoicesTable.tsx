@@ -559,151 +559,108 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
         </table>
       </div>
 
-      {/* Mobile Cards */}
-      <div className="space-y-4 p-2 sm:p-4 lg:hidden">
+      {/* Mobile Cards - Premium Redesign */}
+      <div className="grid grid-cols-1 gap-5 px-1 py-4 sm:grid-cols-2 lg:hidden">
         {invoices.map((invoice) => (
           <div
             key={invoice.id}
-            className={`rounded-xl border ${
+            className={`group relative overflow-hidden rounded-[2.5rem] border backdrop-blur-xl transition-all duration-300 active:scale-[0.98] ${
               theme === "dark"
-                ? "border-gray-700 bg-gray-800/50"
-                : "border-gray-200 bg-white shadow-sm"
-            } transition-all duration-200 hover:shadow-md`}
+                ? "border-white/5 bg-white/[0.03] shadow-2xl shadow-black/40"
+                : "border-gray-200/50 bg-white/70 shadow-xl shadow-gray-200/40"
+            }`}
             onClick={() => onViewDetails(invoice.id, invoice.order_type)}
           >
-            <div className="p-4 sm:p-5">
-              {/* Header */}
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex-1">
-                  <h3
-                    className={`text-base font-semibold sm:text-lg ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
+            {/* Top accent line */}
+            <div className={`absolute top-0 left-0 h-1 w-full bg-gradient-to-r ${getAvatarGradient(invoice.customer_name)} opacity-50`} />
+            
+            <div className="p-6">
+              {/* Header: ID and Status */}
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
+                    Invoice ID
+                  </span>
+                  <h3 className={`text-base font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     #{invoice.invoice_number}
                   </h3>
-                  <p
-                    className={`mt-1 text-xs sm:text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    {formatDate(invoice.created_at)}
-                  </p>
                 </div>
-                <div className="flex-shrink-0">
-                  {getStatusBadge(invoice.status)}
-                </div>
+                {getStatusBadge(invoice.status)}
               </div>
 
               {/* Customer Info */}
-              <div className="mb-4">
-                <h4
-                  className={`mb-1 text-xs font-medium sm:text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+              <div className="mb-6 flex items-center gap-4">
+                <div
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] bg-gradient-to-br text-base font-black text-white shadow-lg ${getAvatarGradient(
+                    invoice.customer_name
+                  )}`}
                 >
-                  Customer
-                </h4>
-                <p
-                  className={`text-sm font-medium sm:text-base ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
-                >
-                  {invoice.customer_name}
-                </p>
-                <p
-                  className={`mt-0.5 truncate text-xs ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {invoice.customer_email}
-                </p>
+                  {getInitials(invoice.customer_name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-base font-black tracking-tight ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
+                    {invoice.customer_name}
+                  </p>
+                  <p className="truncate text-xs font-medium text-gray-500">
+                    {invoice.customer_email}
+                  </p>
+                </div>
               </div>
 
-              {/* Order Info */}
-              <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4">
+              {/* Order Details Grid */}
+              <div className="mb-6 grid grid-cols-2 gap-4 rounded-3xl bg-black/[0.03] p-4 dark:bg-white/[0.03]">
                 <div>
-                  <h4
-                    className={`mb-1 text-xs font-medium sm:text-sm ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    {invoice.order_type === "regular" ? "Shop" : "Order"}
-                  </h4>
-                  <p
-                    className={`truncate text-sm sm:text-base ${
-                      theme === "dark" ? "text-gray-100" : "text-gray-900"
-                    }`}
-                  >
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Order Origin</p>
+                  <p className={`mt-1 truncate text-sm font-bold ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
                     {invoice.order_type === "regular"
-                      ? invoice.shop_name || "Shop"
+                      ? invoice.shop_name || "Official Shop"
                       : invoice.reel_title || "Reel Order"}
                   </p>
                 </div>
                 <div>
-                  <h4
-                    className={`mb-1 text-xs font-medium sm:text-sm ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Items
-                  </h4>
-                  <p
-                    className={`text-sm sm:text-base ${
-                      theme === "dark" ? "text-gray-100" : "text-gray-900"
-                    }`}
-                  >
-                    {invoice.items_count} items
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Creation Date</p>
+                  <p className={`mt-1 text-sm font-bold ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                    {formatDate(invoice.created_at)}
                   </p>
                 </div>
               </div>
 
-              {/* Total Amount */}
-              <div className="mb-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
-                <span
-                  className={`text-sm font-medium sm:text-base ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+              {/* Total and CTA */}
+              <div className="flex items-center justify-between border-t border-gray-200/30 pt-6 dark:border-white/5">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Total Due</p>
+                  <p className={`text-xl font-black tracking-tighter ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    {formatCurrencySync(invoice.total_amount)}
+                  </p>
+                </div>
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadInvoice(invoice);
+                  }}
+                  className={`group/btn relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl transition-all active:scale-90 ${
+                    theme === "dark"
+                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                      : "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
                   }`}
                 >
-                  Total Amount
-                </span>
-                <span
-                  className={`text-lg font-bold sm:text-xl ${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
-                  }`}
-                >
-                  {formatCurrencySync(invoice.total_amount)}
-                </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+                  <svg
+                    className="relative h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </button>
               </div>
-
-              {/* Actions */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadInvoice(invoice);
-                }}
-                className={`group/btn relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-3.5 text-sm font-black tracking-widest text-white transition-all active:scale-95 shadow-xl ${
-                  theme === "dark"
-                    ? "bg-emerald-600 shadow-emerald-900/20"
-                    : "bg-emerald-600 shadow-emerald-200"
-                }`}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
-                <svg
-                  className="relative h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span className="relative uppercase">Download PDF</span>
-              </button>
             </div>
           </div>
         ))}
