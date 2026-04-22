@@ -5,6 +5,8 @@ import { useTheme } from "../../context/ThemeContext";
 import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 import { useSession } from "next-auth/react";
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
+import { useRouter } from "next/router";
+import { toast } from "react-hot-toast";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -54,6 +56,10 @@ export default function NotificationCenter() {
   );
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  
+  const router = useRouter();
+  const isShopping = router.pathname.includes("/Plasa/active-batches");
+  const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
 
   // Ensure FCM is initialized anywhere the notification bell exists
   // (singleton guarded in fcmClient to prevent duplicate listeners)
@@ -116,6 +122,52 @@ export default function NotificationCenter() {
       window.removeEventListener("storage", onHistoryUpdated as EventListener);
     };
   }, [assignedOrderIds]); // Reload when assigned orders change
+
+  // Detect new notifications and show a small toast if we are on the active-batches page
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latest = notifications[0]; // notifications are sorted newest first
+      if (latest.timestamp > lastSeenTimestamp && !latest.read) {
+        setLastSeenTimestamp(latest.timestamp);
+        
+        // Show small toast if shopping
+        if (isShopping) {
+          toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-in slide-in-from-top-2 fade-in duration-300' : 'animate-out slide-out-to-top-2 fade-out duration-300'} max-w-sm w-full bg-white/90 dark:bg-[#1A1A1A]/90 backdrop-blur-xl shadow-2xl rounded-2xl pointer-events-auto flex border border-black/5 dark:border-white/10 overflow-hidden`}>
+              <div className="flex-1 w-0 p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 pt-0.5">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    </div>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                      {latest.title}
+                    </p>
+                    <p className={`mt-1 text-xs line-clamp-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {latest.body}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className={`flex border-l ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className={`w-full border border-transparent rounded-none p-4 flex items-center justify-center text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ), { duration: 5000, position: 'top-center' });
+        }
+      } else if (lastSeenTimestamp === 0) {
+        // Initialize on first load
+        setLastSeenTimestamp(latest.timestamp);
+      }
+    }
+  }, [notifications, isShopping, lastSeenTimestamp, theme]);
 
   // Load currency from system configuration
   useEffect(() => {
@@ -490,10 +542,10 @@ export default function NotificationCenter() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 active:scale-90 ${
+        className={`group relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 ${
           theme === "dark"
-            ? "bg-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] hover:bg-white/10"
-            : "bg-gray-100 text-emerald-600 shadow-md hover:bg-gray-200"
+            ? "bg-gradient-to-br from-white/10 to-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] hover:from-white/15 hover:to-white/10 ring-1 ring-white/10"
+            : "bg-gradient-to-br from-white to-gray-50 text-emerald-600 shadow-md hover:shadow-lg ring-1 ring-black/5"
         }`}
         title="Notifications"
       >
@@ -511,9 +563,8 @@ export default function NotificationCenter() {
           />
         </svg>
 
-        {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-lg ring-2 ring-white duration-300 animate-in zoom-in dark:ring-gray-900">
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-[10px] font-black text-white shadow-lg ring-2 ring-white duration-300 animate-in zoom-in dark:ring-[#0A0A0A]">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -533,12 +584,12 @@ export default function NotificationCenter() {
             ref={panelRef}
             className={`${
               isMobile
-                ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[3rem] duration-500 animate-in slide-in-from-bottom"
-                : "absolute right-0 top-12 z-50 w-[24rem] overflow-hidden rounded-2xl duration-200 animate-in zoom-in-95"
+                ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[2.5rem] duration-500 animate-in slide-in-from-bottom"
+                : "absolute right-0 top-14 z-50 w-[24rem] overflow-hidden rounded-3xl duration-300 animate-in zoom-in-95 origin-top-right"
             } ${
               theme === "dark"
-                ? "border border-white/10 bg-[#0A0A0A]/90 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] shadow-black/80 backdrop-blur-2xl"
-                : "border border-black/5 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur-2xl"
+                ? "border border-white/10 bg-[#0A0A0A]/80 shadow-[0_30px_100px_-15px_rgba(0,0,0,1)] backdrop-blur-3xl"
+                : "border border-black/5 bg-white/80 shadow-[0_30px_100px_-15px_rgba(0,0,0,0.15)] backdrop-blur-3xl"
             }`}
           >
             {/* Grab Handle for Mobile */}
