@@ -407,7 +407,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("=== Rotating Expired Offers ===");
+  // console.log("=== Rotating Expired Offers ===");
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -422,7 +422,7 @@ export default async function handler(
     // STEP 1: Find all expired offers
     // ========================================================================
 
-    console.log("Finding expired offers...");
+    // console.log("Finding expired offers...");
     const expiredOffersData = (await hasuraClient.request(
       GET_EXPIRED_OFFERS,
       { now: new Date().toISOString() }
@@ -431,7 +431,7 @@ export default async function handler(
     const expiredOffers = expiredOffersData.order_offers || [];
 
     if (expiredOffers.length === 0) {
-      console.log("No expired offers found");
+      // console.log("No expired offers found");
       return res.status(200).json({
         success: true,
         message: "No expired offers to rotate",
@@ -439,7 +439,7 @@ export default async function handler(
       });
     }
 
-    console.log(`Found ${expiredOffers.length} expired offers to rotate`);
+    // console.log(`Found ${expiredOffers.length} expired offers to rotate`);
 
     // ========================================================================
     // STEP 2: Process each expired offer
@@ -449,14 +449,14 @@ export default async function handler(
 
     for (const expiredOffer of expiredOffers) {
       try {
-        console.log(`Processing expired offer ${expiredOffer.id}...`);
+        // console.log(`Processing expired offer ${expiredOffer.id}...`);
 
         // Mark offer as expired
         await hasuraClient.request(MARK_OFFER_EXPIRED, {
           offerId: expiredOffer.id,
         });
 
-        console.log(`✅ Marked offer ${expiredOffer.id} as DELAYED`);
+        // console.log(`✅ Marked offer ${expiredOffer.id} as DELAYED`);
 
         // ========================================================================
         // PUNISHMENT LOGIC: Check if shopper has > 2 DELAYED offers today
@@ -472,9 +472,9 @@ export default async function handler(
           delayedCountData.order_offers_aggregate?.aggregate?.count || 0;
 
         if (delayedCount > 2) {
-          console.log(
-            `🚨 Shopper ${expiredOffer.shopper_id} has ${delayedCount} delayed offers today. PUNISHING...`
-          );
+          // console.log(
+          //   `🚨 Shopper ${expiredOffer.shopper_id} has ${delayedCount} delayed offers today. PUNISHING...`
+          // );
 
           // Downgrade shopper to user and take offline
           const downgradeResp = (await hasuraClient.request(DOWNGRADE_SHOPPER, {
@@ -485,9 +485,9 @@ export default async function handler(
 
           if (userId) {
             await hasuraClient.request(UPDATE_USER_ROLE, { user_id: userId });
-            console.log(
-              `✅ Shopper ${expiredOffer.shopper_id} (User ${userId}) downgraded to role 'user' and taken offline.`
-            );
+            // console.log(
+            //   `✅ Shopper ${expiredOffer.shopper_id} (User ${userId}) downgraded to role 'user' and taken offline.`
+            // );
           }
         }
 
@@ -505,9 +505,9 @@ export default async function handler(
         const order = await getOrderDetails(orderId, expiredOffer.order_type);
 
         if (!order) {
-          console.log(
-            `Order ${orderId} is no longer available (might have been accepted)`
-          );
+          // console.log(
+          //   `Order ${orderId} is no longer available (might have been accepted)`
+          // );
           continue;
         }
 
@@ -521,14 +521,11 @@ export default async function handler(
           offeredShoppersData.order_offers.map((o: any) => o.shopper_id)
         );
 
-        console.log(
-          `${offeredShopperIds.size} shoppers have already been offered this order`
-        );
+        // console.log(
+        //   `${offeredShopperIds.size} shoppers have already been offered this order`
+        // );
 
-        // Get all available shoppers
-        const availableShoppersData = (await hasuraClient.request(
-          GET_AVAILABLE_SHOPPERS
-        )) as any;
+        // console.log("Finding all available shoppers...");
 
         const availableShoppers = availableShoppersData.Shoppers || [];
 
@@ -546,16 +543,16 @@ export default async function handler(
           if (alreadyOffered) return false;
 
           if (activeOrderCount >= 2) {
-            console.log(
-              `⏭️ Skipping shopper ${shopper.full_name}: Already has ${activeOrderCount} active orders`
-            );
+            // console.log(
+            //   `⏭️ Skipping shopper ${shopper.full_name}: Already has ${activeOrderCount} active orders`
+            // );
             return false;
           }
 
           if (activeOfferCount > 0) {
-            console.log(
-              `⏭️ Skipping shopper ${shopper.full_name}: Already has a pending offer`
-            );
+            // console.log(
+            //   `⏭️ Skipping shopper ${shopper.full_name}: Already has a pending offer`
+            // );
             return false;
           }
 
@@ -569,9 +566,9 @@ export default async function handler(
           continue;
         }
 
-        console.log(
-          `Found ${eligibleShoppers.length} eligible shoppers for rotation`
-        );
+        // console.log(
+        //   `Found ${eligibleShoppers.length} eligible shoppers for rotation`
+        // );
 
         // Calculate priority for each shopper
         const shoppersWithPriority = await Promise.all(
@@ -602,7 +599,7 @@ export default async function handler(
         // Select the best shopper
         const nextShopper = shoppersWithPriority[0];
 
-        console.log(`Next shopper selected: ${nextShopper.full_name}`);
+        // console.log(`Next shopper selected: ${nextShopper.full_name}`);
 
         // Create new offer for next shopper
         const now = new Date();
@@ -638,9 +635,9 @@ export default async function handler(
           offerVariables
         )) as any;
 
-        console.log(
-          `✅ Created new offer for shopper ${nextShopper.full_name} (round ${nextRound})`
-        );
+        // console.log(
+        //   `✅ Created new offer for shopper ${nextShopper.full_name} (round ${nextRound})`
+        // );
 
         // Send FCM notification to next shopper
         try {
@@ -675,7 +672,7 @@ export default async function handler(
             expiresInMs: OFFER_DURATION_MS,
           });
 
-          console.log(`✅ FCM notification sent to ${nextShopper.full_name}`);
+          // console.log(`✅ FCM notification sent to ${nextShopper.full_name}`);
         } catch (fcmError) {
           console.error("Failed to send FCM notification:", fcmError);
           // Continue even if notification fails
@@ -697,7 +694,7 @@ export default async function handler(
       }
     }
 
-    console.log(`✅ Rotated ${rotationResults.length} offers`);
+    // console.log(`✅ Rotated ${rotationResults.length} offers`);
 
     return res.status(200).json({
       success: true,

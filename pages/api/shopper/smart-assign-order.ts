@@ -1304,24 +1304,24 @@ export default async function handler(
         activeOffer.business_order_id ||
         activeOffer.package_order_id;
 
-      console.log(
-        "🚫 Shopper already has an active OFFERED offer - checking expiration:",
-        {
-          shopperId: user_id,
-          offerId: activeOffer.id,
-          orderId: orderId,
-          orderType: activeOffer.order_type,
-          status: activeOffer.status,
-          expiresAt: activeOffer.expires_at,
-          round: activeOffer.round_number,
-        }
-      );
+      // console.log(
+      //   "🚫 Shopper already has an active OFFERED offer - checking expiration:",
+      //   {
+      //     shopperId: user_id,
+      //     offerId: activeOffer.id,
+      //     orderId: orderId,
+      //     orderType: activeOffer.order_type,
+      //     status: activeOffer.status,
+      //     expiresAt: activeOffer.expires_at,
+      //     round: activeOffer.round_number,
+      //   }
+      // );
 
       // Check if offer is actually expired
       const isExpired = new Date(activeOffer.expires_at) <= new Date();
 
       if (isExpired) {
-        console.log(`🚨 Offer ${activeOffer.id} is EXPIRED. Marking as DELAYED and proceeding...`);
+        // console.log(`🚨 Offer ${activeOffer.id} is EXPIRED. Marking as DELAYED and proceeding...`);
         
         // 1. Mark as DELAYED
         await hasuraClient.request(gql`
@@ -1357,7 +1357,7 @@ export default async function handler(
         const delayedCount = delayedCountData.order_offers_aggregate?.aggregate?.count || 0;
 
         if (delayedCount > 2) {
-          console.log(`🚨 Shopper ${user_id} has ${delayedCount} delayed offers today. PUNISHING...`);
+          // console.log(`🚨 Shopper ${user_id} has ${delayedCount} delayed offers today. PUNISHING...`);
           
           const downgradeResp = (await hasuraClient.request(gql`
             mutation DowngradeShopper($shopper_id: uuid!) {
@@ -1382,7 +1382,7 @@ export default async function handler(
               }
             `, { user_id: punishedUserId });
             
-            console.log(`✅ Shopper ${user_id} downgraded and taken offline.`);
+            // console.log(`✅ Shopper ${user_id} downgraded and taken offline.`);
             
             return res.status(200).json({
               success: false,
@@ -1393,7 +1393,7 @@ export default async function handler(
         }
         
         // After marking as DELAYED and checking punishment, we continue to find new orders
-        console.log("Offer processed as DELAYED. Proceeding to find new eligible orders...");
+        // console.log("Offer processed as DELAYED. Proceeding to find new eligible orders...");
       } else {
         // Return existing offer details so the client can show the notification card on refresh/navigate
         const orderType = activeOffer.order_type || "regular";
@@ -1459,7 +1459,7 @@ export default async function handler(
               // Add unique tag to force re-pop and sound
               tag: `new_order_${orderId}_${Date.now()}`,
             } as any);
-            console.log(`✅ Re-triggered notification for shopper ${user_id}`);
+              // console.log(`✅ Re-triggered notification for shopper ${user_id}`);
           } catch (fcmError) {
             console.error("Failed to re-trigger notification:", fcmError);
           }
