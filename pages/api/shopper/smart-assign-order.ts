@@ -1305,7 +1305,7 @@ export default async function handler(
         activeOffer.package_order_id;
 
       console.log(
-        "🚫 Shopper already has an active OFFERED offer - cannot receive new offer:",
+        "🚫 Shopper already has an active OFFERED offer - checking expiration:",
         {
           shopperId: user_id,
           offerId: activeOffer.id,
@@ -1317,73 +1317,167 @@ export default async function handler(
         }
       );
 
-      // Return existing offer details so the client can show the notification card on refresh/navigate
-      const orderType = activeOffer.order_type || "regular";
-      const currentLocation = (req.body as any)?.current_location;
-      let rawOrder: any = null;
-      if (orderType === "regular" && activeOffer.order_id) {
-        const r = (await hasuraClient.request(GET_ORDER_BY_PK, {
-          id: activeOffer.order_id,
-        })) as any;
-        rawOrder = r?.Orders_by_pk;
-      } else if (orderType === "reel" && activeOffer.reel_order_id) {
-        const r = (await hasuraClient.request(GET_REEL_ORDER_BY_PK, {
-          id: activeOffer.reel_order_id,
-        })) as any;
-        rawOrder = r?.reel_orders_by_pk;
-      } else if (
-        orderType === "restaurant" &&
-        activeOffer.restaurant_order_id
-      ) {
-        const r = (await hasuraClient.request(GET_RESTAURANT_ORDER_BY_PK, {
-          id: activeOffer.restaurant_order_id,
-        })) as any;
-        rawOrder = r?.restaurant_orders_by_pk;
-      } else if (orderType === "business" && activeOffer.business_order_id) {
-        const r = (await hasuraClient.request(GET_BUSINESS_ORDER_BY_PK, {
-          id: activeOffer.business_order_id,
-        })) as any;
-        rawOrder = r?.businessProductOrders_by_pk;
-      } else if (orderType === "package" && activeOffer.package_order_id) {
-        const r = (await hasuraClient.request(GET_PACKAGE_ORDER_BY_PK, {
-          id: activeOffer.package_order_id,
-        })) as any;
-        rawOrder = r?.package_delivery_by_pk;
-      }
-      if (rawOrder) {
-        rawOrder.orderType = orderType;
-        const shopperLocation =
-          currentLocation &&
-          typeof currentLocation.lat === "number" &&
-          typeof currentLocation.lng === "number"
-            ? { lat: currentLocation.lat, lng: currentLocation.lng }
-            : { lat: 0, lng: 0 };
-        const formattedOrder = formatOrderForResponse(
-          rawOrder,
-          shopperLocation,
-          null
-        );
-        // Re-trigger the notification to ensure the shopper sees it
-        try {
-          const distance = formattedOrder.distance || 0;
-          const estimatedEarnings = formattedOrder.estimatedEarnings || 0;
+      // Check if offer is actually expired
+      const isExpired = new Date(activeOffer.expires_at) <= new Date();
 
-          await sendNewOrderNotification(user_id, {
-            id: orderId,
-            shopName: formattedOrder.shopName || "Unknown Shop",
-            customerAddress: formattedOrder.customerAddress || "Unknown Address",
-            distance,
-            itemsCount: formattedOrder.itemsCount || 1,
-            travelTimeMinutes: Math.round((distance / 20) * 60),
-            estimatedEarnings,
-            orderType: orderType,
-            expiresInMs: 120000, // Matching the 2-minute timeout
-            // Add unique tag to force re-pop and sound
-            tag: `new_order_${orderId}_${Date.now()}`,
-          } as any);
-          console.log(`✅ Re-triggered notification for shopper ${user_id}`);
-        } catch (fcmError) {
-          console.error("Failed to re-trigger notification:", fcmError);
+      if (isExpired) {
+        console.log(`🚨 Offer ${activeOffer.id} is EXPIRED. Marking as DELAYED and proceeding...`);
+        
+        // 1. Mark as DELAYED
+        await hasuraClient.request(gql`
+          mutation MarkOfferDelayed($id: uuid!) {
+            update_order_offers_by_pk(
+              pk_columns: { id: $id }
+              _set: { status: "DELAYED", updated_at: "now()" }
+            ) {
+              id
+            }
+          }
+        `, { id: activeOffer.id });
+
+        // 2. Punishment check
+        const delayedCountData = (await hasuraClient.request(gql`
+          query CountDelayedOffersToday($shopper_id: uuid!) {
+            order_offers_aggregate(
+              where: {
+                _and: [
+                  { shopper_id: { _eq: $shopper_id } }
+                  { status: { _eq: "DELAYED" } }
+                  { offered_at: { _gte: "today" } }
+                ]
+              }
+            ) {
+              aggregate {
+                count
+              }
+            }
+          }
+        `, { shopper_id: user_id })) as any;
+
+        const delayedCount = delayedCountData.order_offers_aggregate?.aggregate?.count || 0;
+
+        if (delayedCount > 2) {
+          console.log(`🚨 Shopper ${user_id} has ${delayedCount} delayed offers today. PUNISHING...`);
+          
+          const downgradeResp = (await hasuraClient.request(gql`
+            mutation DowngradeShopper($shopper_id: uuid!) {
+              update_shoppers(
+                where: { id: { _eq: $shopper_id } }
+                _set: { active: false, status: "offline" }
+              ) {
+                returning {
+                  user_id
+                }
+              }
+            }
+          `, { shopper_id: user_id })) as any;
+
+          const punishedUserId = downgradeResp.update_shoppers?.returning?.[0]?.user_id;
+          if (punishedUserId) {
+            await hasuraClient.request(gql`
+              mutation UpdateUserRole($user_id: uuid!) {
+                update_Users_by_pk(pk_columns: { id: $user_id }, _set: { role: "user" }) {
+                  id
+                }
+              }
+            `, { user_id: punishedUserId });
+            
+            console.log(`✅ Shopper ${user_id} downgraded and taken offline.`);
+            
+            return res.status(200).json({
+              success: false,
+              message: "Your account has been set to offline due to multiple ignored offers.",
+              reason: "SHOPPER_PUNISHED"
+            });
+          }
+        }
+        
+        // After marking as DELAYED and checking punishment, we continue to find new orders
+        console.log("Offer processed as DELAYED. Proceeding to find new eligible orders...");
+      } else {
+        // Return existing offer details so the client can show the notification card on refresh/navigate
+        const orderType = activeOffer.order_type || "regular";
+        const currentLocation = (req.body as any)?.current_location;
+        let rawOrder: any = null;
+        if (orderType === "regular" && activeOffer.order_id) {
+          const r = (await hasuraClient.request(GET_ORDER_BY_PK, {
+            id: activeOffer.order_id,
+          })) as any;
+          rawOrder = r?.Orders_by_pk;
+        } else if (orderType === "reel" && activeOffer.reel_order_id) {
+          const r = (await hasuraClient.request(GET_REEL_ORDER_BY_PK, {
+            id: activeOffer.reel_order_id,
+          })) as any;
+          rawOrder = r?.reel_orders_by_pk;
+        } else if (
+          orderType === "restaurant" &&
+          activeOffer.restaurant_order_id
+        ) {
+          const r = (await hasuraClient.request(GET_RESTAURANT_ORDER_BY_PK, {
+            id: activeOffer.restaurant_order_id,
+          })) as any;
+          rawOrder = r?.restaurant_orders_by_pk;
+        } else if (orderType === "business" && activeOffer.business_order_id) {
+          const r = (await hasuraClient.request(GET_BUSINESS_ORDER_BY_PK, {
+            id: activeOffer.business_order_id,
+          })) as any;
+          rawOrder = r?.businessProductOrders_by_pk;
+        } else if (orderType === "package" && activeOffer.package_order_id) {
+          const r = (await hasuraClient.request(GET_PACKAGE_ORDER_BY_PK, {
+            id: activeOffer.package_order_id,
+          })) as any;
+          rawOrder = r?.package_delivery_by_pk;
+        }
+        if (rawOrder) {
+          rawOrder.orderType = orderType;
+          const shopperLocation =
+            currentLocation &&
+            typeof currentLocation.lat === "number" &&
+            typeof currentLocation.lng === "number"
+              ? { lat: currentLocation.lat, lng: currentLocation.lng }
+              : { lat: 0, lng: 0 };
+          const formattedOrder = formatOrderForResponse(
+            rawOrder,
+            shopperLocation,
+            null
+          );
+          // Re-trigger the notification to ensure the shopper sees it
+          try {
+            const distance = formattedOrder.distance || 0;
+            const estimatedEarnings = formattedOrder.estimatedEarnings || 0;
+
+            await sendNewOrderNotification(user_id, {
+              id: orderId,
+              shopName: formattedOrder.shopName || "Unknown Shop",
+              customerAddress: formattedOrder.customerAddress || "Unknown Address",
+              distance,
+              itemsCount: formattedOrder.itemsCount || 1,
+              travelTimeMinutes: Math.round((distance / 20) * 60),
+              estimatedEarnings,
+              orderType: orderType,
+              expiresInMs: 120000, // Matching the 2-minute timeout
+              // Add unique tag to force re-pop and sound
+              tag: `new_order_${orderId}_${Date.now()}`,
+            } as any);
+            console.log(`✅ Re-triggered notification for shopper ${user_id}`);
+          } catch (fcmError) {
+            console.error("Failed to re-trigger notification:", fcmError);
+          }
+
+          return res.status(200).json({
+            success: false,
+            message:
+              "You have a pending offer. Please accept or decline it before receiving new offers",
+            reason: "ACTIVE_OFFER_PENDING",
+            activeOfferId: activeOffer.id,
+            activeOrderId: orderId,
+            activeOrderType: orderType,
+            existingOffer: {
+              order: formattedOrder,
+              offerId: activeOffer.id,
+            },
+            note: "Action-based system: You must accept or decline your current offer before receiving a new one",
+          });
         }
 
         return res.status(200).json({
@@ -1393,25 +1487,10 @@ export default async function handler(
           reason: "ACTIVE_OFFER_PENDING",
           activeOfferId: activeOffer.id,
           activeOrderId: orderId,
-          activeOrderType: orderType,
-          existingOffer: {
-            order: formattedOrder,
-            offerId: activeOffer.id,
-          },
+          activeOrderType: activeOffer.order_type,
           note: "Action-based system: You must accept or decline your current offer before receiving a new one",
         });
       }
-
-      return res.status(200).json({
-        success: false,
-        message:
-          "You have a pending offer. Please accept or decline it before receiving new offers",
-        reason: "ACTIVE_OFFER_PENDING",
-        activeOfferId: activeOffer.id,
-        activeOrderId: orderId,
-        activeOrderType: activeOffer.order_type,
-        note: "Action-based system: You must accept or decline your current offer before receiving a new one",
-      });
     }
 
     console.log(

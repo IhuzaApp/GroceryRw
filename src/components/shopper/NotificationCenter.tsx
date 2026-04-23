@@ -131,6 +131,17 @@ export default function NotificationCenter() {
       if (latest.timestamp > lastSeenTimestamp && !latest.read) {
         setLastSeenTimestamp(latest.timestamp);
 
+        // Play notification sound
+        try {
+          const audio = new Audio("/notifySound.mp3");
+          audio.volume = 0.6;
+          audio.play().catch(() => {
+            // Play failed (e.g. user hasn't interacted with page) - ignore
+          });
+        } catch (e) {
+          // ignore sound errors
+        }
+
         // Show small toast if shopping
         if (isShopping) {
           toast.custom(

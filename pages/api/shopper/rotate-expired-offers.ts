@@ -23,12 +23,12 @@ const OFFER_DURATION_MS = 120000; // 2 minutes (120 seconds)
 
 // Query to get expired offers
 const GET_EXPIRED_OFFERS = gql`
-  query GetExpiredOffers {
+  query GetExpiredOffers($now: timestamptz!) {
     order_offers(
       where: {
         _and: [
           { status: { _eq: "OFFERED" } }
-          { expires_at: { _lte: "now()" } }
+          { expires_at: { _lte: $now } }
         ]
       }
     ) {
@@ -424,7 +424,8 @@ export default async function handler(
 
     console.log("Finding expired offers...");
     const expiredOffersData = (await hasuraClient.request(
-      GET_EXPIRED_OFFERS
+      GET_EXPIRED_OFFERS,
+      { now: new Date().toISOString() }
     )) as any;
 
     const expiredOffers = expiredOffersData.order_offers || [];

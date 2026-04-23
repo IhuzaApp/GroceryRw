@@ -459,6 +459,9 @@ export default function NotificationSystem({
         offerId: order.offerId,
       };
 
+      // Play sound even if duplicate (re-trigger)
+      playNotificationSound({ enabled: true, volume: 0.8 });
+
       // Show notification
       showToast(orderForNotification);
       showDesktopNotification(orderForNotification);
