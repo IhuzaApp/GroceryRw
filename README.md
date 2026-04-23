@@ -83,7 +83,8 @@ Professional dispatch system following the DoorDash/Uber Eats model with exclusi
 
 1. **Server is the source of truth** - Client never decides eligibility
 2. **Action-based system** - Offers stay until shopper explicitly accepts or declines (no time-based expiry)
-3. **Up to 2 active orders** - Shoppers can work on up to 2 orders simultaneously, but cannot receive new offers if they have 2 active orders or a pending OFFERED offer
+3. **One Order At A Time** - Shoppers can work on ONLY 1 order/batch at a time. They cannot receive or accept new offers until their current order is delivered.
+3.5. **Cross-Type Detection** - System monitors active orders across Regular, Reel, Restaurant, Package, and Business tables to ensure total exclusivity.
 4. **Location is volatile** - Redis for GPS, database for offers
 5. **Distance gating** - Only offer to nearby shoppers
 6. **Round-based expansion** - Radius grows if declined (3km → 5km → 8km)
@@ -316,7 +317,7 @@ Accepts an offer with distance re-validation.
 - `NO_VALID_OFFER` - Offer doesn't exist or was already processed
 - `ALREADY_ASSIGNED` - Another shopper got it first
 - `TOO_FAR` - Distance re-validation failed (shopper moved too far)
-- `ACTIVE_ORDER_IN_PROGRESS` - Shopper already has an active order and cannot accept new ones
+- `MAX_ACTIVE_ORDERS_REACHED` - Shopper already has an active order across any type.
 
 ### 4. Decline Offer
 
@@ -513,15 +514,21 @@ try {
 
 ### Key Behaviors
 
-**Active Orders and Offer Limits:**
+**One Order At A Time Policy:**
 
-- Shoppers can work on up to 2 active orders simultaneously (accepted/in_progress/picked_up)
-- If shopper has 2 active orders, they cannot receive new offers until at least one is delivered
-- If shopper has 1 active order, they can still receive new offers (up to 2 total active orders)
-- Shoppers can only have ONE pending OFFERED offer at a time
-- If shopper has a pending OFFERED offer, they must accept or decline it before receiving a new offer
-- This ensures shoppers focus on completing deliveries while allowing flexibility for multiple orders
-- Prevents overwhelming shoppers with too many simultaneous orders
+- Shoppers can work on ONLY ONE order/batch at a time.
+- System performs cross-table checks (Regular, Reel, Restaurant, Package, Business) to detect any busy shopper.
+- If shopper has an active order, they are automatically hidden from the assignment pool.
+- This ensures high delivery quality and prevents shoppers from getting overwhelmed or cherry-picking.
+- Shoppers can only have ONE pending OFFERED offer at a time.
+- If shopper has a pending OFFERED offer, they must accept or decline it before receiving a new offer.
+
+**Combined Orders & Fair Punishment:**
+
+- **Atomic Expiration**: If a shopper ignores a combined batch (e.g., 2 orders from one store), the system marks the entire batch as `DELAYED` simultaneously. This prevents "ghost" assignments and loops.
+- **Fair Striking**: Ignoring a batch of 3 orders counts as **1 strike**, not 3. Strikes are calculated based on distinct assignment rounds (`offered_at` groups).
+- **Three-Strike Rule**: If a shopper accumulates > 2 distinct delayed assignment units in a single day, they are automatically downgraded from "Shopper" to "Regular User" for accountability.
+- **Action-Based Expiration**: While the system is action-based (wait for shopper), a safety timeout (e.g., 2 minutes) exists in `smart-assign-order` to proactively rotate orders if the shopper is unresponsive.
 
 **Duplicate Prevention:**
 
