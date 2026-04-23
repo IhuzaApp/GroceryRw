@@ -327,6 +327,7 @@ export const sendChatNotification = async (
         conversationId,
         collectionPath,
         senderName,
+        tag: `chat_${conversationId}`,
       },
     };
 
