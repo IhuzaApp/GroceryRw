@@ -22,7 +22,13 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business" | "package";
+  orderType?:
+    | "regular"
+    | "reel"
+    | "restaurant"
+    | "combined"
+    | "business"
+    | "package";
   isAvailable?: boolean;
   reel?: {
     id: string;
@@ -325,7 +331,11 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
             >
               {order.isAvailable ? "Available Now" : deliveryInfo.label}
               {(deliveryInfo.overdue || order.isAvailable) && (
-                <span className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${order.isAvailable ? "bg-pink-500" : "bg-red-500"}`} />
+                <span
+                  className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${
+                    order.isAvailable ? "bg-pink-500" : "bg-red-500"
+                  }`}
+                />
               )}
             </p>
           </div>

@@ -26,10 +26,7 @@ const GET_EXPIRED_OFFERS = gql`
   query GetExpiredOffers($now: timestamptz!) {
     order_offers(
       where: {
-        _and: [
-          { status: { _eq: "OFFERED" } }
-          { expires_at: { _lte: $now } }
-        ]
+        _and: [{ status: { _eq: "OFFERED" } }, { expires_at: { _lte: $now } }]
       }
     ) {
       id
@@ -188,16 +185,12 @@ const GET_AVAILABLE_SHOPPERS = gql`
           count
         }
       }
-      reel_orders_aggregate(
-        where: { status: { _neq: "delivered" } }
-      ) {
+      reel_orders_aggregate(where: { status: { _neq: "delivered" } }) {
         aggregate {
           count
         }
       }
-      restaurant_orders_aggregate(
-        where: { status: { _neq: "delivered" } }
-      ) {
+      restaurant_orders_aggregate(where: { status: { _neq: "delivered" } }) {
         aggregate {
           count
         }
@@ -209,9 +202,7 @@ const GET_AVAILABLE_SHOPPERS = gql`
           count
         }
       }
-      package_delivery_aggregate(
-        where: { status: { _neq: "delivered" } }
-      ) {
+      package_delivery_aggregate(where: { status: { _neq: "delivered" } }) {
         aggregate {
           count
         }
@@ -451,10 +442,9 @@ export default async function handler(
     // ========================================================================
 
     // console.log("Finding expired offers...");
-    const expiredOffersData = (await hasuraClient.request(
-      GET_EXPIRED_OFFERS,
-      { now: new Date().toISOString() }
-    )) as any;
+    const expiredOffersData = (await hasuraClient.request(GET_EXPIRED_OFFERS, {
+      now: new Date().toISOString(),
+    })) as any;
 
     const expiredOffers = expiredOffersData.order_offers || [];
 

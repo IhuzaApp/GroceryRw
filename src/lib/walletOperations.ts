@@ -283,9 +283,10 @@ export async function handleDeliveredOperation(
 
   // For restaurant and package orders, only delivery fee is earned (no service fee)
   // For business and regular/reel: service_fee + delivery_fee (business uses transportation_fee as delivery_fee)
-  const totalEarnings = (isRestaurantOrder || isPackageOrder)
-    ? deliveryFee
-    : serviceFee + deliveryFee;
+  const totalEarnings =
+    isRestaurantOrder || isPackageOrder
+      ? deliveryFee
+      : serviceFee + deliveryFee;
   const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
   const remainingEarnings = totalEarnings - platformFee;
 
@@ -594,16 +595,16 @@ export async function processWalletOperation(
         ordered_by: string;
       };
     }>(GET_BUSINESS_ORDER_DETAILS, { orderId });
-    } else if (isPackageOrder) {
-      orderDetails = await hasuraClient!.request<{
-        package_delivery_by_pk: {
-          id: string;
-          delivery_fee: string;
-          shopper_id: string;
-          user_id: string;
-        };
-      }>(GET_PACKAGE_ORDER_DETAILS_WALLET, { orderId });
-    } else {
+  } else if (isPackageOrder) {
+    orderDetails = await hasuraClient!.request<{
+      package_delivery_by_pk: {
+        id: string;
+        delivery_fee: string;
+        shopper_id: string;
+        user_id: string;
+      };
+    }>(GET_PACKAGE_ORDER_DETAILS_WALLET, { orderId });
+  } else {
     orderDetails = await hasuraClient!.request<{
       Orders_by_pk: {
         id: string;

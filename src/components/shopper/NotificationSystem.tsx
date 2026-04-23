@@ -1705,7 +1705,13 @@ export default function NotificationSystem({
           }}
         >
           {/* Bottom Sheet Card */}
-          <div className="relative w-full rounded-t-3xl shadow-2xl md:max-w-md md:rounded-2xl" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+          <div
+            className="relative w-full rounded-t-3xl shadow-2xl md:max-w-md md:rounded-2xl"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              color: "var(--text-primary)",
+            }}
+          >
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
               <div className="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
@@ -1737,7 +1743,10 @@ export default function NotificationSystem({
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Shop
                     </p>
-                    <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                    <p
+                      className="text-base font-bold"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       {formatStoreList(selectedOrder.shopName)}
                     </p>
                     {selectedOrder.orderType && (
@@ -1829,7 +1838,10 @@ export default function NotificationSystem({
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       You
                     </p>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       {currentLocation
                         ? `${currentLocation.lat.toFixed(
                             4
@@ -1855,7 +1867,10 @@ export default function NotificationSystem({
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Delivery Address
                     </p>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       {selectedOrder.customerAddress}
                     </p>
                   </div>
@@ -1865,7 +1880,10 @@ export default function NotificationSystem({
               {/* Order Details */}
               <div className="mb-5 space-y-3">
                 {/* Items (expandable) and Earnings */}
-                <div className="flex items-center justify-between rounded-lg px-4 py-3" style={{ backgroundColor: 'var(--bg-primary)' }}>
+                <div
+                  className="flex items-center justify-between rounded-lg px-4 py-3"
+                  style={{ backgroundColor: "var(--bg-primary)" }}
+                >
                   <button
                     type="button"
                     onClick={async () => {
@@ -1920,7 +1938,10 @@ export default function NotificationSystem({
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                       />
                     </svg>
-                    <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                    <span
+                      className="text-base font-bold"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       {selectedOrder.itemsCount ?? 0} Items
                     </span>
                   </button>
@@ -1945,13 +1966,22 @@ export default function NotificationSystem({
                 </div>
                 {/* Expanded: ordered item names as bullet list */}
                 {itemsExpanded && (
-                  <div className="rounded-lg border px-4 py-3" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--text-secondary)' }}>
+                  <div
+                    className="rounded-lg border px-4 py-3"
+                    style={{
+                      backgroundColor: "var(--bg-primary)",
+                      borderColor: "var(--text-secondary)",
+                    }}
+                  >
                     {orderItemsLoading ? (
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Loading items…
                       </p>
                     ) : orderItemNames && orderItemNames.length > 0 ? (
-                      <ul className="list-inside list-disc space-y-2 text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
+                      <ul
+                        className="list-inside list-disc space-y-2 text-lg font-medium"
+                        style={{ color: "var(--text-primary)" }}
+                      >
                         {orderItemNames.map((name, i) => (
                           <li key={i}>{name}</li>
                         ))}

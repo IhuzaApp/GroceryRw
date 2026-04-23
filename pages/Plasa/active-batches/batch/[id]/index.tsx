@@ -766,7 +766,9 @@ export const getServerSideProps: GetServerSideProps<
 
     // For package orders, check if user is the shopper or customer
     const isPackageShopper =
-      orderType === "package" && (order.shopper_id === session.user.id || (order.shopper_id === null && order.status === "PENDING"));
+      orderType === "package" &&
+      (order.shopper_id === session.user.id ||
+        (order.shopper_id === null && order.status === "PENDING"));
     const isPackageCustomer =
       orderType === "package" && order.user_id === session.user.id;
 

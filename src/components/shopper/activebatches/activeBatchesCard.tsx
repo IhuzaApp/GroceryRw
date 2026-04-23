@@ -44,7 +44,13 @@ interface Order {
   service_fee?: string;
   delivery_fee?: string;
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business" | "package";
+  orderType?:
+    | "regular"
+    | "reel"
+    | "restaurant"
+    | "combined"
+    | "business"
+    | "package";
   isAvailable?: boolean;
   packageDetails?: {
     DeliveryCode?: string | null;
@@ -469,9 +475,7 @@ function ActiveOrderCard({
         <Badge
           content="Available"
           className={`rounded bg-pink-100 px-2 py-1 text-xs font-medium ${
-            theme === "dark"
-              ? "bg-pink-900/20 text-pink-300"
-              : "text-pink-800"
+            theme === "dark" ? "bg-pink-900/20 text-pink-300" : "text-pink-800"
           }`}
         />
       );
@@ -885,26 +889,29 @@ function ActiveOrderCard({
           })()}
 
         {/* Distance Indicator for Regular Batches */}
-        {!isReelOrder && !isRestaurantOrder && !isPackageOrder && (order as any).distance && (
-          <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
-            <svg
-              className="h-3 w-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            {(order as any).distance < 1
-              ? `${Math.round((order as any).distance * 1000)}m`
-              : `${(order as any).distance.toFixed(1)}km`}
-          </div>
-        )}
+        {!isReelOrder &&
+          !isRestaurantOrder &&
+          !isPackageOrder &&
+          (order as any).distance && (
+            <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+              <svg
+                className="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+              {(order as any).distance < 1
+                ? `${Math.round((order as any).distance * 1000)}m`
+                : `${(order as any).distance.toFixed(1)}km`}
+            </div>
+          )}
 
         {/* Delivery Time Indicator for Regular Batches */}
         {!isReelOrder &&

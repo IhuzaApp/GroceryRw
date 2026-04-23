@@ -808,8 +808,12 @@ export default async function handler(
       status: o.status,
       createdAt: o.created_at,
       deliveryTime: o.timeAndDate || undefined,
-      shopName: o.Users?.name ? `Package from ${o.Users.name}` : "Package Delivery",
-      shopNames: [o.Users?.name ? `Package from ${o.Users.name}` : "Package Delivery"],
+      shopName: o.Users?.name
+        ? `Package from ${o.Users.name}`
+        : "Package Delivery",
+      shopNames: [
+        o.Users?.name ? `Package from ${o.Users.name}` : "Package Delivery",
+      ],
       shopAddress: o.pickupLocation || "—",
       shopLat: parseFloat(String(o.pickup_latitude || "0")),
       shopLng: parseFloat(String(o.pickup_longitude || "0")),
@@ -831,7 +835,7 @@ export default async function handler(
         receiverPhone: o.receiverPhone,
         comment: o.comment,
         package_image: o.package_image,
-      }
+      },
     }));
 
     // Combine all types of orders (single-order "combined" groups are included as regular)

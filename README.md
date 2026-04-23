@@ -43,6 +43,7 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ### 18. **Notification & Communication Systems (Resend & Pindo)** ⭐ NEW
 
 ### 19. **Password Recovery System (Email & SMS)** ⭐ NEW
+
 ### 20. **Package Delivery Workflow Integration** ⭐ NEW
 
 ---
@@ -84,7 +85,7 @@ Professional dispatch system following the DoorDash/Uber Eats model with exclusi
 1. **Server is the source of truth** - Client never decides eligibility
 2. **Action-based system** - Offers stay until shopper explicitly accepts or declines (no time-based expiry)
 3. **One Order At A Time** - Shoppers can work on ONLY 1 order/batch at a time. They cannot receive or accept new offers until their current order is delivered.
-3.5. **Cross-Type Detection** - System monitors active orders across Regular, Reel, Restaurant, Package, and Business tables to ensure total exclusivity.
+   3.5. **Cross-Type Detection** - System monitors active orders across Regular, Reel, Restaurant, Package, and Business tables to ensure total exclusivity.
 4. **Location is volatile** - Redis for GPS, database for offers
 5. **Distance gating** - Only offer to nearby shoppers
 6. **Round-based expansion** - Radius grows if declined (3km → 5km → 8km)
@@ -14004,42 +14005,47 @@ The Package Delivery Workflow integrates a comprehensive courier service into th
 ## Key Features
 
 ### 1. Unified Dispatch & Assignment
+
 - **Smart Assignment**: Integrated with the `smart-assign-order` logic. Package orders are prioritized for shoppers with `courier: true` status.
 - **Unified Batch List**: Available packages appear in the shopper's active batches list with a distinct pink/rose aesthetic and "Available Now" indicators.
 - **Action-Based Acceptance**: Couriers can view full package details before explicitly accepting the delivery.
 
 ### 2. Courier-Specific Detail View
+
 - **Dedicated Interface**: The batch detail page adapts to show package-specific metadata:
-    - Precise pickup and dropoff locations with coordinate mapping.
-    - Receiver information (Name and Phone).
-    - Specific delivery instructions and comments.
-    - Package images (if provided).
+  - Precise pickup and dropoff locations with coordinate mapping.
+  - Receiver information (Name and Phone).
+  - Specific delivery instructions and comments.
+  - Package images (if provided).
 - **Streamlined Workflow**: Hides grocery-specific UI elements (like "Start Shopping" or payment summaries) and focuses on the pickup-to-delivery lifecycle.
 
 ### 3. Integrated Financials
+
 - **Automated Earnings**: Integrates with `walletOperations` to calculate and credit courier earnings from the delivery fee upon successful completion.
 - **Platform Fee Management**: Automatically calculates and deducts platform commissions based on system configuration.
 
 ### 4. Status Tracking & Notifications
+
 - **Real-time Status**: Supports a full lifecycle of statuses: `PENDING` → `accepted` → `on_the_way` → `delivered`.
 - **FCM Integration**: Direct deep-linking from push notifications to the package detail view in the shopper dashboard.
 
 ## Technical Implementation
 
 ### Database Schema (package_delivery)
-| Field | Description |
-|-------|-------------|
-| `id` | Unique identifier (UUID) |
-| `DeliveryCode` | Human-readable tracking code |
-| `status` | Current state (PENDING, accepted, on_the_way, delivered) |
-| `pickupLocation` | Formatted address for pickup |
-| `dropoffLocation` | Formatted address for dropoff |
-| `delivery_fee` | Total fee for the delivery |
-| `shopper_id` | Assigned courier (nullable when PENDING) |
-| `user_id` | Package sender |
+
+| Field             | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `id`              | Unique identifier (UUID)                                 |
+| `DeliveryCode`    | Human-readable tracking code                             |
+| `status`          | Current state (PENDING, accepted, on_the_way, delivered) |
+| `pickupLocation`  | Formatted address for pickup                             |
+| `dropoffLocation` | Formatted address for dropoff                            |
+| `delivery_fee`    | Total fee for the delivery                               |
+| `shopper_id`      | Assigned courier (nullable when PENDING)                 |
+| `user_id`         | Package sender                                           |
 
 ### Key API Endpoints
+
 - **`pages/api/shopper/activeBatches.ts`**: Fetches and unifies package deliveries into the shopper's dashboard.
 - **`pages/api/shopper/updateOrderStatus.ts`**: Handles the transition logic, including shopper assignment upon acceptance.
 - **`src/lib/walletOperations.ts`**: Manages the financial credit to the shopper's wallet upon delivery confirmation.
-

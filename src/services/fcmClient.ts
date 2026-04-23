@@ -331,12 +331,20 @@ export const setupFCMListener = (
 
     const unsubscribe = onMessage(messaging, (payload) => {
       // Show notification using service worker (Chrome requires this)
-      if ((payload.notification || payload.data) && Notification.permission === "granted") {
+      if (
+        (payload.notification || payload.data) &&
+        Notification.permission === "granted"
+      ) {
         const notificationType = payload.data?.type || "message";
         const notificationTitle =
-          payload.notification?.title || payload.data?.title || "New Notification";
-        const notificationBody = 
-          payload.notification?.body || payload.data?.body || payload.data?.message || "";
+          payload.notification?.title ||
+          payload.data?.title ||
+          "New Notification";
+        const notificationBody =
+          payload.notification?.body ||
+          payload.data?.body ||
+          payload.data?.message ||
+          "";
 
         // Play notification sound
         try {
