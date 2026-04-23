@@ -1152,10 +1152,11 @@ export default async function handler(
     // ========================================================================
 
     // ========================================================================
-    // Check if shopper has 2 or more active orders (not delivered)
+    // Check if shopper has any active orders (not delivered)
     // ========================================================================
-    // Shoppers can work on up to 2 orders at a time
-    // If they have 2 active orders, block new offers until at least one is delivered
+    // ONE ORDER AT A TIME POLICY:
+    // Shoppers can work on ONLY 1 order/batch at a time.
+    // If they have any active order, block new offers until it is delivered.
     // ========================================================================
     const CHECK_ACTIVE_ORDERS = gql`
       query CheckActiveOrders($shopper_id: uuid!) {
@@ -1220,9 +1221,9 @@ export default async function handler(
     ];
     const activeOrderCount = activeOrders.length;
 
-    if (activeOrderCount >= 2) {
+    if (activeOrderCount >= 1) {
       console.log(
-        "🚫 Shopper already has 2 active orders (not delivered) - cannot receive new offers:",
+        `🚫 Shopper already has ${activeOrderCount} active orders (not delivered) - cannot receive new offers:`,
         {
           shopperId: user_id,
           activeOrderCount: activeOrderCount,
@@ -1235,25 +1236,19 @@ export default async function handler(
 
       return res.status(200).json({
         success: false,
-        message: `You have ${activeOrderCount} active orders. Please deliver at least one before receiving new offers`,
+        message: `You have an active order. Please deliver it before receiving new offers`,
         reason: "MAX_ACTIVE_ORDERS_REACHED",
         activeOrderCount: activeOrderCount,
-        maxAllowed: 2,
+        maxAllowed: 1,
         activeOrders: activeOrders.map((order: any) => ({
           orderId: order.id,
           status: order.status,
         })),
-        note: "You can work on up to 2 orders at a time. Deliver at least one to receive new offers",
+        note: "One Order At A Time: You must deliver your current order to receive new offers",
       });
     }
 
-    if (activeOrderCount === 1) {
-      console.log(
-        "✅ Shopper has 1 active order - can still receive new offers (max 2 active orders)"
-      );
-    } else {
-      console.log("✅ Shopper has no active orders - can receive new offers");
-    }
+    console.log("✅ Shopper has no active orders - can receive new offers");
 
     // ========================================================================
     // Check if shopper already has an active OFFERED offer

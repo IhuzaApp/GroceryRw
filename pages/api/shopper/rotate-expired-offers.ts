@@ -188,6 +188,34 @@ const GET_AVAILABLE_SHOPPERS = gql`
           count
         }
       }
+      reel_orders_aggregate(
+        where: { status: { _neq: "delivered" } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+      restaurant_orders_aggregate(
+        where: { status: { _neq: "delivered" } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+      businessProductOrders_aggregate(
+        where: { status: { _neq: "delivered" } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+      package_delivery_aggregate(
+        where: { status: { _neq: "delivered" } }
+      ) {
+        aggregate {
+          count
+        }
+      }
       orderOffers_aggregate(
         where: {
           _and: [
@@ -536,13 +564,18 @@ export default async function handler(
         const eligibleShoppers = availableShoppers.filter((shopper: any) => {
           const alreadyOffered = offeredShopperIds.has(shopper.id);
           const activeOrderCount =
-            shopper.Orders_aggregate?.aggregate?.count || 0;
+            (shopper.Orders_aggregate?.aggregate?.count || 0) +
+            (shopper.reel_orders_aggregate?.aggregate?.count || 0) +
+            (shopper.restaurant_orders_aggregate?.aggregate?.count || 0) +
+            (shopper.businessProductOrders_aggregate?.aggregate?.count || 0) +
+            (shopper.package_delivery_aggregate?.aggregate?.count || 0);
+
           const activeOfferCount =
             shopper.orderOffers_aggregate?.aggregate?.count || 0;
 
           if (alreadyOffered) return false;
 
-          if (activeOrderCount >= 2) {
+          if (activeOrderCount >= 1) {
             // console.log(
             //   `⏭️ Skipping shopper ${shopper.full_name}: Already has ${activeOrderCount} active orders`
             // );
