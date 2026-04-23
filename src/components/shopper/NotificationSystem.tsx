@@ -1695,7 +1695,7 @@ export default function NotificationSystem({
       {showMapModal && selectedOrder ? (
         <div
           key={selectedOrder.id}
-          className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6"
+          className="fixed inset-x-0 bottom-0 z-[10001] flex md:justify-end md:px-8 md:pb-6"
           onClick={(e) => {
             // Only log if clicking on the background, not the card itself
             // Background click handler

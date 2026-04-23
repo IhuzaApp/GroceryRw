@@ -613,7 +613,7 @@ export default function NotificationCenter() {
 
       {/* Notification Dropdown/Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col md:relative md:block">
+        <div className="fixed inset-0 z-[10001] flex flex-col md:relative md:block">
           {/* Backdrop for mobile */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm duration-500 animate-in fade-in md:hidden"
@@ -747,7 +747,7 @@ export default function NotificationCenter() {
             {/* Notifications List */}
             <div
               className={`overflow-y-auto ${
-                isMobile ? "max-h-[calc(100vh-12rem)]" : "max-h-96"
+                isMobile ? "max-h-[calc(100vh-12rem)] pb-24" : "max-h-96"
               }`}
             >
               {notifications.length === 0 ? (
