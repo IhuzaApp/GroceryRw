@@ -22,7 +22,8 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business" | "package";
+  isAvailable?: boolean;
   reel?: {
     id: string;
     title: string;
@@ -64,6 +65,11 @@ const ORDER_TYPE_CFG = {
     label: "Business",
     gradient: "from-blue-500 to-indigo-600",
     dot: "#60a5fa",
+  },
+  package: {
+    label: "Package",
+    gradient: "from-pink-500 to-rose-600",
+    dot: "#ec4899",
   },
 } as const;
 
@@ -306,7 +312,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
             <p
               className="text-sm font-bold"
               style={{
-                color: deliveryInfo.overdue
+                color: order.isAvailable
+                  ? "#ec4899"
+                  : deliveryInfo.overdue
                   ? "#ef4444"
                   : deliveryInfo.urgent
                   ? "#f97316"
@@ -315,9 +323,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
                   : "#059669",
               }}
             >
-              {deliveryInfo.label}
-              {deliveryInfo.overdue && (
-                <span className="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+              {order.isAvailable ? "Available Now" : deliveryInfo.label}
+              {(deliveryInfo.overdue || order.isAvailable) && (
+                <span className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${order.isAvailable ? "bg-pink-500" : "bg-red-500"}`} />
               )}
             </p>
           </div>

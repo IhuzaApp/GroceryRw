@@ -218,6 +218,51 @@ const GET_ELIGIBLE_BUSINESS_ORDERS = gql`
   }
 `;
 
+const GET_ELIGIBLE_PACKAGE_ORDERS = gql`
+  query GetEligiblePackageOrders {
+    package_delivery(
+      where: {
+        _and: [
+          { status: { _eq: "PENDING" } }
+          { shopper_id: { _is_null: true } }
+          { _not: { orderOffers: { status: { _eq: "OFFERED" } } } }
+        ]
+      }
+      order_by: { created_at: asc }
+      limit: 50
+    ) {
+      id
+      DeliveryCode
+      pickupLocation
+      dropoffLocation
+      status
+      delivery_fee
+      created_at
+      updated_at
+      package_image
+      receiverName
+      receiverPhone
+      comment
+      deliveryMethod
+      distance
+      dropoffDetails
+      pickupDetials
+      scheduled
+      timeAndDate
+      pickup_latitude
+      pickup_longitude
+      dropoff_latitude
+      dropoff_longitude
+      user_id
+      payment_method
+      shopper_id
+      Users {
+        name
+      }
+    }
+  }
+`;
+
 // Fetch single order by pk for existing-offer display (same shape as eligible so formatOrderForResponse works)
 const GET_ORDER_BY_PK = gql`
   query GetOrderByPk($id: uuid!) {
@@ -342,6 +387,41 @@ const GET_BUSINESS_ORDER_BY_PK = gql`
   }
 `;
 
+const GET_PACKAGE_ORDER_BY_PK = gql`
+  query GetPackageOrderByPk($id: uuid!) {
+    package_delivery_by_pk(id: $id) {
+      id
+      DeliveryCode
+      pickupLocation
+      dropoffLocation
+      status
+      delivery_fee
+      created_at
+      updated_at
+      package_image
+      receiverName
+      receiverPhone
+      comment
+      deliveryMethod
+      distance
+      dropoffDetails
+      pickupDetials
+      scheduled
+      timeAndDate
+      pickup_latitude
+      pickup_longitude
+      dropoff_latitude
+      dropoff_longitude
+      user_id
+      payment_method
+      shopper_id
+      Users {
+        name
+      }
+    }
+  }
+`;
+
 // GraphQL query to get shopper performance data
 const GET_SHOPPER_PERFORMANCE = gql`
   query GetShopperPerformance($shopper_id: uuid!) {
@@ -358,6 +438,10 @@ const GET_SHOPPER_PERFORMANCE = gql`
         count
       }
     }
+    shoppers(where: { id: { _eq: $shopper_id } }) {
+      id
+      courier
+    }
   }
 `;
 
@@ -371,6 +455,7 @@ const GET_CURRENT_ROUND = gql`
           { reel_order_id: { _eq: $order_id } }
           { restaurant_order_id: { _eq: $order_id } }
           { business_order_id: { _eq: $order_id } }
+          { package_order_id: { _eq: $order_id } }
         ]
       }
       order_by: { round_number: desc }
@@ -457,6 +542,29 @@ const CHECK_SHOPPER_DECLINED_ORDER_BUSINESS = gql`
       where: {
         _and: [
           { business_order_id: { _eq: $business_order_id } }
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DECLINED" } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      status
+      round_number
+    }
+  }
+`;
+
+// Query to check if shopper has already declined a package order
+const CHECK_SHOPPER_DECLINED_ORDER_PACKAGE = gql`
+  query CheckShopperDeclinedOrderPackage(
+    $package_order_id: uuid!
+    $shopper_id: uuid!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { package_order_id: { _eq: $package_order_id } }
           { shopper_id: { _eq: $shopper_id } }
           { status: { _eq: "DECLINED" } }
         ]
@@ -574,6 +682,32 @@ const CHECK_SHOPPER_EXISTING_OFFER_BUSINESS = gql`
   }
 `;
 
+// Query to check if shopper already has an active offer for this order (package)
+const CHECK_SHOPPER_EXISTING_OFFER_PACKAGE = gql`
+  query CheckShopperExistingOfferPackage(
+    $package_order_id: uuid!
+    $shopper_id: uuid!
+    $order_type: String!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { order_type: { _eq: $order_type } }
+          { status: { _in: ["OFFERED"] } }
+          { package_order_id: { _eq: $package_order_id } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      expires_at
+      round_number
+      status
+    }
+  }
+`;
+
 // Mutation to update existing offer expiry time
 const UPDATE_OFFER_EXPIRY = gql`
   mutation UpdateOfferExpiry($offer_id: uuid!, $expires_at: timestamptz!) {
@@ -595,6 +729,7 @@ const CREATE_ORDER_OFFER = gql`
     $reel_order_id: uuid
     $restaurant_order_id: uuid
     $business_order_id: uuid
+    $package_order_id: uuid
     $shopper_id: uuid!
     $order_type: String!
     $offered_at: timestamptz!
@@ -607,6 +742,7 @@ const CREATE_ORDER_OFFER = gql`
         reel_order_id: $reel_order_id
         restaurant_order_id: $restaurant_order_id
         business_order_id: $business_order_id
+        package_order_id: $package_order_id
         shopper_id: $shopper_id
         order_type: $order_type
         status: "OFFERED"
@@ -704,6 +840,16 @@ const VERIFY_ORDER_UNASSIGNED_BUSINESS = gql`
   }
 `;
 
+const VERIFY_ORDER_UNASSIGNED_PACKAGE = gql`
+  query VerifyOrderUnassignedPackage($order_id: uuid!) {
+    package_delivery_by_pk(id: $order_id) {
+      id
+      shopper_id
+      status
+    }
+  }
+`;
+
 // Query to verify all orders in a combined group are unassigned
 const VERIFY_COMBINED_ORDERS_UNASSIGNED = gql`
   query VerifyCombinedOrdersUnassigned($order_ids: [uuid!]!) {
@@ -751,10 +897,14 @@ function formatOrderForResponse(
   const deliveryLat =
     order.orderType === "business"
       ? parseFloat(order.latitude || order.business_store?.latitude || "0")
+      : order.orderType === "package"
+      ? parseFloat(order.dropoff_latitude || "0")
       : parseFloat(order.Address?.latitude || order.address?.latitude || "0");
   const deliveryLng =
     order.orderType === "business"
       ? parseFloat(order.longitude || order.business_store?.longitude || "0")
+      : order.orderType === "package"
+      ? parseFloat(order.dropoff_longitude || "0")
       : parseFloat(order.Address?.longitude || order.address?.longitude || "0");
   const distance = calculateDistanceKm(
     shopperLocation.lat,
@@ -782,6 +932,8 @@ function formatOrderForResponse(
         : typeof u === "string"
         ? parseInt(u, 10) || 1
         : 1;
+  } else if (order.orderType === "package") {
+    itemsCount = 1;
   }
 
   const customerAddressStr =
@@ -791,6 +943,8 @@ function formatOrderForResponse(
         : order.deliveryAddress
         ? JSON.stringify(order.deliveryAddress)
         : "—"
+      : order.orderType === "package"
+      ? order.dropoffLocation || "—"
       : `${order.Address?.street || order.address?.street || ""}, ${
           order.Address?.city || order.address?.city || ""
         }`.trim() || "—";
@@ -800,11 +954,15 @@ function formatOrderForResponse(
     OrderID: order.OrderID ?? null,
     displayOrderId: order.OrderID != null ? String(order.OrderID) : null,
     shopName:
-      order.Shop?.name ||
-      order.Reel?.title ||
-      order.Restaurant?.name ||
-      order.business_store?.name ||
-      "Unknown Shop",
+      order.orderType === "package"
+        ? order.Users?.name
+          ? `Package from ${order.Users.name}`
+          : "Package Delivery"
+        : order.Shop?.name ||
+          order.Reel?.title ||
+          order.Restaurant?.name ||
+          order.business_store?.name ||
+          "Unknown Shop",
     distance: distance,
     travelTimeMinutes: calculateTravelTime(distance),
     createdAt: order.created_at,
@@ -816,6 +974,8 @@ function formatOrderForResponse(
         : order.orderType === "business"
         ? parseFloat(order.transportation_fee || "0") +
           parseFloat(order.service_fee || "0")
+        : order.orderType === "package"
+        ? parseFloat(order.delivery_fee || "0")
         : parseFloat(order.service_fee || "0") +
           parseFloat(order.delivery_fee || "0"),
     orderType: order.orderType,
@@ -823,20 +983,24 @@ function formatOrderForResponse(
     expiresIn: expiresInMs ?? null,
     // Add coordinates for map route display (pickup location)
     shopLatitude: parseFloat(
-      order.Shop?.latitude ||
-        order.Restaurant?.lat ||
-        order.business_store?.latitude ||
-        order.Reel?.Restaurant?.lat ||
-        order.Reel?.Shops?.latitude ||
-        "0"
+      order.orderType === "package"
+        ? order.pickup_latitude || "0"
+        : order.Shop?.latitude ||
+          order.Restaurant?.lat ||
+          order.business_store?.latitude ||
+          order.Reel?.Restaurant?.lat ||
+          order.Reel?.Shops?.latitude ||
+          "0"
     ),
     shopLongitude: parseFloat(
-      order.Shop?.longitude ||
-        order.Restaurant?.long ||
-        order.business_store?.longitude ||
-        order.Reel?.Restaurant?.long ||
-        order.Reel?.Shops?.longitude ||
-        "0"
+      order.orderType === "package"
+        ? order.pickup_longitude || "0"
+        : order.Shop?.longitude ||
+          order.Restaurant?.long ||
+          order.business_store?.longitude ||
+          order.Reel?.Restaurant?.long ||
+          order.Reel?.Shops?.longitude ||
+          "0"
     ),
     customerLatitude: deliveryLat,
     customerLongitude: deliveryLng,
@@ -857,6 +1021,18 @@ function formatOrderForResponse(
       transportation_fee: parseFloat(order.transportation_fee || "0"),
       service_fee: parseFloat(order.service_fee || "0"),
     }),
+    // Add package-specific fields
+    ...(order.orderType === "package" && {
+      packageDetails: {
+        DeliveryCode: order.DeliveryCode,
+        pickupLocation: order.pickupLocation,
+        dropoffLocation: order.dropoffLocation,
+        receiverName: order.receiverName,
+        receiverPhone: order.receiverPhone,
+        comment: order.comment,
+        package_image: order.package_image,
+      },
+    }),
   };
 }
 
@@ -867,10 +1043,16 @@ function calculateShopperPriority(
   order: any,
   performance: any
 ): number {
-  const orderLocation = {
-    lat: parseFloat(order.Address?.latitude || order.address?.latitude),
-    lng: parseFloat(order.Address?.longitude || order.address?.longitude),
-  };
+  const orderLocation =
+    order.orderType === "package"
+      ? {
+          lat: parseFloat(order.pickup_latitude || order.dropoff_latitude || "0"),
+          lng: parseFloat(order.pickup_longitude || order.dropoff_longitude || "0"),
+        }
+      : {
+          lat: parseFloat(order.Address?.latitude || order.address?.latitude || "0"),
+          lng: parseFloat(order.Address?.longitude || order.address?.longitude || "0"),
+        };
 
   // Calculate distance
   const distance = calculateDistanceKm(
@@ -889,7 +1071,8 @@ function calculateShopperPriority(
   // Calculate order age in minutes
   const orderTimestamp =
     (order.orderType === "restaurant" && order.updated_at) ||
-    (order.orderType === "business" && order.updated_at)
+    (order.orderType === "business" && order.updated_at) ||
+    (order.orderType === "package" && order.updated_at)
       ? new Date(order.updated_at).getTime()
       : new Date(order.created_at).getTime();
   const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
@@ -1012,6 +1195,15 @@ export default async function handler(
           id
           status
         }
+        package_delivery(
+          where: {
+            shopper_id: { _eq: $shopper_id }
+            status: { _neq: "delivered" }
+          }
+        ) {
+          id
+          status
+        }
       }
     `;
 
@@ -1024,6 +1216,7 @@ export default async function handler(
       ...(activeOrdersData.reel_orders || []),
       ...(activeOrdersData.restaurant_orders || []),
       ...(activeOrdersData.businessProductOrders || []),
+      ...(activeOrdersData.package_delivery || []),
     ];
     const activeOrderCount = activeOrders.length;
 
@@ -1083,6 +1276,7 @@ export default async function handler(
           reel_order_id
           restaurant_order_id
           business_order_id
+          package_order_id
           order_type
           status
           expires_at
@@ -1107,7 +1301,8 @@ export default async function handler(
         activeOffer.order_id ||
         activeOffer.reel_order_id ||
         activeOffer.restaurant_order_id ||
-        activeOffer.business_order_id;
+        activeOffer.business_order_id ||
+        activeOffer.package_order_id;
 
       console.log(
         "🚫 Shopper already has an active OFFERED offer - cannot receive new offer:",
@@ -1149,6 +1344,11 @@ export default async function handler(
           id: activeOffer.business_order_id,
         })) as any;
         rawOrder = r?.businessProductOrders_by_pk;
+      } else if (orderType === "package" && activeOffer.package_order_id) {
+        const r = (await hasuraClient.request(GET_PACKAGE_ORDER_BY_PK, {
+          id: activeOffer.package_order_id,
+        })) as any;
+        rawOrder = r?.package_delivery_by_pk;
       }
       if (rawOrder) {
         rawOrder.orderType = orderType;
@@ -1228,16 +1428,29 @@ export default async function handler(
     const availableBusinessOrders =
       businessOrdersData.businessProductOrders || [];
 
+    // Check if the shopper is a courier
+    const isCourier = performanceData.shoppers?.[0]?.courier === true;
+    let availablePackageOrders: any[] = [];
+    
+    if (isCourier) {
+      const packageOrdersData = (await hasuraClient.request(
+        GET_ELIGIBLE_PACKAGE_ORDERS
+      )) as any;
+      availablePackageOrders = packageOrdersData.package_delivery || [];
+    }
+
     console.log("Eligible orders (no active offers):", {
       regular: availableOrders.length,
       reel: availableReelOrders.length,
       restaurant: availableRestaurantOrders.length,
       business: availableBusinessOrders.length,
+      package: availablePackageOrders.length,
       total:
         availableOrders.length +
         availableReelOrders.length +
         availableRestaurantOrders.length +
-        availableBusinessOrders.length,
+        availableBusinessOrders.length +
+        availablePackageOrders.length,
     });
 
     // Combine all orders with type information
@@ -1257,6 +1470,10 @@ export default async function handler(
       ...availableBusinessOrders.map((order: any) => ({
         ...order,
         orderType: "business",
+      })),
+      ...availablePackageOrders.map((order: any) => ({
+        ...order,
+        orderType: "package",
       })),
     ];
 
@@ -1334,6 +1551,15 @@ export default async function handler(
                 order.longitude || order.business_store?.longitude || "0"
               ),
             }
+          : order.orderType === "package"
+          ? {
+              lat: parseFloat(
+                order.pickup_latitude || order.dropoff_latitude || "0"
+              ),
+              lng: parseFloat(
+                order.pickup_longitude || order.dropoff_longitude || "0"
+              ),
+            }
           : {
               lat: parseFloat(
                 order.Address?.latitude || order.address?.latitude || "0"
@@ -1352,7 +1578,8 @@ export default async function handler(
 
       // Calculate order age
       const orderTimestamp =
-        order.orderType === "restaurant" && order.updated_at
+        (order.orderType === "restaurant" && order.updated_at) ||
+        (order.orderType === "package" && order.updated_at)
           ? new Date(order.updated_at).getTime()
           : new Date(order.created_at).getTime();
       const orderAgeMinutes = (Date.now() - orderTimestamp) / 60000;
@@ -1469,6 +1696,14 @@ export default async function handler(
             CHECK_SHOPPER_DECLINED_ORDER_BUSINESS,
             {
               business_order_id: order.id,
+              shopper_id: user_id,
+            }
+          )) as any;
+        } else if (order.orderType === "package") {
+          declinedCheck = (await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_PACKAGE,
+            {
+              package_order_id: order.id,
               shopper_id: user_id,
             }
           )) as any;
@@ -1634,6 +1869,7 @@ export default async function handler(
       reel_order_id: null,
       restaurant_order_id: null,
       business_order_id: null,
+      package_order_id: null,
     };
 
     // Set only the relevant order ID based on type
@@ -1645,6 +1881,8 @@ export default async function handler(
       offerVariables.restaurant_order_id = bestOrder.id;
     } else if (bestOrder.orderType === "business") {
       offerVariables.business_order_id = bestOrder.id;
+    } else if (bestOrder.orderType === "package") {
+      offerVariables.package_order_id = bestOrder.id;
     }
 
     // ========================================================================
@@ -1688,6 +1926,15 @@ export default async function handler(
           shopper_id: user_id,
           order_type: bestOrder.orderType,
           business_order_id: bestOrder.id,
+        }
+      );
+    } else if (bestOrder.orderType === "package") {
+      existingOfferData = await hasuraClient.request(
+        CHECK_SHOPPER_EXISTING_OFFER_PACKAGE,
+        {
+          shopper_id: user_id,
+          order_type: bestOrder.orderType,
+          package_order_id: bestOrder.id,
         }
       );
     }
@@ -1763,6 +2010,15 @@ export default async function handler(
             business_order_id: bestOrder.id,
           }
         );
+      } else if (bestOrder.orderType === "package") {
+        finalCheckData = await hasuraClient.request(
+          CHECK_SHOPPER_EXISTING_OFFER_PACKAGE,
+          {
+            shopper_id: user_id,
+            order_type: bestOrder.orderType,
+            package_order_id: bestOrder.id,
+          }
+        );
       }
 
       const finalCheckOffer = finalCheckData.order_offers?.[0];
@@ -1806,7 +2062,8 @@ export default async function handler(
             existing.order_id ||
             existing.reel_order_id ||
             existing.restaurant_order_id ||
-            existing.business_order_id;
+            existing.business_order_id ||
+            existing.package_order_id;
           console.log(
             "🚫 Race prevented: Another request already created offer for this shopper:",
             { offerId: existing.id, orderId: existingOrderId }
@@ -1846,6 +2103,7 @@ export default async function handler(
                 reel_order_id: null,
                 restaurant_order_id: null,
                 business_order_id: null,
+                package_order_id: null,
               };
 
               const offerResult = (await hasuraClient.request(
@@ -1937,6 +2195,15 @@ export default async function handler(
                   shopper_id: user_id,
                   order_type: bestOrder.orderType,
                   business_order_id: bestOrder.id,
+                }
+              );
+            } else if (bestOrder.orderType === "package") {
+              recoveryCheckData = await hasuraClient.request(
+                CHECK_SHOPPER_EXISTING_OFFER_PACKAGE,
+                {
+                  shopper_id: user_id,
+                  order_type: bestOrder.orderType,
+                  package_order_id: bestOrder.id,
                 }
               );
             }
@@ -2107,13 +2374,19 @@ export default async function handler(
               VERIFY_ORDER_UNASSIGNED_BUSINESS,
               { order_id: bestOrder.id }
             )) as any;
+          } else if (bestOrder.orderType === "package") {
+            verificationData = (await hasuraClient.request(
+              VERIFY_ORDER_UNASSIGNED_PACKAGE,
+              { order_id: bestOrder.id }
+            )) as any;
           }
 
           const order =
             verificationData?.Orders_by_pk ||
             verificationData?.reel_orders_by_pk ||
             verificationData?.restaurant_orders_by_pk ||
-            verificationData?.businessProductOrders_by_pk;
+            verificationData?.businessProductOrders_by_pk ||
+            verificationData?.package_delivery_by_pk;
 
           if (order && order.shopper_id !== null) {
             orderStillUnassigned = false;
@@ -2202,6 +2475,23 @@ export default async function handler(
           ) {
             console.log(
               `⏭️ Skipping FCM for business order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
+            );
+            skipFcmForDeclined = true;
+          }
+        } else if (bestOrder.orderType === "package") {
+          const packageDeclinedCheck = (await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_PACKAGE,
+            {
+              package_order_id: bestOrder.id,
+              shopper_id: user_id,
+            }
+          )) as any;
+          if (
+            packageDeclinedCheck.order_offers &&
+            packageDeclinedCheck.order_offers.length > 0
+          ) {
+            console.log(
+              `⏭️ Skipping FCM for package order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
             );
             skipFcmForDeclined = true;
           }

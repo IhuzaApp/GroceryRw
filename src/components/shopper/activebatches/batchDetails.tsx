@@ -1592,6 +1592,32 @@ export default function BatchDetails({
       return;
     }
 
+    // For package orders, show modal directly
+    if (activeOrder?.orderType === "package") {
+      const mockInvoiceData = {
+        id: `package_${activeOrder.id}_${Date.now()}`,
+        invoiceNumber: activeOrder.DeliveryCode || activeOrder.id.slice(-8),
+        orderId: activeOrder.id,
+        orderNumber: activeOrder.DeliveryCode || activeOrder.id.slice(-8),
+        customer: activeOrder.receiverName || "Receiver",
+        customerPhone: activeOrder.receiverPhone || "",
+        deliveryAddress: activeOrder.dropoffLocation || "",
+        dateCreated: new Date().toLocaleString(),
+        status: "delivered",
+        items: [],
+        subtotal: 0,
+        serviceFee: 0,
+        deliveryFee: parseFloat(activeOrder.delivery_fee || "0"),
+        total: parseFloat(activeOrder.delivery_fee || "0"),
+        orderType: "package",
+        isReelOrder: false,
+        isRestaurantOrder: false,
+      };
+      setInvoiceData(mockInvoiceData);
+      setShowInvoiceModal(true);
+      return;
+    }
+
     // Check if orders are going to different customers
     // IMPORTANT: Use the main batch order to check for multiple customers, not the clicked order
     const allOrdersInBatch = [order, ...(order?.combinedOrders || [])];
@@ -2619,7 +2645,43 @@ export default function BatchDetails({
     const showConfirmPickup =
       activeOrder.orderType === "reel" || isRestaurantOrder || isBusinessOrder;
 
+    // Special handling for package delivery
+    if (activeOrder.orderType === "package") {
+      if (activeOrder.status === "PENDING" && !activeOrder.shopper_id) {
+        return (
+          <Button
+            appearance="primary"
+            color="pink"
+            size="lg"
+            block
+            onClick={() => handleUpdateStatus("accepted", activeOrder.id)}
+            loading={loading}
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+          >
+            Accept Package
+          </Button>
+        );
+      }
+    }
+
     switch (activeOrder.status) {
+      case "PENDING":
+        if (activeOrder.orderType === "package" && !activeOrder.shopper_id) {
+          return (
+            <Button
+              appearance="primary"
+              color="pink"
+              size="lg"
+              block
+              onClick={() => handleUpdateStatus("accepted", activeOrder.id)}
+              loading={loading}
+              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+            >
+              Accept Package
+            </Button>
+          );
+        }
+        return null;
       case "accepted":
       case "Ready for Pickup":
         if (showConfirmPickup) {
@@ -4046,7 +4108,8 @@ export default function BatchDetails({
               {shouldShowOrderDetails() &&
                 order?.orderType !== "reel" &&
                 order?.orderType !== "restaurant" &&
-                order?.orderType !== "business" && (
+                order?.orderType !== "business" &&
+                order?.orderType !== "package" && (
                   <OrderSummarySection
                     order={order}
                     isSummaryExpanded={isSummaryExpanded}

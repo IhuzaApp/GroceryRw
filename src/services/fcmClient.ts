@@ -353,7 +353,8 @@ export const setupFCMListener = (
             window.focus();
             if (
               notificationType === "new_order" ||
-              notificationType === "batch_orders"
+              notificationType === "batch_orders" ||
+              notificationType === "package_delivery"
             ) {
               window.location.href = "/Plasa/active-batches";
             }
