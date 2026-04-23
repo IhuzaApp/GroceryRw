@@ -7,13 +7,14 @@ import { useSession } from "next-auth/react";
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
+import { createPortal } from "react-dom";
 
 // Check if mobile
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -612,8 +613,9 @@ export default function NotificationCenter() {
       </button>
 
       {/* Notification Dropdown/Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[10001] flex flex-col md:relative md:block">
+      {isOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[10001] flex flex-col md:relative md:block">
           {/* Backdrop for mobile */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm duration-500 animate-in fade-in md:hidden"
@@ -626,7 +628,7 @@ export default function NotificationCenter() {
             className={`${
               isMobile
                 ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[2.5rem] duration-500 animate-in slide-in-from-bottom"
-                : "absolute right-0 top-14 z-50 w-[24rem] origin-top-right overflow-hidden rounded-3xl duration-300 animate-in zoom-in-95"
+                : "fixed right-[20px] top-[70px] z-50 w-[24rem] origin-top-right overflow-hidden rounded-3xl duration-300 animate-in zoom-in-95 shadow-2xl"
             } ${
               theme === "dark"
                 ? "border border-white/10 bg-[#0A0A0A]/80 shadow-[0_30px_100px_-15px_rgba(0,0,0,1)] backdrop-blur-3xl"
@@ -1016,8 +1018,9 @@ export default function NotificationCenter() {
               )}
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
