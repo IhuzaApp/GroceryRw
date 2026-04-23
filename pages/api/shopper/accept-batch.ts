@@ -295,6 +295,12 @@ const CHECK_ACTIVE_ORDERS = gql`
       id
       status
     }
+    package_delivery(
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
+    ) {
+      id
+      status
+    }
   }
 `;
 
@@ -383,9 +389,9 @@ export default async function handler(
         ...(activeOrdersData.businessProductOrders || []),
       ];
       const activeOrderCount = activeOrders.length;
-      if (activeOrderCount >= 2) {
+      if (activeOrderCount >= 1) {
         return res.status(403).json({
-          error: `You already have ${activeOrderCount} active orders. Please deliver at least one before accepting more.`,
+          error: `You already have an active order. Please deliver it before accepting more.`,
           code: "MAX_ACTIVE_ORDERS_REACHED",
           activeOrderCount,
         });
@@ -545,16 +551,17 @@ export default async function handler(
       ...(activeOrdersData.reel_orders || []),
       ...(activeOrdersData.restaurant_orders || []),
       ...(activeOrdersData.businessProductOrders || []),
+      ...(activeOrdersData.package_delivery || []),
     ];
     const activeOrderCount = activeOrders.length;
 
-    if (activeOrderCount >= 2) {
+    if (activeOrderCount >= 1) {
       console.warn(
-        "❌ Acceptance blocked - shopper already has 2 active orders:",
+        "❌ Acceptance blocked - shopper already has an active order:",
         userId
       );
       return res.status(403).json({
-        error: `You already have ${activeOrderCount} active orders. Please deliver at least one before accepting more.`,
+        error: `You already have an active order. Please deliver it before accepting more.`,
         code: "MAX_ACTIVE_ORDERS_REACHED",
         activeOrderCount,
       });

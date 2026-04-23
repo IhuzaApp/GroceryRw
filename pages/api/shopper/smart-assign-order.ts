@@ -1316,43 +1316,83 @@ export default async function handler(
       const isExpired = new Date(activeOffer.expires_at) <= new Date();
 
       if (isExpired) {
-        // console.log(`🚨 Offer ${activeOffer.id} is EXPIRED. Marking as DELAYED and proceeding...`);
+        // console.log(`🚨 Offer ${activeOffer.id} is EXPIRED. Processing batch/order as DELAYED...`);
         
-        // 1. Mark as DELAYED
-        await hasuraClient.request(gql`
-          mutation MarkOfferDelayed($id: uuid!) {
-            update_order_offers_by_pk(
-              pk_columns: { id: $id }
-              _set: { status: "DELAYED", updated_at: "now()" }
+        // 1. Mark as DELAYED (handle batches)
+        if (activeOffer.order_type === "regular" && activeOffer.order_id) {
+          // Check if this belongs to a combined order
+          const combinedData = (await hasuraClient.request(gql`
+            query GetCombinedId($id: uuid!) {
+              Orders_by_pk(id: $id) {
+                combined_order_id
+              }
+            }
+          `, { id: activeOffer.order_id })) as any;
+          
+          const combinedId = combinedData.Orders_by_pk?.combined_order_id;
+          
+          if (combinedId) {
+            // Mark ALL offers for this shopper in this batch as DELAYED
+            await hasuraClient.request(gql`
+              mutation MarkBatchDelayed($combined_id: uuid!, $shopper_id: uuid!) {
+                update_order_offers(
+                  where: {
+                    shopper_id: { _eq: $shopper_id }
+                    status: { _eq: "OFFERED" }
+                    Order: { combined_order_id: { _eq: $combined_id } }
+                  }
+                  _set: { status: "DELAYED", updated_at: "now()" }
+                ) {
+                  affected_rows
+                }
+              }
+            `, { combined_id: combinedId, shopper_id: user_id });
+          } else {
+            await hasuraClient.request(gql`
+              mutation MarkOfferDelayed($id: uuid!) {
+                update_order_offers_by_pk(
+                  pk_columns: { id: $id }
+                  _set: { status: "DELAYED", updated_at: "now()" }
+                ) {
+                  id
+                }
+              }
+            `, { id: activeOffer.id });
+          }
+        } else {
+          // Reel, Restaurant, Package, etc (no batches yet)
+          await hasuraClient.request(gql`
+            mutation MarkOfferDelayed($id: uuid!) {
+              update_order_offers_by_pk(
+                pk_columns: { id: $id }
+                _set: { status: "DELAYED", updated_at: "now()" }
+              ) {
+                id
+              }
+            }
+          `, { id: activeOffer.id });
+        }
+
+        // 2. Punishment check (Count distinct offered_at groups to avoid penalizing multiple times for 1 batch)
+        const delayedCountData = (await hasuraClient.request(gql`
+          query CountDelayedAssignmentUnits($shopper_id: uuid!) {
+            order_offers(
+              where: {
+                shopper_id: { _eq: $shopper_id }
+                status: { _eq: "DELAYED" }
+                offered_at: { _gte: "today" }
+              }
+              distinct_on: [offered_at]
             ) {
               id
             }
           }
-        `, { id: activeOffer.id });
-
-        // 2. Punishment check
-        const delayedCountData = (await hasuraClient.request(gql`
-          query CountDelayedOffersToday($shopper_id: uuid!) {
-            order_offers_aggregate(
-              where: {
-                _and: [
-                  { shopper_id: { _eq: $shopper_id } }
-                  { status: { _eq: "DELAYED" } }
-                  { offered_at: { _gte: "today" } }
-                ]
-              }
-            ) {
-              aggregate {
-                count
-              }
-            }
-          }
         `, { shopper_id: user_id })) as any;
 
-        const delayedCount = delayedCountData.order_offers_aggregate?.aggregate?.count || 0;
+        const delayedUnitsCount = (delayedCountData.order_offers || []).length;
 
-        if (delayedCount > 2) {
-          // console.log(`🚨 Shopper ${user_id} has ${delayedCount} delayed offers today. PUNISHING...`);
+        if (delayedUnitsCount > 2) {
+          // console.log(`🚨 Shopper ${user_id} has ${delayedUnitsCount} delayed assignment units today. PUNISHING...`);
           
           const downgradeResp = (await hasuraClient.request(gql`
             mutation DowngradeShopper($shopper_id: uuid!) {
