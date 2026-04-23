@@ -42,9 +42,9 @@ interface RoundConfig {
 }
 
 const ROUND_CONFIGS: RoundConfig[] = [
-  { round: 1, maxDistanceKm: 3, maxEtaMinutes: 15, offerDurationMs: 60000 },
-  { round: 2, maxDistanceKm: 5, maxEtaMinutes: 25, offerDurationMs: 60000 },
-  { round: 3, maxDistanceKm: 8, maxEtaMinutes: 40, offerDurationMs: 90000 },
+  { round: 1, maxDistanceKm: 3, maxEtaMinutes: 15, offerDurationMs: 120000 },
+  { round: 2, maxDistanceKm: 5, maxEtaMinutes: 25, offerDurationMs: 120000 },
+  { round: 3, maxDistanceKm: 8, maxEtaMinutes: 40, offerDurationMs: 120000 },
 ];
 
 // For orders older than 30 minutes, use wider radius immediately
@@ -1363,6 +1363,29 @@ export default async function handler(
           shopperLocation,
           null
         );
+        // Re-trigger the notification to ensure the shopper sees it
+        try {
+          const distance = formattedOrder.distance || 0;
+          const estimatedEarnings = formattedOrder.estimatedEarnings || 0;
+
+          await sendNewOrderNotification(user_id, {
+            id: orderId,
+            shopName: formattedOrder.shopName || "Unknown Shop",
+            customerAddress: formattedOrder.customerAddress || "Unknown Address",
+            distance,
+            itemsCount: formattedOrder.itemsCount || 1,
+            travelTimeMinutes: Math.round((distance / 20) * 60),
+            estimatedEarnings,
+            orderType: orderType,
+            expiresInMs: 120000, // Matching the 2-minute timeout
+            // Add unique tag to force re-pop and sound
+            tag: `new_order_${orderId}_${Date.now()}`,
+          } as any);
+          console.log(`✅ Re-triggered notification for shopper ${user_id}`);
+        } catch (fcmError) {
+          console.error("Failed to re-trigger notification:", fcmError);
+        }
+
         return res.status(200).json({
           success: false,
           message:

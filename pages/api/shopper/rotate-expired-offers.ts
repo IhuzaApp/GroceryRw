@@ -19,7 +19,7 @@ import { sendNewOrderNotification } from "../../../src/services/fcmService";
 // - By the shopper app when polling for new orders
 // ============================================================================
 
-const OFFER_DURATION_MS = 60000; // 60 seconds
+const OFFER_DURATION_MS = 120000; // 2 minutes (120 seconds)
 
 // Query to get expired offers
 const GET_EXPIRED_OFFERS = gql`
@@ -50,7 +50,7 @@ const MARK_OFFER_EXPIRED = gql`
   mutation MarkOfferExpired($offerId: uuid!) {
     update_order_offers_by_pk(
       pk_columns: { id: $offerId }
-      _set: { status: "EXPIRED", updated_at: "now()" }
+      _set: { status: "DELAYED", updated_at: "now()" }
     ) {
       id
       status
@@ -258,6 +258,49 @@ const CREATE_ORDER_OFFER = gql`
   }
 `;
 
+// Query to count DELAYED offers for a shopper today
+const COUNT_DELAYED_OFFERS_TODAY = gql`
+  query CountDelayedOffersToday($shopper_id: uuid!) {
+    order_offers_aggregate(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DELAYED" } }
+          { offered_at: { _gte: "today" } }
+        ]
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
+
+// Mutation to downgrade shopper to user
+const DOWNGRADE_SHOPPER = gql`
+  mutation DowngradeShopper($shopper_id: uuid!) {
+    # Get user_id first
+    update_shoppers(
+      where: { id: { _eq: $shopper_id } }
+      _set: { active: false, status: "offline" }
+    ) {
+      returning {
+        user_id
+      }
+    }
+  }
+`;
+
+const UPDATE_USER_ROLE = gql`
+  mutation UpdateUserRole($user_id: uuid!) {
+    update_Users_by_pk(pk_columns: { id: $user_id }, _set: { role: "user" }) {
+      id
+      role
+    }
+  }
+`;
+
 // Haversine formula to calculate distance in kilometers
 function calculateDistanceKm(
   lat1: number,
@@ -412,7 +455,40 @@ export default async function handler(
           offerId: expiredOffer.id,
         });
 
-        console.log(`✅ Marked offer ${expiredOffer.id} as EXPIRED`);
+        console.log(`✅ Marked offer ${expiredOffer.id} as DELAYED`);
+
+        // ========================================================================
+        // PUNISHMENT LOGIC: Check if shopper has > 2 DELAYED offers today
+        // ========================================================================
+        const delayedCountData = (await hasuraClient.request(
+          COUNT_DELAYED_OFFERS_TODAY,
+          {
+            shopper_id: expiredOffer.shopper_id,
+          }
+        )) as any;
+
+        const delayedCount =
+          delayedCountData.order_offers_aggregate?.aggregate?.count || 0;
+
+        if (delayedCount > 2) {
+          console.log(
+            `🚨 Shopper ${expiredOffer.shopper_id} has ${delayedCount} delayed offers today. PUNISHING...`
+          );
+
+          // Downgrade shopper to user and take offline
+          const downgradeResp = (await hasuraClient.request(DOWNGRADE_SHOPPER, {
+            shopper_id: expiredOffer.shopper_id,
+          })) as any;
+
+          const userId = downgradeResp.update_shoppers?.returning?.[0]?.user_id;
+
+          if (userId) {
+            await hasuraClient.request(UPDATE_USER_ROLE, { user_id: userId });
+            console.log(
+              `✅ Shopper ${expiredOffer.shopper_id} (User ${userId}) downgraded to role 'user' and taken offline.`
+            );
+          }
+        }
 
         // Get order details
         const orderId =
