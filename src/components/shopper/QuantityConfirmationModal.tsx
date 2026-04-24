@@ -206,12 +206,14 @@ export default function QuantityConfirmationModal({
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
 
         <div
-        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
-          theme === "dark"
-            ? "border border-gray-700 bg-gray-900/95 text-white backdrop-blur-xl"
-            : "border border-gray-200 bg-white/95 text-gray-900 backdrop-blur-xl"
+        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] border ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
         }`}
-        style={{ zIndex: 10001 }}
+        style={{ 
+          zIndex: 10001,
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
           {/* Header Gradient */}
@@ -251,9 +253,7 @@ export default function QuantityConfirmationModal({
             <div className="space-y-6">
               
               {/* Product Preview Card */}
-              <div className={`rounded-3xl border p-5 flex items-center gap-5 ${
-                theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-100"
-              }`}>
+              <div className={`rounded-3xl border p-5 flex items-center gap-5`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: theme === "dark" ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
                 <div className="h-20 w-20 overflow-hidden rounded-2xl bg-white p-2 shadow-sm border border-gray-200/50">
                   {currentItem.product.ProductName?.image ? (
                     <Image src={currentItem.product.ProductName.image} alt="Product" width={80} height={80} className="object-contain h-full w-full" />
@@ -326,7 +326,7 @@ export default function QuantityConfirmationModal({
 
                   {showManualInput && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-5">
-                      <div className={`rounded-3xl border p-6 space-y-6 ${theme === "dark" ? "bg-gray-800/40 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+                      <div className={`rounded-3xl border p-6 space-y-6`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
                         <div className="flex items-center justify-between">
                           <h3 className={`font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>ENTER CODE</h3>
                           <button onClick={() => { setShowManualInput(false); setManualSku(""); }} className="text-[10px] font-black tracking-widest text-gray-500 hover:text-gray-800 dark:hover:text-white uppercase">BACK</button>
@@ -338,9 +338,12 @@ export default function QuantityConfirmationModal({
                             onChange={(e) => setManualSku(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
                             placeholder="Type Barcode or SKU..."
-                            className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight text-center transition-all ${
-                              theme === "dark" ? "bg-gray-900 border-gray-700 text-white placeholder-gray-600 focus:border-blue-500" : "bg-white border-gray-200 text-gray-900 placeholder-gray-300 focus:border-blue-500"
-                            }`}
+                            className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight text-center transition-all focus:border-blue-500`}
+                            style={{ 
+                              backgroundColor: 'var(--bg-primary)', 
+                              color: 'var(--text-primary)',
+                              borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            }}
                             autoFocus
                           />
                         </div>
@@ -396,9 +399,12 @@ export default function QuantityConfirmationModal({
                         if (isWeightBased) { setFoundWeight(validValue); setFoundQuantity(validValue); }
                         else { setFoundQuantity(Math.floor(validValue)); }
                       }}
-                      className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all ${
-                        theme === "dark" ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500"
-                      }`}
+                      className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all focus:border-blue-500`}
+                      style={{ 
+                        backgroundColor: 'var(--bg-secondary)', 
+                        color: 'var(--text-primary)',
+                        borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                      }}
                       placeholder="0"
                       autoFocus
                     />
@@ -449,12 +455,15 @@ export default function QuantityConfirmationModal({
             </div>
           </div>
 
-          <div className={`p-6 sm:p-10 border-t flex gap-4 ${theme === "dark" ? "bg-gray-900/50 border-gray-800" : "bg-gray-50 border-gray-200"}`}>
+          <div className={`p-6 sm:p-10 border-t flex gap-4`} style={{ backgroundColor: 'var(--bg-secondary)', borderTopColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
             <button
               onClick={onClose}
-              className={`flex-1 rounded-2xl py-4 font-black tracking-tight transition-all active:scale-95 ${
-                theme === "dark" ? "bg-gray-800 text-gray-400 hover:text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`flex-1 rounded-2xl py-4 font-black tracking-tight transition-all active:scale-95 border`}
+              style={{ 
+                backgroundColor: 'var(--bg-primary)', 
+                color: 'var(--text-secondary)',
+                borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+              }}
             >
               CANCEL
             </button>
