@@ -897,14 +897,19 @@ export default function BatchDetails({
       // If we have enough balance or couldn't check, proceed with OTP
       const generatedCode = generateOtp(targetOrderForPayment.OrderID);
 
-      // Send SMS via Pindo
+      // Send OTP via Pindo (SMS) and Resend (Email)
       const shopperPhone = (session?.user as any)?.phone;
-      if (shopperPhone && generatedCode) {
+      const shopperEmail = session?.user?.email;
+      if ((shopperPhone || shopperEmail) && generatedCode) {
         fetch("/api/shopper/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: shopperPhone, otp: generatedCode }),
-        }).catch((err) => console.error("Error sending OTP SMS:", err));
+          body: JSON.stringify({ 
+            phone: shopperPhone, 
+            email: shopperEmail,
+            otp: generatedCode 
+          }),
+        }).catch((err) => console.error("Error sending OTP:", err));
       }
 
       // Keep payment modal open - it will handle OTP step internally

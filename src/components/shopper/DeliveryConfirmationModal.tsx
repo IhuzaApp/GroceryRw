@@ -742,13 +742,15 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         />
 
         <div
-          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-0 shadow-2xl sm:max-h-[90vh] sm:rounded-2xl sm:border ${
-            theme === "dark"
-              ? "bg-gray-800 sm:border-gray-700"
-              : "bg-white sm:border-gray-200"
-          }`}
+          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] shadow-2xl transition-all duration-300 sm:max-h-[90vh] sm:rounded-[3rem] border`}
+          style={{ 
+            backgroundColor: 'var(--bg-primary)',
+            borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+          }}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Header Gradient */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
           {/* Header */}
           <div
             className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${
@@ -757,43 +759,23 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 : "border-b border-gray-200"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div
-                className={`rounded-full p-2 ${
-                  theme === "dark" ? "bg-green-600" : "bg-green-100"
-                }`}
-              >
-                <svg
-                  className={`h-6 w-6 ${
-                    theme === "dark" ? "text-white" : "text-green-600"
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
+                <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3
-                  className={`text-lg font-bold md:text-xl ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-800"
-                  }`}
-                >
+                <h3 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                   {photoUploading
-                    ? "Uploading Delivery Photo..."
+                    ? "Uploading Photo..."
                     : confirmingDelivery
-                    ? "Confirming Delivery..."
+                    ? "Confirming..."
                     : deliveryConfirmed
-                    ? "Delivery Confirmed!"
+                    ? "Confirmed!"
                     : orderType === "combined_customer"
-                    ? "Combined Delivery Confirmation"
-                    : "Delivery Confirmation"}
+                    ? "Combined Delivery"
+                    : "Confirm Delivery"}
                 </h3>
                 <p
                   className={`text-sm ${
@@ -1145,19 +1127,39 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                             .replace(/\D/g, "")
                             .slice(0, 2);
                           setPinInput(value);
-                          setPinError(null);
-                        }}
-                        placeholder="Enter 2-digit PIN"
-                        maxLength={2}
-                        disabled={verifyingPin}
-                        className={`w-full rounded-xl border-2 px-4 py-4 text-center text-2xl font-bold tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                          theme === "dark"
-                            ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-green-500"
-                            : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
-                        } ${
-                          pinError ? "border-red-500 focus:ring-red-500" : ""
-                        }`}
-                      />
+                  <div className="mt-4 space-y-6">
+                    <div className="flex justify-between gap-3">
+                      {[0, 1, 2, 3].map((index) => (
+                        <input
+                          key={index}
+                          id={`otp-${index}`}
+                          type="text"
+                          maxLength={1}
+                          value={pinInput[index] || ""}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            if (val.length <= 1) {
+                              const newPin = pinInput.split("");
+                              newPin[index] = val;
+                              setPinInput(newPin.join(""));
+                              if (val && index < 3) {
+                                document.getElementById(`otp-${index + 1}`)?.focus();
+                              }
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Backspace" && !pinInput[index] && index > 0) {
+                              document.getElementById(`otp-${index - 1}`)?.focus();
+                            }
+                          }}
+                          className={`h-20 w-full rounded-2xl border-2 text-center text-4xl font-black transition-all focus:border-emerald-500`}
+                          style={{ 
+                            backgroundColor: 'var(--bg-secondary)', 
+                            color: 'var(--text-primary)',
+                            borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                          }}
+                        />
+                      ))}
                     </div>
 
                     {pinError && (
