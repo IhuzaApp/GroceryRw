@@ -217,11 +217,11 @@ export default function QuantityConfirmationModal({
         onClick={(e) => e.stopPropagation()}
       >
           {/* Header Gradient */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
           
           <div className="flex items-center justify-between px-6 pt-10 pb-6 sm:px-10">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-blue-500/20">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
                 <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -230,7 +230,7 @@ export default function QuantityConfirmationModal({
                 <h2 className={`text-2xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                   {(!isWeightBased && !barcodeValidation.isValid) ? "Verify Product" : "Select Amount"}
                 </h2>
-                <p className={`text-sm font-bold ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`}>
+                <p className={`text-sm font-bold ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
                   {(!isWeightBased && !barcodeValidation.isValid) 
                     ? "Security check required" 
                     : (currentItem.product.ProductName?.name || "Premium Item")}
@@ -282,12 +282,12 @@ export default function QuantityConfirmationModal({
                         onClick={() => setShowBarcodeScanner(true)}
                         className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] p-8 border-2 transition-all duration-300 ${
                           theme === "dark" 
-                            ? "bg-gray-800/40 border-gray-700 hover:border-blue-500 hover:bg-blue-500/10 shadow-lg shadow-blue-500/10" 
-                            : "bg-white border-gray-100 hover:border-blue-500 hover:bg-blue-50 shadow-xl shadow-blue-500/5"
+                            ? "bg-gray-800/40 border-gray-700 hover:border-emerald-500 hover:bg-emerald-500/10 shadow-lg shadow-emerald-500/10" 
+                            : "bg-white border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 shadow-xl shadow-emerald-500/5"
                         }`}
                       >
                         <div className={`h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-                          theme === "dark" ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-600"
+                          theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
                         }`}>
                           <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -338,7 +338,7 @@ export default function QuantityConfirmationModal({
                             onChange={(e) => setManualSku(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
                             placeholder="Type Barcode or SKU..."
-                            className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight text-center transition-all focus:border-blue-500`}
+                            className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight text-center transition-all focus:border-emerald-500`}
                             style={{ 
                               backgroundColor: 'var(--bg-primary)', 
                               color: 'var(--text-primary)',
@@ -351,7 +351,7 @@ export default function QuantityConfirmationModal({
                           onClick={() => manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
                           disabled={!manualSku.trim()}
                           className={`w-full rounded-2xl py-4 font-black tracking-widest text-white shadow-xl transition-all ${
-                            manualSku.trim() ? "bg-gradient-to-r from-blue-600 to-indigo-700 shadow-blue-600/20 active:scale-95" : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                            manualSku.trim() ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/20 active:scale-95" : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
                           }`}
                         >
                           VALIDATE
@@ -399,7 +399,7 @@ export default function QuantityConfirmationModal({
                         if (isWeightBased) { setFoundWeight(validValue); setFoundQuantity(validValue); }
                         else { setFoundQuantity(Math.floor(validValue)); }
                       }}
-                      className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all focus:border-blue-500`}
+                      className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all focus:border-emerald-500`}
                       style={{ 
                         backgroundColor: 'var(--bg-secondary)', 
                         color: 'var(--text-primary)',
@@ -421,7 +421,7 @@ export default function QuantityConfirmationModal({
                         }}
                         className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                           (isWeightBased ? foundWeight : foundQuantity) === Number(isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult))
-                            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20 scale-105"
+                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 scale-105"
                             : theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
                         }`}
                       >
@@ -431,7 +431,7 @@ export default function QuantityConfirmationModal({
                   </div>
 
                   {isWeightBased && (
-                    <div className={`rounded-3xl p-6 border-2 ${exceedsBudget ? "bg-red-500/5 border-red-500/10" : "bg-blue-500/5 border-blue-500/10"}`}>
+                    <div className={`rounded-3xl p-6 border-2 ${exceedsBudget ? "bg-red-500/5 border-red-500/10" : "bg-emerald-500/5 border-emerald-500/10"}`}>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">BUDGET</p>
@@ -472,7 +472,7 @@ export default function QuantityConfirmationModal({
               disabled={(!isWeightBased && !barcodeValidation.isValid) || (isWeightBased ? foundWeight : foundQuantity) <= 0}
               className={`flex-[2] rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
                 (barcodeValidation.isValid || isWeightBased) && (isWeightBased ? foundWeight : foundQuantity) > 0
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-blue-600/30 hover:scale-[1.02]"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/30 hover:scale-[1.02]"
                   : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
               }`}
             >
