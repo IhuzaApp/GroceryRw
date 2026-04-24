@@ -22,11 +22,9 @@ const GET_ADDRESS_AND_USER = gql`
   }
 `;
 
-// Generate a random 2-digit PIN (00-99)
+// Generate a random 4-digit PIN (1000-9999)
 function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100)
-    .toString()
-    .padStart(2, "0");
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 // Create a reel order (pin is stored so it shows in order list and can be verified by shopper)

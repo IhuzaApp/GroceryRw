@@ -975,11 +975,11 @@ export default function BatchDetails({
       const orderAmount = getPaymentOrderAmount();
       const originalOrderTotal = getOriginalOrderTotalForPayment();
 
-      // Initiate MoMo payment after OTP verification
+      // Initiate MoMo disbursement (Transfer) after OTP verification
       let momoPaymentSuccess = false;
       let momoReferenceId = "";
       try {
-        const momoResponse = await fetch("/api/momo/request-to-pay", {
+        const momoResponse = await fetch("/api/momo/disburse-to-merchant", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -987,12 +987,12 @@ export default function BatchDetails({
           body: JSON.stringify({
             amount: orderAmount,
             currency: systemConfig?.currency || "RWF",
-            payerNumber: momoCode,
+            momoCode: momoCode, // The Merchant Code
             orderId: targetOrderForPayment.id,
             externalId:
-              targetOrderForPayment.id || `SHOPPER-PAYMENT-${Date.now()}`,
-            payerMessage: "Payment for Shopper Items",
-            payeeNote: "Shopper payment confirmation",
+              targetOrderForPayment.id || `SHOPPER-DISB-${Date.now()}`,
+            payerMessage: "Shopper Payment for Items",
+            payeeNote: "Payment via Plas Grocery",
           }),
         });
 
@@ -1000,14 +1000,14 @@ export default function BatchDetails({
         momoReferenceId = momoData.referenceId;
 
         if (momoResponse.ok) {
-          // Start polling for MoMo payment status
+          // Start polling for MoMo disbursement status
           const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
 
-          // Poll for MoMo payment status
+          // Poll for MoMo status
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
               const statusResponse = await fetch(
-                `/api/momo/request-to-pay-status?referenceId=${momoReferenceId}`
+                `/api/momo/disburse-status?referenceId=${momoReferenceId}`
               );
               const statusData = await statusResponse.json();
 
@@ -1017,10 +1017,10 @@ export default function BatchDetails({
                   toaster.push(
                     <Notification
                       type="success"
-                      header="MoMo Payment Successful"
+                      header="Payment Successful"
                       closable
                     >
-                      Payment completed successfully via MoMo!
+                      Payment disbursed successfully to merchant!
                     </Notification>,
                     { placement: "topEnd" }
                   );
