@@ -523,6 +523,20 @@ export default async function handler(
           };
         }
       }
+    } else if (isPackageOrder) {
+      const packageDetails = await hasuraClient.request<any>(
+        `
+        query GetPackageOrderDetails($orderId: uuid!) {
+          package_delivery_by_pk(id: $orderId) {
+            id
+            status
+            shopper_id
+          }
+        }
+      `,
+        { orderId }
+      );
+      orderDetails = packageDetails.package_delivery_by_pk;
     } else {
       const regularDetails = await hasuraClient.request<any>(
         `
@@ -540,20 +554,6 @@ export default async function handler(
       orderDetails = regularDetails.Orders_by_pk;
       combinedId = orderDetails?.combined_order_id;
       shopId = orderDetails?.shop_id;
-    } else if (isPackageOrder) {
-      const packageDetails = await hasuraClient.request<any>(
-        `
-        query GetPackageOrderDetails($orderId: uuid!) {
-          package_delivery_by_pk(id: $orderId) {
-            id
-            status
-            shopper_id
-          }
-        }
-      `,
-        { orderId }
-      );
-      orderDetails = packageDetails.package_delivery_by_pk;
     }
 
     let updatedOrders: any[] = [];
@@ -839,6 +839,29 @@ export default async function handler(
           }
         );
         updatedOrders = [result.update_businessProductOrders_by_pk];
+      } else if (isPackageOrder) {
+        if (status === "accepted" && !orderDetails.shopper_id) {
+          // Special case: Assign package to shopper
+          const result = await hasuraClient.request<any>(
+            ASSIGN_PACKAGE_TO_SHOPPER,
+            {
+              orderId,
+              shopperId: userId,
+              updated_at: currentTimestamp,
+            }
+          );
+          updatedOrders = [result.update_package_delivery_by_pk];
+        } else {
+          const result = await hasuraClient.request<any>(
+            UPDATE_PACKAGE_ORDER_STATUS,
+            {
+              id: orderId,
+              status,
+              updated_at: currentTimestamp,
+            }
+          );
+          updatedOrders = [result.update_package_delivery_by_pk];
+        }
       } else {
         const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
           id: orderId,
@@ -846,29 +869,6 @@ export default async function handler(
           updated_at: currentTimestamp,
         });
         updatedOrders = [result.update_Orders_by_pk];
-      }
-    } else if (isPackageOrder) {
-      if (status === "accepted" && !orderDetails.shopper_id) {
-        // Special case: Assign package to shopper
-        const result = await hasuraClient.request<any>(
-          ASSIGN_PACKAGE_TO_SHOPPER,
-          {
-            orderId,
-            shopperId: userId,
-            updated_at: currentTimestamp,
-          }
-        );
-        updatedOrders = [result.update_package_delivery_by_pk];
-      } else {
-        const result = await hasuraClient.request<any>(
-          UPDATE_PACKAGE_ORDER_STATUS,
-          {
-            id: orderId,
-            status,
-            updated_at: currentTimestamp,
-          }
-        );
-        updatedOrders = [result.update_package_delivery_by_pk];
       }
     }
 

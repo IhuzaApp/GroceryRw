@@ -76,7 +76,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
   const scannerContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[11000] flex items-end justify-center p-0 sm:items-center sm:p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
