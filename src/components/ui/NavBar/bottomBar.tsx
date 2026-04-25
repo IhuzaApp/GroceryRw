@@ -29,7 +29,7 @@ function NavItem({ icon, label, href }: NavItemProps) {
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push(href, undefined, { shallow: true });
+    router.push(href);
   };
 
   return (
