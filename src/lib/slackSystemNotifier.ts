@@ -58,8 +58,8 @@ export async function notifySystemToSlack(payload: SystemNotificationPayload) {
     await fetch(SLACK_GENERAL_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        text: `${title}: ${message}`, 
+      body: JSON.stringify({
+        text: `${title}: ${message}`,
         attachments: [
           {
             color: "#36C5F0", // Blue for general system info
@@ -137,7 +137,7 @@ export async function notifyNewReviewToSlack(payload: NewReviewPayload) {
     },
     {
       type: "context",
-      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
+      elements: [{ type: "mrkdwn", text: ` ${new Date().toLocaleString()}` }],
     },
   ];
 
@@ -211,8 +211,8 @@ export async function notifyDelayedOrderToSlack(payload: DelayedOrderPayload) {
     minutes < 0
       ? "Already late"
       : minutes <= 1
-      ? "Will expire in 1 minute"
-      : `Will expire in ${Math.round(minutes)} minutes`;
+        ? "Will expire in 1 minute"
+        : `Will expire in ${Math.round(minutes)} minutes`;
 
   let statusLine: string;
   if (isPending) {
@@ -323,15 +323,15 @@ export async function notifyNewStoreCreatedToSlack(
   const descRaw = payload.description?.trim() || "";
   const descDisplay = descRaw
     ? descRaw.replace(/<[^>]*>/g, "").slice(0, 500) +
-      (descRaw.length > 500 ? "…" : "")
+    (descRaw.length > 500 ? "…" : "")
     : "_No description_";
   const lat = payload.latitude?.trim() ?? "";
   const lng = payload.longitude?.trim() ?? "";
   const locationDisplay =
     lat && lng
       ? `Lat: ${lat}, Lng: ${lng}\n<https://www.google.com/maps?q=${encodeURIComponent(
-          lat + "," + lng
-        )}|View on Google Maps>`
+        lat + "," + lng
+      )}|View on Google Maps>`
       : "—";
   const businessDisplay = payload.businessName?.trim() ?? "—";
 
@@ -340,7 +340,7 @@ export async function notifyNewStoreCreatedToSlack(
       type: "header",
       text: {
         type: "plain_text",
-        text: "🏪 New Store Created",
+        text: "New Store Created",
       },
     },
     {

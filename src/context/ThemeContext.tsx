@@ -34,9 +34,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty("--text-secondary", "#a1a1aa");
     } else {
       root.classList.remove("dark");
-      root.style.setProperty("--bg-primary", "#e6e5e5"); // Custom warm white
+      root.style.setProperty("--bg-primary", "#ffffff"); // Pure white
       root.style.setProperty("--text-primary", "#1f2937");
-      root.style.setProperty("--bg-secondary", "#f5f5f5"); // Slightly lighter for contrast
+      root.style.setProperty("--bg-secondary", "#f9fafb"); // Very light gray for contrast
       root.style.setProperty("--text-secondary", "#374151");
     }
     localStorage.setItem("theme", newTheme);
