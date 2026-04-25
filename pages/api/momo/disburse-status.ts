@@ -63,8 +63,8 @@ export default async function handler(
       data.status === "SUCCESSFUL"
         ? "SUCCESSFUL"
         : data.status === "PENDING"
-        ? "PENDING"
-        : "FAILED";
+          ? "PENDING"
+          : "FAILED";
 
     if (hasuraClient) {
       try {

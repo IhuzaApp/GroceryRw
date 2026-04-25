@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import BatchDetails from "./batchDetails";
+import BatchDetails from "./batchDetails.tsx";
 import { BatchDetailsProps } from "./types";
 
 export default function BatchDetailsResponsive(props: BatchDetailsProps) {

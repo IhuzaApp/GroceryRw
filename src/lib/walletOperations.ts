@@ -2,6 +2,7 @@ import { hasuraClient } from "./hasuraClient";
 import { gql } from "graphql-request";
 import type { NextApiRequest } from "next";
 import { logErrorToSlack } from "./slackErrorReporter";
+import { sendSMS } from "./pindo";
 
 // GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
@@ -455,6 +456,36 @@ export async function handleDeliveredOperation(
         plasaFeeError,
         { orderId }
       );
+    }
+
+    // Send confirmation SMS to shopper
+    try {
+      const shopperIdForQuery = order.shopper_id;
+      if (shopperIdForQuery) {
+        const GET_SHOPPER_PHONE = gql`
+          query GetShopperPhone($user_id: uuid!) {
+            shoppers(where: { user_id: { _eq: $user_id } }) {
+              phone_number
+            }
+          }
+        `;
+        const shopperData = await hasuraClient!.request<{
+          shoppers: Array<{ phone_number: string }>;
+        }>(GET_SHOPPER_PHONE, { user_id: shopperIdForQuery });
+
+        const shopperPhone = shopperData.shoppers[0]?.phone_number;
+        if (shopperPhone) {
+          const message = `Plas: You earned RWF ${remainingEarnings.toLocaleString()} from order #${orderId.slice(
+            0,
+            8
+          )}. (Total: ${totalEarnings.toLocaleString()}, Fee: ${platformFee.toLocaleString()})`;
+          await sendSMS(shopperPhone, message);
+          console.log(`✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}`);
+        }
+      }
+    } catch (smsError) {
+      console.error("Error sending earnings SMS:", smsError);
+      // Non-blocking error
     }
   }
 

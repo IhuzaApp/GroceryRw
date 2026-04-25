@@ -56,7 +56,7 @@ class MomoService {
     if (
       cachedToken &&
       cachedToken.generated_at + cachedToken.expires_in >
-        now + this.TOKEN_EXPIRY_BUFFER
+      now + this.TOKEN_EXPIRY_BUFFER
     ) {
       return cachedToken.access_token;
     }
@@ -204,10 +204,10 @@ class MomoService {
     const { subscriptionKey, baseUrl, environment } = this.getEnv();
 
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
-    
+
     // For MoMo codes, we often use MSISDN if it looks like a code, or the provided type
-    const partyId = params.partyIdType === "MSISDN" || !params.partyIdType 
-      ? this.formatPhoneNumber(params.payeeId) 
+    const partyId = params.partyIdType === "MSISDN" || !params.partyIdType
+      ? this.formatPhoneNumber(params.payeeId)
       : params.payeeId;
 
     const body = {
@@ -288,7 +288,7 @@ class MomoService {
 
   private formatPhoneNumber(phone: string): string {
     let partyId = String(phone).replace(/\D/g, "");
-    
+
     // If it's a short MoMo code (5-6 digits), don't add prefix
     if (partyId.length >= 5 && partyId.length <= 8) {
       return partyId;

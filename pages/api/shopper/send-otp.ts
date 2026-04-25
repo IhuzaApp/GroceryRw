@@ -1,6 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { sendSMS } from "../../../src/lib/pindo";
 import { resend } from "../../../src/lib/resend";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+
+const GET_SHOPPER_PHONE = gql`
+  query GetShopperPhone($user_id: uuid!) {
+    shoppers(where: { user_id: { _eq: $user_id } }) {
+      phone_number
+    }
+  }
+`;
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,26 +22,46 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { phone, otp, email } = req.body;
+  const { phone: bodyPhone, otp, email } = req.body;
 
-  if (!phone || !otp) {
-    return res.status(400).json({ error: "Missing phone or OTP" });
+  if (!otp) {
+    return res.status(400).json({ error: "Missing OTP" });
   }
 
-  // Basic phone cleaning (same as registration)
-  const cleanPhone = phone.replace(/\D/g, "");
-  let formattedPhone = phone;
-  if (!phone.startsWith("+")) {
-    if (cleanPhone.startsWith("0")) {
-      formattedPhone = "+250" + cleanPhone.substring(1);
-    } else if (!cleanPhone.startsWith("250")) {
-      formattedPhone = "+250" + cleanPhone;
-    } else {
-      formattedPhone = "+" + cleanPhone;
-    }
-  }
+  let targetPhone = bodyPhone;
 
   try {
+    // Try to get phone from shopper profile if logged in
+    const session = await getServerSession(req, res, authOptions as any);
+    if (session?.user?.id && hasuraClient) {
+      const shopperData = await hasuraClient.request<{
+        shoppers: Array<{ phone_number: string }>;
+      }>(GET_SHOPPER_PHONE, { user_id: session.user.id });
+      
+      const profilePhone = shopperData.shoppers[0]?.phone_number;
+      if (profilePhone) {
+        targetPhone = profilePhone;
+        console.log(`[send-otp] Using profile phone: ${targetPhone}`);
+      }
+    }
+
+    if (!targetPhone) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+
+    // Basic phone cleaning (same as registration)
+    const cleanPhone = targetPhone.replace(/\D/g, "");
+    let formattedPhone = targetPhone;
+    if (!targetPhone.startsWith("+")) {
+      if (cleanPhone.startsWith("0")) {
+        formattedPhone = "+250" + cleanPhone.substring(1);
+      } else if (!cleanPhone.startsWith("250")) {
+        formattedPhone = "+250" + cleanPhone;
+      } else {
+        formattedPhone = "+" + cleanPhone;
+      }
+    }
+
     const message = `Plas Grocery: Your verification code is ${otp}.`;
     
     // 1. Send SMS via Pindo

@@ -944,9 +944,9 @@ export default async function handler(
             walletCount: walletResult.business_wallet?.length ?? 0,
             wallet: walletResult.business_wallet?.[0]
               ? {
-                  id: walletResult.business_wallet[0].id,
-                  amount: walletResult.business_wallet[0].amount,
-                }
+                id: walletResult.business_wallet[0].id,
+                amount: walletResult.business_wallet[0].amount,
+              }
               : null,
           }
         );
@@ -1006,17 +1006,17 @@ export default async function handler(
             quantity?: number;
             unit?: string;
           }> = Array.isArray(orderDetails.allProducts)
-            ? orderDetails.allProducts
-            : typeof orderDetails.allProducts === "string"
-            ? (() => {
-                try {
-                  const parsed = JSON.parse(orderDetails.allProducts);
-                  return Array.isArray(parsed) ? parsed : [];
-                } catch {
-                  return [];
-                }
-              })()
-            : [];
+              ? orderDetails.allProducts
+              : typeof orderDetails.allProducts === "string"
+                ? (() => {
+                  try {
+                    const parsed = JSON.parse(orderDetails.allProducts);
+                    return Array.isArray(parsed) ? parsed : [];
+                  } catch {
+                    return [];
+                  }
+                })()
+                : [];
           const itemLines = products.map(
             (p: { name?: string; quantity?: number; unit?: string }) => {
               const name = p.name ?? "Item";
