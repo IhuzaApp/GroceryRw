@@ -94,6 +94,27 @@
     scrollbar-width: none;
     /* Firefox */
   }
+
+  /* ===================================
+     GRADIENT CARD — Force white text
+     Gradient cards have colored backgrounds (green, blue, purple, etc.)
+     but the body's text-gray-900 can cascade in and make text dark.
+     This rule forces all text inside gradient cards to be white so it
+     remains readable regardless of the active theme.
+     =================================== */
+  [class*="bg-gradient-to"] *:not([class*="text-"]):not([class*="bg-"]) {
+    color: inherit;
+  }
+
+  [class*="bg-gradient-to"] h1,
+  [class*="bg-gradient-to"] h2,
+  [class*="bg-gradient-to"] h3,
+  [class*="bg-gradient-to"] h4,
+  [class*="bg-gradient-to"] p,
+  [class*="bg-gradient-to"] span:not([class*="bg-"]),
+  [class*="bg-gradient-to"] svg {
+    color: white;
+  }
 }
 
 /* RSuite Dark Theme Styles - using CSS variables for true-black dark theme */

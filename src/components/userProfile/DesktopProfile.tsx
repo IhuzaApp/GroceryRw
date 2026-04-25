@@ -366,34 +366,34 @@ export default function DesktopProfile({
           {/* Account Summary Section */}
           <div className="lg:col-span-4">
             <div className="grid grid-cols-1 gap-4">
-              <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 p-5 text-white shadow-xl shadow-green-500/20 transition-all hover:-translate-y-1">
+              <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 p-5 shadow-xl shadow-green-500/20 transition-all hover:-translate-y-1">
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                    <p className="text-xs font-bold uppercase tracking-widest !text-white/70">
                       Total Orders
                     </p>
-                    <h3 className="text-3xl font-black text-white">{orderCount}</h3>
+                    <h3 className="text-3xl font-black !text-white">{orderCount}</h3>
                   </div>
                   <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
-                    <ShoppingBag className="h-6 w-6" />
+                    <ShoppingBag className="h-6 w-6 !text-white" />
                   </div>
                 </div>
                 <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
               </div>
 
               {shopperStatus?.active && (
-                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
                   <div className="relative z-10 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                      <p className="text-xs font-bold uppercase tracking-widest !text-white/70">
                         Wallet Balance
                       </p>
-                      <h3 className="text-3xl font-black text-white">
+                      <h3 className="text-3xl font-black !text-white">
                         {formatCurrency(walletBalance)}
                       </h3>
                     </div>
                     <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
-                      <Wallet className="h-6 w-6" />
+                      <Wallet className="h-6 w-6 !text-white" />
                     </div>
                   </div>
                   <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
