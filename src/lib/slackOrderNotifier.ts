@@ -149,7 +149,15 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
     await fetch(SLACK_ORDERS_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ blocks }),
+      body: JSON.stringify({ 
+        text: `New Order: ${displayOrderId}`,
+        attachments: [
+          {
+            color: "#2EB67D",
+            blocks,
+          },
+        ],
+      }),
     });
   } catch (error) {
     console.error("Failed to send order notification to Slack", error);

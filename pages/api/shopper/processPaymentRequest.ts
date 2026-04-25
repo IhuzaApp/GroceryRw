@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { sendPaymentRequestToSlack } from "../../../src/lib/slackSupportNotifier";
 
 const GET_MERCHANT_WALLET = gql`
   query GetMerchantWallet($shop_id: uuid!) {
@@ -44,6 +45,10 @@ const GET_SHOPPER_ID = gql`
   query GetShopperId($user_id: uuid!) {
     shoppers(where: { user_id: { _eq: $user_id } }) {
       id
+      phone_number
+      user {
+        name
+      }
     }
   }
 `;
@@ -64,7 +69,7 @@ export default async function handler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { orderId, shopId, amount, hasWallet } = req.body;
+  const { orderId, shopId, shopName, amount, hasWallet } = req.body;
 
   if (!orderId || !shopId || !amount) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -126,6 +131,16 @@ export default async function handler(
           agent_approved_id: null,
           transactionCode: null,
         },
+      });
+
+      // Notify Slack
+      const shopperData = shopperRes.shoppers[0];
+      await sendPaymentRequestToSlack({
+        orderId,
+        shopName: shopName || "Unknown Merchant",
+        amount: amount.toString(),
+        shopperName: shopperData?.user?.name || "Unknown Shopper",
+        shopperPhone: shopperData?.phone_number || "Unknown Phone",
       });
 
       return res.status(200).json({

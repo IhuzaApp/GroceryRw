@@ -1067,6 +1067,7 @@ export default function BatchDetails({
             orderId: targetOrderForPayment.id,
             shopId:
               targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
+            shopName: targetOrderForPayment.shop?.name || "Unknown Merchant",
             amount: orderAmount,
             hasWallet: hasWallet ?? true,
           }),
