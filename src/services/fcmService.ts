@@ -511,3 +511,35 @@ export const sendOrderExpiredNotification = async (
     // Silent fail for expiration notifications
   }
 };
+
+/**
+ * Send payment approved notification
+ */
+export const sendPaymentApprovedNotification = async (
+  shopperId: string,
+  orderId: string
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping payment approved notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: "Payment Approved",
+      body: "Your payment request has been approved by the admin. You can now proceed to delivery.",
+      data: {
+        type: "payment_approved",
+        orderId,
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUser(shopperId, payload);
+  } catch (error) {
+    console.error("Error sending payment approved notification:", error);
+    throw error;
+  }
+};

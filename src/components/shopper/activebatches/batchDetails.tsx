@@ -44,6 +44,7 @@ import {
   recordPaymentTransactions,
   generateInvoice,
 } from "../../../lib/walletTransactions";
+import { initializeFCM } from "../../../services/fcmClient";
 import { reportErrorToSlackClient } from "../../../lib/reportErrorClient";
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
@@ -239,33 +240,39 @@ export default function BatchDetails({
     return shops.size > 1;
   }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
 
-  // Real-time listener for payment request status
+  // Real-time listener for payment request status via FCM
   useEffect(() => {
-    if (showPaymentRequestModal && order?.id) {
-      // Create a reference to the payment request in Firestore
-      // We assume the document ID is the order.id
-      const unsub = onSnapshot(doc(db, "payment_requests", order.id), (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          const newStatus = data.status || "PENDING_PAYMENT";
-          setPaymentRequestStatus(newStatus);
+    let unsubscribeFcm: (() => void) | null = null;
+
+    if (showPaymentRequestModal && order?.id && (session as any)?.user?.id) {
+      const userId = (session as any).user.id;
+      
+      initializeFCM(userId, (payload) => {
+        const type = payload?.data?.type;
+        const payloadOrderId = payload?.data?.orderId;
+        
+        if (type === "payment_approved" && payloadOrderId === order.id) {
+          console.log("✅ Received payment_approved FCM notification for order:", order.id);
+          setPaymentRequestStatus("APPROVED");
           
-          if (newStatus === "APPROVED") {
-            // Automatically finalize the payment when approved
-            const amount = getPaymentOrderAmount();
-            const originalTotal = getOriginalOrderTotalForPayment();
-            const targetOrder = paymentTargetOrderId
-              ? order.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
-              : order;
-              
-            finalizeOrderPayment(amount, originalTotal, targetOrder);
-            // Modal will be closed after a short delay or via its own button if we prefer
-          }
+          // Automatically finalize the payment when approved
+          const amount = getPaymentOrderAmount();
+          const originalTotal = getOriginalOrderTotalForPayment();
+          const targetOrder = paymentTargetOrderId
+            ? order.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+            : order;
+            
+          finalizeOrderPayment(amount, originalTotal, targetOrder);
         }
+      }).then(unsub => {
+        if (unsub) unsubscribeFcm = unsub;
       });
-      return () => unsub();
     }
-  }, [showPaymentRequestModal, order?.id, paymentTargetOrderId]);
+
+    return () => {
+      if (unsubscribeFcm) unsubscribeFcm();
+    };
+  }, [showPaymentRequestModal, order?.id, paymentTargetOrderId, session]);
 
   const hasSameShopCombinedOrders = useMemo(() => {
     const has = order?.combinedOrders && order.combinedOrders.length > 0;
