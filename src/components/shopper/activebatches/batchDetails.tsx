@@ -31,10 +31,10 @@ import PickupConfirmationScanner from "../PickupConfirmationScanner";
 import PaymentRequestModal from "./batchDetails/PaymentRequestModal";
 import { db } from "../../../lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
-import { 
-  INSERT_PAYMENT_REQUEST, 
+import {
+  INSERT_PAYMENT_REQUEST,
   UPDATE_MERCHANT_WALLET,
-  GET_MERCHANT_WALLET 
+  GET_MERCHANT_WALLET,
 } from "../../../graphql/mutations/paymentRequests";
 import { hasuraClient } from "../../../lib/hasuraClient";
 import { useChat } from "../../../context/ChatContext";
@@ -227,7 +227,8 @@ export default function BatchDetails({
     string | null
   >(null);
   const [showPaymentRequestModal, setShowPaymentRequestModal] = useState(false);
-  const [paymentRequestStatus, setPaymentRequestStatus] = useState("PENDING_PAYMENT");
+  const [paymentRequestStatus, setPaymentRequestStatus] =
+    useState("PENDING_PAYMENT");
 
   const isMultiShop = useMemo(() => {
     const shops = new Set();
@@ -240,31 +241,59 @@ export default function BatchDetails({
     return shops.size > 1;
   }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
 
+  // Check for existing pending payment request on load to persist state
+  useEffect(() => {
+    if (order?.id && session?.user?.id) {
+      const checkStatus = async () => {
+        try {
+          const response = await fetch(
+            `/api/shopper/checkPaymentRequestStatus?orderId=${order.id}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            if (data.exists && data.status === "PENDING_PAYMENT") {
+              setPaymentRequestStatus("PENDING_PAYMENT");
+              setShowPaymentRequestModal(true);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to check payment request status:", error);
+        }
+      };
+      checkStatus();
+    }
+  }, [order?.id, session?.user?.id]);
+
   // Real-time listener for payment request status via FCM
   useEffect(() => {
     let unsubscribeFcm: (() => void) | null = null;
 
     if (showPaymentRequestModal && order?.id && (session as any)?.user?.id) {
       const userId = (session as any).user.id;
-      
+
       initializeFCM(userId, (payload) => {
         const type = payload?.data?.type;
         const payloadOrderId = payload?.data?.orderId;
-        
+
         if (type === "payment_approved" && payloadOrderId === order.id) {
-          console.log("✅ Received payment_approved FCM notification for order:", order.id);
+          console.log(
+            "✅ Received payment_approved FCM notification for order:",
+            order.id
+          );
           setPaymentRequestStatus("APPROVED");
-          
+
           // Automatically finalize the payment when approved
           const amount = getPaymentOrderAmount();
           const originalTotal = getOriginalOrderTotalForPayment();
           const targetOrder = paymentTargetOrderId
-            ? order.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+            ? order.combinedOrders?.find(
+                (co) => co.id === paymentTargetOrderId
+              ) || order
             : order;
-            
+
           finalizeOrderPayment(amount, originalTotal, targetOrder);
         }
-      }).then(unsub => {
+      }).then((unsub) => {
         if (unsub) unsubscribeFcm = unsub;
       });
     }
@@ -945,10 +974,10 @@ export default function BatchDetails({
         fetch("/api/shopper/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            phone: shopperPhone, 
+          body: JSON.stringify({
+            phone: shopperPhone,
             email: shopperEmail,
-            otp: generatedCode 
+            otp: generatedCode,
           }),
         }).catch((err) => console.error("Error sending OTP:", err));
       }
@@ -976,7 +1005,8 @@ export default function BatchDetails({
   const handleShowPaymentModal = () => {
     // Get the target order for payment
     const targetOrder = paymentTargetOrderId
-      ? order?.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+      ? order?.combinedOrders?.find((co) => co.id === paymentTargetOrderId) ||
+        order
       : order;
 
     console.log("DEBUG: Target Order Shop", targetOrder?.shop);
@@ -1035,7 +1065,8 @@ export default function BatchDetails({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId: targetOrderForPayment.id,
-            shopId: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
+            shopId:
+              targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
             amount: orderAmount,
             hasWallet: hasWallet ?? true,
           }),
@@ -1060,13 +1091,17 @@ export default function BatchDetails({
           setPaymentRequestStatus("PENDING_PAYMENT");
           setShowPaymentRequestModal(true);
           setOtpVerifyLoading(false);
-          setShowPaymentModal(false); 
+          setShowPaymentModal(false);
           return; // STOP HERE - Firebase listener will resume via useEffect
         }
       }
 
       // Finalize payment (deduct from shopper's reserved balance and update order status)
-      await finalizeOrderPayment(orderAmount, originalOrderTotal, targetOrderForPayment);
+      await finalizeOrderPayment(
+        orderAmount,
+        originalOrderTotal,
+        targetOrderForPayment
+      );
     } catch (err) {
       reportErrorToSlackClient("BatchDetails (OTP verification)", err, {
         orderId: order?.id,
@@ -1253,8 +1288,8 @@ export default function BatchDetails({
               header="Invoice Generation Warning"
               closable
             >
-              Payment successful but there was an issue generating invoices.
-              You can continue to delivery.
+              Payment successful but there was an issue generating invoices. You
+              can continue to delivery.
             </Notification>,
             { placement: "topEnd", duration: 5000 }
           );

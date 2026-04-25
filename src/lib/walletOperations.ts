@@ -480,7 +480,9 @@ export async function handleDeliveredOperation(
             8
           )}. (Total: ${totalEarnings.toLocaleString()}, Fee: ${platformFee.toLocaleString()})`;
           await sendSMS(shopperPhone, message);
-          console.log(`✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}`);
+          console.log(
+            `✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}`
+          );
         }
       }
     } catch (smsError) {

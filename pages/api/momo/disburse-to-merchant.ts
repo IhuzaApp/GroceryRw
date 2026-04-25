@@ -57,11 +57,7 @@ export default async function handler(
     walletId,
   });
 
-  const session = (await getServerSession(
-    req,
-    res,
-    authOptions as any
-  )) as any;
+  const session = (await getServerSession(req, res, authOptions as any)) as any;
   const userId = session?.user?.id;
 
   if (!amount || !momoCode) {
@@ -151,20 +147,26 @@ export default async function handler(
 
     if (hasuraClient && dbTransactionId) {
       try {
-        await hasuraClient.request(gql`
-          mutation UpdateOrderTransactionFailed($id: uuid!, $mtn_response: String!) {
-            update_order_transactions_by_pk(
-              pk_columns: { id: $id }
-              _set: { status: "FAILED", mtn_response: $mtn_response }
+        await hasuraClient.request(
+          gql`
+            mutation UpdateOrderTransactionFailed(
+              $id: uuid!
+              $mtn_response: String!
             ) {
-              id
+              update_order_transactions_by_pk(
+                pk_columns: { id: $id }
+                _set: { status: "FAILED", mtn_response: $mtn_response }
+              ) {
+                id
+              }
             }
+          `,
+          {
+            id: dbTransactionId,
+            mtn_response: JSON.stringify({ error: error.message }),
           }
-        `, {
-          id: dbTransactionId,
-          mtn_response: JSON.stringify({ error: error.message }),
-        });
-      } catch (e) { }
+        );
+      } catch (e) {}
     }
 
     return res.status(500).json({

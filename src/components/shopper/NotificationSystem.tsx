@@ -180,7 +180,6 @@ export default function NotificationSystem({
   const [timeLeft, setTimeLeft] = useState(90); // 90 second countdown
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-
   // Reset items state when selected order changes
   useEffect(() => {
     if (selectedOrder) {
@@ -1725,7 +1724,7 @@ export default function NotificationSystem({
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6">
           {/* Dark Backdrop with Pulse Effect */}
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md duration-300 animate-in fade-in"
             onClick={() => {
               // Prevent accidental dismissal but provide visual feedback
             }}
@@ -1734,27 +1733,27 @@ export default function NotificationSystem({
           {/* Center Modal Card */}
           <div
             key={selectedOrder.id}
-            className="relative w-full max-w-lg overflow-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 border-4 border-emerald-500/50 pulse-border"
+            className="pulse-border relative w-full max-w-lg overflow-hidden rounded-3xl border-4 border-emerald-500/50 shadow-2xl duration-300 animate-in zoom-in-95"
             style={{
               backgroundColor: "var(--bg-secondary)",
               color: "var(--text-primary)",
             }}
           >
             {/* Header with Pulsating Timer */}
-            <div className="bg-emerald-500 py-4 px-6 flex items-center justify-between">
+            <div className="flex items-center justify-between bg-emerald-500 px-6 py-4">
               <div className="flex items-center space-x-2">
-                <div className="animate-pulse flex space-x-1">
+                <div className="flex animate-pulse space-x-1">
                   <div className="h-2 w-2 rounded-full bg-white"></div>
                   <div className="h-2 w-2 rounded-full bg-white/60"></div>
                   <div className="h-2 w-2 rounded-full bg-white/30"></div>
                 </div>
-                <h3 className="text-lg font-black text-white uppercase tracking-tighter">
+                <h3 className="text-lg font-black uppercase tracking-tighter text-white">
                   New Order Unit Available
                 </h3>
               </div>
-              <div className="bg-black/20 rounded-full px-4 py-1 flex items-center space-x-2">
+              <div className="flex items-center space-x-2 rounded-full bg-black/20 px-4 py-1">
                 <svg
-                  className="h-4 w-4 text-white animate-spin-slow"
+                  className="animate-spin-slow h-4 w-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -1766,7 +1765,7 @@ export default function NotificationSystem({
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="text-xl font-mono font-bold text-white">
+                <span className="font-mono text-xl font-bold text-white">
                   {timeLeft}s
                 </span>
               </div>
@@ -1785,7 +1784,7 @@ export default function NotificationSystem({
                     }`}
                   >
                     <div className="flex flex-col items-center justify-center leading-none">
-                      <span className="text-[10px] font-bold text-white/80 uppercase">
+                      <span className="text-[10px] font-bold uppercase text-white/80">
                         Unit
                       </span>
                       <span className="text-xl font-black text-white">
@@ -1804,13 +1803,13 @@ export default function NotificationSystem({
                     >
                       {formatStoreList(selectedOrder.shopName)}
                     </p>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {selectedOrder.orderType && (
-                        <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 text-[10px] font-black uppercase text-emerald-500">
+                        <span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase text-emerald-500">
                           {selectedOrder.orderType} Unit
                         </span>
                       )}
-                      <span className="rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-1 text-[10px] font-black uppercase text-blue-500">
+                      <span className="rounded-md border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[10px] font-black uppercase text-blue-500">
                         90s Priority
                       </span>
                     </div>
@@ -1880,8 +1879,8 @@ export default function NotificationSystem({
               </div>
 
               {/* Enhanced Route Visualization */}
-              <div className="relative mb-6 bg-gray-100 dark:bg-gray-800/50 rounded-2xl p-4">
-                <div className="absolute left-[23px] top-8 bottom-8 w-0.5 border-l-2 border-dashed border-emerald-500/50"></div>
+              <div className="relative mb-6 rounded-2xl bg-gray-100 p-4 dark:bg-gray-800/50">
+                <div className="absolute bottom-8 left-[23px] top-8 w-0.5 border-l-2 border-dashed border-emerald-500/50"></div>
 
                 <div className="relative mb-6 flex items-center space-x-4">
                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50">
@@ -1891,7 +1890,7 @@ export default function NotificationSystem({
                     <p className="text-[10px] font-bold uppercase text-gray-500">
                       Pickup From
                     </p>
-                    <p className="text-sm font-bold truncate">
+                    <p className="truncate text-sm font-bold">
                       {formatStoreList(selectedOrder.shopName)}
                     </p>
                   </div>
@@ -1907,7 +1906,11 @@ export default function NotificationSystem({
 
                 <div className="relative flex items-center space-x-4">
                   <div className="flex h-5 w-5 items-center justify-center text-emerald-500">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-5 w-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
                   </div>
@@ -1915,7 +1918,7 @@ export default function NotificationSystem({
                     <p className="text-[10px] font-bold uppercase text-gray-500">
                       Deliver To
                     </p>
-                    <p className="text-sm font-bold truncate">
+                    <p className="truncate text-sm font-bold">
                       {selectedOrder.customerAddress}
                     </p>
                   </div>
@@ -1932,8 +1935,8 @@ export default function NotificationSystem({
 
               {/* Earnings Card */}
               <div className="mb-8 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-4 text-center">
-                  <p className="text-[10px] font-bold uppercase text-gray-500 mb-1">
+                <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4 text-center">
+                  <p className="mb-1 text-[10px] font-bold uppercase text-gray-500">
                     Your Earnings
                   </p>
                   <p className="text-2xl font-black text-emerald-500">
@@ -1941,7 +1944,7 @@ export default function NotificationSystem({
                   </p>
                 </div>
                 <div
-                  className="rounded-2xl bg-gray-100 dark:bg-gray-800/50 p-4 text-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                  className="cursor-pointer rounded-2xl bg-gray-100 p-4 text-center transition-colors hover:bg-gray-200 dark:bg-gray-800/50 dark:hover:bg-gray-800"
                   onClick={async () => {
                     const next = !itemsExpanded;
                     setItemsExpanded(next);
@@ -1961,7 +1964,7 @@ export default function NotificationSystem({
                     }
                   }}
                 >
-                  <p className="text-[10px] font-bold uppercase text-gray-500 mb-1">
+                  <p className="mb-1 text-[10px] font-bold uppercase text-gray-500">
                     Item Count
                   </p>
                   <div className="flex items-center justify-center space-x-2">
@@ -1989,7 +1992,7 @@ export default function NotificationSystem({
 
               {/* Expanded Items List */}
               {itemsExpanded && (
-                <div className="mb-6 max-h-40 overflow-y-auto rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-4">
+                <div className="mb-6 max-h-40 overflow-y-auto rounded-2xl border-2 border-dashed border-gray-300 p-4 dark:border-gray-700">
                   {orderItemsLoading ? (
                     <div className="flex justify-center p-4">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
@@ -2039,7 +2042,7 @@ export default function NotificationSystem({
                     acceptingOrders.has(selectedOrder.id) ||
                     decliningOrders.has(selectedOrder.id)
                   }
-                  className="w-full rounded-2xl bg-emerald-500 py-5 text-xl font-black text-white shadow-xl shadow-emerald-500/30 transition-all hover:bg-emerald-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+                  className="group w-full rounded-2xl bg-emerald-500 py-5 text-xl font-black text-white shadow-xl shadow-emerald-500/30 transition-all hover:bg-emerald-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="flex items-center justify-center gap-3">
                     {acceptingOrders.has(selectedOrder.id) ? (
@@ -2078,14 +2081,17 @@ export default function NotificationSystem({
                     declineClickCount.current += 1;
                     const orderId = selectedOrder.id;
                     try {
-                      const response = await fetch("/api/shopper/decline-offer", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          orderId: orderId,
-                          shopperId: session.user.id,
-                        }),
-                      });
+                      const response = await fetch(
+                        "/api/shopper/decline-offer",
+                        {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            orderId: orderId,
+                            shopperId: session.user.id,
+                          }),
+                        }
+                      );
                       if (!response.ok) throw new Error("Decline failed");
 
                       declinedOrders.current.set(orderId, Date.now() + 300000);
@@ -2114,7 +2120,7 @@ export default function NotificationSystem({
                     decliningOrders.has(selectedOrder.id) ||
                     acceptingOrders.has(selectedOrder.id)
                   }
-                  className="w-full py-2 text-sm font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
+                  className="w-full py-2 text-sm font-black uppercase tracking-widest text-gray-400 transition-colors hover:text-red-500"
                 >
                   Skip this offer
                 </button>
@@ -2151,7 +2157,6 @@ export default function NotificationSystem({
           `}</style>
         </div>
       ) : null}
-
     </>
   );
 }

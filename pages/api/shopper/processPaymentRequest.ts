@@ -74,14 +74,14 @@ export default async function handler(
     if (!hasuraClient) {
       throw new Error("GraphQL client is not initialized.");
     }
-    
+
     // Fetch the correct shopper_id from the users table id
     const shopperRes = await hasuraClient.request<any>(GET_SHOPPER_ID, {
       user_id: userId,
     });
-    
+
     const shopperId = shopperRes.shoppers[0]?.id;
-    
+
     if (!shopperId) {
       throw new Error("Shopper profile not found for this user.");
     }
@@ -96,7 +96,8 @@ export default async function handler(
 
       if (currentWallet) {
         const newBalance = (
-          parseFloat(currentWallet.balance || "0") + parseFloat(amount.toString())
+          parseFloat(currentWallet.balance || "0") +
+          parseFloat(amount.toString())
         ).toString();
 
         await hasuraClient.request(UPDATE_MERCHANT_WALLET, {
@@ -142,7 +143,10 @@ export default async function handler(
     });
     console.error("Payment request processing failed:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to process payment request",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to process payment request",
     });
   }
 }

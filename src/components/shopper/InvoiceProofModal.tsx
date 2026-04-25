@@ -98,15 +98,16 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
         />
 
         <div
-          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] shadow-2xl transition-all duration-300 sm:max-h-[90vh] sm:rounded-[3rem] border`}
-          style={{ 
-            backgroundColor: 'var(--bg-primary)',
-            borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] border shadow-2xl transition-all duration-300 sm:max-h-[90vh] sm:rounded-[3rem]`}
+          style={{
+            backgroundColor: "var(--bg-primary)",
+            borderColor:
+              theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Gradient */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+          <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
           {/* Header */}
           <div
             className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${
@@ -117,15 +118,27 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
           >
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
-                <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="h-7 w-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  {uploading
-                    ? "Uploading Proof..."
-                    : "Upload Invoice"}
+                <h3
+                  className={`text-xl font-black tracking-tight ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {uploading ? "Uploading Proof..." : "Upload Invoice"}
                 </h3>
                 <p
                   className={`text-sm ${
@@ -225,8 +238,18 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                     onClick={() => setShowCameraCapture(true)}
                     className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-4 font-black tracking-tight text-white shadow-xl shadow-emerald-600/30 transition-all duration-200 hover:scale-[1.02] active:scale-95"
                   >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
                     </svg>
                     TAKE INVOICE PHOTO
                   </button>
@@ -346,18 +369,31 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
           {/* Footer */}
           {capturedImage && !uploading && (
             <div
-              className={`flex w-full flex-col-reverse gap-3 px-6 py-8 sm:flex-row sm:justify-end sm:px-10 border-t`}
-              style={{ 
-                backgroundColor: 'var(--bg-secondary)', 
-                borderTopColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' 
+              className={`flex w-full flex-col-reverse gap-3 border-t px-6 py-8 sm:flex-row sm:justify-end sm:px-10`}
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                borderTopColor:
+                  theme === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.1)",
               }}
             >
               <button
                 onClick={handleConfirm}
                 className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 px-8 py-5 font-black tracking-tight text-white shadow-xl shadow-emerald-600/30 transition-all duration-200 hover:scale-[1.02] active:scale-95"
               >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 CONFIRM & GENERATE INVOICE
               </button>

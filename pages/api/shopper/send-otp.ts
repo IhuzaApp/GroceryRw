@@ -37,7 +37,7 @@ export default async function handler(
       const shopperData = await hasuraClient.request<{
         shoppers: Array<{ phone_number: string }>;
       }>(GET_SHOPPER_PHONE, { user_id: session.user.id });
-      
+
       const profilePhone = shopperData.shoppers[0]?.phone_number;
       if (profilePhone) {
         targetPhone = profilePhone;
@@ -46,7 +46,9 @@ export default async function handler(
     }
 
     if (!targetPhone && !email) {
-      return res.status(400).json({ error: "Phone number or email is required" });
+      return res
+        .status(400)
+        .json({ error: "Phone number or email is required" });
     }
 
     let smsPromise = Promise.resolve(null);
@@ -66,13 +68,15 @@ export default async function handler(
       }
 
       const message = `Plas Grocery: Your verification code is ${otp}.`;
-      
-      console.log(`🚀 [send-otp] Preparing to send Pindo SMS to: ${formattedPhone} (Original: ${targetPhone})`);
-      
+
+      console.log(
+        `🚀 [send-otp] Preparing to send Pindo SMS to: ${formattedPhone} (Original: ${targetPhone})`
+      );
+
       // 1. Send SMS via Pindo
       smsPromise = sendSMS(formattedPhone, message);
     }
-    
+
     // 2. Send Email via Resend if email is provided
     let emailPromise = Promise.resolve(null);
     if (email) {
@@ -98,7 +102,7 @@ export default async function handler(
 
     // Wait for both without failing the entire request if one fails
     const results = await Promise.allSettled([smsPromise, emailPromise]);
-    
+
     const smsResult = results[0];
     const emailResult = results[1];
 

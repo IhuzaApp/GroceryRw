@@ -29,7 +29,9 @@ class MomoService {
   private getEnv() {
     return {
       subscriptionKey: process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
-      disbursementSubscriptionKey: process.env.MOMO_DISBURSEMENT_SUBSCRIPTION_KEY_SANDBOX || process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
+      disbursementSubscriptionKey:
+        process.env.MOMO_DISBURSEMENT_SUBSCRIPTION_KEY_SANDBOX ||
+        process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
       userId: process.env.MOMO_API_USER_SANDBOX,
       apiKey: process.env.MOMO_API_KEY_SANDBOX,
       baseUrl: (
@@ -42,8 +44,16 @@ class MomoService {
   /**
    * Get a valid access token for a specific product, generating a new one if missing or expired.
    */
-  async getAccessToken(product: "collection" | "disbursement"): Promise<string> {
-    const { subscriptionKey, disbursementSubscriptionKey, userId, apiKey, baseUrl } = this.getEnv();
+  async getAccessToken(
+    product: "collection" | "disbursement"
+  ): Promise<string> {
+    const {
+      subscriptionKey,
+      disbursementSubscriptionKey,
+      userId,
+      apiKey,
+      baseUrl,
+    } = this.getEnv();
 
     if (!subscriptionKey || !userId || !apiKey) {
       throw new Error(
@@ -51,22 +61,22 @@ class MomoService {
       );
     }
 
-    const currentSubscriptionKey = product === "collection" ? subscriptionKey : disbursementSubscriptionKey;
+    const currentSubscriptionKey =
+      product === "collection" ? subscriptionKey : disbursementSubscriptionKey;
 
     const now = Math.floor(Date.now() / 1000);
-    const cachedToken = product === "collection" ? this.collectionToken : this.disbursementToken;
+    const cachedToken =
+      product === "collection" ? this.collectionToken : this.disbursementToken;
 
     if (
       cachedToken &&
       cachedToken.generated_at + cachedToken.expires_in >
-      now + this.TOKEN_EXPIRY_BUFFER
+        now + this.TOKEN_EXPIRY_BUFFER
     ) {
       return cachedToken.access_token;
     }
 
-    console.log(
-      `🔄 [MoMo Service] Fetching new ${product} access token...`
-    );
+    console.log(`🔄 [MoMo Service] Fetching new ${product} access token...`);
 
     const auth = Buffer.from(`${userId}:${apiKey}`).toString("base64");
 
@@ -80,8 +90,13 @@ class MomoService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ [MoMo Service] ${product} token generation failed:`, errorText);
-      throw new Error(`MoMo ${product} Token Error: ${response.status} - ${errorText}`);
+      console.error(
+        `❌ [MoMo Service] ${product} token generation failed:`,
+        errorText
+      );
+      throw new Error(
+        `MoMo ${product} Token Error: ${response.status} - ${errorText}`
+      );
     }
 
     const data = await response.json();
@@ -151,7 +166,9 @@ class MomoService {
 
     if (response.status !== 202) {
       const errorText = await response.text();
-      throw new Error(`MoMo RequestToPay Error: ${response.status} - ${errorText}`);
+      throw new Error(
+        `MoMo RequestToPay Error: ${response.status} - ${errorText}`
+      );
     }
 
     return { referenceId };
@@ -185,7 +202,8 @@ class MomoService {
     };
 
     const response = await callApi();
-    if (!response.ok) throw new Error(`MoMo status check failed: ${response.status}`);
+    if (!response.ok)
+      throw new Error(`MoMo status check failed: ${response.status}`);
     return (await response.json()) as PaymentStatus;
   }
 
@@ -209,9 +227,10 @@ class MomoService {
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
 
     // For MoMo codes, we often use MSISDN if it looks like a code, or the provided type
-    const partyId = params.partyIdType === "MSISDN" || !params.partyIdType
-      ? this.formatPhoneNumber(params.payeeId)
-      : params.payeeId;
+    const partyId =
+      params.partyIdType === "MSISDN" || !params.partyIdType
+        ? this.formatPhoneNumber(params.payeeId)
+        : params.payeeId;
 
     const body = {
       amount: String(params.amount),
@@ -285,7 +304,12 @@ class MomoService {
     };
 
     const response = await callApi();
-    if (!response.ok) throw new Error(`MoMo transfer status check failed: ${response.status} - ${await response.text()}`);
+    if (!response.ok)
+      throw new Error(
+        `MoMo transfer status check failed: ${
+          response.status
+        } - ${await response.text()}`
+      );
     return await response.json();
   }
 

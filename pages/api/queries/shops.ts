@@ -3,31 +3,30 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_SHOPS = gql`
-query GetShops {
-  Shops {
-    id
-    name
-    description
-    created_at
-    address
-    category_id
-    image
-    logo
-    is_active
-    latitude
-    longitude
-    operating_hours
-    updated_at
-    has_wallet
-    phone
-    rdb_certificate
-    relatedTo
-    ssd
-    tin
-    use_wallet
+  query GetShops {
+    Shops {
+      id
+      name
+      description
+      created_at
+      address
+      category_id
+      image
+      logo
+      is_active
+      latitude
+      longitude
+      operating_hours
+      updated_at
+      has_wallet
+      phone
+      rdb_certificate
+      relatedTo
+      ssd
+      tin
+      use_wallet
+    }
   }
-}
-
 `;
 
 interface ShopsResponse {

@@ -16,8 +16,15 @@ export const INSERT_PAYMENT_REQUEST = gql`
 `;
 
 export const UPDATE_MERCHANT_WALLET = gql`
-  mutation UpdateMerchantWallet($balance: String = "", $update_at: timestamptz = "", $_eq: uuid = "") {
-    update_merchant_wallets(_set: {balance: $balance, update_at: $update_at}, where: {shop_id: {_eq: $_eq}}) {
+  mutation UpdateMerchantWallet(
+    $balance: String = ""
+    $update_at: timestamptz = ""
+    $_eq: uuid = ""
+  ) {
+    update_merchant_wallets(
+      _set: { balance: $balance, update_at: $update_at }
+      where: { shop_id: { _eq: $_eq } }
+    ) {
       affected_rows
     }
   }

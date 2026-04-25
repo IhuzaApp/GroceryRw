@@ -741,75 +741,169 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         />
 
         <div
-          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] shadow-2xl transition-all duration-300 sm:max-h-[90vh] sm:rounded-[3rem] border`}
-          style={{ 
-            backgroundColor: 'var(--bg-primary)',
-            borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] border shadow-2xl transition-all duration-300 sm:max-h-[90vh] sm:rounded-[3rem]`}
+          style={{
+            backgroundColor: "var(--bg-primary)",
+            borderColor:
+              theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
-          
-          <div className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${
-            theme === "dark" ? "border-b border-gray-700" : "border-b border-gray-200"
-          }`}>
+          <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+
+          <div
+            className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${
+              theme === "dark"
+                ? "border-b border-gray-700"
+                : "border-b border-gray-200"
+            }`}
+          >
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
-                <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-7 w-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className={`text-xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  {photoUploading ? "Uploading Photo..." : confirmingDelivery ? "Confirming..." : deliveryConfirmed ? "Confirmed!" : orderType === "combined_customer" ? "Combined Delivery" : "Confirm Delivery"}
+                <h3
+                  className={`text-xl font-black tracking-tight ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {photoUploading
+                    ? "Uploading Photo..."
+                    : confirmingDelivery
+                    ? "Confirming..."
+                    : deliveryConfirmed
+                    ? "Confirmed!"
+                    : orderType === "combined_customer"
+                    ? "Combined Delivery"
+                    : "Confirm Delivery"}
                 </h3>
-                <p className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                  {orderType === "combined_customer" ? `${invoiceData.combinedOrderNumbers?.length || 1} Orders: ${invoiceData.orderNumber}` : `Order #${invoiceData.orderNumber}`}
+                <p
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  {orderType === "combined_customer"
+                    ? `${
+                        invoiceData.combinedOrderNumbers?.length || 1
+                      } Orders: ${invoiceData.orderNumber}`
+                    : `Order #${invoiceData.orderNumber}`}
                 </p>
               </div>
             </div>
             {!photoUploading && !confirmingDelivery && (
-              <button onClick={handleClose} className={`rounded-lg p-2 transition-colors ${
-                theme === "dark" ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              }`}>
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <button
+                onClick={handleClose}
+                className={`rounded-lg p-2 transition-colors ${
+                  theme === "dark"
+                    ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
+                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                }`}
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             )}
           </div>
 
-          <div className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-4 sm:px-8 sm:py-8 ${
-            theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
-          } ${currentVerificationStep === "pin" && !photoUploaded ? "pb-24 sm:pb-8" : ""}`}>
+          <div
+            className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-4 sm:px-8 sm:py-8 ${
+              theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+            } ${
+              currentVerificationStep === "pin" && !photoUploaded
+                ? "pb-24 sm:pb-8"
+                : ""
+            }`}
+          >
             <div className="space-y-6">
               {/* Address section hidden on mobile to focus on action */}
-              <div className={`hidden rounded-2xl border-2 p-6 sm:block ${
-                theme === "dark" ? "border-gray-700 bg-gray-900/40" : "border-gray-100 bg-gray-50/50"
-              }`}>
+              <div
+                className={`hidden rounded-2xl border-2 p-6 sm:block ${
+                  theme === "dark"
+                    ? "border-gray-700 bg-gray-900/40"
+                    : "border-gray-100 bg-gray-50/50"
+                }`}
+              >
                 <div className="flex items-start gap-4">
-                  <div className={`rounded-2xl p-3 ${theme === "dark" ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"}`}>
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <div
+                    className={`rounded-2xl p-3 ${
+                      theme === "dark"
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-emerald-50 text-emerald-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   </div>
                   <div>
                     <h4 className="font-bold">Delivery Address</h4>
-                    <p className="mt-1 text-sm opacity-70">{invoiceData.customer}</p>
-                    <p className="text-sm opacity-70">{invoiceData?.deliveryStreet || invoiceData?.deliveryAddress}</p>
+                    <p className="mt-1 text-sm opacity-70">
+                      {invoiceData.customer}
+                    </p>
+                    <p className="text-sm opacity-70">
+                      {invoiceData?.deliveryStreet ||
+                        invoiceData?.deliveryAddress}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* PIN Verification Section */}
               {currentVerificationStep === "pin" && !photoUploaded && (
-                <div className={`rounded-[2.5rem] border-2 p-8 text-center transition-all ${
-                  theme === "dark" ? "border-emerald-500/30 bg-emerald-500/5" : "border-emerald-100 bg-emerald-50/30"
-                }`}>
-                  <h3 className="text-2xl font-black tracking-tight">Enter Delivery PIN</h3>
-                  <p className="mt-2 text-sm opacity-60">Please ask the customer for their 4-digit security PIN</p>
-                  
+                <div
+                  className={`rounded-[2.5rem] border-2 p-8 text-center transition-all ${
+                    theme === "dark"
+                      ? "border-emerald-500/30 bg-emerald-500/5"
+                      : "border-emerald-100 bg-emerald-50/30"
+                  }`}
+                >
+                  <h3 className="text-2xl font-black tracking-tight">
+                    Enter Delivery PIN
+                  </h3>
+                  <p className="mt-2 text-sm opacity-60">
+                    Please ask the customer for their 4-digit security PIN
+                  </p>
+
                   <div className="mt-8 flex justify-center gap-3">
                     {[0, 1, 2, 3].map((index) => (
                       <input
@@ -825,20 +919,31 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                             newPin[index] = val;
                             setPinInput(newPin.join(""));
                             if (val && index < 3) {
-                              document.getElementById(`otp-${index + 1}`)?.focus();
+                              document
+                                .getElementById(`otp-${index + 1}`)
+                                ?.focus();
                             }
                           }
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === "Backspace" && !pinInput[index] && index > 0) {
-                            document.getElementById(`otp-${index - 1}`)?.focus();
+                          if (
+                            e.key === "Backspace" &&
+                            !pinInput[index] &&
+                            index > 0
+                          ) {
+                            document
+                              .getElementById(`otp-${index - 1}`)
+                              ?.focus();
                           }
                         }}
                         className={`h-16 w-14 rounded-2xl border-2 text-center text-3xl font-black transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10`}
-                        style={{ 
-                          backgroundColor: 'var(--bg-secondary)', 
-                          color: 'var(--text-primary)',
-                          borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          color: "var(--text-primary)",
+                          borderColor:
+                            theme === "dark"
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(0,0,0,0.1)",
                         }}
                       />
                     ))}
@@ -855,35 +960,68 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     disabled={verifyingPin || pinInput.length !== 4}
                     className="mt-8 hidden w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-8 py-5 text-lg font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 sm:flex"
                   >
-                    {verifyingPin ? <div className="h-6 w-6 animate-spin rounded-full border-3 border-white border-t-transparent" /> : "VERIFY PIN"}
+                    {verifyingPin ? (
+                      <div className="border-3 h-6 w-6 animate-spin rounded-full border-white border-t-transparent" />
+                    ) : (
+                      "VERIFY PIN"
+                    )}
                   </button>
                 </div>
               )}
 
               {/* Photo Proof Section */}
               {currentVerificationStep === "photo" && !photoUploaded && (
-                <div className={`rounded-[2.5rem] border-2 p-8 text-center transition-all ${
-                  theme === "dark" ? "border-amber-500/30 bg-amber-500/5" : "border-amber-100 bg-amber-50/30"
-                }`}>
-                  <h3 className="text-2xl font-black tracking-tight">Photo Proof Required</h3>
-                  <p className="mt-2 text-sm opacity-60">PIN verification skipped - please take a photo of the delivery</p>
-                  
+                <div
+                  className={`rounded-[2.5rem] border-2 p-8 text-center transition-all ${
+                    theme === "dark"
+                      ? "border-amber-500/30 bg-amber-500/5"
+                      : "border-amber-100 bg-amber-50/30"
+                  }`}
+                >
+                  <h3 className="text-2xl font-black tracking-tight">
+                    Photo Proof Required
+                  </h3>
+                  <p className="mt-2 text-sm opacity-60">
+                    PIN verification skipped - please take a photo of the
+                    delivery
+                  </p>
+
                   {!capturedImage ? (
                     <button
                       onClick={() => setShowCameraCapture(true)}
                       className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-5 text-lg font-black text-white shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.02]"
                     >
-                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
                       </svg>
                       OPEN CAMERA
                     </button>
                   ) : (
                     <div className="mt-8 space-y-4">
                       <div className="relative h-48 w-full overflow-hidden rounded-[2rem] border-4 border-white shadow-xl">
-                        <Image src={capturedImage} alt="Proof" fill className="object-cover" />
+                        <Image
+                          src={capturedImage}
+                          alt="Proof"
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-                      <button onClick={() => setCapturedImage(null)} className="text-sm font-bold text-amber-600">Retake Photo</button>
+                      <button
+                        onClick={() => setCapturedImage(null)}
+                        className="text-sm font-bold text-amber-600"
+                      >
+                        Retake Photo
+                      </button>
                     </div>
                   )}
                 </div>
@@ -893,8 +1031,18 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {photoUploaded && !deliveryConfirmed && (
                 <div className="text-center">
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-                    <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-10 w-10"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <h3 className="mt-4 text-2xl font-black">Ready to Confirm</h3>
@@ -917,7 +1065,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 disabled={verifyingPin || pinInput.length !== 4}
                 className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-5 text-lg font-black text-white shadow-xl"
               >
-                {verifyingPin ? <div className="h-6 w-6 animate-spin rounded-full border-3 border-white border-t-transparent" /> : "VERIFY PIN"}
+                {verifyingPin ? (
+                  <div className="border-3 h-6 w-6 animate-spin rounded-full border-white border-t-transparent" />
+                ) : (
+                  "VERIFY PIN"
+                )}
               </button>
             </div>
           )}

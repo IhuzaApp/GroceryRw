@@ -57,14 +57,17 @@ export default async function handler(
 
   try {
     const data = await momoService.getTransferStatus(referenceId);
-    console.log("✅ [MoMo Disbursement Status] Real status received:", data.status);
+    console.log(
+      "✅ [MoMo Disbursement Status] Real status received:",
+      data.status
+    );
 
     const newStatus =
       data.status === "SUCCESSFUL"
         ? "SUCCESSFUL"
         : data.status === "PENDING"
-          ? "PENDING"
-          : "FAILED";
+        ? "PENDING"
+        : "FAILED";
 
     if (hasuraClient) {
       try {
@@ -84,11 +87,16 @@ export default async function handler(
               mtn_response: JSON.stringify(data),
               updated_at: new Date().toISOString(),
             });
-            console.log(`📝 [MoMo Disbursement Status] Order Transaction ${orderTransaction.id} updated to ${newStatus}`);
+            console.log(
+              `📝 [MoMo Disbursement Status] Order Transaction ${orderTransaction.id} updated to ${newStatus}`
+            );
           }
         }
       } catch (dbError) {
-        console.error("❌ [MoMo Disbursement Status] DB Update Error:", dbError);
+        console.error(
+          "❌ [MoMo Disbursement Status] DB Update Error:",
+          dbError
+        );
       }
     }
 

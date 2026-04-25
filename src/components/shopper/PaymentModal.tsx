@@ -119,46 +119,87 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   if (!open || !isMounted) return null;
 
   const modalContent = (
-    <div 
+    <div
       className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className={`relative w-full max-w-[500px] overflow-hidden rounded-t-[2.5rem] shadow-2xl transition-all duration-300 sm:rounded-[3rem] border`}
-        style={{ 
-          backgroundColor: 'var(--bg-primary)',
-          borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+        className={`relative w-full max-w-[500px] overflow-hidden rounded-t-[2.5rem] border shadow-2xl transition-all duration-300 sm:rounded-[3rem]`}
+        style={{
+          backgroundColor: "var(--bg-primary)",
+          borderColor:
+            theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Gradient */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+        <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-10 pb-6 sm:px-10">
+        <div className="flex items-center justify-between px-6 pb-6 pt-10 sm:px-10">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
-              <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={currentStep === "success" ? "M5 13l4 4L19 7" : "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"} />
+              <svg
+                className="h-7 w-7 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d={
+                    currentStep === "success"
+                      ? "M5 13l4 4L19 7"
+                      : "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  }
+                />
               </svg>
             </div>
             <div>
-              <h2 className={`text-2xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                {currentStep === "momo" ? "Payment" : currentStep === "otp" ? "Security" : "Success"}
+              <h2
+                className={`text-2xl font-black tracking-tight ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {currentStep === "momo"
+                  ? "Payment"
+                  : currentStep === "otp"
+                  ? "Security"
+                  : "Success"}
               </h2>
-              <p className={`text-sm font-bold ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
-                {currentStep === "success" ? "Order Complete" : `Order #${orderId || "---"}`}
+              <p
+                className={`text-sm font-bold ${
+                  theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                }`}
+              >
+                {currentStep === "success"
+                  ? "Order Complete"
+                  : `Order #${orderId || "---"}`}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95 ${
-              theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
+              theme === "dark"
+                ? "bg-gray-800 text-gray-400"
+                : "bg-gray-100 text-gray-500"
             }`}
           >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -168,7 +209,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           {currentStep === "momo" ? (
             <div className="space-y-6">
               <div className="space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                <label
+                  className={`text-xs font-black uppercase tracking-widest ${
+                    theme === "dark" ? "text-gray-500" : "text-gray-400"
+                  }`}
+                >
                   Store Merchant Code (Auto-populated)
                 </label>
                 <div className="relative">
@@ -177,36 +222,54 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     value={momoCode}
                     readOnly
                     placeholder="Merchant Code Not Found"
-                    className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight transition-all opacity-70 cursor-not-allowed`}
-                    style={{ 
-                      backgroundColor: 'var(--bg-secondary)', 
-                      color: 'var(--text-primary)',
-                      borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                    className={`w-full cursor-not-allowed rounded-2xl border-2 px-6 py-5 text-xl font-bold tracking-tight opacity-70 transition-all`}
+                    style={{
+                      backgroundColor: "var(--bg-secondary)",
+                      color: "var(--text-primary)",
+                      borderColor:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.1)",
                     }}
                   />
                 </div>
               </div>
 
-              <div 
-                className="rounded-[2.5rem] p-8 border-2"
-                style={{ 
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderColor: theme === "dark" ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+              <div
+                className="rounded-[2.5rem] border-2 p-8"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor:
+                    theme === "dark"
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(0,0,0,0.05)",
                 }}
               >
                 <div className="flex flex-col items-center text-center">
-                  <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">AMOUNT TO PAY</p>
-                  <h3 className={`text-5xl font-black tracking-tighter ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
+                  <p className="mb-2 text-xs font-black uppercase tracking-widest text-gray-500">
+                    AMOUNT TO PAY
+                  </p>
+                  <h3
+                    className={`text-5xl font-black tracking-tighter ${
+                      theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                  >
                     {formattedCurrency(orderAmount)}
                   </h3>
-                  <p className="mt-4 text-xs font-bold text-gray-400">Total amount for verified items</p>
+                  <p className="mt-4 text-xs font-bold text-gray-400">
+                    Total amount for verified items
+                  </p>
                 </div>
               </div>
             </div>
           ) : currentStep === "otp" ? (
             <div className="space-y-8">
               <div className="text-center">
-                <p className={`text-sm font-bold ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                <p
+                  className={`text-sm font-bold ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Enter the 5-digit security code sent to you
                 </p>
               </div>
@@ -236,16 +299,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       }
                     }}
                     className={`h-16 w-full rounded-2xl border-2 text-center text-2xl font-black transition-all focus:border-emerald-500`}
-                    style={{ 
-                      backgroundColor: 'var(--bg-secondary)', 
-                      color: 'var(--text-primary)',
-                      borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                    style={{
+                      backgroundColor: "var(--bg-secondary)",
+                      color: "var(--text-primary)",
+                      borderColor:
+                        theme === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.1)",
                     }}
                   />
                 ))}
               </div>
 
-              <div className={`rounded-2xl p-4 border-2 bg-emerald-500/5 border-emerald-500/10 text-center`}>
+              <div
+                className={`rounded-2xl border-2 border-emerald-500/10 bg-emerald-500/5 p-4 text-center`}
+              >
                 <p className="text-xs font-bold text-emerald-600">
                   Checking SMS and Email for verification...
                 </p>
@@ -254,22 +322,50 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           ) : (
             <div className="space-y-8 text-center">
               <div className="flex justify-center">
-                <div className="h-24 w-24 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <svg className="h-12 w-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100">
+                  <svg
+                    className="h-12 w-12 text-emerald-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
               </div>
               <div>
-                <h3 className={`text-3xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                <h3
+                  className={`text-3xl font-black tracking-tight ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Payment Confirmed
                 </h3>
-                <p className="mt-2 text-sm font-bold text-gray-500">Share this PIN with the delivery person</p>
+                <p className="mt-2 text-sm font-bold text-gray-500">
+                  Share this PIN with the delivery person
+                </p>
               </div>
-              
-              <div className={`rounded-[2.5rem] p-10 border-2`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'rgba(16,185,129,0.2)' }}>
-                <span className="text-xs font-black text-gray-500 uppercase tracking-[0.3em]">ORDER PIN</span>
-                <div className={`mt-4 font-mono text-6xl font-black tracking-[0.2em] ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
+
+              <div
+                className={`rounded-[2.5rem] border-2 p-10`}
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "rgba(16,185,129,0.2)",
+                }}
+              >
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-gray-500">
+                  ORDER PIN
+                </span>
+                <div
+                  className={`mt-4 font-mono text-6xl font-black tracking-[0.2em] ${
+                    theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                  }`}
+                >
                   {orderPin || "---"}
                 </div>
               </div>
@@ -278,66 +374,98 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {/* Error Message */}
           {statusMessage && (
-            <div className="mt-6 rounded-2xl border-2 border-red-500/10 bg-red-500/5 p-4 text-center text-red-500 text-xs font-bold">
+            <div className="mt-6 rounded-2xl border-2 border-red-500/10 bg-red-500/5 p-4 text-center text-xs font-bold text-red-500">
               {statusMessage}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div 
-          className="p-6 sm:p-10 border-t flex gap-4" 
-          style={{ 
-            backgroundColor: 'var(--bg-secondary)', 
-            borderTopColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' 
+        <div
+          className="flex gap-4 border-t p-6 sm:p-10"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            borderTopColor:
+              theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
           }}
         >
           {currentStep !== "success" && (
             <button
               onClick={onClose}
-              className={`flex-1 rounded-2xl py-4 font-black tracking-tight transition-all active:scale-95 border`}
-              style={{ 
-                backgroundColor: 'var(--bg-primary)', 
-                color: 'var(--text-secondary)',
-                borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+              className={`flex-1 rounded-2xl border py-4 font-black tracking-tight transition-all active:scale-95`}
+              style={{
+                backgroundColor: "var(--bg-primary)",
+                color: "var(--text-secondary)",
+                borderColor:
+                  theme === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.1)",
               }}
             >
               CANCEL
             </button>
           )}
-          
+
           {currentStep === "momo" ? (
             <button
               onClick={handlePaymentSubmission}
               disabled={!momoCode.trim() || paymentStatus === "processing"}
-              className={`flex-[2] rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+              className={`flex flex-[2] items-center justify-center gap-3 rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 ${
                 momoCode.trim() && paymentStatus !== "processing"
                   ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-emerald-600/30 hover:scale-[1.02]"
-                  : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                  : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
               }`}
             >
-              {paymentStatus === "processing" ? "GENERATING OTP..." : "REQUEST OTP"}
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+              {paymentStatus === "processing"
+                ? "GENERATING OTP..."
+                : "REQUEST OTP"}
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
             </button>
           ) : currentStep === "otp" ? (
             <button
               onClick={handleOtpVerification}
               disabled={otp.length !== 5 || otpLoading}
-              className={`flex-[2] rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
+              className={`flex flex-[2] items-center justify-center gap-3 rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 ${
                 otp.length === 5 && !otpLoading
                   ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-emerald-600/30 hover:scale-[1.02]"
-                  : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                  : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
               }`}
             >
-              {otpLoading 
-                ? "VERIFYING..." 
-                : (!hasWallet ? "SEND REQUEST" : "COMPLETE PAYMENT")}
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              {otpLoading
+                ? "VERIFYING..."
+                : !hasWallet
+                ? "SEND REQUEST"
+                : "COMPLETE PAYMENT"}
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="flex-1 rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-emerald-600/30"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 py-4 font-black tracking-tight text-white shadow-xl shadow-emerald-600/30 transition-all active:scale-95"
             >
               DONE
             </button>

@@ -122,7 +122,11 @@ const CHECK_PACKAGE_ORDER = gql`
 const CHECK_PENDING_PACKAGE = gql`
   query CheckPendingPackage($orderId: uuid!) {
     package_delivery(
-      where: { id: { _eq: $orderId }, shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      where: {
+        id: { _eq: $orderId }
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
+      }
     ) {
       id
       status
@@ -131,10 +135,18 @@ const CHECK_PENDING_PACKAGE = gql`
 `;
 
 const ASSIGN_PACKAGE_TO_SHOPPER = gql`
-  mutation AssignPackageToShopper($orderId: uuid!, $shopperId: uuid!, $updated_at: timestamptz!) {
+  mutation AssignPackageToShopper(
+    $orderId: uuid!
+    $shopperId: uuid!
+    $updated_at: timestamptz!
+  ) {
     update_package_delivery_by_pk(
       pk_columns: { id: $orderId }
-      _set: { shopper_id: $shopperId, status: "accepted", updated_at: $updated_at }
+      _set: {
+        shopper_id: $shopperId
+        status: "accepted"
+        updated_at: $updated_at
+      }
     ) {
       id
       status
@@ -393,16 +405,25 @@ export default async function handler(
     }
 
     // Prevent restaurant, business, and package orders from being updated to "shopping" status
-    if ((isRestaurantOrder || isBusinessOrder || isPackageOrder) && status === "shopping") {
+    if (
+      (isRestaurantOrder || isBusinessOrder || isPackageOrder) &&
+      status === "shopping"
+    ) {
       return res.status(400).json({
-        error:
-          `${orderType.charAt(0).toUpperCase() + orderType.slice(1)} orders cannot be updated to 'shopping' status.`,
+        error: `${
+          orderType.charAt(0).toUpperCase() + orderType.slice(1)
+        } orders cannot be updated to 'shopping' status.`,
       });
     }
 
     // Handle shopping status - process wallet operations only for regular/combined orders
     // Reel, restaurant, and package orders don't use wallet "shopping"; others are skipped (no wallet op)
-    if (status === "shopping" && !isRestaurantOrder && !isReelOrder && !isPackageOrder) {
+    if (
+      status === "shopping" &&
+      !isRestaurantOrder &&
+      !isReelOrder &&
+      !isPackageOrder
+    ) {
       try {
         await processWalletOperation(
           userId,
@@ -944,9 +965,9 @@ export default async function handler(
             walletCount: walletResult.business_wallet?.length ?? 0,
             wallet: walletResult.business_wallet?.[0]
               ? {
-                id: walletResult.business_wallet[0].id,
-                amount: walletResult.business_wallet[0].amount,
-              }
+                  id: walletResult.business_wallet[0].id,
+                  amount: walletResult.business_wallet[0].amount,
+                }
               : null,
           }
         );
@@ -1006,17 +1027,17 @@ export default async function handler(
             quantity?: number;
             unit?: string;
           }> = Array.isArray(orderDetails.allProducts)
-              ? orderDetails.allProducts
-              : typeof orderDetails.allProducts === "string"
-                ? (() => {
-                  try {
-                    const parsed = JSON.parse(orderDetails.allProducts);
-                    return Array.isArray(parsed) ? parsed : [];
-                  } catch {
-                    return [];
-                  }
-                })()
-                : [];
+            ? orderDetails.allProducts
+            : typeof orderDetails.allProducts === "string"
+            ? (() => {
+                try {
+                  const parsed = JSON.parse(orderDetails.allProducts);
+                  return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                  return [];
+                }
+              })()
+            : [];
           const itemLines = products.map(
             (p: { name?: string; quantity?: number; unit?: string }) => {
               const name = p.name ?? "Item";

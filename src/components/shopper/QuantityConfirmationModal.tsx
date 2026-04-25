@@ -143,8 +143,10 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    const itemBarcode = currentItem.product.ProductName?.barcode || currentItem.product.barcode;
-    const itemSku = currentItem.product.ProductName?.sku || currentItem.product.sku;
+    const itemBarcode =
+      currentItem.product.ProductName?.barcode || currentItem.product.barcode;
+    const itemSku =
+      currentItem.product.ProductName?.sku || currentItem.product.sku;
 
     if (itemBarcode || itemSku) {
       let isValid = false;
@@ -181,7 +183,8 @@ export default function QuantityConfirmationModal({
 
     setBarcodeValidation({
       isValid: false,
-      message: "This product has no barcode/SKU in our system. It cannot be scanned.",
+      message:
+        "This product has no barcode/SKU in our system. It cannot be scanned.",
       isWeightBased: false,
     });
   };
@@ -203,72 +206,136 @@ export default function QuantityConfirmationModal({
         className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
         onClick={onClose}
       >
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          aria-hidden="true"
+        />
 
         <div
-        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] border ${
-          theme === "dark" ? "border-gray-700" : "border-gray-200"
-        }`}
-        style={{ 
-          zIndex: 10001,
-          backgroundColor: 'var(--bg-primary)',
-          color: 'var(--text-primary)'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+          className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+          style={{
+            zIndex: 10001,
+            backgroundColor: "var(--bg-primary)",
+            color: "var(--text-primary)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header Gradient */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
-          
-          <div className="flex items-center justify-between px-6 pt-10 pb-6 sm:px-10">
+          <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+
+          <div className="flex items-center justify-between px-6 pb-6 pt-10 sm:px-10">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
-                <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-7 w-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <div>
-                <h2 className={`text-2xl font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  {(!isWeightBased && !barcodeValidation.isValid) ? "Verify Product" : "Select Amount"}
+                <h2
+                  className={`text-2xl font-black tracking-tight ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {!isWeightBased && !barcodeValidation.isValid
+                    ? "Verify Product"
+                    : "Select Amount"}
                 </h2>
-                <p className={`text-sm font-bold ${theme === "dark" ? "text-emerald-400" : "text-emerald-600"}`}>
-                  {(!isWeightBased && !barcodeValidation.isValid) 
-                    ? "Security check required" 
-                    : (currentItem.product.ProductName?.name || "Premium Item")}
+                <p
+                  className={`text-sm font-bold ${
+                    theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                  }`}
+                >
+                  {!isWeightBased && !barcodeValidation.isValid
+                    ? "Security check required"
+                    : currentItem.product.ProductName?.name || "Premium Item"}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
               className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${
-                theme === "dark" ? "bg-gray-800 text-gray-400 hover:text-white" : "bg-gray-100 text-gray-500 hover:text-gray-800"
+                theme === "dark"
+                  ? "bg-gray-800 text-gray-400 hover:text-white"
+                  : "bg-gray-100 text-gray-500 hover:text-gray-800"
               }`}
             >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
           <div className="max-h-[70vh] overflow-y-auto px-6 pb-10 sm:px-10">
             <div className="space-y-6">
-              
               {/* Product Preview Card */}
-              <div className={`rounded-3xl border p-5 flex items-center gap-5`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: theme === "dark" ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                <div className="h-20 w-20 overflow-hidden rounded-2xl bg-white p-2 shadow-sm border border-gray-200/50">
+              <div
+                className={`flex items-center gap-5 rounded-3xl border p-5`}
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor:
+                    theme === "dark"
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(0,0,0,0.05)",
+                }}
+              >
+                <div className="h-20 w-20 overflow-hidden rounded-2xl border border-gray-200/50 bg-white p-2 shadow-sm">
                   {currentItem.product.ProductName?.image ? (
-                    <Image src={currentItem.product.ProductName.image} alt="Product" width={80} height={80} className="object-contain h-full w-full" />
+                    <Image
+                      src={currentItem.product.ProductName.image}
+                      alt="Product"
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-contain"
+                    />
                   ) : (
-                    <div className="h-full w-full flex items-center justify-center text-gray-300">
-                      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
+                    <div className="flex h-full w-full items-center justify-center text-gray-300">
+                      <svg
+                        className="h-10 w-10"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
+                      </svg>
                     </div>
                   )}
                 </div>
                 <div>
-                  <h4 className={`text-lg font-black leading-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h4
+                    className={`text-lg font-black leading-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {currentItem.product.ProductName?.name || "Product"}
                   </h4>
-                  <p className={`text-sm font-bold opacity-60 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    {currentItem.quantity} {isWeightBased ? measurementUnit : "units"} requested
+                  <p
+                    className={`text-sm font-bold opacity-60 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {currentItem.quantity}{" "}
+                    {isWeightBased ? measurementUnit : "units"} requested
                   </p>
                 </div>
               </div>
@@ -280,78 +347,173 @@ export default function QuantityConfirmationModal({
                       {/* Scan with Camera Card */}
                       <button
                         onClick={() => setShowBarcodeScanner(true)}
-                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] p-8 border-2 transition-all duration-300 ${
-                          theme === "dark" 
-                            ? "bg-gray-800/40 border-gray-700 hover:border-emerald-500 hover:bg-emerald-500/10 shadow-lg shadow-emerald-500/10" 
-                            : "bg-white border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 shadow-xl shadow-emerald-500/5"
+                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-800/40 shadow-lg shadow-emerald-500/10 hover:border-emerald-500 hover:bg-emerald-500/10"
+                            : "border-gray-100 bg-white shadow-xl shadow-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-50"
                         }`}
                       >
-                        <div className={`h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-                          theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
-                        }`}>
-                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <div
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
+                            theme === "dark"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-emerald-100 text-emerald-600"
+                          }`}
+                        >
+                          <svg
+                            className="h-8 w-8"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
                           </svg>
                         </div>
                         <div className="text-center">
-                          <span className={`block font-black text-sm tracking-tighter ${theme === "dark" ? "text-white" : "text-gray-900"}`}>SCANNER</span>
-                          <span className={`text-[10px] font-bold opacity-50 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>CAMERA</span>
+                          <span
+                            className={`block text-sm font-black tracking-tighter ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            SCANNER
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold opacity-50 ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            CAMERA
+                          </span>
                         </div>
                       </button>
 
                       {/* Manual Entry Card */}
                       <button
                         onClick={() => setShowManualInput(true)}
-                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] p-8 border-2 transition-all duration-300 ${
-                          theme === "dark" 
-                            ? "bg-gray-800/40 border-gray-700 hover:border-emerald-500 hover:bg-emerald-500/10 shadow-lg shadow-emerald-500/10" 
-                            : "bg-white border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 shadow-xl shadow-emerald-500/5"
+                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-800/40 shadow-lg shadow-emerald-500/10 hover:border-emerald-500 hover:bg-emerald-500/10"
+                            : "border-gray-100 bg-white shadow-xl shadow-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-50"
                         }`}
                       >
-                        <div className={`h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-                          theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
-                        }`}>
-                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <div
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
+                            theme === "dark"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-emerald-100 text-emerald-600"
+                          }`}
+                        >
+                          <svg
+                            className="h-8 w-8"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
                           </svg>
                         </div>
                         <div className="text-center">
-                          <span className={`block font-black text-sm tracking-tighter ${theme === "dark" ? "text-white" : "text-gray-900"}`}>MANUAL</span>
-                          <span className={`text-[10px] font-bold opacity-50 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>TYPE CODE</span>
+                          <span
+                            className={`block text-sm font-black tracking-tighter ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            MANUAL
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold opacity-50 ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            TYPE CODE
+                          </span>
                         </div>
                       </button>
                     </div>
                   )}
 
                   {showManualInput && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 space-y-5">
-                      <div className={`rounded-3xl border p-6 space-y-6`} style={{ backgroundColor: 'var(--bg-secondary)', borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
+                      <div
+                        className={`space-y-6 rounded-3xl border p-6`}
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          borderColor:
+                            theme === "dark"
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(0,0,0,0.1)",
+                        }}
+                      >
                         <div className="flex items-center justify-between">
-                          <h3 className={`font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>ENTER CODE</h3>
-                          <button onClick={() => { setShowManualInput(false); setManualSku(""); }} className="text-[10px] font-black tracking-widest text-gray-500 hover:text-gray-800 dark:hover:text-white uppercase">BACK</button>
+                          <h3
+                            className={`font-black tracking-tight ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            ENTER CODE
+                          </h3>
+                          <button
+                            onClick={() => {
+                              setShowManualInput(false);
+                              setManualSku("");
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                          >
+                            BACK
+                          </button>
                         </div>
                         <div className="relative">
                           <input
                             type="text"
                             value={manualSku}
                             onChange={(e) => setManualSku(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" &&
+                              manualSku.trim() &&
+                              handleBarcodeScanned(manualSku.trim())
+                            }
                             placeholder="Type Barcode or SKU..."
-                            className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight text-center transition-all focus:border-emerald-500`}
-                            style={{ 
-                              backgroundColor: 'var(--bg-primary)', 
-                              color: 'var(--text-primary)',
-                              borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                            className={`w-full rounded-2xl border-2 px-6 py-5 text-center text-xl font-bold tracking-tight transition-all focus:border-emerald-500`}
+                            style={{
+                              backgroundColor: "var(--bg-primary)",
+                              color: "var(--text-primary)",
+                              borderColor:
+                                theme === "dark"
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(0,0,0,0.1)",
                             }}
                             autoFocus
                           />
                         </div>
                         <button
-                          onClick={() => manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
+                          onClick={() =>
+                            manualSku.trim() &&
+                            handleBarcodeScanned(manualSku.trim())
+                          }
                           disabled={!manualSku.trim()}
                           className={`w-full rounded-2xl py-4 font-black tracking-widest text-white shadow-xl transition-all ${
-                            manualSku.trim() ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/20 active:scale-95" : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                            manualSku.trim()
+                              ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/20 active:scale-95"
+                              : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
                           }`}
                         >
                           VALIDATE
@@ -361,19 +523,61 @@ export default function QuantityConfirmationModal({
                   )}
 
                   {barcodeValidation.message && (
-                    <div className={`animate-in zoom-in-95 p-5 rounded-[1.5rem] border-2 flex items-center gap-4 ${
-                      barcodeValidation.isValid ? "bg-emerald-500/10 border-emerald-500/20" : "bg-red-500/10 border-red-500/20"
-                    }`}>
-                      <div className={`h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg ${barcodeValidation.isValid ? "bg-emerald-500" : "bg-red-500"}`}>
-                        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                          {barcodeValidation.isValid ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />}
+                    <div
+                      className={`flex items-center gap-4 rounded-[1.5rem] border-2 p-5 animate-in zoom-in-95 ${
+                        barcodeValidation.isValid
+                          ? "border-emerald-500/20 bg-emerald-500/10"
+                          : "border-red-500/20 bg-red-500/10"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg ${
+                          barcodeValidation.isValid
+                            ? "bg-emerald-500"
+                            : "bg-red-500"
+                        }`}
+                      >
+                        <svg
+                          className="h-7 w-7"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          {barcodeValidation.isValid ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          )}
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className={`font-black tracking-tight ${barcodeValidation.isValid ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"}`}>
-                          {barcodeValidation.isValid ? "MATCH FOUND!" : "NO MATCH"}
+                        <p
+                          className={`font-black tracking-tight ${
+                            barcodeValidation.isValid
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-red-700 dark:text-red-400"
+                          }`}
+                        >
+                          {barcodeValidation.isValid
+                            ? "MATCH FOUND!"
+                            : "NO MATCH"}
                         </p>
-                        <p className={`text-xs font-bold opacity-80 ${barcodeValidation.isValid ? "text-emerald-600 dark:text-emerald-500" : "text-red-600 dark:text-red-500"}`}>
+                        <p
+                          className={`text-xs font-bold opacity-80 ${
+                            barcodeValidation.isValid
+                              ? "text-emerald-600 dark:text-emerald-500"
+                              : "text-red-600 dark:text-red-500"
+                          }`}
+                        >
                           {barcodeValidation.message}
                         </p>
                       </div>
@@ -383,46 +587,80 @@ export default function QuantityConfirmationModal({
               )}
 
               {(barcodeValidation.isValid || isWeightBased) && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
-                  <div className="relative group">
-                    <div className={`absolute inset-y-0 left-6 flex items-center pointer-events-none transition-colors ${theme === "dark" ? "text-gray-600" : "text-gray-300"}`}>
-                      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="group relative">
+                    <div
+                      className={`pointer-events-none absolute inset-y-0 left-6 flex items-center transition-colors ${
+                        theme === "dark" ? "text-gray-600" : "text-gray-300"
+                      }`}
+                    >
+                      <svg
+                        className="h-8 w-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                        />
+                      </svg>
                     </div>
                     <input
                       type="number"
-                      value={isWeightBased ? (foundWeight || "") : (foundQuantity || "")}
+                      value={
+                        isWeightBased ? foundWeight || "" : foundQuantity || ""
+                      }
                       onChange={(e) => {
                         const val = e.target.value;
                         const numValue = val === "" ? 0 : parseFloat(val);
                         const maxAllowed = currentItem?.quantity || 0;
                         const validValue = Math.min(numValue, maxAllowed);
-                        if (isWeightBased) { setFoundWeight(validValue); setFoundQuantity(validValue); }
-                        else { setFoundQuantity(Math.floor(validValue)); }
+                        if (isWeightBased) {
+                          setFoundWeight(validValue);
+                          setFoundQuantity(validValue);
+                        } else {
+                          setFoundQuantity(Math.floor(validValue));
+                        }
                       }}
                       className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all focus:border-emerald-500`}
-                      style={{ 
-                        backgroundColor: 'var(--bg-secondary)', 
-                        color: 'var(--text-primary)',
-                        borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                      style={{
+                        backgroundColor: "var(--bg-secondary)",
+                        color: "var(--text-primary)",
+                        borderColor:
+                          theme === "dark"
+                            ? "rgba(255,255,255,0.1)"
+                            : "rgba(0,0,0,0.1)",
                       }}
                       placeholder="0"
                       autoFocus
                     />
                   </div>
 
-                  <div className="flex gap-2 justify-center">
+                  <div className="flex justify-center gap-2">
                     {[0.5, 1].map((mult) => (
                       <button
                         key={mult}
                         onClick={() => {
-                          const val = isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult);
+                          const val = isWeightBased
+                            ? (currentItem.quantity * mult).toFixed(2)
+                            : Math.floor(currentItem.quantity * mult);
                           if (isWeightBased) setFoundWeight(Number(val));
                           setFoundQuantity(Number(val));
                         }}
-                        className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                          (isWeightBased ? foundWeight : foundQuantity) === Number(isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult))
-                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 scale-105"
-                            : theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"
+                        className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                          (isWeightBased ? foundWeight : foundQuantity) ===
+                          Number(
+                            isWeightBased
+                              ? (currentItem.quantity * mult).toFixed(2)
+                              : Math.floor(currentItem.quantity * mult)
+                          )
+                            ? "scale-105 bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                            : theme === "dark"
+                            ? "bg-gray-800 text-gray-400"
+                            : "bg-gray-100 text-gray-500"
                         }`}
                       >
                         {mult === 1 ? "FULL" : "HALF"} AMOUNT
@@ -431,21 +669,49 @@ export default function QuantityConfirmationModal({
                   </div>
 
                   {isWeightBased && (
-                    <div className={`rounded-3xl p-6 border-2 ${exceedsBudget ? "bg-red-500/5 border-red-500/10" : "bg-emerald-500/5 border-emerald-500/10"}`}>
+                    <div
+                      className={`rounded-3xl border-2 p-6 ${
+                        exceedsBudget
+                          ? "border-red-500/10 bg-red-500/5"
+                          : "border-emerald-500/10 bg-emerald-500/5"
+                      }`}
+                    >
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">BUDGET</p>
-                          <p className={`text-lg font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{customerBudget.toLocaleString()} RWF</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                            BUDGET
+                          </p>
+                          <p
+                            className={`text-lg font-black ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {customerBudget.toLocaleString()} RWF
+                          </p>
                         </div>
                         <div className="space-y-1 text-right">
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">EST. COST</p>
-                          <p className={`text-lg font-black ${exceedsBudget ? "text-red-500" : "text-emerald-500"}`}>{(foundWeight * pricePerUnit).toLocaleString()} RWF</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                            EST. COST
+                          </p>
+                          <p
+                            className={`text-lg font-black ${
+                              exceedsBudget
+                                ? "text-red-500"
+                                : "text-emerald-500"
+                            }`}
+                          >
+                            {(foundWeight * pricePerUnit).toLocaleString()} RWF
+                          </p>
                         </div>
                       </div>
                       {refundAmount > 0 && (
-                        <div className="mt-4 pt-4 border-t border-dashed border-gray-500/20 flex justify-between items-center">
-                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Refund:</p>
-                          <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{refundAmount.toLocaleString()} RWF</p>
+                        <div className="mt-4 flex items-center justify-between border-t border-dashed border-gray-500/20 pt-4">
+                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                            Refund:
+                          </p>
+                          <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                            {refundAmount.toLocaleString()} RWF
+                          </p>
                         </div>
                       )}
                     </div>
@@ -455,36 +721,74 @@ export default function QuantityConfirmationModal({
             </div>
           </div>
 
-          <div className={`p-6 sm:p-10 border-t flex gap-4`} style={{ backgroundColor: 'var(--bg-secondary)', borderTopColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+          <div
+            className={`flex gap-4 border-t p-6 sm:p-10`}
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              borderTopColor:
+                theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+            }}
+          >
             <button
               onClick={onClose}
-              className={`flex-1 rounded-2xl py-4 font-black tracking-tight transition-all active:scale-95 border`}
-              style={{ 
-                backgroundColor: 'var(--bg-primary)', 
-                color: 'var(--text-secondary)',
-                borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+              className={`flex-1 rounded-2xl border py-4 font-black tracking-tight transition-all active:scale-95`}
+              style={{
+                backgroundColor: "var(--bg-primary)",
+                color: "var(--text-secondary)",
+                borderColor:
+                  theme === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.1)",
               }}
             >
               CANCEL
             </button>
             <button
               onClick={onConfirm}
-              disabled={(!isWeightBased && !barcodeValidation.isValid) || (isWeightBased ? foundWeight : foundQuantity) <= 0}
-              className={`flex-[2] rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                (barcodeValidation.isValid || isWeightBased) && (isWeightBased ? foundWeight : foundQuantity) > 0
+              disabled={
+                (!isWeightBased && !barcodeValidation.isValid) ||
+                (isWeightBased ? foundWeight : foundQuantity) <= 0
+              }
+              className={`flex flex-[2] items-center justify-center gap-3 rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 ${
+                (barcodeValidation.isValid || isWeightBased) &&
+                (isWeightBased ? foundWeight : foundQuantity) > 0
                   ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/30 hover:scale-[1.02]"
-                  : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                  : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
               }`}
             >
-              {(!isWeightBased && !barcodeValidation.isValid) ? (
+              {!isWeightBased && !barcodeValidation.isValid ? (
                 <>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
                   VERIFY FIRST
                 </>
               ) : (
                 <>
                   CONFIRM FOUND
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
                 </>
               )}
             </button>
