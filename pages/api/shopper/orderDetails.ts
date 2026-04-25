@@ -110,6 +110,8 @@ const GET_ORDER_DETAILS = gql`
         longitude
         operating_hours
         ssd
+        has_wallet
+        use_wallet
       }
       address: Address {
         id
@@ -448,6 +450,8 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         longitude
         operating_hours
         ssd
+        has_wallet
+        use_wallet
       }
       address: Address {
         id

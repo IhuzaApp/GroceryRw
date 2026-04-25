@@ -839,11 +839,6 @@ export default function BatchDetails({
     if (typeof window !== "undefined") {
       sessionStorage.setItem("payment_otp", secureOtp);
     }
-
-    // Show as alert for demo purposes
-    setTimeout(() => {
-      alert(`For testing purposes, your OTP is: ${secureOtp}`);
-    }, 500);
     return secureOtp;
   };
 
@@ -1028,59 +1023,38 @@ export default function BatchDetails({
       if (targetOrderForPayment.orderType === "regular") {
         const hasWallet = targetOrderForPayment.shop?.has_wallet;
 
-        if (hasWallet) {
+        const response = await fetch("/api/shopper/processPaymentRequest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: targetOrderForPayment.id,
+            shopId: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
+            amount: orderAmount,
+            hasWallet: hasWallet ?? true,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to process payment request");
+        }
+
+        if (data.status === "WALLET_UPDATED") {
           // Path 1: Shop has wallet - Direct payout (Internal Wallet Update)
-          try {
-            // Fetch current wallet balance
-            const walletRes = await hasuraClient.request<any>(GET_MERCHANT_WALLET, {
-              shop_id: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
-            });
-            const currentWallet = walletRes.merchant_wallets[0];
-            if (currentWallet) {
-              const newBalance = (
-                parseFloat(currentWallet.balance || "0") + orderAmount
-              ).toString();
-
-              await hasuraClient.request(UPDATE_MERCHANT_WALLET, {
-                balance: newBalance,
-                update_at: new Date().toISOString(),
-                _eq: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
-              });
-
-              toaster.push(
-                <Notification type="success" header="Wallet Updated" closable>
-                  Merchant wallet updated with {orderAmount} RWF.
-                </Notification>,
-                { placement: "topEnd" }
-              );
-            }
-          } catch (err) {
-            console.error("Wallet update failed:", err);
-            // We continue even if wallet update fails, but log it
-          }
-        } else {
+          toaster.push(
+            <Notification type="success" header="Wallet Updated" closable>
+              {data.message}
+            </Notification>,
+            { placement: "topEnd" }
+          );
+        } else if (data.status === "PENDING_PAYMENT") {
           // Path 2: Shop does NOT have wallet - Create Payment Request + Firebase Listener
-          try {
-            await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
-              object: {
-                order_id: targetOrderForPayment.id,
-                shop_id: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
-                shopper_id: session?.user?.id,
-                amount: orderAmount.toString(),
-                status: "PENDING_PAYMENT",
-              },
-            });
-
-            // Transition to Waiting State
-            setPaymentRequestStatus("PENDING_PAYMENT");
-            setShowPaymentRequestModal(true);
-            setOtpVerifyLoading(false);
-            setShowPaymentModal(false); 
-            return; // STOP HERE - Firebase listener will resume via useEffect
-          } catch (err) {
-            console.error("Payment request creation failed:", err);
-            throw new Error("Failed to create payment request. Please try again.");
-          }
+          setPaymentRequestStatus("PENDING_PAYMENT");
+          setShowPaymentRequestModal(true);
+          setOtpVerifyLoading(false);
+          setShowPaymentModal(false); 
+          return; // STOP HERE - Firebase listener will resume via useEffect
         }
       }
 
@@ -3916,6 +3890,13 @@ export default function BatchDetails({
                   (co) => co.id === paymentTargetOrderId
                 )?.OrderID || order?.OrderID
               : order?.OrderID
+          }
+          hasWallet={
+            (paymentTargetOrderId
+              ? order?.combinedOrders?.find(
+                  (co) => co.id === paymentTargetOrderId
+                )?.shop?.has_wallet
+              : order?.shop?.has_wallet) ?? true
           }
           otp={otp}
           setOtp={setOtp}

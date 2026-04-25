@@ -22,6 +22,7 @@ interface PaymentModalProps {
   otpLoading: boolean;
   onVerifyOtp: () => void;
   generatedOtp: string;
+  hasWallet?: boolean;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -42,6 +43,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   otpLoading,
   onVerifyOtp,
   generatedOtp,
+  hasWallet = true,
 }) => {
   const { theme } = useTheme();
   const [paymentStatus, setPaymentStatus] = useState<
@@ -327,7 +329,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   : "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
               }`}
             >
-              {otpLoading ? "VERIFYING..." : "COMPLETE PAYMENT"}
+              {otpLoading 
+                ? "VERIFYING..." 
+                : (!hasWallet ? "SEND REQUEST" : "COMPLETE PAYMENT")}
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </button>
           ) : (

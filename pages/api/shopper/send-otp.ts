@@ -45,33 +45,39 @@ export default async function handler(
       }
     }
 
-    if (!targetPhone) {
-      return res.status(400).json({ error: "Phone number is required" });
+    if (!targetPhone && !email) {
+      return res.status(400).json({ error: "Phone number or email is required" });
     }
 
-    // Basic phone cleaning (same as registration)
-    const cleanPhone = targetPhone.replace(/\D/g, "");
+    let smsPromise = Promise.resolve(null);
     let formattedPhone = targetPhone;
-    if (!targetPhone.startsWith("+")) {
-      if (cleanPhone.startsWith("0")) {
-        formattedPhone = "+250" + cleanPhone.substring(1);
-      } else if (!cleanPhone.startsWith("250")) {
-        formattedPhone = "+250" + cleanPhone;
-      } else {
-        formattedPhone = "+" + cleanPhone;
-      }
-    }
 
-    const message = `Plas Grocery: Your verification code is ${otp}.`;
-    
-    // 1. Send SMS via Pindo
-    const smsPromise = sendSMS(formattedPhone, message);
+    if (targetPhone) {
+      // Basic phone cleaning (same as registration)
+      const cleanPhone = targetPhone.replace(/\D/g, "");
+      if (!targetPhone.startsWith("+")) {
+        if (cleanPhone.startsWith("0")) {
+          formattedPhone = "+250" + cleanPhone.substring(1);
+        } else if (!cleanPhone.startsWith("250")) {
+          formattedPhone = "+250" + cleanPhone;
+        } else {
+          formattedPhone = "+" + cleanPhone;
+        }
+      }
+
+      const message = `Plas Grocery: Your verification code is ${otp}.`;
+      
+      console.log(`🚀 [send-otp] Preparing to send Pindo SMS to: ${formattedPhone} (Original: ${targetPhone})`);
+      
+      // 1. Send SMS via Pindo
+      smsPromise = sendSMS(formattedPhone, message);
+    }
     
     // 2. Send Email via Resend if email is provided
     let emailPromise = Promise.resolve(null);
     if (email) {
       emailPromise = resend.emails.send({
-        from: "Plas Grocery <onboarding@resend.dev>",
+        from: "Plas Grocery <no-reply@plas.rw>",
         to: email,
         subject: "Your Verification Code",
         html: `
@@ -90,12 +96,22 @@ export default async function handler(
       });
     }
 
-    // Wait for both (or at least SMS)
-    await Promise.all([smsPromise, emailPromise]);
+    // Wait for both without failing the entire request if one fails
+    const results = await Promise.allSettled([smsPromise, emailPromise]);
+    
+    const smsResult = results[0];
+    const emailResult = results[1];
+
+    if (smsResult.status === "rejected") {
+      console.error("SMS sending failed:", smsResult.reason);
+    }
+    if (emailResult.status === "rejected") {
+      console.error("Email sending failed:", emailResult.reason);
+    }
 
     return res.status(200).json({
       success: true,
-      message: `OTP sent successfully via SMS to ${formattedPhone}${email ? " and via Email" : ""}`,
+      message: `OTP sending process completed`,
     });
   } catch (error: any) {
     console.error("Error sending shopper OTP:", error);
