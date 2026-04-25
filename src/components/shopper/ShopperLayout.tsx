@@ -297,7 +297,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
               : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} p-6`
           }`}
         >
-          <div className="relative z-0 mx-auto max-w-7xl">{children}</div>
+          <div className="relative z-0 w-full">{children}</div>
         </main>
       </div>
 
