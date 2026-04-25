@@ -228,7 +228,7 @@ export default function UserAISubscriptions() {
           {/* Usage bar on dark background */}
           <div className="mb-1 flex items-center justify-between text-sm">
             <span className="text-white/80">Requests used</span>
-            <span className="font-bold">
+            <span className="font-bold text-white">
               {data?.limit === -1
                 ? `${data?.usageCount} / ∞`
                 : `${data?.usageCount} / ${data?.limit}`}
