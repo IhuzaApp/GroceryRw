@@ -164,7 +164,7 @@ export default function UserPayment() {
               {/* Details Section */}
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex flex-col items-center gap-2 sm:flex-row">
-                  <h4 className="text-lg font-extrabold text-gray-900 dark:text-white">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {pm.method}
                   </h4>
                   {pm.is_default && (
