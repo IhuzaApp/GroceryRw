@@ -41,7 +41,6 @@ export default async function handler(
       const profilePhone = shopperData.shoppers[0]?.phone_number;
       if (profilePhone) {
         targetPhone = profilePhone;
-        console.log(`[send-otp] Using profile phone: ${targetPhone}`);
       }
     }
 
@@ -68,10 +67,6 @@ export default async function handler(
       }
 
       const message = `Plas Grocery: Your verification code is ${otp}.`;
-
-      console.log(
-        `🚀 [send-otp] Preparing to send Pindo SMS to: ${formattedPhone} (Original: ${targetPhone})`
-      );
 
       // 1. Send SMS via Pindo
       smsPromise = sendSMS(formattedPhone, message);
