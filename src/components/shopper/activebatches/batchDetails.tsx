@@ -978,6 +978,11 @@ export default function BatchDetails({
       // Initiate MoMo disbursement (Transfer) after OTP verification
       let momoPaymentSuccess = false;
       let momoReferenceId = "";
+      console.log("🚀 [BatchDetails] Sending disbursement request:", {
+        orderId: targetOrderForPayment.id,
+        orderType: targetOrderForPayment.orderType,
+        momoCode,
+      });
       try {
         const momoResponse = await fetch("/api/momo/disburse-to-merchant", {
           method: "POST",
@@ -989,6 +994,7 @@ export default function BatchDetails({
             currency: systemConfig?.currency || "RWF",
             momoCode: momoCode, // The Merchant Code
             orderId: targetOrderForPayment.id,
+            orderType: targetOrderForPayment.orderType || "regular",
             externalId:
               targetOrderForPayment.id || `SHOPPER-DISB-${Date.now()}`,
             payerMessage: "Shopper Payment for Items",

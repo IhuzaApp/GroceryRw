@@ -29,6 +29,7 @@ class MomoService {
   private getEnv() {
     return {
       subscriptionKey: process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
+      disbursementSubscriptionKey: process.env.MOMO_DISBURSEMENT_SUBSCRIPTION_KEY_SANDBOX || process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
       userId: process.env.MOMO_API_USER_SANDBOX,
       apiKey: process.env.MOMO_API_KEY_SANDBOX,
       baseUrl: (
@@ -42,13 +43,15 @@ class MomoService {
    * Get a valid access token for a specific product, generating a new one if missing or expired.
    */
   async getAccessToken(product: "collection" | "disbursement"): Promise<string> {
-    const { subscriptionKey, userId, apiKey, baseUrl } = this.getEnv();
+    const { subscriptionKey, disbursementSubscriptionKey, userId, apiKey, baseUrl } = this.getEnv();
 
     if (!subscriptionKey || !userId || !apiKey) {
       throw new Error(
         "MTN MoMo credentials are not configured in environment variables."
       );
     }
+
+    const currentSubscriptionKey = product === "collection" ? subscriptionKey : disbursementSubscriptionKey;
 
     const now = Math.floor(Date.now() / 1000);
     const cachedToken = product === "collection" ? this.collectionToken : this.disbursementToken;
@@ -70,7 +73,7 @@ class MomoService {
     const response = await fetch(`${baseUrl}/${product}/token/`, {
       method: "POST",
       headers: {
-        "Ocp-Apim-Subscription-Key": subscriptionKey,
+        "Ocp-Apim-Subscription-Key": currentSubscriptionKey!,
         Authorization: `Basic ${auth}`,
       },
     });
@@ -227,7 +230,7 @@ class MomoService {
       const response = await fetch(`${baseUrl}/disbursement/v1_0/transfer`, {
         method: "POST",
         headers: {
-          "Ocp-Apim-Subscription-Key": subscriptionKey!,
+          "Ocp-Apim-Subscription-Key": disbursementSubscriptionKey!,
           Authorization: `Bearer ${token}`,
           "X-Reference-Id": referenceId,
           "X-Target-Environment": environment,
@@ -258,7 +261,7 @@ class MomoService {
    * Check status of a Transfer (Disbursement API).
    */
   async getTransferStatus(referenceId: string): Promise<any> {
-    const { subscriptionKey, baseUrl, environment } = this.getEnv();
+    const { disbursementSubscriptionKey, baseUrl, environment } = this.getEnv();
 
     const callApi = async (retry = true): Promise<Response> => {
       const token = await this.getAccessToken("disbursement");
@@ -267,7 +270,7 @@ class MomoService {
         {
           method: "GET",
           headers: {
-            "Ocp-Apim-Subscription-Key": subscriptionKey!,
+            "Ocp-Apim-Subscription-Key": disbursementSubscriptionKey!,
             Authorization: `Bearer ${token}`,
             "X-Target-Environment": environment,
           },
@@ -282,7 +285,7 @@ class MomoService {
     };
 
     const response = await callApi();
-    if (!response.ok) throw new Error(`MoMo transfer status check failed: ${response.status}`);
+    if (!response.ok) throw new Error(`MoMo transfer status check failed: ${response.status} - ${await response.text()}`);
     return await response.json();
   }
 
@@ -299,7 +302,7 @@ class MomoService {
     } else if (!partyId.startsWith("250") && partyId.length >= 9) {
       partyId = "250" + partyId;
     }
-    return partyId;
+    return "+" + partyId;
   }
 }
 

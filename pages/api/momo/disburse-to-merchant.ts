@@ -42,11 +42,20 @@ export default async function handler(
     currency = "RWF",
     momoCode, // The merchant code
     orderId,
+    orderType = "regular", // Add orderType (regular, business, restaurant, reel, package)
     externalId,
     payerMessage = "Shopper Payment for Items",
     payeeNote = "Payment via Plas Grocery",
     walletId,
   } = req.body;
+
+  console.log("📝 [MoMo Disbursement] Payload:", {
+    amount,
+    momoCode,
+    orderId,
+    orderType,
+    walletId,
+  });
 
   const session = (await getServerSession(
     req,
@@ -68,25 +77,39 @@ export default async function handler(
     // 1. Create a PENDING transaction record
     if (hasuraClient) {
       try {
+        // Map orderId to the correct column based on orderType
+        const transactionObject: any = {
+          wallet_id: walletId || null,
+          amount: String(amount),
+          currency,
+          phone: momoCode,
+          reference_id: referenceId,
+          type: "disbursement",
+          status: "PENDING",
+          mtn_response: JSON.stringify({
+            status: "INITIATED",
+            referenceId,
+            momoCode,
+          }),
+          user_id: userId || null,
+        };
+
+        if (orderType === "business") {
+          transactionObject.business_order_id = orderId;
+        } else if (orderType === "restaurant") {
+          transactionObject.restaurant_order_id = orderId;
+        } else if (orderType === "reel") {
+          transactionObject.reel_order_id = orderId;
+        } else if (orderType === "package") {
+          transactionObject.package_id = orderId;
+        } else {
+          transactionObject.order_id = orderId;
+        }
+
         const dbRes = await hasuraClient.request<{
           insert_order_transactions_one: { id: string };
         }>(CREATE_ORDER_TRANSACTION, {
-          object: {
-            wallet_id: walletId || null,
-            order_id: orderId || null,
-            amount: String(amount),
-            currency,
-            phone: momoCode, // Store the merchant code in the phone field
-            reference_id: referenceId,
-            type: "disbursement",
-            status: "PENDING",
-            mtn_response: JSON.stringify({
-              status: "INITIATED",
-              referenceId,
-              momoCode,
-            }),
-            user_id: userId || null,
-          },
+          object: transactionObject,
         });
         dbTransactionId = dbRes.insert_order_transactions_one.id;
       } catch (dbError) {
