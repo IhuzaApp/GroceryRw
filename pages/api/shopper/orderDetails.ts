@@ -19,6 +19,7 @@ interface OrderDetailsResponse {
       address: string;
       latitude: string;
       longitude: string;
+      ssd?: string | null;
     } | null;
     address: {
       latitude: string;
@@ -108,6 +109,7 @@ const GET_ORDER_DETAILS = gql`
         latitude
         longitude
         operating_hours
+        ssd
       }
       address: Address {
         id
@@ -444,6 +446,8 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         phone
         latitude
         longitude
+        operating_hours
+        ssd
       }
       address: Address {
         id

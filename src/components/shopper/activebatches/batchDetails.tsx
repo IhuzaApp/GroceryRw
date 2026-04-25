@@ -28,6 +28,15 @@ import PaymentModal from "../PaymentModal";
 import DeliveryConfirmationModal from "../DeliveryConfirmationModal";
 import InvoiceProofModal from "../InvoiceProofModal";
 import PickupConfirmationScanner from "../PickupConfirmationScanner";
+import PaymentRequestModal from "./batchDetails/PaymentRequestModal";
+import { db } from "../../../lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { 
+  INSERT_PAYMENT_REQUEST, 
+  UPDATE_MERCHANT_WALLET,
+  GET_MERCHANT_WALLET 
+} from "../../../graphql/mutations/paymentRequests";
+import { hasuraClient } from "../../../lib/hasuraClient";
 import { useChat } from "../../../context/ChatContext";
 import { isMobileDevice } from "../../../lib/formatters";
 import ShopperChatDrawer from "../../chat/ShopperChatDrawer";
@@ -216,6 +225,8 @@ export default function BatchDetails({
   const [paymentTargetOrderId, setPaymentTargetOrderId] = useState<
     string | null
   >(null);
+  const [showPaymentRequestModal, setShowPaymentRequestModal] = useState(false);
+  const [paymentRequestStatus, setPaymentRequestStatus] = useState("PENDING_PAYMENT");
 
   const isMultiShop = useMemo(() => {
     const shops = new Set();
@@ -227,6 +238,34 @@ export default function BatchDetails({
     });
     return shops.size > 1;
   }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
+
+  // Real-time listener for payment request status
+  useEffect(() => {
+    if (showPaymentRequestModal && order?.id) {
+      // Create a reference to the payment request in Firestore
+      // We assume the document ID is the order.id
+      const unsub = onSnapshot(doc(db, "payment_requests", order.id), (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          const newStatus = data.status || "PENDING_PAYMENT";
+          setPaymentRequestStatus(newStatus);
+          
+          if (newStatus === "APPROVED") {
+            // Automatically finalize the payment when approved
+            const amount = getPaymentOrderAmount();
+            const originalTotal = getOriginalOrderTotalForPayment();
+            const targetOrder = paymentTargetOrderId
+              ? order.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+              : order;
+              
+            finalizeOrderPayment(amount, originalTotal, targetOrder);
+            // Modal will be closed after a short delay or via its own button if we prefer
+          }
+        }
+      });
+      return () => unsub();
+    }
+  }, [showPaymentRequestModal, order?.id, paymentTargetOrderId]);
 
   const hasSameShopCombinedOrders = useMemo(() => {
     const has = order?.combinedOrders && order.combinedOrders.length > 0;
@@ -933,7 +972,17 @@ export default function BatchDetails({
 
   // Function to show payment modal
   const handleShowPaymentModal = () => {
-    // Payment modal info calculated
+    // Get the target order for payment
+    const targetOrder = paymentTargetOrderId
+      ? order?.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+      : order;
+
+    console.log("DEBUG: Target Order Shop", targetOrder?.shop);
+    console.log("DEBUG: Target Order Shop SSD", targetOrder?.shop?.ssd);
+
+    // Automatically set the merchant code from the shop's ssd field
+    const merchantCode = targetOrder?.shop?.ssd || targetOrder?.Shop?.ssd || "";
+    setMomoCode(merchantCode);
 
     // Generate a new private key when opening the modal
     generatePrivateKey();
@@ -975,361 +1024,68 @@ export default function BatchDetails({
       const orderAmount = getPaymentOrderAmount();
       const originalOrderTotal = getOriginalOrderTotalForPayment();
 
-      // Initiate MoMo disbursement (Transfer) after OTP verification
-      let momoPaymentSuccess = false;
-      let momoReferenceId = "";
-      console.log("🚀 [BatchDetails] Sending disbursement request:", {
-        orderId: targetOrderForPayment.id,
-        orderType: targetOrderForPayment.orderType,
-        momoCode,
-      });
-      try {
-        const momoResponse = await fetch("/api/momo/disburse-to-merchant", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: orderAmount,
-            currency: systemConfig?.currency || "RWF",
-            momoCode: momoCode, // The Merchant Code
-            orderId: targetOrderForPayment.id,
-            orderType: targetOrderForPayment.orderType || "regular",
-            externalId:
-              targetOrderForPayment.id || `SHOPPER-DISB-${Date.now()}`,
-            payerMessage: "Shopper Payment for Items",
-            payeeNote: "Payment via Plas Grocery",
-          }),
-        });
+      // NEW PAYMENT FLOW FOR REGULAR ORDERS
+      if (targetOrderForPayment.orderType === "regular") {
+        const hasWallet = targetOrderForPayment.shop?.has_wallet;
 
-        const momoData = await momoResponse.json();
-        momoReferenceId = momoData.referenceId;
-
-        if (momoResponse.ok) {
-          // Start polling for MoMo disbursement status
-          const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
-
-          // Poll for MoMo status
-          for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            try {
-              const statusResponse = await fetch(
-                `/api/momo/disburse-status?referenceId=${momoReferenceId}`
-              );
-              const statusData = await statusResponse.json();
-
-              if (statusResponse.ok) {
-                if (statusData.status === "SUCCESSFUL") {
-                  momoPaymentSuccess = true;
-                  toaster.push(
-                    <Notification
-                      type="success"
-                      header="Payment Successful"
-                      closable
-                    >
-                      Payment disbursed successfully to merchant!
-                    </Notification>,
-                    { placement: "topEnd" }
-                  );
-                  break; // Exit the polling loop
-                } else if (
-                  statusData.status === "FAILED" ||
-                  statusData.status === "REJECTED" ||
-                  statusData.status === "EXPIRED"
-                ) {
-                  throw new Error(
-                    statusData.reason ||
-                      "MoMo payment failed. Please try again."
-                  );
-                } else {
-                  // PENDING or other status
-                  if (attempt < maxAttempts - 1) {
-                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds
-                  } else {
-                    throw new Error(
-                      "MoMo payment timeout. Please check your phone or try again."
-                    );
-                  }
-                }
-              } else {
-                throw new Error(statusData.error || "MoMo status check failed");
-              }
-            } catch (error) {
-              // MoMo status polling error
-              if (attempt === maxAttempts - 1) {
-                throw error; // Re-throw on last attempt
-              }
-              await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait before retry
-            }
-          }
-
-          if (!momoPaymentSuccess) {
-            throw new Error("MoMo payment did not complete successfully");
-          }
-        } else {
-          throw new Error(momoData.error || "MoMo payment initiation failed");
-        }
-      } catch (momoError) {
-        reportErrorToSlackClient("BatchDetails (MoMo payment)", momoError, {
-          orderId: targetOrderForPayment?.id,
-          OrderID: targetOrderForPayment?.OrderID,
-        });
-        toaster.push(
-          <Notification type="error" header="MoMo Payment Failed" closable>
-            {momoError instanceof Error
-              ? momoError.message
-              : "MoMo payment failed. Please try again."}
-          </Notification>,
-          { placement: "topEnd", duration: 5000 }
-        );
-        setOtpVerifyLoading(false);
-        setShowPaymentModal(false); // Close payment modal on error
-        return;
-      }
-
-      // Make API request to update wallet balance and process payment
-      let paymentSuccess = false;
-      let walletUpdated = false;
-      try {
-        const hasCombinedOrders =
-          order?.combinedOrders && order.combinedOrders.length > 0;
-
-        const response = await fetch("/api/shopper/processPayment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            orderId: targetOrderForPayment.id,
-            momoCode,
-            privateKey,
-            orderAmount: orderAmount,
-            originalOrderTotal: originalOrderTotal,
-            orderType: targetOrderForPayment.orderType || "regular",
-            momoReferenceId: momoReferenceId,
-            momoSuccess: momoPaymentSuccess,
-            isSameShopCombined: hasSameShopCombinedOrders, // batch payment & invoice for same-shop only
-            combinedOrders: hasCombinedOrders
-              ? order.combinedOrders
-              : undefined,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Payment processing failed");
-        }
-
-        const paymentData = await response.json();
-
-        // Check if refunds were created
-        if (paymentData.refunds && paymentData.refunds.length > 0) {
-          if (paymentData.refunds.length === 1) {
-            // Single refund notification
-            toaster.push(
-              <Notification type="info" header="Refund Scheduled" closable>
-                A refund of {formatCurrency(paymentData.totalRefundAmount)} has
-                been scheduled for items not found.
-              </Notification>,
-              { placement: "topEnd", duration: 5000 }
-            );
-          } else {
-            // Multiple refunds notification
-            toaster.push(
-              <Notification type="info" header="Refunds Scheduled" closable>
-                Total refunds of {formatCurrency(paymentData.totalRefundAmount)}{" "}
-                have been scheduled for items not found across{" "}
-                {paymentData.refunds.length} orders.
-              </Notification>,
-              { placement: "topEnd", duration: 5000 }
-            );
-          }
-        }
-
-        paymentSuccess = true;
-        walletUpdated = true;
-      } catch (paymentError) {
-        reportErrorToSlackClient(
-          "BatchDetails (processPayment API)",
-          paymentError,
-          { orderId: targetOrderForPayment?.id }
-        );
-        toaster.push(
-          <Notification type="error" header="Payment Failed" closable>
-            {paymentError instanceof Error
-              ? paymentError.message
-              : "Payment processing failed. Please try again."}
-          </Notification>,
-          { placement: "topEnd", duration: 5000 }
-        );
-        setOtpVerifyLoading(false);
-        setShowPaymentModal(false); // Close payment modal on error
-        return;
-      }
-
-      // Close payment modal (which includes OTP step)
-      setShowPaymentModal(false);
-
-      // Show loading modal while preparing invoice proof modal
-      setShowInvoiceProofLoading(true);
-
-      // Only proceed with invoice proof if payment was successful
-      if (paymentSuccess && walletUpdated) {
-        // Clear payment info
-        setMomoCode("");
-        setPrivateKey("");
-        setOtp("");
-        setGeneratedOtp("");
-
-        const hasCombinedOrders =
-          order?.combinedOrders && order.combinedOrders.length > 0;
-
-        if (hasSameShopCombinedOrders) {
-          // SAME SHOP COMBINED ORDERS: Generate invoices and show proof modal
-          console.log(
-            "🔍 SAME SHOP COMBINED: Generating invoices and showing proof modal"
-          );
-
-          // Generate invoices for all orders in the same-shop batch
+        if (hasWallet) {
+          // Path 1: Shop has wallet - Direct payout (Internal Wallet Update)
           try {
-            const allOrderIds = [
-              order.id,
-              ...(order.combinedOrders || []).map((co) => co.id),
-            ];
-            const generatedInvoices: any[] = [];
-            const combinedIds: string[] = [];
-            const combinedNumbers: string[] = [];
-
-            // Generate invoice for each order in the batch
-            // For combined orders, skip initial invoice generation - they will be created during proof capture
-            for (const orderId of allOrderIds) {
-              try {
-                const invoice = await generateInvoice(orderId, true); // Skip for combined orders
-                console.log(
-                  `🔍 Generated invoice for order ${orderId}:`,
-                  invoice.invoiceNumber
-                );
-
-                generatedInvoices.push(invoice);
-                combinedIds.push(orderId);
-                combinedNumbers.push(invoice.orderNumber);
-              } catch (singleInvoiceError) {
-                console.error(
-                  `Error generating invoice for order ${orderId}:`,
-                  singleInvoiceError
-                );
-                // Continue with other invoices even if one fails
-              }
-            }
-
-            if (generatedInvoices.length > 0) {
-              // Store invoice data for all generated invoices
-              setInvoiceData(generatedInvoices);
-
-              // Set combined order info for the proof modal
-              setCombinedOrderIds(combinedIds);
-              setCombinedOrderNumbers(combinedNumbers);
-
-              // Store the order amount for later use in invoice proof handling
-              setLastOrderAmount(orderAmount);
-
-              console.log(
-                `🔍 Successfully generated ${generatedInvoices.length} invoices for same-shop combined orders`
-              );
-            } else {
-              throw new Error("Failed to generate any invoices");
-            }
-          } catch (invoiceError) {
-            console.error("Error generating invoices:", invoiceError);
-            reportErrorToSlackClient(
-              "BatchDetails (generate invoices)",
-              invoiceError,
-              { orderId: order?.id }
-            );
-            toaster.push(
-              <Notification
-                type="warning"
-                header="Invoice Generation Warning"
-                closable
-              >
-                Payment successful but there was an issue generating invoices.
-                You can continue to delivery.
-              </Notification>,
-              { placement: "topEnd", duration: 5000 }
-            );
-          }
-
-          // Show success notification for same-shop combined orders
-          toaster.push(
-            <Notification
-              type="success"
-              header="Payment Complete - Same Shop Combined"
-              closable
-            >
-              ✅ MoMo payment successful
-              <br />
-              ✅ Found items amount removed from reserved balance
-              <br />
-              ✅ Shopper earnings (fees) added to available balance
-              <br />
-              ✅ Refunds processed if applicable
-              <br />
-              ✅ Invoices generated for all orders
-              <br />✅ Next: Upload one invoice proof for all orders
-            </Notification>,
-            { placement: "topEnd", duration: 5000 }
-          );
-
-          // Show invoice proof modal for same-shop combined orders (not for business batches)
-          const sameShopBatchOrders = [order, ...(order?.combinedOrders || [])];
-          const isBusinessBatch = sameShopBatchOrders.every(
-            (o) => o?.orderType === "business"
-          );
-          if (!isBusinessBatch) setShowInvoiceProofModal(true);
-          setShowInvoiceProofLoading(false);
-        } else {
-          // DIFFERENT SHOP COMBINED ORDERS or SINGLE ORDERS: Use existing logic
-          const targetId = paymentTargetOrderId || order.id;
-          const ordersToUpdate = [targetId];
-
-          await Promise.all(
-            ordersToUpdate.map((id) => onUpdateStatus(id, "on_the_way"))
-          );
-
-          // Update local state
-          if (order) {
-            const updatedMain = ordersToUpdate.includes(order.id)
-              ? { ...order, status: "on_the_way" as string }
-              : order;
-            const updatedCombined = (order.combinedOrders || []).map((o) =>
-              ordersToUpdate.includes(o.id)
-                ? { ...o, status: "on_the_way" as string }
-                : o
-            );
-
-            setOrder({
-              ...updatedMain,
-              combinedOrders: updatedCombined,
+            // Fetch current wallet balance
+            const walletRes = await hasuraClient.request<any>(GET_MERCHANT_WALLET, {
+              shop_id: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
             });
+            const currentWallet = walletRes.merchant_wallets[0];
+            if (currentWallet) {
+              const newBalance = (
+                parseFloat(currentWallet.balance || "0") + orderAmount
+              ).toString();
+
+              await hasuraClient.request(UPDATE_MERCHANT_WALLET, {
+                balance: newBalance,
+                update_at: new Date().toISOString(),
+                _eq: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
+              });
+
+              toaster.push(
+                <Notification type="success" header="Wallet Updated" closable>
+                  Merchant wallet updated with {orderAmount} RWF.
+                </Notification>,
+                { placement: "topEnd" }
+              );
+            }
+          } catch (err) {
+            console.error("Wallet update failed:", err);
+            // We continue even if wallet update fails, but log it
           }
+        } else {
+          // Path 2: Shop does NOT have wallet - Create Payment Request + Firebase Listener
+          try {
+            await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
+              object: {
+                order_id: targetOrderForPayment.id,
+                shop_id: targetOrderForPayment.shop?.id || targetOrderForPayment.shop_id,
+                shopper_id: session?.user?.id,
+                amount: orderAmount.toString(),
+                status: "PENDING_PAYMENT",
+              },
+            });
 
-          // Show invoice proof modal for proof upload (not for business orders)
-          if (order?.orderType !== "business") setShowInvoiceProofModal(true);
-          setShowInvoiceProofLoading(false);
-
-          // Show success notification
-          toaster.push(
-            <Notification type="success" header="Payment Complete" closable>
-              ✅ MoMo payment successful
-              <br />
-              ✅ Wallet balance updated
-              <br />
-              ✅ Status updated to On The Way
-              <br />✅ Next: Add invoice proof
-            </Notification>,
-            { placement: "topEnd", duration: 5000 }
-          );
+            // Transition to Waiting State
+            setPaymentRequestStatus("PENDING_PAYMENT");
+            setShowPaymentRequestModal(true);
+            setOtpVerifyLoading(false);
+            setShowPaymentModal(false); 
+            return; // STOP HERE - Firebase listener will resume via useEffect
+          } catch (err) {
+            console.error("Payment request creation failed:", err);
+            throw new Error("Failed to create payment request. Please try again.");
+          }
         }
       }
+
+      // Finalize payment (deduct from shopper's reserved balance and update order status)
+      await finalizeOrderPayment(orderAmount, originalOrderTotal, targetOrderForPayment);
     } catch (err) {
       reportErrorToSlackClient("BatchDetails (OTP verification)", err, {
         orderId: order?.id,
@@ -1345,6 +1101,255 @@ export default function BatchDetails({
       );
     } finally {
       setOtpVerifyLoading(false);
+    }
+  };
+
+  // Helper to finalize the payment via processPayment API
+  const finalizeOrderPayment = async (
+    orderAmount: number,
+    originalOrderTotal: number,
+    targetOrderForPayment: any
+  ) => {
+    let paymentSuccess = false;
+    let walletUpdated = false;
+    try {
+      const hasCombinedOrders =
+        order?.combinedOrders && order.combinedOrders.length > 0;
+
+      const response = await fetch("/api/shopper/processPayment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: targetOrderForPayment.id,
+          momoCode,
+          privateKey,
+          orderAmount: orderAmount,
+          originalOrderTotal: originalOrderTotal,
+          orderType: targetOrderForPayment.orderType || "regular",
+          momoReferenceId: "INTERNAL", // Bypassing MoMo disbursement
+          momoSuccess: true,
+          isSameShopCombined: hasSameShopCombinedOrders,
+          combinedOrders: hasCombinedOrders ? order.combinedOrders : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Payment processing failed");
+      }
+
+      const paymentData = await response.json();
+
+      // Check if refunds were created
+      if (paymentData.refunds && paymentData.refunds.length > 0) {
+        if (paymentData.refunds.length === 1) {
+          // Single refund notification
+          toaster.push(
+            <Notification type="info" header="Refund Scheduled" closable>
+              A refund of {formatCurrency(paymentData.totalRefundAmount)} has
+              been scheduled for items not found.
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+        } else {
+          // Multiple refunds notification
+          toaster.push(
+            <Notification type="info" header="Refunds Scheduled" closable>
+              Total refunds of {formatCurrency(paymentData.totalRefundAmount)}{" "}
+              have been scheduled for items not found across{" "}
+              {paymentData.refunds.length} orders.
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+        }
+      }
+
+      paymentSuccess = true;
+      walletUpdated = true;
+    } catch (paymentError) {
+      reportErrorToSlackClient(
+        "BatchDetails (processPayment API)",
+        paymentError,
+        { orderId: targetOrderForPayment?.id }
+      );
+      toaster.push(
+        <Notification type="error" header="Payment Failed" closable>
+          {paymentError instanceof Error
+            ? paymentError.message
+            : "Payment processing failed. Please try again."}
+        </Notification>,
+        { placement: "topEnd", duration: 5000 }
+      );
+      setOtpVerifyLoading(false);
+      setShowPaymentModal(false); // Close payment modal on error
+      return;
+    }
+
+    // Close payment modal (which includes OTP step)
+    setShowPaymentModal(false);
+
+    // Show loading modal while preparing invoice proof modal
+    setShowInvoiceProofLoading(true);
+
+    // Only proceed with invoice proof if payment was successful
+    if (paymentSuccess && walletUpdated) {
+      // Clear payment info
+      setMomoCode("");
+      setPrivateKey("");
+      setOtp("");
+      setGeneratedOtp("");
+
+      const hasCombinedOrders =
+        order?.combinedOrders && order.combinedOrders.length > 0;
+
+      if (hasSameShopCombinedOrders) {
+        // SAME SHOP COMBINED ORDERS: Generate invoices and show proof modal
+        console.log(
+          "🔍 SAME SHOP COMBINED: Generating invoices and showing proof modal"
+        );
+
+        // Generate invoices for all orders in the same-shop batch
+        try {
+          const allOrderIds = [
+            order!.id,
+            ...(order!.combinedOrders || []).map((co) => co.id),
+          ];
+          const generatedInvoices: any[] = [];
+          const combinedIds: string[] = [];
+          const combinedNumbers: string[] = [];
+
+          // Generate invoice for each order in the batch
+          // For combined orders, skip initial invoice generation - they will be created during proof capture
+          for (const orderId of allOrderIds) {
+            try {
+              const invoice = await generateInvoice(orderId, true); // Skip for combined orders
+              console.log(
+                `🔍 Generated invoice for order ${orderId}:`,
+                invoice.invoiceNumber
+              );
+
+              generatedInvoices.push(invoice);
+              combinedIds.push(orderId);
+              combinedNumbers.push(invoice.orderNumber);
+            } catch (singleInvoiceError) {
+              console.error(
+                `Error generating invoice for order ${orderId}:`,
+                singleInvoiceError
+              );
+              // Continue with other invoices even if one fails
+            }
+          }
+
+          if (generatedInvoices.length > 0) {
+            // Store invoice data for all generated invoices
+            setInvoiceData(generatedInvoices);
+
+            // Set combined order info for the proof modal
+            setCombinedOrderIds(combinedIds);
+            setCombinedOrderNumbers(combinedNumbers);
+
+            // Store the order amount for later use in invoice proof handling
+            setLastOrderAmount(orderAmount);
+
+            console.log(
+              `🔍 Successfully generated ${generatedInvoices.length} invoices for same-shop combined orders`
+            );
+          } else {
+            throw new Error("Failed to generate any invoices");
+          }
+        } catch (invoiceError) {
+          console.error("Error generating invoices:", invoiceError);
+          reportErrorToSlackClient(
+            "BatchDetails (generate invoices)",
+            invoiceError,
+            { orderId: order?.id }
+          );
+          toaster.push(
+            <Notification
+              type="warning"
+              header="Invoice Generation Warning"
+              closable
+            >
+              Payment successful but there was an issue generating invoices.
+              You can continue to delivery.
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+        }
+
+        // Show success notification for same-shop combined orders
+        toaster.push(
+          <Notification
+            type="success"
+            header="Payment Complete - Same Shop Combined"
+            closable
+          >
+            ✅ MoMo payment successful
+            <br />
+            ✅ Found items amount removed from reserved balance
+            <br />
+            ✅ Shopper earnings (fees) added to available balance
+            <br />
+            ✅ Refunds processed if applicable
+            <br />
+            ✅ Invoices generated for all orders
+            <br />✅ Next: Upload one invoice proof for all orders
+          </Notification>,
+          { placement: "topEnd", duration: 5000 }
+        );
+
+        // Show invoice proof modal for same-shop combined orders (not for business batches)
+        const sameShopBatchOrders = [order!, ...(order?.combinedOrders || [])];
+        const isBusinessBatch = sameShopBatchOrders.every(
+          (o) => o?.orderType === "business"
+        );
+        if (!isBusinessBatch) setShowInvoiceProofModal(true);
+        setShowInvoiceProofLoading(false);
+      } else {
+        // DIFFERENT SHOP COMBINED ORDERS or SINGLE ORDERS: Use existing logic
+        const targetId = paymentTargetOrderId || order!.id;
+        const ordersToUpdate = [targetId];
+
+        await Promise.all(
+          ordersToUpdate.map((id) => onUpdateStatus(id, "on_the_way"))
+        );
+
+        // Update local state
+        if (order) {
+          const updatedMain = ordersToUpdate.includes(order.id)
+            ? { ...order, status: "on_the_way" as string }
+            : order;
+          const updatedCombined = (order.combinedOrders || []).map((o) =>
+            ordersToUpdate.includes(o.id)
+              ? { ...o, status: "on_the_way" as string }
+              : o
+          );
+
+          setOrder({
+            ...updatedMain,
+            combinedOrders: updatedCombined,
+          });
+        }
+
+        // Show invoice proof modal for proof upload (not for business orders)
+        if (order?.orderType !== "business") setShowInvoiceProofModal(true);
+        setShowInvoiceProofLoading(false);
+
+        // Show success notification
+        toaster.push(
+          <Notification type="success" header="Payment Complete" closable>
+            ✅ MoMo payment successful
+            <br />
+            ✅ Wallet balance updated
+            <br />
+            ✅ Status updated to On The Way
+            <br />✅ Next: Add invoice proof
+          </Notification>,
+          { placement: "topEnd", duration: 5000 }
+        );
+      }
     }
   };
 
@@ -3917,6 +3922,18 @@ export default function BatchDetails({
           otpLoading={otpVerifyLoading}
           onVerifyOtp={handleVerifyOtp}
           generatedOtp={generatedOtp}
+        />
+
+        {/* Payment Request Waiting Modal */}
+        <PaymentRequestModal
+          open={showPaymentRequestModal}
+          onClose={() => {
+            setShowPaymentRequestModal(false);
+            // If approved, we already triggered finalizeOrderPayment
+          }}
+          status={paymentRequestStatus}
+          amount={getPaymentOrderAmount()}
+          orderId={order?.id || ""}
         />
 
         {/* Invoice Proof Loading Modal */}

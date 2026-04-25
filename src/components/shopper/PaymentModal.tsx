@@ -167,21 +167,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="space-y-6">
               <div className="space-y-3">
                 <label className={`text-xs font-black uppercase tracking-widest ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
-                  Store Merchant Code
+                  Store Merchant Code (Auto-populated)
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     value={momoCode}
-                    onChange={(e) => setMomoCode(e.target.value)}
-                    placeholder="Enter Merchant Code"
-                    className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight transition-all focus:border-emerald-500`}
+                    readOnly
+                    placeholder="Merchant Code Not Found"
+                    className={`w-full rounded-2xl border-2 py-5 px-6 text-xl font-bold tracking-tight transition-all opacity-70 cursor-not-allowed`}
                     style={{ 
                       backgroundColor: 'var(--bg-secondary)', 
                       color: 'var(--text-primary)',
                       borderColor: theme === "dark" ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
                     }}
-                    autoFocus
                   />
                 </div>
               </div>

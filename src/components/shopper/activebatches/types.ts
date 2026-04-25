@@ -68,6 +68,9 @@ export interface OrderDetailsType {
     category?: { name?: string | null; description?: string | null } | null;
     latitude?: string | number | null;
     longitude?: string | number | null;
+    ssd?: string | null;
+    has_wallet?: boolean;
+    use_wallet?: boolean;
     business_account?: {
       business_name?: string | null;
       business_location?: string | null;

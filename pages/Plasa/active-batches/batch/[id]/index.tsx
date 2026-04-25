@@ -306,6 +306,9 @@ export const getServerSideProps: GetServerSideProps<
           latitude
           longitude
           operating_hours
+          has_wallet
+          use_wallet
+          ssd
         }
         Order_Items {
           id
@@ -841,6 +844,7 @@ export const getServerSideProps: GetServerSideProps<
         operating_hours: order.Restaurant.operating_hours ?? null,
         latitude: order.Restaurant.lat ?? null,
         longitude: order.Restaurant.long ?? null,
+        ssd: order.Restaurant.ussd ?? null,
       };
     }
 
