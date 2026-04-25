@@ -9,7 +9,7 @@ import { useSession } from "next-auth/react";
 import { useAuth } from "../../../context/AuthContext";
 import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Car } from "lucide-react";
 import GuestUpgradeModal from "../GuestUpgradeModal";
 import HomeActionsModal from "./HomeActionsModal";
 import PackageDeliveryModal from "./PackageDeliveryModal";
@@ -358,7 +358,8 @@ export default function BottomBar() {
         router.pathname !== "/Myprofile/become-shopper" &&
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
-        router.pathname !== "/plasBusiness/store/[storeId]" && (
+        router.pathname !== "/plasBusiness/store/[storeId]" &&
+        !router.pathname.startsWith("/Cars") && (
           <div className="notranslate fixed bottom-24 right-4 z-50 md:hidden">
             <Link href="/Cart" passHref>
               <div className="relative flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">
@@ -723,60 +724,12 @@ export default function BottomBar() {
             />
           )}
 
-          {/* Business - Only show for non-guest logged-in users - Second icon */}
-          {session?.user && !isGuest && (
-            <NavItem
-              href="/plasBusiness/portal"
-              icon={
-                <div className="relative inline-block">
-                  <svg
-                    version="1.1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 290.625 290.625"
-                    width="30px"
-                    height="30px"
-                    className="transition-all duration-300 hover:scale-110"
-                  >
-                    <g>
-                      <polygon
-                        style={{ fill: "#2aea63" }}
-                        points="39.511,192.188 147.323,192.188 137.948,239.063 53.573,239.063"
-                      />
-                      <rect
-                        x="58.261"
-                        y="187.5"
-                        style={{ fill: "currentColor" }}
-                        width="70.313"
-                        height="9.375"
-                      />
-                      <rect
-                        x="62.948"
-                        y="210.938"
-                        style={{ fill: "currentColor" }}
-                        width="60.938"
-                        height="9.375"
-                      />
-                      <path
-                        style={{ fill: "currentColor" }}
-                        d="M278.573,267.923l-84.722-55.069l-7.252-50.742l14.813-3.173l28.181-32.878l46.514-11.63 l-6.675,20.02l8.892,2.967l10.289-30.872l-20.798-20.798l-6.628,6.628l12.895,12.895l-49.669,12.417l-28.069,32.747l-11.086,2.377 l-5.592-39.155l-48.22-16.073l-47.475,66.478H64.669l29.658-93.211l92.841,13.927l44.072-70.519l5.639,11.273l8.386-4.195 L234.595,0h-26.334v9.375h14.981L182.48,74.597L87.82,60.398L54.834,164.063h-5.948v9.375h97.406l-12.188,60.938H52.645 L33.895,150H2.011v9.375h24.366l16.927,76.167c-4.983,2.17-8.48,7.125-8.48,12.895c0,5.62,3.338,10.444,8.114,12.694 c-2.142,3.052-3.427,6.741-3.427,10.744c0,10.341,8.409,18.75,18.75,18.75s18.75-8.409,18.75-18.75 c0-3.431-0.994-6.605-2.606-9.375h47.405c-1.617,2.77-2.611,5.944-2.611,9.375c0,10.341,8.409,18.75,18.75,18.75 s18.75-8.409,18.75-18.75s-8.409-18.75-18.75-18.75H48.886c-2.583,0-4.688-2.105-4.688-4.688s2.105-4.688,4.688-4.688h92.906 l15.052-75.258l20.569-4.406l7.758,54.309l87.956,57.173l-15.047,6.019l3.483,8.705l26.386-10.556v-31.298h-9.375L278.573,267.923 L278.573,267.923z M67.636,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375s4.205-9.375,9.375-9.375 S67.636,266.705,67.636,271.875z M147.323,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375 s4.205-9.375,9.375-9.375S147.323,266.705,147.323,271.875z M132.759,164.063H95.494l39.567-55.397l36.155,12.052l4.866,34.059 L132.759,164.063z"
-                      />
-                    </g>
-                  </svg>
-                  {marketplaceNotificationCount > 0 && (
-                    <span
-                      className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg dark:bg-red-600"
-                      aria-label={`${marketplaceNotificationCount} marketplace notifications`}
-                    >
-                      {marketplaceNotificationCount > 9
-                        ? "9+"
-                        : marketplaceNotificationCount}
-                    </span>
-                  )}
-                </div>
-              }
-              label={t("nav.marketplace") || "Marketplace"}
-            />
-          )}
+          {/* Cars - Second icon */}
+          <NavItem
+            href="/Cars"
+            icon={<Car size={30} className="text-gray-600 dark:text-white" />}
+            label="Cars"
+          />
 
           {/* Central Home Button - Third (middle) */}
           <div className="z-50 -mt-12">
@@ -1065,6 +1018,60 @@ export default function BottomBar() {
                       }
                       label="Profile"
                       href="/Myprofile"
+                      onClick={() => setMoreOpen(false)}
+                    />
+                  )}
+
+                  {/* Marketplace - Moved from bottom bar */}
+                  {session?.user && !isGuest && (
+                    <MoreMenuItem
+                      icon={
+                        <div className="relative inline-block">
+                          <svg
+                            version="1.1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 290.625 290.625"
+                            width="20px"
+                            height="20px"
+                          >
+                            <g>
+                              <polygon
+                                style={{ fill: "#2aea63" }}
+                                points="39.511,192.188 147.323,192.188 137.948,239.063 53.573,239.063"
+                              />
+                              <rect
+                                x="58.261"
+                                y="187.5"
+                                style={{ fill: "currentColor" }}
+                                width="70.313"
+                                height="9.375"
+                              />
+                              <rect
+                                x="62.948"
+                                y="210.938"
+                                style={{ fill: "currentColor" }}
+                                width="60.938"
+                                height="9.375"
+                              />
+                              <path
+                                style={{ fill: "currentColor" }}
+                                d="M278.573,267.923l-84.722-55.069l-7.252-50.742l14.813-3.173l28.181-32.878l46.514-11.63 l-6.675,20.02l8.892,2.967l10.289-30.872l-20.798-20.798l-6.628,6.628l12.895,12.895l-49.669,12.417l-28.069,32.747l-11.086,2.377 l-5.592-39.155l-48.22-16.073l-47.475,66.478H64.669l29.658-93.211l92.841,13.927l44.072-70.519l5.639,11.273l8.386-4.195 L234.595,0h-26.334v9.375h14.981L182.48,74.597L87.82,60.398L54.834,164.063h-5.948v9.375h97.406l-12.188,60.938H52.645 L33.895,150H2.011v9.375h24.366l16.927,76.167c-4.983,2.17-8.48,7.125-8.48,12.895c0,5.62,3.338,10.444,8.114,12.694 c-2.142,3.052-3.427,6.741-3.427,10.744c0,10.341,8.409,18.75,18.75,18.75s18.75-8.409,18.75-18.75 c0-3.431-0.994-6.605-2.606-9.375h47.405c-1.617,2.77-2.611,5.944-2.611,9.375c0,10.341,8.409,18.75,18.75,18.75 s18.75-8.409,18.75-18.75s-8.409-18.75-18.75-18.75H48.886c-2.583,0-4.688-2.105-4.688-4.688s2.105-4.688,4.688-4.688h92.906 l15.052-75.258l20.569-4.406l7.758,54.309l87.956,57.173l-15.047,6.019l3.483,8.705l26.386-10.556v-31.298h-9.375L278.573,267.923 L278.573,267.923z M67.636,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375s4.205-9.375,9.375-9.375 S67.636,266.705,67.636,271.875z M147.323,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375 s4.205-9.375,9.375-9.375S147.323,266.705,147.323,271.875z M132.759,164.063H95.494l39.567-55.397l36.155,12.052l4.866,34.059 L132.759,164.063z"
+                              />
+                            </g>
+                          </svg>
+                          {marketplaceNotificationCount > 0 && (
+                            <span
+                              className="absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg"
+                            >
+                              {marketplaceNotificationCount > 9
+                                ? "9+"
+                                : marketplaceNotificationCount}
+                            </span>
+                          )}
+                        </div>
+                      }
+                      label={t("nav.marketplace") || "Marketplace"}
+                      href="/plasBusiness/portal"
                       onClick={() => setMoreOpen(false)}
                     />
                   )}
