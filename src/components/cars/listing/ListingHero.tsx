@@ -54,13 +54,6 @@ export default function ListingHero({
           >
             <SlidersHorizontal className="h-4.5 w-4.5 !text-white" />
           </button>
-          <button
-            onClick={() => router.push("/Cars/become-partner")}
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-green-500 backdrop-blur-md border border-white/20 text-white shadow-lg"
-            title="Become a Partner"
-          >
-            <CarIcon className="h-4.5 w-4.5 !text-white" />
-          </button>
         </div>
       </div>
 

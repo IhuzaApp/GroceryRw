@@ -359,6 +359,7 @@ export default function BottomBar() {
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
         router.pathname !== "/plasBusiness/store/[storeId]" &&
+        router.pathname !== "/plasBusiness/portal" &&
         !router.pathname.startsWith("/Cars") &&
         !router.pathname.startsWith("/Pets") && (
           <div className="notranslate fixed bottom-24 right-4 z-50 md:hidden">
@@ -428,8 +429,8 @@ export default function BottomBar() {
         <div className="notranslate fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
           {open && router.pathname !== "/Myprofile/become-shopper" && (
             <div className="mb-2 flex flex-col items-end gap-2">
-          {/* AI Support - Only show for non-guest users and hide on Pets page */}
-          {session?.user && !isGuest && !router.pathname.startsWith("/Pets") && (
+          {/* AI Support - Only show for non-guest users and hide on Pets and PlasBusiness portal */}
+          {session?.user && !isGuest && !router.pathname.startsWith("/Pets") && router.pathname !== "/plasBusiness/portal" && (
                 <DesktopActionButton
                   icon={
                     <svg

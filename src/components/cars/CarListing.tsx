@@ -165,6 +165,17 @@ export default function CarListing() {
         FUEL_TYPES={FUEL_TYPES}
         LOCATIONS={LOCATIONS}
       />
+
+      {/* Become a Partner CTA (Mobile Only) */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 md:hidden">
+        <button 
+          onClick={() => router.push("/Cars/become-partner")}
+          className="flex items-center gap-3 rounded-full bg-black dark:bg-white px-8 py-4 text-white !text-white dark:text-black dark:!text-black font-black shadow-2xl transition-all hover:scale-105 active:scale-95"
+        >
+          <CarIcon className="h-6 w-6" />
+          <span>Join Plas Ride</span>
+        </button>
+      </div>
     </div>
   );
 }

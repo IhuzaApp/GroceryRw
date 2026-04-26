@@ -69,7 +69,7 @@ export default function PlasDriveHeader({
             onClick={onBecomePartner}
             className="rounded-[1.25rem] bg-green-500 px-8 py-4 text-sm font-black text-white shadow-2xl shadow-green-500/40 transition-all hover:scale-[1.05] active:scale-[0.98] !text-white"
           >
-            Become a Partner
+            Join Plas Ride
           </button>
         </div>
       </div>
