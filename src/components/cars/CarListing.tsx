@@ -7,8 +7,21 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 
 const CarIcon = ({ className }: { className?: string }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M3 8L5.72187 10.2682C5.90158 10.418 6.12811 10.5 6.36205 10.5H17.6379C17.8719 10.5 18.0984 10.418 18.2781 10.2682L21 8M6.5 14H6.51M17.5 14H17.51M8.16065 4.5H15.8394C16.5571 4.5 17.2198 4.88457 17.5758 5.50772L20.473 10.5777C20.8183 11.1821 21 11.8661 21 12.5623V18.5C21 19.0523 20.5523 19.5 20 19.5H19C18.4477 19.5 18 19.0523 18 18.5V17.5H6V18.5C6 19.0523 5.55228 19.5 5 19.5H4C3.44772 19.5 3 19.0523 3 18.5V12.5623C3 11.8661 3.18166 11.1821 3.52703 10.5777L6.42416 5.50772C6.78024 4.88457 7.44293 4.5 8.16065 4.5ZM7 14C7 14.2761 6.77614 14.5 6.5 14.5C6.22386 14.5 6 14.2761 6 14C6 13.7239 6.22386 13.5 6.5 13.5C6.77614 13.5 7 13.7239 7 14ZM18 14C18 14.2761 17.7761 14.5 17.5 14.5C17.2239 14.5 17 14.2761 17 14C17 13.7239 17.2239 13.5 17.5 13.5C17.7761 13.5 18 13.7239 18 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M3 8L5.72187 10.2682C5.90158 10.418 6.12811 10.5 6.36205 10.5H17.6379C17.8719 10.5 18.0984 10.418 18.2781 10.2682L21 8M6.5 14H6.51M17.5 14H17.51M8.16065 4.5H15.8394C16.5571 4.5 17.2198 4.88457 17.5758 5.50772L20.473 10.5777C20.8183 11.1821 21 11.8661 21 12.5623V18.5C21 19.0523 20.5523 19.5 20 19.5H19C18.4477 19.5 18 19.0523 18 18.5V17.5H6V18.5C6 19.0523 5.55228 19.5 5 19.5H4C3.44772 19.5 3 19.0523 3 18.5V12.5623C3 11.8661 3.18166 11.1821 3.52703 10.5777L6.42416 5.50772C6.78024 4.88457 7.44293 4.5 8.16065 4.5ZM7 14C7 14.2761 6.77614 14.5 6.5 14.5C6.22386 14.5 6 14.2761 6 14C6 13.7239 6.22386 13.5 6.5 13.5C6.77614 13.5 7 13.7239 7 14ZM18 14C18 14.2761 17.7761 14.5 17.5 14.5C17.2239 14.5 17 14.2761 17 14C17 13.7239 17.2239 13.5 17.5 13.5C17.7761 13.5 18 13.7239 18 14Z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -26,7 +39,9 @@ const LOCATIONS = ["All", "Kigali", "Musanze", "Rubavu", "Huye", "Rwamagana"];
 
 export default function CarListing() {
   const router = useRouter();
-  const [activeMainTab, setActiveMainTab] = useState<'explore' | 'bookings'>('explore');
+  const [activeMainTab, setActiveMainTab] = useState<"explore" | "bookings">(
+    "explore"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedFuel, setSelectedFuel] = useState("All");
@@ -37,8 +52,8 @@ export default function CarListing() {
   const [showSearchFilter, setShowSearchFilter] = useState(false);
 
   useEffect(() => {
-    if (router.isReady && router.query.tab === 'bookings') {
-      setActiveMainTab('bookings');
+    if (router.isReady && router.query.tab === "bookings") {
+      setActiveMainTab("bookings");
     }
   }, [router.isReady, router.query.tab]);
 
@@ -54,7 +69,7 @@ export default function CarListing() {
             endDate: "2026-04-30",
             total: DUMMY_CARS[0].price * 3,
             status: "Confirmed",
-            owner: DUMMY_CARS[0].owner
+            owner: DUMMY_CARS[0].owner,
           },
           {
             ...DUMMY_CARS[2],
@@ -63,8 +78,8 @@ export default function CarListing() {
             endDate: "2026-05-15",
             total: DUMMY_CARS[2].price * 4,
             status: "Upcoming",
-            owner: DUMMY_CARS[2].owner
-          }
+            owner: DUMMY_CARS[2].owner,
+          },
         ];
         setBookedCars(dummyBookings);
       } else {
@@ -72,24 +87,33 @@ export default function CarListing() {
       }
     };
     loadBookings();
-    window.addEventListener('storage', loadBookings);
-    return () => window.removeEventListener('storage', loadBookings);
+    window.addEventListener("storage", loadBookings);
+    return () => window.removeEventListener("storage", loadBookings);
   }, []);
 
   const filteredCars = useMemo(() => {
     return DUMMY_CARS.filter((car) => {
-      const matchesSearch = car.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = car.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
       const matchesType = selectedType === "All" || car.type === selectedType;
-      const matchesFuel = selectedFuel === "All" || car.fuelType === selectedFuel;
-      const matchesLocation = selectedLocation === "All" || car.location === selectedLocation;
-      return matchesSearch && matchesType && matchesFuel && matchesLocation && car.status === 'active';
+      const matchesFuel =
+        selectedFuel === "All" || car.fuelType === selectedFuel;
+      const matchesLocation =
+        selectedLocation === "All" || car.location === selectedLocation;
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesFuel &&
+        matchesLocation &&
+        car.status === "active"
+      );
     });
   }, [searchQuery, selectedType, selectedFuel, selectedLocation]);
 
   return (
-    <div className="min-h-screen pb-24 md:ml-20 bg-white dark:bg-[#0A0A0A] text-gray-900 dark:text-white transition-colors duration-200 font-sans">
-      
-      <ListingHero 
+    <div className="min-h-screen bg-white pb-24 font-sans text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20">
+      <ListingHero
         onSearchClick={() => setShowSearchFilter(true)}
         onFilterClick={() => setShowSearchFilter(true)}
         activeMainTab={activeMainTab}
@@ -97,24 +121,41 @@ export default function CarListing() {
         bookingCount={bookedCars.length}
       />
 
-      <PlasDriveHeader 
+      <PlasDriveHeader
         activeTab={activeMainTab}
         onTabChange={setActiveMainTab}
         onBecomePartner={() => router.push("/Cars/become-partner")}
       />
 
       <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">
-        {activeMainTab === 'explore' ? (
+        {activeMainTab === "explore" ? (
           <>
             {/* Desktop Filters */}
-            <div className="hidden md:grid mb-8 grid-cols-4 gap-6 bg-gray-50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-100 dark:border-white/5">
-              <FilterSelect label="Type" value={selectedType} options={VEHICLE_TYPES} onChange={setSelectedType} />
-              <FilterSelect label="Fuel" value={selectedFuel} options={FUEL_TYPES} onChange={setSelectedFuel} />
-              <FilterSelect label="Location" value={selectedLocation} options={LOCATIONS} onChange={setSelectedLocation} />
+            <div className="mb-8 hidden grid-cols-4 gap-6 rounded-[2rem] border border-gray-100 bg-gray-50 p-6 dark:border-white/5 dark:bg-white/5 md:grid">
+              <FilterSelect
+                label="Type"
+                value={selectedType}
+                options={VEHICLE_TYPES}
+                onChange={setSelectedType}
+              />
+              <FilterSelect
+                label="Fuel"
+                value={selectedFuel}
+                options={FUEL_TYPES}
+                onChange={setSelectedFuel}
+              />
+              <FilterSelect
+                label="Location"
+                value={selectedLocation}
+                options={LOCATIONS}
+                onChange={setSelectedLocation}
+              />
               <div className="flex flex-col">
-                <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 font-outfit">Search</label>
-                <div className="relative flex items-center rounded-2xl border px-4 py-3 bg-white dark:bg-white/10 border-gray-100 dark:border-white/5">
-                  <Search className="h-4 w-4 text-gray-400 mr-3" />
+                <label className="mb-2 block font-outfit text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                  Search
+                </label>
+                <div className="relative flex items-center rounded-2xl border border-gray-100 bg-white px-4 py-3 dark:border-white/5 dark:bg-white/10">
+                  <Search className="mr-3 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search model..."
@@ -129,18 +170,20 @@ export default function CarListing() {
             {/* Main Listing Grid */}
             <div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-4">
               {filteredCars.map((car) => (
-                <ListingCard 
-                  key={car.id} 
-                  car={car} 
-                  onClick={() => router.push(`/Cars/${car.id}`)} 
+                <ListingCard
+                  key={car.id}
+                  car={car}
+                  onClick={() => router.push(`/Cars/${car.id}`)}
                 />
               ))}
             </div>
 
             {filteredCars.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <CarIcon className="h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-black font-outfit text-gray-400">No cars found</h3>
+                <CarIcon className="mb-4 h-12 w-12 text-gray-300" />
+                <h3 className="font-outfit text-lg font-black text-gray-400">
+                  No cars found
+                </h3>
               </div>
             )}
           </>
@@ -150,7 +193,7 @@ export default function CarListing() {
       </div>
 
       {/* Unified Search & Filter Modal for Mobile */}
-      <SearchFilterModal 
+      <SearchFilterModal
         isOpen={showSearchFilter}
         onClose={() => setShowSearchFilter(false)}
         searchQuery={searchQuery}
@@ -167,10 +210,10 @@ export default function CarListing() {
       />
 
       {/* Become a Partner CTA (Mobile Only) */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 md:hidden">
-        <button 
+      <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 md:hidden">
+        <button
           onClick={() => router.push("/Cars/become-partner")}
-          className="flex items-center gap-3 rounded-full bg-black dark:bg-white px-8 py-4 text-white !text-white dark:text-black dark:!text-black font-black shadow-2xl transition-all hover:scale-105 active:scale-95"
+          className="flex items-center gap-3 rounded-full bg-black px-8 py-4 font-black !text-white text-white shadow-2xl transition-all hover:scale-105 active:scale-95 dark:bg-white dark:!text-black dark:text-black"
         >
           <CarIcon className="h-6 w-6" />
           <span>Join Plas Ride</span>

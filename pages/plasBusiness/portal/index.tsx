@@ -28,7 +28,9 @@ export default function PlasBusinessPage() {
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(
+    null
+  );
   const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
   // Redirect shoppers away from this page
@@ -145,7 +147,7 @@ export default function PlasBusinessPage() {
     <RootLayout>
       <div className="min-h-screen bg-[var(--bg-primary)]">
         {/* Desktop View */}
-        <div className="hidden md:block md:ml-16">
+        <div className="hidden md:ml-16 md:block">
           <div className="max-w-8xl container mx-auto px-4 py-8">
             <DesktopPortal
               selectedQuote={selectedQuote}
@@ -165,15 +167,15 @@ export default function PlasBusinessPage() {
         </div>
 
         {/* Mobile View */}
-        <div className="md:hidden min-h-screen pb-24 relative overflow-hidden">
-          <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
-            <img 
-              src="/assets/images/auth/login_bg.png" 
-              className="w-full h-full object-cover" 
-              alt="" 
+        <div className="relative min-h-screen overflow-hidden pb-24 md:hidden">
+          <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]">
+            <img
+              src="/assets/images/auth/login_bg.png"
+              className="h-full w-full object-cover"
+              alt=""
             />
           </div>
-          
+
           <MobilePortal
             selectedQuote={selectedQuote}
             setSelectedQuote={setSelectedQuote}

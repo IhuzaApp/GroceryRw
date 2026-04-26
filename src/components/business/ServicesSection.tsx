@@ -119,14 +119,14 @@ export function ServicesSection({
     <div className="space-y-6">
       {/* Simplified Search & Category System */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative flex-1 max-w-xl">
+        <div className="relative max-w-xl flex-1">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Filter by name, provider or category..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-white/50 dark:bg-gray-800/50 w-full rounded-xl border border-gray-200 dark:border-gray-700 py-3 pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:outline-none focus:ring-4 focus:ring-green-500/10 backdrop-blur-sm"
+            className="w-full rounded-xl border border-gray-200 bg-white/50 py-3 pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] backdrop-blur-sm transition-all focus:border-green-500/50 focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
           />
         </div>
 
@@ -138,7 +138,7 @@ export function ServicesSection({
               className={`whitespace-nowrap rounded-lg px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
                 selectedCategory === category
                   ? "bg-green-500 text-white shadow-lg shadow-green-500/20"
-                  : "bg-white/50 dark:bg-gray-800/50 text-gray-500 hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  : "border border-gray-200 bg-white/50 text-gray-500 hover:bg-white dark:border-gray-700 dark:bg-gray-800/50 dark:hover:bg-gray-700"
               }`}
             >
               {category === "all" ? "Explore All" : category}

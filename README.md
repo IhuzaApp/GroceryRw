@@ -47,8 +47,11 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ### 20. **Package Delivery Workflow Integration** ⭐ NEW
 
 ### 21. **Merchant Payment Request System** ⭐ NEW
+
 ### 22. **Multi-Store Multi-Cart System** ⭐ NEW
+
 ### 23. **Pets Marketplace System** ⭐ NEW
+
 ### 24. **Second-Hand Listing System** ⭐ NEW
 
 ---
@@ -14060,37 +14063,48 @@ The Package Delivery Workflow integrates a comprehensive courier service into th
 # 🚀 21. Merchant Payment Request System
 
 ## Overview
+
 A robust system designed to handle the scenario where a shopper completes a regular grocery order, but the target merchant (shop) does not have an internal wallet. Instead of a direct automated payout, the system creates a "Payment Request" and alerts administrators to securely clear the payment manually, preserving data integrity and security.
 
 ## Problem Solved
+
 Historically, if a merchant didn't have a wallet, the system would attempt to update a non-existent wallet or require the shopper to bypass the step. This led to database constraint violations (foreign key violations on `agent_approved_id`) and UI state inconsistencies on page refreshes.
 
 ## Architecture & Flow
 
 ### 1. The Trigger
+
 When a shopper attempts to finalize a batch using the OTP, the frontend (`batchDetails.tsx`) checks if the merchant has an internal wallet (`targetOrderForPayment.shop.has_wallet`).
+
 - If `true`: The system routes the payment directly through an automated wallet update.
 - If `false`: The frontend explicitly hits the `/api/shopper/processPaymentRequest` endpoint.
 
 ### 2. Secure Server-Side Insertion
+
 The API route securely fetches the `shopper_id` based on the active session's `user_id` and runs a PostgreSQL/Hasura mutation to insert a new row into the `payment_requests` table with:
+
 - `status`: \`PENDING_PAYMENT\`
 - `amount`: The total due to the merchant
 - `agent_approved_id`: \`null\` (bypassing the foreign key constraint issue)
 
 ### 3. Real-Time Admin Alerts via Slack
+
 Once the request is successfully lodged in the database, the backend automatically triggers `sendPaymentRequestToSlack` (from `slackSupportNotifier.ts`). This sends a premium, Orange-colored alert to the support channel, instantly notifying the team of the pending payment, along with the order ID, merchant name, amount, and shopper details.
 
 ### 4. Persistent UI State
+
 To prevent the shopper from becoming "stuck" or having to re-request the payment if they refresh the app:
+
 - A new API route (`/api/shopper/checkPaymentRequestStatus`) allows the frontend to query the current state of pending requests on page load.
 - If a request is found, the UI locks the active batch into a "Waiting for Payment" state.
 
 ### 5. Real-Time UI Transitions (FCM)
-When an administrator logs into the admin panel and approves the payment request (updating the status to `APPROVED`), the backend fires an FCM push notification (`sendPaymentApprovedNotification`) to the shopper's device. 
+
+When an administrator logs into the admin panel and approves the payment request (updating the status to `APPROVED`), the backend fires an FCM push notification (`sendPaymentApprovedNotification`) to the shopper's device.
 The shopper's app intercepts this push event and automatically transitions the order status to "Delivering / On The Way," without requiring manual page refreshes.
 
 ## Key Files
+
 - **`pages/api/shopper/processPaymentRequest.ts`**: The main entry point for generating requests and resolving database relations.
 - **`src/components/shopper/activebatches/batchDetails.tsx`**: The frontend controller that orchestrates the flow and listens to FCM events.
 - **`pages/api/shopper/checkPaymentRequestStatus.ts`**: The persistence check endpoint to maintain UI continuity across reloads.
@@ -14140,19 +14154,25 @@ graph TD
 ## API & State Management
 
 ### Shop Cart Persistence
+
 Shop carts are synchronized with the server to ensure items remain in the cart across sessions.
+
 - **Fetch**: `GET /api/carts`
 - **Updates**: Triggered via `ItemCartTable` callbacks (`handleTotalChange`, `handleUnitsChange`).
 
 ### Event System
+
 The system relies on a custom event-driven architecture to handle cross-context updates:
+
 ```typescript
-window.dispatchEvent(new CustomEvent("cartChanged", { 
-  detail: { 
-    refetch: true, 
-    shop_id: "optional-uuid" 
-  } 
-}));
+window.dispatchEvent(
+  new CustomEvent("cartChanged", {
+    detail: {
+      refetch: true,
+      shop_id: "optional-uuid",
+    },
+  })
+);
 ```
 
 ## Performance Optimizations
@@ -14164,9 +14184,11 @@ window.dispatchEvent(new CustomEvent("cartChanged", {
 ## Usage & Development
 
 ### Adding a new Cart Type
+
 To support a new category (e.g., Pharmacy), extend the `ShopCart` interface and ensure the `/api/carts` endpoint returns the appropriate type discriminator.
 
 ### Customizing Skeletons
+
 Modify `RestaurantSelectionSkeleton` or `CheckoutSkeleton` in `pages/Cart/index.tsx` to adjust the loading visuals for new layouts.
 
 ---
@@ -14174,9 +14196,11 @@ Modify `RestaurantSelectionSkeleton` or `CheckoutSkeleton` in `pages/Cart/index.
 # 🐾 Pets Marketplace System ⭐ NEW
 
 ## Overview
+
 A comprehensive peer-to-peer and shelter-to-shopper marketplace for pets. This system features a sophisticated multi-step listing flow with strict safety and health verification requirements.
 
 ## Key Features
+
 - **5-Step Listing Process**:
   - **Category & Type**: Specify the species and breed.
   - **Detailed Info**: Age, gender, size, and personality traits.
@@ -14193,9 +14217,11 @@ A comprehensive peer-to-peer and shelter-to-shopper marketplace for pets. This s
 # 📦 Second-Hand Listing System (PlasBusiness) ⭐ NEW
 
 ## Overview
+
 Integrated within the `PlasBusiness` portal, this system allows business owners and individuals to manage pre-owned inventory alongside their primary professional services.
 
 ## Key Features
+
 - **Inventory Management**: Track second-hand items with automated status updates (Available, Sold, Reserved).
 - **Integrated Sales Tracking**: Automatic generation of sales orders for second-hand items within the business ecosystem, linked to the user's wallet.
 - **Unified Portal Experience**: Seamlessly switch between primary business services (RFQs, Quotations) and second-hand marketplace listings.

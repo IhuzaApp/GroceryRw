@@ -151,28 +151,63 @@ export function DesktopPortal({
   const tabs = [
     ...(isServiceProvider && isBusinessAccount
       ? [
-          { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
-          { id: "products-bids", label: "Services/Bids", shortLabel: "Services", icon: Briefcase },
-          { id: "rfq-opportunities", label: "RFQ Opportunities", shortLabel: "RFQ", icon: Search },
+          {
+            id: "overview",
+            label: "Overview",
+            shortLabel: "Overview",
+            icon: BarChart3,
+          },
+          {
+            id: "products-bids",
+            label: "Services/Bids",
+            shortLabel: "Services",
+            icon: Briefcase,
+          },
+          {
+            id: "rfq-opportunities",
+            label: "RFQ Opportunities",
+            shortLabel: "RFQ",
+            icon: Search,
+          },
           { id: "orders", label: "Orders", shortLabel: "Orders", icon: Truck },
           { id: "stores", label: "Stores", shortLabel: "Stores", icon: Store },
         ]
       : []),
     ...(isPersonalAccount
       ? [
-          { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
-          { id: "services", label: "Services", shortLabel: "Services", icon: Package },
+          {
+            id: "overview",
+            label: "Overview",
+            shortLabel: "Overview",
+            icon: BarChart3,
+          },
+          {
+            id: "services",
+            label: "Services",
+            shortLabel: "Services",
+            icon: Package,
+          },
           { id: "stores", label: "Stores", shortLabel: "Stores", icon: Store },
         ]
       : []),
     { id: "rfqs", label: "My RFQs", shortLabel: "RFQs", icon: FileText },
     { id: "quotes", label: "Quotes", shortLabel: "Quotes", icon: ShoppingCart },
-    { id: "contracts", label: "Contracts", shortLabel: "Contracts", icon: FileText },
-    { id: "second-hand", label: "Second Hand", shortLabel: "Pre-owned", icon: RotateCcw },
+    {
+      id: "contracts",
+      label: "Contracts",
+      shortLabel: "Contracts",
+      icon: FileText,
+    },
+    {
+      id: "second-hand",
+      label: "Second Hand",
+      shortLabel: "Pre-owned",
+      icon: RotateCcw,
+    },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 duration-700 animate-in fade-in">
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
         onBusinessChat={() => router.push("/Messages")}
@@ -185,18 +220,22 @@ export function DesktopPortal({
 
       <div className="space-y-6">
         <div className="rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-2 shadow-xl backdrop-blur-md">
-          <div className="flex space-x-2 overflow-x-auto scrollbar-hide">
+          <div className="scrollbar-hide flex space-x-2 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-300 ${
                   activeTab === tab.id
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20 scale-105"
+                    ? "scale-105 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20"
                     : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                 }`}
               >
-                <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? "text-white" : ""}`} />
+                <tab.icon
+                  className={`h-4 w-4 ${
+                    activeTab === tab.id ? "text-white" : ""
+                  }`}
+                />
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -204,14 +243,27 @@ export function DesktopPortal({
         </div>
 
         <div className="min-h-[400px]">
-          {activeTab === "overview" && <BusinessOverview businessAccount={businessAccount} />}
-          {activeTab === "products-bids" && isServiceProvider && <ProductsBidsSection businessAccount={businessAccount} />}
-          {activeTab === "rfq-opportunities" && isServiceProvider && (
-            <RFQOpportunitiesSection onMessageCustomer={handleMessageQuoteSupplier} businessAccount={businessAccount} />
+          {activeTab === "overview" && (
+            <BusinessOverview businessAccount={businessAccount} />
           )}
-          {activeTab === "stores" && <StoresSection businessAccount={businessAccount} />}
+          {activeTab === "products-bids" && isServiceProvider && (
+            <ProductsBidsSection businessAccount={businessAccount} />
+          )}
+          {activeTab === "rfq-opportunities" && isServiceProvider && (
+            <RFQOpportunitiesSection
+              onMessageCustomer={handleMessageQuoteSupplier}
+              businessAccount={businessAccount}
+            />
+          )}
+          {activeTab === "stores" && (
+            <StoresSection businessAccount={businessAccount} />
+          )}
           {activeTab === "services" && isPersonalAccount && (
-            <ServicesSection onRequestQuotation={() => toast.success("Quotation request sent!")} />
+            <ServicesSection
+              onRequestQuotation={() =>
+                toast.success("Quotation request sent!")
+              }
+            />
           )}
           {activeTab === "rfqs" && (
             <MyRFQsSection
@@ -221,7 +273,9 @@ export function DesktopPortal({
               onRFQCreated={rfqCreated}
             />
           )}
-          {activeTab === "quotes" && <QuotesSection onViewQuoteDetails={handleViewQuoteDetails} />}
+          {activeTab === "quotes" && (
+            <QuotesSection onViewQuoteDetails={handleViewQuoteDetails} />
+          )}
           {activeTab === "orders" && <OrdersSection />}
           {activeTab === "contracts" && (
             <ContractsManagement
@@ -231,11 +285,13 @@ export function DesktopPortal({
             />
           )}
           {activeTab === "second-hand" && (
-            <SecondHandManagement businessAccount={businessAccount} theme={theme} />
+            <SecondHandManagement
+              businessAccount={businessAccount}
+              theme={theme}
+            />
           )}
         </div>
       </div>
-
     </div>
   );
 }

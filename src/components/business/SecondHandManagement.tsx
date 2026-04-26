@@ -46,7 +46,7 @@ export function SecondHandManagement({ businessAccount, theme }: any) {
     },
     {
       id: 2,
-      name: "Dell Monitor 24\"",
+      name: 'Dell Monitor 24"',
       price: "85,000",
       status: "Sold",
       stock: 0,
@@ -112,7 +112,7 @@ export function SecondHandManagement({ businessAccount, theme }: any) {
   ];
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6 duration-500">
+    <div className="space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="font-outfit text-3xl font-black">Second Hand Items</h2>
@@ -163,8 +163,8 @@ export function SecondHandManagement({ businessAccount, theme }: any) {
               }}
               className={`group cursor-pointer rounded-[2rem] border p-4 transition-all hover:shadow-xl ${
                 theme === "dark"
-                  ? "bg-white/5 border-white/5"
-                  : "bg-white border-gray-100 shadow-sm"
+                  ? "border-white/5 bg-white/5"
+                  : "border-gray-100 bg-white shadow-sm"
               }`}
             >
               <div className="relative mb-4 aspect-video overflow-hidden rounded-2xl border border-white/5">
@@ -203,7 +203,7 @@ export function SecondHandManagement({ businessAccount, theme }: any) {
                 </div>
               </div>
               <h4
-                className={`font-outfit mb-1 text-lg font-black ${
+                className={`mb-1 font-outfit text-lg font-black ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -235,8 +235,8 @@ export function SecondHandManagement({ businessAccount, theme }: any) {
               key={order.id}
               className={`flex items-center justify-between rounded-[2rem] border p-6 transition-all hover:shadow-lg ${
                 theme === "dark"
-                  ? "bg-white/5 border-white/5"
-                  : "bg-white border-gray-100 shadow-sm"
+                  ? "border-white/5 bg-white/5"
+                  : "border-gray-100 bg-white shadow-sm"
               }`}
             >
               <div className="flex items-center gap-4">
@@ -302,10 +302,8 @@ function DetailModal({ item, onClose, theme }: any) {
         onClick={onClose}
       />
       <div
-        className={`relative max-h-[90vh] w-full max-w-4xl animate-in zoom-in-95 overflow-y-auto rounded-[2.5rem] shadow-2xl duration-300 ${
-          theme === "dark"
-            ? "border border-white/10 bg-[#121212]"
-            : "bg-white"
+        className={`relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[2.5rem] shadow-2xl duration-300 animate-in zoom-in-95 ${
+          theme === "dark" ? "border border-white/10 bg-[#121212]" : "bg-white"
         }`}
       >
         <button
@@ -352,7 +350,7 @@ function DetailModal({ item, onClose, theme }: any) {
                 {item.status}
               </span>
             </div>
-            <h2 className="font-outfit mb-2 text-3xl font-black leading-tight">
+            <h2 className="mb-2 font-outfit text-3xl font-black leading-tight">
               {item.name}
             </h2>
             <p className="mb-6 text-2xl font-black text-green-500">
@@ -364,7 +362,7 @@ function DetailModal({ item, onClose, theme }: any) {
                 <h4 className="mb-2 text-xs font-black uppercase tracking-widest text-gray-400">
                   Description
                 </h4>
-                <p className="font-medium leading-relaxed text-gray-500 dark:text-gray-400 text-sm">
+                <p className="text-sm font-medium leading-relaxed text-gray-500 dark:text-gray-400">
                   {item.description}
                 </p>
               </div>
@@ -437,10 +435,8 @@ function AddItemModal({ onClose, theme }: any) {
         onClick={onClose}
       />
       <div
-        className={`relative w-full max-w-2xl animate-in slide-in-from-bottom-8 rounded-[2.5rem] shadow-2xl duration-300 ${
-          theme === "dark"
-            ? "border border-white/10 bg-[#121212]"
-            : "bg-white"
+        className={`relative w-full max-w-2xl rounded-[2.5rem] shadow-2xl duration-300 animate-in slide-in-from-bottom-8 ${
+          theme === "dark" ? "border border-white/10 bg-[#121212]" : "bg-white"
         }`}
       >
         <div className="flex items-center justify-between border-b border-gray-100 p-8 dark:border-white/5">
@@ -493,7 +489,7 @@ function AddItemModal({ onClose, theme }: any) {
           )}
 
           {step === 2 && (
-            <div className="animate-in fade-in space-y-4 duration-300">
+            <div className="space-y-4 duration-300 animate-in fade-in">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="ml-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -502,7 +498,7 @@ function AddItemModal({ onClose, theme }: any) {
                   <input
                     type="text"
                     placeholder="e.g. iPhone 13 Pro"
-                    className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                    className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                   />
                 </div>
                 <div className="space-y-2">
@@ -512,7 +508,7 @@ function AddItemModal({ onClose, theme }: any) {
                   <input
                     type="text"
                     placeholder="500,000"
-                    className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-green-500 text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                    className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-green-500 outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                   />
                 </div>
               </div>
@@ -526,14 +522,14 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="Apple"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="ml-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
                       Condition
                     </label>
-                    <select className="w-full appearance-none rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5">
+                    <select className="w-full appearance-none rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5">
                       <option>Brand New</option>
                       <option>Used - Like New</option>
                       <option>Used - Good</option>
@@ -551,7 +547,7 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="e.g. Acoustic Guitar"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                   <div className="space-y-2">
@@ -561,7 +557,7 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="e.g. 3 years"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                 </div>
@@ -576,7 +572,7 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="e.g. Drill or Printer"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                   <div className="space-y-2">
@@ -586,7 +582,7 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="e.g. 1.5 years"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                 </div>
@@ -601,7 +597,7 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="Wood / Metal"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                   <div className="space-y-2">
@@ -611,7 +607,7 @@ function AddItemModal({ onClose, theme }: any) {
                     <input
                       type="text"
                       placeholder="120x80 cm"
-                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                     />
                   </div>
                 </div>
@@ -623,7 +619,7 @@ function AddItemModal({ onClose, theme }: any) {
                 </label>
                 <textarea
                   placeholder="Tell us more about the item..."
-                  className="h-32 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 font-bold text-sm outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
+                  className="h-32 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold outline-none transition-all focus:border-green-500 dark:border-white/5 dark:bg-white/5"
                 ></textarea>
               </div>
 
@@ -645,7 +641,7 @@ function AddItemModal({ onClose, theme }: any) {
           )}
 
           {step === 3 && (
-            <div className="animate-in fade-in space-y-6 text-center duration-300">
+            <div className="space-y-6 text-center duration-300 animate-in fade-in">
               <div className="grid grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
                   <button

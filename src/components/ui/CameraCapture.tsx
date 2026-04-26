@@ -33,7 +33,9 @@ export default function CameraCapture({
   const [showPreview, setShowPreview] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
   const [chunks, setChunks] = useState<Blob[]>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -199,7 +201,7 @@ export default function CameraCapture({
   const startRecording = () => {
     if (!stream) return;
 
-    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
     const localChunks: Blob[] = [];
 
     recorder.ondataavailable = (e) => {
@@ -209,7 +211,7 @@ export default function CameraCapture({
     };
 
     recorder.onstop = () => {
-      const blob = new Blob(localChunks, { type: 'video/webm' });
+      const blob = new Blob(localChunks, { type: "video/webm" });
       const videoUrl = URL.createObjectURL(blob);
       setCapturedVideo(videoUrl);
       setShowPreview(true);
@@ -236,12 +238,14 @@ export default function CameraCapture({
     } else if (mode === "video" && capturedVideo) {
       onCapture(capturedVideo);
     }
-    
+
     setCapturedImage(null);
     setCapturedVideo(null);
     setShowPreview(false);
     onClose();
-    toast.success(`${mode === 'photo' ? 'Photo' : 'Video'} captured successfully!`);
+    toast.success(
+      `${mode === "photo" ? "Photo" : "Video"} captured successfully!`
+    );
   };
 
   const retakeCapture = () => {
@@ -300,7 +304,7 @@ export default function CameraCapture({
               >
                 <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
-              
+
               {mode === "photo" ? (
                 <button
                   onClick={capturePhoto}
@@ -313,7 +317,9 @@ export default function CameraCapture({
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
                     className={`z-10 rounded-full p-4 text-white shadow-lg transition-all sm:p-6 ${
-                      isRecording ? "bg-red-600 scale-110" : "bg-red-500 hover:bg-red-600"
+                      isRecording
+                        ? "scale-110 bg-red-600"
+                        : "bg-red-500 hover:bg-red-600"
                     }`}
                   >
                     {isRecording ? (
@@ -384,7 +390,7 @@ export default function CameraCapture({
                   className="z-10 flex items-center space-x-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm text-white shadow-lg hover:bg-green-600 sm:px-6 sm:py-3 sm:text-base"
                 >
                   <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>Use {mode === 'photo' ? 'Photo' : 'Video'}</span>
+                  <span>Use {mode === "photo" ? "Photo" : "Video"}</span>
                 </button>
               </div>
             </div>

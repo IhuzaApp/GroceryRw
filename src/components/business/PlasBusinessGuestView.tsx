@@ -67,8 +67,8 @@ export default function PlasBusinessGuestView({
         <div className="absolute bottom-0 left-[20%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[100px] dark:bg-blue-400/5"></div>
 
         {/* Background Image Overlay */}
-        <div 
-          className="absolute inset-0 z-[-1] opacity-[0.07] bg-cover bg-center bg-no-repeat grayscale"
+        <div
+          className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat opacity-[0.07] grayscale"
           style={{ backgroundImage: 'url("/assets/images/auth/login_bg.png")' }}
         />
 
@@ -81,10 +81,10 @@ export default function PlasBusinessGuestView({
         ></div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 lg:py-20 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-20">
         {/* Asymmetrical Hero Section */}
-        <div className="mb-4 lg:mb-24 flex flex-col gap-12 lg:flex-row lg:items-center">
-          <div className="hidden lg:block max-w-3xl flex-1 space-y-8">
+        <div className="mb-4 flex flex-col gap-12 lg:mb-24 lg:flex-row lg:items-center">
+          <div className="hidden max-w-3xl flex-1 space-y-8 lg:block">
             <div className="inline-flex items-center gap-3 rounded-full border border-green-500/20 bg-green-500/5 px-4 py-2 text-sm font-bold text-green-600 backdrop-blur-md dark:border-green-400/20 dark:bg-green-400/10 dark:text-green-400">
               <Sparkles className="h-4 w-4 animate-bounce" />
               <span className="uppercase tracking-wide">
@@ -204,16 +204,17 @@ export default function PlasBusinessGuestView({
               <h3 className="text-3xl font-black tracking-tighter text-[var(--text-primary)] sm:text-6xl lg:text-7xl">
                 Market <span className="text-green-500">Explorer</span>
               </h3>
-              <p className="max-w-md font-medium text-[var(--text-secondary)] opacity-60 text-lg leading-relaxed">
-                Real-time pulses from the Rwandan business ecosystem. Discovery and trade simplified.
+              <p className="max-w-md text-lg font-medium leading-relaxed text-[var(--text-secondary)] opacity-60">
+                Real-time pulses from the Rwandan business ecosystem. Discovery
+                and trade simplified.
               </p>
             </div>
 
             {/* Sliding Segmented Control */}
-            <div className="bg-[var(--bg-secondary)]/30 relative flex w-full items-center rounded-2xl border border-[var(--bg-secondary)] p-1 md:w-auto backdrop-blur-md">
+            <div className="bg-[var(--bg-secondary)]/30 relative flex w-full items-center rounded-2xl border border-[var(--bg-secondary)] p-1 backdrop-blur-md md:w-auto">
               {/* Sliding Highlight */}
               <div
-                className="ease-[cubic-bezier(0.34,1.56,0.64,1)] absolute inset-y-1 left-1 rounded-xl bg-white dark:bg-gray-800 shadow-xl transition-all duration-500"
+                className="ease-[cubic-bezier(0.34,1.56,0.64,1)] absolute inset-y-1 left-1 rounded-xl bg-white shadow-xl transition-all duration-500 dark:bg-gray-800"
                 style={{
                   width: "calc(50% - 4px)",
                   transform:

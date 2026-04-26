@@ -15,9 +15,9 @@ export default function CarDetail() {
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold">Car not found</h1>
-            <button 
+            <button
               onClick={() => router.back()}
-              className="mt-4 text-green-500 font-bold"
+              className="mt-4 font-bold text-green-500"
             >
               Go Back
             </button>

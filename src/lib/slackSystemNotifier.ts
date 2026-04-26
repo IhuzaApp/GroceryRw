@@ -211,8 +211,8 @@ export async function notifyDelayedOrderToSlack(payload: DelayedOrderPayload) {
     minutes < 0
       ? "Already late"
       : minutes <= 1
-        ? "Will expire in 1 minute"
-        : `Will expire in ${Math.round(minutes)} minutes`;
+      ? "Will expire in 1 minute"
+      : `Will expire in ${Math.round(minutes)} minutes`;
 
   let statusLine: string;
   if (isPending) {
@@ -323,15 +323,15 @@ export async function notifyNewStoreCreatedToSlack(
   const descRaw = payload.description?.trim() || "";
   const descDisplay = descRaw
     ? descRaw.replace(/<[^>]*>/g, "").slice(0, 500) +
-    (descRaw.length > 500 ? "…" : "")
+      (descRaw.length > 500 ? "…" : "")
     : "_No description_";
   const lat = payload.latitude?.trim() ?? "";
   const lng = payload.longitude?.trim() ?? "";
   const locationDisplay =
     lat && lng
       ? `Lat: ${lat}, Lng: ${lng}\n<https://www.google.com/maps?q=${encodeURIComponent(
-        lat + "," + lng
-      )}|View on Google Maps>`
+          lat + "," + lng
+        )}|View on Google Maps>`
       : "—";
   const businessDisplay = payload.businessName?.trim() ?? "—";
 

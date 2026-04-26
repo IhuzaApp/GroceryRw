@@ -97,7 +97,9 @@ export default function MobileProfile({
   const [otpInput, setOtpInput] = useState("");
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [otpError, setOtpError] = useState("");
-  const [pendingRole, setPendingRole] = useState<"user" | "shopper" | null>(null);
+  const [pendingRole, setPendingRole] = useState<"user" | "shopper" | null>(
+    null
+  );
   // Keep visited tab content mounted to avoid refetching when switching tabs
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set());
 
@@ -157,7 +159,9 @@ export default function MobileProfile({
     try {
       await initiateRoleSwitch(pendingRole!);
       toggleRole();
-      toast.success(`Switched to ${pendingRole === "user" ? "User" : "Shopper"}`);
+      toast.success(
+        `Switched to ${pendingRole === "user" ? "User" : "Shopper"}`
+      );
     } catch {
       toast.error("Failed to switch account");
     } finally {
@@ -891,9 +895,24 @@ export default function MobileProfile({
           >
             <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
               {isSwitchingRole || isSendingOTP ? (
-                <svg className="h-5 w-5 animate-spin !text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                <svg
+                  className="h-5 w-5 animate-spin !text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
               ) : (
                 <svg
@@ -1085,14 +1104,27 @@ export default function MobileProfile({
             <div className="p-8">
               <div className="mb-6 flex justify-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-500/30">
-                  <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  <svg
+                    className="h-8 w-8 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                    />
                   </svg>
                 </div>
               </div>
-              <h2 className="mb-1 text-center text-2xl font-black text-gray-900 dark:text-white">Verify It&apos;s You</h2>
+              <h2 className="mb-1 text-center text-2xl font-black text-gray-900 dark:text-white">
+                Verify It&apos;s You
+              </h2>
               <p className="mb-2 text-center text-sm text-gray-500 dark:text-gray-400">
-                We sent a 4-digit code to your phone/email. Enter it below to confirm the profile switch.
+                We sent a 4-digit code to your phone/email. Enter it below to
+                confirm the profile switch.
               </p>
               <div className="mt-6">
                 <input
@@ -1111,10 +1143,16 @@ export default function MobileProfile({
                       : "border-gray-200 focus:border-emerald-500 dark:border-gray-700"
                   }`}
                   autoFocus
-                  onKeyDown={(e) => e.key === "Enter" && otpInput.length === 4 && handleVerifyOTP()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    otpInput.length === 4 &&
+                    handleVerifyOTP()
+                  }
                 />
                 {otpError && (
-                  <p className="mt-2 text-center text-sm font-semibold text-red-500">{otpError}</p>
+                  <p className="mt-2 text-center text-sm font-semibold text-red-500">
+                    {otpError}
+                  </p>
                 )}
               </div>
               <div className="mt-6 flex gap-3">

@@ -131,7 +131,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           !hideBottomBar && <BottomBar />}
       </main>
       {/* AI Chat - Available on all pages except chat pages and specific marketplaces */}
-      {!isChatPage && !isMessagesChat && !isCarsPage && !isPetsPage && !isPlasBusinessPage && <AIChatProvider />}
+      {!isChatPage &&
+        !isMessagesChat &&
+        !isCarsPage &&
+        !isPetsPage &&
+        !isPlasBusinessPage && <AIChatProvider />}
     </div>
   );
 }

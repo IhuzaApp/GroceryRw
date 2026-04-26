@@ -8,36 +8,38 @@ interface PetListingHeaderProps {
   onListPet: () => void;
 }
 
-export default function PetListingHeader({ 
-  onListPet 
-}: PetListingHeaderProps) {
+export default function PetListingHeader({ onListPet }: PetListingHeaderProps) {
   return (
-    <div className="relative hidden md:block overflow-hidden h-[280px] w-full rounded-[3rem] mt-4 mx-4 w-[calc(100%-2rem)]">
+    <div className="relative mx-4 mt-4 hidden h-[280px] w-[calc(100%-2rem)] w-full overflow-hidden rounded-[3rem] md:block">
       {/* Background Image with Overlay */}
-      <Image 
-        src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2069&auto=format&fit=crop" 
-        alt="Pets Marketplace" 
-        fill 
+      <Image
+        src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2069&auto=format&fit=crop"
+        alt="Pets Marketplace"
+        fill
         className="object-cover"
         priority
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-      
-      <div className="relative h-full mx-auto max-w-[1600px] px-12 flex items-center justify-between">
+
+      <div className="relative mx-auto flex h-full max-w-[1600px] items-center justify-between px-12">
         <div className="flex items-center gap-6">
-          <div className="relative h-20 w-20 overflow-hidden rounded-[2rem] bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl">
+          <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md">
             <Dog className="h-10 w-10 text-white" />
           </div>
           <div>
-            <h1 className="text-5xl font-black tracking-tight text-white font-outfit !text-white">Pet Marketplace</h1>
-            <p className="text-white/60 font-medium mt-2">Manage your listings and reach thousands of pet lovers</p>
+            <h1 className="font-outfit text-5xl font-black tracking-tight !text-white text-white">
+              Pet Marketplace
+            </h1>
+            <p className="mt-2 font-medium text-white/60">
+              Manage your listings and reach thousands of pet lovers
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
-          <button 
+          <button
             onClick={onListPet}
-            className="flex items-center gap-3 rounded-[1.5rem] bg-green-500 px-10 py-5 text-lg font-black text-white shadow-2xl shadow-green-500/40 transition-all hover:scale-[1.05] active:scale-[0.98] !text-white"
+            className="flex items-center gap-3 rounded-[1.5rem] bg-green-500 px-10 py-5 text-lg font-black !text-white text-white shadow-2xl shadow-green-500/40 transition-all hover:scale-[1.05] active:scale-[0.98]"
           >
             <Plus className="h-6 w-6" />
             <span>List Your Pet</span>

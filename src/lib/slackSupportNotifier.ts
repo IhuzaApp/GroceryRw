@@ -968,7 +968,9 @@ export interface PaymentRequestPayload {
 /**
  * Notify Slack when a shopper requests to complete a payment because the merchant doesn't have an internal wallet.
  */
-export async function sendPaymentRequestToSlack(payload: PaymentRequestPayload) {
+export async function sendPaymentRequestToSlack(
+  payload: PaymentRequestPayload
+) {
   if (!SLACK_SUPPORT_WEBHOOK) {
     console.error("SLACK_SUPPORT_WEBHOOK is not configured");
     return;

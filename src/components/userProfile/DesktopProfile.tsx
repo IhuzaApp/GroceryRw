@@ -111,7 +111,9 @@ export default function DesktopProfile({
   const [otpInput, setOtpInput] = useState("");
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [otpError, setOtpError] = useState("");
-  const [pendingRole, setPendingRole] = useState<"user" | "shopper" | null>(null);
+  const [pendingRole, setPendingRole] = useState<"user" | "shopper" | null>(
+    null
+  );
   // Keep visited tab content mounted to avoid refetching when switching tabs
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(
     new Set(["account"])
@@ -170,7 +172,9 @@ export default function DesktopProfile({
     try {
       await initiateRoleSwitch(pendingRole!);
       toggleRole();
-      toast.success(`Switched to ${pendingRole === "user" ? "User" : "Shopper"}`);
+      toast.success(
+        `Switched to ${pendingRole === "user" ? "User" : "Shopper"}`
+      );
     } catch {
       toast.error("Failed to switch account");
     } finally {
@@ -372,7 +376,9 @@ export default function DesktopProfile({
                     <p className="text-xs font-bold uppercase tracking-widest !text-white/70">
                       Total Orders
                     </p>
-                    <h3 className="text-3xl font-black !text-white">{orderCount}</h3>
+                    <h3 className="text-3xl font-black !text-white">
+                      {orderCount}
+                    </h3>
                   </div>
                   <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
                     <ShoppingBag className="h-6 w-6 !text-white" />
@@ -412,13 +418,17 @@ export default function DesktopProfile({
                     onClick={(e) => {
                       if (shopperStatus?.active) {
                         if (isGuest) {
-                          toast.error("Please create a full account to switch service");
+                          toast.error(
+                            "Please create a full account to switch service"
+                          );
                           return;
                         }
                         handleSwitchWithOTP();
                       } else {
                         if (isGuest) {
-                          toast.error("Please create a full account to become a plasa");
+                          toast.error(
+                            "Please create a full account to become a plasa"
+                          );
                           return;
                         }
                         handleBecomePlasa(e);
@@ -814,8 +824,18 @@ export default function DesktopProfile({
               {/* Icon */}
               <div className="mb-6 flex justify-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-500/30">
-                  <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  <svg
+                    className="h-8 w-8 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -824,7 +844,8 @@ export default function DesktopProfile({
                 Verify It&apos;s You
               </h2>
               <p className="mb-2 text-center text-sm text-gray-500 dark:text-gray-400">
-                We sent a 4-digit code to your phone/email. Enter it below to confirm the profile switch.
+                We sent a 4-digit code to your phone/email. Enter it below to
+                confirm the profile switch.
               </p>
 
               {/* OTP Input */}
@@ -845,10 +866,16 @@ export default function DesktopProfile({
                       : "border-gray-200 focus:border-emerald-500 dark:border-gray-700"
                   }`}
                   autoFocus
-                  onKeyDown={(e) => e.key === "Enter" && otpInput.length === 4 && handleVerifyOTP()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    otpInput.length === 4 &&
+                    handleVerifyOTP()
+                  }
                 />
                 {otpError && (
-                  <p className="mt-2 text-center text-sm font-semibold text-red-500">{otpError}</p>
+                  <p className="mt-2 text-center text-sm font-semibold text-red-500">
+                    {otpError}
+                  </p>
                 )}
               </div>
 
