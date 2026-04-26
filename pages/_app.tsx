@@ -330,6 +330,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <LanguageProvider>
         <Head>
           <title>{pageTitle}</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
           <meta
             name="google-site-verification"
             content="OksRl63kpYWafgir4UK5IxTx7wYZY5cnkoL7CFrv1wM"

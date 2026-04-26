@@ -1,111 +1,237 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Search, Filter, Car as CarIcon, Users, Fuel, Settings2, Star, ChevronRight } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { 
+  Search, 
+  Car as CarIcon, 
+  Users, 
+  Fuel, 
+  Settings2, 
+  Star, 
+  ChevronRight, 
+  X, 
+  MessageSquare, 
+  ShieldCheck, 
+  Clock, 
+  ArrowRight,
+  ChevronDown,
+  MapPin,
+  Calendar
+} from "lucide-react";
 import { DUMMY_CARS, Car } from "../../constants/dummyCars";
 import { useTheme } from "../../context/ThemeContext";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 const VEHICLE_TYPES = ["All", "Sedan", "SUV", "Truck", "Hatchback", "Luxury"];
 const FUEL_TYPES = ["All", "Fuel", "Electric", "Hybrid", "Diesel"];
+const LOCATIONS = ["All", "Kigali", "Musanze", "Rubavu", "Huye", "Rwamagana"];
 
 export default function CarListing() {
+  const router = useRouter();
   const { theme } = useTheme();
+  const [activeMainTab, setActiveMainTab] = useState<'explore' | 'bookings'>('explore');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedFuel, setSelectedFuel] = useState("All");
+  const [selectedLocation, setSelectedLocation] = useState("All");
+  const [bookedCars, setBookedCars] = useState<any[]>([]);
+
+  // Handle tab switching from query param - ensure router is ready
+  useEffect(() => {
+    if (router.isReady && router.query.tab === 'bookings') {
+      setActiveMainTab('bookings');
+    }
+  }, [router.isReady, router.query.tab]);
+
+  // Load bookings from localStorage
+  useEffect(() => {
+    const loadBookings = () => {
+      const saved = JSON.parse(localStorage.getItem("car_bookings") || "[]");
+      setBookedCars(saved);
+    };
+    loadBookings();
+    window.addEventListener('storage', loadBookings);
+    return () => window.removeEventListener('storage', loadBookings);
+  }, []);
 
   const filteredCars = useMemo(() => {
     return DUMMY_CARS.filter((car) => {
       const matchesSearch = car.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = selectedType === "All" || car.type === selectedType;
       const matchesFuel = selectedFuel === "All" || car.fuelType === selectedFuel;
-      return matchesSearch && matchesType && matchesFuel && car.status === 'active';
+      const matchesLocation = selectedLocation === "All" || car.location === selectedLocation;
+      return matchesSearch && matchesType && matchesFuel && matchesLocation && car.status === 'active';
     });
-  }, [searchQuery, selectedType, selectedFuel]);
+  }, [searchQuery, selectedType, selectedFuel, selectedLocation]);
 
   return (
-    <div className={`min-h-screen pb-24 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-gray-50 text-gray-900'}`}>
-      {/* Sticky Header with Search - Mobile Only */}
-      <div className={`sticky top-0 z-30 px-4 py-4 backdrop-blur-xl md:hidden ${theme === 'dark' ? 'bg-black/40 border-b border-white/5' : 'bg-white/70 border-b border-gray-200'}`}>
-        <div className="relative mx-auto max-w-2xl">
-          <div className={`flex items-center rounded-2xl border px-4 py-3 shadow-sm transition-all focus-within:ring-2 focus-within:ring-green-500/50 ${
-            theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-          }`}>
-            <Search className="h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search for your dream car..."
-              className="ml-3 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-500"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button className={`ml-2 rounded-xl p-2 transition-colors ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
-              <Filter className="h-5 w-5 text-green-500" />
-            </button>
-          </div>
+    <div className="min-h-screen pb-24 md:ml-20 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white transition-colors duration-200">
+      {/* Sticky Header - Mobile Only */}
+      <div className="sticky top-0 z-30 px-4 pt-4 pb-2 backdrop-blur-xl md:hidden bg-white/80 dark:bg-black/40 border-b border-gray-200 dark:border-white/5">
+        <div className="mb-4 flex gap-6 border-b border-gray-200/10 px-2">
+          <button 
+            onClick={() => setActiveMainTab('explore')}
+            className={`pb-2 text-sm font-black uppercase tracking-widest transition-all ${activeMainTab === 'explore' ? 'border-b-2 border-green-500 text-green-500' : 'text-gray-500'}`}
+          >
+            Explore
+          </button>
+          <button 
+            onClick={() => setActiveMainTab('bookings')}
+            className={`pb-2 text-sm font-black uppercase tracking-widest transition-all ${activeMainTab === 'bookings' ? 'border-b-2 border-green-500 text-green-500' : 'text-gray-500'}`}
+          >
+            My Bookings
+            {bookedCars.length > 0 && (
+              <span className="ml-2 rounded-full bg-green-500 px-2 py-0.5 text-[10px] text-white font-black">{bookedCars.length}</span>
+            )}
+          </button>
         </div>
+
+        {activeMainTab === 'explore' && (
+          <div className="relative mx-auto max-w-2xl px-2 mb-2">
+            <div className="flex items-center rounded-2xl border px-4 py-2.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-green-500/50 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10">
+              <Search className="h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search cars..."
+                className="ml-2.5 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 pt-6">
-        {/* Type Filters */}
-        <div className="mb-6 overflow-x-auto pb-2 no-scrollbar">
-          <div className="flex gap-2">
-            {VEHICLE_TYPES.map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(type)}
-                className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-semibold transition-all ${
-                  selectedType === type
-                    ? 'bg-green-500 text-white shadow-lg shadow-green-500/30'
-                    : theme === 'dark' ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-100'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 pt-8 md:px-8">
+        {activeMainTab === 'explore' ? (
+          <>
+            {/* Dropdown Filters */}
+            <div className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-4">
+              <FilterSelect label="Vehicle Type" value={selectedType} options={VEHICLE_TYPES} onChange={setSelectedType} theme={theme} />
+              <FilterSelect label="Fuel Type" value={selectedFuel} options={FUEL_TYPES} onChange={setSelectedFuel} theme={theme} />
+              <FilterSelect label="Location" value={selectedLocation} options={LOCATIONS} onChange={setSelectedLocation} theme={theme} />
 
-        {/* Fuel Filters */}
-        <div className="mb-8">
-          <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Fuel Type</h3>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar">
-            {FUEL_TYPES.map((fuel) => (
-              <button
-                key={fuel}
-                onClick={() => setSelectedFuel(fuel)}
-                className={`flex items-center gap-2 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-bold transition-all ${
-                  selectedFuel === fuel
-                    ? 'border-green-500 bg-green-500/10 text-green-500'
-                    : theme === 'dark' ? 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <div className={`h-2 w-2 rounded-full ${selectedFuel === fuel ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                {fuel}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Grid Section */}
-        <div className="mb-8 flex items-center justify-between">
-          <h2 className="text-xl font-black tracking-tight sm:text-2xl">Available Vehicles</h2>
-          <span className="text-sm font-bold text-gray-500">{filteredCars.length} results</span>
-        </div>
-
-        {filteredCars.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredCars.map((car) => (
-              <CarCard key={car.id} car={car} theme={theme} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className={`mb-4 flex h-20 w-20 items-center justify-center rounded-full ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-100'}`}>
-              <CarIcon className="h-10 w-10 text-gray-400" />
+              <div className="hidden lg:flex flex-col">
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Keyword Search</label>
+                <div className="flex items-center rounded-[1.25rem] border px-4 py-3 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 transition-all focus-within:ring-4 focus-within:ring-green-500/10">
+                  <Search className="h-4.5 w-4.5 text-gray-400 mr-3" />
+                  <input
+                    type="text"
+                    placeholder="e.g. Tesla, SUV..."
+                    className="flex-1 bg-transparent text-sm font-bold outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <h3 className="text-lg font-bold">No cars found</h3>
-            <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+
+            <div className="mb-8 flex items-center justify-between">
+              <h2 className="text-xl font-black tracking-tight md:text-2xl">Available Vehicles in Rwanda</h2>
+              <span className="rounded-full bg-gray-100 dark:bg-white/5 px-4 py-1.5 text-xs font-black text-gray-500 uppercase tracking-widest">{filteredCars.length} results</span>
+            </div>
+
+            {filteredCars.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
+                {filteredCars.map((car) => (
+                  <CarCard key={car.id} car={car} theme={theme} onClick={() => router.push(`/Cars/${car.id}`)} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gray-100 dark:bg-white/5 text-gray-400">
+                  <CarIcon className="h-10 w-10" />
+                </div>
+                <h3 className="text-xl font-black mb-2">No vehicles found</h3>
+                <p className="text-sm text-gray-500 max-w-xs mx-auto">Try adjusting your filters or location to see more available options.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="mb-10 text-center md:text-left">
+              <h2 className="text-3xl font-black tracking-tight">Your Car Bookings</h2>
+              <p className="text-gray-500 font-medium mt-1">Direct rentals from local businesses in Rwanda</p>
+            </div>
+            
+            {bookedCars.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {bookedCars.map((booking) => (
+                  <div key={booking.bookingId} className="group relative overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-2xl dark:border-white/5 dark:bg-[#121212]">
+                    <div className="flex flex-col gap-6 md:flex-row md:items-center">
+                      <div className="h-32 w-full shrink-0 overflow-hidden rounded-[1.5rem] md:h-36 md:w-56 shadow-lg">
+                        <img src={booking.image} alt={booking.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                      </div>
+                      <div className="flex flex-1 flex-col justify-between">
+                        <div>
+                          <div className="mb-2 flex items-center justify-between">
+                            <h4 className="text-2xl font-black tracking-tight">{booking.name}</h4>
+                            <div className="text-right">
+                              <p className="text-[10px] font-black text-gray-400 uppercase">Total Paid</p>
+                              <span className="text-xl font-black text-green-500">${booking.total}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-3 mb-4">
+                            <span className="rounded-full bg-gray-100 dark:bg-white/10 px-3 py-1 text-[10px] font-black uppercase text-gray-500">{booking.type}</span>
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-gray-400 uppercase tracking-wide">
+                              <MapPin className="h-3.5 w-3.5 text-green-500" />
+                              {booking.location}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-gray-400 uppercase tracking-wide">
+                              <Users className="h-3.5 w-3.5 text-blue-500" />
+                              {booking.guests} Guests
+                            </div>
+                          </div>
+                          
+                          <div className="inline-flex flex-wrap items-center gap-4 rounded-2xl bg-gray-50 dark:bg-white/5 px-5 py-2.5">
+                            <div className="flex items-center gap-2 border-r border-gray-200 dark:border-white/10 pr-4">
+                              <Calendar className="h-4 w-4 text-green-500" />
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-black uppercase text-gray-400">Pick-up</span>
+                                <span className="text-xs font-black">{booking.startDate}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-black uppercase text-gray-400">Return</span>
+                                <span className="text-xs font-black">{booking.endDate}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100 dark:border-white/5">
+                          <div className="flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-1.5 text-[10px] font-black uppercase text-green-600">
+                            <ShieldCheck className="h-4 w-4" />
+                            Confirmed Booking
+                          </div>
+                          <Link href={`/Messages?chat=${booking.owner.id}`} className="flex items-center gap-2 text-sm font-black text-green-500 hover:gap-3 transition-all">
+                            <MessageSquare className="h-4.5 w-4.5" />
+                            Message Host
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[3rem] bg-gray-100 dark:bg-white/5 text-gray-400 shadow-inner">
+                   <Calendar className="h-12 w-12" />
+                </div>
+                <h3 className="text-2xl font-black mb-2">Start your journey</h3>
+                <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">You haven't booked any vehicles yet. Explore Rwanda with our premium rental selection.</p>
+                <button 
+                  onClick={() => setActiveMainTab('explore')}
+                  className="rounded-[1.5rem] bg-green-500 px-12 py-4.5 font-black text-white shadow-2xl shadow-green-500/40 transition-all hover:scale-105 active:scale-95 text-lg"
+                >
+                  Browse Cars
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -113,62 +239,69 @@ export default function CarListing() {
   );
 }
 
-function CarCard({ car, theme }: { car: Car; theme: string }) {
+function FilterSelect({ label, value, options, onChange, theme }: any) {
   return (
-    <div className={`group relative overflow-hidden rounded-3xl border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${
-      theme === 'dark' ? 'bg-[#121212] border-white/5 hover:border-white/10 hover:shadow-green-500/5' : 'bg-white border-gray-100 hover:shadow-gray-200'
-    }`}>
-      {/* Image Container */}
-      <div className="relative h-56 overflow-hidden">
-        <img
-          src={car.image}
-          alt={car.name}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        
-        {/* Badge */}
-        <div className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black backdrop-blur-md shadow-xl">
-          {car.type}
-        </div>
-        
-        {/* Price Tag */}
-        <div className="absolute bottom-4 left-4 flex items-end gap-1">
-          <span className="text-2xl font-black text-white shadow-sm">${car.price}</span>
-          <span className="mb-1 text-xs font-bold text-white/80">/ day</span>
+    <div className="flex flex-col">
+      <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">{label}</label>
+      <div className="relative group">
+        <select 
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none rounded-[1.25rem] border px-4 py-3.5 pr-12 text-sm font-black outline-none transition-all focus:ring-4 focus:ring-green-500/10 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white group-hover:border-green-500/50"
+        >
+          {options.map((t: string) => <option key={t} value={t} className="bg-white dark:bg-black">{t}</option>)}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 group-hover:text-green-500 transition-colors" />
+      </div>
+    </div>
+  );
+}
+
+function CarCard({ car, theme, onClick }: { car: Car; theme: string; onClick: () => void }) {
+  return (
+    <div onClick={onClick} className="group relative cursor-pointer overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl dark:border-white/5 dark:bg-[#121212]">
+      <div className="relative h-52 overflow-hidden md:h-60">
+        <img src={car.image} alt={car.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="absolute right-5 top-5 rounded-full bg-white/90 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-black backdrop-blur-md shadow-xl">{car.type}</div>
+        <div className="absolute bottom-5 left-5 flex items-end gap-1.5 translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+          <span className="text-3xl font-black text-white">${car.price}</span>
+          <span className="mb-1 text-[11px] font-black text-white/70 uppercase">/ day</span>
         </div>
       </div>
-
-      {/* Content */}
-      <div className="p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-black tracking-tight">{car.name}</h3>
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-bold">{car.rating}</span>
+      <div className="p-6 md:p-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-xl font-black tracking-tight">{car.name}</h3>
+          <div className="flex items-center gap-1.5 rounded-full bg-yellow-400/10 px-2 py-0.5 text-xs font-black text-yellow-600">
+            <Star className="h-3.5 w-3.5 fill-yellow-400" />
+            {car.rating}
           </div>
         </div>
-
-        <div className="mb-6 grid grid-cols-3 gap-2">
-          <div className={`flex flex-col items-center justify-center rounded-2xl py-3 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-50'}`}>
-            <Users className="mb-1 h-4 w-4 text-green-500" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase">{car.passengers} Seats</span>
-          </div>
-          <div className={`flex flex-col items-center justify-center rounded-2xl py-3 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-50'}`}>
-            <Fuel className="mb-1 h-4 w-4 text-green-500" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase">{car.fuelType}</span>
-          </div>
-          <div className={`flex flex-col items-center justify-center rounded-2xl py-3 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-50'}`}>
-            <Settings2 className="mb-1 h-4 w-4 text-green-500" />
-            <span className="text-[10px] font-bold text-gray-500 uppercase truncate px-1">{car.transmission}</span>
-          </div>
+        
+        <div className="mb-5 flex items-center gap-1.5 text-gray-500 font-black uppercase text-[10px] tracking-widest">
+          <MapPin className="h-4 w-4 text-green-500" />
+          {car.location}
         </div>
 
-        <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 py-4 text-sm font-black text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-500/20">
-          Book Now
-          <ChevronRight className="h-4 w-4" />
+        <div className="mb-8 grid grid-cols-3 gap-3">
+          <SpecIcon icon={<Users className="h-4.5 w-4.5" />} label={`${car.passengers} Seats`} theme={theme} />
+          <SpecIcon icon={<Fuel className="h-4.5 w-4.5" />} label={car.fuelType} theme={theme} />
+          <SpecIcon icon={<Settings2 className="h-4.5 w-4.5" />} label={car.transmission} theme={theme} />
+        </div>
+        <button className="flex w-full items-center justify-center gap-3 rounded-[1.25rem] bg-gradient-to-r from-green-600 to-emerald-600 py-4.5 text-sm font-black text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-green-500/20">
+          View Details & Book
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
+    </div>
+  );
+}
+
+function SpecIcon({ icon, label, theme }: { icon: React.ReactNode, label: string, theme: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-[1.5rem] py-3.5 bg-gray-50 dark:bg-white/[0.03] transition-colors hover:bg-gray-100 dark:hover:bg-white/[0.05]">
+      <div className="mb-2 text-green-500">{icon}</div>
+      <span className="text-[9px] font-black text-gray-400 uppercase truncate px-1 tracking-wider">{label}</span>
     </div>
   );
 }

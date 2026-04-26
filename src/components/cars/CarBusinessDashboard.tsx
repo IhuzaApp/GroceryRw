@@ -21,7 +21,7 @@ export default function CarBusinessDashboard() {
   const [activeTab, setActiveTab] = useState<'fleet' | 'bookings'>('fleet');
 
   return (
-    <div className={`min-h-screen pb-24 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen pb-24 md:ml-20 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* Dashboard Header */}
       <div className={`px-6 py-8 ${theme === 'dark' ? 'bg-gradient-to-b from-green-900/20 to-transparent' : 'bg-gradient-to-b from-green-50 to-transparent'}`}>
         <div className="mx-auto max-w-7xl">

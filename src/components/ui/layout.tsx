@@ -17,11 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProvider>
-      <HideBottomBarProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </HideBottomBarProvider>
-    </ThemeProvider>
+    <HideBottomBarProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </HideBottomBarProvider>
   );
 }
 

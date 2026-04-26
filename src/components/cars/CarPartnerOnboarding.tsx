@@ -172,7 +172,7 @@ export default function CarPartnerOnboarding() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`min-h-screen md:ml-20 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 w-full z-50 px-4 pt-6">
          <div className={`mx-auto max-w-4xl h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'}`}>

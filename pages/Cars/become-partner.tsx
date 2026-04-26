@@ -1,6 +1,9 @@
-import React from "react";
-import CarPartnerOnboarding from "../../src/components/cars/CarPartnerOnboarding";
+import RootLayout from "../../src/components/ui/layout";
 
 export default function BecomeCarPartnerPage() {
-  return <CarPartnerOnboarding />;
+  return (
+    <RootLayout>
+      <CarPartnerOnboarding />
+    </RootLayout>
+  );
 }

@@ -3,6 +3,7 @@ export interface Car {
   name: string;
   type: 'Sedan' | 'SUV' | 'Truck' | 'Hatchback' | 'Van' | 'Luxury';
   fuelType: 'Fuel' | 'Electric' | 'Hybrid' | 'Diesel';
+  location: string;
   price: number;
   image: string;
   images: { url: string; label: string }[];
@@ -23,6 +24,7 @@ export const DUMMY_CARS: Car[] = [
     name: 'Tesla Model 3',
     type: 'Sedan',
     fuelType: 'Electric',
+    location: 'Kigali',
     price: 80,
     image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2071&auto=format&fit=crop',
     images: [
@@ -48,6 +50,7 @@ export const DUMMY_CARS: Car[] = [
     name: 'Toyota RAV4',
     type: 'SUV',
     fuelType: 'Hybrid',
+    location: 'Musanze',
     price: 65,
     image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?q=80&w=2070&auto=format&fit=crop',
     images: [
@@ -71,6 +74,7 @@ export const DUMMY_CARS: Car[] = [
     name: 'Ford F-150',
     type: 'Truck',
     fuelType: 'Fuel',
+    location: 'Rubavu',
     price: 95,
     image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop',
     images: [
