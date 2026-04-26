@@ -16,6 +16,8 @@ export interface Car {
   description: string;
   reviews: { user: string; comment: string; rating: number; date: string }[];
   owner: { name: string; id: string; image: string };
+  securityDeposit: number;
+  driverOption: 'none' | 'offered';
 }
 
 export const DUMMY_CARS: Car[] = [
@@ -25,7 +27,7 @@ export const DUMMY_CARS: Car[] = [
     type: 'Sedan',
     fuelType: 'Electric',
     location: 'Kigali',
-    price: 80,
+    price: 100, // Price includes driver
     image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2071&auto=format&fit=crop',
     images: [
       { url: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2071&auto=format&fit=crop', label: 'Exterior Front' },
@@ -38,12 +40,14 @@ export const DUMMY_CARS: Car[] = [
     passengers: 5,
     transmission: 'Automatic',
     licenseInfo: 'Fully Insured • RURA Certified',
-    description: 'Experience the future with this premium Tesla Model 3. Long range battery, autopilot features, and a glass roof for a stunning driving experience.',
+    description: 'Experience the future with this premium Tesla Model 3. Long range battery, autopilot features, and a glass roof for a stunning driving experience. Includes a professional chauffeur.',
     reviews: [
       { user: 'Alex K.', comment: 'Amazing car, so smooth!', rating: 5, date: '2024-03-15' },
       { user: 'Sarah M.', comment: 'Loved the interior quality.', rating: 4, date: '2024-03-10' }
     ],
-    owner: { name: 'Elon Rental', id: 'owner_1', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop' }
+    owner: { name: 'Elon Rental', id: 'owner_1', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop' },
+    securityDeposit: 200,
+    driverOption: 'offered'
   },
   {
     id: '2',
@@ -63,32 +67,36 @@ export const DUMMY_CARS: Car[] = [
     passengers: 5,
     transmission: 'Automatic',
     licenseInfo: 'Fully Insured • GPS Tracker Installed',
-    description: 'Reliable and spacious SUV, perfect for family trips or city driving. Great fuel economy thanks to the hybrid engine.',
+    description: 'Reliable and spacious SUV, perfect for family trips or city driving. Great fuel economy thanks to the hybrid engine. Self-drive only.',
     reviews: [
       { user: 'David G.', comment: 'Perfect for our weekend trip.', rating: 5, date: '2024-02-20' }
     ],
-    owner: { name: 'Toyota City', id: 'owner_2', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070&auto=format&fit=crop' }
+    owner: { name: 'Toyota City', id: 'owner_2', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070&auto=format&fit=crop' },
+    securityDeposit: 150,
+    driverOption: 'none'
   },
   {
     id: '3',
-    name: 'Ford F-150',
-    type: 'Truck',
+    name: 'Range Rover Sport',
+    type: 'Luxury',
     fuelType: 'Fuel',
-    location: 'Rubavu',
-    price: 95,
-    image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop',
+    location: 'Kigali',
+    price: 180, // Price includes driver
+    image: 'https://images.unsplash.com/photo-1606148632349-5382973ff3dd?q=80&w=2070&auto=format&fit=crop',
     images: [
-      { url: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=2070&auto=format&fit=crop', label: 'Exterior' },
-      { url: 'https://images.unsplash.com/photo-1621183188806-c8585e054486?q=80&w=2070&auto=format&fit=crop', label: 'Dashboard' }
+      { url: 'https://images.unsplash.com/photo-1606148632349-5382973ff3dd?q=80&w=2070&auto=format&fit=crop', label: 'Exterior' },
+      { url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=2070&auto=format&fit=crop', label: 'Interior' }
     ],
     status: 'active',
-    rating: 4.8,
-    year: 2021,
+    rating: 5.0,
+    year: 2024,
     passengers: 5,
     transmission: 'Automatic',
-    licenseInfo: 'Commercial License • Cargo Insured',
-    description: 'The ultimate workhorse. Strong, capable, and surprisingly comfortable. Ready for any task you throw at it.',
+    licenseInfo: 'VIP Insurance • Personal Guard Available',
+    description: 'The pinnacle of luxury and performance. This Range Rover Sport comes with top-of-the-line features and unparalleled comfort. Included with a private driver for safety.',
     reviews: [],
-    owner: { name: 'Heavy Duty Ltd', id: 'owner_3', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1974&auto=format&fit=crop' }
+    owner: { name: 'VIP Rentals', id: 'owner_vip', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1974&auto=format&fit=crop' },
+    securityDeposit: 500,
+    driverOption: 'offered'
   }
 ];
