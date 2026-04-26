@@ -14,7 +14,12 @@ import {
   Store,
   RotateCcw,
   PlusCircle,
-  History
+  History,
+  X,
+  Cpu,
+  Sparkles,
+  Settings,
+  Camera
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -174,6 +179,7 @@ function BuyerDashboardContent({
   rfqCreated: boolean;
   setRfqCreated: (value: boolean | ((prev: boolean) => boolean)) => void;
 }) {
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedContractId, setSelectedContractId] = useState<string | null>(
     null
@@ -520,12 +526,74 @@ function BuyerDashboardContent({
 function SecondHandManagement({ businessAccount, theme }: any) {
   const [view, setView] = useState<'inventory' | 'orders'>('inventory');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Dummy Data
+  // Dummy Data with Categories
   const dummyItems = [
-    { id: 1, name: "Office Desk", price: "45,000", status: "Active", stock: 2, image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?q=80&w=200" },
-    { id: 2, name: "Dell Monitor 24\"", price: "85,000", status: "Sold", stock: 0, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=200" },
-    { id: 3, name: "Ergonomic Chair", price: "120,000", status: "Active", stock: 5, image: "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?q=80&w=200" },
+    { 
+      id: 1, 
+      name: "Office Desk", 
+      price: "45,000", 
+      status: "Active", 
+      stock: 2, 
+      category: "Interior",
+      image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?q=80&w=200",
+      images: [
+        "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?q=80&w=600",
+        "https://images.unsplash.com/photo-1593062096033-9a26b09da705?q=80&w=600",
+        "https://images.unsplash.com/photo-1493932484597-07b41a59d99a?q=80&w=600"
+      ],
+      details: {
+        material: "Oak Wood",
+        dimensions: "120x60x75 cm",
+        roomType: "Office",
+        condition: "Gently Used"
+      },
+      description: "A solid oak wood office desk in excellent condition. Perfect for home offices."
+    },
+    { 
+      id: 2, 
+      name: "Dell Monitor 24\"", 
+      price: "85,000", 
+      status: "Sold", 
+      stock: 0, 
+      category: "Electronic",
+      image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=200",
+      images: [
+        "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=600",
+        "https://images.unsplash.com/photo-1547119957-637f8679db1e?q=80&w=600",
+        "https://images.unsplash.com/photo-1585792180666-f7347c490ee2?q=80&w=600"
+      ],
+      details: {
+        brand: "Dell",
+        model: "U2419H",
+        specs: "IPS, 1080p, 60Hz",
+        condition: "Used - Like New"
+      },
+      description: "Professional grade monitor with ultra-thin bezels and accurate color representation."
+    },
+    { 
+      id: 3, 
+      name: "Fender Stratocaster", 
+      price: "450,000", 
+      status: "Active", 
+      stock: 1, 
+      category: "Instrument",
+      image: "https://images.unsplash.com/photo-1550291652-6ea9114a47b1?q=80&w=200",
+      images: [
+        "https://images.unsplash.com/photo-1550291652-6ea9114a47b1?q=80&w=600",
+        "https://images.unsplash.com/photo-1516924911020-87448282000e?q=80&w=600",
+        "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=600"
+      ],
+      details: {
+        type: "Electric Guitar",
+        brand: "Fender",
+        yearsUsed: "5 years",
+        condition: "Excellent"
+      },
+      description: "Original Fender Stratocaster, Made in Mexico. Classic tone and smooth playability."
+    },
   ];
 
   const dummyOrders = [
@@ -549,7 +617,6 @@ function SecondHandManagement({ businessAccount, theme }: any) {
         </button>
       </div>
 
-      {/* Internal Tabs */}
       <div className="flex gap-4 border-b border-gray-200/10 dark:border-white/5">
         <button 
           onClick={() => setView('inventory')}
@@ -568,11 +635,27 @@ function SecondHandManagement({ businessAccount, theme }: any) {
       {view === 'inventory' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dummyItems.map(item => (
-            <div key={item.id} className={`rounded-[2rem] border p-4 transition-all hover:shadow-xl ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-white border-gray-100 shadow-sm'}`}>
+            <div 
+              key={item.id} 
+              onClick={() => {
+                setSelectedItem(item);
+                setShowDetailModal(true);
+              }}
+              className={`group cursor-pointer rounded-[2rem] border p-4 transition-all hover:shadow-xl ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-white border-gray-100 shadow-sm'}`}
+            >
               <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5 relative">
-                <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
+                <img src={item.image} alt={item.name} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                   <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-white font-black text-xs">View Details</div>
+                </div>
                 <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.status === 'Active' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
                   {item.status}
+                </div>
+                <div className="absolute bottom-2 left-2 flex gap-1">
+                  {item.category === 'Electronic' && <Cpu className="h-4 w-4 text-white drop-shadow-md" />}
+                  {item.category === 'Instrument' && <Sparkles className="h-4 w-4 text-white drop-shadow-md" />}
+                  {item.category === 'Interior' && <Package className="h-4 w-4 text-white drop-shadow-md" />}
+                  {item.category === 'Equipment' && <Settings className="h-4 w-4 text-white drop-shadow-md" />}
                 </div>
               </div>
               <h4 className={`text-lg font-black font-outfit mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{item.name}</h4>
@@ -610,6 +693,240 @@ function SecondHandManagement({ businessAccount, theme }: any) {
           ))}
         </div>
       )}
+      {showAddModal && (
+        <AddItemModal onClose={() => setShowAddModal(false)} theme={theme} />
+      )}
+
+      {showDetailModal && selectedItem && (
+        <DetailModal 
+          item={selectedItem} 
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedItem(null);
+          }} 
+          theme={theme} 
+        />
+      )}
+    </div>
+  );
+}
+
+function DetailModal({ item, onClose, theme }: any) {
+  const [activeImage, setActiveImage] = useState(0);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-300 ${theme === 'dark' ? 'bg-[#121212] border border-white/10' : 'bg-white'}`}>
+        <button onClick={onClose} className="absolute top-6 right-6 z-10 p-2 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors">
+          <X className="h-6 w-6" />
+        </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Images Section */}
+          <div className="p-8">
+            <div className="aspect-square rounded-3xl overflow-hidden mb-4 border border-gray-100 dark:border-white/5">
+              <img src={item.images[activeImage]} alt={item.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              {item.images.map((img: string, idx: number) => (
+                <button 
+                  key={idx} 
+                  onClick={() => setActiveImage(idx)}
+                  className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-green-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                >
+                  <img src={img} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Details Section */}
+          <div className="p-8 md:pl-0">
+             <div className="flex items-center gap-2 mb-2">
+               <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-[10px] font-black uppercase tracking-widest">{item.category}</span>
+               <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest">{item.status}</span>
+             </div>
+             <h2 className="text-3xl font-black font-outfit mb-2 leading-tight">{item.name}</h2>
+             <p className="text-2xl font-black text-green-500 mb-6">RWF {item.price}</p>
+             
+             <div className="space-y-6">
+               <div>
+                 <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Description</h4>
+                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">{item.description}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 {Object.entries(item.details).map(([key, value]: any) => (
+                   <div key={key} className="p-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
+                     <p className="text-[10px] font-black uppercase text-gray-400 mb-1">{key}</p>
+                     <p className="text-sm font-bold truncate">{value}</p>
+                   </div>
+                 ))}
+               </div>
+
+               <div className="pt-6 border-t border-gray-100 dark:border-white/5 flex gap-4">
+                 <button className="flex-1 rounded-2xl bg-green-500 py-4 font-black text-white shadow-xl shadow-green-500/20 hover:scale-[1.02] transition-all">Edit Listing</button>
+                 <button className="rounded-2xl bg-red-500/10 px-6 py-4 font-black text-red-500 hover:bg-red-500/20 transition-all">Delete</button>
+               </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddItemModal({ onClose, theme }: any) {
+  const [step, setStep] = useState(1);
+  const [category, setCategory] = useState<any>(null);
+  
+  const categories = [
+    { id: 'Electronic', name: 'Electronic', icon: Cpu, color: 'text-blue-500 bg-blue-500/10' },
+    { id: 'Interior', name: 'Interior', icon: Package, color: 'text-orange-500 bg-orange-500/10' },
+    { id: 'Instrument', name: 'Instruments', icon: Sparkles, color: 'text-purple-500 bg-purple-500/10' },
+    { id: 'Equipment', name: 'Equipment', icon: Settings, color: 'text-green-500 bg-green-500/10' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-2xl rounded-[2.5rem] shadow-2xl animate-in slide-in-from-bottom-8 duration-300 ${theme === 'dark' ? 'bg-[#121212] border border-white/10' : 'bg-white'}`}>
+        <div className="p-8 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black font-outfit">List New Item</h2>
+            <p className="text-xs font-medium text-gray-500">Step {step} of 3 • {step === 1 ? 'Select Category' : step === 2 ? 'Details' : 'Upload Images'}</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="p-8">
+          {step === 1 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {categories.map((cat) => (
+                <button 
+                  key={cat.id}
+                  onClick={() => {
+                    setCategory(cat.id);
+                    setStep(2);
+                  }}
+                  className={`flex flex-col items-center gap-4 p-8 rounded-[2rem] border-2 transition-all hover:scale-105 ${category === cat.id ? 'border-green-500 bg-green-500/5' : 'border-gray-100 dark:border-white/5 bg-transparent'}`}
+                >
+                  <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${cat.color}`}>
+                    <cat.icon className="h-8 w-8" />
+                  </div>
+                  <span className="font-black font-outfit uppercase tracking-widest text-sm">{cat.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4 animate-in fade-in duration-300">
+               <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Item Name</label>
+                   <input type="text" placeholder="e.g. iPhone 13 Pro" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                 </div>
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Price (RWF)</label>
+                   <input type="text" placeholder="500,000" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm text-green-500" />
+                 </div>
+               </div>
+
+               {category === 'Electronic' && (
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Brand</label>
+                     <input type="text" placeholder="Apple" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Condition</label>
+                     <select className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm appearance-none">
+                       <option>Brand New</option>
+                       <option>Used - Like New</option>
+                       <option>Used - Good</option>
+                     </select>
+                   </div>
+                 </div>
+               )}
+
+               {category === 'Instrument' && (
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Instrument Type</label>
+                     <input type="text" placeholder="e.g. Acoustic Guitar" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Years of Use</label>
+                     <input type="text" placeholder="e.g. 3 years" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                 </div>
+               )}
+
+               {category === 'Equipment' && (
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Tool/Device Type</label>
+                     <input type="text" placeholder="e.g. Drill or Printer" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Years of Use</label>
+                     <input type="text" placeholder="e.g. 1.5 years" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                 </div>
+               )}
+
+               {category === 'Interior' && (
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Material</label>
+                     <input type="text" placeholder="Wood / Metal" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Dimensions</label>
+                     <input type="text" placeholder="120x80 cm" className="w-full rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm" />
+                   </div>
+                 </div>
+               )}
+
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-2">Description</label>
+                 <textarea placeholder="Tell us more about the item..." className="w-full h-32 rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 px-4 py-3 outline-none focus:border-green-500 transition-all font-bold text-sm resize-none"></textarea>
+               </div>
+
+               <div className="flex gap-4 pt-4">
+                 <button onClick={() => setStep(1)} className="flex-1 rounded-2xl bg-gray-100 dark:bg-white/5 py-4 font-black uppercase tracking-widest text-xs">Back</button>
+                 <button onClick={() => setStep(3)} className="flex-[2] rounded-2xl bg-green-500 py-4 font-black text-white shadow-xl shadow-green-500/20 uppercase tracking-widest text-xs">Next: Upload Media</button>
+               </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6 animate-in fade-in duration-300 text-center">
+              <div className="grid grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <button key={i} className="aspect-square rounded-[2rem] border-2 border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center justify-center gap-2 hover:border-green-500 hover:bg-green-500/5 transition-all text-gray-400 hover:text-green-500">
+                    <Camera className="h-8 w-8" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Photo {i}</span>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10">
+                <p className="text-xs font-medium text-blue-600">Great photos increase your chances of selling by 70%. Ensure your items are well-lit!</p>
+              </div>
+
+              <div className="flex gap-4">
+                 <button onClick={() => setStep(2)} className="flex-1 rounded-2xl bg-gray-100 dark:bg-white/5 py-4 font-black uppercase tracking-widest text-xs">Back</button>
+                 <button onClick={onClose} className="flex-[2] rounded-2xl bg-green-500 py-4 font-black text-white shadow-xl shadow-green-500/20 uppercase tracking-widest text-xs">Complete Listing</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

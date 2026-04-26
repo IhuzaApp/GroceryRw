@@ -48,6 +48,8 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 21. **Merchant Payment Request System** ⭐ NEW
 ### 22. **Multi-Store Multi-Cart System** ⭐ NEW
+### 23. **Pets Marketplace System** ⭐ NEW
+### 24. **Second-Hand Listing System** ⭐ NEW
 
 ---
 
@@ -14166,3 +14168,35 @@ To support a new category (e.g., Pharmacy), extend the `ShopCart` interface and 
 
 ### Customizing Skeletons
 Modify `RestaurantSelectionSkeleton` or `CheckoutSkeleton` in `pages/Cart/index.tsx` to adjust the loading visuals for new layouts.
+
+---
+
+# 🐾 Pets Marketplace System ⭐ NEW
+
+## Overview
+A comprehensive peer-to-peer and shelter-to-shopper marketplace for pets. This system features a sophisticated multi-step listing flow with strict safety and health verification requirements.
+
+## Key Features
+- **5-Step Listing Process**:
+  - **Category & Type**: Specify the species and breed.
+  - **Detailed Info**: Age, gender, size, and personality traits.
+  - **Visual Media**: Mandatory photos and a **1-minute video limit** (max 20MB) to ensure listing quality.
+  - **Health & Safety Verification**:
+    - **Vaccination Certificates**: Mandatory image capture/upload of vaccination documents.
+    - **Parent Photos**: Conditional logic requiring photos of parents if the pet is under **6 months old** to verify heritage and health.
+  - **Stock & Quantity**: Ability to list multiple pets of the same type (e.g., a litter of puppies) and track availability.
+- **Responsive Management Dashboard**: Dedicated partner dashboard matching the "Cars" aesthetic for tracking pet listings, sales, and health updates.
+- **Mobile-First Discovery**: High-impact "Join Plas Ride" floating CTA and clean, immersive listing cards.
+
+---
+
+# 📦 Second-Hand Listing System (PlasBusiness) ⭐ NEW
+
+## Overview
+Integrated within the `PlasBusiness` portal, this system allows business owners and individuals to manage pre-owned inventory alongside their primary professional services.
+
+## Key Features
+- **Inventory Management**: Track second-hand items with automated status updates (Available, Sold, Reserved).
+- **Integrated Sales Tracking**: Automatic generation of sales orders for second-hand items within the business ecosystem, linked to the user's wallet.
+- **Unified Portal Experience**: Seamlessly switch between primary business services (RFQs, Quotations) and second-hand marketplace listings.
+- **Minimalist Card UI**: A redesigned "Market Explorer" that removes traditional container boxes, listing services and products as clean, standalone cards directly on a premium background.
