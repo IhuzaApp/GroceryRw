@@ -47,6 +47,7 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ### 20. **Package Delivery Workflow Integration** ⭐ NEW
 
 ### 21. **Merchant Payment Request System** ⭐ NEW
+### 22. **Multi-Store Multi-Cart System** ⭐ NEW
 
 ---
 
@@ -14092,3 +14093,76 @@ The shopper's app intercepts this push event and automatically transitions the o
 - **`src/components/shopper/activebatches/batchDetails.tsx`**: The frontend controller that orchestrates the flow and listens to FCM events.
 - **`pages/api/shopper/checkPaymentRequestStatus.ts`**: The persistence check endpoint to maintain UI continuity across reloads.
 - **`src/lib/slackSupportNotifier.ts`**: Handles the push of the real-time `💸 New Merchant Payment Request` alert to the Slack support channel.
+
+# 🛒 Multi-Store Multi-Cart System
+
+## Overview
+
+A sophisticated multi-cart management system that allows users to maintain and manage separate shopping carts for different restaurants and shops simultaneously. The system intelligently handles transitions between food-based restaurant orders and inventory-based shop orders with a unified, polished interface.
+
+## Key Features
+
+1. **Unified Tabbed Interface**: Seamlessly switch between active restaurant carts and shop carts without losing progress.
+2. **Shop vs. Restaurant Separation**:
+   - **Food Carts**: Real-time state management via `FoodCartContext` for restaurant-specific items.
+   - **Shop Carts**: Persistent server-side carts fetched via `/api/carts` for general grocery and retail shops.
+3. **Intelligent Auto-Rotation**: After checking out from one store, the system automatically transitions the user to the next available cart (Restaurant first, then Shops).
+4. **Local Data Caching**: Uses a sophisticated caching layer to store cart totals and units, preventing layout shifts and redundant API calls during tab switching.
+5. **Real-Time Event Synchronization**: Utilizes custom `cartChanged` DOM events to keep the UI in sync after checkout completions or manual removals.
+6. **Premium Mobile UX**: Features a responsive bottom-bar checkout summary and a floating "My Cart" header with integrated navigation.
+
+## Architecture & Integration
+
+### Data Flow
+
+```mermaid
+graph TD
+    A[Cart Main Page] --> B{Cart Type}
+    B -- Restaurant --> C[FoodCartContext]
+    B -- Shop --> D[/api/carts API]
+    C --> E[ItemCartTable]
+    D --> E
+    E --> F[CheckoutItems Component]
+    F --> G[Order Finalization]
+    G -- Success --> H[Auto-Switch Next Tab]
+    G -- Event --> I[Window: cartChanged]
+    I --> J[Global UI Update]
+```
+
+### Key Components
+
+- **`ItemCartTable`**: The core display engine for cart contents, handling quantity adjustments and item removals.
+- **`CheckoutItems`**: A floating summary component that calculates subtotal, delivery fees, and handles the transition to the payment modal.
+- **`CartLoadingSkeleton`**: Custom-built animation layers for cards, tables, and checkout summaries to ensure a smooth perceived performance.
+
+## API & State Management
+
+### Shop Cart Persistence
+Shop carts are synchronized with the server to ensure items remain in the cart across sessions.
+- **Fetch**: `GET /api/carts`
+- **Updates**: Triggered via `ItemCartTable` callbacks (`handleTotalChange`, `handleUnitsChange`).
+
+### Event System
+The system relies on a custom event-driven architecture to handle cross-context updates:
+```typescript
+window.dispatchEvent(new CustomEvent("cartChanged", { 
+  detail: { 
+    refetch: true, 
+    shop_id: "optional-uuid" 
+  } 
+}));
+```
+
+## Performance Optimizations
+
+1. **Memoized Totals**: Uses `useMemo` to calculate aggregate item counts across all cart types (Food + Shop).
+2. **State Decoupling**: Prevents circular dependencies by using `useRef` for tracking intermediate totals before committing to state.
+3. **Delayed Mounting**: Ensures that the checkout summary remains mounted during the 2-3 second finalization/redirect window to prevent "popping" effects.
+
+## Usage & Development
+
+### Adding a new Cart Type
+To support a new category (e.g., Pharmacy), extend the `ShopCart` interface and ensure the `/api/carts` endpoint returns the appropriate type discriminator.
+
+### Customizing Skeletons
+Modify `RestaurantSelectionSkeleton` or `CheckoutSkeleton` in `pages/Cart/index.tsx` to adjust the loading visuals for new layouts.
