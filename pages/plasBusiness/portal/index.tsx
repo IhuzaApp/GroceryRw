@@ -12,6 +12,9 @@ import {
   MessageSquare,
   Star,
   Store,
+  RotateCcw,
+  PlusCircle,
+  History
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -364,6 +367,12 @@ function BuyerDashboardContent({
                 shortLabel: "Contracts",
                 icon: FileText,
               },
+              {
+                id: "second-hand",
+                label: "Second Hand",
+                shortLabel: "Pre-owned",
+                icon: RotateCcw,
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -470,6 +479,13 @@ function BuyerDashboardContent({
             onMessageSupplier={handleMessageContractSupplier}
           />
         )}
+
+        {activeTab === "second-hand" && (
+          <SecondHandManagement 
+            businessAccount={businessAccount} 
+            theme={theme}
+          />
+        )}
       </div>
 
       <QuoteDetailsModal
@@ -497,6 +513,103 @@ function BuyerDashboardContent({
         contractId={selectedContractId}
         businessAccount={businessAccount}
       />
+    </div>
+  );
+}
+
+function SecondHandManagement({ businessAccount, theme }: any) {
+  const [view, setView] = useState<'inventory' | 'orders'>('inventory');
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Dummy Data
+  const dummyItems = [
+    { id: 1, name: "Office Desk", price: "45,000", status: "Active", stock: 2, image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?q=80&w=200" },
+    { id: 2, name: "Dell Monitor 24\"", price: "85,000", status: "Sold", stock: 0, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=200" },
+    { id: 3, name: "Ergonomic Chair", price: "120,000", status: "Active", stock: 5, image: "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?q=80&w=200" },
+  ];
+
+  const dummyOrders = [
+    { id: "SH-1024", customer: "John Baguma", item: "Office Desk", amount: "45,000", status: "Pending", date: "24 Oct 2026" },
+    { id: "SH-1025", customer: "Sarah Keza", item: "Ergonomic Chair", amount: "240,000", status: "Delivered", date: "22 Oct 2026" },
+  ];
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black font-outfit">Second Hand Items</h2>
+          <p className="text-gray-500 font-medium">Manage your pre-owned assets and sales</p>
+        </div>
+        <button 
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 rounded-2xl bg-green-500 px-6 py-3 font-black text-white shadow-xl shadow-green-500/20 hover:scale-105 transition-all"
+        >
+          <PlusCircle className="h-5 w-5" />
+          List New Item
+        </button>
+      </div>
+
+      {/* Internal Tabs */}
+      <div className="flex gap-4 border-b border-gray-200/10 dark:border-white/5">
+        <button 
+          onClick={() => setView('inventory')}
+          className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${view === 'inventory' ? 'border-b-2 border-green-500 text-green-500' : 'text-gray-500'}`}
+        >
+          Inventory
+        </button>
+        <button 
+          onClick={() => setView('orders')}
+          className={`pb-3 text-sm font-black uppercase tracking-widest transition-all ${view === 'orders' ? 'border-b-2 border-green-500 text-green-500' : 'text-gray-500'}`}
+        >
+          Sales Orders
+        </button>
+      </div>
+
+      {view === 'inventory' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {dummyItems.map(item => (
+            <div key={item.id} className={`rounded-[2rem] border p-4 transition-all hover:shadow-xl ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-white border-gray-100 shadow-sm'}`}>
+              <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5 relative">
+                <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
+                <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.status === 'Active' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                  {item.status}
+                </div>
+              </div>
+              <h4 className={`text-lg font-black font-outfit mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{item.name}</h4>
+              <p className="text-green-500 font-black text-sm mb-4">RWF {item.price}</p>
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200/10 dark:border-white/5">
+                <span className="text-[10px] font-black text-gray-400 uppercase">Stock: {item.stock}</span>
+                <div className="flex gap-2">
+                  <button className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-500 hover:text-green-500 transition-colors"><FileText className="h-4 w-4" /></button>
+                  <button className="p-2 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-500 hover:text-red-500 transition-colors"><PlusCircle className="h-4 w-4 rotate-45" /></button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {dummyOrders.map(order => (
+            <div key={order.id} className={`flex items-center justify-between rounded-[2rem] border p-6 transition-all hover:shadow-lg ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-white border-gray-100 shadow-sm'}`}>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+                  <History className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className={`font-black font-outfit text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{order.item}</h4>
+                  <p className="text-xs font-medium text-gray-500">Ordered by {order.customer} • {order.date}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-black text-green-500 mb-1">RWF {order.amount}</p>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${order.status === 'Pending' ? 'bg-orange-500/10 text-orange-500' : 'bg-green-500/10 text-green-500'}`}>
+                  {order.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
