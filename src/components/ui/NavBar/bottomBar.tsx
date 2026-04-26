@@ -359,7 +359,8 @@ export default function BottomBar() {
         router.pathname !== "/stores/[id]" &&
         router.pathname !== "/stores/[id]/checkout" &&
         router.pathname !== "/plasBusiness/store/[storeId]" &&
-        !router.pathname.startsWith("/Cars") && (
+        !router.pathname.startsWith("/Cars") &&
+        !router.pathname.startsWith("/Pets") && (
           <div className="notranslate fixed bottom-24 right-4 z-50 md:hidden">
             <Link href="/Cart" passHref>
               <div className="relative flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">
@@ -427,8 +428,8 @@ export default function BottomBar() {
         <div className="notranslate fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
           {open && router.pathname !== "/Myprofile/become-shopper" && (
             <div className="mb-2 flex flex-col items-end gap-2">
-              {/* AI Support - Only show for non-guest users */}
-              {session?.user && !isGuest && (
+          {/* AI Support - Only show for non-guest users and hide on Pets page */}
+          {session?.user && !isGuest && !router.pathname.startsWith("/Pets") && (
                 <DesktopActionButton
                   icon={
                     <svg
@@ -728,7 +729,9 @@ export default function BottomBar() {
           <NavItem
             href="/Cars"
             icon={
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white shadow-md">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-all ${
+                router.pathname.startsWith("/Cars") ? "bg-green-500 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400"
+              }`}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M3 8L5.72187 10.2682C5.90158 10.418 6.12811 10.5 6.36205 10.5H17.6379C17.8719 10.5 18.0984 10.418 18.2781 10.2682L21 8M6.5 14H6.51M17.5 14H17.51M8.16065 4.5H15.8394C16.5571 4.5 17.2198 4.88457 17.5758 5.50772L20.473 10.5777C20.8183 11.1821 21 11.8661 21 12.5623V18.5C21 19.0523 20.5523 19.5 20 19.5H19C18.4477 19.5 18 19.0523 18 18.5V17.5H6V18.5C6 19.0523 5.55228 19.5 5 19.5H4C3.44772 19.5 3 19.0523 3 18.5V12.5623C3 11.8661 3.18166 11.1821 3.52703 10.5777L6.42416 5.50772C6.78024 4.88457 7.44293 4.5 8.16065 4.5ZM7 14C7 14.2761 6.77614 14.5 6.5 14.5C6.22386 14.5 6 14.2761 6 14C6 13.7239 6.22386 13.5 6.5 13.5C6.77614 13.5 7 13.7239 7 14ZM18 14C18 14.2761 17.7761 14.5 17.5 14.5C17.2239 14.5 17 14.2761 17 14C17 13.7239 17.2239 13.5 17.5 13.5C17.7761 13.5 18 13.7239 18 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -780,61 +783,24 @@ export default function BottomBar() {
             </div>
           </div>
 
-          {/* Orders - Fourth icon - Show for all signed in users including guests */}
+          {/* Pets - Fourth icon - Show for all signed in users including guests */}
           <NavItem
-            href="/CurrentPendingOrders"
+            href="/Pets"
             icon={
-              <div className="relative inline-block">
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-all hover:scale-110 active:scale-95 ${
+                router.pathname.startsWith("/Pets") ? "bg-green-500 text-white" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400"
+              }`}>
+                <svg width="24px" height="24px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
+                  <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
                   <g id="SVGRepo_iconCarrier">
-                    <path
-                      d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    ></path>
-                    <path
-                      d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    ></path>
-                    <path
-                      d="M11 10.8L12.1429 12L15 9"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                    <path
-                      d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>
+                    <path d="M792.5 558.4c-46.8-27-44-118.7-14-170.7 26.9-46.6 86.5-62.6 133.1-35.7s62.6 86.5 35.7 133.1c-30.1 52.1-108 100.4-154.8 73.3zM623.4 390c-60.7-16.3-86.1-124.4-67.4-194 16.5-61.5 79.7-98.1 141.3-81.6 61.5 16.5 98.1 79.7 81.6 141.3-18.7 69.6-94.8 150.6-155.5 134.3zM233.5 558.7c-46.9 27.1-125.1-21.3-155.2-73.4-27-46.7-11-106.4 35.8-133.4 46.7-27 106.5-11 133.4 35.7 30 52.2 32.9 144-14 171.1zM374.6 390c-60.7 16.3-136.8-64.7-155.4-134.3-16.5-61.5 20-124.8 81.6-141.3S425.6 134.4 442.1 196c18.6 69.6-6.8 177.7-67.5 194zM513 436.3c111.7 0 279.9 170.1 279.9 307.6 0 91.3-28.3 143.3-79.1 161.4-17.5 6.2-32 7.4-54.3 6.7-4.4-0.1-5.2-0.2-6.5-0.2-11.7 0-23.4-3.8-39.7-11.2-5.4-2.5-11.1-5.3-19.2-9.4 5.8 2.9-15.2-7.7-20.1-10.1-16.3-8.1-28.8-13.7-40.5-17.8-9-3.2-17.2-5.3-24.5-6.3h8c-7.3 1.1-15.4 3.2-24.5 6.4-11.8 4.2-24.2 9.7-40.5 17.9-4.9 2.4-25.8 13.1-20.1 10.2-8.1 4.1-13.8 6.9-19.2 9.4-16.2 7.5-28 11.3-39.7 11.3-1.3 0-2.1 0-6.5 0.2-22.3 0.7-36.8-0.5-54.3-6.7-50.8-18.1-79.1-70.1-79.1-161.4 0-137.5 168.2-308 279.9-308z" fill={router.pathname.startsWith("/Pets") ? "#FFFFFF" : "#cccccc"}></path>
+                    <path d="M823.5 509.9c11.9 6.9 61.8-24 78.4-52.8 11.5-19.8 4.7-45.2-15.2-56.7-19.8-11.5-45.2-4.7-56.7 15.2-16.6 28.9-18.4 87.5-6.5 94.3zM637.9 335.9c21.7 5.8 75.1-51 86.9-94.7 8.5-31.7-10.3-64.2-42-72.7s-64.2 10.3-72.7 42c-11.8 43.7 6 119.6 27.8 125.4zM202.9 510.2c12-6.9 10.2-65.7-6.5-94.6-11.5-19.9-37-26.7-56.9-15.2s-26.7 37-15.2 56.9c16.6 28.9 66.6 59.8 78.6 52.9zM360.1 335.9c21.7-5.8 39.6-81.8 27.9-125.5-8.5-31.7-41-50.5-72.7-42s-50.5 41-42 72.7c11.7 43.8 65.1 100.6 86.8 94.8zM513 492.3c-80.6 0-223.9 145.2-223.9 251.9 0 69.7 16.2 99.5 41.8 108.7 9.2 3.3 18.1 4 33.9 3.5 5.2-0.2 6.1-0.2 8.2-0.2 3.9 0 3.7 0.1 54-25 18.2-9.1 32.5-15.5 46.9-20.6 12.3-4.3 23.9-7.4 35.1-9l4-0.6 4 0.6c11.2 1.6 22.7 4.6 35 8.9 14.4 5 28.7 11.4 46.9 20.5 50.3 25 50.1 24.9 54 24.9 2.2 0 3 0 8.2 0.2 15.8 0.5 24.7-0.2 33.9-3.5 25.6-9.1 41.8-39 41.8-108.7 0.1-106.7-143.1-251.6-223.8-251.6z" fill={router.pathname.startsWith("/Pets") ? "#FFFFFF" : "#FFFFFF"}></path>
                   </g>
                 </svg>
-                {pendingOrdersCount > 0 && (
-                  <span
-                    className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600"
-                    aria-label={`${pendingOrdersCount} pending orders`}
-                  >
-                    {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
-                  </span>
-                )}
               </div>
             }
-            label="My Orders"
+            label="Pets"
           />
 
           {/* More Menu */}
@@ -955,6 +921,65 @@ export default function BottomBar() {
                         </div>
                       </button>
                     </div>
+                  )}
+
+                  {/* Orders - Moved from bottom bar */}
+                  {session?.user && (
+                    <MoreMenuItem
+                      icon={
+                        <div className="relative inline-block">
+                          <svg
+                            width="20px"
+                            height="20px"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                            <g
+                              id="SVGRepo_tracerCarrier"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            ></g>
+                            <g id="SVGRepo_iconCarrier">
+                              <path
+                                d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              ></path>
+                              <path
+                                d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                              ></path>
+                              <path
+                                d="M11 10.8L12.1429 12L15 9"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              ></path>
+                              <path
+                                d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                              ></path>
+                            </g>
+                          </svg>
+                          {pendingOrdersCount > 0 && (
+                            <span
+                              className="absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg"
+                            >
+                              {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
+                            </span>
+                          )}
+                        </div>
+                      }
+                      label="My Orders"
+                      href="/CurrentPendingOrders"
+                      onClick={() => setMoreOpen(false)}
+                    />
                   )}
 
                   {/* Plas Package - Only visible when logged in */}
