@@ -107,46 +107,36 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
 
   if (isSuccess) {
     return (
-      <div
-        className={`fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 duration-500 animate-in fade-in ${
-          theme === "dark" ? "bg-[#000]" : "bg-white"
-        }`}
-      >
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 duration-500 animate-in fade-in bg-black/60 backdrop-blur-md">
         <div className="w-full max-w-sm text-center">
           <div className="mb-10 flex justify-center">
             <div className="relative">
-              <div className="absolute inset-0 scale-[2.5] animate-pulse rounded-full bg-green-500/20 blur-3xl" />
-              <CheckCircle2 className="relative z-10 h-24 w-24 text-green-500" />
+              <div className="absolute inset-0 scale-[1.5] animate-pulse rounded-full bg-white/20 blur-2xl" />
+              <img
+                src="/assets/logos/PlasLogoPNG.png"
+                alt="Plas Logo"
+                className="relative z-10 h-20 sm:h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-pulse"
+              />
             </div>
           </div>
 
-          <h2
-            className={`mb-2 text-4xl font-black tracking-tight ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
-          >
+          <h2 className="mb-2 text-4xl font-black tracking-tight text-white drop-shadow-md">
             Welcome Back!
           </h2>
-          <p className="mb-12 font-medium text-gray-500">
+          <p className="mb-12 font-medium text-gray-200 drop-shadow-sm">
             Signing you in. Preparing your dashboard...
           </p>
 
           <div className="space-y-4">
-            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/20">
               <div
-                className="absolute inset-y-0 left-0 bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)] transition-all duration-300 ease-out"
+                className="absolute inset-y-0 left-0 bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-sm font-bold">
-              <span className="text-green-500">
-                {progress < 100 ? "Security Check..." : "Ready!"}
-              </span>
-              <span
-                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
-              >
-                {progress}%
-              </span>
+            <div className="flex items-center justify-between text-sm font-bold text-white drop-shadow-sm">
+              <span>{progress < 100 ? "Security Check..." : "Ready!"}</span>
+              <span>{progress}%</span>
             </div>
           </div>
         </div>
@@ -187,7 +177,7 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
             <input
               id="identifier"
               type="text"
-              placeholder="Enter your email, username, or phone number"
+              placeholder="Email, username, or phone"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className="block w-full rounded-xl border border-gray-300 py-3 pl-10 pr-3 text-gray-900 placeholder-gray-500 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400"

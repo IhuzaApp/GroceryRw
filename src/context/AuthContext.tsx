@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import { useSession, signOut, getSession } from "next-auth/react";
 import { refreshSession } from "../lib/sessionRefresh";
 import apolloClient from "../lib/apolloClient";
+import Image from "next/image";
 // import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
 
 interface User {
@@ -48,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     if (status === "loading") {
@@ -131,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
+    setIsLoggingOut(true);
     // logAuth('AuthContext', 'logout_started', {
     //   currentState: { isLoggedIn, role, hasUser: !!user },
     //   timestamp: Date.now(),
@@ -254,6 +257,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }}
     >
       {children}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
+          {/* Full Screen Background Image */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="/assets/images/auth/login_bg.png"
+              alt="Logging out..."
+              fill
+              className="object-cover"
+              quality={100}
+              priority
+            />
+            {/* Gradients */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-900/60 via-black/40 to-blue-900/40"></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]"></div>
+          </div>
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <img
+              src="/assets/logos/PlasLogoPNG.png"
+              alt="Plas Logo"
+              className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] animate-pulse mb-8"
+            />
+            <h2 className="text-3xl font-bold text-white drop-shadow-md mb-2">Logging Out...</h2>
+            <p className="text-gray-200">See you soon!</p>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
