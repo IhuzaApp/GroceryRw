@@ -27,14 +27,13 @@ export default function AboutFooter() {
             {/* Logo */}
             <div className="flex items-center gap-2">
               <Image
-                src="/assets/logos/PlasIcon.png"
+                src="/assets/logos/PlasLogoPNG.png"
                 alt="Plas Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8 transition-all"
+                width={120}
+                height={40}
+                className="h-5 sm:h-6 w-auto object-contain transition-all"
                 style={{ filter: "brightness(0) invert(1)" }}
               />
-              <span className="text-2xl font-bold text-white">Plas</span>
             </div>
             {/* Slogan */}
             <p className="font-bold text-white">Let&apos;s do it together</p>

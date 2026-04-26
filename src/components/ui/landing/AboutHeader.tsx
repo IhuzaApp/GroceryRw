@@ -43,19 +43,14 @@ export default function AboutHeader({
           {/* Logo */}
           <Link href="/" className="flex cursor-pointer items-center gap-2">
             <Image
-              src="/assets/logos/PlasIcon.png"
+              src="/assets/logos/PlasLogoPNG.png"
               alt="Plas Logo"
-              width={40}
+              width={120}
               height={40}
-              className="h-10 w-10"
-            />
-            <span
-              className={`text-2xl font-bold transition-colors ${
-                isScrolled ? "text-[#022C22]" : "text-white"
+              className={`h-5 sm:h-6 w-auto object-contain transition-all ${
+                !isScrolled ? "brightness-0 invert" : ""
               }`}
-            >
-              Plas
-            </span>
+            />
           </Link>
 
           {/* Navigation Links */}

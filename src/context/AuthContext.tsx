@@ -1,7 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
+import { useRouter } from "next/router";
 import { useSession, signOut, getSession } from "next-auth/react";
 import { refreshSession } from "../lib/sessionRefresh";
 import apolloClient from "../lib/apolloClient";
+import Image from "next/image";
 // import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
 
 interface User {
@@ -48,6 +50,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (router.pathname.startsWith("/Auth/")) {
+      setIsLoggingOut(false);
+    }
+  }, [router.pathname]);
 
   useEffect(() => {
     if (status === "loading") {
@@ -131,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
+    setIsLoggingOut(true);
     // logAuth('AuthContext', 'logout_started', {
     //   currentState: { isLoggedIn, role, hasUser: !!user },
     //   timestamp: Date.now(),
@@ -144,24 +155,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 2. Clear Client Caches
       try {
-        await apolloClient.clearStore();
-        await apolloClient.resetStore();
+        apolloClient.clearStore().catch(() => {});
       } catch (e) {
         /* ignore */
       }
       localStorage.clear();
       sessionStorage.clear();
 
-      // 3. Trigger server-side logout (background)
-      fetch("/api/logout", { method: "POST" }).catch(() => {});
+      // 3. Trigger server-side logout to clear cookies
+      await fetch("/api/logout", { method: "POST" }).catch(() => {});
 
-      // 4. NextAuth SignOut (Handles cookies and redirect)
-      await signOut({
-        callbackUrl: "/Auth/Login",
-        redirect: true,
-      });
-
-      // Fallback redirect if signOut doesn't trigger it
+      // 4. Redirect to login page
       if (typeof window !== "undefined") {
         window.location.replace("/Auth/Login");
       }
@@ -254,6 +258,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }}
     >
       {children}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
+          {/* Full Screen Background Image */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="/assets/images/auth/login_bg.png"
+              alt="Logging out..."
+              fill
+              className="object-cover"
+              quality={100}
+              priority
+            />
+            {/* Gradients */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-900/60 via-black/40 to-blue-900/40"></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]"></div>
+          </div>
+
+          <div className="relative z-10 flex flex-col items-center">
+            <img
+              src="/assets/logos/PlasLogoPNG.png"
+              alt="Plas Logo"
+              className="mb-8 h-24 w-auto animate-pulse object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] sm:h-28"
+            />
+            <h2 className="mb-2 text-3xl font-bold text-white drop-shadow-md">
+              Logging Out...
+            </h2>
+            <p className="text-gray-200">See you soon!</p>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
