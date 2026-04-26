@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useAuth } from "../../../../context/AuthContext";
 import {
@@ -28,6 +28,14 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
   // capture redirect param if any
   const { redirect } = router.query as { redirect?: string };
   const { login } = useAuth();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      setIsSuccess(false);
+      setProgress(0);
+    }
+  }, [status]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

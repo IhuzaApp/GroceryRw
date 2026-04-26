@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
+import { useRouter } from "next/router";
 import { useSession, signOut, getSession } from "next-auth/react";
 import { refreshSession } from "../lib/sessionRefresh";
 import apolloClient from "../lib/apolloClient";
@@ -50,6 +51,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (router.pathname.startsWith("/Auth/")) {
+      setIsLoggingOut(false);
+    }
+  }, [router.pathname]);
 
   useEffect(() => {
     if (status === "loading") {
@@ -147,24 +155,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 2. Clear Client Caches
       try {
-        await apolloClient.clearStore();
-        await apolloClient.resetStore();
+        apolloClient.clearStore().catch(() => {});
       } catch (e) {
         /* ignore */
       }
       localStorage.clear();
       sessionStorage.clear();
 
-      // 3. Trigger server-side logout (background)
-      fetch("/api/logout", { method: "POST" }).catch(() => {});
+      // 3. Trigger server-side logout to clear cookies
+      await fetch("/api/logout", { method: "POST" }).catch(() => {});
 
-      // 4. NextAuth SignOut (Handles cookies and redirect)
-      await signOut({
-        callbackUrl: "/Auth/Login",
-        redirect: true,
-      });
-
-      // Fallback redirect if signOut doesn't trigger it
+      // 4. Redirect to login page
       if (typeof window !== "undefined") {
         window.location.replace("/Auth/Login");
       }

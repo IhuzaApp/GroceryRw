@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]";
 import Link from "next/link";
 import Image from "next/image";
 import "rsuite/dist/rsuite.min.css";
@@ -96,4 +98,21 @@ export default function RegisterPage() {
       </div>
     </ThemeProvider>
   );
+}
+
+export async function getServerSideProps(context: any) {
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 }

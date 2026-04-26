@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import {
   CheckCircle2,
   AlertCircle,
@@ -50,6 +50,14 @@ export default function UserRegistration({
   const router = useRouter();
   const { theme } = useTheme();
   const { redirect } = router.query as { redirect?: string };
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      setIsSuccess(false);
+      setProgress(0);
+    }
+  }, [status]);
 
   const handleNextStep = () => {
     setError("");

@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]";
 import { useRouter } from "next/router";
 import {
   clearRoleSwitchFlag,
@@ -111,4 +113,21 @@ export default function LoginPage() {
       </div>
     </ThemeProvider>
   );
+}
+
+export async function getServerSideProps(context: any) {
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 }
