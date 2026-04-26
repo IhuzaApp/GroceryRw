@@ -32,6 +32,7 @@ import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import PetDashboardHeader from "./PetDashboardHeader";
 import Image from "next/image";
+import AddPetModal from "./modals/AddPetModal";
 
 export default function PetBusinessDashboard() {
   const { theme } = useTheme();
@@ -40,6 +41,7 @@ export default function PetBusinessDashboard() {
   const [walletBalance] = useState(3450000); // 3.4M RWF
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleToggleStatus = (id: string) => {
     setPets(prev => prev.map(pet => 
@@ -58,7 +60,7 @@ export default function PetBusinessDashboard() {
       <PetDashboardHeader 
         title="Partner Dashboard" 
         subtitle="Welcome back, Pet Haven Sanctuary"
-        onAction={() => toast.success("Opening add pet modal...")}
+        onAction={() => setIsAddModalOpen(true)}
         actionLabel="Add New Pet"
         theme={theme}
       />
@@ -142,6 +144,16 @@ export default function PetBusinessDashboard() {
           theme={theme} 
         />
       )}
+
+      <AddPetModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        theme={theme}
+        onSubmit={(data) => {
+          console.log("New pet data:", data);
+          toast.success(`${data.name} has been listed successfully!`);
+        }}
+      />
     </div>
   );
 }
