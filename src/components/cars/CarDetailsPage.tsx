@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,12 +24,19 @@ import {
   Minus,
   Plus,
   UserCheck,
-  AlertCircle
+  AlertCircle,
+  Camera,
+  Wallet,
+  Phone,
+  CheckCircle2,
+  Loader2,
+  Scan
 } from "lucide-react";
 import { Car } from "../../constants/dummyCars";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import CameraCapture from "../ui/CameraCapture";
 
 export default function CarDetailsPage({ car }: { car: Car }) {
   const router = useRouter();
@@ -276,13 +283,71 @@ function BookingModal({ car, onClose, theme, onSuccess }: { car: Car, onClose: (
   const [guests, setGuests] = useState(1);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  
+  // Payment & Verification States
+  const [paymentMethod, setPaymentMethod] = useState<'momo' | 'card' | 'wallet'>('momo');
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [licensePhoto, setLicensePhoto] = useState<string | null>(null);
+  const [fetchingData, setFetchingData] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (step === 2) {
+      fetchUserData();
+    }
+  }, [step]);
+
+  const fetchUserData = async () => {
+    setFetchingData(true);
+    try {
+      // 1. Fetch User Phone Number (from payment methods)
+      const paymentResponse = await fetch("/api/queries/payment-methods");
+      const paymentData = await paymentResponse.json();
+      const momoMethod = paymentData.paymentMethods?.find((m: any) => m.method.toLowerCase() === "mtn momo");
+      if (momoMethod?.number) {
+        setPhoneNumber(momoMethod.number);
+      }
+
+      // 2. Fetch Wallet Balance
+      const walletResponse = await fetch("/api/queries/personal-wallet-balance");
+      const walletData = await walletResponse.json();
+      if (walletData.wallet) {
+        setWalletBalance(parseFloat(walletData.wallet.balance || "0"));
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setFetchingData(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLicensePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const calculateDays = () => {
     if (!startDate || !endDate) return 0;
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+    
+    // Set both dates to midnight for accurate day difference calculation
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Rental is inclusive of both days (e.g., 8th to 9th is 2 days)
+    return diffDays + 1;
   };
 
   const days = calculateDays();
@@ -303,6 +368,9 @@ function BookingModal({ car, onClose, theme, onSuccess }: { car: Car, onClose: (
         guests,
         total: totalUpfront,
         securityDeposit: deposit,
+        paymentMethod,
+        phoneNumber,
+        licensePhoto,
         bookedAt: new Date().toISOString()
       });
       localStorage.setItem("car_bookings", JSON.stringify(bookings));
@@ -406,25 +474,111 @@ function BookingModal({ car, onClose, theme, onSuccess }: { car: Car, onClose: (
               )}
             </div>
           ) : (
-            <div className="space-y-6 md:space-y-8 animate-in slide-in-from-right-4 duration-300">
-              <div className="flex items-center gap-4 text-green-500">
-                <CreditCard className="h-7 w-7 md:h-8 md:w-8" />
-                <h3 className="text-xl md:text-2xl font-bold font-outfit">Payment Confirmation</h3>
-              </div>
-
-              <div className="space-y-3 md:space-y-4">
-                <PaymentOption icon="💳" label="Visa / Mastercard" sub="Ending in •••• 4242" selected theme={theme} />
-                <PaymentOption icon="📱" label="Mobile Money" sub="Direct payment via PINDO" theme={theme} />
-              </div>
-
+            <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+              {/* Driving License Verification Section */}
               {car.driverOption === 'none' && (
-                <div className={`rounded-[2rem] p-5 md:p-6 text-xs md:text-sm font-medium leading-relaxed ${theme === 'dark' ? 'bg-white/5 text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
-                  <div className="flex gap-3">
-                    <Info className="h-4 w-4 md:h-5 md:w-5 shrink-0 text-blue-500" />
-                    <p>A hold of <span className="font-bold text-gray-900 dark:text-white">{formatCurrencySync(car.securityDeposit)}</span> will be placed for the security deposit. This will be automatically released within 24h after the vehicle is returned in its original condition.</p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <SectionTitle title="Verification Required" noMargin />
+                    {licensePhoto && <span className="flex items-center gap-1 text-[10px] font-bold text-green-500 uppercase"><CheckCircle2 className="h-3 w-3" /> Captured</span>}
                   </div>
+                  
+                  <div 
+                    onClick={() => setShowCamera(true)}
+                    className={`relative flex flex-col items-center justify-center gap-3 rounded-[2.5rem] border-2 border-dashed p-8 transition-all cursor-pointer ${
+                      licensePhoto 
+                        ? 'border-green-500 bg-green-50/50 dark:bg-green-500/5' 
+                        : 'border-gray-200 bg-gray-50/50 dark:border-white/10 dark:bg-white/[0.02] hover:bg-gray-100 dark:hover:bg-white/5'
+                    }`}
+                  >
+                    {licensePhoto ? (
+                      <div className="relative h-32 w-full overflow-hidden rounded-2xl shadow-xl">
+                        <img src={licensePhoto} alt="License" className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                           <Camera className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+                          <Scan className="h-8 w-8" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold font-outfit">Capture Driving License</p>
+                          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Required for self-drive rentals</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <CameraCapture 
+                    isOpen={showCamera} 
+                    onClose={() => setShowCamera(false)} 
+                    onCapture={(img) => setLicensePhoto(img)} 
+                    title="Capture Driving License"
+                  />
                 </div>
               )}
+
+              {/* Payment Section */}
+              <div className="space-y-4">
+                <SectionTitle title="Payment Method" noMargin />
+                <div className="space-y-3">
+                  <PaymentOption 
+                    icon={<Wallet className="h-6 w-6 text-orange-500" />} 
+                    label="Plas Wallet" 
+                    sub={fetchingData ? "Checking balance..." : `Balance: ${formatCurrencySync(walletBalance)}`}
+                    selected={paymentMethod === 'wallet'}
+                    onClick={() => setPaymentMethod('wallet')}
+                    theme={theme}
+                    disabled={!fetchingData && walletBalance < totalUpfront}
+                  />
+                  <PaymentOption 
+                    icon={<div className="h-8 w-8 flex items-center justify-center rounded-full bg-[#ffcb05] font-black text-[#004f71] text-[10px]">MTN</div>} 
+                    label="Mobile Money" 
+                    sub={phoneNumber ? phoneNumber : "Enter phone number"}
+                    selected={paymentMethod === 'momo'}
+                    onClick={() => setPaymentMethod('momo')}
+                    theme={theme}
+                  />
+                  <PaymentOption 
+                    icon={<CreditCard className="h-6 w-6 text-blue-500" />} 
+                    label="Debit / Credit Card" 
+                    sub="Pay with Visa or Mastercard"
+                    selected={paymentMethod === 'card'}
+                    onClick={() => setPaymentMethod('card')}
+                    theme={theme}
+                  />
+                </div>
+
+                {paymentMethod === 'momo' && (
+                  <div className="animate-in zoom-in-95 duration-200">
+                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 font-outfit">MoMo Phone Number</label>
+                    <div className={`flex items-center gap-3 rounded-[1.5rem] border p-4 ${theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`}>
+                      <Phone className="h-5 w-5 text-gray-400" />
+                      <input 
+                        type="tel" 
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="078 XXX XXXX"
+                        className="flex-1 bg-transparent font-bold outline-none placeholder:text-gray-300"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Final Summary Card */}
+              <div className={`rounded-[2rem] p-6 space-y-4 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-50'}`}>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Final Total</span>
+                  <span className="text-2xl font-bold text-green-500 font-outfit">{formatCurrencySync(totalUpfront)}</span>
+                </div>
+                <div className="flex gap-3 text-[10px] font-medium leading-relaxed text-gray-400">
+                   <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
+                   <p>Your payment is processed securely. Funds are held in escrow until the vehicle is handed over to you.</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -448,14 +602,15 @@ function BookingModal({ car, onClose, theme, onSuccess }: { car: Car, onClose: (
                   theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
-                Edit Trip
+                Back
               </button>
               <button 
                 onClick={handleBooking}
-                className="flex-[2] flex items-center justify-center gap-2 md:gap-3 rounded-[1.5rem] bg-green-500 py-5 text-lg md:text-xl font-bold text-white !text-white shadow-2xl shadow-green-500/30 transition-all hover:translate-y-[-2px] active:scale-95 font-outfit"
+                disabled={loading || (car.driverOption === 'none' && !licensePhoto) || (paymentMethod === 'momo' && !phoneNumber) || (paymentMethod === 'wallet' && walletBalance < totalUpfront)}
+                className="flex-[2] flex items-center justify-center gap-2 md:gap-3 rounded-[1.5rem] bg-green-500 py-5 text-lg md:text-xl font-bold text-white !text-white shadow-2xl shadow-green-500/30 transition-all hover:translate-y-[-2px] active:scale-95 disabled:opacity-50 disabled:pointer-events-none font-outfit"
               >
                 {loading ? (
-                  <div className="h-6 w-6 md:h-8 md:w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+                  <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" />
                 ) : (
                   <>Pay & Book Trip</>
                 )}
@@ -486,18 +641,27 @@ function DateInput({ label, value, onChange, theme }: any) {
   );
 }
 
-function PaymentOption({ icon, label, sub, selected, theme }: any) {
+function PaymentOption({ icon, label, sub, selected, onClick, theme, disabled }: any) {
   return (
-    <div className={`flex items-center justify-between rounded-[2rem] border p-4 md:p-6 cursor-pointer transition-all ${
-      selected 
-        ? 'border-green-500 bg-green-500/5 ring-4 ring-green-500/10' 
-        : theme === 'dark' ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-white shadow-sm'
-    }`}>
+    <div 
+      onClick={!disabled ? onClick : undefined}
+      className={`flex items-center justify-between rounded-[2rem] border p-4 md:p-6 cursor-pointer transition-all ${
+        selected 
+          ? 'border-green-500 bg-green-500/5 ring-4 ring-green-500/10' 
+          : disabled 
+            ? 'opacity-40 cursor-not-allowed grayscale'
+            : theme === 'dark' ? 'border-white/10 bg-white/[0.02]' : 'border-gray-100 bg-white shadow-sm'
+      }`}
+    >
       <div className="flex items-center gap-3 md:gap-5">
-        <span className="text-2xl md:text-3xl filter grayscale-[0.5]">{icon}</span>
+        <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5">
+          {icon}
+        </div>
         <div>
           <h4 className="text-sm md:text-base font-bold font-outfit">{label}</h4>
-          <p className="text-[10px] md:text-xs font-medium text-gray-500 uppercase tracking-wide">{sub}</p>
+          <p className={`text-[10px] md:text-xs font-medium uppercase tracking-wide ${disabled ? 'text-red-400' : 'text-gray-500'}`}>
+            {disabled && !sub.includes("Checking") ? "Insufficient Balance" : sub}
+          </p>
         </div>
       </div>
       <div className={`h-5 w-5 md:h-6 md:w-6 rounded-full border-4 flex items-center justify-center transition-colors ${selected ? 'border-green-500 bg-green-500' : 'border-gray-300 dark:border-white/20'}`}>
