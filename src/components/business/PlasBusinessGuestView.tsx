@@ -81,9 +81,9 @@ export default function PlasBusinessGuestView({
         ></div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 lg:py-20 sm:px-6 lg:px-8">
         {/* Asymmetrical Hero Section */}
-        <div className="mb-12 lg:mb-24 flex flex-col gap-12 lg:flex-row lg:items-center">
+        <div className="mb-4 lg:mb-24 flex flex-col gap-12 lg:flex-row lg:items-center">
           <div className="hidden lg:block max-w-3xl flex-1 space-y-8">
             <div className="inline-flex items-center gap-3 rounded-full border border-green-500/20 bg-green-500/5 px-4 py-2 text-sm font-bold text-green-600 backdrop-blur-md dark:border-green-400/20 dark:bg-green-400/10 dark:text-green-400">
               <Sparkles className="h-4 w-4 animate-bounce" />
@@ -123,7 +123,7 @@ export default function PlasBusinessGuestView({
               </button>
 
               <button
-                onClick={() => router.push("/pos/register")}
+                onClick={() => window.open("/pos", "_blank")}
                 className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-8 py-4 font-bold text-[var(--text-primary)] transition-all hover:scale-105 hover:border-blue-500/30 hover:bg-blue-500/5 hover:shadow-xl active:scale-95"
               >
                 <CreditCard className="relative z-10 h-5 w-5 text-blue-500" />
@@ -201,7 +201,7 @@ export default function PlasBusinessGuestView({
         <div className="space-y-8 lg:space-y-12">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="space-y-3">
-              <h3 className="text-5xl font-black tracking-tighter text-[var(--text-primary)] sm:text-6xl lg:text-7xl">
+              <h3 className="text-3xl font-black tracking-tighter text-[var(--text-primary)] sm:text-6xl lg:text-7xl">
                 Market <span className="text-green-500">Explorer</span>
               </h3>
               <p className="max-w-md font-medium text-[var(--text-secondary)] opacity-60 text-lg leading-relaxed">
