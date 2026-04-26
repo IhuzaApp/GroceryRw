@@ -73,7 +73,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     : "bg-[#fafdfc]";
 
   const textColor = theme === "dark" ? "text-[#f0f9f6]" : "text-[#022c22]";
-  const secondaryTextColor = theme === "dark" ? "text-gray-400" : "text-gray-500";
+  const secondaryTextColor =
+    theme === "dark" ? "text-gray-400" : "text-gray-500";
 
   return (
     <div
@@ -107,13 +108,13 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         {/* Premium Logo Presentation - No Cards */}
         <div className="group relative mb-12">
           {/* Outer Glow */}
-          <div className="absolute inset-0 -z-10 animate-pulse scale-150 rounded-full bg-[#10b981]/20 blur-3xl dark:bg-[#10b981]/15" />
-          
+          <div className="absolute inset-0 -z-10 scale-150 animate-pulse rounded-full bg-[#10b981]/20 blur-3xl dark:bg-[#10b981]/15" />
+
           <div className="relative flex h-24 w-24 items-center justify-center transition-transform duration-700 hover:scale-110 sm:h-32 sm:w-32">
             <img
               src="/assets/logos/PlasIcon.png"
               alt="Plas Logo"
-              className="h-20 w-20 animate-float object-contain sm:h-28 sm:w-28"
+              className="animate-float h-20 w-20 object-contain sm:h-28 sm:w-28"
             />
           </div>
         </div>
@@ -121,16 +122,22 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         {/* Content Section */}
         <div className="max-w-sm space-y-6">
           <div className="space-y-2">
-            <h2 className={`font-['Poppins'] text-2xl font-bold tracking-tight ${textColor} sm:text-3xl`}>
+            <h2
+              className={`font-['Poppins'] text-2xl font-bold tracking-tight ${textColor} sm:text-3xl`}
+            >
               {isOverlay ? (
                 <span className="flex items-center justify-center gap-2">
                   Processing <span className="text-[#10b981]">Plas</span>
                 </span>
               ) : (
-                <>Welcome to <span className="text-[#10b981]">Plas</span></>
+                <>
+                  Welcome to <span className="text-[#10b981]">Plas</span>
+                </>
               )}
             </h2>
-            <p className={`min-h-[1.5rem] text-sm font-medium transition-all duration-500 ${secondaryTextColor} sm:text-base`}>
+            <p
+              className={`min-h-[1.5rem] text-sm font-medium transition-all duration-500 ${secondaryTextColor} sm:text-base`}
+            >
               {loadingMessage}
             </p>
           </div>
@@ -138,7 +145,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           {/* Modern Progress Tracking */}
           {showProgressBar && !isOverlay && (
             <div className="relative py-4">
-              <div className={`mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest ${textColor} opacity-60`}>
+              <div
+                className={`mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest ${textColor} opacity-60`}
+              >
                 <span>Optimization Status</span>
                 <span className="tabular-nums">{loadingProgress}%</span>
               </div>
@@ -177,7 +186,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           }
         }
         @keyframes float {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0);
           }
           50% {
@@ -193,4 +203,3 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
 };
 
 export default LoadingScreen;
-

@@ -274,14 +274,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             <div className="absolute inset-0 bg-gradient-to-br from-green-900/60 via-black/40 to-blue-900/40"></div>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]"></div>
           </div>
-          
+
           <div className="relative z-10 flex flex-col items-center">
             <img
               src="/assets/logos/PlasLogoPNG.png"
               alt="Plas Logo"
-              className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] animate-pulse mb-8"
+              className="mb-8 h-24 w-auto animate-pulse object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] sm:h-28"
             />
-            <h2 className="text-3xl font-bold text-white drop-shadow-md mb-2">Logging Out...</h2>
+            <h2 className="mb-2 text-3xl font-bold text-white drop-shadow-md">
+              Logging Out...
+            </h2>
             <p className="text-gray-200">See you soon!</p>
           </div>
         </div>

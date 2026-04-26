@@ -24,7 +24,7 @@ function ThemeAwareLogo() {
         alt="Plas Logo"
         width={200}
         height={90}
-        className={`h-16 sm:h-20 w-auto object-contain transition-all duration-200 ${
+        className={`h-16 w-auto object-contain transition-all duration-200 sm:h-20 ${
           theme === "dark" ? "brightness-0 invert" : ""
         }`}
         priority

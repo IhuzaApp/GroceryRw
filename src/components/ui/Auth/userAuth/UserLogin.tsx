@@ -115,7 +115,7 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
 
   if (isSuccess) {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 duration-500 animate-in fade-in bg-black/60 backdrop-blur-md">
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 p-6 backdrop-blur-md duration-500 animate-in fade-in">
         <div className="w-full max-w-sm text-center">
           <div className="mb-10 flex justify-center">
             <div className="relative">
@@ -123,7 +123,7 @@ export default function UserLogin({ onSuccess }: { onSuccess?: () => void }) {
               <img
                 src="/assets/logos/PlasLogoPNG.png"
                 alt="Plas Logo"
-                className="relative z-10 h-20 sm:h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-pulse"
+                className="relative z-10 h-20 w-auto animate-pulse object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] sm:h-24"
               />
             </div>
           </div>

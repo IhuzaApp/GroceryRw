@@ -180,7 +180,7 @@ export default function UserRegistration({
   }, [isSuccess]);
 
   return isSuccess ? (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 duration-500 animate-in fade-in bg-black/60 backdrop-blur-md">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 p-6 backdrop-blur-md duration-500 animate-in fade-in">
       <div className="w-full max-w-sm text-center">
         <div className="mb-10 flex justify-center">
           <div className="relative">
@@ -188,7 +188,7 @@ export default function UserRegistration({
             <img
               src="/assets/logos/PlasLogoPNG.png"
               alt="Plas Logo"
-              className="relative z-10 h-20 sm:h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-pulse"
+              className="relative z-10 h-20 w-auto animate-pulse object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] sm:h-24"
             />
           </div>
         </div>
@@ -233,9 +233,17 @@ export default function UserRegistration({
 
       {/* Progress Indicator */}
       {!isOtpSent && (
-        <div className="flex items-center justify-center space-x-2 mb-6">
-          <div className={`h-2 rounded-full flex-1 transition-colors duration-300 ${step >= 1 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
-          <div className={`h-2 rounded-full flex-1 transition-colors duration-300 ${step >= 2 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+        <div className="mb-6 flex items-center justify-center space-x-2">
+          <div
+            className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+              step >= 1 ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
+            }`}
+          ></div>
+          <div
+            className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+              step >= 2 ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
+            }`}
+          ></div>
         </div>
       )}
 
@@ -246,7 +254,7 @@ export default function UserRegistration({
         {!isOtpSent ? (
           <>
             {step === 1 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-4 duration-300 animate-in fade-in slide-in-from-right-4">
                 {/* Full Name Input */}
                 <div className="space-y-1">
                   <label
@@ -334,7 +342,7 @@ export default function UserRegistration({
                     <div className="w-full border-t border-gray-300 dark:border-gray-600" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500 dark:bg-[#171717] dark:text-gray-400 transition-colors">
+                    <span className="bg-white px-2 text-gray-500 transition-colors dark:bg-[#171717] dark:text-gray-400">
                       Or continue with
                     </span>
                   </div>
@@ -370,10 +378,15 @@ export default function UserRegistration({
                 {/* Apple Sign In Button */}
                 <button
                   type="button"
-                  onClick={() => signIn("apple", { callbackUrl: redirect || "/" })}
+                  onClick={() =>
+                    signIn("apple", { callbackUrl: redirect || "/" })
+                  }
                   className="mt-3 inline-flex w-full justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 dark:border-gray-600 dark:bg-black dark:text-gray-200 dark:hover:bg-gray-900 dark:focus:ring-offset-gray-800"
                 >
-                  <svg className="mr-2 h-5 w-5 fill-current" viewBox="0 0 384 512">
+                  <svg
+                    className="mr-2 h-5 w-5 fill-current"
+                    viewBox="0 0 384 512"
+                  >
                     <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.1-44.6-35.9-2.8-74.3 22.7-93.1 22.7-18.9 0-50.5-22.1-79.6-21.5-38.3.7-73.4 22.1-93.5 56.6-40.4 69.2-10.4 171.7 28.5 228.3 19 27.5 41.5 58.7 71.9 57.5 29.1-1.3 40.5-19.1 75.3-19.1 34.7 0 45.4 19.1 75.6 18.6 31.4-.5 50.8-30.2 69.6-57.5 21.6-31.4 30.6-61.9 31.1-63.5-.7-.3-59.2-22.6-58.8-92.7zM245.5 107.5c16.1-19.6 27-46.7 24-73.8-23.4 1-52.1 15.6-69.2 35.2-13.8 15.6-26.7 43.6-22.9 69.7 26.2 2 52.1-11.5 68.1-31.1z" />
                   </svg>
                   Sign up with Apple
@@ -382,7 +395,7 @@ export default function UserRegistration({
             )}
 
             {step === 2 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="space-y-4 duration-300 animate-in fade-in slide-in-from-right-4">
                 {/* Gender Selection */}
                 <div className="space-y-1">
                   <label
@@ -498,7 +511,10 @@ export default function UserRegistration({
                 <div className="flex space-x-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => { setError(""); setStep(1); }}
+                    onClick={() => {
+                      setError("");
+                      setStep(1);
+                    }}
                     className="w-1/3 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                   >
                     Back
@@ -506,7 +522,7 @@ export default function UserRegistration({
                   <button
                     type="submit"
                     disabled={isLoading || !agreeTerms}
-                    className="w-2/3 group relative flex justify-center rounded-xl border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+                    className="group relative flex w-2/3 justify-center rounded-xl border border-transparent bg-green-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
                   >
                     {isLoading ? (
                       <div className="h-5 w-5 flex-shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -520,7 +536,7 @@ export default function UserRegistration({
           </>
         ) : (
           <>
-            <div className="space-y-4 text-center animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-4 text-center duration-300 animate-in fade-in slide-in-from-right-4">
               <div className="mb-2">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Verification code sent to
