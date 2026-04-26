@@ -71,7 +71,7 @@ if (typeof window !== "undefined" && typeof Node !== "undefined") {
 import { ThemeProvider } from "../src/context/ThemeContext";
 import { LanguageProvider } from "../src/context/LanguageContext";
 import InstallPrompt from "../src/components/ui/InstallPrompt";
-import LoadingOverlay from "../src/components/ui/LoadingOverlay";
+import LoadingScreen from "../src/components/ui/LoadingScreen";
 import Head from "next/head";
 
 // Configure NProgress
@@ -250,7 +250,7 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
 
   // Show loading state while session is being determined
   if (status === "loading") {
-    return <LoadingOverlay />;
+    return <LoadingScreen isOverlay={true} />;
   }
 
   return <>{children}</>;
