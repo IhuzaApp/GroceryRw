@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Building2, FileText, CheckCircle2, ArrowRight, User, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Building2, FileText, CheckCircle2, ArrowRight, User, Check, Home, X } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -298,6 +298,16 @@ export default function CarPartnerOnboarding() {
       )}
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col px-6 pt-24 pb-32 w-full">
+        {/* Mobile Navigation Back */}
+        <div className="absolute top-8 left-6 md:hidden z-50">
+          <button 
+            onClick={() => router.push("/Cars")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/10 backdrop-blur-md border border-white/10 text-white shadow-lg"
+          >
+            <Home className="h-5 w-5" />
+          </button>
+        </div>
+
         {/* Progress Bar */}
         <div className="w-full h-1.5 rounded-full overflow-hidden mb-12 relative z-10">
           <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'}`} />
