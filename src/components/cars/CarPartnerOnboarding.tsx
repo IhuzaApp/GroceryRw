@@ -1,14 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Car, Building2, FileText, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Car, Building2, FileText, CheckCircle2, ShieldCheck, ArrowRight, User, Check } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "next/router";
+import Image from "next/image";
+import { PendingReviewMessage } from "../business/PendingReviewMessage";
+
+const CarIcon = ({ className }: { className?: string }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M3 8L5.72187 10.2682C5.90158 10.418 6.12811 10.5 6.36205 10.5H17.6379C17.8719 10.5 18.0984 10.418 18.2781 10.2682L21 8M6.5 14H6.51M17.5 14H17.51M8.16065 4.5H15.8394C16.5571 4.5 17.2198 4.88457 17.5758 5.50772L20.473 10.5777C20.8183 11.1821 21 11.8661 21 12.5623V18.5C21 19.0523 20.5523 19.5 20 19.5H19C18.4477 19.5 18 19.0523 18 18.5V17.5H6V18.5C6 19.0523 5.55228 19.5 5 19.5H4C3.44772 19.5 3 19.0523 3 18.5V12.5623C3 11.8661 3.18166 11.1821 3.52703 10.5777L6.42416 5.50772C6.78024 4.88457 7.44293 4.5 8.16065 4.5ZM7 14C7 14.2761 6.77614 14.5 6.5 14.5C6.22386 14.5 6 14.2761 6 14C6 13.7239 6.22386 13.5 6.5 13.5C6.77614 13.5 7 13.7239 7 14ZM18 14C18 14.2761 17.7761 14.5 17.5 14.5C17.2239 14.5 17 14.2761 17 14C17 13.7239 17.2239 13.5 17.5 13.5C17.7761 13.5 18 13.7239 18 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 const STEPS = [
-  { id: 1, title: "Welcome", description: "Start your journey", icon: <Car className="h-6 w-6" /> },
-  { id: 2, title: "Business", description: "About your company", icon: <Building2 className="h-6 w-6" /> },
-  { id: 3, title: "Fleet", description: "Add your vehicles", icon: <Car className="h-6 w-6" /> },
+  { id: 1, title: "Account Type", description: "Choose your setup", icon: <User className="h-6 w-6" /> },
+  { id: 2, title: "Details", description: "About you or your company", icon: <Building2 className="h-6 w-6" /> },
+  { id: 3, title: "Fleet", description: "Add your vehicles", icon: <CarIcon className="h-6 w-6" /> },
   { id: 4, title: "Documents", description: "Verify identity", icon: <FileText className="h-6 w-6" /> },
   { id: 5, title: "Review", description: "Final check", icon: <CheckCircle2 className="h-6 w-6" /> },
 ];
@@ -18,19 +26,23 @@ export default function CarPartnerOnboarding() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
+    accountType: "business" as "business" | "personal",
     businessName: "",
     businessAddress: "",
+    fullName: "",
+    personalAddress: "",
     fleetSize: "",
     carTypes: [] as string[],
     documentsUploaded: false,
   });
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleFinish = () => {
     // In a real app, we would submit to an API here
-    router.push("/Cars/dashboard");
+    setIsSubmitted(true);
   };
 
   const renderStep = () => {
@@ -38,58 +50,127 @@ export default function CarPartnerOnboarding() {
       case 1:
         return (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-green-500 text-white shadow-2xl shadow-green-500/20">
-              <ShieldCheck className="h-10 w-10" />
+            <div className="relative mb-12 h-[240px] w-full overflow-hidden rounded-[2.5rem] shadow-2xl">
+              <Image
+                src="/images/cars/hero.png"
+                alt="Car Partnership"
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-8 left-8">
+                <h1 className="text-4xl font-black tracking-tight text-white !text-white">Become a Car Partner</h1>
+                <p className="text-lg font-medium text-white/80 !text-white/80">List your vehicles and start earning</p>
+              </div>
             </div>
-            <h1 className="mb-4 text-4xl font-black tracking-tight sm:text-5xl">Become a Car Rental Partner</h1>
-            <p className="mb-8 text-xl text-gray-500 leading-relaxed">Join thousands of businesses renting out their fleet on our platform. Earn more with less effort.</p>
-            <div className="space-y-6">
-              {[
-                "Reach thousands of active renters daily",
-                "Professional dashboard to manage your fleet",
-                "Secure payments and insurance coverage",
-                "Easy and fast onboarding process"
-              ].map((benefit, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/10 text-green-500">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <span className="font-bold text-gray-600 dark:text-gray-300">{benefit}</span>
+
+            <p className="mb-8 text-xl text-gray-500 leading-relaxed font-medium">Choose how you want to list your vehicles on our platform.</p>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <button
+                onClick={() => setFormData({ ...formData, accountType: 'personal' })}
+                className={`group relative flex flex-col items-start rounded-[2.5rem] border p-8 text-left transition-all ${formData.accountType === 'personal'
+                    ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
+                    : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
+                  }`}
+              >
+                <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:scale-110 ${formData.accountType === 'personal' ? 'bg-green-500 text-white' : 'bg-gray-500/10 text-gray-500'
+                  }`}>
+                  <User className="h-8 w-8" />
                 </div>
-              ))}
+                {formData.accountType === 'personal' && (
+                  <div className="absolute top-6 right-6 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white">
+                    <Check className="h-4 w-4" />
+                  </div>
+                )}
+                <h3 className="mb-2 text-2xl font-black">Personal</h3>
+                <p className="text-sm font-medium text-gray-500">For individual owners or small-scale providers listing their own cars.</p>
+              </button>
+
+              <button
+                onClick={() => setFormData({ ...formData, accountType: 'business' })}
+                className={`group relative flex flex-col items-start rounded-[2.5rem] border p-8 text-left transition-all ${formData.accountType === 'business'
+                    ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
+                    : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
+                  }`}
+              >
+                <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:scale-110 ${formData.accountType === 'business' ? 'bg-green-500 text-white' : 'bg-gray-500/10 text-gray-500'
+                  }`}>
+                  <Building2 className="h-8 w-8" />
+                </div>
+                {formData.accountType === 'business' && (
+                  <div className="absolute top-6 right-6 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white">
+                    <Check className="h-4 w-4" />
+                  </div>
+                )}
+                <h3 className="mb-2 text-2xl font-black">Business</h3>
+                <p className="text-sm font-medium text-gray-500">For registered rental companies and professional fleet managers.</p>
+              </button>
             </div>
           </div>
         );
       case 2:
         return (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="mb-2 text-3xl font-black tracking-tight">Business Details</h2>
-            <p className="mb-8 text-gray-500">Tell us about your rental business.</p>
+            <h2 className="mb-2 text-3xl font-black tracking-tight">
+              {formData.accountType === 'business' ? 'Business Details' : 'Personal Details'}
+            </h2>
+            <p className="mb-8 text-gray-500">
+              {formData.accountType === 'business' ? 'Tell us about your rental business.' : 'Tell us about yourself.'}
+            </p>
             <div className="space-y-6">
-              <div>
-                <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Business Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Elite Car Rentals"
-                  className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
-                    theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
-                  }`}
-                  value={formData.businessName}
-                  onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Business Address</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 123 Rental St, Kigali"
-                  className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
-                    theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
-                  }`}
-                  value={formData.businessAddress}
-                  onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
-                />
-              </div>
+              {formData.accountType === 'business' ? (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Business Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Elite Car Rentals"
+                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                        }`}
+                      value={formData.businessName}
+                      onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Business Address</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 123 Rental St, Kigali"
+                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                        }`}
+                      value={formData.businessAddress}
+                      onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Full Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. John Doe"
+                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                        }`}
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Home Address</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Kimironko, Kigali"
+                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                        }`}
+                      value={formData.personalAddress}
+                      onChange={(e) => setFormData({ ...formData, personalAddress: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         );
@@ -103,11 +184,10 @@ export default function CarPartnerOnboarding() {
                 <button
                   key={range}
                   onClick={() => setFormData({ ...formData, fleetSize: range })}
-                  className={`flex items-center justify-center rounded-3xl border p-8 text-xl font-black transition-all ${
-                    formData.fleetSize === range
+                  className={`flex items-center justify-center rounded-3xl border p-8 text-xl font-black transition-all ${formData.fleetSize === range
                       ? 'border-green-500 bg-green-500 text-white shadow-xl shadow-green-500/20'
                       : theme === 'dark' ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   {range}
                 </button>
@@ -119,19 +199,21 @@ export default function CarPartnerOnboarding() {
         return (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="mb-2 text-3xl font-black tracking-tight">Documents</h2>
-            <p className="mb-8 text-gray-500">Upload your business license and ID.</p>
+            <p className="mb-8 text-gray-500">Upload your documents for verification.</p>
             <div className="space-y-4">
-              {["Business License", "Trading Permit", "Owner ID / Passport"].map((doc) => (
-                <div key={doc} className={`flex items-center justify-between rounded-3xl border p-6 ${
-                  theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
-                }`}>
+              {(formData.accountType === 'business'
+                ? ["Business License", "Trading Permit", "Owner ID / Passport"]
+                : ["National ID / Passport", "Driver's License", "Proof of Address"]
+              ).map((doc) => (
+                <div key={doc} className={`flex items-center justify-between rounded-3xl border p-6 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
+                  }`}>
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-500/10 text-gray-500">
                       <FileText className="h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="font-bold">{doc}</h4>
-                      <p className="text-xs text-gray-500 text-green-500">PDF, JPG, PNG up to 10MB</p>
+                      <p className="text-xs text-green-500 font-bold uppercase tracking-widest">Required</p>
                     </div>
                   </div>
                   <button className="rounded-xl bg-green-500/10 px-4 py-2 text-sm font-bold text-green-500 hover:bg-green-500/20">
@@ -152,13 +234,32 @@ export default function CarPartnerOnboarding() {
             <p className="mb-8 text-gray-500">Almost there! Review your details before submitting.</p>
             <div className={`space-y-4 rounded-3xl p-6 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-50'}`}>
               <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                <span className="font-bold text-gray-500 uppercase text-xs">Business</span>
-                <span className="font-black">{formData.businessName || "Not provided"}</span>
+                <span className="font-bold text-gray-500 uppercase text-xs">Account</span>
+                <span className="font-black capitalize">{formData.accountType}</span>
               </div>
-              <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                <span className="font-bold text-gray-500 uppercase text-xs">Address</span>
-                <span className="font-black">{formData.businessAddress || "Not provided"}</span>
-              </div>
+              {formData.accountType === 'business' ? (
+                <>
+                  <div className="flex justify-between border-b border-gray-200/10 pb-4">
+                    <span className="font-bold text-gray-500 uppercase text-xs">Business</span>
+                    <span className="font-black">{formData.businessName || "Not provided"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-200/10 pb-4">
+                    <span className="font-bold text-gray-500 uppercase text-xs">Address</span>
+                    <span className="font-black">{formData.businessAddress || "Not provided"}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between border-b border-gray-200/10 pb-4">
+                    <span className="font-bold text-gray-500 uppercase text-xs">Name</span>
+                    <span className="font-black">{formData.fullName || "Not provided"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-200/10 pb-4">
+                    <span className="font-bold text-gray-500 uppercase text-xs">Address</span>
+                    <span className="font-black">{formData.personalAddress || "Not provided"}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between">
                 <span className="font-bold text-gray-500 uppercase text-xs">Fleet Size</span>
                 <span className="font-black">{formData.fleetSize || "Not provided"}</span>
@@ -171,19 +272,25 @@ export default function CarPartnerOnboarding() {
     }
   };
 
+  if (isSubmitted) {
+    return (
+      <div className={`min-h-screen md:ml-20 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
+        <PendingReviewMessage />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen md:ml-20 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 w-full z-50 px-4 pt-6">
-         <div className={`mx-auto max-w-4xl h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'}`}>
-            <div 
-              className="h-full bg-green-500 transition-all duration-1000 ease-out" 
-              style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
-            />
-         </div>
-      </div>
-
       <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-6 pt-24 pb-32">
+        {/* Progress Bar Moved Inside Layout */}
+        <div className="w-full h-1.5 rounded-full overflow-hidden mb-12 relative z-10">
+          <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'}`} />
+          <div
+            className="h-full bg-green-500 transition-all duration-1000 ease-out relative z-10"
+            style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
+          />
+        </div>
         {/* Step Indicator */}
         <div className="mb-12 flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 text-white font-black text-xl">
@@ -206,9 +313,8 @@ export default function CarPartnerOnboarding() {
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`flex items-center gap-2 rounded-2xl px-6 py-4 font-bold transition-all ${
-                currentStep === 1 ? 'opacity-0 pointer-events-none' : theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'
-              }`}
+              className={`flex items-center gap-2 rounded-2xl px-6 py-4 font-bold transition-all ${currentStep === 1 ? 'opacity-0 pointer-events-none' : theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'
+                }`}
             >
               <ChevronLeft className="h-5 w-5" />
               Back
