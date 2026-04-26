@@ -23,11 +23,13 @@ import {
   MapPin,
   UserCheck,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  MoreVertical
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { DUMMY_CARS, Car } from "../../constants/dummyCars";
-import AddVehicleModal from "./AddVehicleModal";
+import AddVehicleModal from "./modals/AddVehicleModal";
+import EditVehicleModal from "./modals/EditVehicleModal";
 import DashboardHeader from "./DashboardHeader";
 import CameraCapture from "../ui/CameraCapture";
 import toast from "react-hot-toast";
@@ -196,6 +198,10 @@ export default function CarBusinessDashboard() {
         isOpen={isAddVehicleOpen} 
         onClose={() => setIsAddVehicleOpen(false)} 
         theme={theme} 
+        onSubmit={(data) => {
+          setCars(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), status: 'active', rating: 5, reviews: [] }]);
+          toast.success("Vehicle added to fleet!");
+        }}
       />
 
       {selectedCar && (
@@ -208,12 +214,15 @@ export default function CarBusinessDashboard() {
       )}
 
       {selectedCar && (
-        <AddVehicleModal 
+        <EditVehicleModal 
           isOpen={isEditModalOpen} 
           onClose={() => setIsEditModalOpen(false)} 
           theme={theme} 
           initialData={selectedCar}
-          mode="edit"
+          onSubmit={(data) => {
+            setCars(prev => prev.map(c => c.id === selectedCar.id ? { ...c, ...data } : c));
+            toast.success("Vehicle updated!");
+          }}
         />
       )}
 
@@ -319,14 +328,14 @@ function WalletBalanceCard({ balance, theme }: { balance: number, theme: string 
 
 function FleetItem({ car, theme, onEdit, onToggleStatus, onView }: { car: Car, theme: string, onEdit: () => void, onToggleStatus: () => void, onView: () => void }) {
   return (
-    <div className={`flex items-center justify-between rounded-[2rem] border p-4 transition-all hover:shadow-lg ${
+    <div className={`flex items-center justify-between rounded-[2rem] border p-3 sm:p-4 transition-all hover:shadow-lg ${
       theme === 'dark' ? 'bg-[#121212] border-white/5 hover:bg-white/[0.07]' : 'bg-white border-gray-100 hover:bg-gray-50 shadow-sm'
     }`}>
-      <div className="flex items-center gap-5">
-        <div className="h-20 w-32 overflow-hidden rounded-2xl border border-white/5">
+      <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+        <div className="h-16 w-24 sm:h-20 sm:w-32 shrink-0 overflow-hidden rounded-2xl border border-white/5">
           <img src={car.image} alt={car.name} className="h-full w-full object-cover" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h4 className={`text-lg font-black leading-tight ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{car.name}</h4>
           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{car.type} • {car.fuelType}</p>
           <div className="mt-2 flex items-center gap-3">
@@ -340,7 +349,8 @@ function FleetItem({ car, theme, onEdit, onToggleStatus, onView }: { car: Car, t
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 pr-2">
+      {/* Desktop Actions */}
+      <div className="hidden items-center gap-2 pr-2 sm:flex">
         <button 
           onClick={onToggleStatus}
           title={car.status === 'active' ? 'Disable listing' : 'Enable listing'}
@@ -363,6 +373,31 @@ function FleetItem({ car, theme, onEdit, onToggleStatus, onView }: { car: Car, t
           <Eye className="h-5 w-5" />
         </button>
       </div>
+
+      {/* Mobile Actions Dropdown - Icon Trigger */}
+      <div className="relative sm:hidden pr-1">
+        <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+          theme === 'dark' ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-600'
+        }`}>
+          <MoreVertical className="h-5 w-5" />
+          <select 
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'edit') onEdit();
+              else if (val === 'toggle') onToggleStatus();
+              else if (val === 'view') onView();
+              e.target.value = "";
+            }}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            defaultValue=""
+          >
+            <option value="" disabled>Actions</option>
+            <option value="view">View Details</option>
+            <option value="edit">Edit Vehicle</option>
+            <option value="toggle">{car.status === 'active' ? 'Disable' : 'Enable'} Listing</option>
+          </select>
+        </div>
+      </div>
     </div>
   );
 }
@@ -371,9 +406,9 @@ function CarDetailsModal({ car, isOpen, onClose, theme }: { car: Car, isOpen: bo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center sm:p-6">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-      <div className={`relative flex flex-col w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-[3rem] shadow-2xl animate-in zoom-in-95 duration-300 ${
+      <div className={`relative flex flex-col w-full max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-hidden sm:rounded-[3rem] shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 ${
         theme === 'dark' ? 'bg-[#121212] border border-white/5 text-white' : 'bg-white text-gray-900'
       }`}>
         {/* Header */}
