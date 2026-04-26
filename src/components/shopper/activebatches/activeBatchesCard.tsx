@@ -44,7 +44,23 @@ interface Order {
   service_fee?: string;
   delivery_fee?: string;
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
+  orderType?:
+    | "regular"
+    | "reel"
+    | "restaurant"
+    | "combined"
+    | "business"
+    | "package";
+  isAvailable?: boolean;
+  packageDetails?: {
+    DeliveryCode?: string | null;
+    pickupLocation?: string | null;
+    dropoffLocation?: string | null;
+    receiverName?: string | null;
+    receiverPhone?: string | null;
+    comment?: string | null;
+    package_image?: string | null;
+  };
   reel?: {
     id: string;
     title: string;
@@ -451,8 +467,19 @@ function ActiveOrderCard({
   const { theme } = useTheme();
   const isReelOrder = order.orderType === "reel";
   const isRestaurantOrder = order.orderType === "restaurant";
+  const isPackageOrder = order.orderType === "package";
 
   const getStatusBadge = (status: string) => {
+    if (order.isAvailable) {
+      return (
+        <Badge
+          content="Available"
+          className={`rounded bg-pink-100 px-2 py-1 text-xs font-medium ${
+            theme === "dark" ? "bg-pink-900/20 text-pink-300" : "text-pink-800"
+          }`}
+        />
+      );
+    }
     switch (status) {
       case "accepted":
         return (
@@ -519,7 +546,32 @@ function ActiveOrderCard({
       ? "rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-indigo-500/25 flex items-center gap-1"
       : isRestaurantOrder
       ? "rounded-lg bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-orange-700 hover:to-red-700 shadow-md hover:shadow-orange-500/25 flex items-center gap-1"
+      : isPackageOrder
+      ? "rounded-lg bg-gradient-to-r from-pink-600 to-rose-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-pink-700 hover:to-rose-700 shadow-md hover:shadow-pink-500/25 flex items-center gap-1"
       : "rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-emerald-700 hover:to-green-700 shadow-md hover:shadow-emerald-500/25 flex items-center gap-1";
+
+    if (order.isAvailable) {
+      return (
+        <Link href={`/Plasa/active-batches/batch/${order.id}`}>
+          <button className={buttonClass}>
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Accept Package
+          </button>
+        </Link>
+      );
+    }
 
     // Check if this is a restaurant/user reel that should skip shopping
     // Skip shopping if EITHER restaurant_id OR user_id is not null
@@ -645,11 +697,15 @@ function ActiveOrderCard({
             ? "border-purple-600 bg-gradient-to-br from-gray-800 to-purple-900/20 text-gray-100 hover:border-purple-500 hover:shadow-purple-500/25"
             : isRestaurantOrder
             ? "border-orange-600 bg-gradient-to-br from-gray-800 to-orange-900/20 text-gray-100 hover:border-orange-500 hover:shadow-orange-500/25"
+            : isPackageOrder
+            ? "border-pink-600 bg-gradient-to-br from-gray-800 to-pink-900/20 text-gray-100 hover:border-pink-500 hover:shadow-pink-500/25"
             : "border-emerald-600 bg-gradient-to-br from-gray-800 to-emerald-900/20 text-gray-100 hover:border-emerald-500 hover:shadow-emerald-500/25"
           : isReelOrder
           ? "border-purple-200 bg-gradient-to-br from-white to-purple-50 text-gray-900 hover:border-purple-300 hover:shadow-purple-500/25"
           : isRestaurantOrder
           ? "border-orange-200 bg-gradient-to-br from-white to-orange-50 text-gray-900 hover:border-orange-300 hover:shadow-orange-500/25"
+          : isPackageOrder
+          ? "border-pink-200 bg-gradient-to-br from-white to-pink-50 text-gray-900 hover:border-pink-300 hover:shadow-pink-500/25"
           : "border-emerald-200 bg-gradient-to-br from-white to-emerald-50 text-gray-900 hover:border-emerald-300 hover:shadow-emerald-500/25"
       }`}
     >
@@ -695,8 +751,28 @@ function ActiveOrderCard({
           </div>
         )}
 
+        {/* Package Order indicator */}
+        {isPackageOrder && (
+          <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+            Package Delivery
+          </div>
+        )}
+
         {/* Regular Batch Status Indicator */}
-        {!isReelOrder && !isRestaurantOrder && (
+        {!isReelOrder && !isRestaurantOrder && !isPackageOrder && (
           <div
             className={`flex items-center gap-1 rounded-full px-3 py-1 text-center text-xs font-bold shadow-md ${
               order.status === "accepted"
@@ -763,6 +839,7 @@ function ActiveOrderCard({
         {/* Priority Indicator for Regular Batches */}
         {!isReelOrder &&
           !isRestaurantOrder &&
+          !isPackageOrder &&
           order.deliveryTime &&
           (() => {
             const countdown = getDeliveryCountdown(
@@ -812,30 +889,34 @@ function ActiveOrderCard({
           })()}
 
         {/* Distance Indicator for Regular Batches */}
-        {!isReelOrder && !isRestaurantOrder && (order as any).distance && (
-          <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
-            <svg
-              className="h-3 w-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            {(order as any).distance < 1
-              ? `${Math.round((order as any).distance * 1000)}m`
-              : `${(order as any).distance.toFixed(1)}km`}
-          </div>
-        )}
+        {!isReelOrder &&
+          !isRestaurantOrder &&
+          !isPackageOrder &&
+          (order as any).distance && (
+            <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+              <svg
+                className="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+              {(order as any).distance < 1
+                ? `${Math.round((order as any).distance * 1000)}m`
+                : `${(order as any).distance.toFixed(1)}km`}
+            </div>
+          )}
 
         {/* Delivery Time Indicator for Regular Batches */}
         {!isReelOrder &&
           !isRestaurantOrder &&
+          !isPackageOrder &&
           order.deliveryTime &&
           (() => {
             const countdown = getDeliveryCountdown(
@@ -890,6 +971,10 @@ function ActiveOrderCard({
                 ? theme === "dark"
                   ? "bg-gradient-to-br from-orange-500 to-red-600"
                   : "bg-gradient-to-br from-orange-400 to-red-500"
+                : isPackageOrder
+                ? theme === "dark"
+                  ? "bg-gradient-to-br from-pink-500 to-rose-600"
+                  : "bg-gradient-to-br from-pink-400 to-rose-500"
                 : theme === "dark"
                 ? "bg-gradient-to-br from-emerald-500 to-green-600"
                 : "bg-gradient-to-br from-emerald-400 to-green-500"
@@ -917,6 +1002,14 @@ function ActiveOrderCard({
                   strokeWidth={2}
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
                 />
+              ) : isPackageOrder ? (
+                // Package icon
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
               ) : (
                 // Clipboard icon for regular orders
                 <path
@@ -938,6 +1031,8 @@ function ActiveOrderCard({
                 ? "Quick Batch"
                 : isRestaurantOrder
                 ? "Restaurant Order"
+                : isPackageOrder
+                ? "Package Delivery"
                 : "Batch"}{" "}
               #{order.OrderID}
             </h3>
@@ -952,6 +1047,8 @@ function ActiveOrderCard({
                   }`
                 : isRestaurantOrder
                 ? `${order.items} dishes • ${order.shopName}`
+                : isPackageOrder
+                ? `Package Delivery • ${order.shopName}`
                 : `${order.items} items`}
             </p>
           </div>
@@ -974,6 +1071,10 @@ function ActiveOrderCard({
                   ? theme === "dark"
                     ? "text-orange-400"
                     : "text-orange-600"
+                  : isPackageOrder
+                  ? theme === "dark"
+                    ? "text-pink-400"
+                    : "text-pink-600"
                   : theme === "dark"
                   ? "text-emerald-400"
                   : "text-emerald-600"

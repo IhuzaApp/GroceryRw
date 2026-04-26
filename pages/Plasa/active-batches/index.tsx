@@ -24,7 +24,8 @@ interface Order {
   total: number;
   estimatedEarnings: string;
   // Add order type and reel-specific fields
-  orderType: "regular" | "reel" | "restaurant";
+  orderType: "regular" | "reel" | "restaurant" | "package";
+  isAvailable?: boolean;
   reel?: {
     id: string;
     title: string;

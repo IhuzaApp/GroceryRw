@@ -1,0 +1,117 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import VehicleFields, { VehicleFormData } from "../forms/VehicleForm";
+
+interface EditVehicleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  theme: string;
+  initialData: any;
+  onSubmit?: (data: any) => void;
+}
+
+export default function EditVehicleModal({
+  isOpen,
+  onClose,
+  theme,
+  initialData,
+  onSubmit,
+}: EditVehicleModalProps) {
+  const [formData, setFormData] = useState<VehicleFormData>(initialData);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
+
+  if (!isOpen) return null;
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Updating vehicle:", formData);
+    if (onSubmit) onSubmit(formData);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-6">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md duration-300 animate-in fade-in"
+        onClick={onClose}
+      />
+
+      {/* Modal Content */}
+      <form
+        onSubmit={handleFormSubmit}
+        className={`relative flex h-full w-full max-w-2xl flex-col overflow-hidden border shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[2.5rem] sm:zoom-in-95 ${
+          theme === "dark"
+            ? "border-white/10 bg-[#121212] text-white"
+            : "border-gray-100 bg-white text-gray-900"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-8 pb-6 dark:border-white/5">
+          <div>
+            <h2 className="font-outfit text-3xl font-black tracking-tight">
+              Edit Vehicle
+            </h2>
+            <p className="mt-1 text-xs font-black uppercase tracking-widest text-gray-400">
+              Update vehicle specifications
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`rounded-full p-2 transition-colors ${
+              theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
+            }`}
+          >
+            <X className="h-7 w-7" />
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
+          <VehicleFields
+            formData={formData}
+            setFormData={setFormData}
+            theme={theme}
+          />
+        </div>
+
+        {/* Fixed Footer */}
+        <div
+          className={`shrink-0 border-t p-6 backdrop-blur-md ${
+            theme === "dark"
+              ? "border-white/5 bg-[#121212]/80"
+              : "border-gray-100 bg-white/80"
+          }`}
+        >
+          <div className="flex flex-col gap-4 md:flex-row">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`flex-1 rounded-2xl py-4 text-lg font-black transition-all active:scale-95 ${
+                theme === "dark"
+                  ? "bg-white/5 text-white hover:bg-white/10"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={`flex-[2] rounded-2xl bg-green-500 py-4 text-lg font-black text-white shadow-xl shadow-green-500/30 transition-all active:scale-95`}
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

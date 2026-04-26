@@ -108,6 +108,70 @@ const UPDATE_COMBINED_RESTAURANT_ORDERS = gql`
   }
 `;
 
+const CHECK_PACKAGE_ORDER = gql`
+  query CheckPackageOrder($orderId: uuid!, $shopperId: uuid!) {
+    package_delivery(
+      where: { id: { _eq: $orderId }, shopper_id: { _eq: $shopperId } }
+    ) {
+      id
+      status
+    }
+  }
+`;
+
+const CHECK_PENDING_PACKAGE = gql`
+  query CheckPendingPackage($orderId: uuid!) {
+    package_delivery(
+      where: {
+        id: { _eq: $orderId }
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
+      }
+    ) {
+      id
+      status
+    }
+  }
+`;
+
+const ASSIGN_PACKAGE_TO_SHOPPER = gql`
+  mutation AssignPackageToShopper(
+    $orderId: uuid!
+    $shopperId: uuid!
+    $updated_at: timestamptz!
+  ) {
+    update_package_delivery_by_pk(
+      pk_columns: { id: $orderId }
+      _set: {
+        shopper_id: $shopperId
+        status: "accepted"
+        updated_at: $updated_at
+      }
+    ) {
+      id
+      status
+      shopper_id
+    }
+  }
+`;
+
+const UPDATE_PACKAGE_ORDER_STATUS = gql`
+  mutation UpdatePackageOrderStatus(
+    $id: uuid!
+    $status: String!
+    $updated_at: timestamptz!
+  ) {
+    update_package_delivery_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: $updated_at }
+    ) {
+      id
+      status
+      updated_at
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -209,6 +273,7 @@ export default async function handler(
     let isReelOrder = false;
     let isRestaurantOrder = false;
     let isBusinessOrder = false;
+    let isPackageOrder = false;
     let orderType = "regular";
 
     // Check regular orders first
@@ -283,28 +348,82 @@ export default async function handler(
             isBusinessOrder = true;
             orderType = "business";
           } else {
-            console.error(
-              "Authorization failed: Shopper not assigned to this order"
-            );
-            return res
-              .status(403)
-              .json({ error: "You are not assigned to this order" });
+            // Check package orders
+            const packageOrderCheck = await hasuraClient.request<{
+              package_delivery: Array<{
+                id: string;
+                status: string;
+              }>;
+            }>(CHECK_PACKAGE_ORDER, {
+              orderId,
+              shopperId: userId,
+            });
+
+            if (
+              packageOrderCheck.package_delivery &&
+              packageOrderCheck.package_delivery.length > 0
+            ) {
+              isPackageOrder = true;
+              orderType = "package";
+            } else if (status === "accepted") {
+              // Special case: check if it's a pending package that can be accepted
+              const pendingPackageCheck = await hasuraClient.request<{
+                package_delivery: Array<{
+                  id: string;
+                  status: string;
+                }>;
+              }>(CHECK_PENDING_PACKAGE, {
+                orderId,
+              });
+
+              if (
+                pendingPackageCheck.package_delivery &&
+                pendingPackageCheck.package_delivery.length > 0
+              ) {
+                // It's an available package! We'll handle assignment in the update block
+                isPackageOrder = true;
+                orderType = "package";
+              } else {
+                console.error(
+                  "Authorization failed: Shopper not assigned to this order"
+                );
+                return res
+                  .status(403)
+                  .json({ error: "You are not assigned to this order" });
+              }
+            } else {
+              console.error(
+                "Authorization failed: Shopper not assigned to this order"
+              );
+              return res
+                .status(403)
+                .json({ error: "You are not assigned to this order" });
+            }
           }
         }
       }
     }
 
-    // Prevent restaurant and business orders from being updated to "shopping" status
-    if ((isRestaurantOrder || isBusinessOrder) && status === "shopping") {
+    // Prevent restaurant, business, and package orders from being updated to "shopping" status
+    if (
+      (isRestaurantOrder || isBusinessOrder || isPackageOrder) &&
+      status === "shopping"
+    ) {
       return res.status(400).json({
-        error:
-          "Restaurant and business orders cannot be updated to 'shopping' status. Use 'on_the_way' instead.",
+        error: `${
+          orderType.charAt(0).toUpperCase() + orderType.slice(1)
+        } orders cannot be updated to 'shopping' status.`,
       });
     }
 
     // Handle shopping status - process wallet operations only for regular/combined orders
-    // Reel and restaurant orders don't use wallet "shopping"; others are skipped (no wallet op)
-    if (status === "shopping" && !isRestaurantOrder && !isReelOrder) {
+    // Reel, restaurant, and package orders don't use wallet "shopping"; others are skipped (no wallet op)
+    if (
+      status === "shopping" &&
+      !isRestaurantOrder &&
+      !isReelOrder &&
+      !isPackageOrder
+    ) {
       try {
         await processWalletOperation(
           userId,
@@ -425,6 +544,20 @@ export default async function handler(
           };
         }
       }
+    } else if (isPackageOrder) {
+      const packageDetails = await hasuraClient.request<any>(
+        `
+        query GetPackageOrderDetails($orderId: uuid!) {
+          package_delivery_by_pk(id: $orderId) {
+            id
+            status
+            shopper_id
+          }
+        }
+      `,
+        { orderId }
+      );
+      orderDetails = packageDetails.package_delivery_by_pk;
     } else {
       const regularDetails = await hasuraClient.request<any>(
         `
@@ -556,6 +689,29 @@ export default async function handler(
           updated_at: currentTimestamp,
         });
         updatedOrders = [result.update_Orders_by_pk];
+      }
+    } else if (isPackageOrder) {
+      if (status === "accepted" && !orderDetails.shopper_id) {
+        // Special case: Assign package to shopper
+        const result = await hasuraClient.request<any>(
+          ASSIGN_PACKAGE_TO_SHOPPER,
+          {
+            orderId,
+            shopperId: userId,
+            updated_at: currentTimestamp,
+          }
+        );
+        updatedOrders = [result.update_package_delivery_by_pk];
+      } else {
+        const result = await hasuraClient.request<any>(
+          UPDATE_PACKAGE_ORDER_STATUS,
+          {
+            id: orderId,
+            status,
+            updated_at: currentTimestamp,
+          }
+        );
+        updatedOrders = [result.update_package_delivery_by_pk];
       }
     } else if (combinedId) {
       // If this order is part of a combined order, update all orders with same combined_order_id AND same shop_id
@@ -704,6 +860,29 @@ export default async function handler(
           }
         );
         updatedOrders = [result.update_businessProductOrders_by_pk];
+      } else if (isPackageOrder) {
+        if (status === "accepted" && !orderDetails.shopper_id) {
+          // Special case: Assign package to shopper
+          const result = await hasuraClient.request<any>(
+            ASSIGN_PACKAGE_TO_SHOPPER,
+            {
+              orderId,
+              shopperId: userId,
+              updated_at: currentTimestamp,
+            }
+          );
+          updatedOrders = [result.update_package_delivery_by_pk];
+        } else {
+          const result = await hasuraClient.request<any>(
+            UPDATE_PACKAGE_ORDER_STATUS,
+            {
+              id: orderId,
+              status,
+              updated_at: currentTimestamp,
+            }
+          );
+          updatedOrders = [result.update_package_delivery_by_pk];
+        }
       } else {
         const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
           id: orderId,

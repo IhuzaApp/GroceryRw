@@ -76,7 +76,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
   const scannerContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[11000] flex items-end justify-center p-0 sm:items-center sm:p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -86,11 +86,14 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       />
 
       <div
-        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
-          theme === "dark"
-            ? "border border-gray-700 bg-gray-900/95 text-white backdrop-blur-xl"
-            : "border border-gray-200 bg-white/95 text-gray-900 backdrop-blur-xl"
+        className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
         }`}
+        style={{
+          zIndex: 10001,
+          backgroundColor: "var(--bg-primary)",
+          color: "var(--text-primary)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

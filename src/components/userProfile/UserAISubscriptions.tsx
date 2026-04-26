@@ -187,7 +187,7 @@ export default function UserAISubscriptions() {
       </div>
 
       {/* Usage Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-6 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-6 shadow-lg">
         {/* Decorative blobs */}
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10" />
@@ -197,7 +197,7 @@ export default function UserAISubscriptions() {
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
                 <svg
-                  className="h-5 w-5 text-white"
+                  className="h-5 w-5 !text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -210,15 +210,15 @@ export default function UserAISubscriptions() {
                   />
                 </svg>
               </div>
-              <span className="font-semibold">
+              <span className="font-semibold !text-white">
                 {data?.currentMonth} {data?.currentYear}
               </span>
             </div>
             <span
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
                 data?.isSubscribed
-                  ? "bg-green-400/20 text-green-100 ring-1 ring-green-300/40"
-                  : "bg-white/10 text-white/70 ring-1 ring-white/20"
+                  ? "bg-green-400/20 !text-green-100 ring-1 ring-green-300/40"
+                  : "bg-white/10 !text-white/70 ring-1 ring-white/20"
               }`}
             >
               {data?.isSubscribed ? "✓ Subscribed" : "Free Tier"}
@@ -227,8 +227,8 @@ export default function UserAISubscriptions() {
 
           {/* Usage bar on dark background */}
           <div className="mb-1 flex items-center justify-between text-sm">
-            <span className="text-white/80">Requests used</span>
-            <span className="font-bold">
+            <span className="!text-white/80">Requests used</span>
+            <span className="font-bold !text-white">
               {data?.limit === -1
                 ? `${data?.usageCount} / ∞`
                 : `${data?.usageCount} / ${data?.limit}`}
@@ -248,7 +248,7 @@ export default function UserAISubscriptions() {
             )}
           </div>
           {data?.limit !== -1 && (
-            <p className="mt-1.5 text-xs text-white/60">
+            <p className="mt-1.5 text-xs !text-white/60">
               {(data?.limit || 0) - (data?.usageCount || 0) > 0
                 ? `${
                     (data?.limit || 0) - (data?.usageCount || 0)

@@ -818,7 +818,13 @@ export default function MapSection({
       accuracy: number;
     }>
   >([]);
-  const [showBusyAreas, setShowBusyAreas] = useState(false);
+  const [showBusyAreas, setShowBusyAreas] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("shopper_show_busy_areas");
+      if (saved !== null) return saved === "true";
+    }
+    return true; // Default to true as requested
+  });
   const busyAreaCirclesRef = useRef<L.Circle[]>([]);
 
   // Refs
@@ -1653,28 +1659,29 @@ export default function MapSection({
     return L.divIcon({
       html: `
         <div style="
+          transform: translate(-50%, -50%);
           background: ${bgColor};
-          border: 2px solid ${borderColor};
+          border: 2px solid ${
+            theme === "dark" ? "rgba(255,255,255,0.15)" : "white"
+          };
           border-radius: 50%;
-          width: 44px;
-          height: 44px;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 13px;
-          font-weight: 600;
           color: white;
-          backdrop-filter: blur(8px);
-          box-shadow: 0 2px 4px ${
-            theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.2)"
+          box-shadow: 0 4px 12px ${
+            theme === "dark" ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)"
           };
           z-index: 1000;
+          transition: transform 0.2s;
         ">
-          ${simplifiedEarnings}
+          <span style="font-size: 13px; font-weight: 800; letter-spacing: -0.5px;">${simplifiedEarnings}</span>
         </div>`,
       className: "",
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
+      iconSize: [0, 0],
+      iconAnchor: [0, 0],
       popupAnchor: [0, -22],
     });
   };
@@ -1686,45 +1693,32 @@ export default function MapSection({
   ) => {
     return L.divIcon({
       html: `
-        <div style="
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 800;
-          white-space: nowrap;
-          color: ${
-            isActive
-              ? theme === "dark"
-                ? "#ffffff"
-                : "#1f2937"
-              : theme === "dark"
-              ? "#9ca3af"
-              : "#6b7280"
-          };
-          opacity: 1;
-          text-shadow: 
-            0 0 4px ${
-              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
-            },
-            0 0 8px ${
-              theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"
-            },
-            0 2px 4px ${
-              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"
-            };
-        ">
+        <div style="transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: ${isActive ? "#10b981" : "#6b7280"};
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            color: white;
+            transition: all 0.2s ease;
+          ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M3.5 11V14C3.5 17.7712 3.5 19.6569 4.67157 20.8284C5.84315 22 7.72876 22 11.5 22H12.5C16.2712 22 18.1569 22 19.3284 20.8284M20.5 11V14C20.5 15.1698 20.5 16.1581 20.465 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> <path d="M9.50002 2H14.5M9.50002 2L8.84828 8.51737C8.66182 10.382 10.1261 12 12 12C13.874 12 15.3382 10.382 15.1518 8.51737L14.5 2M9.50002 2H7.41771C6.50969 2 6.05567 2 5.66628 2.10675C4.84579 2.33168 4.15938 2.89439 3.77791 3.65484M9.50002 2L8.77549 9.24527C8.61911 10.8091 7.30318 12 5.73155 12C3.8011 12 2.35324 10.2339 2.73183 8.34093L2.80002 8M14.5 2H16.5823C17.4904 2 17.9444 2 18.3338 2.10675C19.1542 2.33168 19.8407 2.89439 20.2221 3.65484C20.4032 4.01573 20.4922 4.46093 20.6703 5.35133L21.2682 8.34093C21.6468 10.2339 20.1989 12 18.2685 12C16.6969 12 15.3809 10.8091 15.2245 9.24527L14.5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> <path d="M9.5 21.5V18.5C9.5 17.5654 9.5 17.0981 9.70096 16.75C9.83261 16.522 10.022 16.3326 10.25 16.201C10.5981 16 11.0654 16 12 16C12.9346 16 13.4019 16 13.75 16.201C13.978 16.3326 14.1674 16.522 14.299 16.75C14.5 17.0981 14.5 17.5654 14.5 18.5V21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path> </g></svg>
+          </div>
           <span style="
-            font-size: 18px; 
-            filter: drop-shadow(0 0 4px ${
-              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
-            });
-            display: inline-block;
-            margin-right: 4px;
-          "><svg width="36px" height="36px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path opacity="0.5" d="M10 2C9.0335 2 8.25 2.7835 8.25 3.75C8.25 4.7165 9.0335 5.5 10 5.5H14C14.9665 5.5 15.75 4.7165 15.75 3.75C15.75 2.7835 14.9665 2 14 2H10Z" fill="#00b36e"></path> <path opacity="0.5" d="M3.86327 16.2052C3.00532 12.7734 2.57635 11.0575 3.47718 9.90376C4.37801 8.75 6.14672 8.75 9.68413 8.75H14.3148C17.8522 8.75 19.6209 8.75 20.5218 9.90376C21.4226 11.0575 20.9936 12.7734 20.1357 16.2052C19.59 18.3879 19.3172 19.4792 18.5034 20.1146C17.6896 20.75 16.5647 20.75 14.3148 20.75H9.68413C7.43427 20.75 6.30935 20.75 5.49556 20.1146C4.68178 19.4792 4.40894 18.3879 3.86327 16.2052Z" fill="#00b36e"></path> <path d="M15.5805 4.5023C15.6892 4.2744 15.75 4.01931 15.75 3.75C15.75 3.48195 15.6897 3.22797 15.582 3.00089C16.2655 3.00585 16.7983 3.03723 17.2738 3.22309C17.842 3.44516 18.3362 3.82266 18.6999 4.31242C19.0669 4.8065 19.2391 5.43979 19.4762 6.31144L19.5226 6.48181L20.0353 9.44479C19.6266 9.16286 19.0996 8.99533 18.418 8.89578L18.0567 6.80776C17.7729 5.76805 17.6699 5.44132 17.4957 5.20674C17.2999 4.94302 17.0337 4.73975 16.7278 4.62018C16.508 4.53427 16.2424 4.50899 15.5805 4.5023Z" fill="#00b36e"></path> <path d="M8.41799 3.00089C8.31027 3.22797 8.25 3.48195 8.25 3.75C8.25 4.01931 8.31083 4.27441 8.41951 4.50231C7.75766 4.509 7.49208 4.53427 7.27227 4.62018C6.96633 4.73975 6.70021 4.94302 6.50436 5.20674C6.33015 5.44132 6.22715 5.76805 5.94337 6.80776L5.58207 8.89569C4.90053 8.99518 4.37353 9.1626 3.96484 9.44433L4.47748 6.48181L4.52387 6.31145C4.76095 5.4398 4.9332 4.8065 5.30013 4.31242C5.66384 3.82266 6.15806 3.44516 6.72624 3.22309C7.20177 3.03724 7.73449 3.00586 8.41799 3.00089Z" fill="#00b36e"></path> <path d="M8.75 12.75C8.75 12.3358 8.41421 12 8 12C7.58579 12 7.25 12.3358 7.25 12.75V16.75C7.25 17.1642 7.58579 17.5 8 17.5C8.41421 17.5 8.75 17.1642 8.75 16.75V12.75Z" fill="#00b36e"></path> <path d="M16 12C16.4142 12 16.75 12.3358 16.75 12.75V16.75C16.75 17.1642 16.4142 17.5 16 17.5C15.5858 17.5 15.25 17.1642 15.25 16.75V12.75C15.25 12.3358 15.5858 12 16 12Z" fill="#00b36e"></path> <path d="M12.75 12.75C12.75 12.3358 12.4142 12 12 12C11.5858 12 11.25 12.3358 11.25 12.75V16.75C11.25 17.1642 11.5858 17.5 12 17.5C12.4142 17.5 12.75 17.1642 12.75 16.75V12.75Z" fill="#00b36e"></path> </g></svg></span>
-          <span style="text-shadow: inherit; font-weight: 800;">${
-            shopName || "Shop"
-          }</span>
+            font-size: 12px;
+            font-weight: 800;
+            color: ${theme === "dark" ? "white" : "black"};
+            text-shadow: 0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.9)"
+            }, 0 0 8px ${theme === "dark" ? "black" : "white"};
+            white-space: nowrap;
+            opacity: ${isActive ? "1" : "0.7"};
+          ">${shopName || "Shop"}</span>
         </div>
       `,
       className: "",
@@ -1740,45 +1734,32 @@ export default function MapSection({
   ) => {
     return L.divIcon({
       html: `
-      <div style="
-          display: flex;
-          align-items: center;
-          gap: 6px;
-      font-size: 14px;
-          font-weight: 800;
-          white-space: nowrap;
-          color: ${
-            isVerified
-              ? theme === "dark"
-                ? "#ffffff"
-                : "#1f2937"
-              : theme === "dark"
-              ? "#9ca3af"
-              : "#6b7280"
-          };
-          opacity: 1;
-          text-shadow: 
-            0 0 4px ${
-              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
-            },
-            0 0 8px ${
-              theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"
-            },
-            0 2px 4px ${
-              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"
-            };
-        ">
+        <div style="transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: ${isVerified ? "#f97316" : "#6b7280"};
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            color: white;
+            transition: all 0.2s ease;
+          ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+          </div>
           <span style="
-            font-size: 18px; 
-            filter: drop-shadow(0 0 4px ${
-              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
-            });
-            display: inline-block;
-            margin-right: 4px;
-          "><svg width="32px" height="32px" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <defs> <style>.cls-1{fill:#c73b40;}.cls-2{fill:#d26266;}.cls-3{fill:#ffff97;}.cls-4{fill:#ffffac;}.cls-5{fill:#e6e6e6;}.cls-6{fill:#eabc75;}.cls-7{fill:#fccb7e;}</style> </defs> <title></title> <g data-name="Layer 25" id="Layer_25"> <path class="cls-1" d="M53.733,20.32A1,1,0,0,0,53,20H27a1,1,0,0,0-1,1.076l1.142,14.905a1,1,0,0,0,1.57.744,4,4,0,0,1,4.682.095,1,1,0,0,0,1.206,0,3.975,3.975,0,0,1,4.794,0,1,1,0,0,0,1.206,0,3.975,3.975,0,0,1,4.794,0,1,1,0,0,0,1.206,0,4,4,0,0,1,4.682-.095,1,1,0,0,0,1.57-.744L54,21.076A1,1,0,0,0,53.733,20.32Z"></path> <path class="cls-1" d="M51.733,20.32A1,1,0,0,0,51,20H25a1,1,0,0,0-1,1.076l1.142,14.905a1,1,0,0,0,1.57.744,4,4,0,0,1,4.682.095,1,1,0,0,0,1.206,0,3.975,3.975,0,0,1,4.794,0,1,1,0,0,0,1.206,0,3.975,3.975,0,0,1,4.794,0,1,1,0,0,0,1.206,0,4,4,0,0,1,4.682-.095,1,1,0,0,0,1.57-.744L52,21.076A1,1,0,0,0,51.733,20.32Z"></path> <path class="cls-2" d="M53.733,20.32A1,1,0,0,0,53,20H51a1,1,0,0,1,1,1.076L50.855,35.981a.986.986,0,0,1-.135.417,3.944,3.944,0,0,1,.565.327,1,1,0,0,0,1.57-.744L54,21.076A1,1,0,0,0,53.733,20.32Z"></path> <path class="cls-3" d="M52.432,35.086A6.015,6.015,0,0,0,46,34.821a5.97,5.97,0,0,0-6,0,5.97,5.97,0,0,0-6,0,6.019,6.019,0,0,0-6.432.265,1,1,0,0,0-.423.9l2.076,27.1a1,1,0,0,0,1,.924H49.782a1,1,0,0,0,1-.924l2.076-27.095A1,1,0,0,0,52.432,35.086Z"></path> <path class="cls-3" d="M50.432,35.086A6.015,6.015,0,0,0,44,34.821a5.97,5.97,0,0,0-6,0,5.97,5.97,0,0,0-6,0,6.019,6.019,0,0,0-6.432.265,1,1,0,0,0-.423.9l2.076,27.1a1,1,0,0,0,1,.924H47.782a1,1,0,0,0,1-.924l2.076-27.095A1,1,0,0,0,50.432,35.086Z"></path> <path class="cls-4" d="M52.432,35.086a6.016,6.016,0,0,0-4.4-.979,5.948,5.948,0,0,1,2.4.979,1,1,0,0,1,.423.9l-2.076,27.1a1,1,0,0,1-1,.924h2a1,1,0,0,0,1-.924l2.076-27.095A1,1,0,0,0,52.432,35.086Z"></path> <rect class="cls-5" height="18" rx="1" width="6" x="37"></rect> <rect class="cls-3" height="6" rx="1" width="32" x="24" y="16"></rect> <path class="cls-4" d="M55,16H53a1,1,0,0,1,1,1v4a1,1,0,0,1-1,1h2a1,1,0,0,0,1-1V17A1,1,0,0,0,55,16Z"></path> <path d="M35.6,56H12.4a1,1,0,0,1-.988-.844l-1.894-12A1,1,0,0,1,10.5,42H20.768a1,1,0,0,1,.717.3L24,44.9,26.515,42.3a1,1,0,0,1,.717-.3H37.5a1,1,0,0,1,.987,1.156l-1.894,12A1,1,0,0,1,35.6,56ZM13.249,54h21.5L36.33,44H27.655l-2.937,3.029a1.029,1.029,0,0,1-1.436,0L20.345,44H11.67Z"></path> <path class="cls-6" d="M19.994,18H15.987a1,1,0,0,0-1,1V37.359a1.119,1.119,0,0,0,.843.992l.1.025c.8.178,1.676.335,2.68.48.28.041.563.069.846.1l.423.043a1.032,1.032,0,0,0,.111.006,1,1,0,0,0,1-1V19A1,1,0,0,0,19.994,18Z"></path> <path class="cls-6" d="M28.006,16H24a1,1,0,0,0-1,1V38.255a1,1,0,0,0,1,1c.79,0,1.635-.033,2.656-.107h0c.357-.026.708-.068,1.059-.111l.4-.048A1,1,0,0,0,29.006,38V17A1,1,0,0,0,28.006,16Z"></path> <path class="cls-6" d="M36.019,20H32.013a1,1,0,0,0-1,1V37.348a1,1,0,0,0,1,1,1.016,1.016,0,0,0,.225-.026c.8-.184,1.6-.4,2.463-.662.556-.168,1.1-.351,1.649-.543a1,1,0,0,0,.669-.943V21A1,1,0,0,0,36.019,20Z"></path> <path class="cls-7" d="M15.987,20H11.981a1,1,0,0,0-1,1V36.19a1,1,0,0,0,.669.944c.53.185,1.063.363,1.6.526.893.271,1.714.491,2.512.674a.942.942,0,0,0,.223.025,1,1,0,0,0,1-1V21A1,1,0,0,0,15.987,20Z"></path> <path class="cls-7" d="M24,16H19.994a1,1,0,0,0-1,1V38a1,1,0,0,0,.89.994l.414.049c.33.039.661.079,1,.1h0c1.009.073,1.851.107,2.668.107a1,1,0,0,0,1.035-1V17A1,1,0,0,0,24,16Z"></path> <path class="cls-7" d="M32.013,18H28.006a1,1,0,0,0-1,1V38a1,1,0,0,0,1,1,1.014,1.014,0,0,0,.11-.006l.407-.041c.274-.026.547-.053.817-.093,1-.146,1.881-.3,2.68-.48l.209-.052a1,1,0,0,0,.784-.976V19A1,1,0,0,0,32.013,18Z"></path> <path class="cls-1" d="M39.96,35.16l-1.18,7.23L36.6,55.82l-1.2,7.34a1.008,1.008,0,0,1-.99.84H13.54a1.008,1.008,0,0,1-.99-.84l-1.2-7.38L9.18,42.45,7.99,35.16a1,1,0,0,1,.22-.81,1.1,1.1,0,0,1,1.22-.26c.61.28,1.24.54,1.87.79.33.13.67.25,1.01.37.5.17,1.01.34,1.52.5.85.25,1.63.46,2.38.63a.527.527,0,0,0,.12.03c.79.18,1.62.33,2.57.47.25.03.5.06.75.08l.89.1c.3.03.6.07.9.09a30.774,30.774,0,0,0,5.08,0c.32-.02.64-.06.96-.1l.85-.09c.24-.02.48-.05.72-.08.96-.14,1.79-.29,2.54-.46l.21-.05c.74-.17,1.5-.38,2.32-.62.53-.16,1.05-.34,1.57-.52.32-.11.65-.23.97-.35.63-.25,1.25-.51,1.86-.79a.99.99,0,0,1,.42-.09h.04a1.011,1.011,0,0,1,.76.35A1,1,0,0,1,39.96,35.16Z"></path> <path class="cls-2" d="M39.74,34.35a1.011,1.011,0,0,0-.76-.35h-.04a.99.99,0,0,0-.42.09c-.246.113-.5.211-.749.318a.992.992,0,0,1,.189.752l-1.18,7.23L34.6,55.82l-1.2,7.34a1.008,1.008,0,0,1-.99.84h2a1.008,1.008,0,0,0,.99-.84l1.2-7.34,2.18-13.43,1.18-7.23A1,1,0,0,0,39.74,34.35Z"></path> <path class="cls-3" d="M38.78,42.39,36.6,55.82a1.081,1.081,0,0,1-.59.18H11.99a1.033,1.033,0,0,1-.64-.22L9.18,42.45a.3.3,0,0,1,.07-.1,1.037,1.037,0,0,1,.78-.35H20.66a1.07,1.07,0,0,1,.74.3L24,44.9l2.6-2.6a1.07,1.07,0,0,1,.74-.3H37.97a1.037,1.037,0,0,1,.78.35A.138.138,0,0,1,38.78,42.39Z"></path> <path class="cls-4" d="M38.75,42.35a1.037,1.037,0,0,0-.78-.35h-2a1.037,1.037,0,0,1,.78.35.138.138,0,0,1,.03.04L34.6,55.82a1.081,1.081,0,0,1-.59.18h2a1.081,1.081,0,0,0,.59-.18l2.18-13.43A.138.138,0,0,0,38.75,42.35Z"></path> </g> </g></svg></span>
-          <span style="text-shadow: inherit; font-weight: 800;">${
-            restaurantName || "Restaurant"
-          }</span>
+            font-size: 12px;
+            font-weight: 800;
+            color: ${theme === "dark" ? "white" : "black"};
+            text-shadow: 0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.9)"
+            }, 0 0 8px ${theme === "dark" ? "black" : "white"};
+            white-space: nowrap;
+            opacity: ${isVerified ? "1" : "0.7"};
+          ">${restaurantName || "Restaurant"}</span>
         </div>
       `,
       className: "",
@@ -2593,216 +2574,8 @@ export default function MapSection({
         });
       }
 
-      // Process pending orders with grouping - only when online
-      // Double-check isOnline here in case it changed during async operations
-      if (!isOnline) {
-        clearOrderMarkers();
-      } else if (map && map.getContainer()) {
-        // Group pending orders by location
-        const groupedPendingOrders = new Map<string, PendingOrder[]>();
-        pendingOrders.forEach((order) => {
-          if (!order.shopLat || !order.shopLng) return;
-          const key = `${order.shopLat.toFixed(5)},${order.shopLng.toFixed(5)}`;
-          if (!groupedPendingOrders.has(key)) {
-            groupedPendingOrders.set(key, []);
-          }
-          groupedPendingOrders.get(key)?.push(order);
-        });
-
-        // Log grouped orders information
-        logger.info("Pending orders grouped by location", "MapSection", {
-          totalOrders: pendingOrders.length,
-          groupCount: groupedPendingOrders.size,
-          groupSizes: Array.from(groupedPendingOrders.entries()).map(
-            ([key, orders]) => ({
-              location: key,
-              orderCount: orders.length,
-              orderIds: orders.map((o) => o.id),
-            })
-          ),
-        });
-
-        // Process each group of orders
-        groupedPendingOrders.forEach((orders, locationKey) => {
-          const [baseLat, baseLng] = locationKey.split(",").map(Number);
-
-          orders.forEach((order, index) => {
-            try {
-              // Calculate offset based on position in group
-              const offset = calculateMarkerOffset(index, orders.length);
-              const adjustedLat = baseLat + offset.lat;
-              const adjustedLng = baseLng + offset.lng;
-
-              const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(
-                  formatCurrencySync(order.earnings),
-                  "regular"
-                ),
-                zIndexOffset: 1000 + index,
-              });
-
-              if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
-                const popup = marker.bindPopup(
-                  createOrderPopupContent(order, true),
-                  {
-                    maxWidth: 300,
-                    className: `${
-                      theme === "dark"
-                        ? "dark-theme-popup"
-                        : "light-theme-popup"
-                    }`,
-                    closeButton: true,
-                    closeOnClick: false,
-                  }
-                );
-
-                // Apply dark theme class to popup wrapper
-                marker.on("popupopen", () => {
-                  if (marker) {
-                    const popup = marker.getPopup();
-                    if (popup) {
-                      const popupElement = popup.getElement();
-                      if (popupElement && theme === "dark") {
-                        // Use setTimeout to ensure DOM is ready
-                        setTimeout(() => {
-                          forceApplyDarkThemeStyles(popupElement);
-                        }, 10);
-                      }
-                    }
-                  }
-                });
-
-                attachAcceptHandler(marker, order.id, map, "regular"); // Pass "regular" for pending orders
-              }
-            } catch (error) {
-              logger.error(
-                "Error rendering pending order marker",
-                "MapSection",
-                {
-                  orderId: order.id,
-                  error:
-                    error instanceof Error ? error.message : "Unknown error",
-                  location: locationKey,
-                  groupSize: orders.length,
-                  indexInGroup: index,
-                }
-              );
-            }
-          });
-        });
-      }
-
-      // Process available unassigned orders with grouping - only when online
-      // Double-check isOnline here in case it changed during async operations
-      const stillOnlineForAvailable = isOnlineRef.current;
-      if (!stillOnlineForAvailable) {
-        clearOrderMarkers();
-      } else if (allAvailableOrders?.length > 0 && map && map.getContainer()) {
-        // Group available orders by location
-        const groupedAvailableOrders = new Map<
-          string,
-          typeof allAvailableOrders
-        >();
-        allAvailableOrders.forEach((order) => {
-          if (!order.shopLatitude || !order.shopLongitude) {
-            return;
-          }
-          const key = `${order.shopLatitude.toFixed(
-            5
-          )},${order.shopLongitude.toFixed(5)}`;
-          if (!groupedAvailableOrders.has(key)) {
-            groupedAvailableOrders.set(key, []);
-          }
-          groupedAvailableOrders.get(key)?.push(order);
-        });
-
-        // Log grouped orders information
-        logger.info(
-          "Available orders (30+ min old) grouped by location on map",
-          "MapSection",
-          {
-            totalOrders: allAvailableOrders.length,
-            groupCount: groupedAvailableOrders.size,
-            groupSizes: Array.from(groupedAvailableOrders.entries()).map(
-              ([key, orders]) => ({
-                location: key,
-                orderCount: orders.length,
-                orderIds: orders.map((o) => o.id),
-              })
-            ),
-          }
-        );
-
-        // Process each group of orders
-        groupedAvailableOrders.forEach((orders, locationKey) => {
-          const [baseLat, baseLng] = locationKey.split(",").map(Number);
-
-          orders.forEach((order, index) => {
-            try {
-              // Calculate offset based on position in group
-              const offset = calculateMarkerOffset(index, orders.length);
-              const adjustedLat = baseLat + offset.lat;
-              const adjustedLng = baseLng + offset.lng;
-
-              const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(
-                  order.estimatedEarnings || order.earnings || "0",
-                  order.orderType
-                ),
-                zIndexOffset: 1000 + index,
-              });
-
-              if (safeAddMarker(marker, map, `order ${order.id}`)) {
-                const popup = marker.bindPopup(
-                  createOrderPopupContent(order, false),
-                  {
-                    maxWidth: 300,
-                    className: `${
-                      theme === "dark"
-                        ? "dark-theme-popup"
-                        : "light-theme-popup"
-                    }`,
-                    closeButton: true,
-                    closeOnClick: false,
-                  }
-                );
-
-                // Apply dark theme class to popup wrapper
-                marker.on("popupopen", () => {
-                  if (marker) {
-                    const popup = marker.getPopup();
-                    if (popup) {
-                      const popupElement = popup.getElement();
-                      if (popupElement && theme === "dark") {
-                        // Use setTimeout to ensure DOM is ready
-                        setTimeout(() => {
-                          forceApplyDarkThemeStyles(popupElement);
-                        }, 10);
-                      }
-                    }
-                  }
-                });
-
-                attachAcceptHandler(marker, order.id, map, order.orderType); // Pass orderType for available orders
-                orderMarkersRef.current.push(marker);
-              }
-            } catch (error) {
-              logger.error(
-                "Error rendering available order marker",
-                "MapSection",
-                {
-                  orderId: order.id,
-                  error:
-                    error instanceof Error ? error.message : "Unknown error",
-                  location: locationKey,
-                  groupSize: orders.length,
-                  indexInGroup: index,
-                }
-              );
-            }
-          });
-        });
-      }
+      // Batches/orders have been intentionally removed from the map per user request.
+      clearOrderMarkers();
     } catch (error) {
       // Silent fail
     }
@@ -3008,15 +2781,15 @@ export default function MapSection({
 
       if (intensity > 0.7) {
         color = theme === "dark" ? "#ef4444" : "#dc2626"; // Red
-        fillOpacity = 0.35;
+        fillOpacity = 0.6;
         strokeOpacity = 0.8;
       } else if (intensity > 0.4) {
         color = theme === "dark" ? "#f59e0b" : "#d97706"; // Orange
-        fillOpacity = 0.3;
+        fillOpacity = 0.5;
         strokeOpacity = 0.7;
       } else {
         color = theme === "dark" ? "#10b981" : "#059669"; // Green
-        fillOpacity = 0.25;
+        fillOpacity = 0.4;
         strokeOpacity = 0.6;
       }
 
@@ -3030,6 +2803,7 @@ export default function MapSection({
         opacity: 0,
         weight: 0,
         radius: radius,
+        className: "heatmap-blob",
       }).addTo(map);
 
       // Add popup with cluster info
@@ -3405,6 +3179,12 @@ export default function MapSection({
   // Always render the map container so mapRef is available when mapLoaded becomes true
   return (
     <div className="relative h-full w-full md:rounded-lg">
+      <style>{`
+        .heatmap-blob {
+          filter: blur(25px);
+          pointer-events: none;
+        }
+      `}</style>
       {/* Daily Earnings Badge */}
       {!isExpanded && (
         <div className="absolute left-1/2 top-4 z-[1001] -translate-x-1/2 transform rounded-full border border-white/20 bg-white/80 px-5 py-2.5 text-[var(--text-primary)] shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-black/60 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
@@ -3551,31 +3331,44 @@ export default function MapSection({
           {/* Busy Areas Toggle Button - only show when online */}
           {isOnline && (
             <button
-              onClick={() => setShowBusyAreas(!showBusyAreas)}
-              className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-xl px-4 py-2.5 font-semibold shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+              onClick={() => {
+                const newValue = !showBusyAreas;
+                setShowBusyAreas(newValue);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem(
+                    "shopper_show_busy_areas",
+                    String(newValue)
+                  );
+                }
+              }}
+              className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-full px-3 py-2 font-bold shadow-xl transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] ${
                 showBusyAreas
-                  ? "border border-purple-400/30 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
-                  : "border border-white/20 bg-white/80 text-[var(--text-primary)] backdrop-blur-xl hover:bg-white/90 dark:border-white/10 dark:bg-black/60 dark:hover:bg-black/80"
+                  ? "border border-orange-500/50 bg-gradient-to-r from-orange-500 to-red-500 text-white"
+                  : "border border-black/5 bg-white/90 text-gray-600 backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A1A]/90 dark:text-gray-300"
               }`}
-              title={showBusyAreas ? "Hide busy areas" : "Show busy areas"}
+              title={showBusyAreas ? "Turn off Heatmap" : "Turn on Heatmap"}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                className="h-5 w-5"
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                  showBusyAreas
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                }`}
               >
-                <path
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                />
-              </svg>
-              <span className="hidden md:inline">
-                {showBusyAreas ? "Hide" : "Show"} Busy Areas
+                >
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                </svg>
               </span>
-              {showBusyAreas && <span className="text-xs opacity-80">🔥</span>}
+              <span className="pr-1 text-[13px] tracking-wide">Heatmap</span>
             </button>
           )}
 

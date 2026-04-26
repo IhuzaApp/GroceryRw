@@ -25,120 +25,165 @@ const BusiestTimesCard: React.FC<BusiestTimesCardProps> = ({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
+      className={`group relative overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(16,185,129,0.05)] ${
         isDark
-          ? "border border-white/10 bg-white/5"
-          : "border border-black/5 bg-white shadow-xl"
+          ? "border border-white/5 bg-gray-900/40 shadow-2xl shadow-black/20 backdrop-blur-2xl"
+          : "border border-gray-100 bg-white shadow-2xl shadow-gray-200/50"
       }`}
     >
-      <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-emerald-500/5 opacity-50 blur-3xl" />
+      <div
+        className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-[100px] transition-all duration-700 group-hover:scale-110 ${
+          isDark ? "bg-emerald-500/10" : "bg-emerald-500/5"
+        }`}
+      />
 
       <div className="relative z-10">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-black tracking-tight">Active Hours</h3>
-            <p className="mt-0.5 text-[10px] font-black uppercase tracking-widest opacity-40">
-              Peak Activity
+            <h3
+              className={`text-2xl font-black tracking-tight ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Active Hours
+            </h3>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500/60">
+              Peak Intensity Analysis
             </p>
           </div>
-          <button
-            className={`${
-              isDark
-                ? "text-white/20 hover:text-white/60"
-                : "text-black/20 hover:text-black/60"
-            } transition-colors`}
+          <div
+            className={`rounded-2xl p-2.5 ${
+              isDark ? "bg-white/5" : "bg-gray-50"
+            }`}
           >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </button>
+            <Clock
+              className={`h-6 w-6 ${
+                isDark ? "text-white/40" : "text-gray-400"
+              }`}
+            />
+          </div>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+          <div className="flex h-48 items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
           </div>
         ) : activitySummary ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Busiest Day */}
             <div
-              className={`group/item relative overflow-hidden rounded-3xl p-5 transition-all duration-300 ${
+              className={`group/item relative overflow-hidden rounded-[2rem] p-6 transition-all duration-300 ${
                 isDark
-                  ? "border border-white/5 bg-white/5"
-                  : "border border-emerald-100 bg-emerald-50/50"
+                  ? "border border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                  : "border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50"
               }`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-center gap-5">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-inner transition-transform duration-500 group-hover/item:-rotate-3 ${
                     isDark
-                      ? "bg-emerald-500/10 text-emerald-400"
+                      ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-white/10"
                       : "bg-emerald-500 text-white"
                   }`}
                 >
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-7 w-7" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
                     Top Peak Day
                   </p>
-                  <p className="text-xl font-black tracking-tight text-emerald-500">
+                  <p
+                    className={`truncate text-2xl font-black tracking-tighter ${
+                      isDark ? "text-white" : "text-emerald-600"
+                    }`}
+                  >
                     {activitySummary.busiestDay}
                   </p>
-                  <p className="text-xs font-bold opacity-40">
-                    {activitySummary.busiestDayCount} orders (
-                    {Math.round(
-                      (activitySummary.busiestDayCount /
-                        activitySummary.totalOrders) *
-                        100
-                    )}
-                    %)
-                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs font-black tabular-nums">
+                      {activitySummary.busiestDayCount} Orders
+                    </span>
+                    <span
+                      className={`h-1 w-1 rounded-full ${
+                        isDark ? "bg-white/20" : "bg-black/20"
+                      }`}
+                    />
+                    <span className="text-xs font-black text-emerald-500">
+                      {Math.round(
+                        (activitySummary.busiestDayCount /
+                          activitySummary.totalOrders) *
+                          100
+                      )}
+                      % Volume
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Busiest Hour */}
             <div
-              className={`group/item relative overflow-hidden rounded-3xl p-5 transition-all duration-300 ${
+              className={`group/item relative overflow-hidden rounded-[2rem] p-6 transition-all duration-300 ${
                 isDark
-                  ? "border border-white/5 bg-white/5"
-                  : "border border-blue-100 bg-blue-50/50"
+                  ? "border border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                  : "border border-blue-100 bg-blue-50/50 hover:bg-blue-50"
               }`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-center gap-5">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-inner transition-transform duration-500 group-hover/item:rotate-3 ${
                     isDark
-                      ? "bg-blue-500/10 text-blue-400"
+                      ? "bg-blue-500/10 text-blue-400 ring-1 ring-white/10"
                       : "bg-blue-500 text-white"
                   }`}
                 >
-                  <Clock className="h-5 w-5" />
+                  <Clock className="h-7 w-7" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                    Peak Hour
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                    Peak Intensity
                   </p>
-                  <p className="text-xl font-black tracking-tight text-blue-500">
+                  <p
+                    className={`truncate text-2xl font-black tracking-tighter ${
+                      isDark ? "text-white" : "text-blue-600"
+                    }`}
+                  >
                     {activitySummary.busiestHour}
                   </p>
-                  <p className="text-xs font-bold opacity-40">
-                    {activitySummary.busiestHourCount} orders (
-                    {Math.round(
-                      (activitySummary.busiestHourCount /
-                        activitySummary.totalOrders) *
-                        100
-                    )}
-                    %)
-                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs font-black tabular-nums">
+                      {activitySummary.busiestHourCount} Orders
+                    </span>
+                    <span
+                      className={`h-1 w-1 rounded-full ${
+                        isDark ? "bg-white/20" : "bg-black/20"
+                      }`}
+                    />
+                    <span className="text-xs font-black text-blue-500">
+                      {Math.round(
+                        (activitySummary.busiestHourCount /
+                          activitySummary.totalOrders) *
+                          100
+                      )}
+                      % Traffic
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="py-8 text-center text-sm font-bold uppercase tracking-widest opacity-60">
-            <p>Gathering Insights...</p>
+          <div className="py-12 text-center">
+            <div
+              className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl ${
+                isDark ? "bg-white/5" : "bg-gray-50"
+              }`}
+            >
+              <Clock className="h-8 w-8 text-gray-400 opacity-20" />
+            </div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] opacity-20">
+              Analyzing historical data...
+            </p>
           </div>
         )}
       </div>

@@ -89,14 +89,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const handleExportToExcel = () => {
     try {
-      toast.loading("Preparing Premium Report...");
-      const totalEarnings = filteredTransactions
-        .filter((t) => getTransactionCategory(t.type) === "earning")
-        .reduce((sum, t) => sum + t.amount, 0);
-      const totalPayouts = filteredTransactions
-        .filter((t) => getTransactionCategory(t.type) === "payout")
-        .reduce((sum, t) => sum + t.amount, 0);
-
+      toast.loading("Architecting Statement...", { id: "export" });
       const exportData = filteredTransactions.map((t, index) => ({
         "#": index + 1,
         "Transaction ID": t.id,
@@ -109,55 +102,56 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
       const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-      XLSX.writeFile(wb, `Payment_History_${new Date().getTime()}.xlsx`);
-      toast.dismiss();
-      toast.success("Report Generated Successfully");
+      XLSX.utils.book_append_sheet(wb, ws, "Statement");
+      XLSX.writeFile(wb, `Financial_Statement_${new Date().getTime()}.xlsx`);
+      toast.success("Statement Generated", { id: "export" });
     } catch (error) {
-      toast.dismiss();
-      toast.error("Export Failed");
+      toast.error("Export Failed", { id: "export" });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader size="md" content="Syncing Ledgers..." />
+      <div className="flex flex-col items-center justify-center space-y-6 py-32">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
+        <p className="animate-pulse text-xs font-black uppercase tracking-[0.25em] opacity-40">
+          Syncing Financial Ledger...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 duration-1000 animate-in fade-in slide-in-from-bottom-4">
       {/* Premium Header & Filters */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="scrollbar-hide flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0">
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="scrollbar-hide flex items-center gap-4 overflow-x-auto pb-4 lg:pb-0">
           {[
             {
               id: "all",
-              label: "All Logs",
+              label: "Global History",
               icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2",
             },
             {
               id: "earning",
-              label: "Income",
+              label: "Income Logs",
               icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1",
             },
             {
               id: "payout",
-              label: "Outflow",
+              label: "Payouts",
               icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
             },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`flex items-center gap-2.5 whitespace-nowrap rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+              className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-500 active:scale-95 ${
                 filter === tab.id
-                  ? "bg-emerald-500 text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)]"
+                  ? "bg-emerald-500 text-white shadow-[0_10px_25px_rgba(16,185,129,0.3)] ring-1 ring-emerald-400"
                   : isDark
-                  ? "bg-white/5 text-white/40 hover:bg-white/10"
-                  : "bg-black/5 text-black/40 hover:bg-black/10"
+                  ? "border border-white/5 bg-white/5 text-white/40 hover:bg-white/10"
+                  : "border border-gray-100 bg-white text-gray-500 shadow-sm hover:bg-gray-50"
               }`}
             >
               <svg
@@ -180,8 +174,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
         <button
           onClick={handleExportToExcel}
-          className={`flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 ${
-            isDark ? "bg-white text-black" : "bg-black text-white shadow-xl"
+          className={`flex items-center justify-center gap-3 rounded-2xl px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all duration-500 hover:scale-[1.02] active:scale-95 ${
+            isDark
+              ? "bg-white text-black hover:bg-gray-100"
+              : "bg-black text-white shadow-black/20 hover:bg-gray-800"
           }`}
         >
           <svg
@@ -197,81 +193,127 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
             />
           </svg>
-          Export Statement
+          Export Financial Statement
         </button>
       </div>
 
-      {/* Floating Glass Strips Container */}
-      <div className="space-y-3">
-        <div className="hidden grid-cols-6 px-8 py-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-30 lg:grid">
+      {/* Main Ledger List */}
+      <div className="space-y-4">
+        <div className="hidden grid-cols-6 px-10 py-4 text-[10px] font-black uppercase tracking-[0.3em] opacity-30 lg:grid">
           <div className="col-span-2">Transaction Details</div>
           <div>Amount</div>
-          <div>Flow Type</div>
+          <div>Category</div>
           <div>Execution Date</div>
-          <div className="text-right">Status</div>
+          <div className="text-right">Settlement</div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pb-12">
           {filteredTransactions.length === 0 ? (
             <div
-              className={`rounded-[2.5rem] border-2 border-dashed py-20 text-center ${
-                isDark ? "border-white/5" : "border-black/5"
+              className={`rounded-[3rem] border-2 border-dashed py-32 text-center transition-colors ${
+                isDark
+                  ? "border-white/5 bg-white/[0.01]"
+                  : "border-gray-100 bg-gray-50/50"
               }`}
             >
-              <p className="text-sm font-black uppercase tracking-widest opacity-20">
-                No matching records
+              <div
+                className={`mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
+                  isDark ? "bg-white/5" : "bg-white shadow-xl"
+                }`}
+              >
+                <svg
+                  className="h-10 w-10 text-gray-400 opacity-20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <p className="text-sm font-black uppercase tracking-[0.2em] opacity-20">
+                No matching financial records found
               </p>
             </div>
           ) : (
             filteredTransactions.map((t) => {
               const category = getTransactionCategory(t.type);
               const isEarning = category === "earning";
-              const accentColor = isEarning
-                ? "emerald"
-                : category === "payout"
-                ? "rose"
-                : "indigo";
+              const isPayout = category === "payout";
+
+              const accentStyles = isEarning
+                ? {
+                    bg: "bg-emerald-500/10",
+                    text: "text-emerald-500",
+                    border: "ring-emerald-500/20",
+                    amount: "text-emerald-500",
+                  }
+                : isPayout
+                ? {
+                    bg: "bg-rose-500/10",
+                    text: "text-rose-500",
+                    border: "ring-rose-500/20",
+                    amount: "text-rose-500",
+                  }
+                : {
+                    bg: "bg-indigo-500/10",
+                    text: "text-indigo-500",
+                    border: "ring-indigo-500/20",
+                    amount: "text-indigo-500",
+                  };
 
               return (
                 <div
                   key={t.id}
-                  className={`group relative overflow-hidden rounded-[2rem] p-4 transition-all duration-300 hover:scale-[1.01] lg:px-8 lg:py-5 ${
+                  className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
                     isDark
-                      ? "border border-white/10 bg-white/5 hover:bg-white/[0.08]"
-                      : "border border-black/5 bg-white shadow-sm hover:shadow-md"
+                      ? "border border-white/5 bg-gray-900/40 shadow-xl backdrop-blur-2xl hover:bg-gray-800/60"
+                      : "border border-gray-100 bg-white shadow-xl shadow-gray-200/50 hover:border-emerald-200"
                   }`}
                 >
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-6 lg:items-center">
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-6 lg:items-center">
                     {/* Details */}
-                    <div className="col-span-2 flex items-center gap-4">
+                    <div className="col-span-2 flex items-center gap-6">
                       <div
-                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xs font-black ${
+                        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-[11px] font-black tracking-tighter ring-1 transition-all duration-500 group-hover:rotate-12 ${
                           isDark
-                            ? `bg-${accentColor}-500/10 text-${accentColor}-400`
-                            : `bg-${accentColor}-50 text-${accentColor}-600`
+                            ? `${accentStyles.bg} ${accentStyles.text} ${accentStyles.border}`
+                            : `${accentStyles.bg.replace("10", "100")} ${
+                                accentStyles.text
+                              } ${accentStyles.border}`
                         }`}
                       >
                         {getInitials(t.description)}
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="truncate font-black tracking-tight">
+                      <div className="min-w-0 space-y-1">
+                        <h4
+                          className={`truncate text-lg font-black tracking-tight ${
+                            isDark ? "text-white" : "text-gray-900"
+                          }`}
+                        >
                           {t.description}
                         </h4>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                          Ref: #{t.id.slice(-6)}
+                        <p
+                          className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                            isDark ? "text-white/20" : "text-gray-400"
+                          }`}
+                        >
+                          ID: {t.id.slice(-8).toUpperCase()}
                         </p>
                       </div>
                     </div>
 
                     {/* Amount */}
                     <div className="flex flex-col lg:block">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
-                        Amount
+                      <span className="mb-1 text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Quantum
                       </span>
                       <span
-                        className={`text-lg font-black ${
-                          isEarning ? "text-emerald-500" : "text-rose-500"
-                        }`}
+                        className={`text-xl font-black tabular-nums tracking-tighter ${accentStyles.amount}`}
                       >
                         {isEarning ? "+" : "-"}
                         {formatCurrencySync(t.amount)}
@@ -280,14 +322,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
                     {/* Type */}
                     <div className="flex flex-col lg:block">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
-                        Category
+                      <span className="mb-1 text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Classification
                       </span>
                       <span
-                        className={`inline-flex rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-tight ${
+                        className={`inline-flex rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
                           isDark
-                            ? "bg-white/5 text-white/60"
-                            : "bg-black/5 text-black/60"
+                            ? "bg-white/5 text-white/40 ring-1 ring-white/10"
+                            : "bg-gray-100 text-gray-500 ring-1 ring-gray-200"
                         }`}
                       >
                         {t.type}
@@ -296,10 +338,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
                     {/* Date */}
                     <div className="flex flex-col lg:block">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
-                        Date
+                      <span className="mb-1 text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
+                        Execution
                       </span>
-                      <span className="text-sm font-bold tabular-nums opacity-60">
+                      <span
+                        className={`text-sm font-black tabular-nums tracking-tight ${
+                          isDark ? "text-white/40" : "text-gray-500"
+                        }`}
+                      >
                         {formatDate(t.date)}
                       </span>
                     </div>
@@ -307,25 +353,36 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {/* Status */}
                     <div className="flex items-center justify-between lg:block lg:text-right">
                       <span className="text-[10px] font-black uppercase tracking-widest opacity-30 lg:hidden">
-                        Progress
+                        Settlement
                       </span>
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] ${
+                      <div
+                        className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${
                           t.status.toLowerCase() === "completed"
-                            ? "bg-emerald-500/10 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                            : "bg-amber-500/10 text-amber-500"
+                            ? "bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)] ring-1 ring-emerald-500/20"
+                            : "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
                         }`}
                       >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            t.status.toLowerCase() === "completed"
+                              ? "animate-pulse bg-emerald-500"
+                              : "bg-amber-500"
+                          }`}
+                        />
                         {t.status}
-                      </span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Flow Indicator Glow */}
                   <div
-                    className={`absolute left-0 top-0 h-full w-1 ${
-                      isEarning ? "bg-emerald-500" : "bg-rose-500"
-                    } opacity-40 transition-opacity group-hover:opacity-100`}
+                    className={`absolute left-0 top-0 h-full w-1.5 transition-all duration-500 group-hover:w-2 ${
+                      isEarning
+                        ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
+                        : isPayout
+                        ? "bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]"
+                        : "bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+                    }`}
                   />
                 </div>
               );

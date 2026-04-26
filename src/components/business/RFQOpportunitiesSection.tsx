@@ -350,43 +350,35 @@ export function RFQOpportunitiesSection({
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header & Filter Card */}
-      <div className="rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-xl transition-all duration-500 hover:shadow-2xl">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <h3 className="text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
-              RFQ Opportunities
-            </h3>
-            <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] opacity-60">
-              <TrendingUp className="h-4 w-4 text-green-500" />
-              <span>{filteredRFQs.length} active opportunities found</span>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Simplified Search & Category System */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative max-w-xl flex-1">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search active opportunities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-white/50 py-3 pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] backdrop-blur-sm transition-all focus:border-green-500/50 focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+          />
+        </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:w-1/2">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search RFQs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-[var(--bg-secondary)]/30 w-full rounded-2xl border border-[var(--bg-secondary)] py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
-              />
-            </div>
-
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-[var(--bg-secondary)]/30 rounded-2xl border border-[var(--bg-secondary)] px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:border-transparent focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
-            >
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category === "all" ? "All Sectors" : category}
-                </option>
-              ))}
-            </select>
+        <div className="flex gap-2">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="rounded-xl border border-gray-200 bg-white/50 px-4 py-3 text-xs font-black uppercase tracking-widest text-[var(--text-primary)] backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category === "all" ? "All Sectors" : category}
+              </option>
+            ))}
+          </select>
+          <div className="hidden items-center gap-2 rounded-xl bg-green-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-green-600 sm:flex">
+            <TrendingUp className="h-4 w-4" />
+            <span>{filteredRFQs.length} Opportunities</span>
           </div>
         </div>
       </div>

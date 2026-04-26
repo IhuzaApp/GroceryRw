@@ -105,6 +105,15 @@ export default function DesktopProfile({
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("account");
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  // OTP verification state for role switch
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [generatedOTP, setGeneratedOTP] = useState("");
+  const [otpInput, setOtpInput] = useState("");
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [pendingRole, setPendingRole] = useState<"user" | "shopper" | null>(
+    null
+  );
   // Keep visited tab content mounted to avoid refetching when switching tabs
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(
     new Set(["account"])
@@ -129,6 +138,50 @@ export default function DesktopProfile({
       setActiveTab("account");
     }
   }, [activeTab, referralStatus, loadingReferral]);
+
+  // Handle switch with OTP verification
+  const handleSwitchWithOTP = async () => {
+    const nextRole = role === "user" ? "shopper" : "user";
+    setPendingRole(nextRole);
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedOTP(otp);
+    setOtpInput("");
+    setOtpError("");
+    setIsSendingOTP(true);
+    try {
+      await fetch("/api/shopper/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp, email: user?.email, phone: user?.phone }),
+      });
+      setShowOTPModal(true);
+    } catch {
+      toast.error("Failed to send verification code. Please try again.");
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otpInput.trim() !== generatedOTP) {
+      setOtpError("Invalid code. Please try again.");
+      return;
+    }
+    setShowOTPModal(false);
+    setIsSwitchingRole(true);
+    try {
+      await initiateRoleSwitch(pendingRole!);
+      toggleRole();
+      toast.success(
+        `Switched to ${pendingRole === "user" ? "User" : "Shopper"}`
+      );
+    } catch {
+      toast.error("Failed to switch account");
+    } finally {
+      setIsSwitchingRole(false);
+      setPendingRole(null);
+    }
+  };
 
   // Handle click on "Become a Plasa" button
   const handleBecomePlasa = (e: React.MouseEvent) => {
@@ -317,34 +370,36 @@ export default function DesktopProfile({
           {/* Account Summary Section */}
           <div className="lg:col-span-4">
             <div className="grid grid-cols-1 gap-4">
-              <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 p-5 text-white shadow-xl shadow-green-500/20 transition-all hover:-translate-y-1">
+              <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 p-5 shadow-xl shadow-green-500/20 transition-all hover:-translate-y-1">
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                    <p className="text-xs font-bold uppercase tracking-widest !text-white/70">
                       Total Orders
                     </p>
-                    <h3 className="text-3xl font-black">{orderCount}</h3>
+                    <h3 className="text-3xl font-black !text-white">
+                      {orderCount}
+                    </h3>
                   </div>
                   <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
-                    <ShoppingBag className="h-6 w-6" />
+                    <ShoppingBag className="h-6 w-6 !text-white" />
                   </div>
                 </div>
                 <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
               </div>
 
               {shopperStatus?.active && (
-                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-1">
                   <div className="relative z-10 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-white/70">
+                      <p className="text-xs font-bold uppercase tracking-widest !text-white/70">
                         Wallet Balance
                       </p>
-                      <h3 className="text-3xl font-black">
+                      <h3 className="text-3xl font-black !text-white">
                         {formatCurrency(walletBalance)}
                       </h3>
                     </div>
                     <div className="rounded-xl bg-white/20 p-3 backdrop-blur-md">
-                      <Wallet className="h-6 w-6" />
+                      <Wallet className="h-6 w-6 !text-white" />
                     </div>
                   </div>
                   <div className="absolute -bottom-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
@@ -357,24 +412,18 @@ export default function DesktopProfile({
           <div className="lg:col-span-3">
             <div className="flex h-full flex-col justify-between gap-4">
               <div className="space-y-3">
-                {/* Become a Plasa Button */}
+                {/* Become a Plasa / Switch Service Button */}
                 {!loadingShopper && (
                   <button
                     onClick={(e) => {
                       if (shopperStatus?.active) {
-                        const nextRole = role === "user" ? "shopper" : "user";
-                        setIsSwitchingRole(true);
-                        initiateRoleSwitch(nextRole as "user" | "shopper")
-                          .then(() => {
-                            toggleRole();
-                            toast.success(
-                              `Switched to ${
-                                nextRole === "user" ? "User" : "Shopper"
-                              }`
-                            );
-                          })
-                          .catch(() => toast.error("Failed to switch account"))
-                          .finally(() => setIsSwitchingRole(false));
+                        if (isGuest) {
+                          toast.error(
+                            "Please create a full account to switch service"
+                          );
+                          return;
+                        }
+                        handleSwitchWithOTP();
                       } else {
                         if (isGuest) {
                           toast.error(
@@ -387,17 +436,18 @@ export default function DesktopProfile({
                     }}
                     disabled={
                       isSwitchingRole ||
+                      isSendingOTP ||
                       (!shopperStatus?.active &&
                         (shopperStatus?.status === "pending" ||
                           shopperStatus?.status === "under_review"))
                     }
-                    className={`relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-4 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
+                    className={`relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-4 py-3.5 text-xs font-black uppercase tracking-widest !text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
                       shopperStatus?.active
                         ? "bg-gray-900 hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200"
                         : "bg-gradient-to-r from-green-500 to-emerald-600 shadow-green-500/20 hover:from-green-600 hover:to-emerald-700"
                     }`}
                   >
-                    {isSwitchingRole ? (
+                    {isSwitchingRole || isSendingOTP ? (
                       <RefreshCw className="h-4 w-4 animate-spin" />
                     ) : shopperStatus?.active ? (
                       <ArrowRightLeft className="h-4 w-4" />
@@ -405,7 +455,9 @@ export default function DesktopProfile({
                       <Zap className="h-4 w-4" />
                     )}
                     <span>
-                      {isSwitchingRole
+                      {isSendingOTP
+                        ? "Sending Code..."
+                        : isSwitchingRole
                         ? "Switching..."
                         : shopperStatus?.active
                         ? "Switch Service"
@@ -754,6 +806,110 @@ export default function DesktopProfile({
         currentAvatar={user?.profile_picture}
         onAvatarSaved={onAvatarChange}
       />
+
+      {/* OTP Verification Modal for Role Switch */}
+      {showOTPModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowOTPModal(false)}
+          />
+          {/* Modal Card */}
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-900">
+            {/* Top accent bar */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500" />
+
+            <div className="p-8">
+              {/* Icon */}
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-500/30">
+                  <svg
+                    className="h-8 w-8 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="mb-1 text-center text-2xl font-black text-gray-900 dark:text-white">
+                Verify It&apos;s You
+              </h2>
+              <p className="mb-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                We sent a 4-digit code to your phone/email. Enter it below to
+                confirm the profile switch.
+              </p>
+
+              {/* OTP Input */}
+              <div className="mt-6">
+                <input
+                  type="text"
+                  maxLength={4}
+                  inputMode="numeric"
+                  value={otpInput}
+                  onChange={(e) => {
+                    setOtpInput(e.target.value.replace(/\D/g, ""));
+                    setOtpError("");
+                  }}
+                  placeholder="· · · ·"
+                  className={`w-full rounded-2xl border-2 bg-gray-50 px-4 py-4 text-center text-3xl font-black tracking-[0.5em] text-gray-900 outline-none transition-all dark:bg-gray-800 dark:text-white ${
+                    otpError
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-gray-200 focus:border-emerald-500 dark:border-gray-700"
+                  }`}
+                  autoFocus
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    otpInput.length === 4 &&
+                    handleVerifyOTP()
+                  }
+                />
+                {otpError && (
+                  <p className="mt-2 text-center text-sm font-semibold text-red-500">
+                    {otpError}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setShowOTPModal(false)}
+                  className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleVerifyOTP}
+                  disabled={otpInput.length !== 4}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-green-500/20 transition-all hover:from-green-600 hover:to-emerald-700 active:scale-95 disabled:opacity-40"
+                >
+                  Confirm
+                </button>
+              </div>
+
+              {/* Resend */}
+              <p className="mt-4 text-center text-xs text-gray-400">
+                Didn&apos;t receive a code?{" "}
+                <button
+                  onClick={handleSwitchWithOTP}
+                  className="font-bold text-emerald-600 hover:underline dark:text-emerald-400"
+                >
+                  Resend
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

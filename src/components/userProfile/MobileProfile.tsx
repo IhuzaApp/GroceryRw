@@ -91,6 +91,15 @@ export default function MobileProfile({
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  // OTP verification state for role switch
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [generatedOTP, setGeneratedOTP] = useState("");
+  const [otpInput, setOtpInput] = useState("");
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [pendingRole, setPendingRole] = useState<"user" | "shopper" | null>(
+    null
+  );
   // Keep visited tab content mounted to avoid refetching when switching tabs
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set());
 
@@ -115,6 +124,50 @@ export default function MobileProfile({
   // Handle back navigation
   const handleBack = () => {
     setActiveTab("");
+  };
+
+  // Handle switch with OTP verification
+  const handleSwitchWithOTP = async () => {
+    const nextRole = role === "user" ? "shopper" : "user";
+    setPendingRole(nextRole);
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedOTP(otp);
+    setOtpInput("");
+    setOtpError("");
+    setIsSendingOTP(true);
+    try {
+      await fetch("/api/shopper/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp, email: user?.email, phone: user?.phone }),
+      });
+      setShowOTPModal(true);
+    } catch {
+      toast.error("Failed to send verification code. Please try again.");
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otpInput.trim() !== generatedOTP) {
+      setOtpError("Invalid code. Please try again.");
+      return;
+    }
+    setShowOTPModal(false);
+    setIsSwitchingRole(true);
+    try {
+      await initiateRoleSwitch(pendingRole!);
+      toggleRole();
+      toast.success(
+        `Switched to ${pendingRole === "user" ? "User" : "Shopper"}`
+      );
+    } catch {
+      toast.error("Failed to switch account");
+    } finally {
+      setIsSwitchingRole(false);
+      setPendingRole(null);
+    }
   };
 
   // Handle click on "Become a Plasa" button
@@ -836,42 +889,51 @@ export default function MobileProfile({
           <div className="h-12 w-full animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
         ) : shopperStatus?.active ? (
           <button
-            className="group relative flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
-            onClick={async () => {
-              const nextRole = role === "user" ? "shopper" : "user";
-              setIsSwitchingRole(true);
-              try {
-                await initiateRoleSwitch(nextRole as "user" | "shopper");
-                toggleRole();
-                toast.success(
-                  `Switched to ${nextRole === "user" ? "User" : "Shopper"}`
-                );
-              } catch (error) {
-                console.error("Error updating role:", error);
-                toast.error("Failed to switch account");
-              } finally {
-                setIsSwitchingRole(false);
-              }
-            }}
-            disabled={isSwitchingRole}
+            className="group relative flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+            onClick={handleSwitchWithOTP}
+            disabled={isSwitchingRole || isSendingOTP}
           >
             <div className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-              <svg
-                className="h-5 w-5 !text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                />
-              </svg>
+              {isSwitchingRole || isSendingOTP ? (
+                <svg
+                  className="h-5 w-5 animate-spin !text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-5 w-5 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                  />
+                </svg>
+              )}
             </div>
             <span className="!text-white">
-              {isSwitchingRole
+              {isSendingOTP
+                ? "Sending Code..."
+                : isSwitchingRole
                 ? "Switching..."
                 : `Switch to ${role === "user" ? "Shopper" : "User"}`}
             </span>
@@ -1027,6 +1089,100 @@ export default function MobileProfile({
         currentAvatar={user?.profile_picture}
         onAvatarSaved={onAvatarChange}
       />
+
+      {/* OTP Verification Modal for Role Switch */}
+      {showOTPModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowOTPModal(false)}
+          />
+          {/* Modal Card */}
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-900">
+            <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500" />
+            <div className="p-8">
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-500/30">
+                  <svg
+                    className="h-8 w-8 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="mb-1 text-center text-2xl font-black text-gray-900 dark:text-white">
+                Verify It&apos;s You
+              </h2>
+              <p className="mb-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                We sent a 4-digit code to your phone/email. Enter it below to
+                confirm the profile switch.
+              </p>
+              <div className="mt-6">
+                <input
+                  type="text"
+                  maxLength={4}
+                  inputMode="numeric"
+                  value={otpInput}
+                  onChange={(e) => {
+                    setOtpInput(e.target.value.replace(/\D/g, ""));
+                    setOtpError("");
+                  }}
+                  placeholder="· · · ·"
+                  className={`w-full rounded-2xl border-2 bg-gray-50 px-4 py-4 text-center text-3xl font-black tracking-[0.5em] text-gray-900 outline-none transition-all dark:bg-gray-800 dark:text-white ${
+                    otpError
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-gray-200 focus:border-emerald-500 dark:border-gray-700"
+                  }`}
+                  autoFocus
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    otpInput.length === 4 &&
+                    handleVerifyOTP()
+                  }
+                />
+                {otpError && (
+                  <p className="mt-2 text-center text-sm font-semibold text-red-500">
+                    {otpError}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setShowOTPModal(false)}
+                  className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleVerifyOTP}
+                  disabled={otpInput.length !== 4}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-green-500/20 transition-all hover:from-green-600 hover:to-emerald-700 active:scale-95 disabled:opacity-40"
+                >
+                  Confirm
+                </button>
+              </div>
+              <p className="mt-4 text-center text-xs text-gray-400">
+                Didn&apos;t receive a code?{" "}
+                <button
+                  onClick={handleSwitchWithOTP}
+                  className="font-bold text-emerald-600 hover:underline dark:text-emerald-400"
+                >
+                  Resend
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

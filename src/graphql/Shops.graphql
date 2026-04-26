@@ -2,7 +2,6 @@ query GetShops {
   Shops {
     id
     name
-    description
     category_id
     image
     address
@@ -17,5 +16,37 @@ query GetShops {
     relatedTo
     ssd
     tin
+    description
+    has_wallet
+    rdb_certificate
+    use_wallet
+    merchant_wallet {
+      active
+      balance
+      created_at
+      id
+      restaurant_id
+      shop_id
+      update_at
+    }
+    Products {
+      buying_price
+      category
+      created_at
+      expiry_date
+      final_price
+      id
+      image
+      is_active
+      measurement_unit
+      price
+      productName_id
+      quantity
+      reorder_point
+      shop_id
+      sku
+      supplier
+      updated_at
+    }
   }
 }

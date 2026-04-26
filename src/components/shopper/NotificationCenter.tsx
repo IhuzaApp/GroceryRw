@@ -5,13 +5,16 @@ import { useTheme } from "../../context/ThemeContext";
 import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 import { useSession } from "next-auth/react";
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
+import { useRouter } from "next/router";
+import { toast } from "react-hot-toast";
+import { createPortal } from "react-dom";
 
 // Check if mobile
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -54,6 +57,10 @@ export default function NotificationCenter() {
   );
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  const router = useRouter();
+  const isShopping = router.pathname.includes("/Plasa/active-batches");
+  const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
 
   // Ensure FCM is initialized anywhere the notification bell exists
   // (singleton guarded in fcmClient to prevent duplicate listeners)
@@ -116,6 +123,104 @@ export default function NotificationCenter() {
       window.removeEventListener("storage", onHistoryUpdated as EventListener);
     };
   }, [assignedOrderIds]); // Reload when assigned orders change
+
+  // Detect new notifications and show a small toast if we are on the active-batches page
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latest = notifications[0]; // notifications are sorted newest first
+      if (latest.timestamp > lastSeenTimestamp && !latest.read) {
+        setLastSeenTimestamp(latest.timestamp);
+
+        // Play notification sound
+        try {
+          const audio = new Audio("/notifySound.mp3");
+          audio.volume = 0.6;
+          audio.play().catch(() => {
+            // Play failed (e.g. user hasn't interacted with page) - ignore
+          });
+        } catch (e) {
+          // ignore sound errors
+        }
+
+        // Show small toast if shopping
+        if (isShopping) {
+          toast.custom(
+            (t) => (
+              <div
+                className={`${
+                  t.visible
+                    ? "duration-300 animate-in fade-in slide-in-from-top-2"
+                    : "duration-300 animate-out fade-out slide-out-to-top-2"
+                } pointer-events-auto flex w-full max-w-sm overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A1A]/90`}
+              >
+                <div className="w-0 flex-1 p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          theme === "dark"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-emerald-100 text-emerald-600"
+                        }`}
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p
+                        className={`text-sm font-bold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {latest.title}
+                      </p>
+                      <p
+                        className={`mt-1 line-clamp-2 text-xs ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {latest.body}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`flex border-l ${
+                    theme === "dark" ? "border-white/10" : "border-gray-200"
+                  }`}
+                >
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className={`flex w-full items-center justify-center rounded-none border border-transparent p-4 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
+                      theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ),
+            { duration: 5000, position: "top-center" }
+          );
+        }
+      } else if (lastSeenTimestamp === 0) {
+        // Initialize on first load
+        setLastSeenTimestamp(latest.timestamp);
+      }
+    }
+  }, [notifications, isShopping, lastSeenTimestamp, theme]);
 
   // Load currency from system configuration
   useEffect(() => {
@@ -490,10 +595,10 @@ export default function NotificationCenter() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 active:scale-90 ${
+        className={`group relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 ${
           theme === "dark"
-            ? "bg-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] hover:bg-white/10"
-            : "bg-gray-100 text-emerald-600 shadow-md hover:bg-gray-200"
+            ? "bg-gradient-to-br from-white/10 to-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ring-1 ring-white/10 hover:from-white/15 hover:to-white/10"
+            : "bg-gradient-to-br from-white to-gray-50 text-emerald-600 shadow-md ring-1 ring-black/5 hover:shadow-lg"
         }`}
         title="Notifications"
       >
@@ -511,421 +616,428 @@ export default function NotificationCenter() {
           />
         </svg>
 
-        {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-lg ring-2 ring-white duration-300 animate-in zoom-in dark:ring-gray-900">
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-[10px] font-black text-white shadow-lg ring-2 ring-white duration-300 animate-in zoom-in dark:ring-[#0A0A0A]">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {/* Notification Dropdown/Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col md:relative md:block">
-          {/* Backdrop for mobile */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm duration-500 animate-in fade-in md:hidden"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Dropdown Panel - Cinematic Bottom Sheet on mobile */}
-          <div
-            ref={panelRef}
-            className={`${
-              isMobile
-                ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[3rem] duration-500 animate-in slide-in-from-bottom"
-                : "absolute right-0 top-12 z-50 w-[24rem] overflow-hidden rounded-2xl duration-200 animate-in zoom-in-95"
-            } ${
-              theme === "dark"
-                ? "border border-white/10 bg-[#0A0A0A]/90 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] shadow-black/80 backdrop-blur-2xl"
-                : "border border-black/5 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur-2xl"
-            }`}
-          >
-            {/* Grab Handle for Mobile */}
-            {isMobile && (
-              <div className="flex justify-center p-3">
-                <div
-                  className={`h-1 w-12 rounded-full ${
-                    theme === "dark" ? "bg-white/10" : "bg-black/10"
-                  }`}
-                ></div>
-              </div>
-            )}
-            {/* Header */}
+      {isOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[10001] flex flex-col md:relative md:block">
+            {/* Backdrop for mobile */}
             <div
-              className={`sticky top-0 z-10 flex items-center justify-between border-b px-6 py-5 ${
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm duration-500 animate-in fade-in md:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Dropdown Panel - Cinematic Bottom Sheet on mobile */}
+            <div
+              ref={panelRef}
+              className={`${
+                isMobile
+                  ? "fixed inset-x-0 bottom-0 top-[15%] z-50 flex flex-col overflow-hidden rounded-t-[2.5rem] duration-500 animate-in slide-in-from-bottom"
+                  : "fixed right-[20px] top-[70px] z-50 w-[24rem] origin-top-right overflow-hidden rounded-3xl shadow-2xl duration-300 animate-in zoom-in-95"
+              } ${
                 theme === "dark"
-                  ? "border-white/5 bg-[#0A0A0A]/40"
-                  : "border-black/5 bg-white/40"
-              } backdrop-blur-md`}
-            >
-              <div>
-                <h3
-                  className={`text-lg font-black tracking-tight ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Notifications{" "}
-                  {unreadCount > 0 && (
-                    <span className="ml-1 font-bold text-emerald-500">
-                      ({unreadCount})
-                    </span>
-                  )}
-                </h3>
-              </div>
-              <div className="flex items-center gap-1">
-                {notifications.length > 0 && (
-                  <>
-                    <button
-                      onClick={markAllAsRead}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all active:scale-90 ${
-                        theme === "dark"
-                          ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                          : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                      }`}
-                      aria-label="Mark all as read"
-                      title="Mark all as read"
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M9 12l2 2 4-4" />
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={clearAll}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all active:scale-90 ${
-                        theme === "dark"
-                          ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                          : "bg-red-50 text-red-600 hover:bg-red-100"
-                      }`}
-                      aria-label="Clear all notifications"
-                      title="Clear all"
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                      </svg>
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className={`ml-2 inline-flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 ${
-                    theme === "dark"
-                      ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
-                  }`}
-                  aria-label="Close notifications"
-                  title="Close"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Notifications List */}
-            <div
-              className={`overflow-y-auto ${
-                isMobile ? "max-h-[calc(100vh-12rem)]" : "max-h-96"
+                  ? "border border-white/10 bg-[#0A0A0A]/80 shadow-[0_30px_100px_-15px_rgba(0,0,0,1)] backdrop-blur-3xl"
+                  : "border border-black/5 bg-white/80 shadow-[0_30px_100px_-15px_rgba(0,0,0,0.15)] backdrop-blur-3xl"
               }`}
             >
-              {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 text-center">
+              {/* Grab Handle for Mobile */}
+              {isMobile && (
+                <div className="flex justify-center p-3">
                   <div
-                    className={`mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] border-2 border-dashed ${
-                      theme === "dark"
-                        ? "border-white/10 bg-white/[0.03]"
-                        : "border-black/5 bg-gray-50"
+                    className={`h-1 w-12 rounded-full ${
+                      theme === "dark" ? "bg-white/10" : "bg-black/10"
                     }`}
-                  >
-                    <svg
-                      className={`h-10 w-10 ${
-                        theme === "dark" ? "text-white/20" : "text-gray-300"
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                      />
-                    </svg>
-                  </div>
-                  <h4
-                    className={`text-sm font-black tracking-tight ${
+                  ></div>
+                </div>
+              )}
+              {/* Header */}
+              <div
+                className={`sticky top-0 z-10 flex items-center justify-between border-b px-6 py-5 ${
+                  theme === "dark"
+                    ? "border-white/5 bg-[#0A0A0A]/40"
+                    : "border-black/5 bg-white/40"
+                } backdrop-blur-md`}
+              >
+                <div>
+                  <h3
+                    className={`text-lg font-black tracking-tight ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    No notifications yet
-                  </h4>
-                  <p
-                    className={`mt-2 max-w-[200px] text-[11px] leading-relaxed ${
-                      theme === "dark" ? "text-gray-500" : "text-gray-400"
-                    }`}
-                  >
-                    We'll notify you when you have new messages or order
-                    updates.
-                  </p>
-
-                  <div
-                    className={`mt-8 rounded-2xl border px-4 py-2 ${
-                      theme === "dark"
-                        ? "border-white/5 bg-white/[0.02]"
-                        : "border-black/5 bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          hasPermission
-                            ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                            : "bg-red-500"
-                        }`}
-                      ></div>
-                      <span
-                        className={`text-[10px] font-bold ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-600"
-                        }`}
-                      >
-                        FCM STATUS:{" "}
-                        {hasPermission
-                          ? isInitialized
-                            ? "CONNECTED"
-                            : "SYNCING..."
-                          : "DISABLED"}
+                    Notifications{" "}
+                    {unreadCount > 0 && (
+                      <span className="ml-1 font-bold text-emerald-500">
+                        ({unreadCount})
                       </span>
-                    </div>
-                  </div>
+                    )}
+                  </h3>
                 </div>
-              ) : (
-                notifications.map((notification, index) => (
-                  <div
-                    key={index}
-                    className={`group cursor-pointer border-b px-6 py-5 transition-all duration-300 ${
-                      theme === "dark"
-                        ? "border-white/5 hover:bg-white/[0.03]"
-                        : "border-black/5 hover:bg-gray-50"
-                    } ${
-                      !notification.read
-                        ? theme === "dark"
-                          ? "bg-emerald-500/10"
-                          : "bg-emerald-50/50"
-                        : ""
-                    }`}
-                    onClick={() => {
-                      // Mark as read when clicked
-                      if (!notification.read) {
-                        const updatedNotifications = [...notifications];
-                        updatedNotifications[index].read = true;
-                        const allHistory = JSON.parse(
-                          localStorage.getItem("fcm_notification_history") ||
-                            "[]"
-                        );
-                        const updatedHistory = allHistory.map(
-                          (n: NotificationItem) =>
-                            n.timestamp === notification.timestamp
-                              ? { ...n, read: true }
-                              : n
-                        );
-                        localStorage.setItem(
-                          "fcm_notification_history",
-                          JSON.stringify(updatedHistory)
-                        );
-                        loadNotifications();
-                      }
-
-                      // Navigate to relevant page
-                      if (
-                        notification.type === "chat_message" &&
-                        notification.orderId
-                      ) {
-                        window.location.href = `/Messages/${notification.orderId}`;
-                      } else if (
-                        (notification.type === "new_order" ||
-                          notification.type === "batch_orders") &&
-                        notification.orderId
-                      ) {
-                        window.location.href = `/Plasa/active-batches`;
-                      } else if (notification.type === "batch_orders") {
-                        // Batch orders without specific orderId
-                        window.location.href = `/Plasa/active-batches`;
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Tactical Icon Module */}
-                      <div
-                        className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-lg transition-transform group-hover:scale-110 ${
+                <div className="flex items-center gap-1">
+                  {notifications.length > 0 && (
+                    <>
+                      <button
+                        onClick={markAllAsRead}
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all active:scale-90 ${
                           theme === "dark"
-                            ? "border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02]"
-                            : "border border-black/5 bg-white shadow-gray-200"
+                            ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                            : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                         }`}
+                        aria-label="Mark all as read"
+                        title="Mark all as read"
                       >
-                        {getNotificationIcon(
-                          notification.type,
-                          notification.isCombinedOrder
-                        )}
-                        {!notification.read && (
-                          <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] ring-2 ring-[#0A0A0A] dark:ring-gray-900"></span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <h4
-                            className={`truncate text-sm font-black tracking-tight ${
-                              theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            {notification.title}
-                          </h4>
-                          <span
-                            className={`whitespace-nowrap text-[10px] font-bold uppercase tracking-wider opacity-40 ${
-                              theme === "dark" ? "text-white" : "text-gray-500"
-                            }`}
-                          >
-                            {formatTime(notification.timestamp)}
-                          </span>
-                        </div>
-                        <p
-                          className={`line-clamp-2 text-xs leading-relaxed ${
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M9 12l2 2 4-4" />
+                          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={clearAll}
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all active:scale-90 ${
+                          theme === "dark"
+                            ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                            : "bg-red-50 text-red-600 hover:bg-red-100"
+                        }`}
+                        aria-label="Clear all notifications"
+                        title="Clear all"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4h8v2" />
+                          <path d="M19 6l-1 14H6L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className={`ml-2 inline-flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 ${
+                      theme === "dark"
+                        ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                    }`}
+                    aria-label="Close notifications"
+                    title="Close"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Notifications List */}
+              <div
+                className={`overflow-y-auto ${
+                  isMobile ? "max-h-[calc(100vh-12rem)] pb-24" : "max-h-96"
+                }`}
+              >
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-12 text-center">
+                    <div
+                      className={`mb-6 flex h-24 w-24 items-center justify-center rounded-[2rem] border-2 border-dashed ${
+                        theme === "dark"
+                          ? "border-white/10 bg-white/[0.03]"
+                          : "border-black/5 bg-gray-50"
+                      }`}
+                    >
+                      <svg
+                        className={`h-10 w-10 ${
+                          theme === "dark" ? "text-white/20" : "text-gray-300"
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                        />
+                      </svg>
+                    </div>
+                    <h4
+                      className={`text-sm font-black tracking-tight ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      No notifications yet
+                    </h4>
+                    <p
+                      className={`mt-2 max-w-[200px] text-[11px] leading-relaxed ${
+                        theme === "dark" ? "text-gray-500" : "text-gray-400"
+                      }`}
+                    >
+                      We'll notify you when you have new messages or order
+                      updates.
+                    </p>
+
+                    <div
+                      className={`mt-8 rounded-2xl border px-4 py-2 ${
+                        theme === "dark"
+                          ? "border-white/5 bg-white/[0.02]"
+                          : "border-black/5 bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            hasPermission
+                              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                              : "bg-red-500"
+                          }`}
+                        ></div>
+                        <span
+                          className={`text-[10px] font-bold ${
                             theme === "dark" ? "text-gray-400" : "text-gray-600"
                           }`}
                         >
-                          {notification.body}
-                        </p>
-
-                        {/* Combined Order Details */}
-                        {notification.isCombinedOrder && (
-                          <div
-                            className={`mt-2 rounded-lg border p-2 ${
-                              theme === "dark"
-                                ? "border-purple-800 bg-purple-900/20"
-                                : "border-purple-200 bg-purple-50"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <p
-                                  className={`text-[11px] font-medium ${
-                                    theme === "dark"
-                                      ? "text-purple-300"
-                                      : "text-purple-900"
-                                  }`}
-                                >
-                                  Combined Order
-                                </p>
-                                {notification.storeNames && (
-                                  <p
-                                    className={`mt-0.5 text-[11px] ${
-                                      theme === "dark"
-                                        ? "text-purple-400"
-                                        : "text-purple-700"
-                                    }`}
-                                  >
-                                    {notification.storeNames}
-                                  </p>
-                                )}
-                              </div>
-                              {notification.totalEarnings !== undefined && (
-                                <div className="text-right">
-                                  <p
-                                    className={`text-[11px] ${
-                                      theme === "dark"
-                                        ? "text-gray-400"
-                                        : "text-gray-600"
-                                    }`}
-                                  >
-                                    Total Earnings
-                                  </p>
-                                  <p
-                                    className={`text-base font-bold ${
-                                      theme === "dark"
-                                        ? "text-green-400"
-                                        : "text-green-600"
-                                    }`}
-                                  >
-                                    {currency}{" "}
-                                    {notification.totalEarnings.toLocaleString()}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Regular earnings display for single orders */}
-                        {!notification.isCombinedOrder &&
-                          notification.totalEarnings !== undefined && (
-                            <div className="mt-2 flex items-center gap-2">
-                              <span
-                                className={`text-[11px] ${
-                                  theme === "dark"
-                                    ? "text-gray-400"
-                                    : "text-gray-600"
-                                }`}
-                              >
-                                Earnings:
-                              </span>
-                              <span
-                                className={`text-xs font-semibold ${
-                                  theme === "dark"
-                                    ? "text-green-400"
-                                    : "text-green-600"
-                                }`}
-                              >
-                                {currency}{" "}
-                                {notification.totalEarnings.toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-
-                        {notification.type === "chat_message" &&
-                          notification.senderName && (
-                            <p className="mt-1 text-xs text-gray-500">
-                              From: {notification.senderName}
-                            </p>
-                          )}
+                          FCM STATUS:{" "}
+                          {hasPermission
+                            ? isInitialized
+                              ? "CONNECTED"
+                              : "SYNCING..."
+                            : "DISABLED"}
+                        </span>
                       </div>
                     </div>
                   </div>
-                ))
-              )}
+                ) : (
+                  notifications.map((notification, index) => (
+                    <div
+                      key={index}
+                      className={`group cursor-pointer border-b px-6 py-5 transition-all duration-300 ${
+                        theme === "dark"
+                          ? "border-white/5 hover:bg-white/[0.03]"
+                          : "border-black/5 hover:bg-gray-50"
+                      } ${
+                        !notification.read
+                          ? theme === "dark"
+                            ? "bg-emerald-500/10"
+                            : "bg-emerald-50/50"
+                          : ""
+                      }`}
+                      onClick={() => {
+                        // Mark as read when clicked
+                        if (!notification.read) {
+                          const updatedNotifications = [...notifications];
+                          updatedNotifications[index].read = true;
+                          const allHistory = JSON.parse(
+                            localStorage.getItem("fcm_notification_history") ||
+                              "[]"
+                          );
+                          const updatedHistory = allHistory.map(
+                            (n: NotificationItem) =>
+                              n.timestamp === notification.timestamp
+                                ? { ...n, read: true }
+                                : n
+                          );
+                          localStorage.setItem(
+                            "fcm_notification_history",
+                            JSON.stringify(updatedHistory)
+                          );
+                          loadNotifications();
+                        }
+
+                        // Navigate to relevant page
+                        if (
+                          notification.type === "chat_message" &&
+                          notification.orderId
+                        ) {
+                          window.location.href = `/Messages/${notification.orderId}`;
+                        } else if (
+                          (notification.type === "new_order" ||
+                            notification.type === "batch_orders") &&
+                          notification.orderId
+                        ) {
+                          window.location.href = `/Plasa/active-batches`;
+                        } else if (notification.type === "batch_orders") {
+                          // Batch orders without specific orderId
+                          window.location.href = `/Plasa/active-batches`;
+                        }
+                      }}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Tactical Icon Module */}
+                        <div
+                          className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-lg transition-transform group-hover:scale-110 ${
+                            theme === "dark"
+                              ? "border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02]"
+                              : "border border-black/5 bg-white shadow-gray-200"
+                          }`}
+                        >
+                          {getNotificationIcon(
+                            notification.type,
+                            notification.isCombinedOrder
+                          )}
+                          {!notification.read && (
+                            <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] ring-2 ring-[#0A0A0A] dark:ring-gray-900"></span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center justify-between gap-2">
+                            <h4
+                              className={`truncate text-sm font-black tracking-tight ${
+                                theme === "dark"
+                                  ? "text-white"
+                                  : "text-gray-900"
+                              }`}
+                            >
+                              {notification.title}
+                            </h4>
+                            <span
+                              className={`whitespace-nowrap text-[10px] font-bold uppercase tracking-wider opacity-40 ${
+                                theme === "dark"
+                                  ? "text-white"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {formatTime(notification.timestamp)}
+                            </span>
+                          </div>
+                          <p
+                            className={`line-clamp-2 text-xs leading-relaxed ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {notification.body}
+                          </p>
+
+                          {/* Combined Order Details */}
+                          {notification.isCombinedOrder && (
+                            <div
+                              className={`mt-2 rounded-lg border p-2 ${
+                                theme === "dark"
+                                  ? "border-purple-800 bg-purple-900/20"
+                                  : "border-purple-200 bg-purple-50"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p
+                                    className={`text-[11px] font-medium ${
+                                      theme === "dark"
+                                        ? "text-purple-300"
+                                        : "text-purple-900"
+                                    }`}
+                                  >
+                                    Combined Order
+                                  </p>
+                                  {notification.storeNames && (
+                                    <p
+                                      className={`mt-0.5 text-[11px] ${
+                                        theme === "dark"
+                                          ? "text-purple-400"
+                                          : "text-purple-700"
+                                      }`}
+                                    >
+                                      {notification.storeNames}
+                                    </p>
+                                  )}
+                                </div>
+                                {notification.totalEarnings !== undefined && (
+                                  <div className="text-right">
+                                    <p
+                                      className={`text-[11px] ${
+                                        theme === "dark"
+                                          ? "text-gray-400"
+                                          : "text-gray-600"
+                                      }`}
+                                    >
+                                      Total Earnings
+                                    </p>
+                                    <p
+                                      className={`text-base font-bold ${
+                                        theme === "dark"
+                                          ? "text-green-400"
+                                          : "text-green-600"
+                                      }`}
+                                    >
+                                      {currency}{" "}
+                                      {notification.totalEarnings.toLocaleString()}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Regular earnings display for single orders */}
+                          {!notification.isCombinedOrder &&
+                            notification.totalEarnings !== undefined && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span
+                                  className={`text-[11px] ${
+                                    theme === "dark"
+                                      ? "text-gray-400"
+                                      : "text-gray-600"
+                                  }`}
+                                >
+                                  Earnings:
+                                </span>
+                                <span
+                                  className={`text-xs font-semibold ${
+                                    theme === "dark"
+                                      ? "text-green-400"
+                                      : "text-green-600"
+                                  }`}
+                                >
+                                  {currency}{" "}
+                                  {notification.totalEarnings.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+
+                          {notification.type === "chat_message" &&
+                            notification.senderName && (
+                              <p className="mt-1 text-xs text-gray-500">
+                                From: {notification.senderName}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

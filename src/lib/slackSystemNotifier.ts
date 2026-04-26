@@ -58,7 +58,15 @@ export async function notifySystemToSlack(payload: SystemNotificationPayload) {
     await fetch(SLACK_GENERAL_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: `${title}: ${message}`, blocks }),
+      body: JSON.stringify({
+        text: `${title}: ${message}`,
+        attachments: [
+          {
+            color: "#36C5F0", // Blue for general system info
+            blocks,
+          },
+        ],
+      }),
     });
   } catch (error) {
     console.error("Failed to send system notification to Slack", error);
@@ -129,7 +137,7 @@ export async function notifyNewReviewToSlack(payload: NewReviewPayload) {
     },
     {
       type: "context",
-      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
+      elements: [{ type: "mrkdwn", text: ` ${new Date().toLocaleString()}` }],
     },
   ];
 
@@ -139,7 +147,12 @@ export async function notifyNewReviewToSlack(payload: NewReviewPayload) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New review for order #${orderDisplay} — ${ratingDisplay}/5`,
-        blocks,
+        attachments: [
+          {
+            color: "#ECB22E", // Yellow for reviews
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -262,7 +275,12 @@ export async function notifyDelayedOrderToSlack(payload: DelayedOrderPayload) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `Order #${orderDisplay} is late or at risk — ${expiryText}`,
-        blocks,
+        attachments: [
+          {
+            color: "#E01E5A", // Red for late/urgent orders
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -322,7 +340,7 @@ export async function notifyNewStoreCreatedToSlack(
       type: "header",
       text: {
         type: "plain_text",
-        text: "🏪 New Store Created",
+        text: "New Store Created",
       },
     },
     {
@@ -359,7 +377,12 @@ export async function notifyNewStoreCreatedToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New store created: ${nameDisplay}`,
-        blocks,
+        attachments: [
+          {
+            color: "#2EB67D", // Green for new stores
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -442,7 +465,12 @@ export async function notifyPartnershipInquiryToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New partnership inquiry from ${payload.businessName}`,
-        blocks,
+        attachments: [
+          {
+            color: "#36C5F0", // Blue for partnership inquiries
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {

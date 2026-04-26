@@ -192,7 +192,7 @@ export const sendNotificationToUser = async (
 
     const fcmTokens = tokens.map((token) => token.token);
 
-    const message = {
+    const message: any = {
       notification: {
         title: payload.title,
         body: payload.body,
@@ -200,6 +200,26 @@ export const sendNotificationToUser = async (
       },
       data: payload.data || {},
       tokens: fcmTokens,
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default",
+          priority: "high",
+          channelId: "high_importance",
+          // Use a timestamp-based tag for re-triggered notifications if requested
+          // or fallback to a general type-based tag to avoid duplicates
+          tag: payload.data?.tag || payload.data?.type || "general",
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            "content-available": 1,
+          },
+        },
+      },
     };
 
     // Use sendEachForMulticast for better performance and reliability
@@ -307,6 +327,7 @@ export const sendChatNotification = async (
         conversationId,
         collectionPath,
         senderName,
+        tag: `chat_${conversationId}`,
       },
     };
 
@@ -338,6 +359,7 @@ export const sendNewOrderNotification = async (
     OrderID?: number | string; // Numeric order ID for notification card fallback
     combinedOrderId?: string; // combined_order_id (UUID)
     orderIds?: string[]; // order IDs in combined order group
+    tag?: string; // Optional: custom tag for notification replacement/re-triggering
   }
 ): Promise<void> => {
   try {
@@ -381,6 +403,7 @@ export const sendNewOrderNotification = async (
         customerAddress: orderData.customerAddress,
         expiresIn: expiresInMs.toString(),
         timestamp: Date.now().toString(),
+        ...(orderData.tag && { tag: orderData.tag }),
         ...(orderData.displayOrderId && {
           displayOrderId: orderData.displayOrderId,
         }),
@@ -486,5 +509,37 @@ export const sendOrderExpiredNotification = async (
     await sendNotificationToUser(shopperId, payload);
   } catch (error) {
     // Silent fail for expiration notifications
+  }
+};
+
+/**
+ * Send payment approved notification
+ */
+export const sendPaymentApprovedNotification = async (
+  shopperId: string,
+  orderId: string
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping payment approved notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: "Payment Approved",
+      body: "Your payment request has been approved by the admin. You can now proceed to delivery.",
+      data: {
+        type: "payment_approved",
+        orderId,
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUser(shopperId, payload);
+  } catch (error) {
+    console.error("Error sending payment approved notification:", error);
+    throw error;
   }
 };

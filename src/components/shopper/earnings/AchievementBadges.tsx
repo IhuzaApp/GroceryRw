@@ -41,36 +41,31 @@ const TierBadge: React.FC<{
     switch (lvl.toLowerCase()) {
       case "bronze":
         return {
-          color: "from-orange-400 to-orange-700",
-          glow: "shadow-orange-500/20",
+          color: "from-orange-400 to-orange-700 shadow-orange-500/20",
           text: "text-orange-500",
           bg: "bg-orange-500/10",
         };
       case "silver":
         return {
-          color: "from-slate-300 to-slate-500",
-          glow: "shadow-slate-400/20",
+          color: "from-slate-300 to-slate-500 shadow-slate-400/20",
           text: "text-slate-400",
           bg: "bg-slate-400/10",
         };
       case "gold":
         return {
-          color: "from-yellow-300 to-yellow-600",
-          glow: "shadow-yellow-500/20",
+          color: "from-yellow-300 to-yellow-600 shadow-yellow-500/20",
           text: "text-yellow-500",
           bg: "bg-yellow-500/10",
         };
       case "platinum":
         return {
-          color: "from-cyan-300 to-cyan-500",
-          glow: "shadow-cyan-400/20",
+          color: "from-cyan-300 to-cyan-500 shadow-cyan-400/20",
           text: "text-cyan-400",
           bg: "bg-cyan-400/10",
         };
       default:
         return {
-          color: "from-gray-400 to-gray-600",
-          glow: "shadow-gray-400/10",
+          color: "from-gray-400 to-gray-600 shadow-gray-400/10",
           text: "text-gray-400",
           bg: "bg-gray-400/10",
         };
@@ -78,7 +73,7 @@ const TierBadge: React.FC<{
   };
 
   const getIcon = (t: string) => {
-    const size = "h-5 w-5";
+    const size = "h-6 w-6";
     switch (t.toLowerCase()) {
       case "earnings":
         return (
@@ -151,32 +146,34 @@ const TierBadge: React.FC<{
 
   return (
     <div
-      className={`relative flex h-14 w-14 items-center justify-center transition-all duration-300 ${
-        !isAchieved ? "opacity-30 grayscale" : ""
+      className={`relative flex h-20 w-20 items-center justify-center transition-all duration-700 ${
+        !isAchieved ? "opacity-30 grayscale" : "hover:scale-110"
       }`}
     >
-      {/* Dynamic Glow Aura */}
+      {/* Glow Aura */}
       <div
-        className={`absolute inset-0 rounded-full bg-gradient-to-br opacity-20 blur-md ${config.color}`}
+        className={`absolute inset-0 rounded-full bg-gradient-to-br opacity-20 blur-xl ${config.color}`}
       />
 
-      {/* Main Glass Disc */}
+      {/* Badge Container */}
       <div
-        className={`relative flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-md transition-all duration-300 
-        ${isDark ? "border-white/20 bg-white/10" : "border-black/10 bg-white"} 
+        className={`relative flex h-16 w-16 items-center justify-center rounded-[1.5rem] border-2 shadow-2xl backdrop-blur-2xl transition-all duration-500 
         ${
-          isAchieved
-            ? `shadow-xl ${config.glow} ${config.text}`
-            : "text-gray-400"
-        }`}
+          isDark
+            ? "border-white/10 bg-white/5"
+            : "border-gray-100 bg-white shadow-gray-200/50"
+        } 
+        ${isAchieved ? config.text : "text-gray-400"}`}
       >
         {getIcon(type)}
-      </div>
 
-      {/* Achievement Sparkle */}
-      {isAchieved && (
-        <div className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
-      )}
+        {/* Tier Indicator Corner */}
+        <div
+          className={`absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-lg shadow-lg ring-1 ring-white/10 ${config.color}`}
+        >
+          <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
+        </div>
+      </div>
     </div>
   );
 };
@@ -217,9 +214,9 @@ const AchievementBadges: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 py-20">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+      <div className="flex flex-col items-center justify-center space-y-6 py-32">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
+        <p className="animate-pulse text-[10px] font-black uppercase tracking-[0.25em] opacity-40">
           Syncing Trophy Room...
         </p>
       </div>
@@ -232,74 +229,102 @@ const AchievementBadges: React.FC = () => {
 
   const renderAchievementCard = (a: Achievement, isAchieved: boolean) => {
     const tier = a.level.toLowerCase();
-    const glowClass =
+    const accentColor =
       tier === "gold"
-        ? "bg-yellow-500"
+        ? "amber"
         : tier === "platinum"
-        ? "bg-cyan-500"
+        ? "cyan"
         : tier === "silver"
-        ? "bg-slate-400"
-        : "bg-orange-500";
+        ? "slate"
+        : "orange";
 
     return (
       <div
         key={a.badgeName}
-        className={`group relative overflow-hidden rounded-[2rem] border p-5 transition-all duration-500 ${
+        className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 hover:shadow-2xl ${
           isDark
-            ? "border-white/10 bg-white/5 hover:bg-white/10"
-            : "border-black/5 bg-white shadow-sm hover:shadow-md"
+            ? "border border-white/5 bg-gray-900/40 shadow-xl backdrop-blur-2xl hover:bg-gray-800/60"
+            : "border border-gray-100 bg-white shadow-xl shadow-gray-200/50 hover:border-emerald-200"
         }`}
       >
-        <div className="flex items-center gap-4">
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center">
           <TierBadge level={a.level} type={a.type} isAchieved={isAchieved} />
 
-          <div className="min-w-0 flex-1">
-            <h4 className="truncate text-sm font-black tracking-tight">
-              {a.badgeName}
-            </h4>
-            <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="flex items-center gap-3">
+              <h4
+                className={`truncate text-xl font-black tracking-tight ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {a.badgeName}
+              </h4>
               <span
-                className={`h-1 w-1 rounded-full ${glowClass.replace(
-                  "bg-",
-                  "bg-"
-                )}`}
-              />
-              <p className="truncate text-[10px] font-bold uppercase tracking-widest opacity-50">
-                {a.level} Tier
-              </p>
-            </div>
-          </div>
-
-          {isAchieved ? (
-            <div className="flex h-8 items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-              Achieved
-            </div>
-          ) : (
-            <div className="text-right">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                {Math.round(a.progress)}%
+                className={`rounded-xl px-2.5 py-1 text-[9px] font-black uppercase tracking-widest ring-1 ${
+                  isDark
+                    ? "bg-white/5 text-white/40 ring-white/10"
+                    : "bg-gray-100 text-gray-500 ring-gray-200"
+                }`}
+              >
+                {a.level}
               </span>
             </div>
-          )}
+            <p
+              className={`text-xs font-bold leading-relaxed opacity-40 ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {a.description}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between lg:flex-col lg:items-end lg:justify-center">
+            {isAchieved ? (
+              <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                Mastered
+              </div>
+            ) : (
+              <div className="space-y-1 text-right">
+                <span className="text-xl font-black tabular-nums tracking-tighter opacity-20">
+                  {Math.round(a.progress)}%
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {!isAchieved && (
-          <div className="mt-4 space-y-2">
-            <div className="h-1 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
+          <div className="relative z-10 mt-6 space-y-3">
+            <div
+              className={`h-2.5 w-full overflow-hidden rounded-full p-0.5 ${
+                isDark ? "bg-white/5 shadow-inner" : "bg-gray-100 shadow-inner"
+              }`}
+            >
               <div
-                className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all duration-1000 ease-out"
                 style={{ width: `${a.progress}%` }}
               />
             </div>
-            <p className="text-right text-[10px] font-black uppercase tracking-widest opacity-30">
-              {a.current} / {a.target}
-            </p>
+            <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.2em] opacity-40">
+              <span>Current: {a.current}</span>
+              <span>Target: {a.target}</span>
+            </div>
           </div>
         )}
 
-        {/* Decorative Gradient Background */}
+        {/* Floating Decorative Glow */}
         <div
-          className={`absolute -bottom-4 -right-4 h-24 w-24 rounded-full opacity-10 blur-[40px] transition-all duration-700 group-hover:scale-150 group-hover:opacity-20 ${glowClass}`}
+          className={`absolute -bottom-20 -right-20 h-48 w-48 rounded-full opacity-0 blur-[80px] transition-all duration-700 group-hover:opacity-10 
+          ${
+            accentColor === "amber"
+              ? "bg-amber-500"
+              : accentColor === "cyan"
+              ? "bg-cyan-500"
+              : accentColor === "slate"
+              ? "bg-slate-400"
+              : "bg-orange-500"
+          }`}
         />
       </div>
     );
@@ -313,129 +338,208 @@ const AchievementBadges: React.FC = () => {
     : pending.slice(0, INITIAL_LIMIT);
 
   return (
-    <div className="space-y-12 pb-10">
+    <div className="space-y-12 pb-16 duration-1000 animate-in fade-in slide-in-from-bottom-6">
       {/* Header Stat Pills */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {[
           {
-            label: "Earned",
+            label: "Elite Badges",
             val: summary.totalAchieved,
-            color: "text-emerald-500",
-            bg: "bg-emerald-500/10",
+            accent: "emerald",
+            icon: "🏆",
           },
           {
-            label: "In Progress",
+            label: "Active Quests",
             val: summary.totalPending,
-            color: "text-amber-500",
-            bg: "bg-amber-500/10",
+            accent: "amber",
+            icon: "⚡",
           },
           {
-            label: "Completion",
+            label: "Mastery Level",
             val: `${Math.round(
               (summary.totalAchieved /
                 (summary.totalAchieved + summary.totalPending)) *
                 100
             )}%`,
-            color: "text-indigo-500",
-            bg: "bg-indigo-500/10",
+            accent: "purple",
+            icon: "📈",
           },
         ].map((stat, i) => (
           <div
             key={i}
-            className={`rounded-[2rem] border p-6 ${
+            className={`group relative overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 hover:shadow-2xl ${
               isDark
-                ? "border-white/10 bg-white/5"
-                : "border-black/5 bg-white shadow-sm"
+                ? "border border-white/5 bg-gray-900/40 shadow-xl shadow-black/20 backdrop-blur-2xl"
+                : "border border-gray-100 bg-white shadow-xl shadow-gray-200/50"
             } flex items-center justify-between`}
           >
-            <div>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-widest opacity-40">
+            <div className="relative z-10">
+              <p
+                className={`mb-1.5 text-[10px] font-black uppercase tracking-[0.25em] ${
+                  isDark ? "text-white/30" : "text-gray-400"
+                }`}
+              >
                 {stat.label}
               </p>
-              <h2 className={`text-2xl font-black ${stat.color}`}>
+              <h2
+                className={`text-4xl font-black tracking-tighter ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
                 {stat.val}
               </h2>
             </div>
             <div
-              className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center`}
+              className={`relative z-10 flex h-16 w-16 items-center justify-center rounded-[1.5rem] text-2xl shadow-inner ring-1 transition-transform group-hover:rotate-12 ${
+                isDark ? "bg-white/5 ring-white/10" : "bg-gray-50 ring-gray-100"
+              }`}
             >
-              {i === 0 ? "🏆" : i === 1 ? "⚡" : "📈"}
+              {stat.icon}
             </div>
+            {/* Background Glow */}
+            <div
+              className={`absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-0 blur-3xl transition-opacity group-hover:opacity-10 ${
+                stat.accent === "emerald"
+                  ? "bg-emerald-500"
+                  : stat.accent === "amber"
+                  ? "bg-amber-500"
+                  : "bg-purple-500"
+              }`}
+            />
           </div>
         ))}
       </div>
 
-      <div className="space-y-12">
-        {/* Achieved Section - NOW ON TOP */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-1 items-center gap-3">
-              <h3 className="whitespace-nowrap text-sm font-black uppercase tracking-widest opacity-40">
-                Archives
+      <div className="space-y-16">
+        {/* Archives Section */}
+        <div className="space-y-8">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex flex-1 items-center gap-6">
+              <h3
+                className={`text-sm font-black uppercase tracking-[0.3em] ${
+                  isDark ? "text-white/20" : "text-gray-400"
+                }`}
+              >
+                Trophy Archive
               </h3>
-              <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
+              <div className="h-px flex-1 bg-gradient-to-r from-white/5 to-transparent dark:from-white/5" />
             </div>
             {achieved.length > INITIAL_LIMIT && (
               <button
                 onClick={() => setShowAllAchieved(!showAllAchieved)}
-                className={`flex h-8 items-center rounded-full border px-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                className={`group flex items-center gap-2 rounded-2xl border px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-500 active:scale-95
                   ${
                     isDark
-                      ? "border-white/10 bg-white/5 hover:bg-white/10"
-                      : "border-transparent bg-black/5 hover:bg-black/10"
+                      ? "border-white/5 bg-white/5 text-white/40 hover:bg-white/10"
+                      : "border-gray-100 bg-white text-gray-500 shadow-sm hover:bg-gray-50"
                   }`}
               >
                 {showAllAchieved
-                  ? "View Less"
-                  : `View More (${achieved.length - INITIAL_LIMIT})`}
+                  ? "Show Less"
+                  : `Reveal All (${achieved.length})`}
+                <svg
+                  className={`h-3 w-3 transition-transform duration-500 ${
+                    showAllAchieved ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {visibleAchieved.map((a) => renderAchievementCard(a, true))}
           </div>
 
           {achieved.length === 0 && (
             <div
-              className={`rounded-[2.5rem] border-2 border-dashed p-12 text-center ${
-                isDark ? "border-white/5" : "border-black/5"
+              className={`rounded-[3rem] border-2 border-dashed py-32 text-center transition-colors ${
+                isDark
+                  ? "border-white/5 bg-white/[0.01]"
+                  : "border-gray-100 bg-gray-50/50"
               }`}
             >
-              <p className="text-sm font-bold uppercase tracking-widest opacity-30">
-                No badges earned yet
+              <div
+                className={`mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
+                  isDark ? "bg-white/5" : "bg-white shadow-xl"
+                }`}
+              >
+                <svg
+                  className="h-10 w-10 text-gray-400 opacity-20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
+              </div>
+              <p className="text-sm font-black uppercase tracking-[0.2em] opacity-20">
+                No achievements recorded yet
               </p>
             </div>
           )}
         </div>
 
-        {/* In Progress Section - NOW BELOW */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-1 items-center gap-3">
-              <h3 className="whitespace-nowrap text-sm font-black uppercase tracking-widest opacity-40">
-                Current Goals
+        {/* Current Quests Section */}
+        <div className="space-y-8">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex flex-1 items-center gap-6">
+              <h3
+                className={`text-sm font-black uppercase tracking-[0.3em] ${
+                  isDark ? "text-white/20" : "text-gray-400"
+                }`}
+              >
+                Active Quests
               </h3>
-              <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
+              <div className="h-px flex-1 bg-gradient-to-r from-white/5 to-transparent dark:from-white/5" />
             </div>
             {pending.length > INITIAL_LIMIT && (
               <button
                 onClick={() => setShowAllPending(!showAllPending)}
-                className={`flex h-8 items-center rounded-full border px-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                className={`group flex items-center gap-2 rounded-2xl border px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-500 active:scale-95
                   ${
                     isDark
-                      ? "border-white/10 bg-white/5 hover:bg-white/10"
-                      : "border-transparent bg-black/5 hover:bg-black/10"
+                      ? "border-white/5 bg-white/5 text-white/40 hover:bg-white/10"
+                      : "border-gray-100 bg-white text-gray-500 shadow-sm hover:bg-gray-50"
                   }`}
               >
                 {showAllPending
-                  ? "View Less"
-                  : `View More (${pending.length - INITIAL_LIMIT})`}
+                  ? "Show Less"
+                  : `Reveal All (${pending.length})`}
+                <svg
+                  className={`h-3 w-3 transition-transform duration-500 ${
+                    showAllPending ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {visiblePending.map((a) => renderAchievementCard(a, false))}
           </div>
         </div>

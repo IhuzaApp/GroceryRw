@@ -6,11 +6,9 @@ import { gql } from "graphql-request";
 import { notifyNewOrderToSlack } from "../../src/lib/slackOrderNotifier";
 import crypto from "crypto";
 
-// Generate a random 2-digit PIN (00-99)
+// Generate a random 4-digit PIN (1000-9999)
 function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100)
-    .toString()
-    .padStart(2, "0");
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 // Mutation to create a food order (using restaurant_orders table)

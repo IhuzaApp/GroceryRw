@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Button, InputNumber, Form } from "rsuite";
 import { OrderItem } from "../../types/order";
 import { useTheme } from "../../context/ThemeContext";
 import Image from "next/image";
@@ -64,10 +63,8 @@ export default function QuantityConfirmationModal({
   // Check if item is weight-based
   useEffect(() => {
     if (currentItem) {
-      // Access measurement_unit from the correct path based on GraphQL schema
       let unit = "";
 
-      // The measurement_unit is at currentItem.product.measurement_unit according to the GraphQL schema
       if (currentItem.product.measurement_unit) {
         unit = currentItem.product.measurement_unit.toLowerCase().trim();
       }
@@ -104,7 +101,6 @@ export default function QuantityConfirmationModal({
           isWeightBased: true,
         });
       } else {
-        // Reset barcode validation for non-weight-based items
         setBarcodeValidation({
           isValid: false,
           message: "",
@@ -124,12 +120,10 @@ export default function QuantityConfirmationModal({
       const totalCost = foundWeight * pricePerUnit;
       setExceedsBudget(totalCost > customerBudget);
 
-      // Calculate missing weight and refund amount
       const requestedWeight = currentItem?.quantity || 0;
       const missing = Math.max(0, requestedWeight - foundWeight);
       setMissingWeight(missing);
 
-      // Calculate refund amount for missing weight
       const refund = missing * pricePerUnit;
       setRefundAmount(refund);
     } else {
@@ -154,23 +148,17 @@ export default function QuantityConfirmationModal({
     const itemSku =
       currentItem.product.ProductName?.sku || currentItem.product.sku;
 
-    // Check if the item has a barcode or SKU in the database
     if (itemBarcode || itemSku) {
       let isValid = false;
       let validationMessage = "";
 
-      // Check if scanned code matches barcode first
       if (itemBarcode && scannedBarcode === itemBarcode) {
         isValid = true;
         validationMessage = "Barcode matches!";
-      }
-      // If barcode didn't match, check SKU
-      else if (itemSku && scannedBarcode === itemSku) {
+      } else if (itemSku && scannedBarcode === itemSku) {
         isValid = true;
         validationMessage = "SKU matches!";
-      }
-      // If neither matched, show simple error
-      else {
+      } else {
         isValid = false;
         validationMessage = "Scanned code does not match the product.";
       }
@@ -182,7 +170,7 @@ export default function QuantityConfirmationModal({
           isWeightBased: false,
         });
         setShowBarcodeScanner(false);
-        setShowManualInput(false); // Also reset manual input state
+        setShowManualInput(false);
       } else {
         setBarcodeValidation({
           isValid: false,
@@ -193,18 +181,15 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    // If the item has NO barcode or SKU in the database, it cannot be validated.
     setBarcodeValidation({
       isValid: false,
       message:
-        "This product has no barcode/SKU in our system. It cannot be scanned and must be marked as 'Not Found'.",
+        "This product has no barcode/SKU in our system. It cannot be scanned.",
       isWeightBased: false,
     });
   };
 
-  if (!currentItem) return null;
-
-  if (!open) return null;
+  if (!currentItem || !open) return null;
 
   return (
     <>
@@ -221,35 +206,30 @@ export default function QuantityConfirmationModal({
         className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
         onClick={onClose}
       >
-        {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           aria-hidden="true"
         />
 
-        {/* Modal */}
         <div
-          className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl sm:border ${
-            theme === "dark"
-              ? "bg-gray-800 sm:border-gray-700"
-              : "bg-white sm:border-gray-200"
+          className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
+          style={{
+            zIndex: 10001,
+            backgroundColor: "var(--bg-primary)",
+            color: "var(--text-primary)",
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between px-6 py-6 sm:px-8`}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`rounded-full p-2 ${
-                  theme === "dark" ? "bg-blue-600" : "bg-blue-100"
-                }`}
-              >
+          {/* Header Gradient */}
+          <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+
+          <div className="flex items-center justify-between px-6 pb-6 pt-10 sm:px-10">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
                 <svg
-                  className={`h-6 w-6 ${
-                    theme === "dark" ? "text-white" : "text-blue-600"
-                  }`}
+                  className="h-7 w-7 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -257,66 +237,42 @@ export default function QuantityConfirmationModal({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
               <div>
                 <h2
-                  className={`text-xl font-bold ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-800"
+                  className={`text-2xl font-black tracking-tight ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  {(() => {
-                    // Show scanning instructions when barcode scanning section is visible
-                    if (!isWeightBased && !barcodeValidation.isValid) {
-                      return currentItem?.product.barcode ||
-                        currentItem?.product.ProductName?.barcode
-                        ? "Scan Barcode"
-                        : currentItem?.product.sku ||
-                          currentItem?.product.ProductName?.sku
-                        ? "Enter SKU"
-                        : "Scan Barcode or Enter SKU";
-                    }
-                    // Show quantity confirmation when entering quantity
-                    return "Confirm Found Quantity";
-                  })()}
+                  {!isWeightBased && !barcodeValidation.isValid
+                    ? "Verify Product"
+                    : "Select Amount"}
                 </h2>
                 <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  className={`text-sm font-bold ${
+                    theme === "dark" ? "text-emerald-400" : "text-emerald-600"
                   }`}
                 >
-                  {(() => {
-                    // Show scanning instructions when barcode scanning section is visible
-                    if (!isWeightBased && !barcodeValidation.isValid) {
-                      return currentItem?.product.ProductName?.barcode ||
-                        currentItem?.product.barcode
-                        ? "Scan the barcode from the physical product"
-                        : currentItem?.product.ProductName?.sku ||
-                          currentItem?.product.sku
-                        ? "Enter the product SKU from the physical product"
-                        : "This product has no barcode/SKU in our system";
-                    }
-                    // Show product name when entering quantity
-                    return (
-                      currentItem.product.ProductName?.name || "Unknown Product"
-                    );
-                  })()}
+                  {!isWeightBased && !barcodeValidation.isValid
+                    ? "Security check required"
+                    : currentItem.product.ProductName?.name || "Premium Item"}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className={`rounded-lg p-2 transition-colors ${
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${
                 theme === "dark"
-                  ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
-                  : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  ? "bg-gray-800 text-gray-400 hover:text-white"
+                  : "bg-gray-100 text-gray-500 hover:text-gray-800"
               }`}
             >
               <svg
-                className="h-5 w-5"
+                className="h-6 w-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -324,644 +280,518 @@ export default function QuantityConfirmationModal({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
           </div>
 
-          {/* Body */}
-          <div
-            className={`max-h-[70vh] overflow-y-auto px-6 py-4 sm:px-8 ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            <div className="space-y-4">
-              {/* Debug info removed */}
-
-              {/* Barcode Scanning Section - Only for non-weight-based items that haven't been validated yet */}
-              {!isWeightBased && !barcodeValidation.isValid && (
-                <div className="space-y-6">
-                  {/* Card-based selection - Only show when neither option is selected */}
-                  {!showBarcodeScanner && !showManualInput && (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {/* Open Camera Scanner Card */}
-                      <div
-                        onClick={() => {
-                          if (
-                            currentItem?.product.barcode ||
-                            currentItem?.product.ProductName?.barcode ||
-                            currentItem?.product.sku ||
-                            currentItem?.product.ProductName?.sku
-                          ) {
-                            setShowManualInput(false);
-                            setShowBarcodeScanner(true);
-                          }
-                        }}
-                        className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${(() => {
-                          const hasBarcode = !!(
-                            currentItem?.product.ProductName?.barcode ||
-                            currentItem?.product.barcode
-                          );
-                          const hasSku = !!(
-                            currentItem?.product.ProductName?.sku ||
-                            currentItem?.product.sku
-                          );
-                          const shouldDisable = !hasBarcode && !hasSku;
-
-                          return shouldDisable
-                            ? "cursor-not-allowed bg-gray-100 dark:bg-gray-800/50"
-                            : showBarcodeScanner
-                            ? "cursor-pointer bg-gradient-to-br from-purple-500 to-purple-600 shadow-xl ring-2 ring-purple-500/50"
-                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-purple-50 hover:to-purple-100 hover:shadow-lg dark:from-gray-800 dark:to-gray-700 dark:hover:from-purple-900/20 dark:hover:to-purple-800/20";
-                        })()}`}
+          <div className="max-h-[70vh] overflow-y-auto px-6 pb-10 sm:px-10">
+            <div className="space-y-6">
+              {/* Product Preview Card */}
+              <div
+                className={`flex items-center gap-5 rounded-3xl border p-5`}
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor:
+                    theme === "dark"
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(0,0,0,0.05)",
+                }}
+              >
+                <div className="h-20 w-20 overflow-hidden rounded-2xl border border-gray-200/50 bg-white p-2 shadow-sm">
+                  {currentItem.product.ProductName?.image ? (
+                    <Image
+                      src={currentItem.product.ProductName.image}
+                      alt="Product"
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-gray-300">
+                      <svg
+                        className="h-10 w-10"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
                       >
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                          <div
-                            className={`mb-3 rounded-full p-3 ${
-                              showBarcodeScanner
-                                ? "bg-white/20"
-                                : "bg-purple-100 dark:bg-purple-800/50"
-                            }`}
-                          >
-                            <svg
-                              className={`h-6 w-6 ${
-                                showBarcodeScanner
-                                  ? "text-white"
-                                  : "text-purple-600 dark:text-purple-300"
-                              }`}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                          </div>
-                          <div>
-                            <p
-                              className={`font-semibold ${
-                                showBarcodeScanner
-                                  ? "text-white"
-                                  : theme === "dark"
-                                  ? "text-gray-100"
-                                  : "text-gray-800"
-                              }`}
-                            >
-                              Scan with Camera
-                            </p>
-                            <p
-                              className={`mt-1 text-sm ${
-                                showBarcodeScanner
-                                  ? "text-white/80"
-                                  : theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              Use your device's camera
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Manual Entry Card */}
-                      <div
-                        onClick={() => {
-                          if (
-                            currentItem?.product.ProductName?.barcode ||
-                            currentItem?.product.barcode ||
-                            currentItem?.product.ProductName?.sku ||
-                            currentItem?.product.sku
-                          ) {
-                            setShowBarcodeScanner(false);
-                            setShowManualInput(true);
-                          }
-                        }}
-                        className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${(() => {
-                          const productNameBarcode =
-                            currentItem?.product?.ProductName?.barcode;
-                          const productBarcode = currentItem?.product?.barcode;
-                          const productNameSku =
-                            currentItem?.product?.ProductName?.sku;
-                          const productSku = currentItem?.product?.product?.sku;
-
-                          const hasBarcode = !!(
-                            productNameBarcode || productBarcode
-                          );
-                          const hasSku = !!(productNameSku || productSku);
-                          const shouldDisable = !hasBarcode && !hasSku;
-
-                          return shouldDisable
-                            ? "cursor-not-allowed bg-gray-100 dark:bg-gray-800/50"
-                            : showManualInput
-                            ? "cursor-pointer bg-gradient-to-br from-green-500 to-green-600 shadow-xl ring-2 ring-green-500/50"
-                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-green-50 hover:to-green-100 hover:shadow-lg dark:from-gray-800 dark:to-gray-700 dark:hover:from-green-900/20 dark:hover:to-green-800/20";
-                        })()}`}
-                      >
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                          <div
-                            className={`mb-3 rounded-full p-3 ${
-                              showManualInput
-                                ? "bg-white/20"
-                                : "bg-green-100 dark:bg-green-800/50"
-                            }`}
-                          >
-                            <svg
-                              className={`h-6 w-6 ${
-                                showManualInput
-                                  ? "text-white"
-                                  : "text-green-600 dark:text-green-300"
-                              }`}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p
-                              className={`font-semibold ${
-                                showManualInput
-                                  ? "text-white"
-                                  : theme === "dark"
-                                  ? "text-gray-100"
-                                  : "text-gray-800"
-                              }`}
-                            >
-                              Enter Manually
-                            </p>
-                            <p
-                              className={`mt-1 text-sm ${
-                                showManualInput
-                                  ? "text-white/80"
-                                  : theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              Type in the SKU or barcode
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
+                      </svg>
                     </div>
                   )}
+                </div>
+                <div>
+                  <h4
+                    className={`text-lg font-black leading-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {currentItem.product.ProductName?.name || "Product"}
+                  </h4>
+                  <p
+                    className={`text-sm font-bold opacity-60 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {currentItem.quantity}{" "}
+                    {isWeightBased ? measurementUnit : "units"} requested
+                  </p>
+                </div>
+              </div>
 
-                  {/* Manual SKU Input Form */}
-                  {showManualInput && (
-                    <div className="space-y-4">
-                      {/* Back Button */}
-                      <div className="flex items-center justify-start">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowManualInput(false);
-                            setManualSku("");
-                          }}
-                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              {!isWeightBased && !barcodeValidation.isValid && (
+                <div className="space-y-6">
+                  {!showBarcodeScanner && !showManualInput && (
+                    <div className="grid grid-cols-2 gap-5">
+                      {/* Scan with Camera Card */}
+                      <button
+                        onClick={() => setShowBarcodeScanner(true)}
+                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-800/40 shadow-lg shadow-emerald-500/10 hover:border-emerald-500 hover:bg-emerald-500/10"
+                            : "border-gray-100 bg-white shadow-xl shadow-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-50"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
                             theme === "dark"
-                              ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-emerald-100 text-emerald-600"
                           }`}
                         >
                           <svg
-                            className="h-4 w-4"
+                            className="h-8 w-8"
                             fill="none"
-                            stroke="currentColor"
                             viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
                           >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 19l-7-7 7-7"
+                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                             />
                           </svg>
-                          Back to Options
-                        </button>
-                      </div>
-
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (manualSku.trim()) {
-                            handleBarcodeScanned(manualSku.trim());
-                          }
-                        }}
-                        className="space-y-4"
-                      >
+                        </div>
                         <div className="text-center">
-                          <h4
-                            className={`text-base font-medium ${
-                              theme === "dark"
-                                ? "text-gray-100"
-                                : "text-gray-800"
+                          <span
+                            className={`block text-sm font-black tracking-tighter ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
                             }`}
                           >
-                            Enter Product Details
-                          </h4>
-                          <p
-                            className={`mt-1 text-sm ${
+                            SCANNER
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold opacity-50 ${
                               theme === "dark"
                                 ? "text-gray-400"
-                                : "text-gray-600"
+                                : "text-gray-500"
                             }`}
                           >
-                            Type the barcode or SKU from the physical product
-                          </p>
+                            CAMERA
+                          </span>
                         </div>
+                      </button>
 
-                        <div className="relative">
-                          <div
-                            className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4`}
+                      {/* Manual Entry Card */}
+                      <button
+                        onClick={() => setShowManualInput(true)}
+                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${
+                          theme === "dark"
+                            ? "border-gray-700 bg-gray-800/40 shadow-lg shadow-emerald-500/10 hover:border-emerald-500 hover:bg-emerald-500/10"
+                            : "border-gray-100 bg-white shadow-xl shadow-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-50"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
+                            theme === "dark"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-emerald-100 text-emerald-600"
+                          }`}
+                        >
+                          <svg
+                            className="h-8 w-8"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
                           >
-                            <svg
-                              className={`h-5 w-5 ${
-                                theme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                              }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                              />
-                            </svg>
-                          </div>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="text-center">
+                          <span
+                            className={`block text-sm font-black tracking-tighter ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            MANUAL
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold opacity-50 ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            TYPE CODE
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {showManualInput && (
+                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
+                      <div
+                        className={`space-y-6 rounded-3xl border p-6`}
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          borderColor:
+                            theme === "dark"
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3
+                            className={`font-black tracking-tight ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            ENTER CODE
+                          </h3>
+                          <button
+                            onClick={() => {
+                              setShowManualInput(false);
+                              setManualSku("");
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                          >
+                            BACK
+                          </button>
+                        </div>
+                        <div className="relative">
                           <input
                             type="text"
                             value={manualSku}
                             onChange={(e) => setManualSku(e.target.value)}
-                            placeholder={
-                              currentItem?.product.barcode ||
-                              currentItem?.product.ProductName?.barcode
-                                ? "Barcode"
-                                : currentItem?.product.sku ||
-                                  currentItem?.product.ProductName?.sku
-                                ? "SKU"
-                                : "SKU or Barcode"
+                            onKeyDown={(e) =>
+                              e.key === "Enter" &&
+                              manualSku.trim() &&
+                              handleBarcodeScanned(manualSku.trim())
                             }
-                            className={`w-full rounded-xl border-2 py-4 pl-12 pr-4 text-center text-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                              theme === "dark"
-                                ? "border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-green-500"
-                                : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
-                            }`}
+                            placeholder="Type Barcode or SKU..."
+                            className={`w-full rounded-2xl border-2 px-6 py-5 text-center text-xl font-bold tracking-tight transition-all focus:border-emerald-500`}
+                            style={{
+                              backgroundColor: "var(--bg-primary)",
+                              color: "var(--text-primary)",
+                              borderColor:
+                                theme === "dark"
+                                  ? "rgba(255,255,255,0.1)"
+                                  : "rgba(0,0,0,0.1)",
+                            }}
+                            autoFocus
                           />
                         </div>
-
                         <button
-                          type="submit"
-                          className="w-full rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-green-500/25"
+                          onClick={() =>
+                            manualSku.trim() &&
+                            handleBarcodeScanned(manualSku.trim())
+                          }
+                          disabled={!manualSku.trim()}
+                          className={`w-full rounded-2xl py-4 font-black tracking-widest text-white shadow-xl transition-all ${
+                            manualSku.trim()
+                              ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/20 active:scale-95"
+                              : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
+                          }`}
                         >
-                          <div className="flex items-center justify-center gap-2">
-                            <svg
-                              className="h-5 w-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            Validate Code
-                          </div>
+                          VALIDATE
                         </button>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* Validation Status */}
-                  {barcodeValidation.message && (
-                    <div className="mt-6">
-                      <div
-                        className={`rounded-2xl p-4 ${
-                          barcodeValidation.isValid
-                            ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20"
-                            : "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20"
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`rounded-full p-2 ${
-                              barcodeValidation.isValid
-                                ? "bg-green-500"
-                                : "bg-red-500"
-                            }`}
-                          >
-                            <svg
-                              className="h-5 w-5 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              {barcodeValidation.isValid ? (
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              ) : (
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              )}
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <p
-                              className={`font-semibold ${
-                                barcodeValidation.isValid
-                                  ? "text-green-800 dark:text-green-200"
-                                  : "text-red-800 dark:text-red-200"
-                              }`}
-                            >
-                              {barcodeValidation.isValid
-                                ? "Validation Successful"
-                                : "Validation Failed"}
-                            </p>
-                            <p
-                              className={`mt-1 text-sm ${
-                                barcodeValidation.isValid
-                                  ? "text-green-700 dark:text-green-300"
-                                  : "text-red-700 dark:text-red-300"
-                              }`}
-                            >
-                              {barcodeValidation.message}
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
-                </div>
-              )}
 
-              {/* Quantity Input Section - Only show if barcode is valid or item is weight-based */}
-              {(barcodeValidation.isValid || isWeightBased) && (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <p
-                      className={`text-sm ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  {barcodeValidation.message && (
+                    <div
+                      className={`flex items-center gap-4 rounded-[1.5rem] border-2 p-5 animate-in zoom-in-95 ${
+                        barcodeValidation.isValid
+                          ? "border-emerald-500/20 bg-emerald-500/10"
+                          : "border-red-500/20 bg-red-500/10"
                       }`}
                     >
-                      {isWeightBased
-                        ? `Enter the weight you found (0 to ${currentItem.quantity} ${measurementUnit})`
-                        : `Enter the quantity you found (0 to ${currentItem.quantity})`}
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="relative">
                       <div
-                        className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4`}
+                        className={`flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg ${
+                          barcodeValidation.isValid
+                            ? "bg-emerald-500"
+                            : "bg-red-500"
+                        }`}
                       >
                         <svg
-                          className={`h-6 w-6 ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-500"
-                          }`}
+                          className="h-7 w-7"
                           fill="none"
-                          stroke="currentColor"
                           viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                          />
+                          {barcodeValidation.isValid ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          )}
                         </svg>
                       </div>
-                      <input
-                        type="number"
-                        value={isWeightBased ? foundWeight : foundQuantity}
-                        onChange={(e) => {
-                          const numValue = Number(e.target.value) || 0;
-                          // Prevent entering quantities higher than requested
-                          const maxAllowed = currentItem?.quantity || 0;
-                          const validValue = Math.min(numValue, maxAllowed);
-
-                          if (isWeightBased) {
-                            setFoundWeight(validValue);
-                            setFoundQuantity(validValue); // Update quantity for compatibility
-                          } else {
-                            setFoundQuantity(validValue);
-                          }
-
-                          // If user tried to enter a higher value, update the input to show the capped value
-                          if (numValue > maxAllowed) {
-                            e.target.value = validValue.toString();
-                          }
-                        }}
-                        min={0}
-                        max={currentItem.quantity}
-                        step={isWeightBased ? "0.01" : "1"}
-                        className={`w-full rounded-2xl border-2 py-5 pl-14 pr-4 text-center text-2xl font-bold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          theme === "dark"
-                            ? "border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-blue-500"
-                            : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-blue-500"
-                        }`}
-                        placeholder={
-                          isWeightBased ? `0.00 ${measurementUnit}` : "0"
-                        }
-                      />
+                      <div className="flex-1">
+                        <p
+                          className={`font-black tracking-tight ${
+                            barcodeValidation.isValid
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-red-700 dark:text-red-400"
+                          }`}
+                        >
+                          {barcodeValidation.isValid
+                            ? "MATCH FOUND!"
+                            : "NO MATCH"}
+                        </p>
+                        <p
+                          className={`text-xs font-bold opacity-80 ${
+                            barcodeValidation.isValid
+                              ? "text-emerald-600 dark:text-emerald-500"
+                              : "text-red-600 dark:text-red-500"
+                          }`}
+                        >
+                          {barcodeValidation.message}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <span
-                        className={`inline-block rounded-full px-4 py-2 text-sm font-medium ${
-                          theme === "dark"
-                            ? "bg-gray-700 text-gray-300"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {isWeightBased
-                          ? `of ${currentItem.quantity} ${measurementUnit}`
-                          : `of ${currentItem.quantity} units`}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
 
-              {/* Status Indicator */}
-              {(exceedsBudget ||
-                (foundQuantity === currentItem.quantity &&
-                  !barcodeValidation.isValid)) && (
-                <div
-                  className={`rounded-2xl p-4 ${
-                    theme === "dark"
-                      ? "bg-gray-800/50 text-gray-300"
-                      : "bg-gray-50 text-gray-700"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
+              {(barcodeValidation.isValid || isWeightBased) && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="group relative">
                     <div
-                      className={`rounded-full p-2 ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      className={`pointer-events-none absolute inset-y-0 left-6 flex items-center transition-colors ${
+                        theme === "dark" ? "text-gray-600" : "text-gray-300"
                       }`}
                     >
                       <svg
-                        className={`h-5 w-5 ${
-                          exceedsBudget ? "text-red-500" : "text-green-500"
-                        }`}
+                        className="h-8 w-8"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
+                        strokeWidth="2.5"
                       >
-                        {exceedsBudget ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                          />
-                        ) : (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                        />
                       </svg>
                     </div>
-                    <div className="flex-1">
-                      <p className="mb-1 font-semibold">
-                        {exceedsBudget
-                          ? "Budget Exceeded"
-                          : foundQuantity === currentItem.quantity &&
-                            !barcodeValidation.isValid
-                          ? isWeightBased
-                            ? `All ${measurementUnit} Found`
-                            : "All Units Found"
-                          : ""}
-                      </p>
-                      <p className="text-sm opacity-90">
-                        {exceedsBudget
-                          ? `Weight exceeds budget by $${(
-                              foundWeight * pricePerUnit -
-                              customerBudget
-                            ).toFixed(2)}`
-                          : foundQuantity === currentItem.quantity &&
-                            !barcodeValidation.isValid
-                          ? "Perfect match! All items found"
-                          : ""}
-                      </p>
-                      {isWeightBased && foundQuantity > 0 && (
-                        <div className="mt-1 space-y-1 text-xs">
+                    <input
+                      type="number"
+                      value={
+                        isWeightBased ? foundWeight || "" : foundQuantity || ""
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const numValue = val === "" ? 0 : parseFloat(val);
+                        const maxAllowed = currentItem?.quantity || 0;
+                        const validValue = Math.min(numValue, maxAllowed);
+                        if (isWeightBased) {
+                          setFoundWeight(validValue);
+                          setFoundQuantity(validValue);
+                        } else {
+                          setFoundQuantity(Math.floor(validValue));
+                        }
+                      }}
+                      className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all focus:border-emerald-500`}
+                      style={{
+                        backgroundColor: "var(--bg-secondary)",
+                        color: "var(--text-primary)",
+                        borderColor:
+                          theme === "dark"
+                            ? "rgba(255,255,255,0.1)"
+                            : "rgba(0,0,0,0.1)",
+                      }}
+                      placeholder="0"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="flex justify-center gap-2">
+                    {[0.5, 1].map((mult) => (
+                      <button
+                        key={mult}
+                        onClick={() => {
+                          const val = isWeightBased
+                            ? (currentItem.quantity * mult).toFixed(2)
+                            : Math.floor(currentItem.quantity * mult);
+                          if (isWeightBased) setFoundWeight(Number(val));
+                          setFoundQuantity(Number(val));
+                        }}
+                        className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                          (isWeightBased ? foundWeight : foundQuantity) ===
+                          Number(
+                            isWeightBased
+                              ? (currentItem.quantity * mult).toFixed(2)
+                              : Math.floor(currentItem.quantity * mult)
+                          )
+                            ? "scale-105 bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                            : theme === "dark"
+                            ? "bg-gray-800 text-gray-400"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {mult === 1 ? "FULL" : "HALF"} AMOUNT
+                      </button>
+                    ))}
+                  </div>
+
+                  {isWeightBased && (
+                    <div
+                      className={`rounded-3xl border-2 p-6 ${
+                        exceedsBudget
+                          ? "border-red-500/10 bg-red-500/5"
+                          : "border-emerald-500/10 bg-emerald-500/5"
+                      }`}
+                    >
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                            BUDGET
+                          </p>
                           <p
-                            className={`${
-                              exceedsBudget
-                                ? "text-red-600 dark:text-red-400"
-                                : "text-gray-600 dark:text-gray-400"
+                            className={`text-lg font-black ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
                             }`}
                           >
-                            Cost: ${(foundWeight * pricePerUnit).toFixed(2)} |
-                            Budget: ${customerBudget.toFixed(2)}
+                            {customerBudget.toLocaleString()} RWF
                           </p>
-                          {missingWeight > 0 && (
-                            <p className="text-amber-600 dark:text-amber-400">
-                              Missing: {missingWeight.toFixed(2)}{" "}
-                              {measurementUnit} | Refund: $
-                              {refundAmount.toFixed(2)}
-                            </p>
-                          )}
-                          {missingWeight > 0 && (
-                            <p className="font-medium text-blue-600 dark:text-blue-400">
-                              Customer will be charged: $
-                              {(foundWeight * pricePerUnit).toFixed(2)} |
-                              Refund: ${refundAmount.toFixed(2)}
-                            </p>
-                          )}
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                            EST. COST
+                          </p>
+                          <p
+                            className={`text-lg font-black ${
+                              exceedsBudget
+                                ? "text-red-500"
+                                : "text-emerald-500"
+                            }`}
+                          >
+                            {(foundWeight * pricePerUnit).toLocaleString()} RWF
+                          </p>
+                        </div>
+                      </div>
+                      {refundAmount > 0 && (
+                        <div className="mt-4 flex items-center justify-between border-t border-dashed border-gray-500/20 pt-4">
+                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                            Refund:
+                          </p>
+                          <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                            {refundAmount.toLocaleString()} RWF
+                          </p>
                         </div>
                       )}
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Footer */}
           <div
-            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8`}
+            className={`flex gap-4 border-t p-6 sm:p-10`}
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              borderTopColor:
+                theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+            }}
           >
             <button
               onClick={onClose}
-              className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-                theme === "dark"
-                  ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
-                  : "border border-gray-300 text-gray-700 hover:bg-gray-100"
+              className={`flex-1 rounded-2xl border py-4 font-black tracking-tight transition-all active:scale-95`}
+              style={{
+                backgroundColor: "var(--bg-primary)",
+                color: "var(--text-secondary)",
+                borderColor:
+                  theme === "dark"
+                    ? "rgba(255,255,255,0.1)"
+                    : "rgba(0,0,0,0.1)",
+              }}
+            >
+              CANCEL
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={
+                (!isWeightBased && !barcodeValidation.isValid) ||
+                (isWeightBased ? foundWeight : foundQuantity) <= 0
+              }
+              className={`flex flex-[2] items-center justify-center gap-3 rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 ${
+                (barcodeValidation.isValid || isWeightBased) &&
+                (isWeightBased ? foundWeight : foundQuantity) > 0
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/30 hover:scale-[1.02]"
+                  : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
               }`}
             >
-              Cancel
+              {!isWeightBased && !barcodeValidation.isValid ? (
+                <>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  VERIFY FIRST
+                </>
+              ) : (
+                <>
+                  CONFIRM FOUND
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </>
+              )}
             </button>
-            {/* Hide Confirm Found button on mobile when in barcode/SKU input mode */}
-            {!(isMobile && (showBarcodeScanner || showManualInput)) && (
-              <button
-                onClick={onConfirm}
-                disabled={
-                  foundQuantity === 0 ||
-                  exceedsBudget ||
-                  (!isWeightBased &&
-                    !barcodeValidation.isValid &&
-                    (currentItem?.product.ProductName?.barcode ||
-                      currentItem?.product.barcode ||
-                      currentItem?.product.ProductName?.sku ||
-                      currentItem?.product.sku))
-                }
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 sm:flex-initial ${
-                  foundQuantity === 0 ||
-                  exceedsBudget ||
-                  (!isWeightBased && !barcodeValidation.isValid)
-                    ? "cursor-not-allowed bg-gray-400"
-                    : theme === "dark"
-                    ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-                    : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-                }`}
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Confirm Found
-              </button>
-            )}
           </div>
         </div>
       </div>

@@ -253,7 +253,7 @@ export default function UserAccount() {
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <label className="mb-2 block text-sm font-medium text-gray-600 dark:text-gray-400">
                         Username
                       </label>
                       <div className="relative">
@@ -284,7 +284,7 @@ export default function UserAccount() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <label className="mb-2 block text-sm font-medium text-gray-600 dark:text-gray-400">
                         Email
                       </label>
                       <div className="relative">
@@ -318,7 +318,7 @@ export default function UserAccount() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <label className="mb-2 block text-sm font-medium text-gray-600 dark:text-gray-400">
                         Phone
                       </label>
                       <div className="relative">
@@ -349,7 +349,7 @@ export default function UserAccount() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <label className="mb-2 block text-sm font-medium text-gray-600 dark:text-gray-400">
                         Gender
                       </label>
                       <div className="relative">
@@ -567,7 +567,7 @@ export default function UserAccount() {
                 <form onSubmit={handlePasswordSubmit}>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <label className="mb-2 block text-sm font-medium text-gray-600 dark:text-gray-400">
                         Verification Code (OTP)
                       </label>
                       <div className="relative">
@@ -600,7 +600,7 @@ export default function UserAccount() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <label className="mb-2 block text-sm font-medium text-gray-600 dark:text-gray-400">
                         New Password
                       </label>
                       <div className="relative">

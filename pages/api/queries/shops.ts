@@ -18,6 +18,13 @@ const GET_SHOPS = gql`
       longitude
       operating_hours
       updated_at
+      has_wallet
+      phone
+      rdb_certificate
+      relatedTo
+      ssd
+      tin
+      use_wallet
     }
   }
 `;

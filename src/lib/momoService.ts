@@ -8,17 +8,8 @@ interface TokenData {
 }
 
 export interface Payer {
-  partyIdType: "MSISDN";
+  partyIdType: "MSISDN" | "EMAIL" | "PERSONAL_ID";
   partyId: string;
-}
-
-export interface RequestToPayBody {
-  amount: string;
-  currency: string;
-  externalId: string;
-  payer: Payer;
-  payerMessage: string;
-  payeeNote: string;
 }
 
 export interface PaymentStatus {
@@ -31,12 +22,16 @@ export interface PaymentStatus {
 }
 
 class MomoService {
-  private token: TokenData | null = null;
+  private collectionToken: TokenData | null = null;
+  private disbursementToken: TokenData | null = null;
   private readonly TOKEN_EXPIRY_BUFFER = 5 * 60; // 5 minutes buffer
 
   private getEnv() {
     return {
       subscriptionKey: process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
+      disbursementSubscriptionKey:
+        process.env.MOMO_DISBURSEMENT_SUBSCRIPTION_KEY_SANDBOX ||
+        process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX,
       userId: process.env.MOMO_API_USER_SANDBOX,
       apiKey: process.env.MOMO_API_KEY_SANDBOX,
       baseUrl: (
@@ -47,10 +42,18 @@ class MomoService {
   }
 
   /**
-   * Get a valid access token, generating a new one if missing or expired.
+   * Get a valid access token for a specific product, generating a new one if missing or expired.
    */
-  async getAccessToken(): Promise<string> {
-    const { subscriptionKey, userId, apiKey, baseUrl } = this.getEnv();
+  async getAccessToken(
+    product: "collection" | "disbursement"
+  ): Promise<string> {
+    const {
+      subscriptionKey,
+      disbursementSubscriptionKey,
+      userId,
+      apiKey,
+      baseUrl,
+    } = this.getEnv();
 
     if (!subscriptionKey || !userId || !apiKey) {
       throw new Error(
@@ -58,57 +61,60 @@ class MomoService {
       );
     }
 
+    const currentSubscriptionKey =
+      product === "collection" ? subscriptionKey : disbursementSubscriptionKey;
+
     const now = Math.floor(Date.now() / 1000);
+    const cachedToken =
+      product === "collection" ? this.collectionToken : this.disbursementToken;
+
     if (
-      this.token &&
-      this.token.generated_at + this.token.expires_in >
+      cachedToken &&
+      cachedToken.generated_at + cachedToken.expires_in >
         now + this.TOKEN_EXPIRY_BUFFER
     ) {
-      return this.token.access_token;
+      return cachedToken.access_token;
     }
 
-    console.log(
-      "🔄 [MoMo Service] Fetching new access token from:",
-      `${baseUrl}/collection/token/`
-    );
-    console.log("🔑 [MoMo Service] Using credentials:", {
-      hasSubscriptionKey: !!subscriptionKey,
-      hasUserId: !!userId,
-      hasApiKey: !!apiKey,
-      subKeyPreview: subscriptionKey
-        ? `${subscriptionKey.substring(0, 4)}...`
-        : "none",
-    });
+    console.log(`🔄 [MoMo Service] Fetching new ${product} access token...`);
 
     const auth = Buffer.from(`${userId}:${apiKey}`).toString("base64");
 
-    const response = await fetch(`${baseUrl}/collection/token/`, {
+    const response = await fetch(`${baseUrl}/${product}/token/`, {
       method: "POST",
       headers: {
-        "Ocp-Apim-Subscription-Key": subscriptionKey,
+        "Ocp-Apim-Subscription-Key": currentSubscriptionKey!,
         Authorization: `Basic ${auth}`,
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ [MoMo Service] Token generation failed:", errorText);
-      throw new Error(`MoMo Token Error: ${response.status} - ${errorText}`);
+      console.error(
+        `❌ [MoMo Service] ${product} token generation failed:`,
+        errorText
+      );
+      throw new Error(
+        `MoMo ${product} Token Error: ${response.status} - ${errorText}`
+      );
     }
 
     const data = await response.json();
-    this.token = {
+    const newToken = {
       access_token: data.access_token,
       token_type: data.token_type,
       expires_in: parseInt(data.expires_in, 10),
       generated_at: now,
     };
 
-    return this.token.access_token;
+    if (product === "collection") this.collectionToken = newToken;
+    else this.disbursementToken = newToken;
+
+    return newToken.access_token;
   }
 
   /**
-   * Initiate a RequestToPay.
+   * Initiate a RequestToPay (Collection API).
    */
   async requestToPay(params: {
     amount: number | string;
@@ -136,7 +142,7 @@ class MomoService {
     };
 
     const callApi = async (retry = true): Promise<Response> => {
-      const token = await this.getAccessToken();
+      const token = await this.getAccessToken("collection");
       const response = await fetch(`${baseUrl}/collection/v1_0/requesttopay`, {
         method: "POST",
         headers: {
@@ -150,8 +156,7 @@ class MomoService {
       });
 
       if (response.status === 401 && retry) {
-        console.warn("⚠️ [MoMo Service] 401 Unauthorized, retrying once...");
-        this.token = null; // Clear cached token
+        this.collectionToken = null;
         return callApi(false);
       }
       return response;
@@ -161,27 +166,22 @@ class MomoService {
 
     if (response.status !== 202) {
       const errorText = await response.text();
-      console.error("❌ [MoMo Service] RequestToPay failed:", errorText);
       throw new Error(
         `MoMo RequestToPay Error: ${response.status} - ${errorText}`
       );
     }
 
-    console.log(
-      "✅ [MoMo Service] RequestToPay accepted, referenceId:",
-      referenceId
-    );
     return { referenceId };
   }
 
   /**
-   * Check the status of a payment request.
+   * Check status of a RequestToPay.
    */
   async getPaymentStatus(referenceId: string): Promise<PaymentStatus> {
     const { subscriptionKey, baseUrl, environment } = this.getEnv();
 
     const callApi = async (retry = true): Promise<Response> => {
-      const token = await this.getAccessToken();
+      const token = await this.getAccessToken("collection");
       const response = await fetch(
         `${baseUrl}/collection/v1_0/requesttopay/${referenceId}`,
         {
@@ -195,8 +195,71 @@ class MomoService {
       );
 
       if (response.status === 401 && retry) {
-        console.warn("⚠️ [MoMo Service] 401 Unauthorized, retrying once...");
-        this.token = null; // Clear cached token
+        this.collectionToken = null;
+        return callApi(false);
+      }
+      return response;
+    };
+
+    const response = await callApi();
+    if (!response.ok)
+      throw new Error(`MoMo status check failed: ${response.status}`);
+    return (await response.json()) as PaymentStatus;
+  }
+
+  /**
+   * Initiate a Transfer (Disbursement API).
+   * Can be used to disburse to a phone number or a MoMo code.
+   */
+  async transfer(params: {
+    amount: number | string;
+    currency: string;
+    payeeId: string;
+    partyIdType?: "MSISDN" | "EMAIL" | "PERSONAL_ID";
+    externalId: string;
+    payerMessage?: string;
+    payeeNote?: string;
+    referenceId?: string;
+  }): Promise<{ referenceId: string }> {
+    const referenceId = params.referenceId || randomUUID();
+    const { subscriptionKey, baseUrl, environment } = this.getEnv();
+
+    const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
+
+    // For MoMo codes, we often use MSISDN if it looks like a code, or the provided type
+    const partyId =
+      params.partyIdType === "MSISDN" || !params.partyIdType
+        ? this.formatPhoneNumber(params.payeeId)
+        : params.payeeId;
+
+    const body = {
+      amount: String(params.amount),
+      currency: finalCurrency,
+      externalId: params.externalId,
+      payee: {
+        partyIdType: params.partyIdType || "MSISDN",
+        partyId: partyId,
+      },
+      payerMessage: params.payerMessage || "Disbursement Request",
+      payeeNote: params.payeeNote || "Payment Confirmed",
+    };
+
+    const callApi = async (retry = true): Promise<Response> => {
+      const token = await this.getAccessToken("disbursement");
+      const response = await fetch(`${baseUrl}/disbursement/v1_0/transfer`, {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": disbursementSubscriptionKey!,
+          Authorization: `Bearer ${token}`,
+          "X-Reference-Id": referenceId,
+          "X-Target-Environment": environment,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (response.status === 401 && retry) {
+        this.disbursementToken = null;
         return callApi(false);
       }
       return response;
@@ -204,144 +267,66 @@ class MomoService {
 
     const response = await callApi();
 
-    if (!response.ok) {
+    if (response.status !== 202) {
       const errorText = await response.text();
-      console.error("❌ [MoMo Service] GetPaymentStatus failed:", errorText);
-      throw new Error(
-        `MoMo GetPaymentStatus Error: ${response.status} - ${errorText}`
-      );
+      console.error("❌ [MoMo Service] Transfer failed:", errorText);
+      throw new Error(`MoMo Transfer Error: ${response.status} - ${errorText}`);
     }
 
-    return (await response.json()) as PaymentStatus;
+    return { referenceId };
   }
 
   /**
-   * Request a disbursement (transfer)
-   * @param amount Amount to transfer
-   * @param currency Currency code (e.g., "RWF")
-   * @param payeeNumber Phone number of the payee (e.g., "25078xxxxxxx")
-   * @param externalId External reference ID
-   * @param payerMessage Message for the payer
-   * @param payeeNote Note for the payee
-   * @returns Reference ID of the transfer request
-   */
-  async transfer(
-    amount: number | string,
-    currency: string,
-    payeeNumber: string,
-    externalId: string,
-    payerMessage: string = "Transfer request",
-    payeeNote: string = "Transfer confirmation",
-    referenceId?: string
-  ): Promise<{ referenceId: string }> {
-    const finalReferenceId = referenceId || randomUUID();
-    const token = await this.getAccessToken();
-    const { baseUrl, subscriptionKey, environment } = this.getEnv();
-
-    const url = `${baseUrl}/disbursement/v1_0/transfer`;
-    const payload = {
-      amount: amount.toString(),
-      currency,
-      externalId,
-      payee: {
-        partyIdType: "MSISDN",
-        partyId: this.formatPhoneNumber(payeeNumber),
-      },
-      payerMessage,
-      payeeNote,
-    };
-
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "X-Reference-Id": finalReferenceId,
-      "X-Target-Environment": environment,
-      "Content-Type": "application/json",
-      "Ocp-Apim-Subscription-Key": subscriptionKey!,
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      if (response.status === 202) {
-        return { referenceId: finalReferenceId };
-      }
-
-      if (response.status === 401) {
-        // Redo once with fresh token
-        this.token = null;
-        return this.transfer(
-          amount,
-          currency,
-          payeeNumber,
-          externalId,
-          payerMessage,
-          payeeNote,
-          finalReferenceId
-        );
-      }
-
-      const errorText = await response.text();
-      throw new Error(
-        `MoMo transfer failed (${response.status}): ${errorText}`
-      );
-    } catch (error) {
-      console.error("💥 [momoService] Transfer error:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Check the status of a disbursement (transfer)
-   * @param referenceId The X-Reference-Id used in the transfer request
-   * @returns Transfer status object
+   * Check status of a Transfer (Disbursement API).
    */
   async getTransferStatus(referenceId: string): Promise<any> {
-    const token = await this.getAccessToken();
-    const { baseUrl, subscriptionKey, environment } = this.getEnv();
+    const { disbursementSubscriptionKey, baseUrl, environment } = this.getEnv();
 
-    const url = `${baseUrl}/disbursement/v1_0/transfer/${referenceId}`;
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "X-Target-Environment": environment,
-      "Ocp-Apim-Subscription-Key": subscriptionKey!,
+    const callApi = async (retry = true): Promise<Response> => {
+      const token = await this.getAccessToken("disbursement");
+      const response = await fetch(
+        `${baseUrl}/disbursement/v1_0/transfer/${referenceId}`,
+        {
+          method: "GET",
+          headers: {
+            "Ocp-Apim-Subscription-Key": disbursementSubscriptionKey!,
+            Authorization: `Bearer ${token}`,
+            "X-Target-Environment": environment,
+          },
+        }
+      );
+
+      if (response.status === 401 && retry) {
+        this.disbursementToken = null;
+        return callApi(false);
+      }
+      return response;
     };
 
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers,
-      });
-
-      if (response.ok) {
-        return await response.json();
-      }
-
-      if (response.status === 401) {
-        this.token = null;
-        return this.getTransferStatus(referenceId);
-      }
-
-      const errorText = await response.text();
+    const response = await callApi();
+    if (!response.ok)
       throw new Error(
-        `MoMo getTransferStatus failed (${response.status}): ${errorText}`
+        `MoMo transfer status check failed: ${
+          response.status
+        } - ${await response.text()}`
       );
-    } catch (error) {
-      console.error("💥 [momoService] GetTransferStatus error:", error);
-      throw error;
-    }
+    return await response.json();
   }
+
   private formatPhoneNumber(phone: string): string {
     let partyId = String(phone).replace(/\D/g, "");
+
+    // If it's a short MoMo code (5-6 digits), don't add prefix
+    if (partyId.length >= 5 && partyId.length <= 8) {
+      return partyId;
+    }
+
     if (partyId.startsWith("0")) {
       partyId = "250" + partyId.slice(1);
-    } else if (!partyId.startsWith("250")) {
+    } else if (!partyId.startsWith("250") && partyId.length >= 9) {
       partyId = "250" + partyId;
     }
-    return partyId;
+    return "+" + partyId;
   }
 }
 

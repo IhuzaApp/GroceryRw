@@ -44,6 +44,16 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 19. **Password Recovery System (Email & SMS)** ⭐ NEW
 
+### 20. **Package Delivery Workflow Integration** ⭐ NEW
+
+### 21. **Merchant Payment Request System** ⭐ NEW
+
+### 22. **Multi-Store Multi-Cart System** ⭐ NEW
+
+### 23. **Pets Marketplace System** ⭐ NEW
+
+### 24. **Second-Hand Listing System** ⭐ NEW
+
 ---
 
 # 🚀 Order Offers & Nearby Assignment System
@@ -82,7 +92,8 @@ Professional dispatch system following the DoorDash/Uber Eats model with exclusi
 
 1. **Server is the source of truth** - Client never decides eligibility
 2. **Action-based system** - Offers stay until shopper explicitly accepts or declines (no time-based expiry)
-3. **Up to 2 active orders** - Shoppers can work on up to 2 orders simultaneously, but cannot receive new offers if they have 2 active orders or a pending OFFERED offer
+3. **One Order At A Time** - Shoppers can work on ONLY 1 order/batch at a time. They cannot receive or accept new offers until their current order is delivered.
+   3.5. **Cross-Type Detection** - System monitors active orders across Regular, Reel, Restaurant, Package, and Business tables to ensure total exclusivity.
 4. **Location is volatile** - Redis for GPS, database for offers
 5. **Distance gating** - Only offer to nearby shoppers
 6. **Round-based expansion** - Radius grows if declined (3km → 5km → 8km)
@@ -315,7 +326,7 @@ Accepts an offer with distance re-validation.
 - `NO_VALID_OFFER` - Offer doesn't exist or was already processed
 - `ALREADY_ASSIGNED` - Another shopper got it first
 - `TOO_FAR` - Distance re-validation failed (shopper moved too far)
-- `ACTIVE_ORDER_IN_PROGRESS` - Shopper already has an active order and cannot accept new ones
+- `MAX_ACTIVE_ORDERS_REACHED` - Shopper already has an active order across any type.
 
 ### 4. Decline Offer
 
@@ -512,15 +523,21 @@ try {
 
 ### Key Behaviors
 
-**Active Orders and Offer Limits:**
+**One Order At A Time Policy:**
 
-- Shoppers can work on up to 2 active orders simultaneously (accepted/in_progress/picked_up)
-- If shopper has 2 active orders, they cannot receive new offers until at least one is delivered
-- If shopper has 1 active order, they can still receive new offers (up to 2 total active orders)
-- Shoppers can only have ONE pending OFFERED offer at a time
-- If shopper has a pending OFFERED offer, they must accept or decline it before receiving a new offer
-- This ensures shoppers focus on completing deliveries while allowing flexibility for multiple orders
-- Prevents overwhelming shoppers with too many simultaneous orders
+- Shoppers can work on ONLY ONE order/batch at a time.
+- System performs cross-table checks (Regular, Reel, Restaurant, Package, Business) to detect any busy shopper.
+- If shopper has an active order, they are automatically hidden from the assignment pool.
+- This ensures high delivery quality and prevents shoppers from getting overwhelmed or cherry-picking.
+- Shoppers can only have ONE pending OFFERED offer at a time.
+- If shopper has a pending OFFERED offer, they must accept or decline it before receiving a new offer.
+
+**Combined Orders & Fair Punishment:**
+
+- **Atomic Expiration**: If a shopper ignores a combined batch (e.g., 2 orders from one store), the system marks the entire batch as `DELAYED` simultaneously. This prevents "ghost" assignments and loops.
+- **Fair Striking**: Ignoring a batch of 3 orders counts as **1 strike**, not 3. Strikes are calculated based on distinct assignment rounds (`offered_at` groups).
+- **Three-Strike Rule**: If a shopper accumulates > 2 distinct delayed assignment units in a single day, they are automatically downgraded from "Shopper" to "Regular User" for accountability.
+- **Action-Based Expiration**: While the system is action-based (wait for shopper), a safety timeout (e.g., 2 minutes) exists in `smart-assign-order` to proactively rotate orders if the shopper is unresponsive.
 
 **Duplicate Prevention:**
 
@@ -13986,3 +14003,226 @@ Requires the following environment variables:
 1. **Mandatory Forms**: The AI is instructed to _never_ summarize price totals in text; it must always use the interactive form to ensure consistency.
 2. **Cart Sync**: Always dispatch `cartChanged` events after AI actions to keep the header and cart modals updated.
 3. **Error Catching**: Every tool execution and fetch in `AIChatWindow.tsx` should be wrapped in a `try/catch` with a `reportError` call.
+
+# 📦 Package Delivery Workflow Integration
+
+## Overview
+
+The Package Delivery Workflow integrates a comprehensive courier service into the existing shopper ecosystem. This system allows authorized couriers to handle peer-to-peer or business-to-user package deliveries seamlessly alongside standard grocery and restaurant orders.
+
+## Key Features
+
+### 1. Unified Dispatch & Assignment
+
+- **Smart Assignment**: Integrated with the `smart-assign-order` logic. Package orders are prioritized for shoppers with `courier: true` status.
+- **Unified Batch List**: Available packages appear in the shopper's active batches list with a distinct pink/rose aesthetic and "Available Now" indicators.
+- **Action-Based Acceptance**: Couriers can view full package details before explicitly accepting the delivery.
+
+### 2. Courier-Specific Detail View
+
+- **Dedicated Interface**: The batch detail page adapts to show package-specific metadata:
+  - Precise pickup and dropoff locations with coordinate mapping.
+  - Receiver information (Name and Phone).
+  - Specific delivery instructions and comments.
+  - Package images (if provided).
+- **Streamlined Workflow**: Hides grocery-specific UI elements (like "Start Shopping" or payment summaries) and focuses on the pickup-to-delivery lifecycle.
+
+### 3. Integrated Financials
+
+- **Automated Earnings**: Integrates with `walletOperations` to calculate and credit courier earnings from the delivery fee upon successful completion.
+- **Platform Fee Management**: Automatically calculates and deducts platform commissions based on system configuration.
+
+### 4. Status Tracking & Notifications
+
+- **Real-time Status**: Supports a full lifecycle of statuses: `PENDING` → `accepted` → `on_the_way` → `delivered`.
+- **FCM Integration**: Direct deep-linking from push notifications to the package detail view in the shopper dashboard.
+
+## Technical Implementation
+
+### Database Schema (package_delivery)
+
+| Field             | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `id`              | Unique identifier (UUID)                                 |
+| `DeliveryCode`    | Human-readable tracking code                             |
+| `status`          | Current state (PENDING, accepted, on_the_way, delivered) |
+| `pickupLocation`  | Formatted address for pickup                             |
+| `dropoffLocation` | Formatted address for dropoff                            |
+| `delivery_fee`    | Total fee for the delivery                               |
+| `shopper_id`      | Assigned courier (nullable when PENDING)                 |
+| `user_id`         | Package sender                                           |
+
+### Key API Endpoints
+
+- **`pages/api/shopper/activeBatches.ts`**: Fetches and unifies package deliveries into the shopper's dashboard.
+- **`pages/api/shopper/updateOrderStatus.ts`**: Handles the transition logic, including shopper assignment upon acceptance.
+- **`src/lib/walletOperations.ts`**: Manages the financial credit to the shopper's wallet upon delivery confirmation.
+
+---
+
+# 🚀 21. Merchant Payment Request System
+
+## Overview
+
+A robust system designed to handle the scenario where a shopper completes a regular grocery order, but the target merchant (shop) does not have an internal wallet. Instead of a direct automated payout, the system creates a "Payment Request" and alerts administrators to securely clear the payment manually, preserving data integrity and security.
+
+## Problem Solved
+
+Historically, if a merchant didn't have a wallet, the system would attempt to update a non-existent wallet or require the shopper to bypass the step. This led to database constraint violations (foreign key violations on `agent_approved_id`) and UI state inconsistencies on page refreshes.
+
+## Architecture & Flow
+
+### 1. The Trigger
+
+When a shopper attempts to finalize a batch using the OTP, the frontend (`batchDetails.tsx`) checks if the merchant has an internal wallet (`targetOrderForPayment.shop.has_wallet`).
+
+- If `true`: The system routes the payment directly through an automated wallet update.
+- If `false`: The frontend explicitly hits the `/api/shopper/processPaymentRequest` endpoint.
+
+### 2. Secure Server-Side Insertion
+
+The API route securely fetches the `shopper_id` based on the active session's `user_id` and runs a PostgreSQL/Hasura mutation to insert a new row into the `payment_requests` table with:
+
+- `status`: \`PENDING_PAYMENT\`
+- `amount`: The total due to the merchant
+- `agent_approved_id`: \`null\` (bypassing the foreign key constraint issue)
+
+### 3. Real-Time Admin Alerts via Slack
+
+Once the request is successfully lodged in the database, the backend automatically triggers `sendPaymentRequestToSlack` (from `slackSupportNotifier.ts`). This sends a premium, Orange-colored alert to the support channel, instantly notifying the team of the pending payment, along with the order ID, merchant name, amount, and shopper details.
+
+### 4. Persistent UI State
+
+To prevent the shopper from becoming "stuck" or having to re-request the payment if they refresh the app:
+
+- A new API route (`/api/shopper/checkPaymentRequestStatus`) allows the frontend to query the current state of pending requests on page load.
+- If a request is found, the UI locks the active batch into a "Waiting for Payment" state.
+
+### 5. Real-Time UI Transitions (FCM)
+
+When an administrator logs into the admin panel and approves the payment request (updating the status to `APPROVED`), the backend fires an FCM push notification (`sendPaymentApprovedNotification`) to the shopper's device.
+The shopper's app intercepts this push event and automatically transitions the order status to "Delivering / On The Way," without requiring manual page refreshes.
+
+## Key Files
+
+- **`pages/api/shopper/processPaymentRequest.ts`**: The main entry point for generating requests and resolving database relations.
+- **`src/components/shopper/activebatches/batchDetails.tsx`**: The frontend controller that orchestrates the flow and listens to FCM events.
+- **`pages/api/shopper/checkPaymentRequestStatus.ts`**: The persistence check endpoint to maintain UI continuity across reloads.
+- **`src/lib/slackSupportNotifier.ts`**: Handles the push of the real-time `💸 New Merchant Payment Request` alert to the Slack support channel.
+
+# 🛒 Multi-Store Multi-Cart System
+
+## Overview
+
+A sophisticated multi-cart management system that allows users to maintain and manage separate shopping carts for different restaurants and shops simultaneously. The system intelligently handles transitions between food-based restaurant orders and inventory-based shop orders with a unified, polished interface.
+
+## Key Features
+
+1. **Unified Tabbed Interface**: Seamlessly switch between active restaurant carts and shop carts without losing progress.
+2. **Shop vs. Restaurant Separation**:
+   - **Food Carts**: Real-time state management via `FoodCartContext` for restaurant-specific items.
+   - **Shop Carts**: Persistent server-side carts fetched via `/api/carts` for general grocery and retail shops.
+3. **Intelligent Auto-Rotation**: After checking out from one store, the system automatically transitions the user to the next available cart (Restaurant first, then Shops).
+4. **Local Data Caching**: Uses a sophisticated caching layer to store cart totals and units, preventing layout shifts and redundant API calls during tab switching.
+5. **Real-Time Event Synchronization**: Utilizes custom `cartChanged` DOM events to keep the UI in sync after checkout completions or manual removals.
+6. **Premium Mobile UX**: Features a responsive bottom-bar checkout summary and a floating "My Cart" header with integrated navigation.
+
+## Architecture & Integration
+
+### Data Flow
+
+```mermaid
+graph TD
+    A[Cart Main Page] --> B{Cart Type}
+    B -- Restaurant --> C[FoodCartContext]
+    B -- Shop --> D[/api/carts API]
+    C --> E[ItemCartTable]
+    D --> E
+    E --> F[CheckoutItems Component]
+    F --> G[Order Finalization]
+    G -- Success --> H[Auto-Switch Next Tab]
+    G -- Event --> I[Window: cartChanged]
+    I --> J[Global UI Update]
+```
+
+### Key Components
+
+- **`ItemCartTable`**: The core display engine for cart contents, handling quantity adjustments and item removals.
+- **`CheckoutItems`**: A floating summary component that calculates subtotal, delivery fees, and handles the transition to the payment modal.
+- **`CartLoadingSkeleton`**: Custom-built animation layers for cards, tables, and checkout summaries to ensure a smooth perceived performance.
+
+## API & State Management
+
+### Shop Cart Persistence
+
+Shop carts are synchronized with the server to ensure items remain in the cart across sessions.
+
+- **Fetch**: `GET /api/carts`
+- **Updates**: Triggered via `ItemCartTable` callbacks (`handleTotalChange`, `handleUnitsChange`).
+
+### Event System
+
+The system relies on a custom event-driven architecture to handle cross-context updates:
+
+```typescript
+window.dispatchEvent(
+  new CustomEvent("cartChanged", {
+    detail: {
+      refetch: true,
+      shop_id: "optional-uuid",
+    },
+  })
+);
+```
+
+## Performance Optimizations
+
+1. **Memoized Totals**: Uses `useMemo` to calculate aggregate item counts across all cart types (Food + Shop).
+2. **State Decoupling**: Prevents circular dependencies by using `useRef` for tracking intermediate totals before committing to state.
+3. **Delayed Mounting**: Ensures that the checkout summary remains mounted during the 2-3 second finalization/redirect window to prevent "popping" effects.
+
+## Usage & Development
+
+### Adding a new Cart Type
+
+To support a new category (e.g., Pharmacy), extend the `ShopCart` interface and ensure the `/api/carts` endpoint returns the appropriate type discriminator.
+
+### Customizing Skeletons
+
+Modify `RestaurantSelectionSkeleton` or `CheckoutSkeleton` in `pages/Cart/index.tsx` to adjust the loading visuals for new layouts.
+
+---
+
+# 🐾 Pets Marketplace System ⭐ NEW
+
+## Overview
+
+A comprehensive peer-to-peer and shelter-to-shopper marketplace for pets. This system features a sophisticated multi-step listing flow with strict safety and health verification requirements.
+
+## Key Features
+
+- **5-Step Listing Process**:
+  - **Category & Type**: Specify the species and breed.
+  - **Detailed Info**: Age, gender, size, and personality traits.
+  - **Visual Media**: Mandatory photos and a **1-minute video limit** (max 20MB) to ensure listing quality.
+  - **Health & Safety Verification**:
+    - **Vaccination Certificates**: Mandatory image capture/upload of vaccination documents.
+    - **Parent Photos**: Conditional logic requiring photos of parents if the pet is under **6 months old** to verify heritage and health.
+  - **Stock & Quantity**: Ability to list multiple pets of the same type (e.g., a litter of puppies) and track availability.
+- **Responsive Management Dashboard**: Dedicated partner dashboard matching the "Cars" aesthetic for tracking pet listings, sales, and health updates.
+- **Mobile-First Discovery**: High-impact "Join Plas Ride" floating CTA and clean, immersive listing cards.
+
+---
+
+# 📦 Second-Hand Listing System (PlasBusiness) ⭐ NEW
+
+## Overview
+
+Integrated within the `PlasBusiness` portal, this system allows business owners and individuals to manage pre-owned inventory alongside their primary professional services.
+
+## Key Features
+
+- **Inventory Management**: Track second-hand items with automated status updates (Available, Sold, Reserved).
+- **Integrated Sales Tracking**: Automatic generation of sales orders for second-hand items within the business ecosystem, linked to the user's wallet.
+- **Unified Portal Experience**: Seamlessly switch between primary business services (RFQs, Quotations) and second-hand marketplace listings.
+- **Minimalist Card UI**: A redesigned "Market Explorer" that removes traditional container boxes, listing services and products as clean, standalone cards directly on a premium background.

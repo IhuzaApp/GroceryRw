@@ -37,23 +37,27 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-[2.5rem] p-6 transition-all duration-500 lg:col-span-2 ${
+      className={`group relative overflow-hidden rounded-[3rem] p-8 transition-all duration-500 lg:col-span-2 ${
         isDark
-          ? "border border-white/10 bg-white/5"
-          : "border border-black/5 bg-white shadow-xl"
+          ? "border border-white/5 bg-gray-900/40 shadow-2xl shadow-black/20 backdrop-blur-3xl"
+          : "border border-gray-100 bg-white shadow-2xl shadow-gray-200/50"
       }`}
     >
       <div className="relative z-10">
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-0">
+        <div className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center sm:gap-0">
           <div>
-            <h3 className="text-xl font-black tracking-tight">
-              Earning Overview
+            <h3
+              className={`text-2xl font-black tracking-tight ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Revenue Performance
             </h3>
-            <p className="mt-1 text-xs font-bold uppercase tracking-widest opacity-40">
-              Activity Analysis
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500/60">
+              Interactive Activity Analysis
             </p>
           </div>
-          <div className="w-full sm:w-auto">
+          <div className="w-full sm:w-64">
             <SelectPicker
               data={periodOptions}
               value={period}
@@ -61,39 +65,42 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
               searchable={false}
               onChange={(value) => onPeriodChange(value as string)}
               style={{ width: "100%" }}
-              className="custom-select-glass"
-              size="md"
+              className="custom-select-premium"
+              size="lg"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           {/* Chart Stats */}
-          <div className="md:col-span-1">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                Net Earnings
+          <div className="space-y-8 md:col-span-1">
+            <div className="space-y-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                Net Period Revenue
               </p>
-              <p className="bg-gradient-to-br from-emerald-400 to-teal-500 bg-clip-text text-3xl font-black text-transparent">
+              <p className="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 bg-clip-text text-4xl font-black tracking-tighter text-transparent">
                 {formatCurrencySync(totalEarnings)}
               </p>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="space-y-4">
               <div
-                className={`rounded-2xl p-4 transition-colors ${
-                  isDark ? "bg-white/5" : "bg-black/5"
+                className={`group/metric rounded-3xl p-5 transition-all duration-300 ${
+                  isDark
+                    ? "border border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                    : "border border-gray-100 bg-gray-50 hover:bg-gray-100"
                 }`}
               >
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
                   Growth
                 </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-lg font-black text-emerald-500">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-black tracking-tight text-emerald-500">
                     +67%
                   </span>
-                  <div className="h-4 w-4 text-emerald-500">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20 transition-transform group-hover/metric:scale-110">
                     <svg
+                      className="h-5 w-5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -110,36 +117,57 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
               </div>
 
               <div
-                className={`rounded-2xl p-4 transition-colors ${
-                  isDark ? "bg-white/5" : "bg-black/5"
+                className={`group/metric rounded-3xl p-5 transition-all duration-300 ${
+                  isDark
+                    ? "border border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                    : "border border-gray-100 bg-gray-50 hover:bg-gray-100"
                 }`}
               >
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                  Target
-                </p>
-                <p className="mt-1 text-lg font-black opacity-80">
-                  82%{" "}
-                  <span className="ml-1 text-xs font-bold opacity-40">
-                    Reached
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                    Target
+                  </p>
+                  <span
+                    className={`text-xs font-black ${
+                      isDark ? "text-white/60" : "text-gray-900"
+                    }`}
+                  >
+                    82%
                   </span>
-                </p>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+                </div>
+                <div
+                  className={`h-2 w-full overflow-hidden rounded-full ${
+                    isDark
+                      ? "bg-white/5 shadow-inner"
+                      : "bg-gray-200 shadow-inner"
+                  }`}
+                >
                   <div
-                    className="h-full rounded-full bg-emerald-500 transition-all duration-1000"
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000 ease-out"
                     style={{ width: "82%" }}
                   />
                 </div>
+                <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-emerald-500/60">
+                  On Track for Milestone
+                </p>
               </div>
             </div>
           </div>
 
           {/* Real Daily Earnings Chart */}
-          <div className="h-64 min-h-[280px] md:col-span-3 md:h-full">
-            <DailyEarningsChart
-              data={dailyEarnings}
-              isLoading={isLoading}
-              period={period}
+          <div className="relative h-64 min-h-[320px] md:col-span-3 md:h-full">
+            <div
+              className={`absolute inset-0 rounded-[2rem] ${
+                isDark ? "bg-white/[0.02]" : "bg-gray-50/50"
+              } border border-dashed border-white/5`}
             />
+            <div className="relative h-full">
+              <DailyEarningsChart
+                data={dailyEarnings}
+                isLoading={isLoading}
+                period={period}
+              />
+            </div>
           </div>
         </div>
       </div>

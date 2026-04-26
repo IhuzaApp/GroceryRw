@@ -6,7 +6,7 @@ import { gql } from "graphql-request";
 import { notifyNewOrderToSlack } from "../../../src/lib/slackOrderNotifier";
 
 function generateOrderPin(): number {
-  return Math.floor(Math.random() * 100);
+  return Math.floor(1000 + Math.random() * 9000);
 }
 
 const GET_STORE_AND_USER = gql`

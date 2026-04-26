@@ -23,8 +23,15 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
+  orderType?:
+    | "regular"
+    | "reel"
+    | "restaurant"
+    | "combined"
+    | "business"
+    | "package";
   invoiceUrl?: string;
+  isAvailable?: boolean;
 }
 
 /* ── Helpers ── */
@@ -102,6 +109,11 @@ const ORDER_TYPE = {
     label: "Regular",
     gradient: "from-emerald-500 to-green-600",
     dot: "bg-emerald-400",
+  },
+  package: {
+    label: "Package",
+    gradient: "from-pink-500 to-rose-600",
+    dot: "bg-pink-400",
   },
 } as const;
 

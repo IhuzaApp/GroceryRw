@@ -68,13 +68,17 @@ async function broadcastToClients(payload) {
 
 if (messaging && messaging.onBackgroundMessage) {
   messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification?.title || "New Notification";
+    const notificationTitle = payload.notification?.title || payload.data?.title || "New Notification";
     const notificationOptions = {
       body: payload.notification?.body || payload.data?.body || payload.data?.message || "",
       icon: "/assets/logos/PlasIcon.png",
       badge: "/assets/logos/PlasIcon.png",
       data: payload.data,
       requireInteraction: true,
+      vibrate: [200, 100, 200],
+      renotify: true,
+      tag: payload.data?.tag || payload.data?.type || "general",
+      timestamp: Date.now(),
     };
 
     // Show system notification

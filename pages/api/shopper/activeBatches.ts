@@ -131,6 +131,52 @@ const GET_ACTIVE_BUSINESS_ORDERS = gql`
   }
 `;
 
+// Fetch active and pending package delivery orders for couriers
+const GET_PACKAGE_ORDERS = gql`
+  query GetPackageOrders($shopperId: uuid!) {
+    package_delivery(
+      where: {
+        _or: [
+          { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
+          { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+        ]
+      }
+      order_by: { created_at: desc }
+    ) {
+      id
+      DeliveryCode
+      pickupLocation
+      dropoffLocation
+      status
+      delivery_fee
+      created_at
+      package_image
+      receiverName
+      receiverPhone
+      comment
+      deliveryMethod
+      distance
+      dropoffDetails
+      pickupDetials
+      scheduled
+      timeAndDate
+      pickup_latitude
+      pickup_longitude
+      dropoff_latitude
+      dropoff_longitude
+      user_id
+      payment_method
+      shopper_id
+      Users {
+        id
+        name
+        email
+        phone
+      }
+    }
+  }
+`;
+
 // Fetch active restaurant orders for a specific shopper
 const GET_ACTIVE_RESTAURANT_ORDERS = gql`
   query GetActiveRestaurantOrders($shopperId: uuid!) {
@@ -222,11 +268,12 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Fetch regular, reel, restaurant, and business orders in parallel
+    // Fetch regular, reel, restaurant, business, and package orders in parallel
     let regularOrdersData,
       reelOrdersData,
       restaurantOrdersData,
-      businessOrdersData;
+      businessOrdersData,
+      packageOrdersData;
 
     try {
       [
@@ -234,6 +281,7 @@ export default async function handler(
         reelOrdersData,
         restaurantOrdersData,
         businessOrdersData,
+        packageOrdersData,
       ] = await Promise.all([
         hasuraClient.request<{
           Orders: Array<{
@@ -370,6 +418,40 @@ export default async function handler(
             } | null;
           }>;
         }>(GET_ACTIVE_BUSINESS_ORDERS, { shopperId: userId }),
+        hasuraClient.request<{
+          package_delivery: Array<{
+            id: string;
+            DeliveryCode: string | null;
+            pickupLocation: string | null;
+            dropoffLocation: string | null;
+            status: string;
+            delivery_fee: string | null;
+            created_at: string;
+            package_image: string | null;
+            receiverName: string | null;
+            receiverPhone: string | null;
+            comment: string | null;
+            deliveryMethod: string | null;
+            distance: string | null;
+            dropoffDetails: string | null;
+            pickupDetials: string | null;
+            scheduled: boolean;
+            timeAndDate: string | null;
+            pickup_latitude: string | number | null;
+            pickup_longitude: string | number | null;
+            dropoff_latitude: string | number | null;
+            dropoff_longitude: string | number | null;
+            user_id: string | null;
+            payment_method: string | null;
+            shopper_id: string | null;
+            Users: {
+              id: string;
+              name: string | null;
+              email: string | null;
+              phone: string | null;
+            } | null;
+          }>;
+        }>(GET_PACKAGE_ORDERS, { shopperId: userId }),
       ]);
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);
@@ -388,6 +470,7 @@ export default async function handler(
     const reelOrders = reelOrdersData.reel_orders;
     const restaurantOrders = restaurantOrdersData.restaurant_orders;
     const businessOrders = businessOrdersData.businessProductOrders || [];
+    const packageOrders = packageOrdersData.package_delivery || [];
 
     logger.info("Active batches query results", "ActiveBatchesAPI", {
       userId,
@@ -395,11 +478,13 @@ export default async function handler(
       reelOrdersCount: reelOrders.length,
       restaurantOrdersCount: restaurantOrders.length,
       businessOrdersCount: businessOrders.length,
+      packageOrdersCount: packageOrders.length,
       totalOrders:
         regularOrders.length +
         reelOrders.length +
         restaurantOrders.length +
-        businessOrders.length,
+        businessOrders.length +
+        packageOrders.length,
     });
 
     // Group regular orders by combined_order_id
@@ -716,6 +801,43 @@ export default async function handler(
       customerPhone: o.orderedBy.phone,
     }));
 
+    // Transform package delivery orders
+    const transformedPackageOrders = packageOrders.map((o) => ({
+      id: o.id,
+      OrderID: o.DeliveryCode ? o.DeliveryCode : o.id, // Or maybe a specific short ID if available
+      status: o.status,
+      createdAt: o.created_at,
+      deliveryTime: o.timeAndDate || undefined,
+      shopName: o.Users?.name
+        ? `Package from ${o.Users.name}`
+        : "Package Delivery",
+      shopNames: [
+        o.Users?.name ? `Package from ${o.Users.name}` : "Package Delivery",
+      ],
+      shopAddress: o.pickupLocation || "—",
+      shopLat: parseFloat(String(o.pickup_latitude || "0")),
+      shopLng: parseFloat(String(o.pickup_longitude || "0")),
+      customerName: o.receiverName || "Receiver",
+      customerAddress: o.dropoffLocation || "—",
+      customerLat: parseFloat(String(o.dropoff_latitude || "0")),
+      customerLng: parseFloat(String(o.dropoff_longitude || "0")),
+      items: 1, // A package is treated as 1 item
+      total: parseFloat(o.delivery_fee || "0"),
+      estimatedEarnings: parseFloat(o.delivery_fee || "0").toFixed(2),
+      orderType: "package" as const,
+      customerPhone: o.receiverPhone,
+      isAvailable: o.shopper_id === null && o.status === "PENDING", // Flag to differentiate assigned vs available
+      packageDetails: {
+        DeliveryCode: o.DeliveryCode,
+        pickupLocation: o.pickupLocation,
+        dropoffLocation: o.dropoffLocation,
+        receiverName: o.receiverName,
+        receiverPhone: o.receiverPhone,
+        comment: o.comment,
+        package_image: o.package_image,
+      },
+    }));
+
     // Combine all types of orders (single-order "combined" groups are included as regular)
     const allActiveOrders = [
       ...transformedCombinedOrders,
@@ -724,6 +846,7 @@ export default async function handler(
       ...transformedReelOrders,
       ...transformedRestaurantOrders,
       ...transformedBusinessOrders,
+      ...transformedPackageOrders,
     ];
 
     // If no orders were found, return a specific message but with 200 status code

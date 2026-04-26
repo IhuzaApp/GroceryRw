@@ -116,55 +116,34 @@ export function ServicesSection({
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header & Filter Card */}
-      <div className="rounded-[2rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-6 shadow-xl transition-all duration-500 hover:shadow-2xl">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
-              Available Services
-            </h2>
-            <p className="text-sm font-medium text-[var(--text-secondary)] opacity-60">
-              Browse and request quotations from verified service providers
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:w-1/2">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search services..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-[var(--bg-secondary)]/30 w-full rounded-2xl border border-[var(--bg-secondary)] py-3 pl-12 pr-4 text-sm font-medium text-[var(--text-primary)] transition-all focus:border-green-500/50 focus:bg-[var(--bg-primary)] focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
-              />
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Simplified Search & Category System */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative max-w-xl flex-1">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Filter by name, provider or category..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-white/50 py-3 pl-10 pr-4 text-sm font-medium text-[var(--text-primary)] backdrop-blur-sm transition-all focus:border-green-500/50 focus:outline-none focus:ring-4 focus:ring-green-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+          />
         </div>
 
-        {/* Category Pill System */}
-        <div className="mt-8">
-          <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`group relative flex items-center justify-center whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-black transition-all duration-300 ${
-                  selectedCategory === category
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                {selectedCategory === category && (
-                  <div className="absolute inset-0 rounded-xl bg-green-500/10 ring-1 ring-green-500/20"></div>
-                )}
-                <span className="relative z-10">
-                  {category === "all" ? "All Ecosystem" : category}
-                </span>
-              </button>
-            ))}
-          </div>
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto">
+          {categories.slice(0, 8).map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`whitespace-nowrap rounded-lg px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                selectedCategory === category
+                  ? "bg-green-500 text-white shadow-lg shadow-green-500/20"
+                  : "border border-gray-200 bg-white/50 text-gray-500 hover:bg-white dark:border-gray-700 dark:bg-gray-800/50 dark:hover:bg-gray-700"
+              }`}
+            >
+              {category === "all" ? "Explore All" : category}
+            </button>
+          ))}
         </div>
       </div>
 

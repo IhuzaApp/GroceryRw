@@ -177,6 +177,8 @@ export default function NotificationSystem({
   const [itemsExpanded, setItemsExpanded] = useState(false);
   const [orderItemNames, setOrderItemNames] = useState<string[] | null>(null);
   const [orderItemsLoading, setOrderItemsLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(90); // 90 second countdown
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset items state when selected order changes
   useEffect(() => {
@@ -196,11 +198,12 @@ export default function NotificationSystem({
       const count = data.orders?.length || 0;
       setActiveOrderCount(count);
 
-      // If shopper has 2 or more orders, clear any pending notifications
-      if (count >= 2 && selectedOrder) {
+      // If shopper has 1 or more orders, clear any pending notifications
+      if (count >= 1 && selectedOrder) {
         setShowMapModal(false);
         setSelectedOrder(null);
         onNotificationShow?.(null);
+        if (timerRef.current) clearInterval(timerRef.current);
       }
 
       return count;
@@ -423,8 +426,8 @@ export default function NotificationSystem({
         return;
       }
 
-      // Check if shopper already has 2 or more active orders - CRITICAL GUARD
-      if (activeOrderCount >= 2) {
+      // Check if shopper already has 1 or more active orders - CRITICAL GUARD
+      if (activeOrderCount >= 1) {
         return;
       }
 
@@ -459,6 +462,9 @@ export default function NotificationSystem({
         offerId: order.offerId,
       };
 
+      // Play sound even if duplicate (re-trigger)
+      playNotificationSound({ enabled: true, volume: 0.8 });
+
       // Show notification
       showToast(orderForNotification);
       showDesktopNotification(orderForNotification);
@@ -485,8 +491,8 @@ export default function NotificationSystem({
 
       // Show notifications for each order
       orders.forEach((order: any) => {
-        // Check if shopper already has 2 or more active orders - CRITICAL GUARD
-        if (activeOrderCount >= 2) {
+        // Check if shopper already has 1 or more active orders - CRITICAL GUARD
+        if (activeOrderCount >= 1) {
           return;
         }
 
@@ -666,6 +672,10 @@ export default function NotificationSystem({
   };
 
   const removeToastForOrder = (orderId: string) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     const existingToast = activeToasts.current.get(orderId);
     if (existingToast) {
       if (existingToast === "map-modal") {
@@ -931,8 +941,8 @@ export default function NotificationSystem({
   ) => {
     const now = Date.now();
 
-    // Check if shopper already has 2 or more active orders - CRITICAL GUARD
-    if (activeOrderCount >= 2 && type === "info") {
+    // Check if shopper already has 1 or more active orders - CRITICAL GUARD
+    if (activeOrderCount >= 1 && type === "info") {
       return;
     }
 
@@ -982,6 +992,21 @@ export default function NotificationSystem({
 
     // Store a placeholder in activeToasts to track this order
     activeToasts.current.set(order.id, "map-modal");
+
+    // Start 90s countdown
+    setTimeLeft(90);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setShowMapModal(false);
+          setSelectedOrder(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     // Send Firebase push notification for batch notifications
     if (type === "info") {
@@ -1408,13 +1433,14 @@ export default function NotificationSystem({
           // lastNotificationTime was already updated above to prevent rapid API calls
         }
       } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
-        setActiveOrderCount(data.activeOrderCount || 2);
+        setActiveOrderCount(data.activeOrderCount || 1);
 
         // Clear any pending notifications since shopper can't accept more
         if (selectedOrder) {
           setShowMapModal(false);
           setSelectedOrder(null);
           onNotificationShow?.(null);
+          if (timerRef.current) clearInterval(timerRef.current);
         }
 
         lastNotificationTime.current = currentTime;
@@ -1517,11 +1543,12 @@ export default function NotificationSystem({
       // 1. Always check current workload first before showing ANY notification
       // This prevents the card from flashing on page refresh/change if they have 2 orders
       const currentCount = await fetchActiveOrderCount();
-      if (currentCount >= 2) {
+      if (currentCount >= 1) {
         localStorage.removeItem("active_offer");
         // Ensure any existing card is hidden
         setShowMapModal(false);
         setSelectedOrder(null);
+        if (timerRef.current) clearInterval(timerRef.current);
         return;
       }
 
@@ -1558,7 +1585,7 @@ export default function NotificationSystem({
             }
 
             // Double check count again before showing restored offer (use currentCount from step 1, not state)
-            if (currentCount < 2) {
+            if (currentCount < 1) {
               showNewOrderNotification(offer.order, Date.now());
               return; // Exit early, offer restored from cache
             }
@@ -1595,7 +1622,7 @@ export default function NotificationSystem({
         };
 
         // Final guard before showing (use currentCount from step 1)
-        if (currentCount < 2) {
+        if (currentCount < 1) {
           await showNewOrderNotification(order, Date.now());
         }
       } else if (data.existingOffer?.order) {
@@ -1604,15 +1631,16 @@ export default function NotificationSystem({
           ...data.existingOffer.order,
           offerId: data.existingOffer.offerId,
         };
-        if (currentCount < 2) {
+        if (currentCount < 1) {
           await showNewOrderNotification(order, Date.now());
         }
       } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
         // Sync active order count and ensure storage is clean
-        setActiveOrderCount(data.activeOrderCount || 2);
+        setActiveOrderCount(data.activeOrderCount || 1);
         localStorage.removeItem("active_offer");
         setShowMapModal(false);
         setSelectedOrder(null);
+        if (timerRef.current) clearInterval(timerRef.current);
       } else if (data.reason === "ACTIVE_OFFER_PENDING") {
         // Shopper has an active offer but API didn't return order details
         // This shouldn't happen, but if it does, we'll check again in the normal polling
@@ -1693,78 +1721,105 @@ export default function NotificationSystem({
 
       {/* Notification Card */}
       {showMapModal && selectedOrder ? (
-        <div
-          key={selectedOrder.id}
-          className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6"
-          onClick={(e) => {
-            // Only log if clicking on the background, not the card itself
-            // Background click handler
-          }}
-        >
-          {/* Bottom Sheet Card */}
-          <div className="relative w-full rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 md:max-w-md md:rounded-2xl">
-            {/* Drag Handle */}
-            <div className="flex justify-center py-3">
-              <div className="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6">
+          {/* Dark Backdrop with Pulse Effect */}
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-md duration-300 animate-in fade-in"
+            onClick={() => {
+              // Prevent accidental dismissal but provide visual feedback
+            }}
+          />
+
+          {/* Center Modal Card */}
+          <div
+            key={selectedOrder.id}
+            className="pulse-border relative w-full max-w-lg overflow-hidden rounded-3xl border-4 border-emerald-500/50 shadow-2xl duration-300 animate-in zoom-in-95"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              color: "var(--text-primary)",
+            }}
+          >
+            {/* Header with Pulsating Timer */}
+            <div className="flex items-center justify-between bg-emerald-500 px-6 py-4">
+              <div className="flex items-center space-x-2">
+                <div className="flex animate-pulse space-x-1">
+                  <div className="h-2 w-2 rounded-full bg-white"></div>
+                  <div className="h-2 w-2 rounded-full bg-white/60"></div>
+                  <div className="h-2 w-2 rounded-full bg-white/30"></div>
+                </div>
+                <h3 className="text-lg font-black uppercase tracking-tighter text-white">
+                  New Order Unit Available
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2 rounded-full bg-black/20 px-4 py-1">
+                <svg
+                  className="animate-spin-slow h-4 w-4 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="font-mono text-xl font-bold text-white">
+                  {timeLeft}s
+                </span>
+              </div>
             </div>
 
-            <div className="px-6 pb-6">
+            <div className="p-6">
               {/* Order Info with Directions Button */}
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
                   {/* Avatar */}
                   <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg ${
                       theme === "dark"
-                        ? "from-green-500 to-emerald-600"
-                        : "from-blue-400 to-purple-500"
+                        ? "from-emerald-500 to-green-700"
+                        : "from-blue-400 to-indigo-600"
                     }`}
                   >
                     <div className="flex flex-col items-center justify-center leading-none">
-                      <span className="text-[10px] font-semibold text-white/90">
-                        Order
+                      <span className="text-[10px] font-bold uppercase text-white/80">
+                        Unit
                       </span>
-                      <span className="text-sm font-extrabold text-white">
+                      <span className="text-xl font-black text-white">
                         {selectedOrder.OrderID ?? "--"}
                       </span>
                     </div>
                   </div>
                   {/* Shop Name & Offer Type */}
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Shop
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                      Merchant Group
                     </p>
-                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                    <p
+                      className="text-xl font-black leading-tight"
+                      style={{ color: "var(--text-primary)" }}
+                    >
                       {formatStoreList(selectedOrder.shopName)}
                     </p>
-                    {selectedOrder.orderType && (
-                      <span
-                        className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                          selectedOrder.orderType === "reel"
-                            ? theme === "dark"
-                              ? "bg-purple-500/30 text-purple-300"
-                              : "bg-purple-100 text-purple-700"
-                            : selectedOrder.orderType === "restaurant"
-                            ? theme === "dark"
-                              ? "bg-amber-500/30 text-amber-300"
-                              : "bg-amber-100 text-amber-700"
-                            : theme === "dark"
-                            ? "bg-blue-500/30 text-blue-300"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {selectedOrder.orderType}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedOrder.orderType && (
+                        <span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-black uppercase text-emerald-500">
+                          {selectedOrder.orderType} Unit
+                        </span>
+                      )}
+                      <span className="rounded-md border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[10px] font-black uppercase text-blue-500">
+                        90s Priority
                       </span>
-                    )}
+                    </div>
                   </div>
                 </div>
+
                 {/* Directions Button */}
                 <button
                   onClick={() => {
                     directionsClickCount.current += 1;
-
-                    // Open Google Maps with directions to SHOP/pickup location
-                    // Use shop coords first; fallback to customer coords (e.g. reels); else use address
                     const shopLat = selectedOrder.shopLatitude;
                     const shopLng = selectedOrder.shopLongitude;
                     const custLat = selectedOrder.customerLatitude;
@@ -1794,54 +1849,65 @@ export default function NotificationSystem({
                     }
                     window.open(mapsUrl, "_blank");
                   }}
-                  className={`flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-colors ${
+                  className={`flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl transition-all hover:scale-110 active:scale-95 ${
                     theme === "dark"
                       ? "bg-green-600 hover:bg-green-700"
                       : "bg-blue-500 hover:bg-blue-600"
                   }`}
-                  title="Open shop location in Google Maps"
+                  title="View Route"
                 >
                   <svg
-                    className="h-5 w-5 text-white"
-                    viewBox="104 411 24 32"
-                    fill="currentColor"
+                    className="h-6 w-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <path d="M116,426 C114.343,426 113,424.657 113,423 C113,421.343 114.343,420 116,420 C117.657,420 119,421.343 119,423 C119,424.657 117.657,426 116,426 L116,426 Z M116,418 C113.239,418 111,420.238 111,423 C111,425.762 113.239,428 116,428 C118.761,428 121,425.762 121,423 C121,420.238 118.761,418 116,418 L116,418 Z M116,440 C114.337,440.009 106,427.181 106,423 C106,417.478 110.477,413 116,413 C121.523,413 126,417.478 126,423 C126,427.125 117.637,440.009 116,440 L116,440 Z M116,411 C109.373,411 104,416.373 104,423 C104,428.018 114.005,443.011 116,443 C117.964,443.011 128,427.95 128,423 C128,416.373 122.627,411 116,411 L116,411 Z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                 </button>
               </div>
 
-              {/* Location Route with Dashed Line */}
-              <div className="relative mb-4">
-                {/* Dashed Line */}
-                <div className="absolute left-[7px] top-0 h-full w-0.5 border-l-2 border-dashed border-green-500"></div>
+              {/* Enhanced Route Visualization */}
+              <div className="relative mb-6 rounded-2xl bg-gray-100 p-4 dark:bg-gray-800/50">
+                <div className="absolute bottom-8 left-[23px] top-8 w-0.5 border-l-2 border-dashed border-emerald-500/50"></div>
 
-                {/* You - Current Location */}
-                <div className="relative mb-4 flex items-start space-x-3 pl-6">
-                  {/* Green Dot Icon */}
-                  <div className="absolute left-0 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                <div className="relative mb-6 flex items-center space-x-4">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50">
                     <div className="h-2 w-2 rounded-full bg-white"></div>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      You
+                    <p className="text-[10px] font-bold uppercase text-gray-500">
+                      Pickup From
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {currentLocation
-                        ? `${currentLocation.lat.toFixed(
-                            4
-                          )}° N, ${currentLocation.lng.toFixed(4)}° E`
-                        : "Current Location"}
+                    <p className="truncate text-sm font-bold">
+                      {formatStoreList(selectedOrder.shopName)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold uppercase text-gray-500">
+                      Dist.
+                    </p>
+                    <p className="text-sm font-black text-emerald-500">
+                      {selectedOrder.distance?.toFixed(1)}km
                     </p>
                   </div>
                 </div>
 
-                {/* Delivery Location */}
-                <div className="relative flex items-start space-x-3 pl-6">
-                  {/* Location Pin Icon */}
-                  <div className="absolute left-0 flex h-4 w-4 items-center justify-center">
+                <div className="relative flex items-center space-x-4">
+                  <div className="flex h-5 w-5 items-center justify-center text-emerald-500">
                     <svg
-                      className="h-4 w-4 text-green-500"
+                      className="h-5 w-5"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -1849,237 +1915,199 @@ export default function NotificationSystem({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Delivery Address
+                    <p className="text-[10px] font-bold uppercase text-gray-500">
+                      Deliver To
                     </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <p className="truncate text-sm font-bold">
                       {selectedOrder.customerAddress}
                     </p>
                   </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold uppercase text-gray-500">
+                      Est. Time
+                    </p>
+                    <p className="text-sm font-black text-blue-500">
+                      {selectedOrder.travelTimeMinutes || 15}m
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Order Details */}
-              <div className="mb-5 space-y-3">
-                {/* Items (expandable) and Earnings */}
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const next = !itemsExpanded;
-                      setItemsExpanded(next);
-                      if (
-                        next &&
-                        orderItemNames === null &&
-                        !orderItemsLoading
-                      ) {
-                        setOrderItemsLoading(true);
-                        try {
-                          const names = await fetchOrderItemNames(
-                            selectedOrder.id,
-                            selectedOrder.orderType
-                          );
-                          setOrderItemNames(names);
-                        } catch {
-                          setOrderItemNames([]);
-                        } finally {
-                          setOrderItemsLoading(false);
-                        }
+              {/* Earnings Card */}
+              <div className="mb-8 grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4 text-center">
+                  <p className="mb-1 text-[10px] font-bold uppercase text-gray-500">
+                    Your Earnings
+                  </p>
+                  <p className="text-2xl font-black text-emerald-500">
+                    {formatCurrencySync(selectedOrder.estimatedEarnings || 0)}
+                  </p>
+                </div>
+                <div
+                  className="cursor-pointer rounded-2xl bg-gray-100 p-4 text-center transition-colors hover:bg-gray-200 dark:bg-gray-800/50 dark:hover:bg-gray-800"
+                  onClick={async () => {
+                    const next = !itemsExpanded;
+                    setItemsExpanded(next);
+                    if (next && orderItemNames === null && !orderItemsLoading) {
+                      setOrderItemsLoading(true);
+                      try {
+                        const names = await fetchOrderItemNames(
+                          selectedOrder.id,
+                          selectedOrder.orderType
+                        );
+                        setOrderItemNames(names);
+                      } catch {
+                        setOrderItemNames([]);
+                      } finally {
+                        setOrderItemsLoading(false);
                       }
-                    }}
-                    className="flex flex-1 cursor-pointer items-center space-x-2 text-left outline-none focus:ring-0"
-                  >
+                    }
+                  }}
+                >
+                  <p className="mb-1 text-[10px] font-bold uppercase text-gray-500">
+                    Item Count
+                  </p>
+                  <div className="flex items-center justify-center space-x-2">
+                    <p className="text-2xl font-black">
+                      {selectedOrder.itemsCount ?? 0}
+                    </p>
                     <svg
-                      className={`h-5 w-5 flex-shrink-0 text-gray-600 transition-transform dark:text-gray-300 ${
-                        itemsExpanded ? "rotate-90" : ""
+                      className={`h-4 w-4 transition-transform ${
+                        itemsExpanded ? "rotate-180" : ""
                       }`}
                       fill="none"
-                      stroke="currentColor"
                       viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
+                        strokeWidth={3}
+                        d="M19 9l-7 7-7-7"
                       />
                     </svg>
-                    <svg
-                      className="h-5 w-5 text-gray-600 dark:text-gray-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {selectedOrder.itemsCount ?? 0} Items
-                    </span>
-                  </button>
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="h-5 w-5 text-green-600 dark:text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                      {formatCurrencySync(selectedOrder.estimatedEarnings || 0)}
-                    </span>
                   </div>
                 </div>
-                {/* Expanded: ordered item names as bullet list */}
-                {itemsExpanded && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-3 dark:border-gray-600 dark:bg-gray-700/80">
-                    {orderItemsLoading ? (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Loading items…
-                      </p>
-                    ) : orderItemNames && orderItemNames.length > 0 ? (
-                      <ul className="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                        {orderItemNames.map((name, i) => (
-                          <li key={i}>{name}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        No item names available
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex space-x-3">
-                {/* Decline Button */}
+              {/* Expanded Items List */}
+              {itemsExpanded && (
+                <div className="mb-6 max-h-40 overflow-y-auto rounded-2xl border-2 border-dashed border-gray-300 p-4 dark:border-gray-700">
+                  {orderItemsLoading ? (
+                    <div className="flex justify-center p-4">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+                    </div>
+                  ) : orderItemNames && orderItemNames.length > 0 ? (
+                    <ul className="space-y-2">
+                      {orderItemNames.map((name, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center space-x-2 text-sm font-bold"
+                        >
+                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                          <span>{name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-center text-xs text-gray-500">
+                      Item details unavailable
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* High-Stakes Action Buttons */}
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={async () => {
+                    acceptClickCount.current += 1;
+                    const success = await handleAcceptOrder(
+                      selectedOrder.id,
+                      selectedOrder.orderType
+                    );
+                    if (success) {
+                      setShowMapModal(false);
+                      setSelectedOrder(null);
+                      onNotificationShow?.(null);
+                      if (timerRef.current) clearInterval(timerRef.current);
+                      window.dispatchEvent(
+                        new CustomEvent("notification-order-hidden", {
+                          detail: { orderId: selectedOrder.id },
+                        })
+                      );
+                    }
+                  }}
+                  disabled={
+                    acceptingOrders.has(selectedOrder.id) ||
+                    decliningOrders.has(selectedOrder.id)
+                  }
+                  className="group w-full rounded-2xl bg-emerald-500 py-5 text-xl font-black text-white shadow-xl shadow-emerald-500/30 transition-all hover:bg-emerald-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span className="flex items-center justify-center gap-3">
+                    {acceptingOrders.has(selectedOrder.id) ? (
+                      <div className="h-6 w-6 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+                    ) : (
+                      <svg
+                        className="h-6 w-6 group-hover:animate-bounce"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                    {acceptingOrders.has(selectedOrder.id)
+                      ? "Locking Order..."
+                      : "Accept This Batch"}
+                  </span>
+                </button>
+
                 <button
                   onClick={async () => {
                     if (!session?.user?.id) {
-                      toast.error("You must be logged in to decline orders");
+                      toast.error("Login required");
                       return;
                     }
-
-                    // Prevent multiple decline attempts
-                    if (decliningOrders.has(selectedOrder.id)) {
-                      return;
-                    }
-
+                    if (decliningOrders.has(selectedOrder.id)) return;
                     setDecliningOrders((prev) =>
                       new Set(prev).add(selectedOrder.id)
                     );
-
                     declineClickCount.current += 1;
-
-                    // Save order ID before clearing state
                     const orderId = selectedOrder.id;
-                    const expiresAt = Date.now() + 300000; // 5 minutes
-
                     try {
-                      // Call the decline-offer API to update the database
                       const response = await fetch(
                         "/api/shopper/decline-offer",
                         {
                           method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
+                          headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
                             orderId: orderId,
                             shopperId: session.user.id,
                           }),
                         }
                       );
+                      if (!response.ok) throw new Error("Decline failed");
 
-                      const data = await response.json();
-
-                      if (!response.ok) {
-                        throw new Error(
-                          data.error || "Failed to decline offer"
-                        );
-                      }
-
-                      // Add to declined orders list (expires after 5 minutes)
-                      declinedOrders.current.set(orderId, expiresAt);
-
-                      // Persist to localStorage
-                      try {
-                        const declinedObj: Record<string, number> = {};
-                        declinedOrders.current.forEach((value, key) => {
-                          declinedObj[key] = value;
-                        });
-                        localStorage.setItem(
-                          "declined_orders",
-                          JSON.stringify(declinedObj)
-                        );
-                      } catch (error) {
-                        console.error(
-                          "Failed to save declined orders to localStorage:",
-                          error
-                        );
-                      }
-
-                      // Clear active offer from localStorage since it's been declined
-                      try {
-                        localStorage.removeItem("active_offer");
-                      } catch (error) {
-                        logger.warn(
-                          "Failed to clear active offer from localStorage",
-                          "NotificationSystem",
-                          error
-                        );
-                      }
-
-                      // Set decline cooldown (10 seconds before showing next notification)
+                      declinedOrders.current.set(orderId, Date.now() + 300000);
+                      localStorage.removeItem("active_offer");
                       lastDeclineTime.current = Date.now();
-
-                      // Remove from tracking
                       removeToastForOrder(orderId);
-
-                      // Remove from local state
-                      batchAssignments.current =
-                        batchAssignments.current.filter(
-                          (assignment) => assignment.orderId !== orderId
-                        );
-
-                      // Close the notification modal
                       setShowMapModal(false);
                       setSelectedOrder(null);
-
-                      // Notify parent that notification is hidden
                       onNotificationShow?.(null);
-
-                      // Dispatch custom event
-                      window.dispatchEvent(
-                        new CustomEvent("notification-order-hidden", {
-                          detail: { orderId },
-                        })
-                      );
-
-                      toast.success("Order declined");
+                      if (timerRef.current) clearInterval(timerRef.current);
+                      toast.success("Batch Declined");
                     } catch (error) {
-                      const errorMessage =
-                        error instanceof Error
-                          ? error.message
-                          : "Failed to decline order";
-                      console.error("❌ Error declining offer:", error);
-                      toast.error(errorMessage);
-                      // Still close the modal even if API call failed
+                      toast.error("Decline failed");
                       setShowMapModal(false);
                       setSelectedOrder(null);
-                      onNotificationShow?.(null);
+                      if (timerRef.current) clearInterval(timerRef.current);
                     } finally {
                       setDecliningOrders((prev) => {
                         const newSet = new Set(prev);
@@ -2092,108 +2120,41 @@ export default function NotificationSystem({
                     decliningOrders.has(selectedOrder.id) ||
                     acceptingOrders.has(selectedOrder.id)
                   }
-                  className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
-                    decliningOrders.has(selectedOrder.id) ||
-                    acceptingOrders.has(selectedOrder.id)
-                      ? "cursor-not-allowed bg-red-400"
-                      : "bg-red-500 hover:bg-red-600"
-                  }`}
+                  className="w-full py-2 text-sm font-black uppercase tracking-widest text-gray-400 transition-colors hover:text-red-500"
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    {decliningOrders.has(selectedOrder.id) && (
-                      <svg
-                        className="h-5 w-5 animate-spin text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    )}
-                    {decliningOrders.has(selectedOrder.id)
-                      ? "Declining..."
-                      : "Decline"}
-                  </span>
-                </button>
-
-                {/* Accept Batch Button */}
-                <button
-                  onClick={async () => {
-                    acceptClickCount.current += 1;
-
-                    const success = await handleAcceptOrder(
-                      selectedOrder.id,
-                      selectedOrder.orderType
-                    );
-
-                    if (success) {
-                      setShowMapModal(false);
-                      setSelectedOrder(null);
-                      // Notify parent that notification is hidden
-                      onNotificationShow?.(null);
-
-                      // Dispatch custom event
-                      window.dispatchEvent(
-                        new CustomEvent("notification-order-hidden", {
-                          detail: { orderId: selectedOrder.id },
-                        })
-                      );
-                    }
-                  }}
-                  disabled={
-                    acceptingOrders.has(selectedOrder.id) ||
-                    decliningOrders.has(selectedOrder.id)
-                  }
-                  className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
-                    acceptingOrders.has(selectedOrder.id) ||
-                    decliningOrders.has(selectedOrder.id)
-                      ? "cursor-not-allowed bg-green-400"
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {acceptingOrders.has(selectedOrder.id) && (
-                      <svg
-                        className="h-5 w-5 animate-spin text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    )}
-                    {acceptingOrders.has(selectedOrder.id)
-                      ? "Accepting..."
-                      : "Accept Batch"}
-                  </span>
+                  Skip this offer
                 </button>
               </div>
             </div>
           </div>
+
+          <style jsx>{`
+            @keyframes pulse-border {
+              0% {
+                border-color: rgba(16, 185, 129, 0.5);
+              }
+              50% {
+                border-color: rgba(16, 185, 129, 1);
+              }
+              100% {
+                border-color: rgba(16, 185, 129, 0.5);
+              }
+            }
+            .pulse-border {
+              animation: pulse-border 2s infinite;
+            }
+            .animate-spin-slow {
+              animation: spin 3s linear infinite;
+            }
+            @keyframes spin {
+              from {
+                transform: rotate(0deg);
+              }
+              to {
+                transform: rotate(360deg);
+              }
+            }
+          `}</style>
         </div>
       ) : null}
     </>

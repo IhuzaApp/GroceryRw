@@ -307,6 +307,62 @@ export default function OrderItemsSection({
     );
   }
 
+  if (order?.orderType === "package") {
+    return (
+      <div className={activeTab === "items" ? "block" : "hidden sm:block"}>
+        <SectionHeader title="Package Details" />
+        <ContentContainer subtitle="DELIVERY INFORMATION">
+          <div
+            className={`space-y-4 rounded-xl border p-4 ${
+              isDark
+                ? "border-white/10 bg-white/5"
+                : "border-black/5 bg-black/5 shadow-sm"
+            }`}
+          >
+            <div className="space-y-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Pickup Location
+              </p>
+              <p className="font-bold text-gray-900 dark:text-white">
+                {order.packageDetails?.pickupLocation || order.pickupLocation}
+              </p>
+              {order.packageDetails?.pickupDetials && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {order.packageDetails.pickupDetials}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 border-t border-black/5 pt-4 dark:border-white/5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                Dropoff Location
+              </p>
+              <p className="font-bold text-gray-900 dark:text-white">
+                {order.packageDetails?.dropoffLocation || order.dropoffLocation}
+              </p>
+              {order.packageDetails?.dropoffDetails && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {order.packageDetails.dropoffDetails}
+                </p>
+              )}
+            </div>
+
+            {order.packageDetails?.comment && (
+              <div className="space-y-2 border-t border-black/5 pt-4 dark:border-white/5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                  Additional Comments
+                </p>
+                <p className="text-xs italic text-gray-600 dark:text-gray-400">
+                  "{order.packageDetails.comment}"
+                </p>
+              </div>
+            )}
+          </div>
+        </ContentContainer>
+      </div>
+    );
+  }
+
   // Shop navigation tabs for split orders
   const ShopTabs = () => (
     <div className="scrollbar-hide mb-6 flex flex-nowrap gap-3 overflow-x-auto px-1 pb-2">

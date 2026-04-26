@@ -19,17 +19,14 @@ import { sendNewOrderNotification } from "../../../src/services/fcmService";
 // - By the shopper app when polling for new orders
 // ============================================================================
 
-const OFFER_DURATION_MS = 60000; // 60 seconds
+const OFFER_DURATION_MS = 120000; // 2 minutes (120 seconds)
 
 // Query to get expired offers
 const GET_EXPIRED_OFFERS = gql`
-  query GetExpiredOffers {
+  query GetExpiredOffers($now: timestamptz!) {
     order_offers(
       where: {
-        _and: [
-          { status: { _eq: "OFFERED" } }
-          { expires_at: { _lte: "now()" } }
-        ]
+        _and: [{ status: { _eq: "OFFERED" } }, { expires_at: { _lte: $now } }]
       }
     ) {
       id
@@ -50,7 +47,7 @@ const MARK_OFFER_EXPIRED = gql`
   mutation MarkOfferExpired($offerId: uuid!) {
     update_order_offers_by_pk(
       pk_columns: { id: $offerId }
-      _set: { status: "EXPIRED", updated_at: "now()" }
+      _set: { status: "DELAYED", updated_at: "now()" }
     ) {
       id
       status
@@ -188,6 +185,28 @@ const GET_AVAILABLE_SHOPPERS = gql`
           count
         }
       }
+      reel_orders_aggregate(where: { status: { _neq: "delivered" } }) {
+        aggregate {
+          count
+        }
+      }
+      restaurant_orders_aggregate(where: { status: { _neq: "delivered" } }) {
+        aggregate {
+          count
+        }
+      }
+      businessProductOrders_aggregate(
+        where: { status: { _neq: "delivered" } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+      package_delivery_aggregate(where: { status: { _neq: "delivered" } }) {
+        aggregate {
+          count
+        }
+      }
       orderOffers_aggregate(
         where: {
           _and: [
@@ -254,6 +273,49 @@ const CREATE_ORDER_OFFER = gql`
       offered_at
       expires_at
       round_number
+    }
+  }
+`;
+
+// Query to count DELAYED offers for a shopper today
+const COUNT_DELAYED_OFFERS_TODAY = gql`
+  query CountDelayedOffersToday($shopper_id: uuid!) {
+    order_offers_aggregate(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DELAYED" } }
+          { offered_at: { _gte: "today" } }
+        ]
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
+
+// Mutation to downgrade shopper to user
+const DOWNGRADE_SHOPPER = gql`
+  mutation DowngradeShopper($shopper_id: uuid!) {
+    # Get user_id first
+    update_shoppers(
+      where: { id: { _eq: $shopper_id } }
+      _set: { active: false, status: "offline" }
+    ) {
+      returning {
+        user_id
+      }
+    }
+  }
+`;
+
+const UPDATE_USER_ROLE = gql`
+  mutation UpdateUserRole($user_id: uuid!) {
+    update_Users_by_pk(pk_columns: { id: $user_id }, _set: { role: "user" }) {
+      id
+      role
     }
   }
 `;
@@ -364,7 +426,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("=== Rotating Expired Offers ===");
+  // console.log("=== Rotating Expired Offers ===");
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -379,15 +441,15 @@ export default async function handler(
     // STEP 1: Find all expired offers
     // ========================================================================
 
-    console.log("Finding expired offers...");
-    const expiredOffersData = (await hasuraClient.request(
-      GET_EXPIRED_OFFERS
-    )) as any;
+    // console.log("Finding expired offers...");
+    const expiredOffersData = (await hasuraClient.request(GET_EXPIRED_OFFERS, {
+      now: new Date().toISOString(),
+    })) as any;
 
     const expiredOffers = expiredOffersData.order_offers || [];
 
     if (expiredOffers.length === 0) {
-      console.log("No expired offers found");
+      // console.log("No expired offers found");
       return res.status(200).json({
         success: true,
         message: "No expired offers to rotate",
@@ -395,7 +457,7 @@ export default async function handler(
       });
     }
 
-    console.log(`Found ${expiredOffers.length} expired offers to rotate`);
+    // console.log(`Found ${expiredOffers.length} expired offers to rotate`);
 
     // ========================================================================
     // STEP 2: Process each expired offer
@@ -405,14 +467,47 @@ export default async function handler(
 
     for (const expiredOffer of expiredOffers) {
       try {
-        console.log(`Processing expired offer ${expiredOffer.id}...`);
+        // console.log(`Processing expired offer ${expiredOffer.id}...`);
 
         // Mark offer as expired
         await hasuraClient.request(MARK_OFFER_EXPIRED, {
           offerId: expiredOffer.id,
         });
 
-        console.log(`✅ Marked offer ${expiredOffer.id} as EXPIRED`);
+        // console.log(`✅ Marked offer ${expiredOffer.id} as DELAYED`);
+
+        // ========================================================================
+        // PUNISHMENT LOGIC: Check if shopper has > 2 DELAYED offers today
+        // ========================================================================
+        const delayedCountData = (await hasuraClient.request(
+          COUNT_DELAYED_OFFERS_TODAY,
+          {
+            shopper_id: expiredOffer.shopper_id,
+          }
+        )) as any;
+
+        const delayedCount =
+          delayedCountData.order_offers_aggregate?.aggregate?.count || 0;
+
+        if (delayedCount > 2) {
+          // console.log(
+          //   `🚨 Shopper ${expiredOffer.shopper_id} has ${delayedCount} delayed offers today. PUNISHING...`
+          // );
+
+          // Downgrade shopper to user and take offline
+          const downgradeResp = (await hasuraClient.request(DOWNGRADE_SHOPPER, {
+            shopper_id: expiredOffer.shopper_id,
+          })) as any;
+
+          const userId = downgradeResp.update_shoppers?.returning?.[0]?.user_id;
+
+          if (userId) {
+            await hasuraClient.request(UPDATE_USER_ROLE, { user_id: userId });
+            // console.log(
+            //   `✅ Shopper ${expiredOffer.shopper_id} (User ${userId}) downgraded to role 'user' and taken offline.`
+            // );
+          }
+        }
 
         // Get order details
         const orderId =
@@ -428,9 +523,9 @@ export default async function handler(
         const order = await getOrderDetails(orderId, expiredOffer.order_type);
 
         if (!order) {
-          console.log(
-            `Order ${orderId} is no longer available (might have been accepted)`
-          );
+          // console.log(
+          //   `Order ${orderId} is no longer available (might have been accepted)`
+          // );
           continue;
         }
 
@@ -444,14 +539,11 @@ export default async function handler(
           offeredShoppersData.order_offers.map((o: any) => o.shopper_id)
         );
 
-        console.log(
-          `${offeredShopperIds.size} shoppers have already been offered this order`
-        );
+        // console.log(
+        //   `${offeredShopperIds.size} shoppers have already been offered this order`
+        // );
 
-        // Get all available shoppers
-        const availableShoppersData = (await hasuraClient.request(
-          GET_AVAILABLE_SHOPPERS
-        )) as any;
+        // console.log("Finding all available shoppers...");
 
         const availableShoppers = availableShoppersData.Shoppers || [];
 
@@ -462,23 +554,28 @@ export default async function handler(
         const eligibleShoppers = availableShoppers.filter((shopper: any) => {
           const alreadyOffered = offeredShopperIds.has(shopper.id);
           const activeOrderCount =
-            shopper.Orders_aggregate?.aggregate?.count || 0;
+            (shopper.Orders_aggregate?.aggregate?.count || 0) +
+            (shopper.reel_orders_aggregate?.aggregate?.count || 0) +
+            (shopper.restaurant_orders_aggregate?.aggregate?.count || 0) +
+            (shopper.businessProductOrders_aggregate?.aggregate?.count || 0) +
+            (shopper.package_delivery_aggregate?.aggregate?.count || 0);
+
           const activeOfferCount =
             shopper.orderOffers_aggregate?.aggregate?.count || 0;
 
           if (alreadyOffered) return false;
 
-          if (activeOrderCount >= 2) {
-            console.log(
-              `⏭️ Skipping shopper ${shopper.full_name}: Already has ${activeOrderCount} active orders`
-            );
+          if (activeOrderCount >= 1) {
+            // console.log(
+            //   `⏭️ Skipping shopper ${shopper.full_name}: Already has ${activeOrderCount} active orders`
+            // );
             return false;
           }
 
           if (activeOfferCount > 0) {
-            console.log(
-              `⏭️ Skipping shopper ${shopper.full_name}: Already has a pending offer`
-            );
+            // console.log(
+            //   `⏭️ Skipping shopper ${shopper.full_name}: Already has a pending offer`
+            // );
             return false;
           }
 
@@ -492,9 +589,9 @@ export default async function handler(
           continue;
         }
 
-        console.log(
-          `Found ${eligibleShoppers.length} eligible shoppers for rotation`
-        );
+        // console.log(
+        //   `Found ${eligibleShoppers.length} eligible shoppers for rotation`
+        // );
 
         // Calculate priority for each shopper
         const shoppersWithPriority = await Promise.all(
@@ -525,7 +622,7 @@ export default async function handler(
         // Select the best shopper
         const nextShopper = shoppersWithPriority[0];
 
-        console.log(`Next shopper selected: ${nextShopper.full_name}`);
+        // console.log(`Next shopper selected: ${nextShopper.full_name}`);
 
         // Create new offer for next shopper
         const now = new Date();
@@ -561,9 +658,9 @@ export default async function handler(
           offerVariables
         )) as any;
 
-        console.log(
-          `✅ Created new offer for shopper ${nextShopper.full_name} (round ${nextRound})`
-        );
+        // console.log(
+        //   `✅ Created new offer for shopper ${nextShopper.full_name} (round ${nextRound})`
+        // );
 
         // Send FCM notification to next shopper
         try {
@@ -598,7 +695,7 @@ export default async function handler(
             expiresInMs: OFFER_DURATION_MS,
           });
 
-          console.log(`✅ FCM notification sent to ${nextShopper.full_name}`);
+          // console.log(`✅ FCM notification sent to ${nextShopper.full_name}`);
         } catch (fcmError) {
           console.error("Failed to send FCM notification:", fcmError);
           // Continue even if notification fails
@@ -620,7 +717,7 @@ export default async function handler(
       }
     }
 
-    console.log(`✅ Rotated ${rotationResults.length} offers`);
+    // console.log(`✅ Rotated ${rotationResults.length} offers`);
 
     return res.status(200).json({
       success: true,

@@ -331,11 +331,31 @@ export const setupFCMListener = (
 
     const unsubscribe = onMessage(messaging, (payload) => {
       // Show notification using service worker (Chrome requires this)
-      if (payload.notification && Notification.permission === "granted") {
+      if (
+        (payload.notification || payload.data) &&
+        Notification.permission === "granted"
+      ) {
         const notificationType = payload.data?.type || "message";
         const notificationTitle =
-          payload.notification.title || "New Notification";
-        const notificationBody = payload.notification.body;
+          payload.notification?.title ||
+          payload.data?.title ||
+          "New Notification";
+        const notificationBody =
+          payload.notification?.body ||
+          payload.data?.body ||
+          payload.data?.message ||
+          "";
+
+        // Play notification sound
+        try {
+          const audio = new Audio("/notifySound.mp3");
+          audio.volume = 0.7;
+          audio.play().catch(() => {
+            // Play failed (e.g. user hasn't interacted with page) - ignore
+          });
+        } catch (e) {
+          // ignore sound errors
+        }
 
         // Method 1: Try direct Notification API first (works in Safari, sometimes Chrome)
         try {
@@ -353,7 +373,8 @@ export const setupFCMListener = (
             window.focus();
             if (
               notificationType === "new_order" ||
-              notificationType === "batch_orders"
+              notificationType === "batch_orders" ||
+              notificationType === "package_delivery"
             ) {
               window.location.href = "/Plasa/active-batches";
             }

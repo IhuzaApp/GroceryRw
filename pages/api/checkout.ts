@@ -65,11 +65,9 @@ const GET_PRODUCTS_BY_IDS = gql`
   }
 `;
 
-// Generate a random 2-digit PIN (00-99)
+// Generate a random 4-digit PIN (1000-9999)
 function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100)
-    .toString()
-    .padStart(2, "0");
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 // Customer = owner of delivery address (OrderedBy); same pattern as Cart/reel-orders

@@ -123,7 +123,12 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
           ticket.ticketNum != null
             ? `Support ticket #${ticket.ticketNum} (Order #${displayId})`
             : `Support ticket for order #${displayId}`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -230,7 +235,12 @@ export async function sendNewShopperRegistrationToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New shopper: ${payload.full_name} – waiting for review`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -350,7 +360,12 @@ export async function sendNewBusinessAccountRegistrationToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New business account: ${payload.business_name} (${accountLabel}) – waiting for review`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -476,7 +491,12 @@ export async function sendNewStoreProductForReviewToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New product pending review: ${payload.productName} @ ${payload.storeName}`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -583,7 +603,12 @@ export async function sendRequestEnableStoreToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `Request to enable store: ${payload.storeName}`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -688,7 +713,12 @@ export async function sendRejectedAccountSupportRequestToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `Rejected account support request (${priorityLabel}) from ${ownerNameDisplay}`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -750,7 +780,12 @@ export async function sendPOSContactRequestToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New POS Demo Request: ${payload.shopName} (${payload.ownerName})`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -822,7 +857,12 @@ export async function sendBusinessRegistrationNoticeToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New Plas Business registration: ${payload.businessName} (${payload.fullName})`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -898,7 +938,12 @@ export async function sendNewReferralRegistrationToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `New referral registration: ${payload.name} (Code: ${payload.referralCode})`,
-        blocks,
+        attachments: [
+          {
+            color: "#7B18E3",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (error) {
@@ -906,6 +951,93 @@ export async function sendNewReferralRegistrationToSlack(
       "Failed to send referral registration notice to Slack",
       error
     );
+    throw error;
+  }
+}
+
+// --- Payment Request created (Action required) ---
+
+export interface PaymentRequestPayload {
+  orderId: string;
+  shopName: string;
+  amount: string;
+  shopperName?: string;
+  shopperPhone?: string;
+}
+
+/**
+ * Notify Slack when a shopper requests to complete a payment because the merchant doesn't have an internal wallet.
+ */
+export async function sendPaymentRequestToSlack(
+  payload: PaymentRequestPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const shopperDisplay = payload.shopperName ?? "Unknown Shopper";
+  const phoneDisplay = payload.shopperPhone ?? "—";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "💸 New Merchant Payment Request",
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `A shopper has requested a payment for a merchant that doesn't have an internal wallet. Please verify and approve this payment manually.`,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Order ID*\n\`${payload.orderId}\`` },
+        { type: "mrkdwn", text: `*Merchant*\n${payload.shopName}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Amount*\n${payload.amount} RWF` },
+        { type: "mrkdwn", text: `*Status*\n🟡 PENDING APPROVAL` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Shopper*\n${shopperDisplay}` },
+        { type: "mrkdwn", text: `*Shopper Phone*\n${phoneDisplay}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New Payment Request: ${payload.amount} RWF for ${payload.shopName}`,
+        attachments: [
+          {
+            color: "#E38F18", // Orange for pending action
+            blocks,
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send payment request to Slack", error);
     throw error;
   }
 }

@@ -193,10 +193,10 @@ export default function UserPreference() {
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-black uppercase tracking-tighter text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
                 {t("preferences.appearance") || "Appearance"}
               </h3>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              <p className="text-xs font-normal text-gray-400">
                 {t("preferences.customizeColors") || "Theme & visual settings"}
               </p>
             </div>
@@ -204,10 +204,10 @@ export default function UserPreference() {
 
           <div className="flex items-center justify-between rounded-2xl bg-gray-50/50 p-4 transition-all hover:bg-gray-50 dark:bg-gray-800/20 dark:hover:bg-gray-800/40">
             <div className="space-y-1">
-              <span className="block text-sm font-black tracking-tight text-gray-900 dark:text-white">
+              <span className="block text-sm font-semibold text-gray-900 dark:text-white">
                 {t("preferences.darkMode")}
               </span>
-              <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              <span className="block text-xs font-normal text-gray-400">
                 {theme === "dark"
                   ? t("preferences.enabled")
                   : t("preferences.disabled")}
@@ -241,10 +241,10 @@ export default function UserPreference() {
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-black uppercase tracking-tighter text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
                 {t("preferences.notifications") || "Notifications"}
               </h3>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              <p className="text-xs font-normal text-gray-400">
                 {t("preferences.stayUpdated") || "Manage alerts & updates"}
               </p>
             </div>
@@ -273,10 +273,10 @@ export default function UserPreference() {
                 className="flex items-center justify-between rounded-2xl bg-gray-50/50 p-4 transition-all hover:bg-gray-50 dark:bg-gray-800/20 dark:hover:bg-gray-800/40"
               >
                 <div className="space-y-1">
-                  <span className="block text-sm font-black tracking-tight text-gray-900 dark:text-white">
+                  <span className="block text-sm font-semibold text-gray-900 dark:text-white">
                     {item.label}
                   </span>
-                  <span className="block text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  <span className="block text-xs font-normal text-gray-400">
                     {item.desc}
                   </span>
                 </div>
@@ -312,10 +312,10 @@ export default function UserPreference() {
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-black uppercase tracking-tighter text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
                 {t("preferences.locale") || "Language & Region"}
               </h3>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              <p className="text-xs font-normal text-gray-400">
                 {t("preferences.setPreferred") || "Regional preferences"}
               </p>
             </div>
@@ -323,7 +323,7 @@ export default function UserPreference() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2 rounded-2xl bg-gray-50/50 p-5 dark:bg-gray-800/20">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 {t("preferences.language")}
               </label>
               <select
@@ -340,7 +340,7 @@ export default function UserPreference() {
 
             <div className="space-y-2 rounded-2xl bg-gray-50/50 p-5 dark:bg-gray-800/20">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {t("preferences.currency")}
                 </label>
                 <span className="rounded-full bg-green-100 px-2 py-0.5 text-[7px] font-black uppercase tracking-tighter text-green-600 dark:bg-green-900/30">

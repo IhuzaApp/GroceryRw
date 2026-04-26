@@ -106,8 +106,31 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   if (loading) {
     return (
       <ShopperLayout>
-        <div className="flex h-full items-center justify-center">
-          <Loader size="lg" content="Loading invoices..." />
+        <div className="relative min-h-screen transition-colors duration-300">
+          <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] animate-pulse rounded-full bg-emerald-500/10 blur-[100px] dark:bg-emerald-500/5"></div>
+          </div>
+          <div className="container relative z-10 mx-auto h-full max-w-7xl px-4 py-6 pb-24 sm:py-10 sm:pb-12">
+            <div className="animate-pulse">
+              <div className="mb-8">
+                <div className="h-10 w-48 rounded-xl bg-gray-300/50 dark:bg-gray-700/50"></div>
+                <div className="mt-2 h-4 w-64 rounded-lg bg-gray-300/30 dark:bg-gray-700/30"></div>
+              </div>
+
+              {/* Filters Skeleton */}
+              <div className="mb-8 h-20 w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md dark:bg-gray-800/20"></div>
+
+              {/* Table Skeleton Placeholder */}
+              <div className="space-y-4">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-20 w-full rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md dark:bg-gray-800/10"
+                  ></div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </ShopperLayout>
     );
@@ -136,42 +159,56 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 
   return (
     <ShopperLayout>
-      <div className="container mx-auto h-full px-2 py-4 pb-24 sm:py-8 sm:pb-8">
-        <div className="mx-auto h-full w-full">
-          {/* Header */}
-          <div className="mb-6">
-            <h1
-              className={`text-2xl font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              My Invoices
-            </h1>
+      <div className="relative min-h-screen transition-colors duration-300">
+        {/* Background Decorative Gradients */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] animate-pulse rounded-full bg-emerald-500/10 mix-blend-multiply blur-[100px] dark:bg-emerald-500/5 dark:mix-blend-lighten"></div>
+          <div
+            className="absolute -right-[10%] top-[30%] h-[35%] w-[35%] animate-pulse rounded-full bg-blue-500/10 mix-blend-multiply blur-[100px] dark:bg-blue-500/5 dark:mix-blend-lighten"
+            style={{ animationDelay: "2s" }}
+          ></div>
+          <div
+            className="absolute -bottom-[10%] left-[20%] h-[50%] w-[50%] animate-pulse rounded-full bg-teal-500/10 mix-blend-multiply blur-[120px] dark:bg-teal-500/5 dark:mix-blend-lighten"
+            style={{ animationDelay: "4s" }}
+          ></div>
+        </div>
+
+        <div className="container relative z-10 mx-auto h-full max-w-7xl px-4 py-6 pb-24 sm:py-10 sm:pb-12">
+          <div className="mx-auto h-full w-full">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="bg-gradient-to-r from-emerald-600 to-teal-400 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent dark:from-emerald-400 dark:to-teal-200">
+                My Invoices
+              </h1>
+              <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+                Manage, track, and download your billing documentation.
+              </p>
+            </div>
+
+            {/* Filters */}
+            <InvoiceFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              typeFilter={typeFilter}
+              setTypeFilter={setTypeFilter}
+            />
+
+            {/* Invoices Table */}
+            <InvoicesTable
+              invoices={filteredInvoices}
+              onViewDetails={handleViewDetails}
+              loading={loading}
+            />
+
+            {/* Pagination */}
+            <InvoicePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
-
-          {/* Filters */}
-          <InvoiceFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-          />
-
-          {/* Invoices Table */}
-          <InvoicesTable
-            invoices={filteredInvoices}
-            onViewDetails={handleViewDetails}
-            loading={loading}
-          />
-
-          {/* Pagination */}
-          <InvoicePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
         </div>
       </div>
     </ShopperLayout>

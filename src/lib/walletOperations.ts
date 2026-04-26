@@ -2,6 +2,7 @@ import { hasuraClient } from "./hasuraClient";
 import { gql } from "graphql-request";
 import type { NextApiRequest } from "next";
 import { logErrorToSlack } from "./slackErrorReporter";
+import { sendSMS } from "./pindo";
 
 // GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
@@ -73,6 +74,17 @@ const GET_BUSINESS_ORDER_DETAILS = gql`
       service_fee
       shopper_id
       ordered_by
+    }
+  }
+`;
+
+const GET_PACKAGE_ORDER_DETAILS_WALLET = gql`
+  query GetPackageOrderDetailsWallet($orderId: uuid!) {
+    package_delivery_by_pk(id: $orderId) {
+      id
+      delivery_fee
+      shopper_id
+      user_id
     }
   }
 `;
@@ -244,6 +256,7 @@ export async function handleDeliveredOperation(
   isReelOrder: boolean,
   isRestaurantOrder: boolean,
   isBusinessOrder: boolean = false,
+  isPackageOrder: boolean = false,
   req?: NextApiRequest
 ) {
   // Get system configuration for platform fee calculation
@@ -269,11 +282,12 @@ export async function handleDeliveredOperation(
   const serviceFee = parseFloat(order.service_fee || "0");
   const deliveryFee = parseFloat(order.delivery_fee || "0");
 
-  // For restaurant orders, only delivery fee is earned (no service fee)
+  // For restaurant and package orders, only delivery fee is earned (no service fee)
   // For business and regular/reel: service_fee + delivery_fee (business uses transportation_fee as delivery_fee)
-  const totalEarnings = isRestaurantOrder
-    ? deliveryFee
-    : serviceFee + deliveryFee;
+  const totalEarnings =
+    isRestaurantOrder || isPackageOrder
+      ? deliveryFee
+      : serviceFee + deliveryFee;
   const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
   const remainingEarnings = totalEarnings - platformFee;
 
@@ -353,6 +367,26 @@ export async function handleDeliveredOperation(
     await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
+  } else if (isPackageOrder) {
+    // For package orders, create earnings transaction for delivery fee
+    const transactions = [
+      {
+        wallet_id: wallet.id,
+        amount: remainingEarnings.toFixed(2),
+        currency: "RWF",
+        type: "earnings",
+        status: "completed",
+        related_order_id: null,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
+        related_package_order_id: orderId, // Assuming this field exists or we use a generic one
+        description: "Package delivery earnings after platform fee deduction",
+      },
+    ];
+
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
+      transactions,
+    });
   } else if (isReelOrder) {
     // For reel orders, create earnings transaction (service_fee + delivery_fee)
     const transactions = [
@@ -383,6 +417,8 @@ export async function handleDeliveredOperation(
         ? "reel"
         : isRestaurantOrder
         ? "restaurant"
+        : isPackageOrder
+        ? "package"
         : "regular";
       const plasaFeeResponse = await fetch(
         `${
@@ -420,6 +456,38 @@ export async function handleDeliveredOperation(
         plasaFeeError,
         { orderId }
       );
+    }
+
+    // Send confirmation SMS to shopper
+    try {
+      const shopperIdForQuery = order.shopper_id;
+      if (shopperIdForQuery) {
+        const GET_SHOPPER_PHONE = gql`
+          query GetShopperPhone($user_id: uuid!) {
+            shoppers(where: { user_id: { _eq: $user_id } }) {
+              phone_number
+            }
+          }
+        `;
+        const shopperData = await hasuraClient!.request<{
+          shoppers: Array<{ phone_number: string }>;
+        }>(GET_SHOPPER_PHONE, { user_id: shopperIdForQuery });
+
+        const shopperPhone = shopperData.shoppers[0]?.phone_number;
+        if (shopperPhone) {
+          const message = `Plas: You earned RWF ${remainingEarnings.toLocaleString()} from order #${orderId.slice(
+            0,
+            8
+          )}. (Total: ${totalEarnings.toLocaleString()}, Fee: ${platformFee.toLocaleString()})`;
+          await sendSMS(shopperPhone, message);
+          console.log(
+            `✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}`
+          );
+        }
+      }
+    } catch (smsError) {
+      console.error("Error sending earnings SMS:", smsError);
+      // Non-blocking error
     }
   }
 
@@ -502,6 +570,7 @@ export async function processWalletOperation(
   isReelOrder: boolean = false,
   isRestaurantOrder: boolean = false,
   isBusinessOrder: boolean = false,
+  isPackageOrder: boolean = false,
   req?: NextApiRequest
 ) {
   if (!hasuraClient) {
@@ -525,6 +594,7 @@ export async function processWalletOperation(
   let resolvedReel = isReelOrder;
   let resolvedRestaurant = isRestaurantOrder;
   let resolvedBusiness = isBusinessOrder;
+  let resolvedPackage = isPackageOrder;
 
   if (isReelOrder) {
     orderDetails = await hasuraClient!.request<{
@@ -558,6 +628,15 @@ export async function processWalletOperation(
         ordered_by: string;
       };
     }>(GET_BUSINESS_ORDER_DETAILS, { orderId });
+  } else if (isPackageOrder) {
+    orderDetails = await hasuraClient!.request<{
+      package_delivery_by_pk: {
+        id: string;
+        delivery_fee: string;
+        shopper_id: string;
+        user_id: string;
+      };
+    }>(GET_PACKAGE_ORDER_DETAILS_WALLET, { orderId });
   } else {
     orderDetails = await hasuraClient!.request<{
       Orders_by_pk: {
@@ -577,6 +656,8 @@ export async function processWalletOperation(
     ? orderDetails.restaurant_orders_by_pk
     : isBusinessOrder
     ? orderDetails.businessProductOrders_by_pk
+    : isPackageOrder
+    ? orderDetails.package_delivery_by_pk
     : orderDetails.Orders_by_pk;
 
   // Normalize business order to same shape as regular (delivery_fee = transportation_fee) for handleDeliveredOperation
@@ -586,6 +667,14 @@ export async function processWalletOperation(
       delivery_fee: String(order.transportation_fee ?? 0),
       service_fee: String(order.service_fee ?? 0),
       user_id: order.ordered_by,
+    };
+  }
+
+  if (order && isPackageOrder) {
+    order = {
+      ...order,
+      total: order.delivery_fee, // For packages, total is just the fee
+      service_fee: "0",
     };
   }
 
@@ -670,6 +759,7 @@ export async function processWalletOperation(
   const isReelOrderFinal = resolvedReel;
   const isRestaurantOrderFinal = resolvedRestaurant;
   const isBusinessOrderFinal = resolvedBusiness;
+  const isPackageOrderFinal = resolvedPackage;
 
   // Get shopper wallet
   const walletData = await hasuraClient!.request<{
@@ -771,6 +861,7 @@ export async function processWalletOperation(
         orderId,
         isReelOrderFinal,
         isRestaurantOrderFinal,
+        isPackageOrderFinal,
         req
       );
 
@@ -782,6 +873,7 @@ export async function processWalletOperation(
         isReelOrderFinal,
         isRestaurantOrderFinal,
         isBusinessOrderFinal,
+        isPackageOrderFinal,
         req
       );
 

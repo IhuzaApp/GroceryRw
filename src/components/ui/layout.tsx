@@ -17,11 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProvider>
-      <HideBottomBarProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </HideBottomBarProvider>
-    </ThemeProvider>
+    <HideBottomBarProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </HideBottomBarProvider>
   );
 }
 
@@ -46,6 +44,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   );
   const isRecipesPage = router.pathname.startsWith("/Recipes");
   const isBecomeShopperPage = router.pathname === "/Myprofile/become-shopper";
+  const isCarsPage =
+    router.pathname === "/Cars" || router.pathname.startsWith("/Cars/");
+  const isPetsPage =
+    router.pathname === "/Pets" || router.pathname.startsWith("/Pets/");
 
   return (
     <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">
@@ -55,7 +57,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isPlasBusinessPage &&
         !isStoresPage &&
         !isBecomeShopperPage &&
-        (isOrderDetailsPage || isPackageDetailsPage ? (
+        (isOrderDetailsPage || isPackageDetailsPage || isCarsPage ? (
           <div className="hidden md:block">
             <HeaderLayout />
           </div>
@@ -73,6 +75,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
           isReelsPage ||
           isPlasBusinessPage ||
+          isCarsPage ||
+          isPetsPage ||
           isStoresPage ||
           isMessagesChat ||
           isBecomeShopperPage
@@ -105,6 +109,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           style={
             isReelsPage ||
             isPlasBusinessPage ||
+            isCarsPage ||
+            isPetsPage ||
             isStoresPage ||
             isMessagesList ||
             isMessagesChat ||
@@ -124,8 +130,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           !isBecomeShopperPage &&
           !hideBottomBar && <BottomBar />}
       </main>
-      {/* AI Chat - Available on all pages except chat pages */}
-      {!isChatPage && !isMessagesChat && <AIChatProvider />}
+      {/* AI Chat - Available on all pages except chat pages and specific marketplaces */}
+      {!isChatPage &&
+        !isMessagesChat &&
+        !isCarsPage &&
+        !isPetsPage &&
+        !isPlasBusinessPage && <AIChatProvider />}
     </div>
   );
 }

@@ -66,6 +66,12 @@ export default function PlasBusinessGuestView({
         ></div>
         <div className="absolute bottom-0 left-[20%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[100px] dark:bg-blue-400/5"></div>
 
+        {/* Background Image Overlay */}
+        <div
+          className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat opacity-[0.07] grayscale"
+          style={{ backgroundImage: 'url("/assets/images/auth/login_bg.png")' }}
+        />
+
         {/* Grainy Texture */}
         <div
           className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
@@ -75,10 +81,10 @@ export default function PlasBusinessGuestView({
         ></div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-20">
         {/* Asymmetrical Hero Section */}
-        <div className="mb-24 flex flex-col gap-12 lg:flex-row lg:items-center">
-          <div className="max-w-3xl flex-1 space-y-8">
+        <div className="mb-4 flex flex-col gap-12 lg:mb-24 lg:flex-row lg:items-center">
+          <div className="hidden max-w-3xl flex-1 space-y-8 lg:block">
             <div className="inline-flex items-center gap-3 rounded-full border border-green-500/20 bg-green-500/5 px-4 py-2 text-sm font-bold text-green-600 backdrop-blur-md dark:border-green-400/20 dark:bg-green-400/10 dark:text-green-400">
               <Sparkles className="h-4 w-4 animate-bounce" />
               <span className="uppercase tracking-wide">
@@ -117,7 +123,7 @@ export default function PlasBusinessGuestView({
               </button>
 
               <button
-                onClick={() => router.push("/pos/register")}
+                onClick={() => window.open("/pos", "_blank")}
                 className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-8 py-4 font-bold text-[var(--text-primary)] transition-all hover:scale-105 hover:border-blue-500/30 hover:bg-blue-500/5 hover:shadow-xl active:scale-95"
               >
                 <CreditCard className="relative z-10 h-5 w-5 text-blue-500" />
@@ -192,22 +198,23 @@ export default function PlasBusinessGuestView({
         </div>
 
         {/* Discovery Explorer */}
-        <div className="space-y-12">
-          <div className="flex flex-col items-end justify-between gap-6 md:flex-row md:items-center">
-            <div className="space-y-2">
-              <h3 className="text-4xl font-black tracking-tight text-[var(--text-primary)]">
-                Market Explorer
+        <div className="space-y-8 lg:space-y-12">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-3">
+              <h3 className="text-3xl font-black tracking-tighter text-[var(--text-primary)] sm:text-6xl lg:text-7xl">
+                Market <span className="text-green-500">Explorer</span>
               </h3>
-              <p className="font-medium text-[var(--text-secondary)] opacity-60">
-                Real-time pulses from the Rwandan business ecosystem.
+              <p className="max-w-md text-lg font-medium leading-relaxed text-[var(--text-secondary)] opacity-60">
+                Real-time pulses from the Rwandan business ecosystem. Discovery
+                and trade simplified.
               </p>
             </div>
 
             {/* Sliding Segmented Control */}
-            <div className="bg-[var(--bg-secondary)]/30 relative flex w-full items-center rounded-2xl border border-[var(--bg-secondary)] p-1 md:w-auto">
+            <div className="bg-[var(--bg-secondary)]/30 relative flex w-full items-center rounded-2xl border border-[var(--bg-secondary)] p-1 backdrop-blur-md md:w-auto">
               {/* Sliding Highlight */}
               <div
-                className="ease-[cubic-bezier(0.34,1.56,0.64,1)] absolute inset-y-1 left-1 rounded-xl bg-[var(--bg-primary)] shadow-lg transition-all duration-500"
+                className="ease-[cubic-bezier(0.34,1.56,0.64,1)] absolute inset-y-1 left-1 rounded-xl bg-white shadow-xl transition-all duration-500 dark:bg-gray-800"
                 style={{
                   width: "calc(50% - 4px)",
                   transform:
@@ -250,11 +257,8 @@ export default function PlasBusinessGuestView({
             </div>
           </div>
 
-          <div className="group/marketplace relative overflow-hidden rounded-[2.5rem] border border-[var(--bg-secondary)] bg-[var(--bg-primary)] p-4 shadow-2xl lg:p-6">
-            {/* Inner Glow/Shadow effect */}
-            <div className="pointer-events-none absolute inset-0 z-10 rounded-[2.5rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.02)] transition-opacity group-hover/marketplace:opacity-50 dark:shadow-[inset_0_0_80px_rgba(154,154,154,0.01)]"></div>
-
-            <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 max-h-[900px] overflow-y-auto overflow-x-hidden rounded-[2rem]">
+          <div className="relative">
+            <div className="scrollbar-hide max-h-[1200px] overflow-y-auto overflow-x-hidden">
               {activeTab === "services" && (
                 <div className="duration-700 animate-in fade-in zoom-in-95">
                   <ServicesSection

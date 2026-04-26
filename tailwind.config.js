@@ -9,6 +9,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        outfit: ["Outfit", "sans-serif"],
+      },
       zIndex: {
         "-10": "-10",
         0: "0",

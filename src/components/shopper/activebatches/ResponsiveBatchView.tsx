@@ -28,7 +28,13 @@ interface Order {
   items?: number;
   total: number;
   estimatedEarnings?: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
+  orderType?:
+    | "regular"
+    | "reel"
+    | "restaurant"
+    | "combined"
+    | "business"
+    | "package";
   reel?: {
     id: string;
     title: string;
@@ -41,6 +47,16 @@ interface Order {
     user_id?: string | null;
     isRestaurantUserReel?: boolean;
   };
+  packageDetails?: {
+    DeliveryCode?: string | null;
+    pickupLocation?: string | null;
+    dropoffLocation?: string | null;
+    receiverName?: string | null;
+    receiverPhone?: string | null;
+    comment?: string | null;
+    package_image?: string | null;
+  };
+  isAvailable?: boolean;
   quantity?: number;
   deliveryNote?: string | null;
   customerPhone?: string;

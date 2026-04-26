@@ -109,7 +109,12 @@ export async function logErrorToSlack(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: `Error in ${where}: ${err.message}`,
-        blocks,
+        attachments: [
+          {
+            color: "#E01E5A",
+            blocks,
+          },
+        ],
       }),
     });
   } catch (sendError) {

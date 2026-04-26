@@ -84,7 +84,7 @@ interface BatchOrderDetailsType {
     };
   };
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant" | "business";
+  orderType?: "regular" | "reel" | "restaurant" | "business" | "package";
   reel?: {
     id: string;
     title: string;
@@ -93,6 +93,15 @@ interface BatchOrderDetailsType {
     Product: string;
     type: string;
     video_url: string;
+  };
+  packageDetails?: {
+    DeliveryCode?: string | null;
+    pickupLocation?: string | null;
+    dropoffLocation?: string | null;
+    receiverName?: string | null;
+    receiverPhone?: string | null;
+    comment?: string | null;
+    package_image?: string | null;
   };
   quantity?: number;
   deliveryNote?: string;
@@ -297,6 +306,9 @@ export const getServerSideProps: GetServerSideProps<
           latitude
           longitude
           operating_hours
+          has_wallet
+          use_wallet
+          ssd
         }
         Order_Items {
           id
@@ -655,6 +667,61 @@ export const getServerSideProps: GetServerSideProps<
       });
     }
 
+    // If still no order found, try as a package order
+    if (!order) {
+      console.log("🔄 Trying package order query...");
+      const GET_PACKAGE_ORDER_DETAILS = gql`
+        query GetPackageOrderDetails($id: uuid!) {
+          package_delivery(where: { id: { _eq: $id } }, limit: 1) {
+            id
+            OrderID: DeliveryCode
+            placedAt: created_at
+            estimatedDelivery: timeAndDate
+            deliveryNotes: comment
+            total: delivery_fee
+            deliveryFee: delivery_fee
+            status
+            package_image
+            receiverName
+            receiverPhone
+            comment
+            deliveryMethod
+            distance
+            dropoffLocation
+            pickupLocation
+            pickup_latitude
+            pickup_longitude
+            dropoff_latitude
+            dropoff_longitude
+            user_id
+            shopper_id
+            Users {
+              id
+              name
+              email
+              phone
+              profile_picture
+            }
+            shopper {
+              id
+              name
+              profile_photo
+              phone
+            }
+          }
+        }
+      `;
+      const packageData = await hasuraClient.request<{
+        package_delivery: any[];
+      }>(GET_PACKAGE_ORDER_DETAILS, { id });
+      order = packageData.package_delivery?.[0];
+      orderType = "package";
+      console.log("📊 Package order result:", {
+        found: !!order,
+        count: packageData.package_delivery?.length ?? 0,
+      });
+    }
+
     if (!order) {
       console.log("❌ No order found for ID:", id);
       return {
@@ -700,6 +767,14 @@ export const getServerSideProps: GetServerSideProps<
       (order.ordered_by === session.user.id ||
         order.orderedBy?.id === session.user.id);
 
+    // For package orders, check if user is the shopper or customer
+    const isPackageShopper =
+      orderType === "package" &&
+      (order.shopper_id === session.user.id ||
+        (order.shopper_id === null && order.status === "PENDING"));
+    const isPackageCustomer =
+      orderType === "package" && order.user_id === session.user.id;
+
     console.log("🔐 Authorization check:", {
       isAssignedShopper,
       isCustomer,
@@ -723,7 +798,9 @@ export const getServerSideProps: GetServerSideProps<
       !isRestaurantShopper &&
       !isRestaurantCustomer &&
       !isBusinessShopper &&
-      !isBusinessCustomer
+      !isBusinessCustomer &&
+      !isPackageShopper &&
+      !isPackageCustomer
     ) {
       console.log("❌ User not authorized to view this order");
       return {
@@ -767,6 +844,7 @@ export const getServerSideProps: GetServerSideProps<
         operating_hours: order.Restaurant.operating_hours ?? null,
         latitude: order.Restaurant.lat ?? null,
         longitude: order.Restaurant.long ?? null,
+        ssd: order.Restaurant.ussd ?? null,
       };
     }
 
@@ -812,6 +890,49 @@ export const getServerSideProps: GetServerSideProps<
             },
           }))
         : [];
+    }
+
+    // For package orders, set up shop and items
+    if (orderType === "package") {
+      formattedOrder.shop = {
+        id: order.id,
+        name: order.Users?.name || "Sender",
+        address: order.pickupLocation || "",
+        phone: order.Users?.phone || null,
+        image: order.Users?.profile_picture || null,
+        latitude: String(order.pickup_latitude || ""),
+        longitude: String(order.pickup_longitude || ""),
+      };
+      formattedOrder.address = {
+        id: order.id,
+        street: order.dropoffLocation || "",
+        city: "",
+        postal_code: "",
+        latitude: String(order.dropoff_latitude || ""),
+        longitude: String(order.dropoff_longitude || ""),
+      };
+      formattedOrder.Order_Items = [
+        {
+          id: order.id,
+          product_id: order.id,
+          quantity: 1,
+          price: order.deliveryFee || "0",
+          product: {
+            id: order.id,
+            ProductName: { name: "Package Delivery" },
+            image: order.package_image,
+          },
+        },
+      ];
+      formattedOrder.packageDetails = {
+        DeliveryCode: order.OrderID,
+        pickupLocation: order.pickupLocation,
+        dropoffLocation: order.dropoffLocation,
+        receiverName: order.receiverName,
+        receiverPhone: order.receiverPhone,
+        comment: order.comment,
+        package_image: order.package_image,
+      };
     }
 
     console.log("✅ Successfully formatted order:", {
