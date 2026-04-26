@@ -18,6 +18,7 @@ import ListingCard from "./listing/ListingCard";
 import ListingBookings from "./listing/ListingBookings";
 import SearchFilterModal from "./listing/SearchFilterModal";
 import FilterSelect from "./listing/FilterSelect";
+import PlasDriveHeader from "./PlasDriveHeader";
 
 const VEHICLE_TYPES = ["All", "Sedan", "SUV", "Truck", "Hatchback", "Luxury"];
 const FUEL_TYPES = ["All", "Fuel", "Electric", "Hybrid", "Diesel"];
@@ -96,52 +97,13 @@ export default function CarListing() {
         bookingCount={bookedCars.length}
       />
 
-      {/* Desktop Header */}
-      <div className="hidden md:block bg-white dark:bg-[#121212] border-b border-gray-100 dark:border-white/5 pt-16 px-8 pb-8">
-        <div className="mx-auto max-w-7xl flex items-center justify-between">
-            <div className="flex items-center gap-6">
-               <div className="relative h-16 w-16 overflow-hidden rounded-2xl bg-green-500/10 flex items-center justify-center">
-                  <CarIcon className="h-10 w-10 text-green-600" />
-               </div>
-               <div>
-                  <h1 className="text-3xl font-bold font-outfit">Car Marketplace</h1>
-                  <p className="text-gray-400 font-medium mt-1">Premium rentals across Rwanda</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-2xl">
-                 <button 
-                   onClick={() => setActiveMainTab('explore')}
-                   className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                     activeMainTab === 'explore' 
-                       ? 'bg-black text-white dark:bg-white dark:!text-green-600 shadow-lg' 
-                       : 'text-gray-500'
-                   }`}
-                 >
-                   Explore
-                 </button>
-                 <button 
-                   onClick={() => setActiveMainTab('bookings')}
-                   className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                     activeMainTab === 'bookings' 
-                       ? 'bg-black text-white dark:bg-white dark:!text-green-600 shadow-lg' 
-                       : 'text-gray-500'
-                   }`}
-                 >
-                   My Bookings
-                 </button>
-              </div>
-              <button 
-                onClick={() => router.push("/Cars/become-partner")}
-                className="rounded-2xl bg-green-500 px-6 py-3 text-sm font-black text-white shadow-xl shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Become a Partner
-              </button>
-            </div>
-        </div>
-      </div>
+      <PlasDriveHeader 
+        activeTab={activeMainTab}
+        onTabChange={setActiveMainTab}
+        onBecomePartner={() => router.push("/Cars/become-partner")}
+      />
 
-      <div className="mx-auto max-w-7xl px-4 pt-4 md:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-8 md:px-8">
         {activeMainTab === 'explore' ? (
           <>
             {/* Desktop Filters */}

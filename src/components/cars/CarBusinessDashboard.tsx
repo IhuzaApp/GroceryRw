@@ -5,7 +5,6 @@ import {
   BarChart3, 
   CalendarCheck, 
   TrendingUp, 
-  Plus, 
   Search, 
   MoreVertical,
   Circle,
@@ -15,6 +14,7 @@ import {
 import { useTheme } from "../../context/ThemeContext";
 import { DUMMY_CARS, Car } from "../../constants/dummyCars";
 import AddVehicleModal from "./AddVehicleModal";
+import DashboardHeader from "./DashboardHeader";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -29,34 +29,23 @@ export default function CarBusinessDashboard() {
 
   return (
     <div className={`min-h-screen pb-24 md:ml-20 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-gray-50 text-gray-900'}`}>
-      {/* Dashboard Header */}
-      <div className={`px-6 py-8 ${theme === 'dark' ? 'bg-gradient-to-b from-green-900/20 to-transparent' : 'bg-gradient-to-b from-green-50 to-transparent'}`}>
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight">Partner Dashboard</h1>
-              <p className="text-gray-500 font-medium">Welcome back, Elite Car Rentals</p>
-            </div>
-            <button 
-              onClick={() => setIsAddVehicleOpen(true)}
-              className="flex items-center gap-2 rounded-2xl bg-green-500 px-6 py-3 font-black text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Plus className="h-5 w-5" />
-              Add Vehicle
-            </button>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatsCard label="Total Revenue" value="$12,450" icon={<TrendingUp />} color="green" theme={theme} />
-            <StatsCard label="Active Fleet" value="48" icon={<CarIcon />} color="blue" theme={theme} />
-            <StatsCard label="Today's Bookings" value="12" icon={<CalendarCheck />} color="purple" theme={theme} />
-            <StatsCard label="Average Rating" value="4.8" icon={<BarChart3 />} color="orange" theme={theme} />
-          </div>
-        </div>
-      </div>
+      <DashboardHeader 
+        title="Partner Dashboard" 
+        subtitle="Welcome back, Elite Car Rentals"
+        onAction={() => setIsAddVehicleOpen(true)}
+        actionLabel="Add Vehicle"
+        theme={theme}
+      />
 
       <div className="mx-auto max-w-7xl px-6">
+        {/* Quick Stats */}
+        <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard label="Total Revenue" value="$12,450" icon={<TrendingUp />} color="green" theme={theme} />
+          <StatsCard label="Active Fleet" value="48" icon={<CarIcon />} color="blue" theme={theme} />
+          <StatsCard label="Today's Bookings" value="12" icon={<CalendarCheck />} color="purple" theme={theme} />
+          <StatsCard label="Average Rating" value="4.8" icon={<BarChart3 />} color="orange" theme={theme} />
+        </div>
+
         {/* Tab Navigation */}
         <div className="mb-8 flex gap-8 border-b border-gray-200/10">
           <button 

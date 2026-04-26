@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Car, Building2, FileText, CheckCircle2, ShieldCheck, ArrowRight, User, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Building2, FileText, CheckCircle2, ArrowRight, User, Check } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -41,7 +41,6 @@ export default function CarPartnerOnboarding() {
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleFinish = () => {
-    // In a real app, we would submit to an API here
     setIsSubmitted(true);
   };
 
@@ -49,8 +48,9 @@ export default function CarPartnerOnboarding() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="relative mb-12 h-[240px] w-full overflow-hidden rounded-[2.5rem] shadow-2xl">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full">
+            {/* Desktop Hero Image */}
+            <div className="relative hidden md:block mb-12 h-[240px] w-full overflow-hidden rounded-[2.5rem] shadow-2xl">
               <Image
                 src="/images/cars/hero.png"
                 alt="Car Partnership"
@@ -65,15 +65,15 @@ export default function CarPartnerOnboarding() {
               </div>
             </div>
 
-            <p className="mb-8 text-xl text-gray-500 leading-relaxed font-medium">Choose how you want to list your vehicles on our platform.</p>
+            <p className="mb-8 text-xl text-gray-500 leading-relaxed font-medium md:block hidden">Choose how you want to list your vehicles on our platform.</p>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 relative z-10">
               <button
                 onClick={() => setFormData({ ...formData, accountType: 'personal' })}
                 className={`group relative flex flex-col items-start rounded-[2.5rem] border p-8 text-left transition-all ${formData.accountType === 'personal'
-                    ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
-                    : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
-                  }`}
+                  ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
+                  : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
+                  } ${currentStep === 1 ? 'md:bg-inherit' : ''}`}
               >
                 <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:scale-110 ${formData.accountType === 'personal' ? 'bg-green-500 text-white' : 'bg-gray-500/10 text-gray-500'
                   }`}>
@@ -91,8 +91,8 @@ export default function CarPartnerOnboarding() {
               <button
                 onClick={() => setFormData({ ...formData, accountType: 'business' })}
                 className={`group relative flex flex-col items-start rounded-[2.5rem] border p-8 text-left transition-all ${formData.accountType === 'business'
-                    ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
-                    : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
+                  ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
+                  : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
               >
                 <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:scale-110 ${formData.accountType === 'business' ? 'bg-green-500 text-white' : 'bg-gray-500/10 text-gray-500'
@@ -185,8 +185,8 @@ export default function CarPartnerOnboarding() {
                   key={range}
                   onClick={() => setFormData({ ...formData, fleetSize: range })}
                   className={`flex items-center justify-center rounded-3xl border p-8 text-xl font-black transition-all ${formData.fleetSize === range
-                      ? 'border-green-500 bg-green-500 text-white shadow-xl shadow-green-500/20'
-                      : theme === 'dark' ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'border-green-500 bg-green-500 text-white shadow-xl shadow-green-500/20'
+                    : theme === 'dark' ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                 >
                   {range}
@@ -281,9 +281,24 @@ export default function CarPartnerOnboarding() {
   }
 
   return (
-    <div className={`min-h-screen md:ml-20 ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
-      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-6 pt-24 pb-32">
-        {/* Progress Bar Moved Inside Layout */}
+    <div className={`min-h-screen md:ml-20 flex flex-col ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
+
+      {/* Mobile Background Image for Step 1 */}
+      {currentStep === 1 && (
+        <div className="fixed inset-0 z-0 md:hidden overflow-hidden">
+          <Image
+            src="/images/cars/hero.png"
+            alt="Plas Drive"
+            fill
+            className="object-cover opacity-40 scale-110 blur-[2px]"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60" />
+        </div>
+      )}
+
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col px-6 pt-24 pb-32 w-full">
+        {/* Progress Bar */}
         <div className="w-full h-1.5 rounded-full overflow-hidden mb-12 relative z-10">
           <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'}`} />
           <div
@@ -293,12 +308,12 @@ export default function CarPartnerOnboarding() {
         </div>
         {/* Step Indicator */}
         <div className="mb-12 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 text-white font-black text-xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 text-white font-black text-xl shadow-lg shadow-green-500/20">
             {currentStep}
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-black uppercase tracking-widest text-green-500">Step {currentStep} of {STEPS.length}</span>
-            <span className="text-lg font-bold">{STEPS[currentStep - 1].title}</span>
+            <span className={`text-xs font-black uppercase tracking-widest ${currentStep === 1 ? 'text-white' : 'text-green-500'}`}>Step {currentStep} of {STEPS.length}</span>
+            <span className={`text-lg font-bold ${currentStep === 1 ? 'text-white' : ''}`}>{STEPS[currentStep - 1].title}</span>
           </div>
         </div>
 
@@ -308,7 +323,7 @@ export default function CarPartnerOnboarding() {
         </div>
 
         {/* Bottom Actions */}
-        <div className="fixed bottom-0 left-0 w-full p-6 backdrop-blur-xl border-t border-gray-200/10">
+        <div className="fixed bottom-0 left-0 w-full p-6 backdrop-blur-xl border-t border-gray-200/10 z-50">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
             <button
               onClick={prevStep}
