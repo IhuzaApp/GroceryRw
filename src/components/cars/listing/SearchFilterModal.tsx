@@ -40,7 +40,7 @@ export default function SearchFilterModal({
     <div className="fixed inset-0 z-[100] bg-white dark:bg-[#0A0A0A] animate-in slide-in-from-bottom duration-300 overflow-y-auto">
       <div className="p-8 pt-16">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold font-outfit">Search & Filters</h2>
+          <h2 className="text-2xl font-black font-outfit">Search & Filters</h2>
           <button onClick={onClose} className="p-3 bg-gray-100 dark:bg-white/5 rounded-full">
             <X className="h-6 w-6" />
           </button>
@@ -110,7 +110,7 @@ export default function SearchFilterModal({
 
         <button 
           onClick={onClose} 
-          className="w-full mt-12 bg-green-500 py-4.5 rounded-2xl font-bold text-white !text-white text-lg shadow-lg"
+          className="w-full mt-12 bg-green-500 py-4.5 rounded-2xl font-black text-white !text-white text-lg shadow-lg"
         >
           View Listings
         </button>

@@ -23,15 +23,15 @@ export default function DashboardHeader({
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black tracking-tight">{title}</h1>
-            <p className="text-gray-500 font-medium">{subtitle}</p>
+            <h1 className={`text-3xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : '!text-gray-900'}`}>{title}</h1>
+            <p className={`${theme === 'dark' ? 'text-gray-400' : '!text-gray-600'} font-medium`}>{subtitle}</p>
           </div>
           <button 
             onClick={onAction}
-            className="flex items-center gap-2 rounded-2xl bg-green-500 px-6 py-3 font-black text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] !text-white"
+            className="flex items-center gap-2 rounded-2xl bg-green-500 p-3 md:px-6 md:py-3 font-black !text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.05] active:scale-[0.95]"
           >
             <Plus className="h-5 w-5" />
-            {actionLabel}
+            <span className="hidden md:inline">{actionLabel}</span>
           </button>
         </div>
       </div>

@@ -32,7 +32,7 @@ export default function PlasDriveHeader({
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
       
-      <div className="relative h-full mx-auto max-w-7xl px-8 flex items-center justify-between">
+      <div className="relative h-full mx-auto max-w-[1600px] px-8 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="relative h-20 w-20 overflow-hidden rounded-[2rem] bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl">
             <CarIcon className="h-12 w-12 text-white" />

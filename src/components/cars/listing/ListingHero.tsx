@@ -29,32 +29,32 @@ export default function ListingHero({
   const router = useRouter();
   return (
     <div className="relative h-[200px] w-full md:hidden">
-      <Image 
-        src="/images/cars/partnership_hero.png"
+      <Image
+        src="/images/cars/hero.png"
         alt="Explore Rwanda"
         fill
         className="object-cover"
         priority
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-white dark:to-[#0A0A0A]" />
-      
+
       {/* Top bar with Search & Filter Icons */}
       <div className="absolute top-10 left-0 right-0 px-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white !text-white font-outfit">Explore</h1>
+        <h1 className="text-xl font-black text-white !text-white font-outfit">Explore</h1>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={onSearchClick}
             className="h-9 w-9 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md border border-white/20 text-white shadow-lg"
           >
             <Search className="h-4.5 w-4.5 !text-white" />
           </button>
-          <button 
+          <button
             onClick={onFilterClick}
             className="h-9 w-9 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md border border-white/20 text-white shadow-lg"
           >
             <SlidersHorizontal className="h-4.5 w-4.5 !text-white" />
           </button>
-          <button 
+          <button
             onClick={() => router.push("/Cars/become-partner")}
             className="h-9 w-9 flex items-center justify-center rounded-full bg-green-500 backdrop-blur-md border border-white/20 text-white shadow-lg"
             title="Become a Partner"
@@ -66,29 +66,27 @@ export default function ListingHero({
 
       {/* Tab Switcher - Mobile Hero Bottom */}
       <div className="absolute bottom-4 left-6 right-6">
-         <div className="flex p-1 bg-black/20 backdrop-blur-xl rounded-[1.25rem] border border-white/10">
-            <button 
-              onClick={() => setActiveMainTab('explore')}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all font-outfit flex items-center justify-center gap-2 ${
-                activeMainTab === 'explore' 
-                  ? 'bg-white !text-green-600 shadow-lg' 
-                  : 'text-white/70'
+        <div className="flex p-1 bg-black/20 backdrop-blur-xl rounded-[1.25rem] border border-white/10">
+          <button
+            onClick={() => setActiveMainTab('explore')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all font-outfit flex items-center justify-center gap-2 ${activeMainTab === 'explore'
+                ? 'bg-white !text-green-600 shadow-lg'
+                : 'text-white/70'
               }`}
-            >
-              Explore
-            </button>
-            <button 
-              onClick={() => setActiveMainTab('bookings')}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all font-outfit flex items-center justify-center gap-2 ${
-                activeMainTab === 'bookings' 
-                  ? 'bg-white !text-green-600 shadow-lg' 
-                  : 'text-white/70'
+          >
+            Explore
+          </button>
+          <button
+            onClick={() => setActiveMainTab('bookings')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all font-outfit flex items-center justify-center gap-2 ${activeMainTab === 'bookings'
+                ? 'bg-white !text-green-600 shadow-lg'
+                : 'text-white/70'
               }`}
-            >
-              Bookings
-              {bookingCount > 0 && <span className="ml-1 rounded-full bg-green-500 px-1.5 py-0.5 text-[8px] text-white !text-white font-bold">{bookingCount}</span>}
-            </button>
-         </div>
+          >
+            Bookings
+            {bookingCount > 0 && <span className="ml-1 rounded-full bg-green-500 px-1.5 py-0.5 text-[8px] text-white !text-white font-black">{bookingCount}</span>}
+          </button>
+        </div>
       </div>
     </div>
   );

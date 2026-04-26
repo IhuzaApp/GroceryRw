@@ -103,7 +103,7 @@ export default function CarListing() {
         onBecomePartner={() => router.push("/Cars/become-partner")}
       />
 
-      <div className="mx-auto max-w-7xl px-4 pt-8 md:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">
         {activeMainTab === 'explore' ? (
           <>
             {/* Desktop Filters */}
@@ -140,7 +140,7 @@ export default function CarListing() {
             {filteredCars.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <CarIcon className="h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-bold font-outfit text-gray-400">No cars found</h3>
+                <h3 className="text-lg font-black font-outfit text-gray-400">No cars found</h3>
               </div>
             )}
           </>

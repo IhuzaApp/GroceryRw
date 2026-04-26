@@ -35,9 +35,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       root.classList.remove("dark");
       root.style.setProperty("--bg-primary", "#ffffff"); // Pure white
-      root.style.setProperty("--text-primary", "#1f2937");
+      root.style.setProperty("--text-primary", "#111827"); // Gray-900 (softer than pure black)
       root.style.setProperty("--bg-secondary", "#f9fafb"); // Very light gray for contrast
-      root.style.setProperty("--text-secondary", "#374151");
+      root.style.setProperty("--text-secondary", "#4b5563"); // Gray-600
     }
     localStorage.setItem("theme", newTheme);
   };

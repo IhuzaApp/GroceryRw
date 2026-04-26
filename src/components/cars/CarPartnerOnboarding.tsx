@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Building2, FileText, CheckCircle2, ArrowRight, User, Check, Home, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Building2, FileText, CheckCircle2, ArrowRight, User, Check, Home } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -61,18 +61,18 @@ export default function CarPartnerOnboarding() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-8 left-8">
                 <h1 className="text-4xl font-black tracking-tight text-white !text-white">Become a Car Partner</h1>
-                <p className="text-lg font-medium text-white/80 !text-white/80">List your vehicles and start earning</p>
+                <p className="text-lg font-black text-white/80 !text-white/80">List your vehicles and start earning</p>
               </div>
             </div>
 
-            <p className="mb-8 text-xl text-gray-500 leading-relaxed font-medium md:block hidden">Choose how you want to list your vehicles on our platform.</p>
+            <p className="mb-8 text-xl text-gray-500 leading-relaxed font-black md:block hidden">Choose how you want to list your vehicles on our platform.</p>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 relative z-10">
               <button
                 onClick={() => setFormData({ ...formData, accountType: 'personal' })}
                 className={`group relative flex flex-col items-start rounded-[2.5rem] border p-8 text-left transition-all ${formData.accountType === 'personal'
-                  ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
-                  : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
+                    ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
+                    : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
                   } ${currentStep === 1 ? 'md:bg-inherit' : ''}`}
               >
                 <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:scale-110 ${formData.accountType === 'personal' ? 'bg-green-500 text-white' : 'bg-gray-500/10 text-gray-500'
@@ -85,14 +85,14 @@ export default function CarPartnerOnboarding() {
                   </div>
                 )}
                 <h3 className="mb-2 text-2xl font-black">Personal</h3>
-                <p className="text-sm font-medium text-gray-500">For individual owners or small-scale providers listing their own cars.</p>
+                <p className="text-sm font-normal text-gray-500">For individual owners or small-scale providers listing their own cars.</p>
               </button>
 
               <button
                 onClick={() => setFormData({ ...formData, accountType: 'business' })}
                 className={`group relative flex flex-col items-start rounded-[2.5rem] border p-8 text-left transition-all ${formData.accountType === 'business'
-                  ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
-                  : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
+                    ? 'border-green-500 bg-green-500/5 shadow-xl shadow-green-500/10'
+                    : theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
               >
                 <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:scale-110 ${formData.accountType === 'business' ? 'bg-green-500 text-white' : 'bg-gray-500/10 text-gray-500'
@@ -105,7 +105,7 @@ export default function CarPartnerOnboarding() {
                   </div>
                 )}
                 <h3 className="mb-2 text-2xl font-black">Business</h3>
-                <p className="text-sm font-medium text-gray-500">For registered rental companies and professional fleet managers.</p>
+                <p className="text-sm font-normal text-gray-500">For registered rental companies and professional fleet managers.</p>
               </button>
             </div>
           </div>
@@ -123,22 +123,22 @@ export default function CarPartnerOnboarding() {
               {formData.accountType === 'business' ? (
                 <>
                   <div>
-                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Business Name</label>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">Business Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Elite Car Rentals"
-                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                      className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                         }`}
                       value={formData.businessName}
                       onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Business Address</label>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">Business Address</label>
                     <input
                       type="text"
                       placeholder="e.g. 123 Rental St, Kigali"
-                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                      className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                         }`}
                       value={formData.businessAddress}
                       onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })}
@@ -148,22 +148,22 @@ export default function CarPartnerOnboarding() {
               ) : (
                 <>
                   <div>
-                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Full Name</label>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">Full Name</label>
                     <input
                       type="text"
                       placeholder="e.g. John Doe"
-                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                      className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                         }`}
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-500">Home Address</label>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">Home Address</label>
                     <input
                       type="text"
                       placeholder="e.g. Kimironko, Kigali"
-                      className={`w-full rounded-2xl border p-4 text-lg font-medium outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
+                      className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                         }`}
                       value={formData.personalAddress}
                       onChange={(e) => setFormData({ ...formData, personalAddress: e.target.value })}
@@ -212,11 +212,11 @@ export default function CarPartnerOnboarding() {
                       <FileText className="h-6 w-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold">{doc}</h4>
-                      <p className="text-xs text-green-500 font-bold uppercase tracking-widest">Required</p>
+                      <h4 className="font-black">{doc}</h4>
+                      <p className="text-xs text-green-500 font-black uppercase tracking-widest">Required</p>
                     </div>
                   </div>
-                  <button className="rounded-xl bg-green-500/10 px-4 py-2 text-sm font-bold text-green-500 hover:bg-green-500/20">
+                  <button className="rounded-xl bg-green-500/10 px-4 py-2 text-sm font-black text-green-500 hover:bg-green-500/20">
                     Upload
                   </button>
                 </div>
@@ -234,35 +234,35 @@ export default function CarPartnerOnboarding() {
             <p className="mb-8 text-gray-500">Almost there! Review your details before submitting.</p>
             <div className={`space-y-4 rounded-3xl p-6 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-50'}`}>
               <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                <span className="font-bold text-gray-500 uppercase text-xs">Account</span>
-                <span className="font-black capitalize">{formData.accountType}</span>
+                <span className="font-normal text-gray-500 uppercase text-xs">Account</span>
+                <span className="font-normal capitalize">{formData.accountType}</span>
               </div>
               {formData.accountType === 'business' ? (
                 <>
                   <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                    <span className="font-bold text-gray-500 uppercase text-xs">Business</span>
-                    <span className="font-black">{formData.businessName || "Not provided"}</span>
+                    <span className="font-normal text-gray-500 uppercase text-xs">Business</span>
+                    <span className="font-normal">{formData.businessName || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                    <span className="font-bold text-gray-500 uppercase text-xs">Address</span>
-                    <span className="font-black">{formData.businessAddress || "Not provided"}</span>
+                    <span className="font-normal text-gray-500 uppercase text-xs">Address</span>
+                    <span className="font-normal">{formData.businessAddress || "Not provided"}</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                    <span className="font-bold text-gray-500 uppercase text-xs">Name</span>
-                    <span className="font-black">{formData.fullName || "Not provided"}</span>
+                    <span className="font-normal text-gray-500 uppercase text-xs">Name</span>
+                    <span className="font-normal">{formData.fullName || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200/10 pb-4">
-                    <span className="font-bold text-gray-500 uppercase text-xs">Address</span>
-                    <span className="font-black">{formData.personalAddress || "Not provided"}</span>
+                    <span className="font-normal text-gray-500 uppercase text-xs">Address</span>
+                    <span className="font-normal">{formData.personalAddress || "Not provided"}</span>
                   </div>
                 </>
               )}
               <div className="flex justify-between">
-                <span className="font-bold text-gray-500 uppercase text-xs">Fleet Size</span>
-                <span className="font-black">{formData.fleetSize || "Not provided"}</span>
+                <span className="font-normal text-gray-500 uppercase text-xs">Fleet Size</span>
+                <span className="font-normal">{formData.fleetSize || "Not provided"}</span>
               </div>
             </div>
           </div>
@@ -282,7 +282,7 @@ export default function CarPartnerOnboarding() {
 
   return (
     <div className={`min-h-screen md:ml-20 flex flex-col ${theme === 'dark' ? 'bg-[#0A0A0A] text-white' : 'bg-white text-gray-900'}`}>
-
+      
       {/* Mobile Background Image for Step 1 */}
       {currentStep === 1 && (
         <div className="fixed inset-0 z-0 md:hidden overflow-hidden">
@@ -318,12 +318,12 @@ export default function CarPartnerOnboarding() {
         </div>
         {/* Step Indicator */}
         <div className="mb-12 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 text-white font-black text-xl shadow-lg shadow-green-500/20">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 text-white !text-white font-black text-xl shadow-lg shadow-green-500/20">
             {currentStep}
           </div>
           <div className="flex flex-col">
             <span className={`text-xs font-black uppercase tracking-widest ${currentStep === 1 ? 'text-white' : 'text-green-500'}`}>Step {currentStep} of {STEPS.length}</span>
-            <span className={`text-lg font-bold ${currentStep === 1 ? 'text-white' : ''}`}>{STEPS[currentStep - 1].title}</span>
+            <span className={`text-lg font-black ${currentStep === 1 ? 'text-white' : ''}`}>{STEPS[currentStep - 1].title}</span>
           </div>
         </div>
 
@@ -338,7 +338,7 @@ export default function CarPartnerOnboarding() {
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`flex items-center gap-2 rounded-2xl px-6 py-4 font-bold transition-all ${currentStep === 1 ? 'opacity-0 pointer-events-none' : theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'
+              className={`flex items-center gap-2 rounded-2xl px-6 py-4 font-black transition-all ${currentStep === 1 ? 'opacity-0 pointer-events-none' : theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'
                 }`}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -346,7 +346,7 @@ export default function CarPartnerOnboarding() {
             </button>
             <button
               onClick={currentStep === STEPS.length ? handleFinish : nextStep}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black text-white !text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12"
             >
               {currentStep === STEPS.length ? "Finish Application" : "Continue"}
               {currentStep !== STEPS.length && <ChevronRight className="h-5 w-5" />}
