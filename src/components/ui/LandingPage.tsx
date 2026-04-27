@@ -13,6 +13,7 @@ import HeroSectionSkeleton from "./landing/HeroSectionSkeleton";
 import CategoriesSection from "./landing/CategoriesSection";
 import CategoriesSectionSkeleton from "./landing/CategoriesSectionSkeleton";
 import AboutFooter from "./landing/AboutFooter";
+import FeaturesSection from "./landing/FeaturesSection";
 import { Handshake } from "lucide-react";
 import Head from "next/head";
 import PartnershipFormDrawer from "./partnership/PartnershipFormDrawer";
@@ -689,6 +690,423 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Let's do it together Section */}
+        <div className="bg-[#ffff] py-24">
+          <div className="container mx-auto px-4">
+            {/* Header with Icon */}
+            <div className="mb-16 text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#022C22] shadow-xl">
+                  <Handshake className="h-10 w-10 text-white" />
+                </div>
+              </div>
+              <h2 className="text-4xl font-bold text-[#1A1A1A] md:text-5xl">
+                Let&apos;s do it together
+              </h2>
+            </div>
+
+            {/* Three Columns */}
+            <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+              {/* Become a Partner */}
+              <div className="group flex flex-col items-center text-center">
+                <div className="relative mb-8 flex aspect-square w-full max-w-[280px] items-center justify-center overflow-hidden rounded-3xl bg-white shadow-2xl transition-transform duration-300 group-hover:-translate-y-2">
+                  <Image
+                    src="/images/features/feature_partner.png"
+                    alt="Become a Partner"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-black/10"></div>
+                </div>
+                <h3 className="mb-4 text-3xl font-bold text-[#1A1A1A]">
+                  Become a partner
+                </h3>
+                <p className="mb-8 text-lg text-gray-600">
+                  Grow with Plas! Our technology and user base can help you
+                  boost sales and unlock new opportunities!
+                </p>
+                <button
+                  onClick={() => setIsPartnershipDrawerOpen(true)}
+                  className="rounded-xl bg-[#022C22] px-8 py-4 font-bold text-white shadow-lg transition-all hover:-translate-y-1 hover:bg-[#011a14] hover:shadow-xl"
+                >
+                  Register here
+                </button>
+              </div>
+
+              {/* Careers */}
+              <div className="group flex flex-col items-center text-center">
+                <div className="relative mb-8 flex aspect-square w-full max-w-[280px] items-center justify-center overflow-hidden rounded-3xl bg-white shadow-2xl transition-transform duration-300 group-hover:-translate-y-2">
+                  <Image
+                    src="/assets/images/carreer.jpg"
+                    alt="Careers"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-black/10"></div>
+                </div>
+                <h3 className="mb-4 text-3xl font-bold text-[#1A1A1A]">
+                  Careers
+                </h3>
+                <p className="mb-8 text-lg text-gray-600">
+                  Ready for an exciting new challenge? If you&apos;re ambitious,
+                  humble, and love working with others, then we want to hear
+                  from you!
+                </p>
+                <button
+                  onClick={() => router.push("/careers")}
+                  className="rounded-xl bg-[#022C22] px-8 py-4 font-bold text-white shadow-lg transition-all hover:-translate-y-1 hover:bg-[#011a14] hover:shadow-xl"
+                >
+                  Register here
+                </button>
+              </div>
+
+              {/* Get POS System */}
+              <div className="group flex flex-col items-center text-center">
+                <div className="relative mb-8 flex aspect-square w-full max-w-[280px] items-center justify-center overflow-hidden rounded-3xl bg-white shadow-2xl transition-transform duration-300 group-hover:-translate-y-2">
+                  <Image
+                    src="/images/features/feature_pos.png"
+                    alt="POS System"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-black/10"></div>
+                </div>
+                <h3 className="mb-4 text-3xl font-bold text-[#1A1A1A]">
+                  Get POS System
+                </h3>
+                <p className="mb-8 text-lg text-gray-600">
+                  Streamline your business operations with our advanced Point of
+                  Sale system. Manage sales, inventory, and customers all in one
+                  place!
+                </p>
+                <button
+                  onClick={() => router.push("/pos")}
+                  className="rounded-xl bg-[#022C22] px-8 py-4 font-bold text-white shadow-lg transition-all hover:-translate-y-1 hover:bg-[#011a14] hover:shadow-xl"
+                >
+                  Register here
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Features Section */}
+        <FeaturesSection />
+        {/* Cities we deliver in Section */}
+        <div className="relative bg-[#022C22] py-28 md:py-32">
+          {/* Wave separator at top */}
+          <div className="absolute left-0 right-0 top-0 -translate-y-px">
+            <svg
+              viewBox="0 0 1440 120"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0 0L60 10C120 20 240 40 360 50C480 60 600 60 720 55C840 50 960 40 1080 35C1200 30 1320 30 1380 30L1440 30V0H1380C1320 0 1200 0 1080 0C960 0 840 0 720 0C600 0 480 0 360 0C240 0 120 0 60 0H0Z"
+                fill="white"
+              />
+            </svg>
+          </div>
+
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col items-center text-center">
+              {/* Globe Illustration */}
+              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white md:mb-8 md:h-28 md:w-28">
+                <svg
+                  className="h-14 w-14 text-black md:h-16 md:w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h2 className="mb-8 text-3xl font-bold text-white md:mb-10 md:text-4xl lg:text-5xl">
+                Our Global Presence
+              </h2>
+
+              {/* Locations List */}
+              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                {[
+                  "Rwanda Office",
+                  "UK Office",
+                  "Australia Office",
+                  "Ethiopia Office",
+                  "South Africa Office",
+                ].map((location) => (
+                  <div
+                    key={location}
+                    className="rounded-xl bg-white px-4 py-1.5 text-xs font-medium text-black shadow-sm transition-transform hover:scale-105 md:px-5 md:py-2 md:text-sm"
+                  >
+                    {location}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Wave separator at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 translate-y-px">
+            <svg
+              viewBox="0 0 1440 120"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+                fill="white"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* "Anything delivered" Section */}
+        <div className="bg-white py-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-center text-3xl font-bold text-black md:text-4xl lg:text-5xl">
+              Anything delivered
+            </h2>
+          </div>
+        </div>
+
+        {/* Service Offerings Section */}
+        <div className="bg-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">
+              {/* Your city's top restaurants */}
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className="relative mb-6 flex h-32 w-32 items-center justify-center overflow-hidden"
+                  style={{
+                    borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                    clipPath: "ellipse(45% 55% at 50% 50%)",
+                  }}
+                >
+                  {/* Watercolor splattered background */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                      background: `
+                    radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
+                    radial-gradient(circle at 10% 80%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
+                    radial-gradient(circle at 90% 20%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
+                    radial-gradient(circle at 60% 10%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
+                  `,
+                      filter: "blur(8px)",
+                      transform: "scale(1.2)",
+                    }}
+                  ></div>
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                      background: `
+                    radial-gradient(ellipse at 30% 40%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
+                    radial-gradient(ellipse at 70% 60%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
+                  `,
+                      filter: "blur(4px)",
+                    }}
+                  ></div>
+                  <Image
+                    src="/images/mainPageIcons/restaurant.png"
+                    alt="Restaurant"
+                    width={80}
+                    height={80}
+                    className="relative z-10 h-20 w-20 object-contain"
+                  />
+                </div>
+                <h3 className="mb-4 text-2xl font-bold text-black">
+                  Your city&apos;s top restaurants, supermarkets, stores & more
+                </h3>
+                <p className="text-gray-700">
+                  With a great variety of restaurants, supermarkets, stores, and
+                  more you can order your favourite food or{" "}
+                  <span className="relative inline-block font-bold">
+                    <span
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
+                      style={{
+                        transform: "skew(-2deg, 1deg)",
+                        filter: "blur(2px)",
+                      }}
+                    ></span>
+                    <span
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
+                      style={{
+                        transform: "skew(1deg, -1deg)",
+                        filter: "blur(1px)",
+                      }}
+                    ></span>
+                    <span className="relative">explore new places nearby!</span>
+                  </span>
+                </p>
+              </div>
+
+              {/* Fast delivery */}
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className="relative mb-6 flex h-32 w-32 items-center justify-center overflow-hidden"
+                  style={{
+                    borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                    clipPath: "ellipse(45% 55% at 50% 50%)",
+                  }}
+                >
+                  {/* Watercolor splattered background */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                      background: `
+                      radial-gradient(circle at 25% 35%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
+                      radial-gradient(circle at 75% 65%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
+                      radial-gradient(circle at 45% 55%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
+                      radial-gradient(circle at 15% 75%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
+                      radial-gradient(circle at 85% 25%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
+                      radial-gradient(circle at 55% 15%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
+                    `,
+                      filter: "blur(8px)",
+                      transform: "scale(1.2)",
+                    }}
+                  ></div>
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                      background: `
+                      radial-gradient(ellipse at 35% 45%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
+                      radial-gradient(ellipse at 65% 55%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
+                    `,
+                      filter: "blur(4px)",
+                    }}
+                  ></div>
+                  <Image
+                    src="/images/mainPageIcons/fast-shipping.png"
+                    alt="Fast Delivery"
+                    width={80}
+                    height={80}
+                    className="relative z-10 h-20 w-20 object-contain"
+                  />
+                </div>
+                <h3 className="mb-4 text-2xl font-bold text-black">
+                  Fast delivery
+                </h3>
+                <p className="text-gray-700">
+                  Like a flash! Order or send anything in your city and{" "}
+                  <span className="relative inline-block font-bold">
+                    <span
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
+                      style={{
+                        transform: "skew(-2deg, 1deg)",
+                        filter: "blur(2px)",
+                      }}
+                    ></span>
+                    <span
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
+                      style={{
+                        transform: "skew(1deg, -1deg)",
+                        filter: "blur(1px)",
+                      }}
+                    ></span>
+                    <span className="relative">receive it in minutes</span>
+                  </span>
+                </p>
+              </div>
+
+              {/* Groceries delivery & more */}
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className="relative mb-6 flex h-32 w-32 items-center justify-center overflow-hidden"
+                  style={{
+                    borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                    clipPath: "ellipse(45% 55% at 50% 50%)",
+                  }}
+                >
+                  {/* Watercolor splattered background */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                      background: `
+                    radial-gradient(circle at 22% 32%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
+                    radial-gradient(circle at 78% 68%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
+                    radial-gradient(circle at 48% 52%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
+                    radial-gradient(circle at 12% 78%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
+                    radial-gradient(circle at 88% 22%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
+                    radial-gradient(circle at 58% 12%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
+                  `,
+                      filter: "blur(8px)",
+                      transform: "scale(1.2)",
+                    }}
+                  ></div>
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                      background: `
+                    radial-gradient(ellipse at 32% 42%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
+                    radial-gradient(ellipse at 68% 58%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
+                  `,
+                      filter: "blur(4px)",
+                    }}
+                  ></div>
+                  <Image
+                    src="/images/mainPageIcons/groceries.png"
+                    alt="Groceries"
+                    width={80}
+                    height={80}
+                    className="relative z-10 h-20 w-20 object-contain"
+                  />
+                </div>
+                <h3 className="mb-4 text-2xl font-bold text-black">
+                  Groceries delivery & more
+                </h3>
+                <p className="text-gray-700">
+                  Find anything you need! From{" "}
+                  <span className="relative inline-block font-bold">
+                    <span
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
+                      style={{
+                        transform: "skew(-2deg, 1deg)",
+                        filter: "blur(2px)",
+                      }}
+                    ></span>
+                    <span
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
+                      style={{
+                        transform: "skew(1deg, -1deg)",
+                        filter: "blur(1px)",
+                      }}
+                    ></span>
+                    <span className="relative">
+                      supermarkets to shops, pharmacies to florists
+                    </span>
+                  </span>{" "}
+                  — if it&apos;s in your city order it and receive it.
+                </p>
+              </div>
+            </div>
+
+            {/* Call to Action Button */}
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={handleUseCurrentLocation}
+                className="rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#011a14]"
+              >
+                Explore stores around you
+              </button>
+            </div>
+          </div>
+        </div>
         {/* Bottom White Section - Brand Logos */}
         <div className="bg-white py-16">
           <div className="container mx-auto px-4">
@@ -948,439 +1366,6 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-
-        {/* "Anything delivered" Section */}
-        <div className="bg-white py-12">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-3xl font-bold text-black md:text-4xl lg:text-5xl">
-              Anything delivered
-            </h2>
-          </div>
-        </div>
-
-        {/* Service Offerings Section */}
-        <div className="bg-white py-16">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">
-              {/* Your city's top restaurants */}
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className="relative mb-6 flex h-32 w-32 items-center justify-center overflow-hidden"
-                  style={{
-                    borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                    clipPath: "ellipse(45% 55% at 50% 50%)",
-                  }}
-                >
-                  {/* Watercolor splattered background */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                      background: `
-                    radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 50%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
-                    radial-gradient(circle at 10% 80%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
-                    radial-gradient(circle at 90% 20%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
-                    radial-gradient(circle at 60% 10%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
-                  `,
-                      filter: "blur(8px)",
-                      transform: "scale(1.2)",
-                    }}
-                  ></div>
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                      background: `
-                    radial-gradient(ellipse at 30% 40%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
-                    radial-gradient(ellipse at 70% 60%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
-                  `,
-                      filter: "blur(4px)",
-                    }}
-                  ></div>
-                  <Image
-                    src="/images/mainPageIcons/restaurant.png"
-                    alt="Restaurant"
-                    width={80}
-                    height={80}
-                    className="relative z-10 h-20 w-20 object-contain"
-                  />
-                </div>
-                <h3 className="mb-4 text-2xl font-bold text-black">
-                  Your city&apos;s top restaurants, supermarkets, stores & more
-                </h3>
-                <p className="text-gray-700">
-                  With a great variety of restaurants, supermarkets, stores, and
-                  more you can order your favourite food or{" "}
-                  <span className="relative inline-block font-bold">
-                    <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
-                      style={{
-                        transform: "skew(-2deg, 1deg)",
-                        filter: "blur(2px)",
-                      }}
-                    ></span>
-                    <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
-                      style={{
-                        transform: "skew(1deg, -1deg)",
-                        filter: "blur(1px)",
-                      }}
-                    ></span>
-                    <span className="relative">explore new places nearby!</span>
-                  </span>
-                </p>
-              </div>
-
-              {/* Fast delivery */}
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className="relative mb-6 flex h-32 w-32 items-center justify-center overflow-hidden"
-                  style={{
-                    borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                    clipPath: "ellipse(45% 55% at 50% 50%)",
-                  }}
-                >
-                  {/* Watercolor splattered background */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                      background: `
-                      radial-gradient(circle at 25% 35%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
-                      radial-gradient(circle at 75% 65%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
-                      radial-gradient(circle at 45% 55%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
-                      radial-gradient(circle at 15% 75%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
-                      radial-gradient(circle at 85% 25%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
-                      radial-gradient(circle at 55% 15%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
-                    `,
-                      filter: "blur(8px)",
-                      transform: "scale(1.2)",
-                    }}
-                  ></div>
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                      background: `
-                      radial-gradient(ellipse at 35% 45%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
-                      radial-gradient(ellipse at 65% 55%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
-                    `,
-                      filter: "blur(4px)",
-                    }}
-                  ></div>
-                  <Image
-                    src="/images/mainPageIcons/fast-shipping.png"
-                    alt="Fast Delivery"
-                    width={80}
-                    height={80}
-                    className="relative z-10 h-20 w-20 object-contain"
-                  />
-                </div>
-                <h3 className="mb-4 text-2xl font-bold text-black">
-                  Fast delivery
-                </h3>
-                <p className="text-gray-700">
-                  Like a flash! Order or send anything in your city and{" "}
-                  <span className="relative inline-block font-bold">
-                    <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
-                      style={{
-                        transform: "skew(-2deg, 1deg)",
-                        filter: "blur(2px)",
-                      }}
-                    ></span>
-                    <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
-                      style={{
-                        transform: "skew(1deg, -1deg)",
-                        filter: "blur(1px)",
-                      }}
-                    ></span>
-                    <span className="relative">receive it in minutes</span>
-                  </span>
-                </p>
-              </div>
-
-              {/* Groceries delivery & more */}
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className="relative mb-6 flex h-32 w-32 items-center justify-center overflow-hidden"
-                  style={{
-                    borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                    clipPath: "ellipse(45% 55% at 50% 50%)",
-                  }}
-                >
-                  {/* Watercolor splattered background */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                      background: `
-                    radial-gradient(circle at 22% 32%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
-                    radial-gradient(circle at 78% 68%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
-                    radial-gradient(circle at 48% 52%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
-                    radial-gradient(circle at 12% 78%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
-                    radial-gradient(circle at 88% 22%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
-                    radial-gradient(circle at 58% 12%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
-                  `,
-                      filter: "blur(8px)",
-                      transform: "scale(1.2)",
-                    }}
-                  ></div>
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
-                      background: `
-                    radial-gradient(ellipse at 32% 42%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
-                    radial-gradient(ellipse at 68% 58%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
-                  `,
-                      filter: "blur(4px)",
-                    }}
-                  ></div>
-                  <Image
-                    src="/images/mainPageIcons/groceries.png"
-                    alt="Groceries"
-                    width={80}
-                    height={80}
-                    className="relative z-10 h-20 w-20 object-contain"
-                  />
-                </div>
-                <h3 className="mb-4 text-2xl font-bold text-black">
-                  Groceries delivery & more
-                </h3>
-                <p className="text-gray-700">
-                  Find anything you need! From{" "}
-                  <span className="relative inline-block font-bold">
-                    <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
-                      style={{
-                        transform: "skew(-2deg, 1deg)",
-                        filter: "blur(2px)",
-                      }}
-                    ></span>
-                    <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
-                      style={{
-                        transform: "skew(1deg, -1deg)",
-                        filter: "blur(1px)",
-                      }}
-                    ></span>
-                    <span className="relative">
-                      supermarkets to shops, pharmacies to florists
-                    </span>
-                  </span>{" "}
-                  — if it&apos;s in your city order it and receive it.
-                </p>
-              </div>
-            </div>
-
-            {/* Call to Action Button */}
-            <div className="mt-12 flex justify-center">
-              <button
-                onClick={handleUseCurrentLocation}
-                className="rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#011a14]"
-              >
-                Explore stores around you
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Cities we deliver in Section */}
-        <div className="relative bg-[#022C22] py-28 md:py-32">
-          {/* Wave separator at top */}
-          <div className="absolute left-0 right-0 top-0 -translate-y-px">
-            <svg
-              viewBox="0 0 1440 120"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0 0L60 10C120 20 240 40 360 50C480 60 600 60 720 55C840 50 960 40 1080 35C1200 30 1320 30 1380 30L1440 30V0H1380C1320 0 1200 0 1080 0C960 0 840 0 720 0C600 0 480 0 360 0C240 0 120 0 60 0H0Z"
-                fill="white"
-              />
-            </svg>
-          </div>
-
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col items-center text-center">
-              {/* Globe Illustration */}
-              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-white md:mb-8 md:h-28 md:w-28">
-                <svg
-                  className="h-14 w-14 text-black md:h-16 md:w-16"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h2 className="mb-8 text-3xl font-bold text-white md:mb-10 md:text-4xl lg:text-5xl">
-                Our Global Presence
-              </h2>
-
-              {/* Locations List */}
-              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-                {[
-                  "Rwanda Office",
-                  "UK Office",
-                  "Australia Office",
-                  "Ethiopia Office",
-                  "South Africa Office",
-                ].map((location) => (
-                  <div
-                    key={location}
-                    className="rounded-xl bg-white px-4 py-1.5 text-xs font-medium text-black shadow-sm transition-transform hover:scale-105 md:px-5 md:py-2 md:text-sm"
-                  >
-                    {location}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Wave separator at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 translate-y-px">
-            <svg
-              viewBox="0 0 1440 120"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-                fill="white"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Let's do it together Section */}
-        <div className="bg-[#ffff] py-16">
-          <div className="container mx-auto px-4">
-            {/* Header with Icon */}
-            <div className="mb-12 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#022C22]">
-                  <Handshake className="h-8 w-8 text-white" />
-                </div>
-              </div>
-              <h2 className="text-3xl font-bold text-[#1A1A1A] md:text-4xl">
-                Let&apos;s do it together
-              </h2>
-            </div>
-
-            {/* Three Columns */}
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {/* Become a Partner */}
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className="relative mb-6 flex h-48 w-48 items-center justify-center overflow-hidden bg-white shadow-lg"
-                  style={{
-                    borderRadius: "50% 50% 50% 50% / 40% 40% 60% 60%",
-                    clipPath: "ellipse(55% 45% at 50% 50%)",
-                  }}
-                >
-                  <Image
-                    src="/assets/images/becomePatern.jpg"
-                    alt="Become a Partner"
-                    fill
-                    className="object-cover"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 40% 40% 60% 60%",
-                    }}
-                  />
-                </div>
-                <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">
-                  Become a partner
-                </h3>
-                <p className="mb-6 text-gray-700">
-                  Grow with Plas! Our technology and user base can help you
-                  boost sales and unlock new opportunities!
-                </p>
-                <button
-                  onClick={() => setIsPartnershipDrawerOpen(true)}
-                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
-                >
-                  Register here
-                </button>
-              </div>
-
-              {/* Careers */}
-              <div className="flex flex-col items-center text-center">
-                <div
-                  className="relative mb-6 flex h-48 w-48 items-center justify-center overflow-hidden bg-white shadow-lg"
-                  style={{
-                    borderRadius: "50% 50% 50% 50% / 40% 40% 60% 60%",
-                    clipPath: "ellipse(55% 45% at 50% 50%)",
-                  }}
-                >
-                  <Image
-                    src="/assets/images/carreer.jpg"
-                    alt="Careers"
-                    fill
-                    className="object-cover"
-                    style={{
-                      borderRadius: "50% 50% 50% 50% / 40% 40% 60% 60%",
-                    }}
-                  />
-                </div>
-                <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">
-                  Careers
-                </h3>
-                <p className="mb-6 text-gray-700">
-                  Ready for an exciting new challenge? If you&apos;re ambitious,
-                  humble, and love working with others, then we want to hear
-                  from you!
-                </p>
-                <button
-                  onClick={() => router.push("/careers")}
-                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
-                >
-                  Register here
-                </button>
-              </div>
-
-              {/* Get POS System */}
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
-                  <Image
-                    src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                    alt="POS System"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">
-                  Get POS System
-                </h3>
-                <p className="mb-6 text-gray-700">
-                  Streamline your business operations with our advanced Point of
-                  Sale system. Manage sales, inventory, and customers all in one
-                  place!
-                </p>
-                <button
-                  onClick={() => router.push("/pos")}
-                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
-                >
-                  Register here
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Footer */}
         <AboutFooter />
 

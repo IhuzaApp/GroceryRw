@@ -47,7 +47,7 @@ export default function AboutHeader({
               alt="Plas Logo"
               width={120}
               height={40}
-              className={`h-5 sm:h-6 w-auto object-contain transition-all ${
+              className={`h-5 w-auto object-contain transition-all sm:h-6 ${
                 !isScrolled ? "brightness-0 invert" : ""
               }`}
             />
