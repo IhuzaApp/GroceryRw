@@ -31,14 +31,17 @@ export default function AboutFooter() {
                 alt="Plas Logo"
                 width={120}
                 height={40}
-                className="h-5 sm:h-6 w-auto object-contain transition-all"
+                className="h-5 w-auto object-contain transition-all sm:h-6"
                 style={{ filter: "brightness(0) invert(1)" }}
               />
             </div>
-            {/* Slogan */}
-            <p className="font-bold text-white">Let&apos;s do it together</p>
+            {/* Slogan & About */}
+            <p className="mt-2 text-sm text-gray-400">
+              Africa&apos;s most trusted digital marketplace. Order food,
+              groceries, list services, and more. Let&apos;s do it together.
+            </p>
             {/* Links */}
-            <ul className="space-y-2">
+            <ul className="mt-4 space-y-2">
               <li>
                 <Link
                   href="/careers"
