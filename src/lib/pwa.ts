@@ -75,18 +75,4 @@ export const isAndroid = () => {
   return /Android/.test(navigator.userAgent);
 };
 
-// Get install prompt event
-export const getInstallPrompt =
-  (): Promise<BeforeInstallPromptEvent | null> => {
-    return new Promise((resolve) => {
-      const handler = (e: Event) => {
-        e.preventDefault();
-        resolve(e as BeforeInstallPromptEvent);
-      };
 
-      window.addEventListener("beforeinstallprompt", handler, { once: true });
-
-      // Resolve with null after 10 seconds if no prompt event
-      setTimeout(() => resolve(null), 10000);
-    });
-  };

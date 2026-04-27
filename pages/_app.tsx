@@ -70,7 +70,6 @@ if (typeof window !== "undefined" && typeof Node !== "undefined") {
 }
 import { ThemeProvider } from "../src/context/ThemeContext";
 import { LanguageProvider } from "../src/context/LanguageContext";
-import InstallPrompt from "../src/components/ui/InstallPrompt";
 import LoadingScreen from "../src/components/ui/LoadingScreen";
 import Head from "next/head";
 
@@ -494,7 +493,6 @@ export default function App({ Component, pageProps }: AppProps) {
                       <SessionRefreshHandler>
                         <Toaster />
                         <Component {...pageProps} />
-                        <InstallPrompt />
                       </SessionRefreshHandler>
                     </GoogleMapProvider>
                   </ChatProvider>
