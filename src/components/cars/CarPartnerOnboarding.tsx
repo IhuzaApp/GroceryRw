@@ -16,6 +16,11 @@ import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { PendingReviewMessage } from "../business/PendingReviewMessage";
+import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
+import { useGoogleMap } from "../../context/GoogleMapProvider";
+import { Autocomplete } from "@react-google-maps/api";
+import { useEffect, useRef } from "react";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -72,6 +77,10 @@ const STEPS = [
 export default function CarPartnerOnboarding() {
   const { theme } = useTheme();
   const router = useRouter();
+  const { data: session } = useSession();
+  const { isLoaded } = useGoogleMap();
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     accountType: "business" as "business" | "personal",
@@ -82,15 +91,83 @@ export default function CarPartnerOnboarding() {
     fleetSize: "",
     carTypes: [] as string[],
     documentsUploaded: false,
+    nationalIdOrPassport: "",
+    license: "",
+    business_cert: "",
+    proof_address: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (session?.user && formData.accountType === "personal") {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || session.user?.name || "",
+      }));
+
+      fetch("/api/queries/addresses")
+        .then((res) => res.json())
+        .then((data) => {
+          const defaultAddr =
+            data.addresses?.find((a: any) => a.is_default) || data.addresses?.[0];
+          if (defaultAddr) {
+            setFormData((prev) => ({
+              ...prev,
+              personalAddress: prev.personalAddress || defaultAddr.street || "",
+            }));
+          }
+        })
+        .catch((err) => console.error("Error fetching address:", err));
+    }
+  }, [session, formData.accountType]);
+
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      const address = place.formatted_address || "";
+      if (formData.accountType === "business") {
+        setFormData({ ...formData, businessAddress: address });
+      } else {
+        setFormData({ ...formData, personalAddress: address });
+      }
+    }
+  };
 
   const nextStep = () =>
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-  const handleFinish = () => {
-    setIsSubmitted(true);
+  const handleFinish = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/mutations/register-logistics-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: formData.accountType === "business" ? formData.businessAddress : formData.personalAddress,
+          businessName: formData.accountType === "business" ? formData.businessName : "",
+          fullname: formData.fullName || formData.businessName,
+          nationalIdOrPassport: formData.nationalIdOrPassport,
+          license: formData.license,
+          business_cert: formData.business_cert,
+          num_of_cars: formData.fleetSize,
+          type: formData.accountType,
+          status: "pending",
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to register");
+      }
+
+      setIsSubmitted(true);
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderStep = () => {
@@ -230,21 +307,21 @@ export default function CarPartnerOnboarding() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
-                      Business Address
+                      Business Registration Number
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 123 Rental St, Kigali"
+                      placeholder="e.g. RDB-123456"
                       className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
                         theme === "dark"
                           ? "border-white/10 bg-white/5 text-white"
                           : "border-gray-200 bg-gray-50 text-gray-900"
                       }`}
-                      value={formData.businessAddress}
+                      value={formData.business_cert}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          businessAddress: e.target.value,
+                          business_cert: e.target.value,
                         })
                       }
                     />
@@ -272,24 +349,84 @@ export default function CarPartnerOnboarding() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
-                      Home Address
+                      National ID / Passport
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Kimironko, Kigali"
+                      placeholder="Enter ID number"
                       className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
                         theme === "dark"
                           ? "border-white/10 bg-white/5 text-white"
                           : "border-gray-200 bg-gray-50 text-gray-900"
                       }`}
-                      value={formData.personalAddress}
+                      value={formData.nationalIdOrPassport}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          personalAddress: e.target.value,
-                        })
+                        setFormData({ ...formData, nationalIdOrPassport: e.target.value })
                       }
                     />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
+                      Driver's License Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter license number"
+                      className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
+                        theme === "dark"
+                          ? "border-white/10 bg-white/5 text-white"
+                          : "border-gray-200 bg-gray-50 text-gray-900"
+                      }`}
+                      value={formData.license}
+                      onChange={(e) =>
+                        setFormData({ ...formData, license: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
+                      Home Address
+                    </label>
+                    {isLoaded ? (
+                      <Autocomplete
+                        onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                        onPlaceChanged={onPlaceChanged}
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search home address..."
+                          className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
+                            theme === "dark"
+                              ? "border-white/10 bg-white/5 text-white"
+                              : "border-gray-200 bg-gray-50 text-gray-900"
+                          }`}
+                          value={formData.personalAddress}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              personalAddress: e.target.value,
+                            })
+                          }
+                        />
+                      </Autocomplete>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. Kimironko, Kigali"
+                        className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
+                          theme === "dark"
+                            ? "border-white/10 bg-white/5 text-white"
+                            : "border-gray-200 bg-gray-50 text-gray-900"
+                        }`}
+                        value={formData.personalAddress}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            personalAddress: e.target.value,
+                          })
+                        }
+                      />
+                    )}
                   </div>
                 </>
               )}
@@ -551,13 +688,22 @@ export default function CarPartnerOnboarding() {
             </button>
             <button
               onClick={currentStep === STEPS.length ? handleFinish : nextStep}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black !text-white text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12"
+              disabled={isLoading}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black !text-white text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12 ${
+                isLoading ? "opacity-70 pointer-events-none" : ""
+              }`}
             >
-              {currentStep === STEPS.length ? "Finish Application" : "Continue"}
-              {currentStep !== STEPS.length && (
+              {isLoading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : currentStep === STEPS.length ? (
+                "Finish Application"
+              ) : (
+                "Continue"
+              )}
+              {!isLoading && currentStep !== STEPS.length && (
                 <ChevronRight className="h-5 w-5" />
               )}
-              {currentStep === STEPS.length && (
+              {!isLoading && currentStep === STEPS.length && (
                 <ArrowRight className="h-5 w-5" />
               )}
             </button>
