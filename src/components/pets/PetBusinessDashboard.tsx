@@ -34,14 +34,71 @@ import PetDashboardHeader from "./PetDashboardHeader";
 import Image from "next/image";
 import AddPetModal from "./modals/AddPetModal";
 
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import {
+  PendingReviewMessage,
+  RejectedAccountMessage,
+} from "../business/PendingReviewMessage";
+import LoadingScreen from "../ui/LoadingScreen";
+
 export default function PetBusinessDashboard() {
   const { theme } = useTheme();
+  const { data: session } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"pets" | "interests">("pets");
   const [pets, setPets] = useState(DUMMY_PETS);
   const [walletBalance] = useState(3450000); // 3.4M RWF
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  const [vendorData, setVendorData] = useState<any>(null);
+  const [isLoadingAccount, setIsLoadingAccount] = useState(true);
+
+  useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch("/api/queries/check-pet-vendor");
+        if (response.ok) {
+          const data = await response.json();
+          setVendorData(data.account);
+          if (!data.hasAccount) {
+            router.push("/Pets/become-partner");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking pet vendor account:", error);
+      } finally {
+        setIsLoadingAccount(false);
+      }
+    };
+
+    if (session?.user) {
+      checkAccount();
+    }
+  }, [session, router]);
+
+  if (isLoadingAccount) {
+    return <LoadingScreen isOverlay={true} />;
+  }
+
+  if (vendorData?.disabled) {
+    return (
+      <div className={`min-h-screen ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"}`}>
+        <RejectedAccountMessage businessAccountId={vendorData?.id} />
+      </div>
+    );
+  }
+
+  if (vendorData?.status !== "active") {
+    return (
+      <div className={`min-h-screen ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"}`}>
+        <PendingReviewMessage contactEmail={vendorData?.businessEmail || session?.user?.email} />
+      </div>
+    );
+  }
 
   const handleToggleStatus = (id: string) => {
     setPets((prev) =>

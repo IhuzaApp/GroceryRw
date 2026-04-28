@@ -153,7 +153,7 @@ export default function PetListing() {
         />
       </div>
 
-      <PetListingHeader onListPet={() => router.push("/Pets/become-partner")} />
+      <PetListingHeader onListPet={() => router.push("/Pets/dashboard")} />
 
       <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">
         {/* Filters */}
@@ -214,7 +214,7 @@ export default function PetListing() {
       {/* Become a Partner CTA (Mobile Only) */}
       <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 md:hidden">
         <button
-          onClick={() => router.push("/Pets/become-partner")}
+          onClick={() => router.push("/Pets/dashboard")}
           className="flex items-center gap-3 rounded-full bg-black px-8 py-4 font-black !text-white text-white shadow-2xl transition-all hover:scale-105 active:scale-95 dark:bg-white dark:!text-black dark:text-black"
         >
           <Dog className="h-6 w-6" />

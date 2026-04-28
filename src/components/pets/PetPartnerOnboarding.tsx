@@ -22,6 +22,7 @@ import { useSession } from "next-auth/react";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
 import { Autocomplete } from "@react-google-maps/api";
 import { useEffect, useRef } from "react";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 const STEPS = [
   {
@@ -105,6 +106,37 @@ export default function PetPartnerOnboarding() {
         .catch(err => console.error("Error fetching address:", err));
     }
   }, [session, formData.accountType]);
+
+  const handleFileUpload = async (file: File, docName: string) => {
+    setIsLoading(true);
+    try {
+      const path = `verifications/pets/${session?.user?.id}/${Date.now()}_${file.name}`;
+      const url = await uploadToFirebase(file, path);
+      
+      setFormData(prev => {
+        const newDocs = { ...prev.documents };
+        let nationalIdOrPassport = prev.nationalIdOrPassport;
+
+        if (docName === "Registration Certificate") newDocs.rdb_certificate = url;
+        else if (docName === "Shelter Permit") newDocs.sherter_permit = url;
+        else if (docName === "Owner ID" || docName === "National ID") {
+          nationalIdOrPassport = url;
+        }
+        else if (docName === "Proof of Residence") newDocs.proof_residency = url;
+
+        return {
+          ...prev,
+          documents: newDocs,
+          nationalIdOrPassport,
+        };
+      });
+      toast.success(`${docName} uploaded successfully!`);
+    } catch (error) {
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onPlaceChanged = () => {
     if (autocompleteRef.current) {
@@ -431,6 +463,10 @@ export default function PetPartnerOnboarding() {
           </div>
         );
       case 4:
+        const docs = formData.accountType === "business"
+          ? ["Registration Certificate", "Shelter Permit", "Owner ID"]
+          : ["National ID", "Proof of Residence"];
+        
         return (
           <div className="duration-700 animate-in fade-in slide-in-from-bottom-4">
             <h2 className="mb-2 font-outfit text-3xl font-black tracking-tight">
@@ -440,34 +476,52 @@ export default function PetPartnerOnboarding() {
               Upload documents to verify your status.
             </p>
             <div className="space-y-4">
-              {(formData.accountType === "business"
-                ? ["Registration Certificate", "Shelter Permit", "Owner ID"]
-                : ["National ID", "Proof of Residence", "Health Cert Example"]
-              ).map((doc) => (
-                <div
-                  key={doc}
-                  className={`flex items-center justify-between rounded-3xl border p-6 ${
-                    theme === "dark"
-                      ? "border-white/10 bg-white/5"
-                      : "border-gray-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-500/10 text-gray-500">
-                      <FileText className="h-6 w-6" />
+              {docs.map((doc) => {
+                let isUploaded = false;
+                if (doc === "Registration Certificate") isUploaded = !!formData.documents.rdb_certificate;
+                else if (doc === "Shelter Permit") isUploaded = !!formData.documents.sherter_permit;
+                else if (doc === "Owner ID" || doc === "National ID") isUploaded = !!formData.nationalIdOrPassport;
+                else if (doc === "Proof of Residence") isUploaded = !!formData.documents.proof_residency;
+
+                return (
+                  <div
+                    key={doc}
+                    className={`flex items-center justify-between rounded-3xl border p-6 ${
+                      theme === "dark"
+                        ? "border-white/10 bg-white/5"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                        isUploaded ? "bg-green-500 text-white" : "bg-gray-500/10 text-gray-500"
+                      }`}>
+                        {isUploaded ? <Check className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
+                      </div>
+                      <div>
+                        <h4 className="font-outfit font-black">{doc}</h4>
+                        <p className={`text-xs font-black uppercase tracking-widest ${
+                          isUploaded ? "text-green-500" : "text-gray-400"
+                        }`}>
+                          {isUploaded ? "Uploaded" : "Required"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-outfit font-black">{doc}</h4>
-                      <p className="text-xs font-black uppercase tracking-widest text-green-500">
-                        Required
-                      </p>
-                    </div>
+                    <label className="cursor-pointer rounded-xl bg-green-500 px-4 py-2 text-sm font-black text-white transition-colors hover:bg-green-600">
+                      {isUploaded ? "Change" : "Upload"}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,.pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, doc);
+                        }}
+                      />
+                    </label>
                   </div>
-                  <button className="rounded-xl bg-green-500/10 px-4 py-2 text-sm font-black text-green-500 transition-colors hover:bg-green-500/20">
-                    Upload
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
