@@ -24,11 +24,11 @@ const GET_CAR_BY_ID = gql`
       exterior
       interior
       logisticAccount_id
-      logisticsAccount {
+      logisticsAccounts {
         id
         fullname
         businessName
-        user {
+        Users {
           image
         }
       }

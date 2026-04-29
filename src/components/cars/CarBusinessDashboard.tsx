@@ -27,7 +27,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-import { DUMMY_CARS, Car } from "../../constants/dummyCars";
+import { Car } from "../../constants/dummyCars";
 import AddVehicleModal from "./modals/AddVehicleModal";
 import EditVehicleModal from "./modals/EditVehicleModal";
 import DashboardHeader from "./DashboardHeader";

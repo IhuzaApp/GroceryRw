@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
-import { DUMMY_CARS } from "../../constants/dummyCars";
 import { useRouter } from "next/router";
 import Image from "next/image";
 
@@ -107,31 +106,7 @@ export default function CarListing() {
   useEffect(() => {
     const loadBookings = () => {
       const saved = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-      if (saved.length === 0) {
-        const dummyBookings = [
-          {
-            ...DUMMY_CARS[0],
-            bookingId: "bk-82931",
-            startDate: "2026-04-28",
-            endDate: "2026-04-30",
-            total: DUMMY_CARS[0].price * 3,
-            status: "Confirmed",
-            owner: DUMMY_CARS[0].owner,
-          },
-          {
-            ...DUMMY_CARS[2],
-            bookingId: "bk-99210",
-            startDate: "2026-05-12",
-            endDate: "2026-05-15",
-            total: DUMMY_CARS[2].price * 4,
-            status: "Upcoming",
-            owner: DUMMY_CARS[2].owner,
-          },
-        ];
-        setBookedCars(dummyBookings);
-      } else {
-        setBookedCars(saved);
-      }
+      setBookedCars(saved);
     };
     loadBookings();
     window.addEventListener("storage", loadBookings);
