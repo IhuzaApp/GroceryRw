@@ -30,8 +30,9 @@ import {
   Phone,
   CheckCircle2,
   Loader2,
-  Scan,
+  Image as ImageIcon,
 } from "lucide-react";
+import { uploadToFirebase } from "../../lib/firebase";
 import { Car } from "../../constants/dummyCars";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
@@ -388,7 +389,38 @@ function BookingModal({
   const [licensePhoto, setLicensePhoto] = useState<string | null>(null);
   const [fetchingData, setFetchingData] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [uploadingLicense, setUploadingLicense] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const base64ToBlob = (base64: string) => {
+    const byteString = atob(base64.split(",")[1]);
+    const mimeString = base64.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  };
+
+  const handleLicenseCapture = async (imageDataUrl: string) => {
+    setUploadingLicense(true);
+    try {
+      const blob = base64ToBlob(imageDataUrl);
+      const file = new File([blob], `license-${Date.now()}.jpg`, {
+        type: "image/jpeg",
+      });
+      const path = `licenses/${Date.now()}-car-rental.jpg`;
+      const url = await uploadToFirebase(file, path);
+      setLicensePhoto(url);
+      toast.success("License uploaded successfully!");
+    } catch (error) {
+      console.error("License upload failed:", error);
+      toast.error("Failed to upload license. Please try again.");
+    } finally {
+      setUploadingLicense(false);
+    }
+  };
 
   useEffect(() => {
     if (step === 2) {
@@ -452,9 +484,9 @@ function BookingModal({
   };
 
   const days = calculateDays();
-  const subtotal = car.price * days;
+  const subtotal = Number(car.price || 0) * days;
   const serviceFee = Number((subtotal * 0.015).toFixed(2));
-  const deposit = car.driverOption === "none" ? car.securityDeposit : 0;
+  const deposit = car.driverOption === "none" ? Number(car.securityDeposit || 0) : 0;
   const totalUpfront = subtotal + serviceFee + deposit;
 
   const handleBooking = async () => {
@@ -481,12 +513,12 @@ function BookingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 md:items-center md:p-4">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={onClose}
       />
-      <div className="relative flex h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-[3rem] border border-white/5 bg-white font-sans text-gray-900 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] duration-300 animate-in slide-in-from-bottom-10 dark:bg-[#121212] dark:text-white md:h-auto md:rounded-[3rem] md:zoom-in-95">
+      <div className="relative flex h-[100dvh] w-full max-w-xl flex-col overflow-hidden border border-white/5 bg-white font-sans text-gray-900 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] duration-300 animate-in slide-in-from-bottom-10 dark:bg-[#121212] dark:text-white sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95">
         <div className="flex items-center justify-between border-b border-gray-100 p-6 dark:border-white/5 md:p-8">
           <div>
             <h2 className="font-outfit text-xl font-black md:text-2xl">
@@ -671,7 +703,14 @@ function BookingModal({
                         : "border-gray-200 bg-gray-50/50 hover:bg-gray-100 dark:border-white/10 dark:bg-white/[0.02] dark:hover:bg-white/5"
                     }`}
                   >
-                    {licensePhoto ? (
+                    {uploadingLicense ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-green-500">
+                          Uploading to Secure Storage...
+                        </span>
+                      </div>
+                    ) : licensePhoto ? (
                       <div className="relative h-32 w-full overflow-hidden rounded-2xl shadow-xl">
                         <img
                           src={licensePhoto}
@@ -685,7 +724,7 @@ function BookingModal({
                     ) : (
                       <>
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
-                          <Scan className="h-8 w-8" />
+                          <ImageIcon className="h-8 w-8" />
                         </div>
                         <div className="text-center">
                           <p className="font-outfit text-sm font-normal">
@@ -702,7 +741,7 @@ function BookingModal({
                   <CameraCapture
                     isOpen={showCamera}
                     onClose={() => setShowCamera(false)}
-                    onCapture={(img) => setLicensePhoto(img)}
+                    onCapture={handleLicenseCapture}
                     title="Capture Driving License"
                   />
                 </div>

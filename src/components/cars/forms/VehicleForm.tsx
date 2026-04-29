@@ -10,7 +10,9 @@ import {
   UserCheck,
   Settings2,
   Users,
+  Loader2,
 } from "lucide-react";
+import { uploadToFirebase } from "../../../lib/firebase";
 
 export interface VehicleFormData {
   name: string;
@@ -41,6 +43,36 @@ export default function VehicleFields({
   setFormData,
   theme,
 }: VehicleFieldsProps) {
+  const [uploading, setUploading] = useState<string | null>(null);
+
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "main" | "exterior" | "interior" | "seats"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(type);
+    try {
+      const path = `cars/${Date.now()}-${type}-${file.name}`;
+      const url = await uploadToFirebase(file, path);
+
+      if (type === "main") {
+        setFormData({ ...formData, image: url });
+      } else if (type === "exterior") {
+        setFormData({ ...formData, exteriorImage: url });
+      } else if (type === "interior") {
+        setFormData({ ...formData, interiorImage: url });
+      } else if (type === "seats") {
+        setFormData({ ...formData, seatsImage: url });
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setUploading(null);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Main Image Upload */}
@@ -55,7 +87,19 @@ export default function VehicleFields({
               : "border-gray-200 bg-gray-50"
           }`}
         >
-          {formData.image ? (
+          <input
+            type="file"
+            className="absolute inset-0 z-10 cursor-pointer opacity-0"
+            onChange={(e) => handleFileUpload(e, "main")}
+            accept="image/*"
+            disabled={uploading !== null}
+          />
+          {uploading === "main" ? (
+            <div className="flex flex-col items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+              <p className="mt-2 text-sm font-medium text-gray-500">Uploading...</p>
+            </div>
+          ) : formData.image ? (
             <img
               src={formData.image}
               alt="Vehicle"
@@ -79,19 +123,22 @@ export default function VehicleFields({
         <GalleryImageInput
           label="Exterior"
           value={formData.exteriorImage}
-          onChange={(val) => setFormData({ ...formData, exteriorImage: val })}
+          uploading={uploading === "exterior"}
+          onChange={(e) => handleFileUpload(e, "exterior")}
           theme={theme}
         />
         <GalleryImageInput
           label="Interior"
           value={formData.interiorImage}
-          onChange={(val) => setFormData({ ...formData, interiorImage: val })}
+          uploading={uploading === "interior"}
+          onChange={(e) => handleFileUpload(e, "interior")}
           theme={theme}
         />
         <GalleryImageInput
           label="Seats"
           value={formData.seatsImage}
-          onChange={(val) => setFormData({ ...formData, seatsImage: val })}
+          uploading={uploading === "seats"}
+          onChange={(e) => handleFileUpload(e, "seats")}
           theme={theme}
         />
       </div>
@@ -369,12 +416,14 @@ export default function VehicleFields({
 function GalleryImageInput({
   label,
   value,
+  uploading,
   onChange,
   theme,
 }: {
   label: string;
   value: string;
-  onChange: (val: string) => void;
+  uploading?: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   theme: string;
 }) {
   return (
@@ -389,7 +438,16 @@ function GalleryImageInput({
             : "border-gray-200 bg-gray-50"
         }`}
       >
-        {value ? (
+        <input
+          type="file"
+          className="absolute inset-0 z-10 cursor-pointer opacity-0"
+          onChange={onChange}
+          accept="image/*"
+          disabled={uploading}
+        />
+        {uploading ? (
+          <Loader2 className="h-6 w-6 animate-spin text-green-500" />
+        ) : value ? (
           <img
             src={value}
             alt={label}

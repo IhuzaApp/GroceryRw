@@ -32,7 +32,7 @@ const GET_ALL_VEHICLES = gql`
         fullname
         businessName
         Users {
-          profile_picture
+          image: profile_picture
         }
       }
     }
