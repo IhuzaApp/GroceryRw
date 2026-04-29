@@ -3,6 +3,7 @@ import { Loader, Message, useToaster } from "rsuite";
 import LogsTable from "@components/logs/LogsTable";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
+import Image from "next/image";
 import "./logs.css";
 
 interface SystemLog {
@@ -21,9 +22,9 @@ interface LogsPageProps {
   initialUser: any;
 }
 
-const LogsPage: React.FC<LogsPageProps> = ({ 
-  initialLogs, 
-  initialTotal, 
+const LogsPage: React.FC<LogsPageProps> = ({
+  initialLogs,
+  initialTotal,
   initialAuthenticated,
   initialUser
 }) => {
@@ -47,7 +48,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
         body: JSON.stringify({ action: "login", identifier, password }),
       });
       const data = await res.json();
-      
+
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       if (data.step === "2fa" || data.step === "setup-2fa") {
@@ -107,7 +108,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
     return (
       <div className="min-h-screen flex bg-white">
         <Head>
-          <title>Dev Access | Plasa</title>
+          <title>Dev Access | Plas</title>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         </Head>
@@ -137,11 +138,17 @@ const LogsPage: React.FC<LogsPageProps> = ({
           {/* Logo */}
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center font-black text-white text-lg shadow-lg">
-                P
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white/10 shadow-lg border border-white/10">
+                <Image
+                  src="/assets/logos/plasIcon.png"
+                  alt="Plas Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
               <div>
-                <div className="text-white font-black text-lg tracking-tight leading-none">Plasa</div>
+                <div className="text-white font-black text-lg tracking-tight leading-none">Plas</div>
                 <div className="text-purple-300 text-[10px] font-bold uppercase tracking-widest">Dev Console</div>
               </div>
             </div>
@@ -161,7 +168,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
                 </span>
               </h2>
               <p className="text-slate-400 text-lg leading-relaxed max-w-sm">
-                Real-time system observability and log management for Plasa&apos;s core infrastructure.
+                Real-time system observability and log management for Plas&apos;s core infrastructure.
               </p>
             </div>
 
@@ -177,7 +184,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
 
           {/* Bottom footer */}
           <div className="relative z-10 text-slate-600 text-xs font-bold">
-            © {new Date().getFullYear()} Plasa Technologies · All rights reserved
+            © {new Date().getFullYear()} Plas Technologies · All rights reserved
           </div>
         </div>
 
@@ -190,8 +197,10 @@ const LogsPage: React.FC<LogsPageProps> = ({
                 {/* Header */}
                 <div className="space-y-2">
                   <div className="lg:hidden flex items-center gap-2 mb-6">
-                    <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black text-sm">P</div>
-                    <span className="font-black text-slate-900 text-sm">Dev Console</span>
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-purple-50 flex items-center justify-center">
+                      <Image src="/assets/logos/plasIcon.png" alt="Plas Logo" width={32} height={32} className="object-contain" />
+                    </div>
+                    <span className="font-black text-slate-900 text-sm">Plas Dev Console</span>
                   </div>
                   <h1 className="text-3xl font-black text-slate-900 tracking-tight">Welcome back</h1>
                   <p className="text-slate-400 text-sm font-medium">Sign in to access the infrastructure dashboard.</p>
@@ -228,7 +237,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
                     type="submit"
                     disabled={loading}
                     className="w-full h-14 rounded-2xl font-black text-sm text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-                    style={{ background: loading ? "#64748b" : "linear-gradient(135deg, #7c3aed, #8b5cf6)" }}
+                    style={{ background: loading ? "#64748b" : "linear-gradient(135deg, #9256f9ff, #8b5cf6)" }}
                   >
                     {loading ? (
                       <><Loader size="sm" /> Verifying Identity...</>
@@ -322,10 +331,10 @@ const LogsPage: React.FC<LogsPageProps> = ({
       </Head>
 
       <main className="w-full max-w-7xl">
-        <LogsTable 
-          initialLogs={initialLogs} 
-          initialTotal={initialTotal} 
-          user={user} 
+        <LogsTable
+          initialLogs={initialLogs}
+          initialTotal={initialTotal}
+          user={user}
           onLogout={handleLogout}
         />
       </main>
@@ -336,7 +345,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req } = context;
   const token = req.cookies.project_admin_session;
-  
+
   let authenticated = false;
   let user = null;
 
