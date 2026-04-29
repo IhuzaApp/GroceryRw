@@ -30,6 +30,7 @@ const INSERT_SYSTEM_LOG = gql`
     $message: String
     $component: String!
     $details: String
+    $time: String!
   ) {
     insert_System_Logs_one(
       object: {
@@ -37,7 +38,7 @@ const INSERT_SYSTEM_LOG = gql`
         message: $message
         component: $component
         details: $details
-        time: "now()"
+        time: $time
       }
     ) {
       id
@@ -95,6 +96,7 @@ export async function insertSystemLog(
             ? details
             : JSON.stringify(details)
           : null,
+        time: new Date().toISOString(),
       }
     );
 

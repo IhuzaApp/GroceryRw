@@ -269,8 +269,8 @@ const GET_PET_ADOPTION_DETAILS = gql`
       pets {
         name
         pet_vendors {
-          users {
-            phone_number
+          Users {
+            phone
           }
         }
       }
@@ -393,8 +393,8 @@ export default async function handler(
       data.status === "SUCCESSFUL"
         ? "SUCCESSFUL"
         : data.status === "PENDING"
-        ? "PENDING"
-        : "FAILED";
+          ? "PENDING"
+          : "FAILED";
 
     if (hasuraClient) {
       try {
@@ -628,10 +628,10 @@ export default async function handler(
                     const adoption = adoptionDetails.petAdoption_by_pk;
                     if (
                       adoption &&
-                      adoption.pets?.pet_vendors?.users?.phone_number
+                      adoption.pets?.pet_vendors?.Users?.phone
                     ) {
                       const vendorPhone =
-                        adoption.pets.pet_vendors.users.phone_number;
+                        adoption.pets.pet_vendors.Users.phone;
                       const petName = adoption.pets.name;
                       const customerPhone = adoption.phone;
                       const customerAddress = adoption.address;
@@ -644,10 +644,16 @@ export default async function handler(
                         vendorPhone
                       );
                     }
-                  } catch (smsErr) {
+                  } catch (smsErr: any) {
                     console.error(
                       "❌ [MoMo Status] Failed to send vendor SMS (Adoption):",
                       smsErr
+                    );
+                    await insertSystemLog(
+                      "error",
+                      `Failed to send vendor SMS (Adoption): ${smsErr.message || "Unknown"}`,
+                      "MomoRequestToPayStatusAPI:SMS",
+                      { petAdoptionId, error: smsErr }
                     );
                   }
                 }
@@ -777,10 +783,10 @@ export default async function handler(
                   const adoption = adoptionDetails.petAdoption_by_pk;
                   if (
                     adoption &&
-                    adoption.pets?.pet_vendors?.users?.phone_number
+                    adoption.pets?.pet_vendors?.Users?.phone
                   ) {
                     const vendorPhone =
-                      adoption.pets.pet_vendors.users.phone_number;
+                      adoption.pets.pet_vendors.Users.phone;
                     const petName = adoption.pets.name;
                     const customerPhone = adoption.phone;
                     const customerAddress = adoption.address;
@@ -793,10 +799,16 @@ export default async function handler(
                       vendorPhone
                     );
                   }
-                } catch (smsErr) {
+                } catch (smsErr: any) {
                   console.error(
                     "❌ [MoMo Status] Failed to send vendor SMS (Adoption):",
                     smsErr
+                  );
+                  await insertSystemLog(
+                    "error",
+                    `Failed to send vendor SMS (Adoption): ${smsErr.message || "Unknown"}`,
+                    "MomoRequestToPayStatusAPI:SMS",
+                    { petAdoptionId, error: smsErr }
                   );
                 }
               }
@@ -883,10 +895,16 @@ export default async function handler(
                     `✅[MoMo Status] Wallet ${transaction.wallet_id} updated: ${currentBalance} -> ${newBalance} `
                   );
                 }
-              } catch (walletError) {
+              } catch (walletError: any) {
                 console.error(
                   "❌ [MoMo Status] Failed to update wallet balance:",
                   walletError
+                );
+                await insertSystemLog(
+                  "error",
+                  `Failed to update wallet balance: ${walletError.message || "Unknown"}`,
+                  "MomoRequestToPayStatusAPI:Wallet",
+                  { transactionId: transaction.id, error: walletError }
                 );
               }
             }

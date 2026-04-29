@@ -421,11 +421,6 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
       return;
     }
 
-    if (isAdopted) {
-      toast.success("You have already adopted this pet!");
-      return;
-    }
-
     setIsAdoptionModalOpen(true);
   };
 
