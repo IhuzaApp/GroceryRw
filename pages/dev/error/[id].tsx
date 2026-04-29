@@ -1,8 +1,9 @@
 import React from "react";
-import { Container, Button, Panel, Tag, Stack, Divider, IconButton } from "rsuite";
+import { Button, IconButton, Tag } from "rsuite";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import Image from "next/image";
 import { GraphQLClient, gql } from "graphql-request";
 import ArrowLeftIcon from "@rsuite/icons/ArrowLeft";
 import CopyIcon from "@rsuite/icons/Copy";
@@ -32,130 +33,158 @@ interface LogDetailProps {
 const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
   if (!authenticated) {
     return (
-      <div className="dev-page-container flex items-center justify-center">
-        <Panel className="premium-card p-8 text-center">
-          <h2 className="text-red-400 mb-4">Authentication Required</h2>
-          <p className="text-slate-400 mb-6">You must be logged in as a Project Admin to view error details.</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl p-8 text-center shadow-xl border border-slate-100">
+          <div className="text-4xl mb-4">🔒</div>
+          <h2 className="text-lg font-black text-slate-900 mb-2">Authentication Required</h2>
+          <p className="text-slate-400 text-sm mb-6">You must be logged in as a Project Admin to view error details.</p>
           <Link href="/dev/logs">
-            <Button appearance="primary">Go to Login</Button>
+            <Button appearance="primary" className="!bg-purple-600 !rounded-xl font-black">Go to Login</Button>
           </Link>
-        </Panel>
+        </div>
       </div>
     );
   }
 
   if (!log) {
     return (
-      <div className="dev-page-container flex items-center justify-center">
-        <Panel className="premium-card p-8 text-center">
-          <h2 className="text-slate-400 mb-4">Log Not Found</h2>
-          <p className="text-slate-500 mb-6">The requested log entry could not be found or has been cleaned up.</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl p-8 text-center shadow-xl border border-slate-100">
+          <div className="text-4xl mb-4">🔍</div>
+          <h2 className="text-lg font-black text-slate-900 mb-2">Log Not Found</h2>
+          <p className="text-slate-400 text-sm mb-6">This log entry could not be found or has been cleaned up.</p>
           <Link href="/dev/logs">
-            <Button appearance="subtle">Back to Dashboard</Button>
+            <Button appearance="subtle" className="!rounded-xl font-black">← Back to Dashboard</Button>
           </Link>
-        </Panel>
+        </div>
       </div>
     );
   }
 
   const getTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case "error": return "red";
-      case "warn": return "orange";
-      case "info": return "blue";
-      case "debug": return "green";
-      default: return "cyan";
+      case "error": return { bg: "bg-rose-50", text: "text-rose-600", ring: "ring-rose-500/10", dot: "bg-rose-500" };
+      case "warn": return { bg: "bg-amber-50", text: "text-amber-600", ring: "ring-amber-500/10", dot: "bg-amber-500" };
+      case "info": return { bg: "bg-blue-50", text: "text-blue-600", ring: "ring-blue-500/10", dot: "bg-blue-500" };
+      default: return { bg: "bg-emerald-50", text: "text-emerald-600", ring: "ring-emerald-500/10", dot: "bg-emerald-500" };
     }
   };
+
+  const typeColors = getTypeColor(log.type);
 
   const copyDetails = () => {
     navigator.clipboard.writeText(JSON.stringify(log.details, null, 2));
   };
 
   return (
-    <div className="dev-page-container">
+    <div className="min-h-screen bg-slate-50" style={{
+      backgroundImage: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%)"
+    }}>
       <Head>
-        <title>Error Details | {log.id.slice(0,8)}</title>
+        <title>Error Details | {log.id.slice(0, 8)}</title>
       </Head>
-      
-      <header className="dashboard-header premium-card m-4 !rounded-xl">
-        <div className="flex items-center gap-4">
+
+      {/* Mobile-friendly Header */}
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30 shadow-sm">
+        <div className="flex items-center gap-3 min-w-0">
           <Link href="/dev/logs">
-            <IconButton icon={<ArrowLeftIcon />} appearance="subtle" className="hover:bg-slate-100" />
+            <IconButton
+              icon={<ArrowLeftIcon />}
+              appearance="subtle"
+              size="sm"
+              className="!rounded-xl hover:!bg-slate-100 flex-shrink-0"
+            />
           </Link>
-          <div className="dashboard-title">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-purple-200">
-              P
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-black text-slate-900 leading-none">Error Details</span>
-              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Log Inspector</span>
+          <div className="w-8 h-8 rounded-lg overflow-hidden bg-purple-50 flex-shrink-0">
+            <Image src="/assets/logos/plasIcon.png" alt="Plas" width={32} height={32} className="object-contain" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-black text-slate-900 leading-none">Log Inspector</div>
+            <div className="text-[9px] text-purple-500 uppercase tracking-widest font-bold hidden sm:block truncate">
+              {log.id}
             </div>
           </div>
         </div>
-        <Tag color={getTypeColor(log.type)} className="uppercase font-black px-3 py-1 text-[10px] rounded-lg">
+
+        <span className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase ring-1 ring-inset ${typeColors.bg} ${typeColors.text} ${typeColors.ring}`}>
           {log.type}
-        </Tag>
+        </span>
       </header>
 
-      <main className="dashboard-content max-w-5xl mx-auto w-full">
-        <Panel className="premium-card p-0 overflow-hidden !bg-white">
-          <div className="p-8 border-b border-slate-100">
-            <Stack justifyContent="space-between" alignItems="flex-start">
-              <div>
-                <h1 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">{log.message}</h1>
-                <p className="text-purple-600 font-bold text-xs uppercase tracking-widest">{log.component}</p>
-              </div>
-              <div className="text-right text-slate-400 text-xs">
-                <div className="font-bold">{new Date(log.time).toLocaleString()}</div>
-                <div className="font-mono mt-1 opacity-60">{log.id}</div>
-              </div>
-            </Stack>
-          </div>
+      <main className="px-4 sm:px-6 py-6 max-w-5xl mx-auto space-y-4">
 
-          <div className="p-8 bg-slate-50/50">
-            <Stack justifyContent="space-between" className="mb-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Technical Trace</h3>
-              <IconButton 
-                icon={<CopyIcon />} 
-                size="xs" 
-                onClick={copyDetails}
-                appearance="subtle"
-                className="text-slate-400 hover:text-purple-600"
-              >
-                Copy JSON
-              </IconButton>
-            </Stack>
-            
-            <pre className="details-pre !max-h-none !text-sm !bg-white !border-slate-200 !text-slate-600 shadow-sm">
-              {log.details ? (
-                typeof log.details === 'string' 
-                  ? log.details 
-                  : JSON.stringify(log.details, null, 2)
-              ) : (
-                <span className="italic text-slate-400 text-xs">No additional details provided.</span>
-              )}
-            </pre>
-          </div>
-
-          <div className="p-8 border-t border-slate-100 bg-white">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Metadata</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-black mb-1">Source Component</div>
-                <div className="text-slate-900 font-bold text-sm">{log.component.split(':')[0]}</div>
+        {/* Message Card */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-5 sm:p-8 border-b border-slate-50">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-2">{log.component}</p>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight break-words">
+                  {log.message}
+                </h1>
               </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-black mb-1">Sub-Service</div>
-                <div className="text-slate-900 font-bold text-sm">{log.component.split(':')[1] || "Global"}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-black mb-1">Log ID</div>
-                <div className="text-slate-900 font-mono text-[11px] opacity-60">{log.id}</div>
+              <div className="text-left sm:text-right flex-shrink-0">
+                <div className="text-xs font-bold text-slate-500">{new Date(log.time).toLocaleString()}</div>
+                <div className="font-mono text-[10px] text-slate-300 mt-1 hidden sm:block">{log.id}</div>
               </div>
             </div>
           </div>
-        </Panel>
+
+          {/* Status indicator bar */}
+          <div className={`h-1 w-full ${typeColors.dot}`}></div>
+        </div>
+
+        {/* Technical Trace */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-4 sm:p-6 flex items-center justify-between border-b border-slate-50">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Technical Trace</h3>
+            <button
+              onClick={copyDetails}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-colors text-[10px] font-black uppercase tracking-wide"
+            >
+              <CopyIcon /> Copy JSON
+            </button>
+          </div>
+          <div className="p-4 sm:p-6 bg-slate-50/50">
+            <pre className="text-xs text-slate-600 font-mono leading-relaxed whitespace-pre-wrap break-all overflow-x-auto max-h-[50vh] bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+              {log.details ? (
+                typeof log.details === 'string'
+                  ? log.details
+                  : JSON.stringify(log.details, null, 2)
+              ) : (
+                <span className="italic text-slate-300">No additional details provided.</span>
+              )}
+            </pre>
+          </div>
+        </div>
+
+        {/* Metadata */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-8">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Metadata</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-8">
+            <div>
+              <div className="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-wider">Source Component</div>
+              <div className="text-slate-900 font-bold text-sm break-words">{log.component.split(':')[0]}</div>
+            </div>
+            <div>
+              <div className="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-wider">Sub-Service</div>
+              <div className="text-slate-900 font-bold text-sm">{log.component.split(':')[1] || "Global"}</div>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <div className="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-wider">Log ID</div>
+              <div className="text-slate-900 font-mono text-[10px] opacity-60 break-all">{log.id}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Back link */}
+        <div className="pb-6">
+          <Link href="/dev/logs">
+            <button className="text-sm text-slate-400 font-bold hover:text-purple-600 transition-colors flex items-center gap-2">
+              <ArrowLeftIcon /> Back to System Logs
+            </button>
+          </Link>
+        </div>
       </main>
     </div>
   );

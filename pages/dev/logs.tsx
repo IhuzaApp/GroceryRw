@@ -325,18 +325,22 @@ const LogsPage: React.FC<LogsPageProps> = ({
   }
 
   return (
-    <div className="dev-page-container flex flex-col items-center p-4 sm:p-8 md:p-12">
+    <div className="min-h-screen bg-slate-50 flex flex-col" style={{
+      backgroundImage: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%)"
+    }}>
       <Head>
         <title>System Logs | Dev Dashboard</title>
       </Head>
 
-      <main className="w-full max-w-7xl">
-        <LogsTable
-          initialLogs={initialLogs}
-          initialTotal={initialTotal}
-          user={user}
-          onLogout={handleLogout}
-        />
+      <main className="flex-1 p-3 sm:p-6 md:p-10">
+        <div className="max-w-7xl mx-auto">
+          <LogsTable
+            initialLogs={initialLogs}
+            initialTotal={initialTotal}
+            user={user}
+            onLogout={handleLogout}
+          />
+        </div>
       </main>
     </div>
   );
