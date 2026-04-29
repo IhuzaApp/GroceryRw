@@ -163,6 +163,7 @@ export default function PetListing() {
               isVerified: true,
             },
             reviews: [],
+            status: parseInt(p.quantity || "0") <= parseInt(p.quantity_sold || "0") ? "sold" : "available",
           }));
           setPets(mappedPets);
         }

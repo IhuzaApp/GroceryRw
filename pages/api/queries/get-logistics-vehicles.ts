@@ -28,12 +28,12 @@ const GET_LOGISTICS_VEHICLES = gql`
       updated_at
       exterior
       interior
-      logisticsAccount {
+      logisticsAccounts {
         id
         fullname
         businessName
-        user {
-          image
+        Users {
+          profile_picture
         }
       }
     }

@@ -72,11 +72,11 @@ export default function CarListing() {
             owner: {
               id: v.logisticAccount_id,
               name:
-                v.logisticsAccount?.businessName ||
-                v.logisticsAccount?.fullname ||
+                v.logisticsAccounts?.businessName ||
+                v.logisticsAccounts?.fullname ||
                 "Verified Host",
               image:
-                v.logisticsAccount?.user?.image ||
+                v.logisticsAccounts?.Users?.image ||
                 "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
               isVerified: true,
             },

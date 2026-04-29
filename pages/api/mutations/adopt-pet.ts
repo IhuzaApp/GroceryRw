@@ -4,6 +4,16 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { sendSMS } from "../../../src/lib/pindo.ts";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
+
+const UPDATE_PET_QUANTITY_SOLD = gql`
+  mutation UpdatePetQuantitySold($id: uuid!, $quantity_sold: String!) {
+    update_pets_by_pk(pk_columns: { id: $id }, _set: { quantity_sold: $quantity_sold }) {
+      id
+      quantity_sold
+    }
+  }
+`;
 
 const INSERT_PET_ADOPTION = gql`
   mutation RegisterPetAdoption(
@@ -44,10 +54,12 @@ const GET_VENDER_AND_PET_INFO = gql`
   query GetVendorAndPetInfo($pet_id: uuid!) {
     pets_by_pk(id: $pet_id) {
       name
+      quantity_sold
       pet_vendors {
         fullname
         organisationName
         user: Users {
+          id
           phone
         }
       }
@@ -109,21 +121,46 @@ export default async function handler(
         );
         const petInfo = infoResult.pets_by_pk;
         if (petInfo) {
+          try {
+            const currentSold = parseInt(petInfo.quantity_sold || "0", 10);
+            const newSold = (currentSold + 1).toString();
+            await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, { id: pet_id, quantity_sold: newSold });
+          } catch (incErr) {
+            console.error("Failed to increment pet quantity_sold:", incErr);
+          }
+
           const petName = petInfo.name;
           const vendorPhone = petInfo.pet_vendors?.user?.phone;
+          const vendorUserId = petInfo.pet_vendors?.user?.id;
           const vendorName =
             petInfo.pet_vendors?.organisationName ||
             petInfo.pet_vendors?.fullname ||
             "Vendor";
 
+          const message = `Hello ${vendorName}, your pet "${petName}" has been ordered and paid for! Customer Address: ${address}. Phone: ${phone}.`;
+
           if (vendorPhone) {
-            const message = `Hello ${vendorName}, your pet "${petName}" has been ordered and paid for! Customer Address: ${address}. Phone: ${phone}.`;
             await sendSMS(vendorPhone, message);
+          }
+
+          if (vendorUserId) {
+            try {
+              await sendNotificationToUser(vendorUserId, {
+                title: "New Pet Adoption! 🐾",
+                body: `Your pet "${petName}" has been adopted and paid for!`,
+                data: {
+                  type: "pet_adoption",
+                  petId: pet_id,
+                },
+              });
+            } catch (notifErr) {
+              console.error("Failed to send FCM notification:", notifErr);
+            }
           }
         }
       } catch (smsError) {
-        console.error("Failed to send SMS to vendor:", smsError);
-        // Don't fail the whole request if SMS fails
+        console.error("Failed to process post-adoption tasks:", smsError);
+        // Don't fail the whole request if SMS/Update fails
       }
     }
 

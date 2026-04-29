@@ -4,6 +4,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { sendSMS } from "../../../src/lib/pindo";
 import { insertSystemLog } from "../queries/system-logs";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const GET_TRANSACTION_BY_REF = gql`
   query GetTransactionByRef($reference_id: String!) {
@@ -267,13 +268,25 @@ const GET_PET_ADOPTION_DETAILS = gql`
       phone
       address
       pets {
+        id
         name
+        quantity_sold
         pet_vendors {
           Users {
+            id
             phone
           }
         }
       }
+    }
+  }
+`;
+
+const UPDATE_PET_QUANTITY_SOLD = gql`
+  mutation UpdatePetQuantitySold($id: uuid!, $quantity_sold: String!) {
+    update_pets_by_pk(pk_columns: { id: $id }, _set: { quantity_sold: $quantity_sold }) {
+      id
+      quantity_sold
     }
   }
 `;
@@ -626,12 +639,25 @@ export default async function handler(
                     }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
 
                     const adoption = adoptionDetails.petAdoption_by_pk;
+                    
+                    if (adoption && adoption.pets?.id) {
+                      try {
+                        const currentSold = parseInt(adoption.pets.quantity_sold || "0", 10);
+                        const newSold = (currentSold + 1).toString();
+                        await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, { id: adoption.pets.id, quantity_sold: newSold });
+                      } catch (incErr) {
+                        console.error("Failed to increment pet quantity_sold:", incErr);
+                      }
+                    }
+
                     if (
                       adoption &&
                       adoption.pets?.pet_vendors?.Users?.phone
                     ) {
                       const vendorPhone =
                         adoption.pets.pet_vendors.Users.phone;
+                      const vendorUserId =
+                        adoption.pets.pet_vendors.Users.id;
                       const petName = adoption.pets.name;
                       const customerPhone = adoption.phone;
                       const customerAddress = adoption.address;
@@ -643,6 +669,21 @@ export default async function handler(
                         "✅ [MoMo Status] SMS sent to vendor (Adoption):",
                         vendorPhone
                       );
+
+                      if (vendorUserId) {
+                        try {
+                          await sendNotificationToUser(vendorUserId, {
+                            title: "New Pet Adoption! 🐾",
+                            body: `Your pet "${petName}" has been adopted and paid for!`,
+                            data: {
+                              type: "pet_adoption",
+                              petId: adoption.pets.id,
+                            },
+                          });
+                        } catch (notifErr) {
+                          console.error("Failed to send FCM notification:", notifErr);
+                        }
+                      }
                     }
                   } catch (smsErr: any) {
                     console.error(
@@ -781,12 +822,25 @@ export default async function handler(
                   }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
 
                   const adoption = adoptionDetails.petAdoption_by_pk;
+                  
+                  if (adoption && adoption.pets?.id) {
+                    try {
+                      const currentSold = parseInt(adoption.pets.quantity_sold || "0", 10);
+                      const newSold = (currentSold + 1).toString();
+                      await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, { id: adoption.pets.id, quantity_sold: newSold });
+                    } catch (incErr) {
+                      console.error("Failed to increment pet quantity_sold:", incErr);
+                    }
+                  }
+
                   if (
                     adoption &&
                     adoption.pets?.pet_vendors?.Users?.phone
                   ) {
                     const vendorPhone =
                       adoption.pets.pet_vendors.Users.phone;
+                    const vendorUserId =
+                      adoption.pets.pet_vendors.Users.id;
                     const petName = adoption.pets.name;
                     const customerPhone = adoption.phone;
                     const customerAddress = adoption.address;
@@ -798,6 +852,21 @@ export default async function handler(
                       "✅ [MoMo Status] SMS sent to vendor (Adoption):",
                       vendorPhone
                     );
+
+                    if (vendorUserId) {
+                      try {
+                        await sendNotificationToUser(vendorUserId, {
+                          title: "New Pet Adoption! 🐾",
+                          body: `Your pet "${petName}" has been adopted and paid for!`,
+                          data: {
+                            type: "pet_adoption",
+                            petId: adoption.pets.id,
+                          },
+                        });
+                      } catch (notifErr) {
+                        console.error("Failed to send FCM notification:", notifErr);
+                      }
+                    }
                   }
                 } catch (smsErr: any) {
                   console.error(

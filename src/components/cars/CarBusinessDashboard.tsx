@@ -104,11 +104,11 @@ export default function CarBusinessDashboard() {
           owner: {
             id: v.logisticAccount_id,
             name:
-              v.logisticsAccount?.businessName ||
-              v.logisticsAccount?.fullname ||
+              v.logisticsAccounts?.businessName ||
+              v.logisticsAccounts?.fullname ||
               "Verified Host",
             image:
-              v.logisticsAccount?.user?.image ||
+              v.logisticsAccounts?.Users?.profile_picture ||
               "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
             isVerified: true,
           },
@@ -224,9 +224,8 @@ export default function CarBusinessDashboard() {
   if (accountStatus === "pending") {
     return (
       <div
-        className={`min-h-screen pb-24 md:ml-20 ${
-          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
-        }`}
+        className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+          }`}
       >
         <PendingReviewMessage contactEmail={session?.user?.email} />
       </div>
@@ -236,9 +235,8 @@ export default function CarBusinessDashboard() {
   if (accountStatus === "disabled") {
     return (
       <div
-        className={`min-h-screen pb-24 md:ml-20 ${
-          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
-        }`}
+        className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+          }`}
       >
         <RejectedAccountMessage businessAccountId={logisticsAccountId} />
       </div>
@@ -247,9 +245,8 @@ export default function CarBusinessDashboard() {
 
   return (
     <div
-      className={`min-h-screen pb-24 md:ml-20 ${
-        theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
-      }`}
+      className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
     >
       <DashboardHeader
         title="Partner Dashboard"
@@ -302,21 +299,19 @@ export default function CarBusinessDashboard() {
         <div className="mb-8 flex gap-8 border-b border-gray-200/10">
           <button
             onClick={() => setActiveTab("fleet")}
-            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${
-              activeTab === "fleet"
+            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${activeTab === "fleet"
                 ? "border-b-2 border-green-500 text-green-500"
                 : "text-gray-500 hover:text-gray-400"
-            }`}
+              }`}
           >
             My Fleet
           </button>
           <button
             onClick={() => setActiveTab("bookings")}
-            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${
-              activeTab === "bookings"
+            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${activeTab === "bookings"
                 ? "border-b-2 border-green-500 text-green-500"
                 : "text-gray-500 hover:text-gray-400"
-            }`}
+              }`}
           >
             Bookings
           </button>
@@ -326,11 +321,10 @@ export default function CarBusinessDashboard() {
           <div className="space-y-4">
             <div className="mb-6 flex items-center justify-between">
               <div
-                className={`flex max-w-md flex-1 items-center rounded-2xl border px-4 py-3 ${
-                  theme === "dark"
+                className={`flex max-w-md flex-1 items-center rounded-2xl border px-4 py-3 ${theme === "dark"
                     ? "border-white/10 bg-white/5"
                     : "border-gray-200 bg-gray-50"
-                }`}
+                  }`}
               >
                 <Search className="h-4 w-4 text-gray-400" />
                 <input
@@ -434,22 +428,20 @@ export default function CarBusinessDashboard() {
             onClick={() => setIsRejectionModalOpen(false)}
           />
           <div
-            className={`relative w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl ${
-              theme === "dark"
+            className={`relative w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl ${theme === "dark"
                 ? "border border-white/10 bg-[#121212]"
                 : "bg-white"
-            }`}
+              }`}
           >
             <h3 className="mb-4 text-2xl font-black">Reject Booking</h3>
             <p className="mb-6 font-normal text-gray-500">
               Please provide a reason for rejecting this booking.
             </p>
             <textarea
-              className={`mb-6 h-32 w-full rounded-2xl border p-4 text-sm font-normal outline-none ${
-                theme === "dark"
+              className={`mb-6 h-32 w-full rounded-2xl border p-4 text-sm font-normal outline-none ${theme === "dark"
                   ? "border-white/10 bg-white/5"
                   : "border-gray-200 bg-gray-50"
-              }`}
+                }`}
               placeholder="e.g. Vehicle maintenance, fully booked..."
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
@@ -457,11 +449,10 @@ export default function CarBusinessDashboard() {
             <div className="flex gap-3">
               <button
                 onClick={() => setIsRejectionModalOpen(false)}
-                className={`flex-1 rounded-2xl py-4 font-normal transition-all ${
-                  theme === "dark"
+                className={`flex-1 rounded-2xl py-4 font-normal transition-all ${theme === "dark"
                     ? "bg-white/5 hover:bg-white/10"
                     : "bg-gray-100 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 Cancel
               </button>
@@ -510,11 +501,10 @@ function StatsCard({
 
   return (
     <div
-      className={`rounded-[2rem] border p-5 transition-all hover:shadow-xl ${
-        theme === "dark"
+      className={`rounded-[2rem] border p-5 transition-all hover:shadow-xl ${theme === "dark"
           ? "border-white/5 bg-[#121212]"
           : "border-gray-100 bg-white shadow-sm"
-      }`}
+        }`}
     >
       <div
         className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
@@ -527,9 +517,8 @@ function StatsCard({
         {label}
       </p>
       <h3
-        className={`text-xl font-black ${
-          theme === "dark" ? "text-white" : "text-black"
-        }`}
+        className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-black"
+          }`}
       >
         {value}
       </h3>
@@ -609,11 +598,10 @@ function FleetItem({
 }) {
   return (
     <div
-      className={`flex items-center justify-between rounded-[2rem] border p-3 transition-all hover:shadow-lg sm:p-4 ${
-        theme === "dark"
+      className={`flex items-center justify-between rounded-[2rem] border p-3 transition-all hover:shadow-lg sm:p-4 ${theme === "dark"
           ? "border-white/5 bg-[#121212] hover:bg-white/[0.07]"
           : "border-gray-100 bg-white shadow-sm hover:bg-gray-50"
-      }`}
+        }`}
     >
       <div className="flex min-w-0 items-center gap-3 sm:gap-5">
         <div className="h-16 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/5 sm:h-20 sm:w-32">
@@ -625,9 +613,8 @@ function FleetItem({
         </div>
         <div className="min-w-0">
           <h4
-            className={`text-lg font-black leading-tight ${
-              theme === "dark" ? "text-white" : "text-black"
-            }`}
+            className={`text-lg font-black leading-tight ${theme === "dark" ? "text-white" : "text-black"
+              }`}
           >
             {car.name}
           </h4>
@@ -636,11 +623,10 @@ function FleetItem({
           </p>
           <div className="mt-2 flex items-center gap-3">
             <div
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-normal uppercase tracking-wider ${
-                car.status === "active"
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-normal uppercase tracking-wider ${car.status === "active"
                   ? "bg-green-500/10 text-green-500"
                   : "bg-red-500/10 text-red-500"
-              }`}
+                }`}
             >
               <Circle className="h-2 w-2 fill-current" />
               {car.status}
@@ -656,33 +642,30 @@ function FleetItem({
         <button
           onClick={onToggleStatus}
           title={car.status === "active" ? "Disable listing" : "Enable listing"}
-          className={`rounded-xl p-3 transition-colors ${
-            theme === "dark"
+          className={`rounded-xl p-3 transition-colors ${theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
               : "text-gray-600 hover:bg-gray-200"
-          }`}
+            }`}
         >
           <Clock className="h-5 w-5" />
         </button>
         <button
           onClick={onEdit}
           title="Edit details"
-          className={`rounded-xl p-3 transition-colors ${
-            theme === "dark"
+          className={`rounded-xl p-3 transition-colors ${theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
               : "text-gray-600 hover:bg-gray-200"
-          }`}
+            }`}
         >
           <Edit2 className="h-5 w-5" />
         </button>
         <button
           onClick={onView}
           title="View all details"
-          className={`rounded-xl p-3 transition-colors ${
-            theme === "dark"
+          className={`rounded-xl p-3 transition-colors ${theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
               : "text-gray-600 hover:bg-gray-200"
-          }`}
+            }`}
         >
           <Eye className="h-5 w-5" />
         </button>
@@ -691,11 +674,10 @@ function FleetItem({
       {/* Mobile Actions Dropdown - Icon Trigger */}
       <div className="relative pr-1 sm:hidden">
         <div
-          className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-            theme === "dark"
+          className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${theme === "dark"
               ? "bg-white/5 text-gray-400"
               : "bg-gray-100 text-gray-600"
-          }`}
+            }`}
         >
           <MoreVertical className="h-5 w-5" />
           <select
@@ -744,11 +726,10 @@ function CarDetailsModal({
         onClick={onClose}
       />
       <div
-        className={`relative flex h-full w-full max-w-4xl flex-col overflow-hidden shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95 ${
-          theme === "dark"
+        className={`relative flex h-full w-full max-w-4xl flex-col overflow-hidden shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95 ${theme === "dark"
             ? "border border-white/5 bg-[#121212] text-white"
             : "bg-white text-gray-900"
-        }`}
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 p-8 dark:border-white/5">
@@ -769,9 +750,8 @@ function CarDetailsModal({
           </div>
           <button
             onClick={onClose}
-            className={`rounded-full p-3 transition-colors ${
-              theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
-            }`}
+            className={`rounded-full p-3 transition-colors ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
+              }`}
           >
             <X className="h-6 w-6" />
           </button>
@@ -866,9 +846,8 @@ function CarDetailsModal({
                   Pricing & Policies
                 </h3>
                 <div
-                  className={`space-y-4 rounded-3xl p-6 ${
-                    theme === "dark" ? "bg-white/5" : "bg-gray-50"
-                  }`}
+                  className={`space-y-4 rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-normal text-gray-500">
@@ -889,11 +868,10 @@ function CarDetailsModal({
                     </span>
                   </div>
                   <div
-                    className={`flex items-center gap-3 rounded-2xl p-3 ${
-                      car.driverOption === "offered"
+                    className={`flex items-center gap-3 rounded-2xl p-3 ${car.driverOption === "offered"
                         ? "bg-purple-500/10"
                         : "bg-orange-500/10"
-                    }`}
+                      }`}
                   >
                     {car.driverOption === "offered" ? (
                       <UserCheck className="text-purple-500" />
@@ -902,11 +880,10 @@ function CarDetailsModal({
                     )}
                     <div>
                       <p
-                        className={`text-xs font-normal uppercase ${
-                          car.driverOption === "offered"
+                        className={`text-xs font-normal uppercase ${car.driverOption === "offered"
                             ? "text-purple-500"
                             : "text-orange-500"
-                        }`}
+                          }`}
                       >
                         {car.driverOption === "offered"
                           ? "Driver Provided"
@@ -932,11 +909,10 @@ function CarDetailsModal({
 function SpecItem({ icon, label, value, theme }: any) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border p-4 ${
-        theme === "dark"
+      className={`flex items-center gap-3 rounded-2xl border p-4 ${theme === "dark"
           ? "border-white/5 bg-white/5"
           : "border-gray-100 bg-white shadow-sm"
-      }`}
+        }`}
     >
       <div className="text-green-500">
         {React.cloneElement(icon, { className: "h-5 w-5" })}
@@ -970,26 +946,23 @@ function BookingItem({
 
   return (
     <div
-      className={`flex flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${
-        theme === "dark"
+      className={`flex flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${theme === "dark"
           ? "border-white/5 bg-[#121212]"
           : "border-gray-100 bg-white shadow-sm"
-      }`}
+        }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
-              theme === "dark" ? "bg-white/5" : "bg-gray-50"
-            }`}
+            className={`flex h-14 w-14 items-center justify-center rounded-2xl ${theme === "dark" ? "bg-white/5" : "bg-gray-50"
+              }`}
           >
             <Clock className="h-7 w-7 text-gray-400" />
           </div>
           <div>
             <h4
-              className={`text-lg font-black ${
-                theme === "dark" ? "text-white" : "text-black"
-              }`}
+              className={`text-lg font-black ${theme === "dark" ? "text-white" : "text-black"
+                }`}
             >
               {customer}
             </h4>
@@ -1009,15 +982,13 @@ function BookingItem({
       </div>
 
       <div
-        className={`flex items-center justify-between rounded-2xl px-4 py-3 ${
-          theme === "dark" ? "bg-white/5" : "bg-gray-50"
-        }`}
+        className={`flex items-center justify-between rounded-2xl px-4 py-3 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"
+          }`}
       >
         <div className="flex items-center gap-2">
           <div
-            className={`h-2 w-2 rounded-full ${
-              driverProvided ? "bg-green-500" : "bg-orange-500"
-            }`}
+            className={`h-2 w-2 rounded-full ${driverProvided ? "bg-green-500" : "bg-orange-500"
+              }`}
           />
           <span className="text-[10px] font-normal uppercase tracking-widest text-gray-500">
             {driverProvided
@@ -1028,11 +999,10 @@ function BookingItem({
         <div className="flex gap-2">
           <button
             onClick={onReject}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${
-              theme === "dark"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${theme === "dark"
                 ? "bg-white/5 text-red-500 hover:bg-red-500/10"
                 : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
-            }`}
+              }`}
           >
             <X className="h-4 w-4" />
             Reject
