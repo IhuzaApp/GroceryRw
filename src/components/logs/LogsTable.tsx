@@ -130,43 +130,19 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    if (theme === "dark") {
-      switch (type.toLowerCase()) {
-        case "error":
-          return "#ff4d4f";
-        case "warn":
-          return "#faad14";
-        case "info":
-          return "#1890ff";
-        case "debug":
-          return "#52c41a";
-        default:
-          return "#d9d9d9";
-      }
-    } else {
-      switch (type.toLowerCase()) {
-        case "error":
-          return "#cf1322";
-        case "warn":
-          return "#d48806";
-        case "info":
-          return "#096dd9";
-        case "debug":
-          return "#389e0d";
-        default:
-          return "#8c8c8c";
-      }
+  const getBadgeClass = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "error": return "log-badge log-badge-error";
+      case "warn": return "log-badge log-badge-warn";
+      case "info": return "log-badge log-badge-info";
+      case "debug": return "log-badge log-badge-debug";
+      default: return "log-badge";
     }
   };
 
   return (
     <>
       <Panel
-        style={{
-          backgroundColor: "var(--bg-secondary)",
-          color: "var(--text-primary)",
-        }}
         header={
           <div className="mb-4 flex items-center justify-between">
             <h2
@@ -235,13 +211,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
             height={600}
             data={logs}
             loading={loading}
-            rowHeight={60}
-            className={`logs-table ${theme === "dark" ? "dark" : "light"}`}
-            style={{
-              backgroundColor: "var(--bg-primary)",
-              color: "var(--text-primary)",
-            }}
-            rowClassName={() => (theme === "dark" ? "dark-row" : "light-row")}
+            className="logs-table"
           >
             <Column width={150} align="left" fixed>
               <HeaderCell className="header-cell">Timestamp</HeaderCell>
@@ -254,7 +224,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
               <HeaderCell className="header-cell">Type</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => (
-                  <span style={{ color: getTypeColor(rowData.type) }}>
+                  <span className={getBadgeClass(rowData.type)}>
                     {rowData.type}
                   </span>
                 )}
@@ -279,7 +249,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
               <HeaderCell className="header-cell">Details</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => (
-                  <pre className="whitespace-pre-wrap text-sm">
+                  <pre className="details-pre">
                     {formatDetails(rowData.details)}
                   </pre>
                 )}
