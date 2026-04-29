@@ -118,7 +118,7 @@ class LoggerImpl {
   }
 
   private async flushBuffer() {
-    if (this.isProcessing || !hasuraClient) return;
+    if (this.isProcessing) return;
 
     const buffer = this.getBuffer();
     if (buffer.length === 0) return;
@@ -126,9 +126,11 @@ class LoggerImpl {
     this.isProcessing = true;
 
     try {
-      // Disabled database logging to prevent bloat. Only specific critical APIs log to DB now.
-      // await this.sendLogs(buffer);
-      // Clear buffer only after "successful" process
+      // Sync all logs to the database in one batch if possible, or filter.
+      // For now, we sync everything from the client to our API.
+      await this.sendLogs(buffer);
+      
+      // Clear buffer only after successful sync
       this.setBuffer([]);
     } catch (error) {
       console.error("Error flushing logs:", error);
@@ -155,6 +157,31 @@ class LoggerImpl {
   }
 
   private async sendLogs(logs: LogEntry[]) {
+    if (this.isClient) {
+      // Use internal API from the browser
+      try {
+        await Promise.all(
+          logs.map((log) =>
+            fetch("/api/logs/insert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: log.type,
+                message: log.message,
+                component: log.component,
+                details: log.details,
+              }),
+            })
+          )
+        );
+      } catch (e) {
+        console.error("Failed to send logs to internal API", e);
+        throw e;
+      }
+      return;
+    }
+
+    // Server-side direct DB access
     if (!hasuraClient) return;
 
     const mutation = gql`

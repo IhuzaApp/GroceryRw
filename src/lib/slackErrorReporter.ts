@@ -9,7 +9,8 @@ type ExtraContext = Record<string, unknown>;
 export async function logErrorToSlack(
   where: string,
   error: unknown,
-  extra?: ExtraContext
+  extra?: ExtraContext,
+  logId?: string
 ) {
   if (!SLACK_ERRORS_WEBHOOK) {
     // Avoid throwing if Slack isn't configured; just log locally
@@ -94,6 +95,21 @@ export async function logErrorToSlack(
         ]
       : []),
     { type: "divider" },
+    ...(logId
+      ? [
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: { type: "plain_text", text: "🔍 View Full Details" },
+                url: `${process.env.API_BASE_URL || "https://www.plas.rw"}/dev/error/${logId}`,
+                style: "primary",
+              },
+            ],
+          },
+        ]
+      : []),
     {
       type: "context",
       elements: [

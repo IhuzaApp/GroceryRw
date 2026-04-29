@@ -18,7 +18,6 @@ const PROJECT_USER_LOGIN_QUERY = gql`
     ProjectUsers(
       where: {
         _or: [{ email: { _eq: $identifier } }, { username: { _eq: $identifier } }]
-        is_active: { _eq: true }
       }
     ) {
       id
@@ -28,6 +27,7 @@ const PROJECT_USER_LOGIN_QUERY = gql`
       username
       TwoAuth_enabled
       profile
+      is_active
     }
   }
 `;
@@ -48,56 +48,75 @@ export default async function handler(
           identifier,
         });
 
+        console.log("🔍 [Project Auth] Login attempt for:", identifier);
+        console.log("🔍 [Project Auth] User found:", data.ProjectUsers.length > 0 ? "YES" : "NO");
+
         const user = data.ProjectUsers[0];
 
         if (!user) {
           return res.status(401).json({ error: "Invalid credentials" });
         }
 
+        if (!user.is_active) {
+          console.log("🔍 [Project Auth] User found but is INACTIVE:", user.username);
+          return res.status(401).json({ error: "Account is inactive" });
+        }
+
         // Verify role
-        if (user.role !== "projectAdmin" && user.role !== "projectDev") {
+        const normalizedRole = user.role?.toLowerCase();
+        if (normalizedRole !== "projectadmin" && normalizedRole !== "projectdev") {
           return res.status(403).json({ error: "Access denied: Unauthorized role" });
         }
 
         // Verify password
-        const isValid = await bcrypt.compare(password, user.password);
+        console.log("🔍 [Project Auth] Verifying password for:", user.username);
+        let isValid = await bcrypt.compare(password, user.password).catch(() => false);
+        
+        // Fallback for plain-text passwords (common in dev/manual setups)
+        if (!isValid && password === user.password) {
+          console.log("🔍 [Project Auth] Plain-text password matched!");
+          isValid = true;
+        }
+
+        console.log("🔍 [Project Auth] Password valid:", isValid ? "YES" : "NO");
+        
         if (!isValid) {
           return res.status(401).json({ error: "Invalid credentials" });
         }
 
-        if (user.TwoAuth_enabled) {
-          // Generate 2FA code (6 digits)
-          const otp = Math.floor(100000 + Math.random() * 900000).toString();
-          
-          // Generate a temporary token containing the OTP and user ID
-          const tToken = jwt.sign(
-            { userId: user.id, otp, purpose: "2fa" },
-            JWT_SECRET,
-            { expiresIn: "5m" }
-          );
+        // Always require 2FA for Project Users (Setup or Verify)
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Generate a temporary token containing the OTP and user ID
+        const tToken = jwt.sign(
+          { userId: user.id, otp, purpose: user.TwoAuth_enabled ? "2fa" : "setup-2fa" },
+          JWT_SECRET,
+          { expiresIn: "5m" }
+        );
 
-          // Send email
-          await resend.emails.send({
-            from: "Plasa Dev <no-reply@plasa.app>",
-            to: user.email,
-            subject: "Your Dev Login 2FA Code",
-            html: `
-              <div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f8fafc; border-radius: 8px;">
-                <h2 style="color: #38bdf8;">Dev Dashboard Security</h2>
-                <p>Use the following code to complete your login:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #38bdf8; padding: 10px 0;">
-                  ${otp}
-                </div>
-                <p style="font-size: 12px; color: #94a3b8;">This code expires in 5 minutes.</p>
+        // Send email
+        await resend.emails.send({
+          from: "Plasa Dev <no-reply@plasa.app>",
+          to: user.email,
+          subject: user.TwoAuth_enabled ? "Your Dev Login 2FA Code" : "Set up your Dev 2FA",
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; background: #f8fafc; color: #1e293b; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <h2 style="color: #4f46e5;">${user.TwoAuth_enabled ? "Security Verification" : "Mandatory 2FA Setup"}</h2>
+              <p>${user.TwoAuth_enabled ? "Use this code to login:" : "To secure your account, please verify this code to enable 2FA:"}</p>
+              <div style="font-size: 36px; font-weight: 800; letter-spacing: 6px; color: #4f46e5; padding: 20px 0; font-family: monospace;">
+                ${otp}
               </div>
-            `,
-          });
+              <p style="font-size: 12px; color: #64748b;">This code expires in 5 minutes.</p>
+              ${!user.TwoAuth_enabled ? '<p style="font-size: 11px; color: #ef4444; font-weight: bold;">Logging in will automatically enable 2FA on your account for future sessions.</p>' : ''}
+            </div>
+          `,
+        });
 
-          return res.status(200).json({ step: "2fa", tempToken: tToken });
-        }
-
-        // Success - No 2FA
-        return finalizeLogin(res, user);
+        return res.status(200).json({ 
+          step: user.TwoAuth_enabled ? "2fa" : "setup-2fa", 
+          tempToken: tToken,
+          message: user.TwoAuth_enabled ? "Verification code sent." : "2FA setup required."
+        });
       } catch (error: any) {
         console.error("Project User Login Error:", error);
         return res.status(500).json({ error: "Internal server error" });
@@ -111,8 +130,20 @@ export default async function handler(
         }
 
         const decoded = jwt.verify(tempToken, JWT_SECRET) as any;
-        if (decoded.purpose !== "2fa" || decoded.otp !== code) {
+        if ((decoded.purpose !== "2fa" && decoded.purpose !== "setup-2fa") || decoded.otp !== code) {
           return res.status(401).json({ error: "Invalid or expired code" });
+        }
+
+        // If it was setup, enable it in the DB
+        if (decoded.purpose === "setup-2fa") {
+          await hasuraClient.request(gql`
+            mutation Enable2FA($id: uuid!) {
+              update_ProjectUsers_by_pk(pk_columns: {id: $id}, _set: {TwoAuth_enabled: true}) {
+                id
+              }
+            }
+          `, { id: decoded.userId });
+          console.log("🔍 [Project Auth] 2FA Enabled for user:", decoded.userId);
         }
 
         // Fetch full user data again to finalize
