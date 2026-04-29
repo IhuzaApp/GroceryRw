@@ -22,11 +22,6 @@ interface SystemLog {
   timestamp: string;
 }
 
-interface LogsResponse {
-  logs: SystemLog[];
-  total: number;
-}
-
 type LogType = "error" | "warn" | "info" | "debug" | null;
 
 interface LogsTableProps {
@@ -182,7 +177,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal, user, 
               { label: "Information", value: "info" },
             ]}
             value={filter}
-            onChange={setFilter}
+            onChange={(v) => setFilter(v as LogType)}
             cleanable={false}
             searchable={false}
             className="!bg-slate-100/50 !rounded-xl !border-none font-bold !text-slate-600"
