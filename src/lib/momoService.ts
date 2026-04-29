@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { insertSystemLog } from "../../pages/api/queries/system-logs";
 
 interface TokenData {
   access_token: string;
@@ -94,6 +95,12 @@ class MomoService {
         `❌ [MoMo Service] ${product} token generation failed:`,
         errorText
       );
+      await insertSystemLog(
+        "error",
+        `MoMo ${product} token generation failed: ${response.status}`,
+        "MomoService:getAccessToken",
+        { status: response.status, errorText, product }
+      );
       throw new Error(
         `MoMo ${product} Token Error: ${response.status} - ${errorText}`
       );
@@ -166,6 +173,12 @@ class MomoService {
 
     if (response.status !== 202) {
       const errorText = await response.text();
+      await insertSystemLog(
+        "error",
+        `MoMo RequestToPay failed: ${response.status}`,
+        "MomoService:requestToPay",
+        { status: response.status, errorText, params }
+      );
       throw new Error(
         `MoMo RequestToPay Error: ${response.status} - ${errorText}`
       );
@@ -202,8 +215,16 @@ class MomoService {
     };
 
     const response = await callApi();
-    if (!response.ok)
+    if (!response.ok) {
+      const errorText = await response.text();
+      await insertSystemLog(
+        "error",
+        `MoMo payment status check failed: ${response.status}`,
+        "MomoService:getPaymentStatus",
+        { status: response.status, errorText, referenceId }
+      );
       throw new Error(`MoMo status check failed: ${response.status}`);
+    }
     return (await response.json()) as PaymentStatus;
   }
 
@@ -270,6 +291,12 @@ class MomoService {
     if (response.status !== 202) {
       const errorText = await response.text();
       console.error("❌ [MoMo Service] Transfer failed:", errorText);
+      await insertSystemLog(
+        "error",
+        `MoMo Transfer failed: ${response.status}`,
+        "MomoService:transfer",
+        { status: response.status, errorText, params }
+      );
       throw new Error(`MoMo Transfer Error: ${response.status} - ${errorText}`);
     }
 
@@ -304,12 +331,18 @@ class MomoService {
     };
 
     const response = await callApi();
-    if (!response.ok)
-      throw new Error(
-        `MoMo transfer status check failed: ${
-          response.status
-        } - ${await response.text()}`
+    if (!response.ok) {
+      const errorText = await response.text();
+      await insertSystemLog(
+        "error",
+        `MoMo transfer status check failed: ${response.status}`,
+        "MomoService:getTransferStatus",
+        { status: response.status, errorText, referenceId }
       );
+      throw new Error(
+        `MoMo transfer status check failed: ${response.status} - ${errorText}`
+      );
+    }
     return await response.json();
   }
 

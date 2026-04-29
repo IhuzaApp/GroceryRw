@@ -1,4 +1,5 @@
 import { PindoSMS, SMSPayload } from "pindo-sms";
+import { insertSystemLog } from "../../pages/api/queries/system-logs";
 
 const pindoToken = process.env.PINDO_API_TOKEN;
 
@@ -46,8 +47,14 @@ export const sendSMS = async (to: string, text: string) => {
 
     const response = await pindo.sendSMS(payload);
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to send SMS:", error);
+    await insertSystemLog(
+      "error",
+      `Pindo SMS failure: ${error.message || "Unknown error"}`,
+      "PindoLib:sendSMS",
+      { to, text, error: error.message || error }
+    );
     throw error;
   }
 };

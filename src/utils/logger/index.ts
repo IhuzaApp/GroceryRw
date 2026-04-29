@@ -126,8 +126,9 @@ class LoggerImpl {
     this.isProcessing = true;
 
     try {
-      await this.sendLogs(buffer);
-      // Clear buffer only after successful send
+      // Disabled database logging to prevent bloat. Only specific critical APIs log to DB now.
+      // await this.sendLogs(buffer);
+      // Clear buffer only after "successful" process
       this.setBuffer([]);
     } catch (error) {
       console.error("Error flushing logs:", error);

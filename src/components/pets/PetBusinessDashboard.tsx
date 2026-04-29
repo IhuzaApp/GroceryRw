@@ -33,6 +33,7 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import PetDashboardHeader from "./PetDashboardHeader";
 import Image from "next/image";
 import AddPetModal from "./modals/AddPetModal";
+import EditPetModal from "./modals/EditPetModal";
 
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
@@ -53,9 +54,50 @@ export default function PetBusinessDashboard() {
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [petToEdit, setPetToEdit] = useState<any>(null);
   
   const [vendorData, setVendorData] = useState<any>(null);
   const [isLoadingAccount, setIsLoadingAccount] = useState(true);
+  const [isLoadingPets, setIsLoadingPets] = useState(false);
+
+  const fetchPets = async (vendorId: string) => {
+    setIsLoadingPets(true);
+    try {
+      const response = await fetch(`/api/queries/get-vendor-pets?vendor_id=${vendorId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Map DB fields to Pet interface if necessary, or update components to handle DB fields
+        const mappedPets = data.pets.map((p: any) => {
+          // Reconstruct images array from 'image' and 'parent_images'
+          const images = [];
+          if (p.image) {
+            images.push({ url: p.image, label: "Main Photo" });
+          }
+          if (p.parent_images && Array.isArray(p.parent_images)) {
+            images.push(...p.parent_images);
+          }
+          
+          return {
+            ...p,
+            type: p.pet_type,
+            price: parseFloat(p.amount) || 0,
+            isDonation: p.free,
+            isVaccinated: p.vaccinated,
+            images: images.length > 0 ? images : [
+              { url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop", label: "Default" }
+            ],
+            status: parseInt(p.quantity) > parseInt(p.quantity_sold) ? "available" : "sold"
+          };
+        });
+        setPets(mappedPets);
+      }
+    } catch (error) {
+      console.error("Error fetching pets:", error);
+    } finally {
+      setIsLoadingPets(false);
+    }
+  };
 
   useEffect(() => {
     const checkAccount = async () => {
@@ -76,9 +118,17 @@ export default function PetBusinessDashboard() {
     };
 
     if (session?.user) {
-      checkAccount();
+      checkAccount().then(() => {
+         // We'll fetch pets inside checkAccount once we have vendorData
+      });
     }
   }, [session, router]);
+
+  useEffect(() => {
+    if (vendorData?.id) {
+       fetchPets(vendorData.id);
+    }
+  }, [vendorData?.id]);
 
   if (isLoadingAccount) {
     return <LoadingScreen isOverlay={true} />;
@@ -100,23 +150,39 @@ export default function PetBusinessDashboard() {
     );
   }
 
-  const handleToggleStatus = (id: string) => {
-    setPets((prev) =>
-      prev.map((pet) =>
-        pet.id === id
-          ? {
-              ...pet,
-              status: pet.status === "available" ? "sold" : "available",
-            }
-          : pet
-      )
-    );
-    toast.success("Pet status updated");
+  const handleToggleStatus = async (pet: any) => {
+    const newQuantitySold = pet.status === "available" ? pet.quantity : "0";
+    const toastId = toast.loading("Updating status...");
+    try {
+      const response = await fetch("/api/mutations/update-pet-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: pet.id,
+          quantity_sold: newQuantitySold,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Status updated", { id: toastId });
+        if (vendorData?.id) fetchPets(vendorData.id);
+      } else {
+        throw new Error("Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error updating pet status:", error);
+      toast.error("Failed to update status", { id: toastId });
+    }
   };
 
   const handleViewDetails = (pet: Pet) => {
     setSelectedPet(pet);
     setIsDetailsOpen(true);
+  };
+
+  const handleEditPet = (pet: any) => {
+    setPetToEdit(pet);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -231,8 +297,9 @@ export default function PetBusinessDashboard() {
                   key={pet.id}
                   pet={pet}
                   theme={theme}
-                  onToggleStatus={() => handleToggleStatus(pet.id)}
+                  onToggleStatus={() => handleToggleStatus(pet)}
                   onView={() => handleViewDetails(pet)}
+                  onEdit={() => handleEditPet(pet)}
                 />
               ))}
             </div>
@@ -270,11 +337,22 @@ export default function PetBusinessDashboard() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         theme={theme}
-        onSubmit={(data) => {
-          console.log("New pet data:", data);
-          toast.success(`${data.name} has been listed successfully!`);
-        }}
+        vendorId={vendorData?.id}
+        onSuccess={() => fetchPets(vendorData.id)}
       />
+
+      {petToEdit && (
+        <EditPetModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setPetToEdit(null);
+          }}
+          theme={theme}
+          pet={petToEdit}
+          onSuccess={() => fetchPets(vendorData.id)}
+        />
+      )}
     </div>
   );
 }
@@ -373,7 +451,7 @@ function WalletBalanceCard({
   );
 }
 
-function PetManagementItem({ pet, theme, onToggleStatus, onView }: any) {
+function PetManagementItem({ pet, theme, onToggleStatus, onView, onEdit }: any) {
   return (
     <div
       className={`flex items-center justify-between rounded-[2.5rem] border p-4 transition-all hover:shadow-xl ${
@@ -416,7 +494,7 @@ function PetManagementItem({ pet, theme, onToggleStatus, onView }: any) {
               {pet.status}
             </div>
             <span className="text-sm font-black text-green-600 dark:text-green-500">
-              {pet.isDonation ? "FREE" : `$${pet.price}`}
+              {pet.isDonation ? "FREE" : formatCurrencySync(pet.price)}
             </span>
           </div>
         </div>
@@ -436,6 +514,7 @@ function PetManagementItem({ pet, theme, onToggleStatus, onView }: any) {
           <Clock className="h-5 w-5" />
         </button>
         <button
+          onClick={onEdit}
           className={`rounded-xl p-3 transition-colors ${
             theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
@@ -471,6 +550,7 @@ function PetManagementItem({ pet, theme, onToggleStatus, onView }: any) {
               const val = e.target.value;
               if (val === "toggle") onToggleStatus();
               else if (val === "view") onView();
+              else if (val === "edit") onEdit();
               e.target.value = "";
             }}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
@@ -583,6 +663,33 @@ function PetDetailsModal({
                   {pet.story}
                 </p>
               </div>
+
+              {/* Parent Photos for Baby Pets */}
+              {pet.parentImages && pet.parentImages.length > 0 && (
+                <div>
+                  <h3 className="mb-4 font-outfit text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+                    Meet the Parents
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {pet.parentImages.map((img: any, i: number) => (
+                      <div
+                        key={i}
+                        className="relative aspect-square overflow-hidden rounded-3xl border border-gray-100 dark:border-white/5"
+                      >
+                        <Image
+                          src={img.url}
+                          alt={img.label}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute bottom-3 left-3 rounded-full bg-black/50 px-2 py-1 text-[8px] font-black uppercase text-white">
+                          {img.label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right: Specs & Health */}
@@ -613,7 +720,13 @@ function PetDetailsModal({
                   <DetailItem
                     icon={<MapPin />}
                     label="Location"
-                    value={pet.location.split(",")[0]}
+                    value={pet.location ? pet.location.split(",")[0] : "Kigali"}
+                    theme={theme}
+                  />
+                  <DetailItem
+                    icon={<Wallet />}
+                    label="Price"
+                    value={pet.isDonation ? "FREE / DONATION" : `${formatCurrencySync(pet.price)}`}
                     theme={theme}
                   />
                 </div>
@@ -652,6 +765,53 @@ function PetDetailsModal({
                       </span>
                     ))}
                   </div>
+
+                  {pet.vaccination_cert && (
+                    <div className="pt-4">
+                      <a
+                        href={pet.vaccination_cert}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-green-500 hover:underline"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        View Vaccination Certificate
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Specs */}
+              <div>
+                <h3 className="mb-4 font-outfit text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+                  Additional Details
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailItem
+                    icon={<Info />}
+                    label="Months"
+                    value={`${pet.months} Months`}
+                    theme={theme}
+                  />
+                  <DetailItem
+                    icon={<Info />}
+                    label="Color"
+                    value={pet.color}
+                    theme={theme}
+                  />
+                  <DetailItem
+                    icon={<Scale />}
+                    label="Quantity"
+                    value={`${pet.quantity} Available`}
+                    theme={theme}
+                  />
+                  <DetailItem
+                    icon={<Calendar />}
+                    label="Last Updated"
+                    value={new Date(pet.updated_at).toLocaleDateString()}
+                    theme={theme}
+                  />
                 </div>
               </div>
             </div>

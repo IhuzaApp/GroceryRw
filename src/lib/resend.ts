@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { insertSystemLog } from "../../pages/api/queries/system-logs";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 

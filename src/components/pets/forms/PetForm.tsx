@@ -16,7 +16,11 @@ import {
   MapPin,
   Calendar,
   X,
+  Heart,
+  Loader2,
 } from "lucide-react";
+import Image from "next/image";
+import { uploadToFirebase } from "@/lib/firebase";
 
 export interface PetFormData {
   name: string;
@@ -51,10 +55,51 @@ export default function PetForm({
   theme,
 }: PetFormProps) {
   const [step, setStep] = useState(1);
+  const [uploading, setUploading] = useState<string | null>(null);
   const totalSteps = 5;
 
   const handleNext = () => setStep((s) => Math.min(s + 1, totalSteps));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
+
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "main" | "father" | "mother" | "certificate"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(type);
+    try {
+      const path = `pets/${Date.now()}-${type}-${file.name}`;
+      const url = await uploadToFirebase(file, path);
+
+      if (type === "main") {
+        const newImages = [...formData.images];
+        newImages[0] = { url, label: "Main Photo" };
+        setFormData({ ...formData, images: newImages });
+      } else if (type === "father") {
+        const newImages = [...formData.images];
+        // Find or add father photo
+        const index = newImages.findIndex((img) => img.label === "Father");
+        if (index > -1) newImages[index].url = url;
+        else newImages.push({ url, label: "Father" });
+        setFormData({ ...formData, images: newImages });
+      } else if (type === "mother") {
+        const newImages = [...formData.images];
+        // Find or add mother photo
+        const index = newImages.findIndex((img) => img.label === "Mother");
+        if (index > -1) newImages[index].url = url;
+        else newImages.push({ url, label: "Mother" });
+        setFormData({ ...formData, images: newImages });
+      } else if (type === "certificate") {
+        setFormData({ ...formData, vaccinationCertificateUrl: url });
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setUploading(null);
+    }
+  };
 
   const StepIndicator = () => (
     <div className="mb-10">
@@ -115,6 +160,41 @@ export default function PetForm({
                     theme={theme}
                   />
                 </div>
+
+                <div className="flex items-center justify-between rounded-2xl border border-blue-500/10 bg-blue-500/5 p-4">
+                  <span className="text-sm font-black">
+                    Is this a Donation? (Free)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        isDonation: !formData.isDonation,
+                      })
+                    }
+                    className={`relative h-6 w-12 rounded-full transition-all ${
+                      formData.isDonation ? "bg-blue-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${
+                        formData.isDonation ? "left-7" : "left-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {!formData.isDonation && (
+                  <InputField
+                    label="Price (USD)"
+                    placeholder="e.g. 150"
+                    value={formData.price}
+                    onChange={(v) => setFormData({ ...formData, price: v })}
+                    theme={theme}
+                  />
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <InputField
                     label="Age Description"
@@ -289,15 +369,28 @@ export default function PetForm({
                       Vaccination Certificate
                     </label>
                     <div
-                      className={`relative flex h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all ${
+                      className={`relative flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
                         formData.vaccinationCertificateUrl
                           ? "border-green-500 bg-green-500/5"
                           : theme === "dark"
-                          ? "border-white/10 hover:bg-white/5"
-                          : "border-gray-200 hover:bg-gray-50"
+                          ? "border-white/10"
+                          : "border-gray-200"
                       }`}
                     >
-                      {formData.vaccinationCertificateUrl ? (
+                      <input
+                        type="file"
+                        className="absolute inset-0 cursor-pointer opacity-0"
+                        onChange={(e) => handleFileUpload(e, "certificate")}
+                        accept="image/*"
+                      />
+                      {uploading === "certificate" ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-green-500">
+                            Uploading...
+                          </span>
+                        </div>
+                      ) : formData.vaccinationCertificateUrl ? (
                         <div className="relative h-full w-full">
                           <Image
                             src={formData.vaccinationCertificateUrl}
@@ -306,13 +399,15 @@ export default function PetForm({
                             className="rounded-[1.8rem] object-cover"
                           />
                           <button
-                            onClick={() =>
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setFormData({
                                 ...formData,
                                 vaccinationCertificateUrl: "",
-                              })
-                            }
-                            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md"
+                              });
+                            }}
+                            className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -338,14 +433,51 @@ export default function PetForm({
             <FormSection title="Visuals" icon={<Camera />} theme={theme}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div
-                  className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
-                    theme === "dark" ? "border-white/10" : "border-gray-200"
+                  className={`relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
+                    formData.images[0]?.url
+                      ? "border-green-500 bg-green-500/5"
+                      : theme === "dark"
+                      ? "border-white/10"
+                      : "border-gray-200"
                   }`}
                 >
-                  <Camera className="text-gray-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    Main Photo
-                  </span>
+                  <input
+                    type="file"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    onChange={(e) => handleFileUpload(e, "main")}
+                    accept="image/*"
+                  />
+                  {uploading === "main" ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+                  ) : formData.images[0]?.url ? (
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={formData.images[0].url}
+                        alt="Main Pet"
+                        fill
+                        className="rounded-[1.8rem] object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newImages = [...formData.images];
+                          newImages.shift();
+                          setFormData({ ...formData, images: newImages });
+                        }}
+                        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Camera className="text-gray-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Main Photo
+                      </span>
+                    </>
+                  )}
                 </div>
                 <div
                   className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
@@ -377,24 +509,82 @@ export default function PetForm({
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div
-                    className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
-                      theme === "dark" ? "border-white/10" : "border-gray-200"
+                    className={`relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
+                      formData.images.find((img) => img.label === "Father")?.url
+                        ? "border-green-500 bg-green-500/5"
+                        : theme === "dark"
+                        ? "border-white/10"
+                        : "border-gray-200"
                     }`}
                   >
-                    <Camera className="h-5 w-5 text-gray-400" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                      Father's Photo
-                    </span>
+                    <input
+                      type="file"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(e) => handleFileUpload(e, "father")}
+                      accept="image/*"
+                    />
+                    {uploading === "father" ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-green-500" />
+                    ) : formData.images.find((img) => img.label === "Father")
+                        ?.url ? (
+                      <div className="relative h-full w-full">
+                        <Image
+                          src={
+                            formData.images.find((img) => img.label === "Father")!
+                              .url
+                          }
+                          alt="Father"
+                          fill
+                          className="rounded-[1.8rem] object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <Camera className="h-5 w-5 text-gray-400" />
+                        <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">
+                          Father's Photo
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div
-                    className={`flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
-                      theme === "dark" ? "border-white/10" : "border-gray-200"
+                    className={`relative flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed transition-all hover:bg-green-500/5 ${
+                      formData.images.find((img) => img.label === "Mother")?.url
+                        ? "border-green-500 bg-green-500/5"
+                        : theme === "dark"
+                        ? "border-white/10"
+                        : "border-gray-200"
                     }`}
                   >
-                    <Camera className="h-5 w-5 text-gray-400" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                      Mother's Photo
-                    </span>
+                    <input
+                      type="file"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(e) => handleFileUpload(e, "mother")}
+                      accept="image/*"
+                    />
+                    {uploading === "mother" ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-green-500" />
+                    ) : formData.images.find((img) => img.label === "Mother")
+                        ?.url ? (
+                      <div className="relative h-full w-full">
+                        <Image
+                          src={
+                            formData.images.find((img) => img.label === "Mother")!
+                              .url
+                          }
+                          alt="Mother"
+                          fill
+                          className="rounded-[1.8rem] object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <Camera className="h-5 w-5 text-gray-400" />
+                        <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">
+                          Mother's Photo
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </FormSection>
@@ -405,45 +595,11 @@ export default function PetForm({
         {step === 5 && (
           <div className="space-y-6">
             <FormSection
-              title="Listing Details"
+              title="Review & Location"
               icon={<MapPin />}
               theme={theme}
             >
               <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-2xl border border-blue-500/10 bg-blue-500/5 p-4">
-                  <span className="text-sm font-black">
-                    Is this a Donation? (Free)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        isDonation: !formData.isDonation,
-                      })
-                    }
-                    className={`relative h-6 w-12 rounded-full transition-all ${
-                      formData.isDonation ? "bg-blue-500" : "bg-gray-300"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${
-                        formData.isDonation ? "left-7" : "left-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {!formData.isDonation && (
-                  <InputField
-                    label="Price (USD)"
-                    placeholder="e.g. 150"
-                    value={formData.price}
-                    onChange={(v) => setFormData({ ...formData, price: v })}
-                    theme={theme}
-                  />
-                )}
-
                 <InputField
                   label="Location"
                   placeholder="e.g. Kigali, Rwanda"
@@ -451,6 +607,15 @@ export default function PetForm({
                   onChange={(v) => setFormData({ ...formData, location: v })}
                   theme={theme}
                 />
+                
+                <div className="rounded-2xl border border-yellow-500/10 bg-yellow-500/5 p-6">
+                  <h4 className="mb-2 text-sm font-black uppercase tracking-widest text-yellow-600">
+                    Final Review
+                  </h4>
+                  <p className="text-xs text-yellow-700/70">
+                    Please review all steps before completing your listing. Ensure your contact details and pet information are accurate.
+                  </p>
+                </div>
               </div>
             </FormSection>
           </div>

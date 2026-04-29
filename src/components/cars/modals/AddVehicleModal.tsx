@@ -3,20 +3,24 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import VehicleFields, { VehicleFormData } from "../forms/VehicleForm";
+import toast from "react-hot-toast";
 
 interface AddVehicleModalProps {
   isOpen: boolean;
   onClose: () => void;
   theme: string;
-  onSubmit?: (data: any) => void;
+  logisticAccountId: string;
+  onSuccess?: () => void;
 }
 
 export default function AddVehicleModal({
   isOpen,
   onClose,
   theme,
-  onSubmit,
+  logisticAccountId,
+  onSuccess,
 }: AddVehicleModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<VehicleFormData>({
     name: "",
     type: "Sedan",
@@ -37,11 +41,52 @@ export default function AddVehicleModal({
 
   if (!isOpen) return null;
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Adding vehicle:", formData);
-    if (onSubmit) onSubmit(formData);
-    onClose();
+    setIsSubmitting(true);
+    const toastId = toast.loading("Listing vehicle...");
+
+    try {
+      const payload = {
+        name: formData.name,
+        category: formData.type,
+        price: formData.price,
+        location: formData.location,
+        fuel_type: formData.fuelType,
+        main_photo: formData.image,
+        engine: formData.engine,
+        transmission: formData.transmission,
+        status: "active",
+        exterior: formData.exteriorImage,
+        interior: formData.interiorImage,
+        seats: formData.seatsImage,
+        drive_provided: formData.driverOption === "offered",
+        refundable_amount: formData.securityDeposit || "0",
+        passenger: formData.passengers?.toString() || "5",
+        logisticAccount_id: logisticAccountId,
+      };
+
+      const response = await fetch("/api/mutations/add-car", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Vehicle listed successfully!", { id: toastId });
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        throw new Error(result.error || "Failed to add vehicle");
+      }
+    } catch (error: any) {
+      console.error("Error adding car:", error);
+      toast.error(error.message || "Failed to add vehicle", { id: toastId });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
+import { insertSystemLog } from "../queries/system-logs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,14 +21,14 @@ export default async function handler(
   }
 
   try {
-    const response = await momoService.transfer(
+    const response = await momoService.transfer({
       amount,
       currency,
-      payerNumber,
-      externalId || `TRANSFER-${Date.now()}`,
-      payerMessage || "Transfer request",
-      payeeNote || "Transfer confirmation"
-    );
+      payeeId: payerNumber,
+      externalId: externalId || `TRANSFER-${Date.now()}`,
+      payerMessage: payerMessage || "Transfer request",
+      payeeNote: payeeNote || "Transfer confirmation",
+    });
 
     res.status(200).json({
       ...response,
@@ -36,6 +37,12 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("💥 [MoMo Transfer API] Error:", error);
+    await insertSystemLog(
+      "error",
+      `MoMo Transfer API failure: ${error.message || "Unknown"}`,
+      "MomoTransferAPI",
+      { amount, payerNumber, error: error.message || error }
+    );
     res.status(500).json({ error: error.message || "Transfer request failed" });
   }
 }

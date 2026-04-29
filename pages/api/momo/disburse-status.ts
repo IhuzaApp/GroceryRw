@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { insertSystemLog } from "../queries/system-logs";
 
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
@@ -92,10 +93,16 @@ export default async function handler(
             );
           }
         }
-      } catch (dbError) {
+      } catch (dbError: any) {
         console.error(
           "❌ [MoMo Disbursement Status] DB Update Error:",
           dbError
+        );
+        await insertSystemLog(
+          "error",
+          `MoMo Disbursement DB Update Error: ${dbError.message || "Unknown"}`,
+          "MomoDisburseStatusAPI:DB",
+          { referenceId, error: dbError.message || dbError }
         );
       }
     }
@@ -103,6 +110,12 @@ export default async function handler(
     return res.status(200).json(data);
   } catch (error: any) {
     console.error("💥 [MoMo Disbursement Status] Exception:", error);
+    await insertSystemLog(
+      "error",
+      `MoMo Disbursement Status Exception: ${error.message || "Unknown"}`,
+      "MomoDisburseStatusAPI:Main",
+      { referenceId, error: error.message || error }
+    );
     return res.status(500).json({
       error: "MoMo status check failed",
       details: error.message,

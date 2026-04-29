@@ -1,25 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import PetForm, { PetFormData } from "../forms/PetForm";
 import toast from "react-hot-toast";
 
-interface AddPetModalProps {
+interface EditPetModalProps {
   isOpen: boolean;
   onClose: () => void;
   theme: string;
-  vendorId: string;
+  pet: any;
   onSuccess?: () => void;
 }
 
-export default function AddPetModal({
+export default function EditPetModal({
   isOpen,
   onClose,
   theme,
-  vendorId,
+  pet,
   onSuccess,
-}: AddPetModalProps) {
+}: EditPetModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<PetFormData>({
     name: "",
@@ -42,29 +42,55 @@ export default function AddPetModal({
     vaccinationCertificateUrl: "",
   });
 
+  useEffect(() => {
+    if (pet) {
+      setFormData({
+        name: pet.name || "",
+        type: pet.pet_type || "Dog",
+        breed: pet.breed || "",
+        age: pet.age || "",
+        ageInMonths: parseInt(pet.months) || 0,
+        gender: pet.gender || "Male",
+        color: pet.color || "",
+        weight: pet.weight || "",
+        story: pet.story || "",
+        isVaccinated: pet.vaccinated || false,
+        vaccinations: pet.vaccinations || [],
+        price: pet.amount || "",
+        isDonation: pet.free || false,
+        location: pet.location || "Kigali, Rwanda",
+        status: pet.status || "available",
+        images: pet.images || [],
+        videoUrl: pet.video || "",
+        vaccinationCertificateUrl: pet.vaccination_cert || "",
+        ...pet, // Spread the rest to handle quantity etc.
+      });
+    }
+  }, [pet]);
+
   if (!isOpen) return null;
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vendorId) {
-      toast.error("Vendor ID is missing");
+    if (!pet?.id) {
+      toast.error("Pet ID is missing");
       return;
     }
 
     setSubmitting(true);
-    const toastId = toast.loading("Listing your pet...");
+    const toastId = toast.loading("Updating your pet listing...");
     try {
-      const response = await fetch("/api/mutations/add-pet", {
+      const response = await fetch("/api/mutations/edit-pet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id: pet.id,
           ...formData,
           pet_type: formData.type,
           amount: formData.price.toString(),
           free: formData.isDonation,
           vaccinated: formData.isVaccinated,
           vaccination_cert: formData.vaccinationCertificateUrl,
-          vendor_id: vendorId,
           quantity: (formData as any).quantity?.toString() || "1",
           images: formData.images,
           age: formData.age,
@@ -74,20 +100,21 @@ export default function AddPetModal({
           color: formData.color,
           story: formData.story,
           vaccinations: formData.vaccinations,
+          videoUrl: formData.videoUrl,
         }),
       });
 
       if (response.ok) {
-        toast.success(`${formData.name} has been listed!`, { id: toastId });
+        toast.success(`${formData.name} has been updated!`, { id: toastId });
         if (onSuccess) onSuccess();
         onClose();
       } else {
         const error = await response.json();
-        throw new Error(error.error || "Failed to add pet");
+        throw new Error(error.error || "Failed to update pet");
       }
     } catch (error: any) {
-      console.error("Error adding pet:", error);
-      toast.error(error.message || "Failed to add pet", { id: toastId });
+      console.error("Error updating pet:", error);
+      toast.error(error.message || "Failed to update pet", { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -114,10 +141,10 @@ export default function AddPetModal({
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-8 pb-6 dark:border-white/5">
           <div>
             <h2 className="font-outfit text-3xl font-black tracking-tight">
-              List New Pet
+              Edit {formData.name || "Pet"}
             </h2>
             <p className="mt-1 text-xs font-black uppercase tracking-widest text-gray-400">
-              Find a loving home for your pet
+              Update your listing information
             </p>
           </div>
           <button

@@ -34,6 +34,11 @@ import DashboardHeader from "./DashboardHeader";
 import CameraCapture from "../ui/CameraCapture";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import LoadingScreen from "../ui/LoadingScreen";
+import { PendingReviewMessage, RejectedAccountMessage } from "../business/PendingReviewMessage";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -66,7 +71,85 @@ export default function CarBusinessDashboard() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [walletBalance] = useState(2450800);
-  const [cars, setCars] = useState(DUMMY_CARS);
+  const [cars, setCars] = useState<any[]>([]);
+  const [isVehiclesLoading, setIsVehiclesLoading] = useState(true);
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [accountStatus, setAccountStatus] = useState<"loading" | "active" | "pending" | "disabled">("loading");
+  const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(null);
+
+  const fetchVehicles = async (accountId: string) => {
+    try {
+      const response = await fetch(`/api/queries/get-logistics-vehicles?logisticAccount_id=${accountId}`);
+      const data = await response.json();
+      if (data.vehicles) {
+        // Map database fields to frontend Car structure
+        const mappedCars = data.vehicles.map((v: any) => ({
+          ...v,
+          type: v.category,
+          fuelType: v.fuel_type,
+          image: v.main_photo,
+          passengers: parseInt(v.passenger || "5"),
+          securityDeposit: v.refundable_amount,
+          driverOption: v.drive_provided ? "offered" : "none",
+          owner: {
+            id: v.logisticAccount_id,
+            name: v.logisticsAccount?.businessName || v.logisticsAccount?.fullname || "Verified Host",
+            image: v.logisticsAccount?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+            isVerified: true
+          },
+          images: [
+            { url: v.main_photo, label: "Main" },
+            { url: v.exterior, label: "Exterior" },
+            { url: v.interior, label: "Interior" },
+            { url: v.seats, label: "Seats" }
+          ].filter(img => img.url),
+          reviews: [],
+          rating: 5.0,
+          description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
+          licenseInfo: "Verified License & Insurance"
+        }));
+        setCars(mappedCars);
+      }
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setIsVehiclesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch("/api/queries/check-logistics-account");
+        if (!response.ok) {
+          router.push("/Cars/become-partner");
+          return;
+        }
+        const data = await response.json();
+        if (!data.hasAccount) {
+          router.push("/Cars/become-partner");
+          return;
+        }
+        
+        setLogisticsAccountId(data.account.id);
+        fetchVehicles(data.account.id);
+        
+        if (data.account.disabled) {
+          setAccountStatus("disabled");
+        } else {
+          setAccountStatus(data.account.status);
+        }
+      } catch (error) {
+        console.error("Error checking logistics account status:", error);
+        setAccountStatus("active"); // Fallback
+      }
+    };
+
+    if (session?.user) {
+      checkAccount();
+    }
+  }, [session, router]);
 
   const handleToggleStatus = (id: string) => {
     setCars((prev) =>
@@ -120,6 +203,26 @@ export default function CarBusinessDashboard() {
     setRejectionReason("");
   };
 
+  if (accountStatus === "loading") {
+    return <LoadingScreen />;
+  }
+
+  if (accountStatus === "pending") {
+    return (
+      <div className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"}`}>
+        <PendingReviewMessage contactEmail={session?.user?.email} />
+      </div>
+    );
+  }
+
+  if (accountStatus === "disabled") {
+    return (
+      <div className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"}`}>
+        <RejectedAccountMessage businessAccountId={logisticsAccountId} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`min-h-screen pb-24 md:ml-20 ${
@@ -144,7 +247,7 @@ export default function CarBusinessDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <StatsCard
               label="Revenue"
-              value="$12.4k"
+              value={formatCurrencySync(12400)}
               icon={<TrendingUp />}
               color="green"
               theme={theme}
@@ -235,7 +338,7 @@ export default function CarBusinessDashboard() {
               customer="John Doe"
               car="Tesla Model 3"
               date="Oct 24 - Oct 26"
-              amount="$160.00"
+              amount={formatCurrencySync(160)}
               status="Ongoing"
               driverProvided={false}
               theme={theme}
@@ -251,7 +354,7 @@ export default function CarBusinessDashboard() {
               customer="Jane Smith"
               car="Toyota RAV4"
               date="Oct 22 - Oct 23"
-              amount="$65.00"
+              amount={formatCurrencySync(65)}
               status="Completed"
               driverProvided={true}
               theme={theme}
@@ -267,24 +370,15 @@ export default function CarBusinessDashboard() {
         )}
       </div>
 
-      <AddVehicleModal
-        isOpen={isAddVehicleOpen}
-        onClose={() => setIsAddVehicleOpen(false)}
-        theme={theme}
-        onSubmit={(data) => {
-          setCars((prev) => [
-            ...prev,
-            {
-              ...data,
-              id: Math.random().toString(36).substr(2, 9),
-              status: "active",
-              rating: 5,
-              reviews: [],
-            },
-          ]);
-          toast.success("Vehicle added to fleet!");
-        }}
-      />
+      {isAddVehicleOpen && logisticsAccountId && (
+        <AddVehicleModal
+          isOpen={isAddVehicleOpen}
+          onClose={() => setIsAddVehicleOpen(false)}
+          theme={theme}
+          logisticAccountId={logisticsAccountId}
+          onSuccess={() => fetchVehicles(logisticsAccountId)}
+        />
+      )}
 
       {selectedCar && (
         <CarDetailsModal
@@ -530,7 +624,7 @@ function FleetItem({
               {car.status}
             </div>
             <span className="text-sm font-normal text-green-600">
-              ${car.price}/day
+              {formatCurrencySync(car.price)}/day
             </span>
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { insertSystemLog } from "../queries/system-logs";
 import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
@@ -108,8 +109,14 @@ export default async function handler(
           object: transactionObject,
         });
         dbTransactionId = dbRes.insert_order_transactions_one.id;
-      } catch (dbError) {
+      } catch (dbError: any) {
         console.error("❌ [MoMo Disbursement] DB Init Error:", dbError);
+        await insertSystemLog(
+          "error",
+          `MoMo Disburse DB Init Error: ${dbError.message || "Unknown"}`,
+          "MomoDisburseToMerchantAPI:DBInit",
+          { orderId, momoCode, error: dbError.message || dbError }
+        );
       }
     }
 
@@ -132,8 +139,14 @@ export default async function handler(
           id: dbTransactionId,
           mtn_response: JSON.stringify(momoResult),
         });
-      } catch (updateError) {
+      } catch (updateError: any) {
         console.error("❌ [MoMo Disbursement] DB Update Error:", updateError);
+        await insertSystemLog(
+          "error",
+          `MoMo Disburse DB Update Error: ${updateError.message || "Unknown"}`,
+          "MomoDisburseToMerchantAPI:DBUpdate",
+          { dbTransactionId, error: updateError.message || updateError }
+        );
       }
     }
 
@@ -168,6 +181,13 @@ export default async function handler(
         );
       } catch (e) {}
     }
+
+    await insertSystemLog(
+      "error",
+      `MoMo Disburse Exception: ${error.message || "Unknown"}`,
+      "MomoDisburseToMerchantAPI:Main",
+      { orderId, momoCode, error: error.message || error }
+    );
 
     return res.status(500).json({
       error: "MoMo disbursement failed",

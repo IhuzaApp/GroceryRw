@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
+import { insertSystemLog } from "../queries/system-logs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,13 +13,19 @@ export default async function handler(
   console.log("🔑 [MoMo Token API] Starting token request...");
 
   try {
-    const accessToken = await momoService.getAccessToken();
+    const accessToken = await momoService.getAccessToken("collection");
 
     // We return a simplified response that matches what the frontend might expect,
     // or we could return the full token data. The service handles caching.
     res.status(200).json({ access_token: accessToken });
-  } catch (error) {
+  } catch (error: any) {
     console.error("💥 [MoMo Token API] Exception:", error);
+    await insertSystemLog(
+      "error",
+      `MoMo Token API failure: ${error.message || "Unknown"}`,
+      "MomoTokenAPI",
+      { error: error.message || error }
+    );
     res.status(500).json({ error: "Token fetch failed" });
   }
 }

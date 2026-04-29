@@ -85,6 +85,26 @@ export default function PetPartnerOnboarding() {
 
   // Pre-fill user data
   useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch("/api/queries/check-pet-vendor");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasAccount) {
+            router.push("/Pets/dashboard");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking pet vendor account:", error);
+      }
+    };
+
+    if (session?.user) {
+      checkAccount();
+    }
+  }, [session, router]);
+
+  useEffect(() => {
     if (session?.user && formData.accountType === "personal") {
       setFormData(prev => ({
         ...prev,
@@ -465,7 +485,7 @@ export default function PetPartnerOnboarding() {
       case 4:
         const docs = formData.accountType === "business"
           ? ["Registration Certificate", "Shelter Permit", "Owner ID"]
-          : ["National ID", "Proof of Residence"];
+          : ["National ID", "Proof of Residence (from irembo.com)"];
         
         return (
           <div className="duration-700 animate-in fade-in slide-in-from-bottom-4">
@@ -481,7 +501,7 @@ export default function PetPartnerOnboarding() {
                 if (doc === "Registration Certificate") isUploaded = !!formData.documents.rdb_certificate;
                 else if (doc === "Shelter Permit") isUploaded = !!formData.documents.sherter_permit;
                 else if (doc === "Owner ID" || doc === "National ID") isUploaded = !!formData.nationalIdOrPassport;
-                else if (doc === "Proof of Residence") isUploaded = !!formData.documents.proof_residency;
+                else if (doc === "Proof of Residence (from irembo.com)") isUploaded = !!formData.documents.proof_residency;
 
                 return (
                   <div

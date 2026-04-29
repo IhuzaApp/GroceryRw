@@ -3,6 +3,7 @@ import { gql } from "graphql-request";
 import type { NextApiRequest } from "next";
 import { logErrorToSlack } from "./slackErrorReporter";
 import { sendSMS } from "./pindo";
+import { insertSystemLog } from "../../pages/api/queries/system-logs";
 
 // GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
@@ -231,8 +232,14 @@ export async function handleShoppingOperation(
           }
         );
       }
-    } catch (commissionError) {
+    } catch (commissionError: any) {
       console.error("Error adding commission revenue:", commissionError);
+      await insertSystemLog(
+        "error",
+        `Commission revenue calculation failure: ${commissionError.message || "Unknown"}`,
+        "WalletOperations:handleShoppingOperation:addCommissionRevenue",
+        { orderId, error: commissionError.message || commissionError }
+      );
       await logErrorToSlack(
         "WalletOperations:handleShoppingOperation:addCommissionRevenue",
         commissionError,
@@ -449,8 +456,14 @@ export async function handleDeliveredOperation(
           }
         );
       }
-    } catch (plasaFeeError) {
+    } catch (plasaFeeError: any) {
       console.error("Error adding plasa fee revenue:", plasaFeeError);
+      await insertSystemLog(
+        "error",
+        `Plasa fee revenue calculation failure: ${plasaFeeError.message || "Unknown"}`,
+        "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
+        { orderId, error: plasaFeeError.message || plasaFeeError }
+      );
       await logErrorToSlack(
         "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
         plasaFeeError,
@@ -574,6 +587,12 @@ export async function processWalletOperation(
   req?: NextApiRequest
 ) {
   if (!hasuraClient) {
+    await insertSystemLog(
+      "error",
+      "Hasura client is not initialized",
+      "WalletOperations:processWalletOperation",
+      { userId, orderId, operation }
+    );
     await logErrorToSlack(
       "WalletOperations:processWalletOperation",
       new Error("Hasura client is not initialized"),

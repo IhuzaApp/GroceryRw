@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Search } from "lucide-react";
+import { Search, ChevronDown, User, LogOut, LayoutDashboard } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { Avatar, Dropdown } from "rsuite";
 
 interface AboutHeaderProps {
   activePage?:
@@ -22,6 +24,8 @@ export default function AboutHeader({
 }: AboutHeaderProps) {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -155,16 +159,68 @@ export default function AboutHeader({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
-            <button
-              className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${
-                isScrolled
-                  ? "border-gray-300 bg-white text-gray-900 hover:border-[#022C22]"
-                  : "border-white bg-transparent text-white hover:bg-white/10"
-              }`}
-              onClick={() => router.push("/Auth/Login")}
-            >
-              Sign in
-            </button>
+            {status === "authenticated" ? (
+              <Dropdown
+                renderToggle={(props, ref) => (
+                  <div
+                    {...props}
+                    ref={ref}
+                    className={`flex cursor-pointer items-center gap-2 rounded-full border px-2 py-1 transition-all ${
+                      isScrolled
+                        ? "border-gray-200 bg-gray-50 text-gray-900 hover:border-[#022C22] hover:bg-gray-100"
+                        : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    <Avatar
+                      src={user?.image || undefined}
+                      alt={user?.name || "User"}
+                      size="xs"
+                      circle
+                      className="border border-white/20"
+                    >
+                      {user?.name?.[0].toUpperCase() || "U"}
+                    </Avatar>
+                    <span className="hidden max-w-[120px] truncate text-sm font-semibold lg:block">
+                      {user?.name?.split(" ")[0]}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-60" />
+                  </div>
+                )}
+                placement="bottomEnd"
+              >
+                <Dropdown.Item
+                  icon={<LayoutDashboard className="h-4 w-4" />}
+                  onClick={() => router.push("/")}
+                >
+                  Go to App
+                </Dropdown.Item>
+                <Dropdown.Item
+                  icon={<User className="h-4 w-4" />}
+                  onClick={() => router.push("/Myprofile")}
+                >
+                  My Profile
+                </Dropdown.Item>
+                <Dropdown.Separator />
+                <Dropdown.Item
+                  icon={<LogOut className="h-4 w-4 text-red-500" />}
+                  onClick={() => signOut()}
+                >
+                  <span className="text-red-500">Sign out</span>
+                </Dropdown.Item>
+              </Dropdown>
+            ) : (
+              <button
+                className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${
+                  isScrolled
+                    ? "border-gray-300 bg-white text-gray-900 hover:border-[#022C22]"
+                    : "border-white bg-transparent text-white hover:bg-white/10"
+                }`}
+                onClick={() => router.push("/Auth/Login")}
+              >
+                Sign in
+              </button>
+            )}
+
             <button
               className={`rounded-lg p-2 transition-colors ${
                 isScrolled

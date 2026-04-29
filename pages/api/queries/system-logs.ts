@@ -77,7 +77,7 @@ export async function insertSystemLog(
   type: string,
   message: string | null,
   component: string,
-  details?: string | null
+  details?: any
 ) {
   try {
     if (!hasuraClient) {
@@ -90,7 +90,9 @@ export async function insertSystemLog(
         type,
         message,
         component,
-        details: details ? JSON.stringify(details) : null,
+        details: details 
+          ? (typeof details === 'string' ? details : JSON.stringify(details)) 
+          : null,
       }
     );
 
@@ -120,7 +122,7 @@ export default async function handler(
         type,
         message || null,
         component,
-        details ? JSON.stringify(details) : null
+        details || null
       );
       return res.status(200).json(result);
     } catch (error) {

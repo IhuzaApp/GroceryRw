@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { DUMMY_CARS } from "../../constants/dummyCars";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -33,6 +33,8 @@ import SearchFilterModal from "./listing/SearchFilterModal";
 import FilterSelect from "./listing/FilterSelect";
 import PlasDriveHeader from "./PlasDriveHeader";
 
+import { formatCurrencySync } from "../../utils/formatCurrency";
+
 const VEHICLE_TYPES = ["All", "Sedan", "SUV", "Truck", "Hatchback", "Luxury"];
 const FUEL_TYPES = ["All", "Fuel", "Electric", "Hybrid", "Diesel"];
 const LOCATIONS = ["All", "Kigali", "Musanze", "Rubavu", "Huye", "Rwamagana"];
@@ -42,6 +44,8 @@ export default function CarListing() {
   const [activeMainTab, setActiveMainTab] = useState<"explore" | "bookings">(
     "explore"
   );
+  const [cars, setCars] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedFuel, setSelectedFuel] = useState("All");
@@ -50,6 +54,44 @@ export default function CarListing() {
 
   // Unified Modal state
   const [showSearchFilter, setShowSearchFilter] = useState(false);
+
+  useEffect(() => {
+    const fetchAllVehicles = async () => {
+      try {
+        const response = await fetch("/api/queries/get-all-vehicles");
+        const data = await response.json();
+        if (data.vehicles) {
+          const mappedCars = data.vehicles.map((v: any) => ({
+            ...v,
+            type: v.category,
+            fuelType: v.fuel_type,
+            image: v.main_photo,
+            passengers: parseInt(v.passenger || "5"),
+            securityDeposit: v.refundable_amount,
+            driverOption: v.drive_provided ? "offered" : "none",
+            owner: {
+              id: v.logisticAccount_id,
+              name: v.logisticsAccount?.businessName || v.logisticsAccount?.fullname || "Verified Host",
+              image: v.logisticsAccount?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+              isVerified: true
+            },
+            images: [{ url: v.main_photo, label: "Main" }],
+            reviews: [],
+            rating: 5.0,
+            description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
+            licenseInfo: "Verified License & Insurance"
+          }));
+          setCars(mappedCars);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllVehicles();
+  }, []);
 
   useEffect(() => {
     if (router.isReady && router.query.tab === "bookings") {
@@ -92,7 +134,7 @@ export default function CarListing() {
   }, []);
 
   const filteredCars = useMemo(() => {
-    return DUMMY_CARS.filter((car) => {
+    return cars.filter((car) => {
       const matchesSearch = car.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -101,15 +143,9 @@ export default function CarListing() {
         selectedFuel === "All" || car.fuelType === selectedFuel;
       const matchesLocation =
         selectedLocation === "All" || car.location === selectedLocation;
-      return (
-        matchesSearch &&
-        matchesType &&
-        matchesFuel &&
-        matchesLocation &&
-        car.status === "active"
-      );
+      return matchesSearch && matchesType && matchesFuel && matchesLocation;
     });
-  }, [searchQuery, selectedType, selectedFuel, selectedLocation]);
+  }, [searchQuery, selectedType, selectedFuel, selectedLocation, cars]);
 
   return (
     <div className="min-h-screen bg-white pb-24 font-sans text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20">
@@ -168,17 +204,23 @@ export default function CarListing() {
             </div>
 
             {/* Main Listing Grid */}
-            <div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-4">
-              {filteredCars.map((car) => (
-                <ListingCard
-                  key={car.id}
-                  car={car}
-                  onClick={() => router.push(`/Cars/${car.id}`)}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex h-64 items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-green-500" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-4">
+                {filteredCars.map((car) => (
+                  <ListingCard
+                    key={car.id}
+                    car={car}
+                    onClick={() => router.push(`/Cars/${car.id}`)}
+                  />
+                ))}
+              </div>
+            )}
 
-            {filteredCars.length === 0 && (
+            {!isLoading && filteredCars.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <CarIcon className="mb-4 h-12 w-12 text-gray-300" />
                 <h3 className="font-outfit text-lg font-black text-gray-400">

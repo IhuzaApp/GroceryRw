@@ -21,6 +21,7 @@ import { useSession } from "next-auth/react";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
 import { Autocomplete } from "@react-google-maps/api";
 import { useEffect, useRef } from "react";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -100,6 +101,26 @@ export default function CarPartnerOnboarding() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch("/api/queries/check-logistics-account");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasAccount) {
+            router.push("/Cars/dashboard");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking logistics account:", error);
+      }
+    };
+
+    if (session?.user) {
+      checkAccount();
+    }
+  }, [session, router]);
+
+  useEffect(() => {
     if (session?.user && formData.accountType === "personal") {
       setFormData((prev) => ({
         ...prev,
@@ -137,6 +158,21 @@ export default function CarPartnerOnboarding() {
   const nextStep = () =>
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
+  
+  const handleFileUpload = async (file: File, fieldName: string) => {
+    if (!session?.user?.id) return;
+    
+    const toastId = toast.loading(`Uploading ${fieldName.replace(/_/g, ' ')}...`);
+    try {
+      const path = `verifications/cars/${session.user.id}/${fieldName}`;
+      const url = await uploadToFirebase(file, path);
+      setFormData(prev => ({ ...prev, [fieldName]: url }));
+      toast.success("File uploaded successfully", { id: toastId });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload file", { id: toastId });
+    }
+  };
 
   const handleFinish = async () => {
     setIsLoading(true);
@@ -151,6 +187,7 @@ export default function CarPartnerOnboarding() {
           nationalIdOrPassport: formData.nationalIdOrPassport,
           license: formData.license,
           business_cert: formData.business_cert,
+          proof_address: formData.proof_address,
           num_of_cars: formData.fleetSize,
           type: formData.accountType,
           status: "pending",
@@ -472,15 +509,19 @@ export default function CarPartnerOnboarding() {
             </p>
             <div className="space-y-4">
               {(formData.accountType === "business"
-                ? ["Business License", "Trading Permit", "Owner ID / Passport"]
+                ? [
+                    { label: "Business License", field: "business_cert" },
+                    { label: "Trading Permit", field: "proof_address" },
+                    { label: "Owner ID / Passport", field: "nationalIdOrPassport" },
+                  ]
                 : [
-                    "National ID / Passport",
-                    "Driver's License",
-                    "Proof of Address",
+                    { label: "National ID / Passport", field: "nationalIdOrPassport" },
+                    { label: "Driver's License", field: "license" },
+                    { label: "Proof of Address (from irembo.com)", field: "proof_address" },
                   ]
               ).map((doc) => (
                 <div
-                  key={doc}
+                  key={doc.label}
                   className={`flex items-center justify-between rounded-3xl border p-6 ${
                     theme === "dark"
                       ? "border-white/10 bg-white/5"
@@ -488,19 +529,34 @@ export default function CarPartnerOnboarding() {
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-500/10 text-gray-500">
-                      <FileText className="h-6 w-6" />
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                      formData[doc.field as keyof typeof formData] 
+                        ? "bg-green-500 text-white" 
+                        : "bg-gray-500/10 text-gray-500"
+                    }`}>
+                      {formData[doc.field as keyof typeof formData] ? <Check className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
                     </div>
                     <div>
-                      <h4 className="font-black">{doc}</h4>
-                      <p className="text-xs font-black uppercase tracking-widest text-green-500">
-                        Required
+                      <h4 className="font-black">{doc.label}</h4>
+                      <p className={`text-xs font-black uppercase tracking-widest ${
+                        formData[doc.field as keyof typeof formData] ? "text-green-500" : "text-gray-400"
+                      }`}>
+                        {formData[doc.field as keyof typeof formData] ? "Uploaded" : "Required"}
                       </p>
                     </div>
                   </div>
-                  <button className="rounded-xl bg-green-500/10 px-4 py-2 text-sm font-black text-green-500 hover:bg-green-500/20">
-                    Upload
-                  </button>
+                  <label className="cursor-pointer rounded-xl bg-green-500/10 px-4 py-2 text-sm font-black text-green-500 hover:bg-green-500/20">
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, doc.field);
+                      }}
+                      accept="image/*,.pdf"
+                    />
+                    {formData[doc.field as keyof typeof formData] ? "Replace" : "Upload"}
+                  </label>
                 </div>
               ))}
             </div>

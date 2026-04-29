@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
+import { insertSystemLog } from "../queries/system-logs";
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,6 +21,12 @@ export default async function handler(
     res.status(200).json(statusData);
   } catch (error: any) {
     console.error("💥 [MoMo Status API] Error:", error);
+    await insertSystemLog(
+      "error",
+      `MoMo Status API failure: ${error.message || "Unknown"}`,
+      "MomoStatusAPI",
+      { referenceId, error: error.message || error }
+    );
     res.status(500).json({ error: error.message || "Status check failed" });
   }
 }
