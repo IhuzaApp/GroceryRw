@@ -604,11 +604,16 @@ export default async function handler(
               }
 
               // Handle Pet Adoption from order_transactions
-              if (orderTransaction.type === "pet_adoption" || orderTransaction.petAdoptionId) {
+              if (
+                orderTransaction.type === "pet_adoption" ||
+                orderTransaction.petAdoptionId
+              ) {
                 const petAdoptionId = orderTransaction.petAdoptionId;
                 if (petAdoptionId) {
-                  console.log(`🚀[MoMo Status] Activating pet adoption from Order Transaction: ${petAdoptionId}`);
-                  
+                  console.log(
+                    `🚀[MoMo Status] Activating pet adoption from Order Transaction: ${petAdoptionId}`
+                  );
+
                   await hasuraClient.request(UPDATE_PET_ADOPTION_STATUS, {
                     id: petAdoptionId,
                     status: "PAID",
@@ -619,24 +624,34 @@ export default async function handler(
                     const adoptionDetails = await hasuraClient.request<{
                       petAdoption_by_pk: any;
                     }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
-                  
-                  const adoption = adoptionDetails.petAdoption_by_pk;
-                  if (adoption && adoption.pets?.pet_vendors?.users?.phone_number) {
-                    const vendorPhone = adoption.pets.pet_vendors.users.phone_number;
-                    const petName = adoption.pets.name;
-                    const customerPhone = adoption.phone;
-                    const customerAddress = adoption.address;
 
-                    const smsMessage = `Hello, your pet ${petName} has been ordered and paid for! Customer Address: ${customerAddress}. Customer Phone: ${customerPhone}. Please prepare for delivery.`;
-                    
-                    await sendSMS(vendorPhone, smsMessage);
-                    console.log("✅ [MoMo Status] SMS sent to vendor (Adoption):", vendorPhone);
+                    const adoption = adoptionDetails.petAdoption_by_pk;
+                    if (
+                      adoption &&
+                      adoption.pets?.pet_vendors?.users?.phone_number
+                    ) {
+                      const vendorPhone =
+                        adoption.pets.pet_vendors.users.phone_number;
+                      const petName = adoption.pets.name;
+                      const customerPhone = adoption.phone;
+                      const customerAddress = adoption.address;
+
+                      const smsMessage = `Hello, your pet ${petName} has been ordered and paid for! Customer Address: ${customerAddress}. Customer Phone: ${customerPhone}. Please prepare for delivery.`;
+
+                      await sendSMS(vendorPhone, smsMessage);
+                      console.log(
+                        "✅ [MoMo Status] SMS sent to vendor (Adoption):",
+                        vendorPhone
+                      );
+                    }
+                  } catch (smsErr) {
+                    console.error(
+                      "❌ [MoMo Status] Failed to send vendor SMS (Adoption):",
+                      smsErr
+                    );
                   }
-                } catch (smsErr) {
-                  console.error("❌ [MoMo Status] Failed to send vendor SMS (Adoption):", smsErr);
                 }
               }
-            }
             } else if (newStatus === "FAILED") {
               // FAILURE: Mark orders as PAYMENT_FAILED
               if (orderId) {
@@ -744,8 +759,10 @@ export default async function handler(
               // Handle Pet Adoption
               const petAdoptionId = transaction.petAdoptionId;
               if (petAdoptionId) {
-                console.log(`🚀[MoMo Status] Activating pet adoption from Wallet Transaction field: ${petAdoptionId}`);
-                
+                console.log(
+                  `🚀[MoMo Status] Activating pet adoption from Wallet Transaction field: ${petAdoptionId}`
+                );
+
                 await hasuraClient.request(UPDATE_PET_ADOPTION_STATUS, {
                   id: petAdoptionId,
                   status: "PAID",
@@ -756,21 +773,31 @@ export default async function handler(
                   const adoptionDetails = await hasuraClient.request<{
                     petAdoption_by_pk: any;
                   }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
-                  
+
                   const adoption = adoptionDetails.petAdoption_by_pk;
-                  if (adoption && adoption.pets?.pet_vendors?.users?.phone_number) {
-                    const vendorPhone = adoption.pets.pet_vendors.users.phone_number;
+                  if (
+                    adoption &&
+                    adoption.pets?.pet_vendors?.users?.phone_number
+                  ) {
+                    const vendorPhone =
+                      adoption.pets.pet_vendors.users.phone_number;
                     const petName = adoption.pets.name;
                     const customerPhone = adoption.phone;
                     const customerAddress = adoption.address;
 
                     const smsMessage = `Hello, your pet ${petName} has been ordered and paid for! Customer Address: ${customerAddress}. Customer Phone: ${customerPhone}. Please prepare for delivery.`;
-                    
+
                     await sendSMS(vendorPhone, smsMessage);
-                    console.log("✅ [MoMo Status] SMS sent to vendor (Adoption):", vendorPhone);
+                    console.log(
+                      "✅ [MoMo Status] SMS sent to vendor (Adoption):",
+                      vendorPhone
+                    );
                   }
                 } catch (smsErr) {
-                  console.error("❌ [MoMo Status] Failed to send vendor SMS (Adoption):", smsErr);
+                  console.error(
+                    "❌ [MoMo Status] Failed to send vendor SMS (Adoption):",
+                    smsErr
+                  );
                 }
               }
             } else if (newStatus === "FAILED") {
@@ -803,7 +830,11 @@ export default async function handler(
             }
 
             // Wallet balance update logic (Personal Wallet) - ONLY if not a pet adoption payment
-            if (newStatus === "SUCCESSFUL" && transaction.wallet_id && !transaction.petAdoptionId) {
+            if (
+              newStatus === "SUCCESSFUL" &&
+              transaction.wallet_id &&
+              !transaction.petAdoptionId
+            ) {
               // ... (Existing wallet balance update logic remains same)
               try {
                 const walletRes = await hasuraClient.request<{

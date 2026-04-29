@@ -90,8 +90,10 @@ export async function insertSystemLog(
         type,
         message,
         component,
-        details: details 
-          ? (typeof details === 'string' ? details : JSON.stringify(details)) 
+        details: details
+          ? typeof details === "string"
+            ? details
+            : JSON.stringify(details)
           : null,
       }
     );

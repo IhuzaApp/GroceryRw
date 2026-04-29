@@ -530,8 +530,9 @@ export default function PetForm({
                       <div className="relative h-full w-full">
                         <Image
                           src={
-                            formData.images.find((img) => img.label === "Father")!
-                              .url
+                            formData.images.find(
+                              (img) => img.label === "Father"
+                            )!.url
                           }
                           alt="Father"
                           fill
@@ -569,8 +570,9 @@ export default function PetForm({
                       <div className="relative h-full w-full">
                         <Image
                           src={
-                            formData.images.find((img) => img.label === "Mother")!
-                              .url
+                            formData.images.find(
+                              (img) => img.label === "Mother"
+                            )!.url
                           }
                           alt="Mother"
                           fill
@@ -607,13 +609,15 @@ export default function PetForm({
                   onChange={(v) => setFormData({ ...formData, location: v })}
                   theme={theme}
                 />
-                
+
                 <div className="rounded-2xl border border-yellow-500/10 bg-yellow-500/5 p-6">
                   <h4 className="mb-2 text-sm font-black uppercase tracking-widest text-yellow-600">
                     Final Review
                   </h4>
                   <p className="text-xs text-yellow-700/70">
-                    Please review all steps before completing your listing. Ensure your contact details and pet information are accurate.
+                    Please review all steps before completing your listing.
+                    Ensure your contact details and pet information are
+                    accurate.
                   </p>
                 </div>
               </div>

@@ -236,7 +236,9 @@ export async function handleShoppingOperation(
       console.error("Error adding commission revenue:", commissionError);
       await insertSystemLog(
         "error",
-        `Commission revenue calculation failure: ${commissionError.message || "Unknown"}`,
+        `Commission revenue calculation failure: ${
+          commissionError.message || "Unknown"
+        }`,
         "WalletOperations:handleShoppingOperation:addCommissionRevenue",
         { orderId, error: commissionError.message || commissionError }
       );
@@ -460,7 +462,9 @@ export async function handleDeliveredOperation(
       console.error("Error adding plasa fee revenue:", plasaFeeError);
       await insertSystemLog(
         "error",
-        `Plasa fee revenue calculation failure: ${plasaFeeError.message || "Unknown"}`,
+        `Plasa fee revenue calculation failure: ${
+          plasaFeeError.message || "Unknown"
+        }`,
         "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
         { orderId, error: plasaFeeError.message || plasaFeeError }
       );

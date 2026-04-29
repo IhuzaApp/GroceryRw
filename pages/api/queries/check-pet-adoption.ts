@@ -16,7 +16,10 @@ const CHECK_PET_ADOPTION = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const session = await getServerSession(req, res, authOptions as any);
     if (!session || !(session as any).user?.id) {
@@ -34,17 +37,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Hasura client is not initialized");
     }
 
-    const result = await hasuraClient.request<{ petAdoption: any[] }>(CHECK_PET_ADOPTION, {
-      pet_id,
-      customer_id,
-    });
+    const result = await hasuraClient.request<{ petAdoption: any[] }>(
+      CHECK_PET_ADOPTION,
+      {
+        pet_id,
+        customer_id,
+      }
+    );
 
-    const isPaidAdoption = result.petAdoption.some((a: any) => a.status === "PAID");
+    const isPaidAdoption = result.petAdoption.some(
+      (a: any) => a.status === "PAID"
+    );
 
     return res.status(200).json({
       isAdopted: isPaidAdoption,
       adoption: result.petAdoption[0] || null,
-      status: result.petAdoption[0]?.status || null
+      status: result.petAdoption[0]?.status || null,
     });
   } catch (error: any) {
     console.error("Check Pet Adoption Error:", error);

@@ -41,7 +41,6 @@ export const ai = app ? getAI(app, { backend: new GoogleAIBackend() }) : null;
 export const authenticateWithFirebase = async (customToken: string) => {
   try {
     if (!auth) {
-
       return;
     }
     await signInWithCustomToken(auth, customToken);
@@ -59,7 +58,10 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
  * @param path The path in storage (e.g., 'pets/buddy-main.jpg')
  * @returns The download URL of the uploaded file
  */
-export const uploadToFirebase = async (file: File, path: string): Promise<string> => {
+export const uploadToFirebase = async (
+  file: File,
+  path: string
+): Promise<string> => {
   if (!storage) {
     throw new Error("Firebase Storage not initialized");
   }

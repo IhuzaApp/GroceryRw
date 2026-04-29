@@ -129,7 +129,7 @@ class LoggerImpl {
       // Sync all logs to the database in one batch if possible, or filter.
       // For now, we sync everything from the client to our API.
       await this.sendLogs(buffer);
-      
+
       // Clear buffer only after successful sync
       this.setBuffer([]);
     } catch (error) {

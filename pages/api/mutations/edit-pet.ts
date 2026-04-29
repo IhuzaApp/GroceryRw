@@ -59,7 +59,10 @@ const EDIT_PET_MUTATION = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -111,28 +114,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     }
 
-    const result = await hasuraClient.request<EditPetResponse>(EDIT_PET_MUTATION, {
-      id,
-      age,
-      amount,
-      breed,
-      color,
-      free: free || false,
-      gender,
-      months,
-      name,
-      pet_type,
-      quantity,
-      quantity_sold: quantity_sold || "0",
-      story,
-      vaccinated: vaccinated || false,
-      vaccination_cert,
-      vaccinations: vaccinations || [],
-      weight,
-      image: mainImage,
-      parent_images: parentImages,
-      video: videoUrl || "",
-    });
+    const result = await hasuraClient.request<EditPetResponse>(
+      EDIT_PET_MUTATION,
+      {
+        id,
+        age,
+        amount,
+        breed,
+        color,
+        free: free || false,
+        gender,
+        months,
+        name,
+        pet_type,
+        quantity,
+        quantity_sold: quantity_sold || "0",
+        story,
+        vaccinated: vaccinated || false,
+        vaccination_cert,
+        vaccinations: vaccinations || [],
+        weight,
+        image: mainImage,
+        parent_images: parentImages,
+        video: videoUrl || "",
+      }
+    );
 
     return res.status(200).json({
       success: true,

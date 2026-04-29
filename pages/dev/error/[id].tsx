@@ -33,13 +33,22 @@ interface LogDetailProps {
 const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl p-8 text-center shadow-xl border border-slate-100">
-          <div className="text-4xl mb-4">🔒</div>
-          <h2 className="text-lg font-black text-slate-900 mb-2">Authentication Required</h2>
-          <p className="text-slate-400 text-sm mb-6">You must be logged in as a Project Admin to view error details.</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-xl">
+          <div className="mb-4 text-4xl">🔒</div>
+          <h2 className="mb-2 text-lg font-black text-slate-900">
+            Authentication Required
+          </h2>
+          <p className="mb-6 text-sm text-slate-400">
+            You must be logged in as a Project Admin to view error details.
+          </p>
           <Link href="/dev/logs">
-            <Button appearance="primary" className="!bg-purple-600 !rounded-xl font-black">Go to Login</Button>
+            <Button
+              appearance="primary"
+              className="!rounded-xl !bg-purple-600 font-black"
+            >
+              Go to Login
+            </Button>
           </Link>
         </div>
       </div>
@@ -48,13 +57,19 @@ const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
 
   if (!log) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl p-8 text-center shadow-xl border border-slate-100">
-          <div className="text-4xl mb-4">🔍</div>
-          <h2 className="text-lg font-black text-slate-900 mb-2">Log Not Found</h2>
-          <p className="text-slate-400 text-sm mb-6">This log entry could not be found or has been cleaned up.</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-xl">
+          <div className="mb-4 text-4xl">🔍</div>
+          <h2 className="mb-2 text-lg font-black text-slate-900">
+            Log Not Found
+          </h2>
+          <p className="mb-6 text-sm text-slate-400">
+            This log entry could not be found or has been cleaned up.
+          </p>
           <Link href="/dev/logs">
-            <Button appearance="subtle" className="!rounded-xl font-black">← Back to Dashboard</Button>
+            <Button appearance="subtle" className="!rounded-xl font-black">
+              ← Back to Dashboard
+            </Button>
           </Link>
         </div>
       </div>
@@ -63,10 +78,34 @@ const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
 
   const getTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case "error": return { bg: "bg-rose-50", text: "text-rose-600", ring: "ring-rose-500/10", dot: "bg-rose-500" };
-      case "warn": return { bg: "bg-amber-50", text: "text-amber-600", ring: "ring-amber-500/10", dot: "bg-amber-500" };
-      case "info": return { bg: "bg-blue-50", text: "text-blue-600", ring: "ring-blue-500/10", dot: "bg-blue-500" };
-      default: return { bg: "bg-emerald-50", text: "text-emerald-600", ring: "ring-emerald-500/10", dot: "bg-emerald-500" };
+      case "error":
+        return {
+          bg: "bg-rose-50",
+          text: "text-rose-600",
+          ring: "ring-rose-500/10",
+          dot: "bg-rose-500",
+        };
+      case "warn":
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-600",
+          ring: "ring-amber-500/10",
+          dot: "bg-amber-500",
+        };
+      case "info":
+        return {
+          bg: "bg-blue-50",
+          text: "text-blue-600",
+          ring: "ring-blue-500/10",
+          dot: "bg-blue-500",
+        };
+      default:
+        return {
+          bg: "bg-emerald-50",
+          text: "text-emerald-600",
+          ring: "ring-emerald-500/10",
+          dot: "bg-emerald-500",
+        };
     }
   };
 
@@ -77,55 +116,74 @@ const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50" style={{
-      backgroundImage: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%)"
-    }}>
+    <div
+      className="min-h-screen bg-slate-50"
+      style={{
+        backgroundImage:
+          "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%)",
+      }}
+    >
       <Head>
         <title>Error Details | {log.id.slice(0, 8)}</title>
       </Head>
 
       {/* Mobile-friendly Header */}
-      <header className="bg-white border-b border-slate-100 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-3 min-w-0">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-3 shadow-sm sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           <Link href="/dev/logs">
             <IconButton
               icon={<ArrowLeftIcon />}
               appearance="subtle"
               size="sm"
-              className="!rounded-xl hover:!bg-slate-100 flex-shrink-0"
+              className="flex-shrink-0 !rounded-xl hover:!bg-slate-100"
             />
           </Link>
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-purple-50 flex-shrink-0">
-            <Image src="/assets/logos/plasIcon.png" alt="Plas" width={32} height={32} className="object-contain" />
+          <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg bg-purple-50">
+            <Image
+              src="/assets/logos/plasIcon.png"
+              alt="Plas"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-black text-slate-900 leading-none">Log Inspector</div>
-            <div className="text-[9px] text-purple-500 uppercase tracking-widest font-bold hidden sm:block truncate">
+            <div className="text-sm font-black leading-none text-slate-900">
+              Log Inspector
+            </div>
+            <div className="hidden truncate text-[9px] font-bold uppercase tracking-widest text-purple-500 sm:block">
               {log.id}
             </div>
           </div>
         </div>
 
-        <span className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase ring-1 ring-inset ${typeColors.bg} ${typeColors.text} ${typeColors.ring}`}>
+        <span
+          className={`flex-shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase ring-1 ring-inset ${typeColors.bg} ${typeColors.text} ${typeColors.ring}`}
+        >
           {log.type}
         </span>
       </header>
 
-      <main className="px-4 sm:px-6 py-6 max-w-5xl mx-auto space-y-4">
-
+      <main className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6">
         {/* Message Card */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-5 sm:p-8 border-b border-slate-50">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="border-b border-slate-50 p-5 sm:p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-2">{log.component}</p>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight break-words">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-purple-500">
+                  {log.component}
+                </p>
+                <h1 className="break-words text-xl font-black leading-tight tracking-tight text-slate-900 sm:text-2xl">
                   {log.message}
                 </h1>
               </div>
-              <div className="text-left sm:text-right flex-shrink-0">
-                <div className="text-xs font-bold text-slate-500">{new Date(log.time).toLocaleString()}</div>
-                <div className="font-mono text-[10px] text-slate-300 mt-1 hidden sm:block">{log.id}</div>
+              <div className="flex-shrink-0 text-left sm:text-right">
+                <div className="text-xs font-bold text-slate-500">
+                  {new Date(log.time).toLocaleString()}
+                </div>
+                <div className="mt-1 hidden font-mono text-[10px] text-slate-300 sm:block">
+                  {log.id}
+                </div>
               </div>
             </div>
           </div>
@@ -135,44 +193,64 @@ const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
         </div>
 
         {/* Technical Trace */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-4 sm:p-6 flex items-center justify-between border-b border-slate-50">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Technical Trace</h3>
+        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-50 p-4 sm:p-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              Technical Trace
+            </h3>
             <button
               onClick={copyDetails}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-purple-50 text-slate-400 hover:text-purple-600 transition-colors text-[10px] font-black uppercase tracking-wide"
+              className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400 transition-colors hover:bg-purple-50 hover:text-purple-600"
             >
               <CopyIcon /> Copy JSON
             </button>
           </div>
-          <div className="p-4 sm:p-6 bg-slate-50/50">
-            <pre className="text-xs text-slate-600 font-mono leading-relaxed whitespace-pre-wrap break-all overflow-x-auto max-h-[50vh] bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+          <div className="bg-slate-50/50 p-4 sm:p-6">
+            <pre className="max-h-[50vh] overflow-x-auto whitespace-pre-wrap break-all rounded-xl border border-slate-100 bg-white p-4 font-mono text-xs leading-relaxed text-slate-600 shadow-sm">
               {log.details ? (
-                typeof log.details === 'string'
-                  ? log.details
-                  : JSON.stringify(log.details, null, 2)
+                typeof log.details === "string" ? (
+                  log.details
+                ) : (
+                  JSON.stringify(log.details, null, 2)
+                )
               ) : (
-                <span className="italic text-slate-300">No additional details provided.</span>
+                <span className="italic text-slate-300">
+                  No additional details provided.
+                </span>
               )}
             </pre>
           </div>
         </div>
 
         {/* Metadata */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-8">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Metadata</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 sm:gap-8">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-8">
+          <h3 className="mb-5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+            Metadata
+          </h3>
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-8">
             <div>
-              <div className="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-wider">Source Component</div>
-              <div className="text-slate-900 font-bold text-sm break-words">{log.component.split(':')[0]}</div>
+              <div className="mb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                Source Component
+              </div>
+              <div className="break-words text-sm font-bold text-slate-900">
+                {log.component.split(":")[0]}
+              </div>
             </div>
             <div>
-              <div className="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-wider">Sub-Service</div>
-              <div className="text-slate-900 font-bold text-sm">{log.component.split(':')[1] || "Global"}</div>
+              <div className="mb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                Sub-Service
+              </div>
+              <div className="text-sm font-bold text-slate-900">
+                {log.component.split(":")[1] || "Global"}
+              </div>
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <div className="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-wider">Log ID</div>
-              <div className="text-slate-900 font-mono text-[10px] opacity-60 break-all">{log.id}</div>
+              <div className="mb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                Log ID
+              </div>
+              <div className="break-all font-mono text-[10px] text-slate-900 opacity-60">
+                {log.id}
+              </div>
             </div>
           </div>
         </div>
@@ -180,7 +258,7 @@ const LogDetailPage: React.FC<LogDetailProps> = ({ log, authenticated }) => {
         {/* Back link */}
         <div className="pb-6">
           <Link href="/dev/logs">
-            <button className="text-sm text-slate-400 font-bold hover:text-purple-600 transition-colors flex items-center gap-2">
+            <button className="flex items-center gap-2 text-sm font-bold text-slate-400 transition-colors hover:text-purple-600">
               <ArrowLeftIcon /> Back to System Logs
             </button>
           </Link>

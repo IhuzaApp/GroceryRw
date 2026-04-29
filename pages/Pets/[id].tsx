@@ -27,18 +27,25 @@ export default function PetDetailPage() {
             isVaccinated: p.vaccinated,
             ageInMonths: p.months,
             healthInfo: p.vaccinated ? "Up to date" : "Needs attention",
-            images: p.image ? [{ url: p.image, label: "Main" }, ...(p.parent_images || [])] : (p.parent_images || []),
+            images: p.image
+              ? [{ url: p.image, label: "Main" }, ...(p.parent_images || [])]
+              : p.parent_images || [],
             videoUrl: p.video,
             vaccinationCertificateUrl: p.vaccination_cert,
             owner: {
               id: p.vendor_id,
-              name: p.pet_vendors?.organisationName || p.pet_vendors?.fullname || "Verified Vendor",
-              image: p.pet_vendors?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
-              isVerified: true
+              name:
+                p.pet_vendors?.organisationName ||
+                p.pet_vendors?.fullname ||
+                "Verified Vendor",
+              image:
+                p.pet_vendors?.user?.image ||
+                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+              isVerified: true,
             },
             reviews: [],
             rating: 5.0,
-            parentImages: p.parent_images || []
+            parentImages: p.parent_images || [],
           };
           setPet(mappedPet);
         }
@@ -53,7 +60,7 @@ export default function PetDetailPage() {
   }, [id]);
 
   if (!router.isReady || isLoading) return <LoadingScreen />;
-  
+
   if (!pet)
     return (
       <div className="flex min-h-screen items-center justify-center font-outfit text-2xl font-black">

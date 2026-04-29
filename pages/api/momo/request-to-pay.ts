@@ -133,7 +133,9 @@ const ADD_SUBSCRIPTION_TRANSACTION = gql`
 `;
 
 const CREATE_ORDER_TRANSACTION = gql`
-  mutation CreateOrderTransaction($objects: [order_transactions_insert_input!]!) {
+  mutation CreateOrderTransaction(
+    $objects: [order_transactions_insert_input!]!
+  ) {
     insert_order_transactions(objects: $objects) {
       returning {
         id
@@ -304,26 +306,28 @@ export default async function handler(
           const dbRes = await hasuraClient.request<{
             insert_order_transactions: { returning: Array<{ id: string }> };
           }>(CREATE_ORDER_TRANSACTION, {
-            objects: [{
-              wallet_id: null,
-              order_id: null,
-              business_order_id: null,
-              restaurant_order_id: null,
-              reel_order_id: null,
-              package_id: null,
-              petAdoptionId: petAdoptionId, // Match user's provided mutation field
-              amount: String(amount).toString(),
-              currency,
-              phone: payerNumber,
-              reference_id: referenceId,
-              type: "pet_adoption",
-              status: "PENDING",
-              user_id: userId || null,
-              mtn_response: JSON.stringify({
-                status: "INITIATED",
-                referenceId,
-              }),
-            }],
+            objects: [
+              {
+                wallet_id: null,
+                order_id: null,
+                business_order_id: null,
+                restaurant_order_id: null,
+                reel_order_id: null,
+                package_id: null,
+                petAdoptionId: petAdoptionId, // Match user's provided mutation field
+                amount: String(amount).toString(),
+                currency,
+                phone: payerNumber,
+                reference_id: referenceId,
+                type: "pet_adoption",
+                status: "PENDING",
+                user_id: userId || null,
+                mtn_response: JSON.stringify({
+                  status: "INITIATED",
+                  referenceId,
+                }),
+              },
+            ],
           });
           dbTransactionId = dbRes.insert_order_transactions.returning[0].id;
           console.log(
@@ -335,27 +339,29 @@ export default async function handler(
           const dbRes = await hasuraClient.request<{
             insert_order_transactions: { returning: Array<{ id: string }> };
           }>(CREATE_ORDER_TRANSACTION, {
-            objects: [{
-              wallet_id: walletId || null,
-              order_id: orderId || null,
-              package_id: packageId || null,
-              business_order_id: businessOrderId || businessId || null,
-              restaurant_order_id:
-                restaurantOrderId ||
-                (businessType === "RESTAURANT" ? businessId : null),
-              reel_order_id: reelOrderId || null,
-              amount: String(amount).toString(),
-              currency,
-              phone: payerNumber,
-              reference_id: referenceId,
-              type: orderType || "payment",
-              status: "PENDING",
-              mtn_response: JSON.stringify({
-                status: "INITIATED",
-                referenceId,
-              }),
-              user_id: userId || null,
-            }],
+            objects: [
+              {
+                wallet_id: walletId || null,
+                order_id: orderId || null,
+                package_id: packageId || null,
+                business_order_id: businessOrderId || businessId || null,
+                restaurant_order_id:
+                  restaurantOrderId ||
+                  (businessType === "RESTAURANT" ? businessId : null),
+                reel_order_id: reelOrderId || null,
+                amount: String(amount).toString(),
+                currency,
+                phone: payerNumber,
+                reference_id: referenceId,
+                type: orderType || "payment",
+                status: "PENDING",
+                mtn_response: JSON.stringify({
+                  status: "INITIATED",
+                  referenceId,
+                }),
+                user_id: userId || null,
+              },
+            ],
           });
           dbTransactionId = dbRes.insert_order_transactions.returning[0].id;
           console.log(

@@ -33,7 +33,16 @@ const INSERT_PET_VENDOR = gql`
         updated_at: $updated_at
         user_id: $user_id
       }
-      on_conflict: { constraint: pet_vendors_fullname_key, update_columns: [address, organisationName, specialties, status, updated_at] }
+      on_conflict: {
+        constraint: pet_vendors_fullname_key
+        update_columns: [
+          address
+          organisationName
+          specialties
+          status
+          updated_at
+        ]
+      }
     ) {
       affected_rows
       returning {
@@ -48,11 +57,15 @@ const GET_USER_BUSINESS_INFO = gql`
     business_accounts(where: { user_id: { _eq: $user_id } }) {
       id
     }
-    business_wallet(where: { _or: [
-      { business_account: { user_id: { _eq: $user_id } } },
-      { pet_vendor: { user_id: { _eq: $user_id } } },
-      { logisticsAccount: { user_id: { _eq: $user_id } } }
-    ]}) {
+    business_wallet(
+      where: {
+        _or: [
+          { business_account: { user_id: { _eq: $user_id } } }
+          { pet_vendor: { user_id: { _eq: $user_id } } }
+          { logisticsAccount: { user_id: { _eq: $user_id } } }
+        ]
+      }
+    ) {
       id
     }
   }
@@ -70,7 +83,11 @@ const UPDATE_WALLET_PET_VENDOR = gql`
 `;
 
 const CREATE_WALLET_FOR_PET_VENDOR = gql`
-  mutation CreateWalletForPetVendor($petvendor_id: uuid!, $business_id: uuid, $amount: String = "0") {
+  mutation CreateWalletForPetVendor(
+    $petvendor_id: uuid!
+    $business_id: uuid
+    $amount: String = "0"
+  ) {
     insert_business_wallet(
       objects: {
         amount: $amount
@@ -85,7 +102,10 @@ const CREATE_WALLET_FOR_PET_VENDOR = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -106,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       rdb_certificate,
       sherter_permit,
       specialties,
-      status = "pending"
+      status = "pending",
     } = req.body;
 
     // 1. Insert Pet Vendor
@@ -120,13 +140,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       sherter_permit,
       specialties,
       status,
-      user_id
+      user_id,
     });
 
     const petVendorId = petVendorResult.insert_pet_vendors.returning[0].id;
 
     // 2. Handle Wallet
-    const businessInfo = await hasuraClient.request(GET_USER_BUSINESS_INFO, { user_id });
+    const businessInfo = await hasuraClient.request(GET_USER_BUSINESS_INFO, {
+      user_id,
+    });
     const existingWallet = businessInfo.business_wallet?.[0];
     const businessAccount = businessInfo.business_accounts?.[0];
 
@@ -134,19 +156,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Update existing wallet
       await hasuraClient.request(UPDATE_WALLET_PET_VENDOR, {
         wallet_id: existingWallet.id,
-        petvendor_id: petVendorId
+        petvendor_id: petVendorId,
       });
     } else {
       // Create new wallet
       await hasuraClient.request(CREATE_WALLET_FOR_PET_VENDOR, {
         petvendor_id: petVendorId,
-        business_id: businessAccount?.id || null
+        business_id: businessAccount?.id || null,
       });
     }
 
     return res.status(200).json({ success: true, petVendorId });
   } catch (error: any) {
     console.error("Pet Vendor Registration Error:", error);
-    return res.status(500).json({ error: error.message || "Registration failed" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Registration failed" });
   }
 }

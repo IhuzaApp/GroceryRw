@@ -38,7 +38,10 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import LoadingScreen from "../ui/LoadingScreen";
-import { PendingReviewMessage, RejectedAccountMessage } from "../business/PendingReviewMessage";
+import {
+  PendingReviewMessage,
+  RejectedAccountMessage,
+} from "../business/PendingReviewMessage";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -75,12 +78,18 @@ export default function CarBusinessDashboard() {
   const [isVehiclesLoading, setIsVehiclesLoading] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
-  const [accountStatus, setAccountStatus] = useState<"loading" | "active" | "pending" | "disabled">("loading");
-  const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(null);
+  const [accountStatus, setAccountStatus] = useState<
+    "loading" | "active" | "pending" | "disabled"
+  >("loading");
+  const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(
+    null
+  );
 
   const fetchVehicles = async (accountId: string) => {
     try {
-      const response = await fetch(`/api/queries/get-logistics-vehicles?logisticAccount_id=${accountId}`);
+      const response = await fetch(
+        `/api/queries/get-logistics-vehicles?logisticAccount_id=${accountId}`
+      );
       const data = await response.json();
       if (data.vehicles) {
         // Map database fields to frontend Car structure
@@ -94,20 +103,25 @@ export default function CarBusinessDashboard() {
           driverOption: v.drive_provided ? "offered" : "none",
           owner: {
             id: v.logisticAccount_id,
-            name: v.logisticsAccount?.businessName || v.logisticsAccount?.fullname || "Verified Host",
-            image: v.logisticsAccount?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
-            isVerified: true
+            name:
+              v.logisticsAccount?.businessName ||
+              v.logisticsAccount?.fullname ||
+              "Verified Host",
+            image:
+              v.logisticsAccount?.user?.image ||
+              "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+            isVerified: true,
           },
           images: [
             { url: v.main_photo, label: "Main" },
             { url: v.exterior, label: "Exterior" },
             { url: v.interior, label: "Interior" },
-            { url: v.seats, label: "Seats" }
-          ].filter(img => img.url),
+            { url: v.seats, label: "Seats" },
+          ].filter((img) => img.url),
           reviews: [],
           rating: 5.0,
           description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
-          licenseInfo: "Verified License & Insurance"
+          licenseInfo: "Verified License & Insurance",
         }));
         setCars(mappedCars);
       }
@@ -131,10 +145,10 @@ export default function CarBusinessDashboard() {
           router.push("/Cars/become-partner");
           return;
         }
-        
+
         setLogisticsAccountId(data.account.id);
         fetchVehicles(data.account.id);
-        
+
         if (data.account.disabled) {
           setAccountStatus("disabled");
         } else {
@@ -209,7 +223,11 @@ export default function CarBusinessDashboard() {
 
   if (accountStatus === "pending") {
     return (
-      <div className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"}`}>
+      <div
+        className={`min-h-screen pb-24 md:ml-20 ${
+          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
+      >
         <PendingReviewMessage contactEmail={session?.user?.email} />
       </div>
     );
@@ -217,7 +235,11 @@ export default function CarBusinessDashboard() {
 
   if (accountStatus === "disabled") {
     return (
-      <div className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"}`}>
+      <div
+        className={`min-h-screen pb-24 md:ml-20 ${
+          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
+      >
         <RejectedAccountMessage businessAccountId={logisticsAccountId} />
       </div>
     );

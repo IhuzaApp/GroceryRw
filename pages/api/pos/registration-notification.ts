@@ -133,7 +133,11 @@ export default async function handler(
       "info",
       `POS Registration successful: ${formData.name}`,
       "POS:Registration",
-      { business: formData.name, email: formData.email, owner: formData.fullnames }
+      {
+        business: formData.name,
+        email: formData.email,
+        owner: formData.fullnames,
+      }
     );
 
     return res.status(200).json({ success: true });
@@ -142,7 +146,7 @@ export default async function handler(
 
     const log = await insertSystemLog(
       "error",
-      `POS Registration failed: ${formData.name || 'Unknown'}`,
+      `POS Registration failed: ${formData.name || "Unknown"}`,
       "POS:Registration",
       { error: error.message, stack: error.stack }
     );

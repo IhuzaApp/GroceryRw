@@ -36,7 +36,10 @@ const GET_CAR_BY_ID = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const { id } = req.query;
     if (!id) {
@@ -47,9 +50,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Hasura client is not initialized");
     }
 
-    const result = await hasuraClient.request<{ RentalVehicles_by_pk: any }>(GET_CAR_BY_ID, {
-      id,
-    });
+    const result = await hasuraClient.request<{ RentalVehicles_by_pk: any }>(
+      GET_CAR_BY_ID,
+      {
+        id,
+      }
+    );
 
     return res.status(200).json({
       car: result.RentalVehicles_by_pk,

@@ -26,7 +26,7 @@ const LogsPage: React.FC<LogsPageProps> = ({
   initialLogs,
   initialTotal,
   initialAuthenticated,
-  initialUser
+  initialUser,
 }) => {
   const [authenticated, setAuthenticated] = useState(initialAuthenticated);
   const [user, setUser] = useState(initialUser);
@@ -56,7 +56,9 @@ const LogsPage: React.FC<LogsPageProps> = ({
         setTempToken(data.tempToken);
         toaster.push(
           <Message type="info">
-            {data.step === "setup-2fa" ? "2FA setup required. Check your email for the code." : "A 2FA code has been sent to your email."}
+            {data.step === "setup-2fa"
+              ? "2FA setup required. Check your email for the code."
+              : "A 2FA code has been sent to your email."}
           </Message>,
           { placement: "topCenter" }
         );
@@ -65,7 +67,9 @@ const LogsPage: React.FC<LogsPageProps> = ({
         setUser(data.user);
       }
     } catch (err: any) {
-      toaster.push(<Message type="error">{err.message}</Message>, { placement: "topCenter" });
+      toaster.push(<Message type="error">{err.message}</Message>, {
+        placement: "topCenter",
+      });
     } finally {
       setLoading(false);
     }
@@ -86,9 +90,15 @@ const LogsPage: React.FC<LogsPageProps> = ({
 
       setAuthenticated(true);
       setUser(data.user);
-      toaster.push(<Message type="success">Welcome back, {data.user.username || "Admin"}</Message>);
+      toaster.push(
+        <Message type="success">
+          Welcome back, {data.user.username || "Admin"}
+        </Message>
+      );
     } catch (err: any) {
-      toaster.push(<Message type="error">{err.message}</Message>, { placement: "topCenter" });
+      toaster.push(<Message type="error">{err.message}</Message>, {
+        placement: "topCenter",
+      });
     } finally {
       setLoading(false);
     }
@@ -106,39 +116,60 @@ const LogsPage: React.FC<LogsPageProps> = ({
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex bg-white">
+      <div className="flex min-h-screen bg-white">
         <Head>
           <title>Dev Access | Plas</title>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+            rel="stylesheet"
+          />
         </Head>
 
         {/* Left Panel - Branding */}
-        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-between p-16"
+        <div
+          className="relative hidden flex-col justify-between overflow-hidden p-16 lg:flex lg:w-1/2"
           style={{
-            background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)"
-          }}>
+            background:
+              "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
+          }}
+        >
           {/* Animated background orbs */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-20"
-              style={{ background: "radial-gradient(circle, #8b5cf6, transparent 70%)" }} />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full opacity-20"
-              style={{ background: "radial-gradient(circle, #a855f7, transparent 70%)" }} />
-            <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] rounded-full opacity-10"
-              style={{ background: "radial-gradient(circle, #d8b4fe, transparent 70%)" }} />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div
+              className="absolute right-[-10%] top-[-10%] h-[500px] w-[500px] rounded-full opacity-20"
+              style={{
+                background: "radial-gradient(circle, #8b5cf6, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute bottom-[-10%] left-[-10%] h-[400px] w-[400px] rounded-full opacity-20"
+              style={{
+                background: "radial-gradient(circle, #a855f7, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute left-[30%] top-[40%] h-[300px] w-[300px] rounded-full opacity-10"
+              style={{
+                background: "radial-gradient(circle, #d8b4fe, transparent 70%)",
+              }}
+            />
           </div>
 
           {/* Grid pattern overlay */}
-          <div className="absolute inset-0 opacity-5"
+          <div
+            className="absolute inset-0 opacity-5"
             style={{
-              backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-              backgroundSize: "40px 40px"
-            }} />
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
 
           {/* Logo */}
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white/10 shadow-lg border border-white/10">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/10 shadow-lg">
                 <Image
                   src="/assets/logos/plasIcon.png"
                   alt="Plas Logo"
@@ -148,8 +179,12 @@ const LogsPage: React.FC<LogsPageProps> = ({
                 />
               </div>
               <div>
-                <div className="text-white font-black text-lg tracking-tight leading-none">Plas</div>
-                <div className="text-purple-300 text-[10px] font-bold uppercase tracking-widest">Dev Console</div>
+                <div className="text-lg font-black leading-none tracking-tight text-white">
+                  Plas
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-purple-300">
+                  Dev Console
+                </div>
               </div>
             </div>
           </div>
@@ -157,25 +192,42 @@ const LogsPage: React.FC<LogsPageProps> = ({
           {/* Center content */}
           <div className="relative z-10 space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-white/70 text-[11px] font-bold uppercase tracking-wider">Systems Operational</span>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">
+                  Systems Operational
+                </span>
               </div>
-              <h2 className="text-5xl font-black text-white leading-tight tracking-tighter">
-                Infrastructure<br />
-                <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(90deg, #c084fc, #f0abfc)" }}>
+              <h2 className="text-5xl font-black leading-tight tracking-tighter text-white">
+                Infrastructure
+                <br />
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: "linear-gradient(90deg, #c084fc, #f0abfc)",
+                  }}
+                >
                   Command Center
                 </span>
               </h2>
-              <p className="text-slate-400 text-lg leading-relaxed max-w-sm">
-                Real-time system observability and log management for Plas&apos;s core infrastructure.
+              <p className="max-w-sm text-lg leading-relaxed text-slate-400">
+                Real-time system observability and log management for
+                Plas&apos;s core infrastructure.
               </p>
             </div>
 
             {/* Feature pills */}
             <div className="flex flex-wrap gap-3">
-              {["Live Error Stream", "Slack Alerts", "2FA Secured", "Auto Cleanup"].map(f => (
-                <div key={f} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[11px] text-white/60 font-bold">
+              {[
+                "Live Error Stream",
+                "Slack Alerts",
+                "2FA Secured",
+                "Auto Cleanup",
+              ].map((f) => (
+                <div
+                  key={f}
+                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/60"
+                >
                   {f}
                 </div>
               ))}
@@ -183,32 +235,45 @@ const LogsPage: React.FC<LogsPageProps> = ({
           </div>
 
           {/* Bottom footer */}
-          <div className="relative z-10 text-slate-600 text-xs font-bold">
+          <div className="relative z-10 text-xs font-bold text-slate-600">
             © {new Date().getFullYear()} Plas Technologies · All rights reserved
           </div>
         </div>
 
         {/* Right Panel - Login Form */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-16 bg-white">
+        <div className="flex flex-1 flex-col items-center justify-center bg-white p-8 sm:p-16">
           <div className="w-full max-w-[400px] space-y-8">
-
             {step === "login" ? (
               <>
                 {/* Header */}
                 <div className="space-y-2">
-                  <div className="lg:hidden flex items-center gap-2 mb-6">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-purple-50 flex items-center justify-center">
-                      <Image src="/assets/logos/plasIcon.png" alt="Plas Logo" width={32} height={32} className="object-contain" />
+                  <div className="mb-6 flex items-center gap-2 lg:hidden">
+                    <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-purple-50">
+                      <Image
+                        src="/assets/logos/plasIcon.png"
+                        alt="Plas Logo"
+                        width={32}
+                        height={32}
+                        className="object-contain"
+                      />
                     </div>
-                    <span className="font-black text-slate-900 text-sm">Plas Dev Console</span>
+                    <span className="text-sm font-black text-slate-900">
+                      Plas Dev Console
+                    </span>
                   </div>
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">Welcome back</h1>
-                  <p className="text-slate-400 text-sm font-medium">Sign in to access the infrastructure dashboard.</p>
+                  <h1 className="text-3xl font-black tracking-tight text-slate-900">
+                    Welcome back
+                  </h1>
+                  <p className="text-sm font-medium text-slate-400">
+                    Sign in to access the infrastructure dashboard.
+                  </p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Identity</label>
+                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Identity
+                    </label>
                     <input
                       type="text"
                       placeholder="Username or email"
@@ -216,12 +281,14 @@ const LogsPage: React.FC<LogsPageProps> = ({
                       onChange={(e) => setIdentifier(e.target.value)}
                       required
                       disabled={loading}
-                      className="w-full h-14 px-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-slate-900 font-semibold text-sm placeholder:text-slate-300 focus:outline-none focus:border-purple-500 focus:bg-white transition-all"
+                      className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-4 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-300 focus:border-purple-500 focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Security Key</label>
+                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Security Key
+                    </label>
                     <input
                       type="password"
                       placeholder="Enter your password"
@@ -229,34 +296,47 @@ const LogsPage: React.FC<LogsPageProps> = ({
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
-                      className="w-full h-14 px-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-slate-900 font-semibold text-sm placeholder:text-slate-300 focus:outline-none focus:border-purple-500 focus:bg-white transition-all"
+                      className="h-14 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-4 text-sm font-semibold text-slate-900 transition-all placeholder:text-slate-300 focus:border-purple-500 focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-14 rounded-2xl font-black text-sm text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-                    style={{ background: loading ? "#64748b" : "linear-gradient(135deg, #9256f9ff, #8b5cf6)" }}
+                    className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black text-white transition-all active:scale-95 disabled:opacity-60"
+                    style={{
+                      background: loading
+                        ? "#64748b"
+                        : "linear-gradient(135deg, #9256f9ff, #8b5cf6)",
+                    }}
                   >
                     {loading ? (
-                      <><Loader size="sm" /> Verifying Identity...</>
+                      <>
+                        <Loader size="sm" /> Verifying Identity...
+                      </>
                     ) : (
-                      <>Authenticate <span className="text-purple-200">→</span></>
+                      <>
+                        Authenticate <span className="text-purple-200">→</span>
+                      </>
                     )}
                   </button>
                 </form>
 
                 <div className="flex items-center gap-3">
                   <div className="h-px flex-1 bg-slate-100"></div>
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Secure Access</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                    Secure Access
+                  </span>
                   <div className="h-px flex-1 bg-slate-100"></div>
                 </div>
 
-                <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <div className="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 text-xs">🔒</div>
-                  <p className="text-[11px] text-slate-400 font-medium">
-                    Two-factor authentication is mandatory for all project developers.
+                <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-600">
+                    🔒
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-400">
+                    Two-factor authentication is mandatory for all project
+                    developers.
                   </p>
                 </div>
               </>
@@ -264,14 +344,18 @@ const LogsPage: React.FC<LogsPageProps> = ({
               <>
                 {/* 2FA / Setup Header */}
                 <div className="space-y-2">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4"
-                    style={{ background: step === "setup-2fa" ? "#fef3c7" : "#ede9fe" }}>
+                  <div
+                    className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl"
+                    style={{
+                      background: step === "setup-2fa" ? "#fef3c7" : "#ede9fe",
+                    }}
+                  >
                     {step === "setup-2fa" ? "🛡️" : "📱"}
                   </div>
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                  <h1 className="text-3xl font-black tracking-tight text-slate-900">
                     {step === "setup-2fa" ? "Enable 2FA" : "Verify Identity"}
                   </h1>
-                  <p className="text-slate-400 text-sm font-medium">
+                  <p className="text-sm font-medium text-slate-400">
                     {step === "setup-2fa"
                       ? "Your account requires mandatory two-factor authentication. Enter the code we sent to your email to activate it."
                       : "A 6-digit verification code was sent to your registered email address."}
@@ -281,38 +365,55 @@ const LogsPage: React.FC<LogsPageProps> = ({
                 <form onSubmit={handleVerify2FA} className="space-y-6">
                   {/* OTP Boxes */}
                   <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Verification Code</label>
+                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                      Verification Code
+                    </label>
                     <input
                       type="text"
                       inputMode="numeric"
                       maxLength={6}
                       placeholder="000000"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, ""))
+                      }
                       required
                       autoFocus
-                      className="w-full h-16 text-center text-3xl font-black tracking-[0.5em] bg-slate-50 border-2 border-slate-100 rounded-2xl text-slate-900 placeholder:text-slate-200 focus:outline-none focus:border-purple-500 focus:bg-white transition-all font-mono"
+                      className="h-16 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 text-center font-mono text-3xl font-black tracking-[0.5em] text-slate-900 transition-all placeholder:text-slate-200 focus:border-purple-500 focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading || otp.length < 6}
-                    className="w-full h-14 rounded-2xl font-black text-sm text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-                    style={{ background: loading ? "#64748b" : step === "setup-2fa" ? "linear-gradient(135deg, #d97706, #f59e0b)" : "linear-gradient(135deg, #7c3aed, #8b5cf6)" }}
+                    className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black text-white transition-all active:scale-95 disabled:opacity-60"
+                    style={{
+                      background: loading
+                        ? "#64748b"
+                        : step === "setup-2fa"
+                        ? "linear-gradient(135deg, #d97706, #f59e0b)"
+                        : "linear-gradient(135deg, #7c3aed, #8b5cf6)",
+                    }}
                   >
                     {loading ? (
-                      <><Loader size="sm" /> Verifying...</>
+                      <>
+                        <Loader size="sm" /> Verifying...
+                      </>
+                    ) : step === "setup-2fa" ? (
+                      "Activate 2FA & Access →"
                     ) : (
-                      step === "setup-2fa" ? "Activate 2FA & Access →" : "Verify & Enter Console →"
+                      "Verify & Enter Console →"
                     )}
                   </button>
                 </form>
 
                 <button
                   type="button"
-                  onClick={() => { setStep("login"); setOtp(""); }}
-                  className="w-full text-center text-sm text-slate-400 font-bold hover:text-slate-600 transition-colors"
+                  onClick={() => {
+                    setStep("login");
+                    setOtp("");
+                  }}
+                  className="w-full text-center text-sm font-bold text-slate-400 transition-colors hover:text-slate-600"
                 >
                   ← Back to sign in
                 </button>
@@ -325,15 +426,19 @@ const LogsPage: React.FC<LogsPageProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" style={{
-      backgroundImage: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%)"
-    }}>
+    <div
+      className="flex min-h-screen flex-col bg-slate-50"
+      style={{
+        backgroundImage:
+          "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.04) 0px, transparent 50%)",
+      }}
+    >
       <Head>
         <title>System Logs | Dev Dashboard</title>
       </Head>
 
       <main className="flex-1 p-3 sm:p-6 md:p-10">
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto max-w-7xl">
           <LogsTable
             initialLogs={initialLogs}
             initialTotal={initialTotal}

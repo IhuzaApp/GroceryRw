@@ -29,20 +29,25 @@ export default function CarDetail() {
             driverOption: v.drive_provided ? "offered" : "none",
             owner: {
               id: v.logisticAccount_id,
-              name: v.logisticsAccount?.businessName || v.logisticsAccount?.fullname || "Verified Host",
-              image: v.logisticsAccount?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
-              isVerified: true
+              name:
+                v.logisticsAccount?.businessName ||
+                v.logisticsAccount?.fullname ||
+                "Verified Host",
+              image:
+                v.logisticsAccount?.user?.image ||
+                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+              isVerified: true,
             },
             images: [
               { url: v.main_photo, label: "Main" },
               { url: v.exterior, label: "Exterior" },
               { url: v.interior, label: "Interior" },
-              { url: v.seats, label: "Seats" }
+              { url: v.seats, label: "Seats" },
             ].filter((img: any) => img.url),
             reviews: [],
             rating: 5.0,
             description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
-            licenseInfo: "Verified License & Insurance"
+            licenseInfo: "Verified License & Insurance",
           };
           setCar(mappedCar);
         }

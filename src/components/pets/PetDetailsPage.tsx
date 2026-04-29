@@ -55,7 +55,9 @@ const AdoptionModal = ({
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const [processingStep, setProcessingStep] = useState<"initiating_payment" | "awaiting_approval" | "success">("initiating_payment");
+  const [processingStep, setProcessingStep] = useState<
+    "initiating_payment" | "awaiting_approval" | "success"
+  >("initiating_payment");
   const [momoRef, setMomoRef] = useState<string | null>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const addressInputRef = useRef<HTMLInputElement | null>(null);
@@ -105,13 +107,15 @@ const AdoptionModal = ({
     if (isPolling && momoRef) {
       pollInterval = setInterval(async () => {
         try {
-          const res = await fetch(`/api/momo/request-to-pay-status?referenceId=${momoRef}`);
+          const res = await fetch(
+            `/api/momo/request-to-pay-status?referenceId=${momoRef}`
+          );
           const data = await res.json();
 
           if (data.status === "SUCCESSFUL") {
             setProcessingStep("success");
             clearInterval(pollInterval);
-            
+
             // Wait for success animation then close
             setTimeout(() => {
               setIsPolling(false);
@@ -189,7 +193,7 @@ const AdoptionModal = ({
         }
       } else {
         // MoMo Payment - Following Checkout Pattern (Create Order First)
-        
+
         // 1. Create adoption record as PENDING
         const adoptRes = await fetch("/api/mutations/adopt-pet", {
           method: "POST",
@@ -209,9 +213,9 @@ const AdoptionModal = ({
         if (!adoptData.success) {
           throw new Error(adoptData.error || "Failed to initialize adoption");
         }
-        
+
         const petAdoptionId = adoptData.id;
-        
+
         // Show overlay before starting MoMo request
         setProcessingStep("initiating_payment");
         setIsPolling(true);
@@ -228,7 +232,7 @@ const AdoptionModal = ({
           }),
         });
         const momoData = await momoRes.json();
-        
+
         if (momoData.status === "PENDING") {
           setMomoRef(momoData.referenceId);
           setProcessingStep("awaiting_approval");
@@ -250,13 +254,23 @@ const AdoptionModal = ({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      {isPolling && <PaymentProcessingOverlay processingStep={processingStep} />}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+      {isPolling && (
+        <PaymentProcessingOverlay processingStep={processingStep} />
+      )}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl dark:bg-[#121212]">
         <div className="p-8">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-outfit text-2xl font-black">Complete Adoption</h2>
-            <button onClick={onClose} className="rounded-full bg-gray-100 p-2 dark:bg-white/10">
+            <h2 className="font-outfit text-2xl font-black">
+              Complete Adoption
+            </h2>
+            <button
+              onClick={onClose}
+              className="rounded-full bg-gray-100 p-2 dark:bg-white/10"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -299,7 +313,7 @@ const AdoptionModal = ({
                     onClick={() => setPaymentMethod("momo")}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
                       paymentMethod === "momo"
-                        ? "bg-yellow-400 text-black font-bold shadow-lg"
+                        ? "bg-yellow-400 font-bold text-black shadow-lg"
                         : "bg-gray-100 text-gray-400 dark:bg-white/5"
                     }`}
                   >
@@ -310,7 +324,7 @@ const AdoptionModal = ({
                     onClick={() => setPaymentMethod("wallet")}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
                       paymentMethod === "wallet"
-                        ? "bg-green-500 text-white font-bold shadow-lg"
+                        ? "bg-green-500 font-bold text-white shadow-lg"
                         : "bg-gray-100 text-gray-400 dark:bg-white/5"
                     }`}
                   >
@@ -323,7 +337,9 @@ const AdoptionModal = ({
 
             {paymentMethod === "wallet" && walletBalance !== null && (
               <div className="flex items-center justify-between rounded-2xl bg-green-50 p-4 dark:bg-green-500/10">
-                <span className="text-xs font-bold text-green-600">Wallet Balance</span>
+                <span className="text-xs font-bold text-green-600">
+                  Wallet Balance
+                </span>
                 <span className="font-outfit font-black text-green-600">
                   {formatCurrencySync(walletBalance)}
                 </span>
@@ -385,7 +401,9 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
         return;
       }
       try {
-        const res = await fetch(`/api/queries/check-pet-adoption?pet_id=${pet.id}`);
+        const res = await fetch(
+          `/api/queries/check-pet-adoption?pet_id=${pet.id}`
+        );
         const data = await res.json();
         setIsAdopted(data.isAdopted);
       } catch (err) {
@@ -727,7 +745,7 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                   </div>
 
                   {isAdopted && (
-                    <button 
+                    <button
                       onClick={() => router.push(`/Messages/${pet.owner.id}`)}
                       className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-green-500 py-4 font-outfit font-black text-green-500 transition-all hover:bg-green-500 hover:text-white active:scale-95"
                     >
@@ -743,9 +761,13 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                   className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-green-500 py-5 font-outfit text-xl font-black !text-white text-white shadow-2xl shadow-green-500/30 transition-all hover:translate-y-[-2px] hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none md:py-6"
                 >
                   <span className="!text-white">
-                    {isAdopted 
-                      ? (pet.isDonation ? "Adopt Another One" : "Buy Another One")
-                      : (pet.isDonation ? "Adopt Now" : "Buy Now")}
+                    {isAdopted
+                      ? pet.isDonation
+                        ? "Adopt Another One"
+                        : "Buy Another One"
+                      : pet.isDonation
+                      ? "Adopt Now"
+                      : "Buy Now"}
                   </span>
                   <ChevronRight className="h-6 w-6 !text-white" />
                 </button>

@@ -103,7 +103,9 @@ export async function logErrorToSlack(
               {
                 type: "button",
                 text: { type: "plain_text", text: "🔍 View Full Details" },
-                url: `${process.env.API_BASE_URL || "https://www.plas.rw"}/dev/error/${logId}`,
+                url: `${
+                  process.env.API_BASE_URL || "https://www.plas.rw"
+                }/dev/error/${logId}`,
                 style: "primary",
               },
             ],

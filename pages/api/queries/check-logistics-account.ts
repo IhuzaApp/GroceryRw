@@ -16,7 +16,10 @@ const CHECK_LOGISTICS_ACCOUNT = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const session = await getServerSession(req, res, authOptions as any);
     if (!session || !(session as any).user?.id) {
@@ -29,9 +32,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const user_id = (session as any).user.id;
 
-    const result = await hasuraClient.request<{ logisticsAccount: any[] }>(CHECK_LOGISTICS_ACCOUNT, {
-      user_id,
-    });
+    const result = await hasuraClient.request<{ logisticsAccount: any[] }>(
+      CHECK_LOGISTICS_ACCOUNT,
+      {
+        user_id,
+      }
+    );
 
     return res.status(200).json({
       hasAccount: result.logisticsAccount.length > 0,

@@ -39,7 +39,10 @@ const GET_ALL_PETS = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");

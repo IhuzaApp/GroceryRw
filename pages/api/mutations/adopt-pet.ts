@@ -55,7 +55,10 @@ const GET_VENDER_AND_PET_INFO = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -75,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       phone = "",
       latitude = "",
       longitude = "",
-      status = "PAID"
+      status = "PAID",
     } = req.body;
 
     if (!pet_id) {
@@ -100,12 +103,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (status === "PAID") {
       try {
-        const infoResult = await hasuraClient.request<any>(GET_VENDER_AND_PET_INFO, { pet_id });
+        const infoResult = await hasuraClient.request<any>(
+          GET_VENDER_AND_PET_INFO,
+          { pet_id }
+        );
         const petInfo = infoResult.pets_by_pk;
         if (petInfo) {
           const petName = petInfo.name;
           const vendorPhone = petInfo.pet_vendors?.user?.phone;
-          const vendorName = petInfo.pet_vendors?.organisationName || petInfo.pet_vendors?.fullname || "Vendor";
+          const vendorName =
+            petInfo.pet_vendors?.organisationName ||
+            petInfo.pet_vendors?.fullname ||
+            "Vendor";
 
           if (vendorPhone) {
             const message = `Hello ${vendorName}, your pet "${petName}" has been ordered and paid for! Customer Address: ${address}. Phone: ${phone}.`;
@@ -121,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       success: true,
       affected_rows: result.insert_petAdoption.affected_rows,
-      id: result.insert_petAdoption.returning?.[0]?.id
+      id: result.insert_petAdoption.returning?.[0]?.id,
     });
   } catch (error: any) {
     console.error("Pet Adoption Error:", error);

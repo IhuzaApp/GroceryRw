@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Search, ChevronDown, User, LogOut, LayoutDashboard } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  User,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { Avatar, Dropdown } from "rsuite";
 

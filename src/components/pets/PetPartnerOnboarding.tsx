@@ -106,43 +106,48 @@ export default function PetPartnerOnboarding() {
 
   useEffect(() => {
     if (session?.user && formData.accountType === "personal") {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         fullName: prev.fullName || session.user?.name || "",
       }));
 
       // Fetch default address
       fetch("/api/queries/addresses")
-        .then(res => res.json())
-        .then(data => {
-          const defaultAddr = data.addresses?.find((a: any) => a.is_default) || data.addresses?.[0];
+        .then((res) => res.json())
+        .then((data) => {
+          const defaultAddr =
+            data.addresses?.find((a: any) => a.is_default) ||
+            data.addresses?.[0];
           if (defaultAddr) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
               ...prev,
               personalAddress: prev.personalAddress || defaultAddr.street || "",
             }));
           }
         })
-        .catch(err => console.error("Error fetching address:", err));
+        .catch((err) => console.error("Error fetching address:", err));
     }
   }, [session, formData.accountType]);
 
   const handleFileUpload = async (file: File, docName: string) => {
     setIsLoading(true);
     try {
-      const path = `verifications/pets/${session?.user?.id}/${Date.now()}_${file.name}`;
+      const path = `verifications/pets/${session?.user?.id}/${Date.now()}_${
+        file.name
+      }`;
       const url = await uploadToFirebase(file, path);
-      
-      setFormData(prev => {
+
+      setFormData((prev) => {
         const newDocs = { ...prev.documents };
         let nationalIdOrPassport = prev.nationalIdOrPassport;
 
-        if (docName === "Registration Certificate") newDocs.rdb_certificate = url;
+        if (docName === "Registration Certificate")
+          newDocs.rdb_certificate = url;
         else if (docName === "Shelter Permit") newDocs.sherter_permit = url;
         else if (docName === "Owner ID" || docName === "National ID") {
           nationalIdOrPassport = url;
-        }
-        else if (docName === "Proof of Residence") newDocs.proof_residency = url;
+        } else if (docName === "Proof of Residence")
+          newDocs.proof_residency = url;
 
         return {
           ...prev,
@@ -181,9 +186,16 @@ export default function PetPartnerOnboarding() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          address: formData.accountType === "business" ? formData.businessAddress : formData.personalAddress,
-          fullname: formData.accountType === "business" ? formData.businessName : formData.fullName,
-          organisationName: formData.accountType === "business" ? formData.businessName : "",
+          address:
+            formData.accountType === "business"
+              ? formData.businessAddress
+              : formData.personalAddress,
+          fullname:
+            formData.accountType === "business"
+              ? formData.businessName
+              : formData.fullName,
+          organisationName:
+            formData.accountType === "business" ? formData.businessName : "",
           nationalIdOrPassport: formData.nationalIdOrPassport,
           proof_residency: formData.documents.proof_residency,
           rdb_certificate: formData.documents.rdb_certificate,
@@ -358,7 +370,10 @@ export default function PetPartnerOnboarding() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          documents: { ...formData.documents, rdb_certificate: e.target.value },
+                          documents: {
+                            ...formData.documents,
+                            rdb_certificate: e.target.value,
+                          },
                         })
                       }
                     />
@@ -396,7 +411,10 @@ export default function PetPartnerOnboarding() {
                       }`}
                       value={formData.nationalIdOrPassport}
                       onChange={(e) =>
-                        setFormData({ ...formData, nationalIdOrPassport: e.target.value })
+                        setFormData({
+                          ...formData,
+                          nationalIdOrPassport: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -406,7 +424,9 @@ export default function PetPartnerOnboarding() {
                     </label>
                     {isLoaded ? (
                       <Autocomplete
-                        onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                        onLoad={(autocomplete) =>
+                          (autocompleteRef.current = autocomplete)
+                        }
                         onPlaceChanged={onPlaceChanged}
                       >
                         <input
@@ -483,10 +503,11 @@ export default function PetPartnerOnboarding() {
           </div>
         );
       case 4:
-        const docs = formData.accountType === "business"
-          ? ["Registration Certificate", "Shelter Permit", "Owner ID"]
-          : ["National ID", "Proof of Residence (from irembo.com)"];
-        
+        const docs =
+          formData.accountType === "business"
+            ? ["Registration Certificate", "Shelter Permit", "Owner ID"]
+            : ["National ID", "Proof of Residence (from irembo.com)"];
+
         return (
           <div className="duration-700 animate-in fade-in slide-in-from-bottom-4">
             <h2 className="mb-2 font-outfit text-3xl font-black tracking-tight">
@@ -498,10 +519,14 @@ export default function PetPartnerOnboarding() {
             <div className="space-y-4">
               {docs.map((doc) => {
                 let isUploaded = false;
-                if (doc === "Registration Certificate") isUploaded = !!formData.documents.rdb_certificate;
-                else if (doc === "Shelter Permit") isUploaded = !!formData.documents.sherter_permit;
-                else if (doc === "Owner ID" || doc === "National ID") isUploaded = !!formData.nationalIdOrPassport;
-                else if (doc === "Proof of Residence (from irembo.com)") isUploaded = !!formData.documents.proof_residency;
+                if (doc === "Registration Certificate")
+                  isUploaded = !!formData.documents.rdb_certificate;
+                else if (doc === "Shelter Permit")
+                  isUploaded = !!formData.documents.sherter_permit;
+                else if (doc === "Owner ID" || doc === "National ID")
+                  isUploaded = !!formData.nationalIdOrPassport;
+                else if (doc === "Proof of Residence (from irembo.com)")
+                  isUploaded = !!formData.documents.proof_residency;
 
                 return (
                   <div
@@ -513,16 +538,26 @@ export default function PetPartnerOnboarding() {
                     }`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                        isUploaded ? "bg-green-500 text-white" : "bg-gray-500/10 text-gray-500"
-                      }`}>
-                        {isUploaded ? <Check className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                          isUploaded
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-500/10 text-gray-500"
+                        }`}
+                      >
+                        {isUploaded ? (
+                          <Check className="h-6 w-6" />
+                        ) : (
+                          <FileText className="h-6 w-6" />
+                        )}
                       </div>
                       <div>
                         <h4 className="font-outfit font-black">{doc}</h4>
-                        <p className={`text-xs font-black uppercase tracking-widest ${
-                          isUploaded ? "text-green-500" : "text-gray-400"
-                        }`}>
+                        <p
+                          className={`text-xs font-black uppercase tracking-widest ${
+                            isUploaded ? "text-green-500" : "text-gray-400"
+                          }`}
+                        >
                           {isUploaded ? "Uploaded" : "Required"}
                         </p>
                       </div>
@@ -663,7 +698,7 @@ export default function PetPartnerOnboarding() {
               onClick={currentStep === STEPS.length ? handleFinish : nextStep}
               disabled={isLoading}
               className={`flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black !text-white text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12 ${
-                isLoading ? "opacity-70 pointer-events-none" : ""
+                isLoading ? "pointer-events-none opacity-70" : ""
               }`}
             >
               {isLoading ? (

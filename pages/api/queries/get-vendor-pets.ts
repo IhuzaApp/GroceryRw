@@ -6,7 +6,10 @@ import { gql } from "graphql-request";
 
 const GET_VENDOR_PETS = gql`
   query GetVendorPets($vendor_id: uuid!) {
-    pets(where: { vendor_id: { _eq: $vendor_id } }, order_by: { updated_at: desc }) {
+    pets(
+      where: { vendor_id: { _eq: $vendor_id } }
+      order_by: { updated_at: desc }
+    ) {
       id
       name
       pet_type
@@ -33,7 +36,10 @@ const GET_VENDOR_PETS = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const session = await getServerSession(req, res, authOptions as any);
     if (!session || !(session as any).user?.id) {
@@ -49,9 +55,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Hasura client is not initialized");
     }
 
-    const result = await hasuraClient.request<{ pets: any[] }>(GET_VENDOR_PETS, {
-      vendor_id,
-    });
+    const result = await hasuraClient.request<{ pets: any[] }>(
+      GET_VENDOR_PETS,
+      {
+        vendor_id,
+      }
+    );
 
     return res.status(200).json({
       pets: result.pets,

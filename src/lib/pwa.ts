@@ -74,5 +74,3 @@ export const isAndroid = () => {
   if (typeof window === "undefined") return false;
   return /Android/.test(navigator.userAgent);
 };
-
-

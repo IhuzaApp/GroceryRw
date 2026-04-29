@@ -131,7 +131,8 @@ export default function CarPartnerOnboarding() {
         .then((res) => res.json())
         .then((data) => {
           const defaultAddr =
-            data.addresses?.find((a: any) => a.is_default) || data.addresses?.[0];
+            data.addresses?.find((a: any) => a.is_default) ||
+            data.addresses?.[0];
           if (defaultAddr) {
             setFormData((prev) => ({
               ...prev,
@@ -158,15 +159,17 @@ export default function CarPartnerOnboarding() {
   const nextStep = () =>
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
-  
+
   const handleFileUpload = async (file: File, fieldName: string) => {
     if (!session?.user?.id) return;
-    
-    const toastId = toast.loading(`Uploading ${fieldName.replace(/_/g, ' ')}...`);
+
+    const toastId = toast.loading(
+      `Uploading ${fieldName.replace(/_/g, " ")}...`
+    );
     try {
       const path = `verifications/cars/${session.user.id}/${fieldName}`;
       const url = await uploadToFirebase(file, path);
-      setFormData(prev => ({ ...prev, [fieldName]: url }));
+      setFormData((prev) => ({ ...prev, [fieldName]: url }));
       toast.success("File uploaded successfully", { id: toastId });
     } catch (error) {
       console.error("Upload error:", error);
@@ -177,22 +180,29 @@ export default function CarPartnerOnboarding() {
   const handleFinish = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/mutations/register-logistics-account", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address: formData.accountType === "business" ? formData.businessAddress : formData.personalAddress,
-          businessName: formData.accountType === "business" ? formData.businessName : "",
-          fullname: formData.fullName || formData.businessName,
-          nationalIdOrPassport: formData.nationalIdOrPassport,
-          license: formData.license,
-          business_cert: formData.business_cert,
-          proof_address: formData.proof_address,
-          num_of_cars: formData.fleetSize,
-          type: formData.accountType,
-          status: "pending",
-        }),
-      });
+      const response = await fetch(
+        "/api/mutations/register-logistics-account",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address:
+              formData.accountType === "business"
+                ? formData.businessAddress
+                : formData.personalAddress,
+            businessName:
+              formData.accountType === "business" ? formData.businessName : "",
+            fullname: formData.fullName || formData.businessName,
+            nationalIdOrPassport: formData.nationalIdOrPassport,
+            license: formData.license,
+            business_cert: formData.business_cert,
+            proof_address: formData.proof_address,
+            num_of_cars: formData.fleetSize,
+            type: formData.accountType,
+            status: "pending",
+          }),
+        }
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -398,7 +408,10 @@ export default function CarPartnerOnboarding() {
                       }`}
                       value={formData.nationalIdOrPassport}
                       onChange={(e) =>
-                        setFormData({ ...formData, nationalIdOrPassport: e.target.value })
+                        setFormData({
+                          ...formData,
+                          nationalIdOrPassport: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -426,7 +439,9 @@ export default function CarPartnerOnboarding() {
                     </label>
                     {isLoaded ? (
                       <Autocomplete
-                        onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+                        onLoad={(autocomplete) =>
+                          (autocompleteRef.current = autocomplete)
+                        }
                         onPlaceChanged={onPlaceChanged}
                       >
                         <input
@@ -512,12 +527,21 @@ export default function CarPartnerOnboarding() {
                 ? [
                     { label: "Business License", field: "business_cert" },
                     { label: "Trading Permit", field: "proof_address" },
-                    { label: "Owner ID / Passport", field: "nationalIdOrPassport" },
+                    {
+                      label: "Owner ID / Passport",
+                      field: "nationalIdOrPassport",
+                    },
                   ]
                 : [
-                    { label: "National ID / Passport", field: "nationalIdOrPassport" },
+                    {
+                      label: "National ID / Passport",
+                      field: "nationalIdOrPassport",
+                    },
                     { label: "Driver's License", field: "license" },
-                    { label: "Proof of Address (from irembo.com)", field: "proof_address" },
+                    {
+                      label: "Proof of Address (from irembo.com)",
+                      field: "proof_address",
+                    },
                   ]
               ).map((doc) => (
                 <div
@@ -529,19 +553,31 @@ export default function CarPartnerOnboarding() {
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                      formData[doc.field as keyof typeof formData] 
-                        ? "bg-green-500 text-white" 
-                        : "bg-gray-500/10 text-gray-500"
-                    }`}>
-                      {formData[doc.field as keyof typeof formData] ? <Check className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                        formData[doc.field as keyof typeof formData]
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-500/10 text-gray-500"
+                      }`}
+                    >
+                      {formData[doc.field as keyof typeof formData] ? (
+                        <Check className="h-6 w-6" />
+                      ) : (
+                        <FileText className="h-6 w-6" />
+                      )}
                     </div>
                     <div>
                       <h4 className="font-black">{doc.label}</h4>
-                      <p className={`text-xs font-black uppercase tracking-widest ${
-                        formData[doc.field as keyof typeof formData] ? "text-green-500" : "text-gray-400"
-                      }`}>
-                        {formData[doc.field as keyof typeof formData] ? "Uploaded" : "Required"}
+                      <p
+                        className={`text-xs font-black uppercase tracking-widest ${
+                          formData[doc.field as keyof typeof formData]
+                            ? "text-green-500"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {formData[doc.field as keyof typeof formData]
+                          ? "Uploaded"
+                          : "Required"}
                       </p>
                     </div>
                   </div>
@@ -555,7 +591,9 @@ export default function CarPartnerOnboarding() {
                       }}
                       accept="image/*,.pdf"
                     />
-                    {formData[doc.field as keyof typeof formData] ? "Replace" : "Upload"}
+                    {formData[doc.field as keyof typeof formData]
+                      ? "Replace"
+                      : "Upload"}
                   </label>
                 </div>
               ))}
@@ -746,7 +784,7 @@ export default function CarPartnerOnboarding() {
               onClick={currentStep === STEPS.length ? handleFinish : nextStep}
               disabled={isLoading}
               className={`flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black !text-white text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12 ${
-                isLoading ? "opacity-70 pointer-events-none" : ""
+                isLoading ? "pointer-events-none opacity-70" : ""
               }`}
             >
               {isLoading ? (

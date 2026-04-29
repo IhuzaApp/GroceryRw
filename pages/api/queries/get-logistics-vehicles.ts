@@ -6,7 +6,10 @@ import { gql } from "graphql-request";
 
 const GET_LOGISTICS_VEHICLES = gql`
   query GetLogisticsVehicles($logisticAccount_id: uuid!) {
-    RentalVehicles(where: { logisticAccount_id: { _eq: $logisticAccount_id } }, order_by: { updated_at: desc }) {
+    RentalVehicles(
+      where: { logisticAccount_id: { _eq: $logisticAccount_id } }
+      order_by: { updated_at: desc }
+    ) {
       id
       name
       category
@@ -37,7 +40,10 @@ const GET_LOGISTICS_VEHICLES = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     const session = await getServerSession(req, res, authOptions as any);
     if (!session || !(session as any).user?.id) {
@@ -53,9 +59,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Hasura client is not initialized");
     }
 
-    const result = await hasuraClient.request<{ RentalVehicles: any[] }>(GET_LOGISTICS_VEHICLES, {
-      logisticAccount_id,
-    });
+    const result = await hasuraClient.request<{ RentalVehicles: any[] }>(
+      GET_LOGISTICS_VEHICLES,
+      {
+        logisticAccount_id,
+      }
+    );
 
     return res.status(200).json({
       vehicles: result.RentalVehicles,

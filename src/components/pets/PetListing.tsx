@@ -146,16 +146,23 @@ export default function PetListing() {
             price: p.amount,
             isDonation: p.free,
             isVaccinated: p.vaccinated,
-            images: p.image ? [{ url: p.image, label: "Main" }, ...(p.parent_images || [])] : (p.parent_images || []),
+            images: p.image
+              ? [{ url: p.image, label: "Main" }, ...(p.parent_images || [])]
+              : p.parent_images || [],
             videoUrl: p.video,
             vaccinationCertificateUrl: p.vaccination_cert,
             owner: {
               id: p.vendor_id,
-              name: p.pet_vendors?.organisationName || p.pet_vendors?.fullname || "Verified Vendor",
-              image: p.pet_vendors?.user?.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
-              isVerified: true
+              name:
+                p.pet_vendors?.organisationName ||
+                p.pet_vendors?.fullname ||
+                "Verified Vendor",
+              image:
+                p.pet_vendors?.user?.image ||
+                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+              isVerified: true,
             },
-            reviews: []
+            reviews: [],
           }));
           setPets(mappedPets);
         }

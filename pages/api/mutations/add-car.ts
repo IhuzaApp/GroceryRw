@@ -5,8 +5,48 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const ADD_CAR_MUTATION = gql`
-  mutation AddCar($category: String = "", $disabled: Boolean = false, $drive_provided: Boolean = false, $engine: String = "", $exterior: String = "", $fuel_type: String = "", $interior: String = "", $location: String = "", $logisticAccount_id: uuid = "", $main_photo: String = "", $name: String = "", $passenger: String = "", $price: String = "", $refundable_amount: String = "", $seats: String = "", $status: String = "", $transmission: String = "", $updated_at: timestamptz = "") {
-    insert_RentalVehicles(objects: {category: $category, disabled: $disabled, drive_provided: $drive_provided, engine: $engine, exterior: $exterior, fuel_type: $fuel_type, interior: $interior, location: $location, logisticAccount_id: $logisticAccount_id, main_photo: $main_photo, name: $name, passenger: $passenger, price: $price, refundable_amount: $refundable_amount, seats: $seats, status: $status, transmission: $transmission, updated_at: $updated_at}) {
+  mutation AddCar(
+    $category: String = ""
+    $disabled: Boolean = false
+    $drive_provided: Boolean = false
+    $engine: String = ""
+    $exterior: String = ""
+    $fuel_type: String = ""
+    $interior: String = ""
+    $location: String = ""
+    $logisticAccount_id: uuid = ""
+    $main_photo: String = ""
+    $name: String = ""
+    $passenger: String = ""
+    $price: String = ""
+    $refundable_amount: String = ""
+    $seats: String = ""
+    $status: String = ""
+    $transmission: String = ""
+    $updated_at: timestamptz = ""
+  ) {
+    insert_RentalVehicles(
+      objects: {
+        category: $category
+        disabled: $disabled
+        drive_provided: $drive_provided
+        engine: $engine
+        exterior: $exterior
+        fuel_type: $fuel_type
+        interior: $interior
+        location: $location
+        logisticAccount_id: $logisticAccount_id
+        main_photo: $main_photo
+        name: $name
+        passenger: $passenger
+        price: $price
+        refundable_amount: $refundable_amount
+        seats: $seats
+        status: $status
+        transmission: $transmission
+        updated_at: $updated_at
+      }
+    ) {
       affected_rows
       returning {
         id
@@ -15,7 +55,10 @@ const ADD_CAR_MUTATION = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -31,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const carData = req.body;
-    
+
     // Add default values and timestamps
     const variables = {
       ...carData,
@@ -47,7 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     }
 
-    const result = await hasuraClient.request<AddCarResponse>(ADD_CAR_MUTATION, variables);
+    const result = await hasuraClient.request<AddCarResponse>(
+      ADD_CAR_MUTATION,
+      variables
+    );
 
     return res.status(200).json({
       success: true,

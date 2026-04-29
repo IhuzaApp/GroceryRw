@@ -56,7 +56,7 @@ export default function PetBusinessDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [petToEdit, setPetToEdit] = useState<any>(null);
-  
+
   const [vendorData, setVendorData] = useState<any>(null);
   const [isLoadingAccount, setIsLoadingAccount] = useState(true);
   const [isLoadingPets, setIsLoadingPets] = useState(false);
@@ -64,7 +64,9 @@ export default function PetBusinessDashboard() {
   const fetchPets = async (vendorId: string) => {
     setIsLoadingPets(true);
     try {
-      const response = await fetch(`/api/queries/get-vendor-pets?vendor_id=${vendorId}`);
+      const response = await fetch(
+        `/api/queries/get-vendor-pets?vendor_id=${vendorId}`
+      );
       if (response.ok) {
         const data = await response.json();
         // Map DB fields to Pet interface if necessary, or update components to handle DB fields
@@ -77,17 +79,26 @@ export default function PetBusinessDashboard() {
           if (p.parent_images && Array.isArray(p.parent_images)) {
             images.push(...p.parent_images);
           }
-          
+
           return {
             ...p,
             type: p.pet_type,
             price: parseFloat(p.amount) || 0,
             isDonation: p.free,
             isVaccinated: p.vaccinated,
-            images: images.length > 0 ? images : [
-              { url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop", label: "Default" }
-            ],
-            status: parseInt(p.quantity) > parseInt(p.quantity_sold) ? "available" : "sold"
+            images:
+              images.length > 0
+                ? images
+                : [
+                    {
+                      url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop",
+                      label: "Default",
+                    },
+                  ],
+            status:
+              parseInt(p.quantity) > parseInt(p.quantity_sold)
+                ? "available"
+                : "sold",
           };
         });
         setPets(mappedPets);
@@ -119,14 +130,14 @@ export default function PetBusinessDashboard() {
 
     if (session?.user) {
       checkAccount().then(() => {
-         // We'll fetch pets inside checkAccount once we have vendorData
+        // We'll fetch pets inside checkAccount once we have vendorData
       });
     }
   }, [session, router]);
 
   useEffect(() => {
     if (vendorData?.id) {
-       fetchPets(vendorData.id);
+      fetchPets(vendorData.id);
     }
   }, [vendorData?.id]);
 
@@ -136,7 +147,11 @@ export default function PetBusinessDashboard() {
 
   if (vendorData?.disabled) {
     return (
-      <div className={`min-h-screen ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"}`}>
+      <div
+        className={`min-h-screen ${
+          theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"
+        }`}
+      >
         <RejectedAccountMessage businessAccountId={vendorData?.id} />
       </div>
     );
@@ -144,8 +159,14 @@ export default function PetBusinessDashboard() {
 
   if (vendorData?.status !== "active") {
     return (
-      <div className={`min-h-screen ${theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"}`}>
-        <PendingReviewMessage contactEmail={vendorData?.businessEmail || session?.user?.email} />
+      <div
+        className={`min-h-screen ${
+          theme === "dark" ? "bg-[#0A0A0A]" : "bg-white"
+        }`}
+      >
+        <PendingReviewMessage
+          contactEmail={vendorData?.businessEmail || session?.user?.email}
+        />
       </div>
     );
   }
@@ -451,7 +472,13 @@ function WalletBalanceCard({
   );
 }
 
-function PetManagementItem({ pet, theme, onToggleStatus, onView, onEdit }: any) {
+function PetManagementItem({
+  pet,
+  theme,
+  onToggleStatus,
+  onView,
+  onEdit,
+}: any) {
   return (
     <div
       className={`flex items-center justify-between rounded-[2.5rem] border p-4 transition-all hover:shadow-xl ${
@@ -726,7 +753,11 @@ function PetDetailsModal({
                   <DetailItem
                     icon={<Wallet />}
                     label="Price"
-                    value={pet.isDonation ? "FREE / DONATION" : `${formatCurrencySync(pet.price)}`}
+                    value={
+                      pet.isDonation
+                        ? "FREE / DONATION"
+                        : `${formatCurrencySync(pet.price)}`
+                    }
                     theme={theme}
                   />
                 </div>
