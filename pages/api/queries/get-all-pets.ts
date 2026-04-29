@@ -54,7 +54,7 @@ export default async function handler(
       pets: result.pets,
     });
   } catch (error: any) {
-    console.error("Error fetching all pets:", error);
+
     return res.status(500).json({
       error: "Failed to fetch pets",
       details: error.message,
