@@ -33,11 +33,13 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { uploadToFirebase } from "../../lib/firebase";
+import toast from "react-hot-toast";
 import { Car } from "../../constants/dummyCars";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import CameraCapture from "../ui/CameraCapture";
+import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
 
 export default function CarDetailsPage({ car }: { car: Car }) {
   const router = useRouter();
@@ -387,10 +389,22 @@ function BookingModal({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [walletBalance, setWalletBalance] = useState(0);
   const [licensePhoto, setLicensePhoto] = useState<string | null>(null);
+  const [uploadingLicense, setUploadingLicense] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-  const [uploadingLicense, setUploadingLicense] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<
+    null | "initiating_payment" | "awaiting_approval" | "success"
+  >(null);
+  const [momoReference, setMomoReference] = useState<string | null>(null);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const isNavigatingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
 
   const base64ToBlob = (base64: string) => {
     const byteString = atob(base64.split(",")[1]);
@@ -490,26 +504,149 @@ function BookingModal({
   const totalUpfront = subtotal + serviceFee + deposit;
 
   const handleBooking = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select pick-up and return dates.");
+      return;
+    }
+
+    if (car.driverOption === "none" && !licensePhoto) {
+      toast.error("Please capture your driving license first.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const bookings = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-      bookings.push({
-        ...car,
-        bookingId: Math.random().toString(36).substr(2, 9),
-        startDate,
-        endDate,
-        guests,
-        total: totalUpfront,
-        securityDeposit: deposit,
-        paymentMethod,
-        phoneNumber,
-        licensePhoto,
-        bookedAt: new Date().toISOString(),
+    try {
+      // 1. Create the booking in DB first
+      const response = await fetch("/api/mutations/book-car", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: subtotal.toString(),
+          carVideo_Status: "pending",
+          driving_license: licensePhoto || "",
+          guests: guests.toString(),
+          pickup_date: new Date(startDate).toISOString(),
+          refundable_fee: deposit.toString(),
+          return_date: new Date(endDate).toISOString(),
+          services_fee: serviceFee.toString(),
+          status: paymentMethod === "momo" ? "PENDING_PAYMENT" : "PAID",
+          vehicle_id: car.id,
+        }),
       });
-      localStorage.setItem("car_bookings", JSON.stringify(bookings));
-      setLoading(false);
-      onSuccess();
-    }, 2000);
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Booking failed");
+
+      const bookingId = data.booking?.id;
+
+      // 2. If MoMo, initiate payment flow
+      if (paymentMethod === "momo") {
+        setPaymentStep("initiating_payment");
+        const momoRes = await fetch("/api/momo/request-to-pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalUpfront.toString(),
+            payerNumber: phoneNumber,
+            vehicleBookingsId: bookingId,
+            payerMessage: `Booking for ${car.name}`,
+            externalId: bookingId,
+          }),
+        });
+
+        const momoData = await momoRes.json();
+        if (momoData.referenceId) {
+          setMomoReference(momoData.referenceId);
+          setPaymentStep("awaiting_approval");
+          startPolling(momoData.referenceId, bookingId);
+        } else {
+          throw new Error(momoData.error || "MoMo payment initiation failed");
+        }
+      } else {
+        // Successful non-MoMo booking
+        finalizeBooking(bookingId);
+      }
+    } catch (error: any) {
+      console.error("Booking failed:", error);
+      toast.error(error.message || "Failed to confirm booking.");
+      setPaymentStep(null);
+    } finally {
+      if (paymentMethod !== "momo") setLoading(false);
+    }
+  };
+
+  const startPolling = async (referenceId: string, bookingId: string) => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    let attempts = 0;
+    const maxAttempts = 40; // ~2 minutes
+
+    pollRef.current = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        setPaymentStep(null);
+        setLoading(false);
+        toast.error("Payment timeout. Please check your MoMo app.");
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `/api/momo/request-to-pay-status?referenceId=${referenceId}`
+        );
+        const data = await res.json();
+
+        if (data.status === "SUCCESSFUL") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setPaymentStep("success");
+          setTimeout(() => {
+            finalizeBooking(bookingId);
+          }, 2000);
+        } else if (data.status === "FAILED") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setPaymentStep(null);
+          setLoading(false);
+          toast.error("Payment failed or was cancelled.");
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 3000);
+  };
+
+  const finalizeBooking = (bookingId: string) => {
+    if (isNavigatingRef.current) return;
+    
+    const bookings = JSON.parse(localStorage.getItem("car_bookings") || "[]");
+    const newBooking = {
+      ...car,
+      bookingId: bookingId || Math.random().toString(36).substr(2, 9),
+      startDate,
+      endDate,
+      guests,
+      total: totalUpfront,
+      securityDeposit: deposit,
+      paymentMethod,
+      phoneNumber,
+      licensePhoto,
+      bookedAt: new Date().toISOString(),
+    };
+
+    // Deduplicate by bookingId
+    const existingIndex = bookings.findIndex((b: any) => b.bookingId === newBooking.bookingId);
+    if (existingIndex !== -1) {
+      bookings[existingIndex] = newBooking;
+    } else {
+      bookings.push(newBooking);
+    }
+
+    localStorage.setItem("car_bookings", JSON.stringify(bookings));
+    setLoading(false);
+    setPaymentStep(null);
+    toast.success("Booking confirmed! 🚗");
+    
+    isNavigatingRef.current = true;
+    onSuccess();
   };
 
   return (
@@ -880,6 +1017,7 @@ function BookingModal({
           )}
         </div>
       </div>
+      {paymentStep && <PaymentProcessingOverlay processingStep={paymentStep} />}
     </div>
   );
 }

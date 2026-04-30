@@ -187,6 +187,7 @@ export default async function handler(
     businessId, // For POS Registration
     businessType, // For POS Registration
     orderType, // For payment type
+    vehicleBookingsId,
   } = req.body;
 
   const session = (await getServerSession(
@@ -219,7 +220,8 @@ export default async function handler(
     restaurantOrderId ||
     businessOrderId ||
     reelOrderId ||
-    packageId
+    packageId ||
+    vehicleBookingsId
   );
 
   try {
@@ -315,6 +317,7 @@ export default async function handler(
                 reel_order_id: null,
                 package_id: null,
                 petAdoptionId: petAdoptionId, // Match user's provided mutation field
+                vehicleBookingsId: vehicleBookingsId || null,
                 amount: String(amount).toString(),
                 currency,
                 phone: payerNumber,
@@ -349,6 +352,8 @@ export default async function handler(
                   restaurantOrderId ||
                   (businessType === "RESTAURANT" ? businessId : null),
                 reel_order_id: reelOrderId || null,
+                vehicleBookingsId: vehicleBookingsId || null,
+                petAdoptionId: null, // Explicitly set to null to avoid FK issues
                 amount: String(amount).toString(),
                 currency,
                 phone: payerNumber,
@@ -381,6 +386,7 @@ export default async function handler(
                 restaurantOrderId ||
                 (businessType === "RESTAURANT" ? businessId : null),
               related_reel_orderId: reelOrderId || null,
+              vehicleBookingsId: vehicleBookingsId || null,
               amount: String(amount).toString(),
               currency,
               phone: payerNumber,

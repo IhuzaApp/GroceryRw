@@ -29,8 +29,8 @@ export default function ListingBookings({ bookings }: ListingBookingsProps) {
 
   return (
     <div className="mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {bookings.map((booking) => (
-        <BookingCard key={booking.bookingId} booking={booking} />
+      {bookings.map((booking, index) => (
+        <BookingCard key={`${booking.bookingId || index}-${index}`} booking={booking} />
       ))}
     </div>
   );

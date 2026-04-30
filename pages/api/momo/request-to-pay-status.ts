@@ -23,6 +23,7 @@ const GET_TRANSACTION_BY_REF = gql`
       related_reel_orderId
       description
       petAdoptionId
+      vehicleBookingsId
     }
   }
 `;
@@ -291,6 +292,17 @@ const UPDATE_PET_QUANTITY_SOLD = gql`
   }
 `;
 
+const UPDATE_VEHICLE_BOOKING_STATUS = gql`
+  mutation UpdateVehicleBookingStatus($id: uuid!, $status: String!) {
+    update_vehicleBookings_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
+      id
+    }
+  }
+`;
+
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
     order_transactions(where: { reference_id: { _eq: $reference_id } }) {
@@ -305,6 +317,7 @@ const GET_ORDER_TRANSACTION_BY_REF = gql`
       user_id
       type
       petAdoptionId
+      vehicleBookingsId
     }
   }
 `;
@@ -699,6 +712,19 @@ export default async function handler(
                   }
                 }
               }
+
+              // Handle Vehicle Booking from order_transactions
+              if (orderTransaction.vehicleBookingsId) {
+                const vehicleBookingsId = orderTransaction.vehicleBookingsId;
+                console.log(
+                  `🚀[MoMo Status] Activating vehicle booking from Order Transaction: ${vehicleBookingsId}`
+                );
+
+                await hasuraClient.request(UPDATE_VEHICLE_BOOKING_STATUS, {
+                  id: vehicleBookingsId,
+                  status: "PAID",
+                });
+              }
             } else if (newStatus === "FAILED") {
               // FAILURE: Mark orders as PAYMENT_FAILED
               if (orderId) {
@@ -880,6 +906,18 @@ export default async function handler(
                     { petAdoptionId, error: smsErr }
                   );
                 }
+              }
+
+              // Handle Vehicle Booking
+              const vehicleBookingsId = transaction.vehicleBookingsId;
+              if (vehicleBookingsId) {
+                console.log(
+                  `🚀[MoMo Status] Activating vehicle booking from Wallet Transaction: ${vehicleBookingsId}`
+                );
+                await hasuraClient.request(UPDATE_VEHICLE_BOOKING_STATUS, {
+                  id: vehicleBookingsId,
+                  status: "PAID",
+                });
               }
             } else if (newStatus === "FAILED") {
               const orderId = transaction.related_order_id;
