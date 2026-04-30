@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
+import { toast } from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -45,11 +46,14 @@ export default function CarDetailsPage({ car }: { car: Car }) {
   const router = useRouter();
   const { theme } = useTheme();
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [activeBooking, setActiveBooking] = useState<any>(null);
   const [isBooked, setIsBooked] = useState(false);
 
   useEffect(() => {
     const bookings = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-    setIsBooked(bookings.some((b: any) => b.id === car.id));
+    const found = bookings.find((b: any) => b.id === car.id);
+    setActiveBooking(found);
+    setIsBooked(!!found);
   }, [car.id]);
 
   return (
@@ -307,7 +311,7 @@ export default function CarDetailsPage({ car }: { car: Car }) {
                   </div>
                   {isBooked && (
                     <Link
-                      href={`/Messages?chat=${car.owner.id}`}
+                      href={`/Messages/${activeBooking?.bookingId || activeBooking?.id}?chat=true`}
                       className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-green-500 shadow-lg transition-transform hover:scale-110 active:scale-90 dark:bg-white/10"
                     >
                       <MessageSquare className="h-5 w-5" />

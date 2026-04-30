@@ -82,7 +82,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           isBecomeShopperPage
             ? ""
             : isMessagesList
-            ? "pb-[60px] pt-0 md:pb-0"
+            ? "h-[calc(100dvh-60px)] md:h-screen pb-[60px] pt-0 md:pb-0"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
@@ -92,9 +92,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             ? {
                 margin: 0,
                 padding: 0,
-                height: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
-                minHeight: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
-                maxHeight: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
+                ...(isMessagesList ? {} : {
+                  height: "100dvh",
+                  minHeight: "100dvh",
+                  maxHeight: "100dvh",
+                }),
                 overflow: "hidden",
               }
             : {}

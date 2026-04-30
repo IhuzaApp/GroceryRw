@@ -126,6 +126,104 @@ const GET_ORDER_DETAILS = gql`
   }
 `;
 
+const GET_REEL_ORDER_DETAILS = gql`
+  query GetReelOrderDetails($id: uuid!) {
+    reel_orders_by_pk(id: $id) {
+      id
+      OrderID
+      status
+      created_at
+      total
+      service_fee
+      delivery_fee
+      quantity
+      reel: Reel {
+        id
+        title
+        description
+        Price
+        Product
+        Shops {
+          id
+          name
+          address
+          image
+          logo
+        }
+      }
+    }
+  }
+`;
+
+const GET_RESTAURANT_ORDER_DETAILS = gql`
+  query GetRestaurantOrderDetails($id: uuid!) {
+    restaurant_orders_by_pk(id: $id) {
+      id
+      OrderID
+      status
+      created_at
+      total
+      delivery_fee
+      restaurant_id
+      Restaurant {
+        id
+        name
+        location
+        logo
+      }
+    }
+  }
+`;
+
+const GET_BUSINESS_ORDER_DETAILS = gql`
+  query GetBusinessOrderDetails($id: uuid!) {
+    businessProductOrders_by_pk(id: $id) {
+      id
+      status
+      created_at
+      total
+      service_fee
+      transportation_fee
+      store_id
+      business_store {
+        id
+        name
+        image
+      }
+    }
+  }
+`;
+
+const GET_VEHICLE_BOOKING_DETAILS = gql`
+  query GetVehicleBookingDetails($id: uuid!) {
+    vehicleBookings_by_pk(id: $id) {
+      id
+      amount
+      status
+      pickup_date
+      return_date
+      customer_id
+      RentalVehicles {
+        id
+        name
+        main_photo
+        category
+        location
+        logisticsAccounts {
+          id
+          fullname
+          businessName
+          Users {
+            id
+            name
+            profile_picture
+          }
+        }
+      }
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -276,9 +374,122 @@ export default async function handler(
       }>;
     }>(GET_ORDER_DETAILS, { id: orderId });
 
-    // Check if order exists
+    // Check if order exists in regular Orders table
     if (!data.Orders || data.Orders.length === 0) {
-      return res.status(404).json({ error: "Order not found" });
+      // 1. Try vehicle bookings
+      const vehicleData = await hasuraClient.request<any>(
+        GET_VEHICLE_BOOKING_DETAILS,
+        { id: orderId }
+      );
+      const booking = vehicleData.vehicleBookings_by_pk;
+
+      if (booking) {
+        const vendor = booking.RentalVehicles?.logisticsAccounts;
+        const ownerUser = Array.isArray(vendor?.Users) ? vendor.Users[0] : vendor?.Users;
+        
+        const formattedBooking = {
+          id: booking.id,
+          OrderID: booking.id.substring(0, 8).toUpperCase(),
+          placedAt: new Date(booking.pickup_date).toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }),
+          total: booking.amount,
+          status: booking.status,
+          pickup_date: booking.pickup_date,
+          return_date: booking.return_date,
+          orderType: "vehicle",
+          shop: {
+            id: vendor?.id || "vehicle-vendor",
+            name: vendor?.businessName || vendor?.fullname || "Vehicle Partner",
+            image: ownerUser?.profile_picture || null,
+          },
+          assignedTo: ownerUser ? {
+            id: ownerUser.id,
+            name: vendor?.fullname || vendor?.businessName || "Owner",
+            profile_picture: ownerUser.profile_picture || null,
+            shopper: {
+              full_name: vendor?.fullname || vendor?.businessName || "Owner",
+              profile_photo: ownerUser.profile_picture || null,
+              Employment_id: "VEHICLE"
+            }
+          } : null,
+          Order_Items: [
+            {
+              id: booking.id,
+              product: {
+                ProductName: { name: booking.RentalVehicles?.name || "Rental Vehicle" },
+                image: booking.RentalVehicles?.main_photo,
+                category: booking.RentalVehicles?.category,
+                location: booking.RentalVehicles?.location,
+              },
+            },
+          ],
+        };
+        return res.status(200).json({ order: formattedBooking });
+      }
+
+      // 2. Try reel orders
+      const reelData = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, {
+        id: orderId,
+      });
+      const reelOrder = reelData.reel_orders_by_pk;
+      if (reelOrder) {
+        return res.status(200).json({
+          order: {
+            ...reelOrder,
+            orderType: "reel",
+            placedAt: new Date(reelOrder.created_at).toLocaleString(),
+            shop: reelOrder.reel?.Shops,
+            Order_Items: [{
+              id: reelOrder.id,
+              product: {
+                ProductName: { name: reelOrder.reel?.title || "Reel Product" },
+                image: reelOrder.reel?.Shops?.image || reelOrder.reel?.Shops?.logo
+              }
+            }]
+          },
+        });
+      }
+
+      // 3. Try restaurant orders
+      const restData = await hasuraClient.request<any>(GET_RESTAURANT_ORDER_DETAILS, {
+        id: orderId,
+      });
+      const restOrder = restData.restaurant_orders_by_pk;
+      if (restOrder) {
+        return res.status(200).json({
+          order: {
+            ...restOrder,
+            orderType: "restaurant",
+            placedAt: new Date(restOrder.created_at).toLocaleString(),
+            shop: restOrder.Restaurant ? {
+              id: restOrder.Restaurant.id,
+              name: restOrder.Restaurant.name,
+              address: restOrder.Restaurant.location,
+              logo: restOrder.Restaurant.logo
+            } : null,
+          },
+        });
+      }
+
+      // 4. Try business orders
+      const bizData = await hasuraClient.request<any>(GET_BUSINESS_ORDER_DETAILS, {
+        id: orderId,
+      });
+      const bizOrder = bizData.businessProductOrders_by_pk;
+      if (bizOrder) {
+        return res.status(200).json({
+          order: {
+            ...bizOrder,
+            orderType: "business",
+            placedAt: new Date(bizOrder.created_at).toLocaleString(),
+            shop: bizOrder.business_store,
+          },
+        });
+      }
+
+      return res.status(404).json({ error: "Order or Booking not found" });
     }
 
     const order = data.Orders[0];

@@ -1,0 +1,174 @@
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+
+const GET_BOOKING_DETAILS = gql`
+  query GetBookingDetails($id: uuid!) {
+    vehicleBookings_by_pk(id: $id) {
+      id
+      amount
+      status
+      customer_id
+      vehicle_id
+      RentalVehicles {
+        name
+        logisticAccount_id
+      }
+    }
+  }
+`;
+
+const GET_PERSONAL_WALLET = gql`
+  query GetPersonalWallet($user_id: uuid!) {
+    personalWallet(where: { user_id: { _eq: $user_id } }) {
+      id
+      balance
+    }
+  }
+`;
+
+const UPDATE_PERSONAL_WALLET = gql`
+  mutation UpdatePersonalWallet($id: uuid!, $balance: String!) {
+    update_personalWallet_by_pk(
+      pk_columns: { id: $id }
+      _set: { balance: $balance, updated_at: "now()" }
+    ) {
+      id
+    }
+  }
+`;
+
+const GET_BUSINESS_WALLET = gql`
+  query GetBusinessWallet($business_id: uuid!) {
+    business_wallet(where: { business_id: { _eq: $business_id } }) {
+      id
+      amount
+    }
+  }
+`;
+
+const UPDATE_BUSINESS_WALLET = gql`
+  mutation UpdateBusinessWallet($id: uuid!, $amount: String!) {
+    update_business_wallet_by_pk(
+      pk_columns: { id: $id }
+      _set: { amount: $amount, updated_at: "now()" }
+    ) {
+      id
+    }
+  }
+`;
+
+const UPDATE_BOOKING_STATUS = gql`
+  mutation UpdateBookingStatus($id: uuid!, $status: String!) {
+    update_vehicleBookings_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
+      id
+    }
+  }
+`;
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const session = await getServerSession(req, res, authOptions as any);
+    if (!session || !(session as any).user?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { bookingId } = req.body;
+    if (!bookingId) {
+      return res.status(400).json({ error: "Missing bookingId" });
+    }
+
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
+    // 1. Fetch booking details
+    const bookingRes = await hasuraClient.request<any>(GET_BOOKING_DETAILS, {
+      id: bookingId,
+    });
+    const booking = bookingRes.vehicleBookings_by_pk;
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    if (booking.status === "CANCELLED") {
+      return res.status(400).json({ error: "Booking is already cancelled" });
+    }
+
+    const originalAmount = parseFloat(booking.amount || "0");
+    let refundAmount = 0;
+    let businessFee = 0;
+    let systemFee = 0;
+
+    // 2. Calculate refund based on status
+    if (booking.status === "ACCEPTED") {
+      // 5% total fee: 2.5% to business, 2.5% to system
+      systemFee = originalAmount * 0.025;
+      businessFee = originalAmount * 0.025;
+      refundAmount = originalAmount - systemFee - businessFee;
+    } else {
+      // 2% total fee (system fee)
+      systemFee = originalAmount * 0.02;
+      refundAmount = originalAmount - systemFee;
+    }
+
+    // 3. Update personal wallet (Refund)
+    const walletRes = await hasuraClient.request<any>(GET_PERSONAL_WALLET, {
+      user_id: booking.customer_id,
+    });
+    const wallet = walletRes.personalWallet?.[0];
+
+    if (wallet) {
+      const currentBalance = parseFloat(wallet.balance || "0");
+      const newBalance = currentBalance + refundAmount;
+      await hasuraClient.request(UPDATE_PERSONAL_WALLET, {
+        id: wallet.id,
+        balance: newBalance.toFixed(2),
+      });
+    }
+
+    // 4. Update business wallet (If accepted)
+    if (businessFee > 0 && booking.RentalVehicles?.logisticAccount_id) {
+      const bWalletRes = await hasuraClient.request<any>(GET_BUSINESS_WALLET, {
+        business_id: booking.RentalVehicles.logisticAccount_id,
+      });
+      const bWallet = bWalletRes.business_wallet?.[0];
+      if (bWallet) {
+        const currentAmount = parseFloat(bWallet.amount || "0");
+        const newAmount = currentAmount + businessFee;
+        await hasuraClient.request(UPDATE_BUSINESS_WALLET, {
+          id: bWallet.id,
+          amount: newAmount.toFixed(2),
+        });
+      }
+    }
+
+    // 5. Update booking status
+    await hasuraClient.request(UPDATE_BOOKING_STATUS, {
+      id: bookingId,
+      status: "CANCELLED",
+    });
+
+    return res.status(200).json({
+      success: true,
+      refundAmount,
+      feeTaken: originalAmount - refundAmount,
+    });
+  } catch (error: any) {
+    console.error("Cancel Booking Error:", error);
+    return res.status(500).json({ error: error.message || "Cancellation failed" });
+  }
+}

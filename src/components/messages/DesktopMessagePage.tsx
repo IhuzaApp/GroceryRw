@@ -1016,7 +1016,7 @@ export default function DesktopMessagePage({
               </div>
             )}
             {/* Message Input */}
-            <div className="flex-shrink-0 px-8 py-6">
+            <div className="mb-6 flex-shrink-0 px-8 pb-10 pt-4">
               <form
                 onSubmit={handleSendMessage}
                 className="relative mx-auto flex max-w-4xl items-center gap-3"
@@ -1151,27 +1151,37 @@ export default function DesktopMessagePage({
             <div className="flex-1 space-y-6 overflow-y-auto p-6">
               {selectedOrder ? (
                 <>
-                  {/* Company Info Card */}
+                  {/* Company Info / Vehicle Info Card */}
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                     <div className="flex items-center gap-4">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20">
-                        <svg
-                          className="h-8 w-8"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20">
+                        {selectedOrder.Order_Items?.[0]?.product?.image ? (
+                          <img
+                            src={selectedOrder.Order_Items[0].product.image}
+                            alt="Vehicle"
+                            className="h-full w-full object-cover"
                           />
-                        </svg>
+                        ) : (
+                          <svg
+                            className="h-8 w-8"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            />
+                          </svg>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
-                          {selectedOrder.shop?.name || "Store"}
+                          {selectedOrder.Order_Items?.[0]?.product?.ProductName?.name ||
+                            selectedOrder.shop?.name ||
+                            "Store"}
                         </h3>
                         <p className="mt-0.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
                           ID: #
@@ -1188,9 +1198,9 @@ export default function DesktopMessagePage({
                       </span>
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
-                          selectedOrder.status === "completed"
+                          selectedOrder.status === "completed" || selectedOrder.status === "PAID"
                             ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-                            : selectedOrder.status === "in_progress"
+                            : selectedOrder.status === "in_progress" || selectedOrder.status === "ACCEPTED"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
                             : selectedOrder.status === "pending"
                             ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
@@ -1203,10 +1213,39 @@ export default function DesktopMessagePage({
                     </div>
                   </div>
 
-                  {/* Shopper Details Card */}
+                  {/* Rental Duration Card (if vehicle) */}
+                  {selectedOrder.pickup_date && (
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
+                        Rental Duration
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                            Pickup
+                          </p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">
+                            {new Date(selectedOrder.pickup_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                            Return
+                          </p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">
+                            {new Date(selectedOrder.return_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Counterpart Details Card (Shopper or Owner) */}
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
-                    <h4 className="mb-5 text-sm font-bold font-bold uppercase tracking-wider text-gray-400">
-                      Shopper Details
+                    <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
+                      {selectedOrder.assignedTo?.shopper?.Employment_id === "VEHICLE"
+                        ? "Owner Details"
+                        : "Shopper Details"}
                     </h4>
                     {selectedOrder.assignedTo && (
                       <div className="flex items-center gap-4">
@@ -1219,7 +1258,7 @@ export default function DesktopMessagePage({
                                   ?.profile_photo ||
                                 selectedOrder.assignedTo?.profile_picture
                               }
-                              alt="Shopper"
+                              alt="Counterpart"
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -1240,22 +1279,21 @@ export default function DesktopMessagePage({
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            {selectedOrder.assignedTo?.shopper
-                              ?.Employment_id && (
-                              <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-500/20 dark:text-green-400">
-                                #00
-                                {selectedOrder.assignedTo.shopper.Employment_id}
-                              </span>
-                            )}
+                            {selectedOrder.assignedTo?.shopper?.Employment_id &&
+                              selectedOrder.assignedTo.shopper.Employment_id !== "VEHICLE" && (
+                                <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-500/20 dark:text-green-400">
+                                  #00
+                                  {selectedOrder.assignedTo.shopper.Employment_id}
+                                </span>
+                              )}
                           </div>
                           <h5 className="mt-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                             {selectedOrder.assignedTo?.shopper?.full_name ||
                               selectedOrder.assignedTo?.name ||
-                              "Shopper"}
+                              "Partner"}
                           </h5>
                           <p className="truncate text-xs font-medium text-gray-500 dark:text-gray-400">
-                            {selectedOrder.assignedTo?.email ||
-                              "No contact info"}
+                            {selectedOrder.assignedTo?.email || "No contact info"}
                           </p>
                         </div>
                       </div>

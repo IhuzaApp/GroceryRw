@@ -126,6 +126,17 @@ function MessagesPage() {
     }
   }, [router.query, isMobile]);
 
+  // Auto-select conversation matching the orderId if one exists
+  useEffect(() => {
+    if (selectedOrderId && !selectedConversationId && conversations.length > 0) {
+      const conv = conversations.find((c) => c.orderId === selectedOrderId);
+      if (conv) {
+        setSelectedConversationId(conv.id);
+        if (!isMobile) setIsDrawerOpen(true);
+      }
+    }
+  }, [selectedOrderId, selectedConversationId, conversations, isMobile]);
+
   // Fetch user's business account ID
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
