@@ -196,6 +196,7 @@ export default function DesktopMessagePage({
   const [piiError, setPiiError] = useState<string | null>(null);
   const [selectedRfq, setSelectedRfq] = useState<any>(null);
   const [loadingRfq, setLoadingRfq] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -401,7 +402,11 @@ export default function DesktopMessagePage({
     }
 
     const text = newMessage.trim();
-    const piiCheck = containsBlockedPii(text);
+    const piiCheck = containsBlockedPii(text, {
+      senderId: session.user.id,
+      senderName: session.user.name || "User",
+      conversationId: conversationId,
+    });
     if (piiCheck.blocked && piiCheck.reason) {
       setPiiError(getBlockedMessage(piiCheck.reason));
       return;
@@ -489,9 +494,9 @@ export default function DesktopMessagePage({
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-full w-full overflow-hidden bg-[var(--bg-primary)]">
       {/* Left Column - Conversation List */}
-      <div className="flex h-full w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-gray-700">
+      <div className="flex h-full w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-white/10">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
@@ -539,7 +544,7 @@ export default function DesktopMessagePage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conversations..."
-              className="w-full rounded-xl bg-white/40 px-4 py-3 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-500 transition-all focus:bg-white/60 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-800/40 dark:placeholder-gray-400 dark:focus:bg-gray-700/60"
+              className="w-full rounded-xl bg-[var(--bg-secondary)] px-4 py-3 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-500 transition-all focus:bg-white/60 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-white/5 dark:placeholder-gray-400 dark:focus:bg-white/10"
             />
             <svg
               className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -565,7 +570,7 @@ export default function DesktopMessagePage({
           {loading ? (
             <div className="flex h-full items-center justify-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-green-600 dark:border-gray-700 dark:border-t-green-500"></div>
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--bg-secondary)] border-t-green-600 dark:border-white/5 dark:border-t-green-500"></div>
                 <p className="text-sm text-[var(--text-secondary)]">
                   Loading...
                 </p>
@@ -853,11 +858,11 @@ export default function DesktopMessagePage({
                     <div key={groupIndex} className="space-y-4">
                       {/* Date Separator */}
                       <div className="flex items-center gap-4 py-2">
-                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-                        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
+                        <span className="rounded-full bg-[var(--bg-secondary)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)]">
                           {group.date}
                         </span>
-                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+                        <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
                       </div>
 
                       {/* Messages for this date */}
@@ -940,7 +945,7 @@ export default function DesktopMessagePage({
                                     className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
                                       isCurrentUser
                                         ? "rounded-br-none border-2 border-green-500/20 bg-green-500/5 font-medium text-green-700 dark:text-green-400"
-                                        : "rounded-bl-none border-2 border-gray-200/50 bg-gray-50/50 text-gray-900 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50 dark:text-gray-100"
+                                        : "rounded-bl-none border-2 border-gray-200/50 bg-[var(--bg-secondary)] text-[var(--text-primary)] backdrop-blur-sm dark:border-white/5"
                                     }`}
                                   >
                                     {message.product ? (
@@ -1016,7 +1021,7 @@ export default function DesktopMessagePage({
               </div>
             )}
             {/* Message Input */}
-            <div className="mb-6 flex-shrink-0 px-8 pb-10 pt-4">
+            <div className="mb-4 flex-shrink-0 px-8 pb-6 pt-2">
               <form
                 onSubmit={handleSendMessage}
                 className="relative mx-auto flex max-w-4xl items-center gap-3"
@@ -1108,9 +1113,9 @@ export default function DesktopMessagePage({
             </div>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="flex flex-1 items-center justify-center bg-[var(--bg-primary)]">
             <div className="text-center">
-              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-500/10 dark:to-emerald-500/10">
                 <svg
                   className="h-12 w-12 text-green-600 dark:text-green-400"
                   fill="none"
@@ -1125,10 +1130,10 @@ export default function DesktopMessagePage({
                   />
                 </svg>
               </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
                 Select a conversation
               </h3>
-              <p className="mt-2 max-w-xs text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 max-w-xs text-sm text-[var(--text-secondary)]">
                 Choose a chat from the list to start messaging and view order
                 details
               </p>
@@ -1137,7 +1142,7 @@ export default function DesktopMessagePage({
         )}
       </div>
 
-      <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden border-l border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden border-l border-gray-200 bg-[var(--bg-primary)] dark:border-white/10">
         {selectedConversation && (selectedOrder || selectedRfq) ? (
           <>
             {/* Header */}
@@ -1299,6 +1304,103 @@ export default function DesktopMessagePage({
                       </div>
                     )}
                   </div>
+
+                  {/* Customer Details Card */}
+                  {selectedOrder.orderedBy && (
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
+                        Customer Details
+                      </h4>
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md ring-2 ring-white dark:ring-gray-700">
+                          {selectedOrder.orderedBy.profile_picture ? (
+                            <img
+                              src={selectedOrder.orderedBy.profile_picture}
+                              alt="Customer"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-indigo-100 text-lg font-black text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                              {selectedOrder.orderedBy.name?.charAt(0).toUpperCase() || "C"}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h5 className="truncate text-sm font-bold text-gray-900 dark:text-white">
+                            {selectedOrder.orderedBy.name || "Customer"}
+                          </h5>
+                          {selectedOrder.orderedBy.phone && (
+                            <a
+                              href={`tel:${selectedOrder.orderedBy.phone}`}
+                              className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                            >
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                />
+                              </svg>
+                              {selectedOrder.orderedBy.phone}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Confirmation Action Button */}
+                  {selectedOrder.orderType === "vehicle" &&
+                    selectedOrder.status === "PENDING" &&
+                    (selectedOrder.assignedTo?.id === session?.user?.id ||
+                      selectedOrder.assignedTo?.shopper?.id === session?.user?.id) && (
+                      <div className="pt-2">
+                        <button
+                          disabled={isConfirming}
+                          onClick={async () => {
+                            if (!window.confirm("Are you sure you want to confirm this booking?")) return;
+                            setIsConfirming(true);
+                            try {
+                              const res = await fetch("/api/mutations/update-vehicle-booking-status", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  bookingId: selectedOrder.id,
+                                  status: "ACCEPTED",
+                                }),
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                window.location.reload();
+                              } else {
+                                alert(data.error || "Failed to confirm booking");
+                                setIsConfirming(false);
+                              }
+                            } catch (error) {
+                              console.error("Error confirming booking:", error);
+                              alert("An error occurred. Please try again.");
+                              setIsConfirming(false);
+                            }
+                          }}
+                          className={`group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition-all active:scale-[0.98] ${
+                            isConfirming ? "opacity-70 cursor-not-allowed" : "hover:scale-[1.02] hover:shadow-green-500/25"
+                          }`}
+                        >
+                          <span className="relative z-10">
+                            {isConfirming ? "Confirming..." : "Confirm Booking"}
+                          </span>
+                          {!isConfirming && (
+                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
+                          )}
+                        </button>
+                      </div>
+                    )}
                 </>
               ) : selectedRfq ? (
                 <div className="space-y-6">

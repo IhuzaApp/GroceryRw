@@ -151,6 +151,13 @@ const GET_REEL_ORDER_DETAILS = gql`
           logo
         }
       }
+      orderedBy: Users {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
     }
   }
 `;
@@ -171,6 +178,13 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         location
         logo
       }
+      orderedBy: Users {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
     }
   }
 `;
@@ -190,6 +204,13 @@ const GET_BUSINESS_ORDER_DETAILS = gql`
         name
         image
       }
+      orderedBy: Users {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
     }
   }
 `;
@@ -203,6 +224,13 @@ const GET_VEHICLE_BOOKING_DETAILS = gql`
       pickup_date
       return_date
       customer_id
+      orderedBy: Users {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
       RentalVehicles {
         id
         name
@@ -414,6 +442,7 @@ export default async function handler(
               Employment_id: "VEHICLE"
             }
           } : null,
+          orderedBy: booking.orderedBy || null,
           Order_Items: [
             {
               id: booking.id,
@@ -441,6 +470,7 @@ export default async function handler(
             orderType: "reel",
             placedAt: new Date(reelOrder.created_at).toLocaleString(),
             shop: reelOrder.reel?.Shops,
+            orderedBy: reelOrder.orderedBy || null,
             Order_Items: [{
               id: reelOrder.id,
               product: {
@@ -463,6 +493,7 @@ export default async function handler(
             ...restOrder,
             orderType: "restaurant",
             placedAt: new Date(restOrder.created_at).toLocaleString(),
+            orderedBy: restOrder.orderedBy || null,
             shop: restOrder.Restaurant ? {
               id: restOrder.Restaurant.id,
               name: restOrder.Restaurant.name,
@@ -484,6 +515,7 @@ export default async function handler(
             ...bizOrder,
             orderType: "business",
             placedAt: new Date(bizOrder.created_at).toLocaleString(),
+            orderedBy: bizOrder.orderedBy || null,
             shop: bizOrder.business_store,
           },
         });

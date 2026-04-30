@@ -50,7 +50,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     router.pathname === "/Pets" || router.pathname.startsWith("/Pets/");
 
   return (
-    <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">
+    <div className={`min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)] ${
+      isMessagesList || isMessagesChat ? "h-screen flex flex-col overflow-hidden" : ""
+    }`}>
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
         !isReelsPage &&
@@ -78,11 +80,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           isCarsPage ||
           isPetsPage ||
           isStoresPage ||
-          isMessagesChat ||
           isBecomeShopperPage
             ? ""
             : isMessagesList
-            ? "h-[calc(100dvh-60px)] md:h-screen pb-[60px] pt-0 md:pb-0"
+            ? "flex-1 overflow-hidden pb-[60px] md:pb-0"
+            : isMessagesChat
+            ? "flex-1 overflow-hidden"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
@@ -92,11 +95,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             ? {
                 margin: 0,
                 padding: 0,
-                ...(isMessagesList ? {} : {
-                  height: "100dvh",
-                  minHeight: "100dvh",
-                  maxHeight: "100dvh",
-                }),
                 overflow: "hidden",
               }
             : {}

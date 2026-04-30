@@ -295,7 +295,11 @@ export default function MobileChatPage({
       return;
 
     const text = newMessage.trim();
-    const piiCheck = containsBlockedPii(text);
+    const piiCheck = containsBlockedPii(text, {
+      senderId: session.user.id,
+      senderName: session.user.name || "User",
+      conversationId: conversationId,
+    });
     if (piiCheck.blocked && piiCheck.reason) {
       setError(getBlockedMessage(piiCheck.reason));
       return;

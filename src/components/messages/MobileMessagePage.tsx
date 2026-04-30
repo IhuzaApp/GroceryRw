@@ -371,7 +371,7 @@ export default function MobileMessagePage({
                   </div>
 
                   {/* Right Side: Content with perfectly aligned inner bottom border common in iOS WhatsApp */}
-                  <div className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-gray-200 py-3 pr-4 dark:border-gray-800">
+                  <div className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-gray-100 py-3 pr-4 dark:border-white/5">
                     <div className="flex items-center justify-between pb-[1px]">
                       <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
                         {contactName}
