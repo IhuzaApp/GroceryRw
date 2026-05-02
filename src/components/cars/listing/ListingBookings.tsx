@@ -11,7 +11,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Camera,
-  Check
+  Check,
+  Eye
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
@@ -85,6 +86,31 @@ function BookingCard({ booking }: { booking: any }) {
     };
   }, [booking.total, booking.status]);
 
+  const canCancel = useMemo(() => {
+    if (booking.status === "CANCELLED" || booking.status === "picked_up" || booking.status === "COMPLETED") return false;
+    
+    const now = new Date();
+    const pickupDate = new Date(booking.pickup_date);
+    const returnDate = new Date(booking.return_date);
+    
+    const pickup6AM = new Date(pickupDate);
+    pickup6AM.setHours(6, 0, 0, 0);
+
+    const durationDays = Math.ceil((returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24));
+    const hoursToPickup = (pickup6AM.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const daysToPickup = hoursToPickup / 24;
+
+    if (durationDays > 3) {
+      if (daysToPickup <= 2 && daysToPickup > 0) return false;
+    } else {
+      if (hoursToPickup <= 12 && hoursToPickup > 0) return false;
+    }
+
+    if (now > pickup6AM) return false;
+
+    return true;
+  }, [booking.status, booking.pickup_date, booking.return_date]);
+
   const handleCancel = async () => {
     setIsCancelling(true);
     try {
@@ -154,7 +180,7 @@ function BookingCard({ booking }: { booking: any }) {
   };
 
   return (
-    <>
+    <div className="contents">
       <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white p-5 shadow-sm transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-white/5 dark:bg-[#121212]">
         <div className="relative mb-4 h-48 w-full overflow-hidden rounded-[2rem]">
           <img
@@ -184,9 +210,16 @@ function BookingCard({ booking }: { booking: any }) {
 
         <div className="flex-1">
           <div className="mb-3 flex items-center justify-between">
-            <h4 className="font-outfit text-lg font-black text-gray-900 dark:text-white">
-              {booking.name}
-            </h4>
+            <div className="flex flex-col">
+              <h4 className="font-outfit text-lg font-black text-gray-900 dark:text-white">
+                {booking.name}
+              </h4>
+              {booking.platNumber && (
+                <span className="w-fit rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-black tracking-wider text-gray-500 dark:bg-white/10 dark:text-gray-400">
+                  {booking.platNumber}
+                </span>
+              )}
+            </div>
             <div className="flex flex-col items-end">
               <span className="font-outfit text-xl font-black text-green-500">
                 {formatCurrencySync(booking.total)}
@@ -219,14 +252,21 @@ function BookingCard({ booking }: { booking: any }) {
           </div>
 
           <div className="flex flex-col gap-3">
-
             <div className="flex items-center gap-3">
               <Link
-                href={`/Messages/${booking.bookingId}?chat=true`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 text-sm font-black !text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
+                href={`/Cars/booking/${booking.bookingId}`}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-gray-200 py-4 text-sm font-black text-gray-900 transition-all hover:bg-gray-50 active:scale-95 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
               >
-                <MessageSquare className="h-4 w-4" />
-                Contact Owner
+                <Eye className="h-4 w-4" />
+                View Details
+              </Link>
+
+              <Link
+                href={`/Messages/${booking.bookingId}?chat=true`}
+                title="Contact Owner"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500 text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
+              >
+                <MessageSquare className="h-5 w-5" />
               </Link>
 
               <div className="relative">
@@ -269,7 +309,7 @@ function BookingCard({ booking }: { booking: any }) {
                           setShowMenu(false);
                           setShowCancelModal(true);
                         }}
-                        disabled={booking.status === "CANCELLED" || booking.status === "picked_up" || booking.status === "COMPLETED"}
+                        disabled={!canCancel}
                         className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-500/10"
                       >
                         <X className="h-4 w-4" />
@@ -301,7 +341,7 @@ function BookingCard({ booking }: { booking: any }) {
         title="Confirm Vehicle Pickup"
         maxVideoDuration={60}
       />
-    </>
+    </div>
   );
 }
 

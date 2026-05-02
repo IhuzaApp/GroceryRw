@@ -37,6 +37,7 @@ export default function AddVehicleModal({
     driverOption: "none",
     securityDeposit: "",
     passengers: 5,
+    platNumber: "",
   });
 
   if (!isOpen) return null;
@@ -63,6 +64,7 @@ export default function AddVehicleModal({
         drive_provided: formData.driverOption === "offered",
         refundable_amount: formData.securityDeposit || "0",
         passenger: formData.passengers?.toString() || "5",
+        platNumber: formData.platNumber,
         logisticAccount_id: logisticAccountId,
       };
 

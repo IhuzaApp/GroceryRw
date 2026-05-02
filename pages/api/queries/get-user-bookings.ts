@@ -30,6 +30,7 @@ const GET_USER_BOOKINGS = gql`
         fuel_type
         price
         refundable_amount
+        platNumber
         logisticsAccounts {
           id
           businessName
@@ -81,6 +82,7 @@ export default async function handler(
       price: b.RentalVehicles?.price || 0,
       total: (parseFloat(b.amount || "0") + parseFloat(b.services_fee || "0")),
       securityDeposit: parseFloat(b.refundable_fee || "0"),
+      platNumber: b.RentalVehicles?.platNumber || "",
       ownerName: b.RentalVehicles?.logisticsAccounts?.businessName || b.RentalVehicles?.logisticsAccounts?.fullname || "Host",
     }));
 

@@ -23,6 +23,7 @@ const ADD_CAR_MUTATION = gql`
     $seats: String = ""
     $status: String = ""
     $transmission: String = ""
+    $platNumber: String = ""
     $updated_at: timestamptz = ""
   ) {
     insert_RentalVehicles(
@@ -44,6 +45,7 @@ const ADD_CAR_MUTATION = gql`
         seats: $seats
         status: $status
         transmission: $transmission
+        platNumber: $platNumber
         updated_at: $updated_at
       }
     ) {

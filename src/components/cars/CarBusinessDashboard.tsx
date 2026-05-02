@@ -577,6 +577,7 @@ export default function CarBusinessDashboard() {
                   key={booking.id}
                   customer={booking.orderedBy?.name || "Customer"}
                   car={booking.RentalVehicles?.name || "Vehicle"}
+                  platNumber={booking.RentalVehicles?.platNumber}
                   date={booking.pickup_date ? `${new Date(booking.pickup_date).toLocaleDateString()} - ${new Date(booking.return_date).toLocaleDateString()}` : "No dates"}
                   amount={formatCurrencySync(booking.amount)}
                   status={booking.status}
@@ -951,9 +952,16 @@ function CarDetailsModal({
             </div>
             <div>
               <h2 className="font-outfit text-2xl font-black">{car.name}</h2>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                {car.year} • {car.type}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                  {car.year} • {car.type}
+                </p>
+                {car.platNumber && (
+                  <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black tracking-wider text-gray-900 dark:bg-white/10 dark:text-white">
+                    {car.platNumber}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <button
@@ -1138,6 +1146,7 @@ function SpecItem({ icon, label, value, theme }: any) {
 function BookingItem({
   customer,
   car,
+  platNumber,
   date,
   amount,
   status,
@@ -1199,7 +1208,7 @@ function BookingItem({
               {customer}
             </h4>
             <p className="text-sm font-black text-gray-500">
-              {car} • {date}
+              {car} {platNumber && `(${platNumber})`} • {date}
             </p>
           </div>
         </div>

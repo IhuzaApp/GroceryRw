@@ -25,3 +25,90 @@ export const resend = resendApiKey
         },
       },
     } as unknown as Resend);
+
+export async function sendRentalInvoice({
+  to,
+  customerName,
+  vehicleName,
+  platNumber,
+  amount,
+  refundableDeposit,
+  serviceFee,
+  platformFee,
+}: {
+  to: string;
+  customerName: string;
+  vehicleName: string;
+  platNumber: string;
+  amount: string;
+  refundableDeposit: string;
+  serviceFee: string;
+  platformFee: string;
+}) {
+  try {
+    const subject = `Invoice for your rental: ${vehicleName} (${platNumber})`;
+    const html = `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #f0f0f0; border-radius: 24px;">
+        <div style="margin-bottom: 40px;">
+          <h1 style="font-size: 24px; font-weight: 800; color: #111827; margin: 0;">Rental Invoice</h1>
+          <p style="color: #6b7280; font-size: 14px;">Thank you for booking with us, ${customerName}!</p>
+        </div>
+
+        <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #f3f4f6;">
+          <h2 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Vehicle Details</h2>
+          <p style="font-size: 18px; font-weight: 700; color: #111827; margin: 0;">${vehicleName}</p>
+          <p style="font-size: 14px; font-weight: 600; color: #10b981; margin: 4px 0 0 0;">Plate Number: ${platNumber}</p>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+          <h2 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Billing Breakdown</h2>
+          <div style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #6b7280; font-size: 14px;">Rental Rate</span>
+              <span style="color: #111827; font-size: 14px; font-weight: 600;">RWF ${amount}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #6b7280; font-size: 14px;">Service Fee</span>
+              <span style="color: #111827; font-size: 14px; font-weight: 600;">RWF ${serviceFee}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #6b7280; font-size: 14px;">Platform Fee</span>
+              <span style="color: #111827; font-size: 14px; font-weight: 600;">RWF ${platformFee}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb;">
+              <span style="color: #6b7280; font-size: 14px;">Refundable Deposit</span>
+              <span style="color: #f59e0b; font-size: 14px; font-weight: 700;">RWF ${refundableDeposit}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 24px; background-color: #f9fafb; border-radius: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 800; color: #111827;">Total Paid</span>
+            <span style="font-size: 24px; font-weight: 900; color: #10b981;">RWF ${parseInt(amount) + parseInt(serviceFee) + parseInt(platformFee) + parseInt(refundableDeposit)}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center;">
+          <p style="font-size: 12px; color: #9ca3af; line-height: 1.5;">
+            This is an automated invoice for your rental booking.<br/>
+            The refundable deposit will be returned after the vehicle is inspected and returned.
+          </p>
+        </div>
+      </div>
+    `;
+
+    const result = await resend.emails.send({
+      from: "Plas <onboarding@resend.dev>",
+      to,
+      subject,
+      html,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Failed to send rental invoice email:", error);
+    await insertSystemLog("error", "Failed to send rental invoice email", "ResendLib", { error, to });
+    return null;
+  }
+}

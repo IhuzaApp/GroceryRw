@@ -34,6 +34,7 @@ const GET_LOGISTICS_BOOKINGS = gql`
         main_photo
         category
         price
+        platNumber
       }
       Ratings {
         id

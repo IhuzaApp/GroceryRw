@@ -13,6 +13,7 @@ const UPDATE_BOOKING_STATUS = gql`
       status
       RentalVehicles {
         name
+        platNumber
       }
       Users {
         phone
@@ -58,7 +59,8 @@ export default async function handler(
       if (customerPhone) {
         let message = "";
         if (status === "approved") {
-          message = `Hello ${booking.Users.name}, your booking for "${vehicleName}" on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
+          const platNum = booking.RentalVehicles?.platNumber ? `(${booking.RentalVehicles.platNumber})` : "";
+          message = `Hello ${booking.Users.name}, your booking for "${vehicleName}" ${platNum} on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
         } else if (status === "CANCELLED") {
           message = `Hello ${booking.Users.name}, unfortunately your booking for "${vehicleName}" on ${pickupDate} was declined by the owner. Any payments made will be refunded to your wallet.`;
         }

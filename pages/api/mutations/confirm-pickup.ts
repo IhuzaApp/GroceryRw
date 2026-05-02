@@ -15,6 +15,8 @@ const GET_BOOKING = gql`
       services_fee
       customer_id
       RentalVehicles {
+        name
+        platNumber
         logisticAccount_id
         logisticsAccounts {
           id
@@ -81,6 +83,10 @@ export default async function handler(
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "System error: Database client not initialized" });
   }
 
   const session = await getServerSession(req, res, authOptions as any) as any;
@@ -162,7 +168,8 @@ export default async function handler(
       const ownerName = booking.RentalVehicles?.logisticsAccounts?.businessName || booking.RentalVehicles?.logisticsAccounts?.fullname || "Vendor";
 
       if (ownerPhone) {
-        const message = `Hello ${ownerName}, your vehicle "${vehicleName}" has been successfully picked up! The condition video report is uploaded and funds have been credited.`;
+        const platNumber = booking.RentalVehicles?.platNumber || "";
+        const message = `Hello ${ownerName}, your vehicle "${vehicleName}" (${platNumber}) has been successfully picked up! The condition video report is uploaded and funds have been credited.`;
         await sendSMS(ownerPhone, message);
       }
     } catch (smsErr) {

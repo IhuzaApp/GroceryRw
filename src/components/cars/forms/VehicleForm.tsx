@@ -30,6 +30,7 @@ export interface VehicleFormData {
   driverOption: string;
   securityDeposit: string;
   passengers?: number;
+  platNumber: string;
 }
 
 interface VehicleFieldsProps {
@@ -164,6 +165,32 @@ export default function VehicleFields({
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
+              }
+              required
+            />
+          </div>
+        </div>
+
+        {/* Plate Number */}
+        <div>
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+            Plate Number
+          </label>
+          <div
+            className={`relative flex items-center rounded-2xl border px-4 transition-all focus-within:ring-2 focus-within:ring-green-500/50 ${
+              theme === "dark"
+                ? "border-white/10 bg-white/5"
+                : "border-gray-200 bg-gray-50"
+            }`}
+          >
+            <span className="mr-3 text-xs font-black text-gray-400">ABC</span>
+            <input
+              type="text"
+              placeholder="e.g. RAC 123A"
+              className="w-full bg-transparent py-4 text-sm font-medium outline-none"
+              value={formData.platNumber}
+              onChange={(e) =>
+                setFormData({ ...formData, platNumber: e.target.value })
               }
               required
             />

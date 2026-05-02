@@ -303,6 +303,27 @@ const UPDATE_VEHICLE_BOOKING_STATUS = gql`
   }
 `;
 
+const GET_VEHICLE_BOOKING_DETAILS_FOR_INVOICE = gql`
+  query GetVehicleBookingDetails($id: uuid!) {
+    vehicleBookings_by_pk(id: $id) {
+      id
+      amount
+      refundable_fee
+      services_fee
+      pickup_date
+      return_date
+      orderedBy {
+        name
+        email
+      }
+      RentalVehicles {
+        name
+        platNumber
+      }
+    }
+  }
+`;
+
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
     order_transactions(where: { reference_id: { _eq: $reference_id } }) {
@@ -724,6 +745,30 @@ export default async function handler(
                   id: vehicleBookingsId,
                   status: "PAID",
                 });
+
+                // Send Invoice Email
+                try {
+                  const bookingDetailsRes = await hasuraClient.request<{
+                    vehicleBookings_by_pk: any;
+                  }>(GET_VEHICLE_BOOKING_DETAILS_FOR_INVOICE, { id: vehicleBookingsId });
+
+                  const booking = bookingDetailsRes.vehicleBookings_by_pk;
+                  if (booking && booking.orderedBy?.email) {
+                    const { sendRentalInvoice } = require("../../../src/lib/resend");
+                    await sendRentalInvoice({
+                      to: booking.orderedBy.email,
+                      customerName: booking.orderedBy.name || "Customer",
+                      vehicleName: booking.RentalVehicles?.name || "Vehicle",
+                      platNumber: booking.RentalVehicles?.platNumber || "N/A",
+                      amount: booking.amount,
+                      refundableDeposit: booking.refundable_fee || "0",
+                      serviceFee: booking.services_fee || "0",
+                      platformFee: "0",
+                    });
+                  }
+                } catch (emailErr) {
+                  console.error("Failed to send rental invoice:", emailErr);
+                }
               }
             } else if (newStatus === "FAILED") {
               // FAILURE: Mark orders as PAYMENT_FAILED

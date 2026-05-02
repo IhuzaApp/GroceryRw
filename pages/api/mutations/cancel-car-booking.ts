@@ -13,6 +13,8 @@ const GET_BOOKING_DETAILS = gql`
       status
       customer_id
       vehicle_id
+      pickup_date
+      return_date
       RentalVehicles {
         name
         logisticAccount_id
@@ -87,6 +89,10 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "System error: Database client not initialized" });
+  }
+
   try {
     const session = await getServerSession(req, res, authOptions as any);
     if (!session || !(session as any).user?.id) {
@@ -115,6 +121,40 @@ export default async function handler(
     if (booking.status === "CANCELLED") {
       return res.status(400).json({ error: "Booking is already cancelled" });
     }
+
+    // --- New Cancellation Logic ---
+    const now = new Date();
+    const pickupDate = new Date(booking.pickup_date);
+    const returnDate = new Date(booking.return_date);
+    
+    // Set pickup time to 6 AM as per requirement
+    const pickup6AM = new Date(pickupDate);
+    pickup6AM.setHours(6, 0, 0, 0);
+
+    const durationDays = Math.ceil((returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24));
+    const hoursToPickup = (pickup6AM.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const daysToPickup = hoursToPickup / 24;
+
+    if (durationDays > 3) {
+      // More than 3 days: Cannot cancel if 1 or 2 days remaining to pickup
+      if (daysToPickup <= 2 && daysToPickup > 0) {
+        return res.status(400).json({ 
+          error: "For bookings longer than 3 days, cancellation is not allowed within 2 days of pickup." 
+        });
+      }
+    } else {
+      // 1-3 days (today or tomorrow bookings): Cannot cancel 12 hours before 6 AM pickup
+      if (hoursToPickup <= 12 && hoursToPickup > 0) {
+        return res.status(400).json({ 
+          error: "Cancellation is not allowed within 12 hours of the 6 AM pickup time." 
+        });
+      }
+    }
+
+    if (now > pickup6AM) {
+      return res.status(400).json({ error: "Cannot cancel a booking after the pickup time has passed." });
+    }
+    // ------------------------------
 
     const originalAmount = parseFloat(booking.amount || "0");
     let refundAmount = 0;
