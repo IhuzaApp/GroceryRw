@@ -33,14 +33,20 @@ export interface Pet {
   story: string;
   price: number;
   location: string;
+  months?: string | number;
+  quantity?: string | number;
+  updated_at?: string;
   image: string;
   images: { url: string; label: string }[];
   isVaccinated: boolean;
+  isDonation?: boolean;
   vaccinations: string[];
   vaccination_cert?: string;
   vaccinationCertificateUrl?: string;
   video?: string;
   videoUrl?: string;
+  parentImages?: { url: string; label: string }[];
+  parent_images?: { url: string; label: string }[];
   status: "available" | "sold";
   vendor: { name: string; id: string; image: string };
 }

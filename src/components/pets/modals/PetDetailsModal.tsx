@@ -260,7 +260,7 @@ export default function PetDetailsModal({
                   <DetailItem
                     icon={<Calendar />}
                     label="Last Updated"
-                    value={new Date(pet.updated_at).toLocaleDateString()}
+                    value={new Date(pet.updated_at || 0).toLocaleDateString()}
                     theme={theme}
                   />
                 </div>
