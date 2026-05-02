@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { insertSystemLog } from "../../queries/system-logs";
+import { insertSystemLog } from "../queries/system-logs";
 
 export default async function handler(
   req: NextApiRequest,
