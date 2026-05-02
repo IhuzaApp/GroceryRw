@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { uploadToFirebase } from "../../lib/firebase";
 import toast from "react-hot-toast";
-import { Car } from "../../constants/dummyCars";
+import { Car } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";

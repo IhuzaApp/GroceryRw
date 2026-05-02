@@ -26,7 +26,7 @@ import {
   Wallet,
   CreditCard,
 } from "lucide-react";
-import { Pet } from "../../constants/dummyPets";
+import { Pet } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";

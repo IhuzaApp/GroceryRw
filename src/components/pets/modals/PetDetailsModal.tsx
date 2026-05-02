@@ -12,7 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
-import { Pet } from "../../../constants/dummyPets";
+import { Pet } from "../../../types/models";
 
 interface PetDetailsModalProps {
   pet: Pet;

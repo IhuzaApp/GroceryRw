@@ -10,7 +10,7 @@ import {
   Info,
   Loader2,
 } from "lucide-react";
-import { Pet } from "../../constants/dummyPets";
+import { Pet } from "../../types/models";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import PetListingHeader from "./PetListingHeader";

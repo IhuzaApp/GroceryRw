@@ -27,7 +27,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-import { DUMMY_PETS, Pet } from "../../constants/dummyPets";
+import { Pet } from "../../types/models";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import PetDashboardHeader from "./PetDashboardHeader";
@@ -51,7 +51,7 @@ export default function PetBusinessDashboard() {
   const { data: session } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"pets" | "interests">("pets");
-  const [pets, setPets] = useState(DUMMY_PETS);
+  const [pets, setPets] = useState<Pet[]>([]);
   const { walletBalance } = useBusinessWallet();
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);

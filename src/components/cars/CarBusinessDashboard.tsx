@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useBusinessWallet } from "../../context/BusinessWalletContext";
-import { Car } from "../../constants/dummyCars";
+import { Car } from "../../types/models";
 import AddVehicleModal from "./modals/AddVehicleModal";
 import EditVehicleModal from "./modals/EditVehicleModal";
 import BookingDetailsModal from "./modals/BookingDetailsModal";

@@ -1,0 +1,46 @@
+export interface Car {
+  id: string;
+  name: string;
+  type: "Sedan" | "SUV" | "Truck" | "Hatchback" | "Van" | "Luxury";
+  fuelType: "Fuel" | "Electric" | "Hybrid" | "Diesel";
+  location: string;
+  price: number;
+  image: string;
+  images: { url: string; label: string }[];
+  status: "active" | "inactive";
+  rating: number;
+  year: number;
+  passengers: number;
+  transmission: "Automatic" | "Manual";
+  licenseInfo: string;
+  description: string;
+  reviews: { user: string; comment: string; rating: number; date: string }[];
+  owner: { name: string; id: string; image: string };
+  securityDeposit: number;
+  driverOption: "none" | "offered";
+  platNumber?: string;
+}
+
+export interface Pet {
+  id: string;
+  name: string;
+  type: string;
+  breed: string;
+  age: string;
+  gender: "Male" | "Female";
+  color: string;
+  weight: string;
+  story: string;
+  price: number;
+  location: string;
+  image: string;
+  images: { url: string; label: string }[];
+  isVaccinated: boolean;
+  vaccinations: string[];
+  vaccination_cert?: string;
+  vaccinationCertificateUrl?: string;
+  video?: string;
+  videoUrl?: string;
+  status: "available" | "sold";
+  vendor: { name: string; id: string; image: string };
+}
