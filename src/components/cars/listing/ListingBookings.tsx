@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Camera,
   Check,
-  Eye
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
@@ -46,7 +46,10 @@ export default function ListingBookings({ bookings }: ListingBookingsProps) {
   return (
     <div className="mx-auto grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bookings.map((booking, index) => (
-        <BookingCard key={`${booking.bookingId || index}-${index}`} booking={booking} />
+        <BookingCard
+          key={`${booking.bookingId || index}-${index}`}
+          booking={booking}
+        />
       ))}
     </div>
   );
@@ -61,18 +64,25 @@ function BookingCard({ booking }: { booking: any }) {
 
   const statusLabel = useMemo(() => {
     switch (booking.status) {
-      case "PAID": return "Booked";
-      case "approved": return "Waiting for Pickup";
-      case "picked_up": return "Active Ride";
-      case "COMPLETED": return "Completed";
-      case "CANCELLED": return "Cancelled";
-      default: return booking.status || "Confirmed";
+      case "PAID":
+        return "Booked";
+      case "approved":
+        return "Waiting for Pickup";
+      case "picked_up":
+        return "Active Ride";
+      case "COMPLETED":
+        return "Completed";
+      case "CANCELLED":
+        return "Cancelled";
+      default:
+        return booking.status || "Confirmed";
     }
   }, [booking.status]);
 
   const cancellationDetails = useMemo(() => {
     const total = parseFloat(booking.total || "0");
-    const isAccepted = booking.status === "approved" || booking.status === "picked_up";
+    const isAccepted =
+      booking.status === "approved" || booking.status === "picked_up";
     const feePercent = isAccepted ? 0.05 : 0.02;
     const feeAmount = total * feePercent;
     const refundAmount = total - feeAmount;
@@ -87,17 +97,25 @@ function BookingCard({ booking }: { booking: any }) {
   }, [booking.total, booking.status]);
 
   const canCancel = useMemo(() => {
-    if (booking.status === "CANCELLED" || booking.status === "picked_up" || booking.status === "COMPLETED") return false;
-    
+    if (
+      booking.status === "CANCELLED" ||
+      booking.status === "picked_up" ||
+      booking.status === "COMPLETED"
+    )
+      return false;
+
     const now = new Date();
     const pickupDate = new Date(booking.pickup_date);
     const returnDate = new Date(booking.return_date);
-    
+
     const pickup6AM = new Date(pickupDate);
     pickup6AM.setHours(6, 0, 0, 0);
 
-    const durationDays = Math.ceil((returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24));
-    const hoursToPickup = (pickup6AM.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const durationDays = Math.ceil(
+      (returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const hoursToPickup =
+      (pickup6AM.getTime() - now.getTime()) / (1000 * 60 * 60);
     const daysToPickup = hoursToPickup / 24;
 
     if (durationDays > 3) {
@@ -141,13 +159,17 @@ function BookingCard({ booking }: { booking: any }) {
   };
 
   const handlePickupVideoCapture = async (videoUrl: string) => {
-    const loadingToast = toast.loading("Uploading pickup confirmation video...");
+    const loadingToast = toast.loading(
+      "Uploading pickup confirmation video..."
+    );
     setIsConfirmingPickup(true);
     try {
       // 1. Fetch blob
       const response = await fetch(videoUrl);
       const blob = await response.blob();
-      const file = new File([blob], `pickup_${booking.bookingId}.webm`, { type: "video/webm" });
+      const file = new File([blob], `pickup_${booking.bookingId}.webm`, {
+        type: "video/webm",
+      });
 
       // 2. Upload to Firebase
       const storagePath = `bookings/${booking.bookingId}/pickup_video.webm`;
@@ -157,18 +179,22 @@ function BookingCard({ booking }: { booking: any }) {
       const res = await fetch("/api/mutations/confirm-pickup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           bookingId: booking.bookingId,
-          carVideo_Status: downloadUrl 
+          carVideo_Status: downloadUrl,
         }),
       });
       const data = await res.json();
 
       if (data.success) {
-        toast.success("Pickup confirmed! Ride is now active.", { id: loadingToast });
+        toast.success("Pickup confirmed! Ride is now active.", {
+          id: loadingToast,
+        });
         window.location.reload(); // Refresh to update status
       } else {
-        toast.error(data.error || "Failed to confirm pickup", { id: loadingToast });
+        toast.error(data.error || "Failed to confirm pickup", {
+          id: loadingToast,
+        });
       }
     } catch (error) {
       console.error("Pickup confirmation error:", error);

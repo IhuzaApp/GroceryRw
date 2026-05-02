@@ -54,7 +54,9 @@ if (hasFirebaseCredentials()) {
     console.error("❌ [Firebase Admin] Initialization failed:", error);
   }
 } else {
-  console.warn("⚠️ [Firebase Admin] Credentials missing. Admin features disabled.");
+  console.warn(
+    "⚠️ [Firebase Admin] Credentials missing. Admin features disabled."
+  );
 }
 
 export { adminApp, storage, db };

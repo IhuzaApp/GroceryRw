@@ -511,14 +511,23 @@ export async function notifyPIIDetectionToSlack(payload: PIIDetectionPayload) {
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Sender*\n${payload.senderName} (\`${payload.senderId}\`)` },
-        { type: "mrkdwn", text: `*Type*\n${payload.detectedType.toUpperCase()}` },
+        {
+          type: "mrkdwn",
+          text: `*Sender*\n${payload.senderName} (\`${payload.senderId}\`)`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Type*\n${payload.detectedType.toUpperCase()}`,
+        },
       ],
     },
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Conversation*\n\`${payload.conversationId}\`` },
+        {
+          type: "mrkdwn",
+          text: `*Conversation*\n\`${payload.conversationId}\``,
+        },
         { type: "mrkdwn", text: `*Time*\n${new Date().toLocaleString()}` },
       ],
     },
@@ -527,7 +536,9 @@ export async function notifyPIIDetectionToSlack(payload: PIIDetectionPayload) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Detected Message*\n> ${payload.message.slice(0, 500)}${payload.message.length > 500 ? "..." : ""}`,
+        text: `*Detected Message*\n> ${payload.message.slice(0, 500)}${
+          payload.message.length > 500 ? "..." : ""
+        }`,
       },
     },
   ];

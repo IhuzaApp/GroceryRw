@@ -413,8 +413,10 @@ export default async function handler(
 
       if (booking) {
         const vendor = booking.RentalVehicles?.logisticsAccounts;
-        const ownerUser = Array.isArray(vendor?.Users) ? vendor.Users[0] : vendor?.Users;
-        
+        const ownerUser = Array.isArray(vendor?.Users)
+          ? vendor.Users[0]
+          : vendor?.Users;
+
         const formattedBooking = {
           id: booking.id,
           OrderID: booking.id.substring(0, 8).toUpperCase(),
@@ -432,22 +434,27 @@ export default async function handler(
             name: vendor?.businessName || vendor?.fullname || "Vehicle Partner",
             image: ownerUser?.profile_picture || null,
           },
-          assignedTo: ownerUser ? {
-            id: ownerUser.id,
-            name: vendor?.fullname || vendor?.businessName || "Owner",
-            profile_picture: ownerUser.profile_picture || null,
-            shopper: {
-              full_name: vendor?.fullname || vendor?.businessName || "Owner",
-              profile_photo: ownerUser.profile_picture || null,
-              Employment_id: "VEHICLE"
-            }
-          } : null,
+          assignedTo: ownerUser
+            ? {
+                id: ownerUser.id,
+                name: vendor?.fullname || vendor?.businessName || "Owner",
+                profile_picture: ownerUser.profile_picture || null,
+                shopper: {
+                  full_name:
+                    vendor?.fullname || vendor?.businessName || "Owner",
+                  profile_photo: ownerUser.profile_picture || null,
+                  Employment_id: "VEHICLE",
+                },
+              }
+            : null,
           orderedBy: booking.orderedBy || null,
           Order_Items: [
             {
               id: booking.id,
               product: {
-                ProductName: { name: booking.RentalVehicles?.name || "Rental Vehicle" },
+                ProductName: {
+                  name: booking.RentalVehicles?.name || "Rental Vehicle",
+                },
                 image: booking.RentalVehicles?.main_photo,
                 category: booking.RentalVehicles?.category,
                 location: booking.RentalVehicles?.location,
@@ -471,21 +478,29 @@ export default async function handler(
             placedAt: new Date(reelOrder.created_at).toLocaleString(),
             shop: reelOrder.reel?.Shops,
             orderedBy: reelOrder.orderedBy || null,
-            Order_Items: [{
-              id: reelOrder.id,
-              product: {
-                ProductName: { name: reelOrder.reel?.title || "Reel Product" },
-                image: reelOrder.reel?.Shops?.image || reelOrder.reel?.Shops?.logo
-              }
-            }]
+            Order_Items: [
+              {
+                id: reelOrder.id,
+                product: {
+                  ProductName: {
+                    name: reelOrder.reel?.title || "Reel Product",
+                  },
+                  image:
+                    reelOrder.reel?.Shops?.image || reelOrder.reel?.Shops?.logo,
+                },
+              },
+            ],
           },
         });
       }
 
       // 3. Try restaurant orders
-      const restData = await hasuraClient.request<any>(GET_RESTAURANT_ORDER_DETAILS, {
-        id: orderId,
-      });
+      const restData = await hasuraClient.request<any>(
+        GET_RESTAURANT_ORDER_DETAILS,
+        {
+          id: orderId,
+        }
+      );
       const restOrder = restData.restaurant_orders_by_pk;
       if (restOrder) {
         return res.status(200).json({
@@ -494,20 +509,25 @@ export default async function handler(
             orderType: "restaurant",
             placedAt: new Date(restOrder.created_at).toLocaleString(),
             orderedBy: restOrder.orderedBy || null,
-            shop: restOrder.Restaurant ? {
-              id: restOrder.Restaurant.id,
-              name: restOrder.Restaurant.name,
-              address: restOrder.Restaurant.location,
-              logo: restOrder.Restaurant.logo
-            } : null,
+            shop: restOrder.Restaurant
+              ? {
+                  id: restOrder.Restaurant.id,
+                  name: restOrder.Restaurant.name,
+                  address: restOrder.Restaurant.location,
+                  logo: restOrder.Restaurant.logo,
+                }
+              : null,
           },
         });
       }
 
       // 4. Try business orders
-      const bizData = await hasuraClient.request<any>(GET_BUSINESS_ORDER_DETAILS, {
-        id: orderId,
-      });
+      const bizData = await hasuraClient.request<any>(
+        GET_BUSINESS_ORDER_DETAILS,
+        {
+          id: orderId,
+        }
+      );
       const bizOrder = bizData.businessProductOrders_by_pk;
       if (bizOrder) {
         return res.status(200).json({

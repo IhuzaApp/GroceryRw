@@ -128,7 +128,11 @@ function MessagesPage() {
 
   // Auto-select conversation matching the orderId if one exists
   useEffect(() => {
-    if (selectedOrderId && !selectedConversationId && conversations.length > 0) {
+    if (
+      selectedOrderId &&
+      !selectedConversationId &&
+      conversations.length > 0
+    ) {
       const conv = conversations.find((c) => c.orderId === selectedOrderId);
       if (conv) {
         setSelectedConversationId(conv.id);

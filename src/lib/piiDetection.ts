@@ -1,10 +1,11 @@
 import { notifyPIIDetectionToSlack } from "./slackSystemNotifier";
 
 /**
- * Regex for detecting phone numbers. 
+ * Regex for detecting phone numbers.
  * Matches common formats: +123..., 07..., (123) ..., etc.
  */
-const PHONE_REGEX = /(\+?\d{1,4}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4,6}|(\+?\d{10,14})/g;
+const PHONE_REGEX =
+  /(\+?\d{1,4}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4,6}|(\+?\d{10,14})/g;
 
 /**
  * Regex for detecting email addresses.
@@ -24,7 +25,7 @@ export interface CheckPIIParams {
  */
 export async function checkAndNotifyPII(params: CheckPIIParams) {
   const { message, senderId, senderName, conversationId } = params;
-  
+
   const hasPhone = PHONE_REGEX.test(message);
   const hasEmail = EMAIL_REGEX.test(message);
 
@@ -40,7 +41,7 @@ export async function checkAndNotifyPII(params: CheckPIIParams) {
       message,
       detectedType,
     });
-    
+
     return true;
   }
 

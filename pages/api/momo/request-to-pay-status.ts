@@ -285,7 +285,10 @@ const GET_PET_ADOPTION_DETAILS = gql`
 
 const UPDATE_PET_QUANTITY_SOLD = gql`
   mutation UpdatePetQuantitySold($id: uuid!, $quantity_sold: String!) {
-    update_pets_by_pk(pk_columns: { id: $id }, _set: { quantity_sold: $quantity_sold }) {
+    update_pets_by_pk(
+      pk_columns: { id: $id }
+      _set: { quantity_sold: $quantity_sold }
+    ) {
       id
       quantity_sold
     }
@@ -440,8 +443,8 @@ export default async function handler(
       data.status === "SUCCESSFUL"
         ? "SUCCESSFUL"
         : data.status === "PENDING"
-          ? "PENDING"
-          : "FAILED";
+        ? "PENDING"
+        : "FAILED";
 
     if (hasuraClient) {
       try {
@@ -673,25 +676,29 @@ export default async function handler(
                     }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
 
                     const adoption = adoptionDetails.petAdoption_by_pk;
-                    
+
                     if (adoption && adoption.pets?.id) {
                       try {
-                        const currentSold = parseInt(adoption.pets.quantity_sold || "0", 10);
+                        const currentSold = parseInt(
+                          adoption.pets.quantity_sold || "0",
+                          10
+                        );
                         const newSold = (currentSold + 1).toString();
-                        await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, { id: adoption.pets.id, quantity_sold: newSold });
+                        await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
+                          id: adoption.pets.id,
+                          quantity_sold: newSold,
+                        });
                       } catch (incErr) {
-                        console.error("Failed to increment pet quantity_sold:", incErr);
+                        console.error(
+                          "Failed to increment pet quantity_sold:",
+                          incErr
+                        );
                       }
                     }
 
-                    if (
-                      adoption &&
-                      adoption.pets?.pet_vendors?.Users?.phone
-                    ) {
-                      const vendorPhone =
-                        adoption.pets.pet_vendors.Users.phone;
-                      const vendorUserId =
-                        adoption.pets.pet_vendors.Users.id;
+                    if (adoption && adoption.pets?.pet_vendors?.Users?.phone) {
+                      const vendorPhone = adoption.pets.pet_vendors.Users.phone;
+                      const vendorUserId = adoption.pets.pet_vendors.Users.id;
                       const petName = adoption.pets.name;
                       const customerPhone = adoption.phone;
                       const customerAddress = adoption.address;
@@ -715,7 +722,10 @@ export default async function handler(
                             },
                           });
                         } catch (notifErr) {
-                          console.error("Failed to send FCM notification:", notifErr);
+                          console.error(
+                            "Failed to send FCM notification:",
+                            notifErr
+                          );
                         }
                       }
                     }
@@ -726,7 +736,9 @@ export default async function handler(
                     );
                     await insertSystemLog(
                       "error",
-                      `Failed to send vendor SMS (Adoption): ${smsErr.message || "Unknown"}`,
+                      `Failed to send vendor SMS (Adoption): ${
+                        smsErr.message || "Unknown"
+                      }`,
                       "MomoRequestToPayStatusAPI:SMS",
                       { petAdoptionId, error: smsErr }
                     );
@@ -750,11 +762,15 @@ export default async function handler(
                 try {
                   const bookingDetailsRes = await hasuraClient.request<{
                     vehicleBookings_by_pk: any;
-                  }>(GET_VEHICLE_BOOKING_DETAILS_FOR_INVOICE, { id: vehicleBookingsId });
+                  }>(GET_VEHICLE_BOOKING_DETAILS_FOR_INVOICE, {
+                    id: vehicleBookingsId,
+                  });
 
                   const booking = bookingDetailsRes.vehicleBookings_by_pk;
                   if (booking && booking.orderedBy?.email) {
-                    const { sendRentalInvoice } = require("../../../src/lib/resend");
+                    const {
+                      sendRentalInvoice,
+                    } = require("../../../src/lib/resend");
                     await sendRentalInvoice({
                       to: booking.orderedBy.email,
                       customerName: booking.orderedBy.name || "Customer",
@@ -893,25 +909,29 @@ export default async function handler(
                   }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
 
                   const adoption = adoptionDetails.petAdoption_by_pk;
-                  
+
                   if (adoption && adoption.pets?.id) {
                     try {
-                      const currentSold = parseInt(adoption.pets.quantity_sold || "0", 10);
+                      const currentSold = parseInt(
+                        adoption.pets.quantity_sold || "0",
+                        10
+                      );
                       const newSold = (currentSold + 1).toString();
-                      await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, { id: adoption.pets.id, quantity_sold: newSold });
+                      await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
+                        id: adoption.pets.id,
+                        quantity_sold: newSold,
+                      });
                     } catch (incErr) {
-                      console.error("Failed to increment pet quantity_sold:", incErr);
+                      console.error(
+                        "Failed to increment pet quantity_sold:",
+                        incErr
+                      );
                     }
                   }
 
-                  if (
-                    adoption &&
-                    adoption.pets?.pet_vendors?.Users?.phone
-                  ) {
-                    const vendorPhone =
-                      adoption.pets.pet_vendors.Users.phone;
-                    const vendorUserId =
-                      adoption.pets.pet_vendors.Users.id;
+                  if (adoption && adoption.pets?.pet_vendors?.Users?.phone) {
+                    const vendorPhone = adoption.pets.pet_vendors.Users.phone;
+                    const vendorUserId = adoption.pets.pet_vendors.Users.id;
                     const petName = adoption.pets.name;
                     const customerPhone = adoption.phone;
                     const customerAddress = adoption.address;
@@ -935,7 +955,10 @@ export default async function handler(
                           },
                         });
                       } catch (notifErr) {
-                        console.error("Failed to send FCM notification:", notifErr);
+                        console.error(
+                          "Failed to send FCM notification:",
+                          notifErr
+                        );
                       }
                     }
                   }
@@ -946,7 +969,9 @@ export default async function handler(
                   );
                   await insertSystemLog(
                     "error",
-                    `Failed to send vendor SMS (Adoption): ${smsErr.message || "Unknown"}`,
+                    `Failed to send vendor SMS (Adoption): ${
+                      smsErr.message || "Unknown"
+                    }`,
                     "MomoRequestToPayStatusAPI:SMS",
                     { petAdoptionId, error: smsErr }
                   );
@@ -1054,7 +1079,9 @@ export default async function handler(
                 );
                 await insertSystemLog(
                   "error",
-                  `Failed to update wallet balance: ${walletError.message || "Unknown"}`,
+                  `Failed to update wallet balance: ${
+                    walletError.message || "Unknown"
+                  }`,
                   "MomoRequestToPayStatusAPI:Wallet",
                   { transactionId: transaction.id, error: walletError }
                 );

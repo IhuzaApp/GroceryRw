@@ -8,7 +8,10 @@ import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const UPDATE_PET_QUANTITY_SOLD = gql`
   mutation UpdatePetQuantitySold($id: uuid!, $quantity_sold: String!) {
-    update_pets_by_pk(pk_columns: { id: $id }, _set: { quantity_sold: $quantity_sold }) {
+    update_pets_by_pk(
+      pk_columns: { id: $id }
+      _set: { quantity_sold: $quantity_sold }
+    ) {
       id
       quantity_sold
     }
@@ -124,7 +127,10 @@ export default async function handler(
           try {
             const currentSold = parseInt(petInfo.quantity_sold || "0", 10);
             const newSold = (currentSold + 1).toString();
-            await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, { id: pet_id, quantity_sold: newSold });
+            await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
+              id: pet_id,
+              quantity_sold: newSold,
+            });
           } catch (incErr) {
             console.error("Failed to increment pet quantity_sold:", incErr);
           }

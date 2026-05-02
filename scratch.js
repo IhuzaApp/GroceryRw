@@ -19,7 +19,7 @@ async function run() {
   try {
     const res = await hasuraClient.request(query);
     console.log(JSON.stringify(res, null, 2));
-  } catch(e) {
+  } catch (e) {
     console.error(e);
   }
 }

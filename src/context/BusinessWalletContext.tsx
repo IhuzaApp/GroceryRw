@@ -17,7 +17,11 @@ const BusinessWalletContext = createContext<BusinessWalletContextType>({
   fetchWalletBalance: async () => {},
 });
 
-export function BusinessWalletProvider({ children }: { children: React.ReactNode }) {
+export function BusinessWalletProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { isLoggedIn, role, authReady } = useAuth();
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [businessWalletId, setBusinessWalletId] = useState<string | null>(null);

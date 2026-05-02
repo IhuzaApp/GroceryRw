@@ -98,7 +98,9 @@ export default function VehicleFields({
           {uploading === "main" ? (
             <div className="flex flex-col items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-green-500" />
-              <p className="mt-2 text-sm font-medium text-gray-500">Uploading...</p>
+              <p className="mt-2 text-sm font-medium text-gray-500">
+                Uploading...
+              </p>
             </div>
           ) : formData.image ? (
             <img

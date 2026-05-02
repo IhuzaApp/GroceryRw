@@ -131,16 +131,16 @@ export default function CarListing() {
         console.error("Error fetching bookings:", error);
       }
     };
-    
+
     if (activeMainTab === "bookings") {
       loadBookings();
     }
-    
+
     // Refresh bookings periodically if on bookings tab
     const interval = setInterval(() => {
       if (activeMainTab === "bookings") loadBookings();
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [activeMainTab]);
 
@@ -171,7 +171,9 @@ export default function CarListing() {
       <PlasDriveHeader
         activeTab={activeMainTab}
         onTabChange={setActiveMainTab}
-        onBecomePartner={() => router.push(hasAccount ? "/Cars/dashboard" : "/Cars/become-partner")}
+        onBecomePartner={() =>
+          router.push(hasAccount ? "/Cars/dashboard" : "/Cars/become-partner")
+        }
         isPartner={hasAccount}
       />
 

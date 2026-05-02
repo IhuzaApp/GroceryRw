@@ -50,7 +50,11 @@ export default async function handler(
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions as any) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -80,15 +84,20 @@ export default async function handler(
       type: b.RentalVehicles?.category || "",
       fuelType: b.RentalVehicles?.fuel_type || "",
       price: b.RentalVehicles?.price || 0,
-      total: (parseFloat(b.amount || "0") + parseFloat(b.services_fee || "0")),
+      total: parseFloat(b.amount || "0") + parseFloat(b.services_fee || "0"),
       securityDeposit: parseFloat(b.refundable_fee || "0"),
       platNumber: b.RentalVehicles?.platNumber || "",
-      ownerName: b.RentalVehicles?.logisticsAccounts?.businessName || b.RentalVehicles?.logisticsAccounts?.fullname || "Host",
+      ownerName:
+        b.RentalVehicles?.logisticsAccounts?.businessName ||
+        b.RentalVehicles?.logisticsAccounts?.fullname ||
+        "Host",
     }));
 
     return res.status(200).json({ bookings });
   } catch (error: any) {
     console.error("Error fetching user bookings:", error);
-    return res.status(500).json({ error: error.message || "Failed to fetch bookings" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to fetch bookings" });
   }
 }

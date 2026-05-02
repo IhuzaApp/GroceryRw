@@ -8,7 +8,8 @@ import { notifyPIIDetectionToSlack } from "./slackSystemNotifier";
 const PHONE_PATTERN =
   /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}(?:[-.\s]?\d{2,4})?|\b\d{7,15}\b/g;
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-const KEYWORD_PATTERN = /\b(whatsapp|number|email|contact|call|phone|reach me|talk outside|telegram|instagram|ig|dm me)\b/i;
+const KEYWORD_PATTERN =
+  /\b(whatsapp|number|email|contact|call|phone|reach me|talk outside|telegram|instagram|ig|dm me)\b/i;
 
 const MASK_PHONE = "[phone not allowed]";
 const MASK_EMAIL = "[email not allowed]";
@@ -44,13 +45,16 @@ export function containsBlockedPii(
 
   if (hasPhone || hasEmail || hasKeyword) {
     const reason = hasPhone ? "phone" : hasEmail ? "email" : "keyword";
-    
+
     if (notificationContext) {
       notifyPIIDetectionToSlack({
         ...notificationContext,
         message: t,
-        detectedType: (hasPhone && hasEmail) ? "both" : (hasPhone ? "phone" : hasEmail ? "email" : "keyword") as any,
-      }).catch(err => console.error("PII Slack notification failed:", err));
+        detectedType:
+          hasPhone && hasEmail
+            ? "both"
+            : ((hasPhone ? "phone" : hasEmail ? "email" : "keyword") as any),
+      }).catch((err) => console.error("PII Slack notification failed:", err));
     }
 
     return { blocked: true, reason };
@@ -74,8 +78,12 @@ export function sanitizeMessageForDisplay(text: string): string {
   return out;
 }
 
-export function getBlockedMessage(reason: "phone" | "email" | "keyword"): string {
-  if (reason === "phone") return "Sharing phone numbers is not allowed in chat for security.";
-  if (reason === "email") return "Sharing email addresses is not allowed in chat for security.";
+export function getBlockedMessage(
+  reason: "phone" | "email" | "keyword"
+): string {
+  if (reason === "phone")
+    return "Sharing phone numbers is not allowed in chat for security.";
+  if (reason === "email")
+    return "Sharing email addresses is not allowed in chat for security.";
   return "For your security, please keep all conversations and contact details within this chat.";
 }

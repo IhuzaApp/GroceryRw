@@ -33,9 +33,7 @@ export default function CarDetail() {
                 v.logisticsAccounts?.businessName ||
                 v.logisticsAccounts?.fullname ||
                 "Verified Host",
-              image:
-                v.logisticsAccounts?.Users?.image ||
-                null,
+              image: v.logisticsAccounts?.Users?.image || null,
               isVerified: true,
             },
             images: [

@@ -46,7 +46,10 @@ export default function PetDetailPage() {
             reviews: [],
             rating: 5.0,
             parentImages: p.parent_images || [],
-            status: parseInt(p.quantity || "0") <= parseInt(p.quantity_sold || "0") ? "sold" : "available",
+            status:
+              parseInt(p.quantity || "0") <= parseInt(p.quantity_sold || "0")
+                ? "sold"
+                : "available",
           };
           setPet(mappedPet);
         }

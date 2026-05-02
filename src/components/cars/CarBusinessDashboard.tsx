@@ -80,8 +80,10 @@ export default function CarBusinessDashboard() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isPickupCameraOpen, setIsPickupCameraOpen] = useState(false);
-  const [selectedBookingForPickup, setSelectedBookingForPickup] = useState<any>(null);
-  const { walletBalance, fetchWalletBalance: refreshWallet } = useBusinessWallet();
+  const [selectedBookingForPickup, setSelectedBookingForPickup] =
+    useState<any>(null);
+  const { walletBalance, fetchWalletBalance: refreshWallet } =
+    useBusinessWallet();
   const [isNavigating, setIsNavigating] = useState(false);
   const [cars, setCars] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -89,8 +91,13 @@ export default function CarBusinessDashboard() {
   const [isBookingsLoading, setIsBookingsLoading] = useState(true);
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
   const [isComplaintCameraOpen, setIsComplaintCameraOpen] = useState(false);
-  const [selectedBookingForComplaint, setSelectedBookingForComplaint] = useState<any>(null);
-  const [complaintData, setComplaintData] = useState({ title: "", description: "", amount: "" });
+  const [selectedBookingForComplaint, setSelectedBookingForComplaint] =
+    useState<any>(null);
+  const [complaintData, setComplaintData] = useState({
+    title: "",
+    description: "",
+    amount: "",
+  });
   const router = useRouter();
   const { data: session } = useSession();
   const [accountStatus, setAccountStatus] = useState<
@@ -163,8 +170,6 @@ export default function CarBusinessDashboard() {
     }
   };
 
-
-
   useEffect(() => {
     const checkAccount = async () => {
       try {
@@ -202,16 +207,22 @@ export default function CarBusinessDashboard() {
     }
   }, [session, router]);
 
-  const handleToggleStatus = async (vehicleId: string, currentActive: boolean) => {
+  const handleToggleStatus = async (
+    vehicleId: string,
+    currentActive: boolean
+  ) => {
     try {
-      const response = await fetch("/api/mutations/update-vehicle-active-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          vehicleId,
-          active: !currentActive,
-        }),
-      });
+      const response = await fetch(
+        "/api/mutations/update-vehicle-active-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vehicleId,
+            active: !currentActive,
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success(`Vehicle ${!currentActive ? "enabled" : "disabled"}`);
@@ -237,14 +248,17 @@ export default function CarBusinessDashboard() {
 
   const handleConfirmBooking = async (booking: any) => {
     try {
-      const response = await fetch("/api/mutations/update-vehicle-booking-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId: booking.id,
-          status: "approved"
-        }),
-      });
+      const response = await fetch(
+        "/api/mutations/update-vehicle-booking-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            status: "approved",
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success("Booking confirmed! It is now waiting for pickup.");
@@ -263,20 +277,24 @@ export default function CarBusinessDashboard() {
     setComplaintData({
       title: `Damage Report: ${booking.RentalVehicles?.name}`,
       description: "",
-      amount: booking.refundable_fee?.toString() || "0"
+      amount: booking.refundable_fee?.toString() || "0",
     });
     setIsComplaintModalOpen(true);
   };
 
   const onComplaintCaptureComplete = async (videoUrl: string) => {
     if (!selectedBookingForComplaint) return;
-    
+
     const loadingToast = toast.loading("Uploading damage report video...");
     try {
       // 1. Fetch blob
       const response = await fetch(videoUrl);
       const blob = await response.blob();
-      const file = new File([blob], `complaint_${selectedBookingForComplaint.id}.webm`, { type: "video/webm" });
+      const file = new File(
+        [blob],
+        `complaint_${selectedBookingForComplaint.id}.webm`,
+        { type: "video/webm" }
+      );
 
       // 2. Upload to Firebase
       const storagePath = `complaints/${selectedBookingForComplaint.id}/damage_report.webm`;
@@ -291,20 +309,27 @@ export default function CarBusinessDashboard() {
           videoUrl: downloadUrl,
           title: complaintData.title,
           description: complaintData.description,
-          amount: complaintData.amount
+          amount: complaintData.amount,
         }),
       });
       const data = await res.json();
 
       if (data.success) {
-        toast.success("Complaint raised! Our team will review the damage report.", { id: loadingToast });
+        toast.success(
+          "Complaint raised! Our team will review the damage report.",
+          { id: loadingToast }
+        );
         if (logisticsAccountId) fetchBookings(logisticsAccountId);
       } else {
-        toast.error(data.error || "Failed to raise complaint", { id: loadingToast });
+        toast.error(data.error || "Failed to raise complaint", {
+          id: loadingToast,
+        });
       }
     } catch (error) {
       console.error("Complaint error:", error);
-      toast.error("An error occurred while reporting damage.", { id: loadingToast });
+      toast.error("An error occurred while reporting damage.", {
+        id: loadingToast,
+      });
     } finally {
       setIsComplaintCameraOpen(false);
       setSelectedBookingForComplaint(null);
@@ -314,17 +339,20 @@ export default function CarBusinessDashboard() {
   const handleCaptureComplete = async (imageData: string) => {
     console.log("Vehicle condition captured:", imageData);
     setIsCameraOpen(false);
-    
+
     if (selectedBooking) {
       try {
-        const response = await fetch("/api/mutations/update-vehicle-booking-status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: selectedBooking.id,
-            status: "approved"
-          }),
-        });
+        const response = await fetch(
+          "/api/mutations/update-vehicle-booking-status",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              status: "approved",
+            }),
+          }
+        );
 
         if (response.ok) {
           toast.success("Booking confirmed with condition report!");
@@ -349,17 +377,20 @@ export default function CarBusinessDashboard() {
       toast.error("Please provide a reason");
       return;
     }
-    
+
     if (selectedBooking) {
       try {
-        const response = await fetch("/api/mutations/update-vehicle-booking-status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: selectedBooking.id,
-            status: "CANCELLED"
-          }),
-        });
+        const response = await fetch(
+          "/api/mutations/update-vehicle-booking-status",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              status: "CANCELLED",
+            }),
+          }
+        );
 
         if (response.ok) {
           toast.success("Booking rejected");
@@ -389,7 +420,11 @@ export default function CarBusinessDashboard() {
       // 1. Fetch the blob from the local object URL
       const response = await fetch(videoUrl);
       const blob = await response.blob();
-      const file = new File([blob], `pickup_${selectedBookingForPickup.id}.webm`, { type: "video/webm" });
+      const file = new File(
+        [blob],
+        `pickup_${selectedBookingForPickup.id}.webm`,
+        { type: "video/webm" }
+      );
 
       // 2. Upload to Firebase
       const storagePath = `bookings/${selectedBookingForPickup.id}/pickup_video.webm`;
@@ -406,7 +441,9 @@ export default function CarBusinessDashboard() {
       });
 
       if (confirmResponse.ok) {
-        toast.success("Pickup confirmed! Funds transferred to wallet.", { id: loadingToast });
+        toast.success("Pickup confirmed! Funds transferred to wallet.", {
+          id: loadingToast,
+        });
         if (logisticsAccountId) fetchBookings(logisticsAccountId);
         refreshWallet();
       } else {
@@ -414,7 +451,9 @@ export default function CarBusinessDashboard() {
       }
     } catch (error) {
       console.error("Error confirming pickup:", error);
-      toast.error("An error occurred during pickup confirmation", { id: loadingToast });
+      toast.error("An error occurred during pickup confirmation", {
+        id: loadingToast,
+      });
     } finally {
       setIsPickupCameraOpen(false);
       setSelectedBookingForPickup(null);
@@ -433,8 +472,9 @@ export default function CarBusinessDashboard() {
   if (accountStatus === "pending") {
     return (
       <div
-        className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
-          }`}
+        className={`min-h-screen pb-24 md:ml-20 ${
+          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
       >
         <PendingReviewMessage contactEmail={session?.user?.email} />
       </div>
@@ -444,8 +484,9 @@ export default function CarBusinessDashboard() {
   if (accountStatus === "disabled") {
     return (
       <div
-        className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
-          }`}
+        className={`min-h-screen pb-24 md:ml-20 ${
+          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
       >
         <RejectedAccountMessage businessAccountId={logisticsAccountId} />
       </div>
@@ -454,8 +495,9 @@ export default function CarBusinessDashboard() {
 
   return (
     <div
-      className={`min-h-screen pb-24 md:ml-20 ${theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
-        }`}
+      className={`min-h-screen pb-24 md:ml-20 ${
+        theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+      }`}
     >
       <DashboardHeader
         title="Partner Dashboard"
@@ -477,7 +519,12 @@ export default function CarBusinessDashboard() {
               label="Revenue"
               value={formatCurrencySync(
                 bookings
-                  .filter((b) => b.status === "approved" || b.status === "picked_up" || b.status === "COMPLETED")
+                  .filter(
+                    (b) =>
+                      b.status === "approved" ||
+                      b.status === "picked_up" ||
+                      b.status === "COMPLETED"
+                  )
                   .reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0)
               )}
               icon={<TrendingUp />}
@@ -501,8 +548,14 @@ export default function CarBusinessDashboard() {
             <StatsCard
               label="Rating"
               value={(() => {
-                const ratings = bookings.flatMap(b => b.Ratings || []).map(r => r.rating);
-                return ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "5.0";
+                const ratings = bookings
+                  .flatMap((b) => b.Ratings || [])
+                  .map((r) => r.rating);
+                return ratings.length > 0
+                  ? (
+                      ratings.reduce((a, b) => a + b, 0) / ratings.length
+                    ).toFixed(1)
+                  : "5.0";
               })()}
               icon={<Star />}
               color="orange"
@@ -515,19 +568,21 @@ export default function CarBusinessDashboard() {
         <div className="mb-8 flex gap-8 border-b border-gray-200/10">
           <button
             onClick={() => setActiveTab("fleet")}
-            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${activeTab === "fleet"
+            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${
+              activeTab === "fleet"
                 ? "border-b-2 border-green-500 text-green-500"
                 : "text-gray-500 hover:text-gray-400"
-              }`}
+            }`}
           >
             My Fleet
           </button>
           <button
             onClick={() => setActiveTab("bookings")}
-            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${activeTab === "bookings"
+            className={`pb-4 text-sm font-black uppercase tracking-widest transition-all ${
+              activeTab === "bookings"
                 ? "border-b-2 border-green-500 text-green-500"
                 : "text-gray-500 hover:text-gray-400"
-              }`}
+            }`}
           >
             Bookings
           </button>
@@ -537,10 +592,11 @@ export default function CarBusinessDashboard() {
           <div className="space-y-4">
             <div className="mb-6 flex items-center justify-between">
               <div
-                className={`flex max-w-md flex-1 items-center rounded-2xl border px-4 py-3 ${theme === "dark"
+                className={`flex max-w-md flex-1 items-center rounded-2xl border px-4 py-3 ${
+                  theme === "dark"
                     ? "border-white/10 bg-white/5"
                     : "border-gray-200 bg-gray-50"
-                  }`}
+                }`}
               >
                 <Search className="h-4 w-4 text-gray-400" />
                 <input
@@ -558,7 +614,9 @@ export default function CarBusinessDashboard() {
                   car={car}
                   theme={theme}
                   onEdit={() => handleEdit(car)}
-                  onToggleStatus={() => handleToggleStatus(car.id, car.status === "active")}
+                  onToggleStatus={() =>
+                    handleToggleStatus(car.id, car.status === "active")
+                  }
                   onView={() => handleViewDetails(car)}
                 />
               ))}
@@ -569,7 +627,9 @@ export default function CarBusinessDashboard() {
             {bookings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <CalendarCheck className="mb-4 h-12 w-12 text-gray-500 opacity-20" />
-                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">No bookings yet</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                  No bookings yet
+                </p>
               </div>
             ) : (
               bookings.map((booking) => (
@@ -578,7 +638,15 @@ export default function CarBusinessDashboard() {
                   customer={booking.orderedBy?.name || "Customer"}
                   car={booking.RentalVehicles?.name || "Vehicle"}
                   platNumber={booking.RentalVehicles?.platNumber}
-                  date={booking.pickup_date ? `${new Date(booking.pickup_date).toLocaleDateString()} - ${new Date(booking.return_date).toLocaleDateString()}` : "No dates"}
+                  date={
+                    booking.pickup_date
+                      ? `${new Date(
+                          booking.pickup_date
+                        ).toLocaleDateString()} - ${new Date(
+                          booking.return_date
+                        ).toLocaleDateString()}`
+                      : "No dates"
+                  }
                   amount={formatCurrencySync(booking.amount)}
                   status={booking.status}
                   driverProvided={false}
@@ -654,7 +722,7 @@ export default function CarBusinessDashboard() {
         title="Pickup Condition Report"
         maxVideoDuration={60}
       />
-      
+
       <CameraCapture
         isOpen={isComplaintCameraOpen}
         onClose={() => setIsComplaintCameraOpen(false)}
@@ -710,10 +778,11 @@ function StatsCard({
 
   return (
     <div
-      className={`rounded-[2rem] border p-5 transition-all hover:shadow-xl ${theme === "dark"
+      className={`rounded-[2rem] border p-5 transition-all hover:shadow-xl ${
+        theme === "dark"
           ? "border-white/5 bg-[#121212]"
           : "border-gray-100 bg-white shadow-sm"
-        }`}
+      }`}
     >
       <div
         className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
@@ -726,8 +795,9 @@ function StatsCard({
         {label}
       </p>
       <h3
-        className={`text-xl font-black ${theme === "dark" ? "text-white" : "text-black"
-          }`}
+        className={`text-xl font-black ${
+          theme === "dark" ? "text-white" : "text-black"
+        }`}
       >
         {value}
       </h3>
@@ -807,10 +877,11 @@ function FleetItem({
 }) {
   return (
     <div
-      className={`flex items-center justify-between rounded-[2rem] border p-3 transition-all hover:shadow-lg sm:p-4 ${theme === "dark"
+      className={`flex items-center justify-between rounded-[2rem] border p-3 transition-all hover:shadow-lg sm:p-4 ${
+        theme === "dark"
           ? "border-white/5 bg-[#121212] hover:bg-white/[0.07]"
           : "border-gray-100 bg-white shadow-sm hover:bg-gray-50"
-        }`}
+      }`}
     >
       <div className="flex min-w-0 items-center gap-3 sm:gap-5">
         <div className="h-16 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/5 sm:h-20 sm:w-32">
@@ -822,8 +893,9 @@ function FleetItem({
         </div>
         <div className="min-w-0">
           <h4
-            className={`text-lg font-black leading-tight ${theme === "dark" ? "text-white" : "text-black"
-              }`}
+            className={`text-lg font-black leading-tight ${
+              theme === "dark" ? "text-white" : "text-black"
+            }`}
           >
             {car.name}
           </h4>
@@ -832,10 +904,11 @@ function FleetItem({
           </p>
           <div className="mt-2 flex items-center gap-3">
             <div
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-normal uppercase tracking-wider ${car.status === "active"
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-normal uppercase tracking-wider ${
+                car.status === "active"
                   ? "bg-green-500/10 text-green-500"
                   : "bg-red-500/10 text-red-500"
-                }`}
+              }`}
             >
               <Circle className="h-2 w-2 fill-current" />
               {car.status === "active" ? "Active" : "Disabled"}
@@ -851,30 +924,33 @@ function FleetItem({
         <button
           onClick={onToggleStatus}
           title={car.status === "active" ? "Disable listing" : "Enable listing"}
-          className={`rounded-xl p-3 transition-colors ${theme === "dark"
+          className={`rounded-xl p-3 transition-colors ${
+            theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
               : "text-gray-600 hover:bg-gray-200"
-            }`}
+          }`}
         >
           <Clock className="h-5 w-5" />
         </button>
         <button
           onClick={onEdit}
           title="Edit details"
-          className={`rounded-xl p-3 transition-colors ${theme === "dark"
+          className={`rounded-xl p-3 transition-colors ${
+            theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
               : "text-gray-600 hover:bg-gray-200"
-            }`}
+          }`}
         >
           <Edit2 className="h-5 w-5" />
         </button>
         <button
           onClick={onView}
           title="View all details"
-          className={`rounded-xl p-3 transition-colors ${theme === "dark"
+          className={`rounded-xl p-3 transition-colors ${
+            theme === "dark"
               ? "text-gray-400 hover:bg-white/5"
               : "text-gray-600 hover:bg-gray-200"
-            }`}
+          }`}
         >
           <Eye className="h-5 w-5" />
         </button>
@@ -883,10 +959,11 @@ function FleetItem({
       {/* Mobile Actions Dropdown - Icon Trigger */}
       <div className="relative pr-1 sm:hidden">
         <div
-          className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${theme === "dark"
+          className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+            theme === "dark"
               ? "bg-white/5 text-gray-400"
               : "bg-gray-100 text-gray-600"
-            }`}
+          }`}
         >
           <MoreVertical className="h-5 w-5" />
           <select
@@ -935,10 +1012,11 @@ function CarDetailsModal({
         onClick={onClose}
       />
       <div
-        className={`relative flex h-full w-full max-w-4xl flex-col overflow-hidden shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95 ${theme === "dark"
+        className={`relative flex h-full w-full max-w-4xl flex-col overflow-hidden shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95 ${
+          theme === "dark"
             ? "border border-white/5 bg-[#121212] text-white"
             : "bg-white text-gray-900"
-          }`}
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 p-8 dark:border-white/5">
@@ -966,8 +1044,9 @@ function CarDetailsModal({
           </div>
           <button
             onClick={onClose}
-            className={`rounded-full p-3 transition-colors ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
-              }`}
+            className={`rounded-full p-3 transition-colors ${
+              theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
+            }`}
           >
             <X className="h-6 w-6" />
           </button>
@@ -1062,8 +1141,9 @@ function CarDetailsModal({
                   Pricing & Policies
                 </h3>
                 <div
-                  className={`space-y-4 rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"
-                    }`}
+                  className={`space-y-4 rounded-3xl p-6 ${
+                    theme === "dark" ? "bg-white/5" : "bg-gray-50"
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-normal text-gray-500">
@@ -1084,10 +1164,11 @@ function CarDetailsModal({
                     </span>
                   </div>
                   <div
-                    className={`flex items-center gap-3 rounded-2xl p-3 ${car.driverOption === "offered"
+                    className={`flex items-center gap-3 rounded-2xl p-3 ${
+                      car.driverOption === "offered"
                         ? "bg-purple-500/10"
                         : "bg-orange-500/10"
-                      }`}
+                    }`}
                   >
                     {car.driverOption === "offered" ? (
                       <UserCheck className="text-purple-500" />
@@ -1096,10 +1177,11 @@ function CarDetailsModal({
                     )}
                     <div>
                       <p
-                        className={`text-xs font-normal uppercase ${car.driverOption === "offered"
+                        className={`text-xs font-normal uppercase ${
+                          car.driverOption === "offered"
                             ? "text-purple-500"
                             : "text-orange-500"
-                          }`}
+                        }`}
                       >
                         {car.driverOption === "offered"
                           ? "Driver Provided"
@@ -1125,10 +1207,11 @@ function CarDetailsModal({
 function SpecItem({ icon, label, value, theme }: any) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border p-4 ${theme === "dark"
+      className={`flex items-center gap-3 rounded-2xl border p-4 ${
+        theme === "dark"
           ? "border-white/5 bg-white/5"
           : "border-gray-100 bg-white shadow-sm"
-        }`}
+      }`}
     >
       <div className="text-green-500">
         {React.cloneElement(icon, { className: "h-5 w-5" })}
@@ -1187,23 +1270,26 @@ function BookingItem({
   return (
     <div
       onClick={onClick}
-      className={`flex cursor-pointer flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${theme === "dark"
+      className={`flex cursor-pointer flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${
+        theme === "dark"
           ? "border-white/5 bg-[#121212]"
           : "border-gray-100 bg-white shadow-sm"
-        }`}
+      }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-2xl ${theme === "dark" ? "bg-white/5" : "bg-gray-50"
-              }`}
+            className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+              theme === "dark" ? "bg-white/5" : "bg-gray-50"
+            }`}
           >
             <Clock className="h-7 w-7 text-gray-400" />
           </div>
           <div>
             <h4
-              className={`text-lg font-black ${theme === "dark" ? "text-white" : "text-black"
-                }`}
+              className={`text-lg font-black ${
+                theme === "dark" ? "text-white" : "text-black"
+              }`}
             >
               {customer}
             </h4>
@@ -1215,7 +1301,9 @@ function BookingItem({
         <div className="text-right">
           <p className="text-xl font-black text-green-500">{amount}</p>
           <div
-            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusColors[status] || "text-gray-500 bg-gray-500/10"}`}
+            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+              statusColors[status] || "bg-gray-500/10 text-gray-500"
+            }`}
           >
             {statusLabels[status] || status}
           </div>
@@ -1223,13 +1311,15 @@ function BookingItem({
       </div>
 
       <div
-        className={`flex items-center justify-between rounded-2xl px-4 py-3 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"
-          }`}
+        className={`flex items-center justify-between rounded-2xl px-4 py-3 ${
+          theme === "dark" ? "bg-white/5" : "bg-gray-50"
+        }`}
       >
         <div className="flex items-center gap-2">
           <div
-            className={`h-2 w-2 rounded-full ${driverProvided ? "bg-green-500" : "bg-orange-500"
-              }`}
+            className={`h-2 w-2 rounded-full ${
+              driverProvided ? "bg-green-500" : "bg-orange-500"
+            }`}
           />
           <span className="text-[10px] font-normal uppercase tracking-widest text-gray-500">
             {driverProvided
@@ -1238,20 +1328,28 @@ function BookingItem({
           </span>
         </div>
         <div className="flex gap-2">
-          {(status?.toUpperCase() === "PENDING" || status?.toUpperCase() === "PAID") && (
+          {(status?.toUpperCase() === "PENDING" ||
+            status?.toUpperCase() === "PAID") && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); onReject(); }}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${theme === "dark"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReject();
+                }}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${
+                  theme === "dark"
                     ? "bg-white/5 text-red-500 hover:bg-red-500/10"
                     : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
-                  }`}
+                }`}
               >
                 <X className="h-4 w-4" />
                 Reject
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); onConfirm(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onConfirm();
+                }}
                 className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/30"
               >
                 <Check className="h-4 w-4 !text-white" />
@@ -1259,27 +1357,40 @@ function BookingItem({
               </button>
             </>
           )}
-          {status === "picked_up" && rawReturnDate && new Date(rawReturnDate) <= new Date() && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onRaiseComplaint(); }}
-              className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/30"
-            >
-              <AlertCircle className="h-4 w-4 !text-white" />
-              <span className="!text-white">Raise Complaint</span>
-            </button>
-          )}
+          {status === "picked_up" &&
+            rawReturnDate &&
+            new Date(rawReturnDate) <= new Date() && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRaiseComplaint();
+                }}
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/30"
+              >
+                <AlertCircle className="h-4 w-4 !text-white" />
+                <span className="!text-white">Raise Complaint</span>
+              </button>
+            )}
         </div>
       </div>
 
       {rating && (
-        <div className={`mt-2 rounded-2xl p-4 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
+        <div
+          className={`mt-2 rounded-2xl p-4 ${
+            theme === "dark" ? "bg-white/5" : "bg-gray-50"
+          }`}
+        >
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-3 w-3 ${i < rating ? "fill-orange-500 text-orange-500" : "text-gray-300"}`}
+                    className={`h-3 w-3 ${
+                      i < rating
+                        ? "fill-orange-500 text-orange-500"
+                        : "text-gray-300"
+                    }`}
                   />
                 ))}
               </div>
@@ -1288,7 +1399,7 @@ function BookingItem({
               </span>
             </div>
             {professionalism && (
-              <span className="text-[9px] font-black uppercase text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-black uppercase text-blue-500">
                 Professionalism: {professionalism}/5
               </span>
             )}
@@ -1299,4 +1410,3 @@ function BookingItem({
     </div>
   );
 }
-

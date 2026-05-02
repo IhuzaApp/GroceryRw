@@ -148,7 +148,9 @@ export interface VehicleComplaintPayload {
   ticketNum?: number;
 }
 
-export async function sendVehicleComplaintToSlack(complaint: VehicleComplaintPayload) {
+export async function sendVehicleComplaintToSlack(
+  complaint: VehicleComplaintPayload
+) {
   if (!SLACK_SUPPORT_WEBHOOK) {
     console.error("SLACK_SUPPORT_WEBHOOK is not configured");
     return;
@@ -165,7 +167,10 @@ export async function sendVehicleComplaintToSlack(complaint: VehicleComplaintPay
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Ticket #*\n\`${complaint.ticketNum ?? "—"}\`` },
+        {
+          type: "mrkdwn",
+          text: `*Ticket #*\n\`${complaint.ticketNum ?? "—"}\``,
+        },
         { type: "mrkdwn", text: `*Booking ID*\n\`${complaint.bookingId}\`` },
       ],
     },
@@ -210,7 +215,9 @@ export async function sendVehicleComplaintToSlack(complaint: VehicleComplaintPay
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: `🚨 Vehicle Damage Complaint #${complaint.ticketNum ?? complaint.bookingId}`,
+        text: `🚨 Vehicle Damage Complaint #${
+          complaint.ticketNum ?? complaint.bookingId
+        }`,
         attachments: [
           {
             color: "#FF4444",

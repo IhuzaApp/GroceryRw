@@ -58,11 +58,17 @@ export default async function handler(
   }
 
   if (!hasuraClient) {
-    return res.status(500).json({ error: "System error: Database client not initialized" });
+    return res
+      .status(500)
+      .json({ error: "System error: Database client not initialized" });
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions as any) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -83,16 +89,22 @@ export default async function handler(
 
     // Check authorization: must be either customer or owner
     const isCustomer = booking.customer_id === session.user.id;
-    const isOwner = booking.RentalVehicles?.logisticAccount_id === session.user.id || 
-                    booking.RentalVehicles?.logisticAccount_id === (session.user as any).logisticsAccountId;
+    const isOwner =
+      booking.RentalVehicles?.logisticAccount_id === session.user.id ||
+      booking.RentalVehicles?.logisticAccount_id ===
+        (session.user as any).logisticsAccountId;
 
     if (!isCustomer && !isOwner) {
-      return res.status(403).json({ error: "Not authorized to view this booking" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to view this booking" });
     }
 
     return res.status(200).json({ booking });
   } catch (error: any) {
     console.error("Error fetching booking details:", error);
-    return res.status(500).json({ error: error.message || "Failed to fetch booking details" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to fetch booking details" });
   }
 }

@@ -163,7 +163,10 @@ export default function PetListing() {
               isVerified: true,
             },
             reviews: [],
-            status: parseInt(p.quantity || "0") <= parseInt(p.quantity_sold || "0") ? "sold" : "available",
+            status:
+              parseInt(p.quantity || "0") <= parseInt(p.quantity_sold || "0")
+                ? "sold"
+                : "available",
           }));
           setPets(mappedPets);
         }
@@ -178,21 +181,23 @@ export default function PetListing() {
   }, []);
 
   const filteredPets = useMemo(() => {
-    return pets.filter((pet) => {
-      const matchesSearch =
-        pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pet.breed.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = selectedType === "All" || pet.type === selectedType;
-      const matchesStatus =
-        selectedStatus === "All" ||
-        (selectedStatus === "Available" && pet.status === "available") ||
-        (selectedStatus === "Sold" && pet.status === "sold");
-      return matchesSearch && matchesType && matchesStatus;
-    }).sort((a, b) => {
-      if (a.status === "sold" && b.status !== "sold") return 1;
-      if (a.status !== "sold" && b.status === "sold") return -1;
-      return 0;
-    });
+    return pets
+      .filter((pet) => {
+        const matchesSearch =
+          pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          pet.breed.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = selectedType === "All" || pet.type === selectedType;
+        const matchesStatus =
+          selectedStatus === "All" ||
+          (selectedStatus === "Available" && pet.status === "available") ||
+          (selectedStatus === "Sold" && pet.status === "sold");
+        return matchesSearch && matchesType && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (a.status === "sold" && b.status !== "sold") return 1;
+        if (a.status !== "sold" && b.status === "sold") return -1;
+        return 0;
+      });
   }, [searchQuery, selectedType, selectedStatus, pets]);
 
   return (

@@ -40,6 +40,10 @@ export default async function handler(
   }
 
   try {
+    if (!hasuraClient) {
+      return res.status(500).json({ error: "Hasura client not initialized" });
+    }
+
     const data = await hasuraClient.request<any>(UPDATE_BOOKING_STATUS, {
       id: bookingId,
       status: status,
@@ -54,31 +58,35 @@ export default async function handler(
     try {
       const customerPhone = booking.Users?.phone;
       const vehicleName = booking.RentalVehicles?.name;
-      const pickupDate = booking.pickup_date ? new Date(booking.pickup_date).toLocaleDateString() : "";
-      
+      const pickupDate = booking.pickup_date
+        ? new Date(booking.pickup_date).toLocaleDateString()
+        : "";
+
       if (customerPhone) {
         let message = "";
         if (status === "approved") {
-          const platNum = booking.RentalVehicles?.platNumber ? `(${booking.RentalVehicles.platNumber})` : "";
+          const platNum = booking.RentalVehicles?.platNumber
+            ? `(${booking.RentalVehicles.platNumber})`
+            : "";
           message = `Hello ${booking.Users.name}, your booking for "${vehicleName}" ${platNum} on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
         } else if (status === "CANCELLED") {
           message = `Hello ${booking.Users.name}, unfortunately your booking for "${vehicleName}" on ${pickupDate} was declined by the owner. Any payments made will be refunded to your wallet.`;
         }
-        
+
         if (message) await sendSMS(customerPhone, message);
       }
     } catch (smsErr) {
       console.error("SMS notification failed:", smsErr);
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      booking: booking 
+    return res.status(200).json({
+      success: true,
+      booking: booking,
     });
   } catch (error: any) {
     console.error("Error updating booking status:", error);
-    return res.status(500).json({ 
-      error: error.message || "Internal Server Error" 
+    return res.status(500).json({
+      error: error.message || "Internal Server Error",
     });
   }
 }

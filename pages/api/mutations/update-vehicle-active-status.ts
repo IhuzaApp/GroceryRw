@@ -32,7 +32,9 @@ export default async function handler(
 
     const { vehicleId, active } = req.body;
     if (!vehicleId || active === undefined) {
-      return res.status(400).json({ error: "Missing vehicleId or active status" });
+      return res
+        .status(400)
+        .json({ error: "Missing vehicleId or active status" });
     }
 
     if (!hasuraClient) {
@@ -44,9 +46,16 @@ export default async function handler(
       status: active ? "active" : "disabled",
     });
 
-    return res.status(200).json({ success: true, vehicle: (result as any).update_RentalVehicles_by_pk });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        vehicle: (result as any).update_RentalVehicles_by_pk,
+      });
   } catch (error: any) {
     console.error("Error updating vehicle status:", error);
-    return res.status(500).json({ error: error.message || "Internal server error" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
   }
 }

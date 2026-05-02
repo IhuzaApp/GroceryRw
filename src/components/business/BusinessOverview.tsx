@@ -61,7 +61,11 @@ interface BusinessOverviewProps {
 
 export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [showDetailedStats, setShowDetailedStats] = useState(false);
-  const { walletBalance, businessWalletId, isLoading: loadingWallet } = useBusinessWallet();
+  const {
+    walletBalance,
+    businessWalletId,
+    isLoading: loadingWallet,
+  } = useBusinessWallet();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);

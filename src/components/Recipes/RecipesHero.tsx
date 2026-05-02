@@ -135,7 +135,7 @@ const RecipesHero: React.FC<RecipesHeroProps> = ({
             <img
               src="https://images.pexels.com/photos/4109084/pexels-photo-4109084.jpeg?auto=compress&cs=tinysrgb&w=1200"
               alt="Delicious dish"
-              className="duration-[2s] pointer-events-auto h-full w-full object-cover transition-transform hover:scale-110"
+              className="pointer-events-auto h-full w-full object-cover transition-transform [transition-duration:2s] hover:scale-110"
             />
             {/* Floating micro-card */}
             <div className="absolute bottom-6 left-6 right-6 flex items-center gap-4 rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur-xl">

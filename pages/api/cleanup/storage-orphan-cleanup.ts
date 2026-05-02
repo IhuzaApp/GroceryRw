@@ -5,17 +5,48 @@ import { storage } from "../../../src/lib/firebaseAdmin";
 
 const GET_ALL_USED_URLS = gql`
   query GetAllUsedUrls {
-    Restaurants { logo profile rdb_cert }
-    Shops { logo image rdb_certificate }
-    logisticsAccount { license business_cert nationalIdOrPassport proof_address }
-    vehicleBookings { driving_license carVideo_Status }
-    Issuecomplains { vehicleVideo }
-    pets { image vaccination_cert video parent_images }
-    pet_vendors { nationalIdOrPassport proof_residency rdb_certificate sherter_permit }
+    Restaurants {
+      logo
+      profile
+      rdb_cert
+    }
+    Shops {
+      logo
+      image
+      rdb_certificate
+    }
+    logisticsAccount {
+      license
+      business_cert
+      nationalIdOrPassport
+      proof_address
+    }
+    vehicleBookings {
+      driving_license
+      carVideo_Status
+    }
+    Issuecomplains {
+      vehicleVideo
+    }
+    pets {
+      image
+      vaccination_cert
+      video
+      parent_images
+    }
+    pet_vendors {
+      nationalIdOrPassport
+      proof_residency
+      rdb_certificate
+      sherter_permit
+    }
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -23,9 +54,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const authHeader = req.headers.authorization;
   const expectedToken = process.env.CLEANUP_API_TOKEN;
-  const isDevelopment = req.headers.host?.includes("localhost") || req.headers.host?.includes("127.0.0.1");
+  const isDevelopment =
+    req.headers.host?.includes("localhost") ||
+    req.headers.host?.includes("127.0.0.1");
 
-  if (expectedToken && !isDevelopment && authHeader !== `Bearer ${expectedToken}`) {
+  if (
+    expectedToken &&
+    !isDevelopment &&
+    authHeader !== `Bearer ${expectedToken}`
+  ) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -53,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Process all tables
     Object.values(dbData).forEach((rows: any) => {
       if (!Array.isArray(rows)) return;
-      rows.forEach(row => {
+      rows.forEach((row) => {
         Object.entries(row).forEach(([key, value]) => {
           if (key === "parent_images" && Array.isArray(value)) {
             value.forEach((img: any) => addUrl(img.url));
@@ -66,7 +103,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 2. Scan Storage and Delete Orphans
     const bucket = storage.bucket();
-    const prefixes = ["business/", "verifications/", "pets/", "bookings/", "licenses/"];
+    const prefixes = [
+      "business/",
+      "verifications/",
+      "pets/",
+      "bookings/",
+      "licenses/",
+    ];
     let deletedCount = 0;
     let totalScanned = 0;
 
@@ -77,7 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const [files] = await bucket.getFiles({ prefix });
       for (const file of files) {
         totalScanned++;
-        
+
         // Skip if recently created (within 24 hours) to avoid race conditions
         const [metadata] = await file.getMetadata();
         const created = new Date(metadata.timeCreated || 0);

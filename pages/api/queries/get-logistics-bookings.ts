@@ -7,7 +7,9 @@ import { gql } from "graphql-request";
 const GET_LOGISTICS_BOOKINGS = gql`
   query GetLogisticsBookings($logisticAccount_id: uuid!) {
     vehicleBookings(
-      where: { RentalVehicles: { logisticAccount_id: { _eq: $logisticAccount_id } } }
+      where: {
+        RentalVehicles: { logisticAccount_id: { _eq: $logisticAccount_id } }
+      }
       order_by: { created_at: desc }
     ) {
       id

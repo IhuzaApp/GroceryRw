@@ -140,7 +140,11 @@ export default async function handler(
           const vehicleName = vehicle.name;
           const vendorName = owner.businessName || owner.fullname || "Vendor";
 
-          const message = `Hello ${vendorName}, your vehicle "${vehicleName}" has been booked and paid for! Trip: ${new Date(pickup_date).toLocaleDateString()} to ${new Date(return_date).toLocaleDateString()}. Customer Phone: ${phone}. Please prepare for pickup.`;
+          const message = `Hello ${vendorName}, your vehicle "${vehicleName}" has been booked and paid for! Trip: ${new Date(
+            pickup_date
+          ).toLocaleDateString()} to ${new Date(
+            return_date
+          ).toLocaleDateString()}. Customer Phone: ${phone}. Please prepare for pickup.`;
 
           if (ownerPhone) {
             await sendSMS(ownerPhone, message);

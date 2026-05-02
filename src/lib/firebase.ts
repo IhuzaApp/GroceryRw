@@ -18,16 +18,26 @@ const firebaseConfig = {
 // Initialize Firebase with proper guards to prevent duplicate apps
 let app;
 try {
-  const isConfigValid = !!firebaseConfig.apiKey && !!firebaseConfig.projectId && !!firebaseConfig.appId;
+  const isConfigValid =
+    !!firebaseConfig.apiKey &&
+    !!firebaseConfig.projectId &&
+    !!firebaseConfig.appId;
   if (!isConfigValid) {
-    console.error("Firebase config is incomplete. Check environment variables.");
+    console.error(
+      "Firebase config is incomplete. Check environment variables."
+    );
     console.log("Config keys status:", {
       apiKey: !!firebaseConfig.apiKey,
       projectId: !!firebaseConfig.projectId,
       appId: !!firebaseConfig.appId,
     });
   }
-  app = getApps().length === 0 ? (isConfigValid ? initializeApp(firebaseConfig) : null) : getApps()[0];
+  app =
+    getApps().length === 0
+      ? isConfigValid
+        ? initializeApp(firebaseConfig)
+        : null
+      : getApps()[0];
 } catch (error) {
   console.warn("Firebase initialization failed:", error);
   app = null;

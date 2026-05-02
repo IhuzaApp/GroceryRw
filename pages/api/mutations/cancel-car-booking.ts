@@ -90,7 +90,9 @@ export default async function handler(
   }
 
   if (!hasuraClient) {
-    return res.status(500).json({ error: "System error: Database client not initialized" });
+    return res
+      .status(500)
+      .json({ error: "System error: Database client not initialized" });
   }
 
   try {
@@ -126,33 +128,42 @@ export default async function handler(
     const now = new Date();
     const pickupDate = new Date(booking.pickup_date);
     const returnDate = new Date(booking.return_date);
-    
+
     // Set pickup time to 6 AM as per requirement
     const pickup6AM = new Date(pickupDate);
     pickup6AM.setHours(6, 0, 0, 0);
 
-    const durationDays = Math.ceil((returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24));
-    const hoursToPickup = (pickup6AM.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const durationDays = Math.ceil(
+      (returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const hoursToPickup =
+      (pickup6AM.getTime() - now.getTime()) / (1000 * 60 * 60);
     const daysToPickup = hoursToPickup / 24;
 
     if (durationDays > 3) {
       // More than 3 days: Cannot cancel if 1 or 2 days remaining to pickup
       if (daysToPickup <= 2 && daysToPickup > 0) {
-        return res.status(400).json({ 
-          error: "For bookings longer than 3 days, cancellation is not allowed within 2 days of pickup." 
+        return res.status(400).json({
+          error:
+            "For bookings longer than 3 days, cancellation is not allowed within 2 days of pickup.",
         });
       }
     } else {
       // 1-3 days (today or tomorrow bookings): Cannot cancel 12 hours before 6 AM pickup
       if (hoursToPickup <= 12 && hoursToPickup > 0) {
-        return res.status(400).json({ 
-          error: "Cancellation is not allowed within 12 hours of the 6 AM pickup time." 
+        return res.status(400).json({
+          error:
+            "Cancellation is not allowed within 12 hours of the 6 AM pickup time.",
         });
       }
     }
 
     if (now > pickup6AM) {
-      return res.status(400).json({ error: "Cannot cancel a booking after the pickup time has passed." });
+      return res
+        .status(400)
+        .json({
+          error: "Cannot cancel a booking after the pickup time has passed.",
+        });
     }
     // ------------------------------
 
@@ -213,8 +224,12 @@ export default async function handler(
     // Notify Owner via SMS
     try {
       const vehicleName = booking.RentalVehicles?.name;
-      const ownerPhone = booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
-      const ownerName = booking.RentalVehicles?.logisticsAccounts?.businessName || booking.RentalVehicles?.logisticsAccounts?.fullname || "Vendor";
+      const ownerPhone =
+        booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
+      const ownerName =
+        booking.RentalVehicles?.logisticsAccounts?.businessName ||
+        booking.RentalVehicles?.logisticsAccounts?.fullname ||
+        "Vendor";
 
       if (ownerPhone) {
         const message = `Hello ${ownerName}, the booking for your vehicle "${vehicleName}" has been CANCELLED by the customer. The vehicle is now available again for booking.`;
@@ -231,6 +246,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Cancel Booking Error:", error);
-    return res.status(500).json({ error: error.message || "Cancellation failed" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Cancellation failed" });
   }
 }

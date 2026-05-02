@@ -85,7 +85,12 @@ export async function sendRentalInvoice({
         <div style="padding: 24px; background-color: #f9fafb; border-radius: 16px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 16px; font-weight: 800; color: #111827;">Total Paid</span>
-            <span style="font-size: 24px; font-weight: 900; color: #10b981;">RWF ${parseInt(amount) + parseInt(serviceFee) + parseInt(platformFee) + parseInt(refundableDeposit)}</span>
+            <span style="font-size: 24px; font-weight: 900; color: #10b981;">RWF ${
+              parseInt(amount) +
+              parseInt(serviceFee) +
+              parseInt(platformFee) +
+              parseInt(refundableDeposit)
+            }</span>
           </div>
         </div>
 
@@ -108,7 +113,12 @@ export async function sendRentalInvoice({
     return result;
   } catch (error) {
     console.error("Failed to send rental invoice email:", error);
-    await insertSystemLog("error", "Failed to send rental invoice email", "ResendLib", { error, to });
+    await insertSystemLog(
+      "error",
+      "Failed to send rental invoice email",
+      "ResendLib",
+      { error, to }
+    );
     return null;
   }
 }

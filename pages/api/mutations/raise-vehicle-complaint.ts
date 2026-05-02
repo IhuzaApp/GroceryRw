@@ -95,12 +95,21 @@ export default async function handler(
   const { bookingId, videoUrl, title, description, amount } = req.body;
 
   if (!bookingId || !videoUrl || !title) {
-    return res.status(400).json({ error: "Missing required fields: bookingId, videoUrl or title" });
+    return res
+      .status(400)
+      .json({ error: "Missing required fields: bookingId, videoUrl or title" });
   }
 
   try {
+    if (!hasuraClient) {
+      return res.status(500).json({ error: "Hasura client not initialized" });
+    }
+
     // 1. Fetch booking details for context
-    const bookingRes = await hasuraClient.request<any>(GET_BOOKING_FOR_COMPLAINT, { id: bookingId });
+    const bookingRes = await hasuraClient.request<any>(
+      GET_BOOKING_FOR_COMPLAINT,
+      { id: bookingId }
+    );
     const booking = bookingRes.vehicleBookings_by_pk;
 
     if (!booking) {
@@ -109,7 +118,10 @@ export default async function handler(
 
     const customerName = booking.Users?.name || "Customer";
     const vehicleName = booking.RentalVehicles?.name || "Vehicle";
-    const ownerName = booking.RentalVehicles?.logisticsAccounts?.businessName || booking.RentalVehicles?.logisticsAccounts?.fullname || "Partner";
+    const ownerName =
+      booking.RentalVehicles?.logisticsAccounts?.businessName ||
+      booking.RentalVehicles?.logisticsAccounts?.fullname ||
+      "Partner";
 
     // 2. Create a support ticket
     const ticketRes = await hasuraClient.request<any>(INSERT_TICKET, {
@@ -144,9 +156,13 @@ export default async function handler(
       ticketNum: ticket.ticket_num,
     });
 
-    return res.status(200).json({ success: true, ticket_num: ticket.ticket_num });
+    return res
+      .status(200)
+      .json({ success: true, ticket_num: ticket.ticket_num });
   } catch (error: any) {
     console.error("Raise Complaint Error:", error);
-    return res.status(500).json({ error: error.message || "Failed to raise complaint" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to raise complaint" });
   }
 }

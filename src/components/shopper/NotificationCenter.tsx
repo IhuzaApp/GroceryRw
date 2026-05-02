@@ -313,7 +313,7 @@ export default function NotificationCenter() {
               timestamp: new Date(n.created_at).getTime(),
               type: n.type,
               read: n.is_read,
-              id: n.id
+              id: n.id,
             }));
           }
         } catch (e) {
@@ -322,11 +322,13 @@ export default function NotificationCenter() {
       }
 
       // Merge and sort by timestamp desc
-      const combinedHistory = [...history, ...dbNotifications].sort((a, b) => b.timestamp - a.timestamp);
-      
+      const combinedHistory = [...history, ...dbNotifications].sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+
       // Deduplicate by ID if both sources have same notification
       const seenIds = new Set();
-      const uniqueHistory = combinedHistory.filter(n => {
+      const uniqueHistory = combinedHistory.filter((n) => {
         if (!n.id) return true;
         if (seenIds.has(n.id)) return false;
         seenIds.add(n.id);
@@ -342,15 +344,27 @@ export default function NotificationCenter() {
       let filteredHistory = uniqueHistory.filter((n: NotificationItem) => {
         // Regular users (non-shoppers): ONLY show chat_message and partner notifications
         if (!isShopper) {
-          return n.type === "chat_message" || n.type === "vehicle_booking" || n.type === "pet_adoption" || n.type === "system";
+          return (
+            n.type === "chat_message" ||
+            n.type === "vehicle_booking" ||
+            n.type === "pet_adoption" ||
+            n.type === "system"
+          );
         }
 
         // Shoppers: show all notification types, but filter out already-assigned orders
         if (n.orderId && assignedOrderIds.size > 0) {
           if (n.orderIds) {
             try {
-              const orderIdsArray = typeof n.orderIds === "string" ? JSON.parse(n.orderIds) : (Array.isArray(n.orderIds) ? n.orderIds : []);
-              const hasAssignedOrder = orderIdsArray.some((id: string) => assignedOrderIds.has(String(id)));
+              const orderIdsArray =
+                typeof n.orderIds === "string"
+                  ? JSON.parse(n.orderIds)
+                  : Array.isArray(n.orderIds)
+                  ? n.orderIds
+                  : [];
+              const hasAssignedOrder = orderIdsArray.some((id: string) =>
+                assignedOrderIds.has(String(id))
+              );
               if (hasAssignedOrder) return false;
             } catch {}
           }
@@ -878,7 +892,8 @@ export default function NotificationCenter() {
                         <button
                           onClick={async () => {
                             if (!hasPermission) {
-                              const granted = await requestNotificationPermission();
+                              const granted =
+                                await requestNotificationPermission();
                               if (granted) {
                                 window.location.reload();
                               } else {

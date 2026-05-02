@@ -21,7 +21,10 @@ const GET_DELETABLE_BOOKINGS = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -30,9 +33,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Auth logic same as system-logs-cleanup
   const authHeader = req.headers.authorization;
   const expectedToken = process.env.CLEANUP_API_TOKEN;
-  const isDevelopment = req.headers.host?.includes("localhost") || req.headers.host?.includes("127.0.0.1");
+  const isDevelopment =
+    req.headers.host?.includes("localhost") ||
+    req.headers.host?.includes("127.0.0.1");
 
-  if (expectedToken && !isDevelopment && authHeader !== `Bearer ${expectedToken}`) {
+  if (
+    expectedToken &&
+    !isDevelopment &&
+    authHeader !== `Bearer ${expectedToken}`
+  ) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -60,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         const [files] = await bucket.getFiles({ prefix: folderPath });
         if (files.length > 0) {
-          await Promise.all(files.map(file => file.delete()));
+          await Promise.all(files.map((file) => file.delete()));
           deletedFilesCount += files.length;
         }
       } catch (err) {
@@ -69,11 +78,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 2. Delete license if it was uploaded specifically for this booking
       // Note: We only delete if the URL matches the "licenses/" prefix used in CarDetailsPage
-      if (booking.driving_license && booking.driving_license.includes("licenses/")) {
+      if (
+        booking.driving_license &&
+        booking.driving_license.includes("licenses/")
+      ) {
         try {
           // Extract path from URL (simple version)
           const url = new URL(booking.driving_license);
-          const path = decodeURIComponent(url.pathname.split("/o/")[1].split("?")[0]);
+          const path = decodeURIComponent(
+            url.pathname.split("/o/")[1].split("?")[0]
+          );
           await bucket.file(path).delete();
           deletedFilesCount++;
         } catch (err) {

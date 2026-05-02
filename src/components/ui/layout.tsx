@@ -50,9 +50,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     router.pathname === "/Pets" || router.pathname.startsWith("/Pets/");
 
   return (
-    <div className={`min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)] ${
-      isMessagesList || isMessagesChat ? "h-screen flex flex-col overflow-hidden" : ""
-    }`}>
+    <div
+      className={`min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)] ${
+        isMessagesList || isMessagesChat
+          ? "flex h-screen flex-col overflow-hidden"
+          : ""
+      }`}
+    >
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
         !isReelsPage &&

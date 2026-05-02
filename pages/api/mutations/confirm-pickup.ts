@@ -86,10 +86,12 @@ export default async function handler(
   }
 
   if (!hasuraClient) {
-    return res.status(500).json({ error: "System error: Database client not initialized" });
+    return res
+      .status(500)
+      .json({ error: "System error: Database client not initialized" });
   }
 
-  const session = await getServerSession(req, res, authOptions as any) as any;
+  const session = (await getServerSession(req, res, authOptions as any)) as any;
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -101,12 +103,18 @@ export default async function handler(
 
   // Mandatory video check for payout
   if (!carVideo_Status) {
-    return res.status(400).json({ error: "Vehicle condition video is required for pickup confirmation." });
+    return res
+      .status(400)
+      .json({
+        error: "Vehicle condition video is required for pickup confirmation.",
+      });
   }
 
   try {
     // 1. Get booking details
-    const bookingData = await hasuraClient.request<any>(GET_BOOKING, { id: bookingId });
+    const bookingData = await hasuraClient.request<any>(GET_BOOKING, {
+      id: bookingId,
+    });
     const booking = bookingData.vehicleBookings_by_pk;
 
     if (!booking) {
@@ -114,15 +122,19 @@ export default async function handler(
     }
 
     const isCustomer = booking.customer_id === session.user.id;
-    const isPartner = booking.RentalVehicles?.logisticAccount_id === (session.user as any).logisticsAccountId || 
-                      booking.RentalVehicles?.logisticAccount_id === session.user.id;
+    const isPartner =
+      booking.RentalVehicles?.logisticAccount_id ===
+        (session.user as any).logisticsAccountId ||
+      booking.RentalVehicles?.logisticAccount_id === session.user.id;
 
     if (!isCustomer && !isPartner) {
       return res.status(403).json({ error: "Not authorized for this booking" });
     }
 
     if (booking.status !== "approved") {
-      return res.status(400).json({ error: "Booking must be approved before confirming pickup" });
+      return res
+        .status(400)
+        .json({ error: "Booking must be approved before confirming pickup" });
     }
 
     // 2. Step 1: Update the video report field
@@ -164,8 +176,12 @@ export default async function handler(
     // Notify Owner via SMS
     try {
       const vehicleName = booking.RentalVehicles?.name || "Vehicle";
-      const ownerPhone = booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
-      const ownerName = booking.RentalVehicles?.logisticsAccounts?.businessName || booking.RentalVehicles?.logisticsAccounts?.fullname || "Vendor";
+      const ownerPhone =
+        booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
+      const ownerName =
+        booking.RentalVehicles?.logisticsAccounts?.businessName ||
+        booking.RentalVehicles?.logisticsAccounts?.fullname ||
+        "Vendor";
 
       if (ownerPhone) {
         const platNumber = booking.RentalVehicles?.platNumber || "";
@@ -183,6 +199,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error confirming pickup:", error);
-    return res.status(500).json({ error: error.message || "Failed to confirm pickup" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to confirm pickup" });
   }
 }

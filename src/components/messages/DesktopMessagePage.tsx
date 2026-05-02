@@ -1184,7 +1184,8 @@ export default function DesktopMessagePage({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
-                          {selectedOrder.Order_Items?.[0]?.product?.ProductName?.name ||
+                          {selectedOrder.Order_Items?.[0]?.product?.ProductName
+                            ?.name ||
                             selectedOrder.shop?.name ||
                             "Store"}
                         </h3>
@@ -1203,9 +1204,11 @@ export default function DesktopMessagePage({
                       </span>
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
-                          selectedOrder.status === "completed" || selectedOrder.status === "PAID"
+                          selectedOrder.status === "completed" ||
+                          selectedOrder.status === "PAID"
                             ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
-                            : selectedOrder.status === "in_progress" || selectedOrder.status === "ACCEPTED"
+                            : selectedOrder.status === "in_progress" ||
+                              selectedOrder.status === "ACCEPTED"
                             ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
                             : selectedOrder.status === "pending"
                             ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
@@ -1230,7 +1233,9 @@ export default function DesktopMessagePage({
                             Pickup
                           </p>
                           <p className="text-xs font-bold text-gray-900 dark:text-white">
-                            {new Date(selectedOrder.pickup_date).toLocaleDateString()}
+                            {new Date(
+                              selectedOrder.pickup_date
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="space-y-1">
@@ -1238,7 +1243,9 @@ export default function DesktopMessagePage({
                             Return
                           </p>
                           <p className="text-xs font-bold text-gray-900 dark:text-white">
-                            {new Date(selectedOrder.return_date).toLocaleDateString()}
+                            {new Date(
+                              selectedOrder.return_date
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -1248,7 +1255,8 @@ export default function DesktopMessagePage({
                   {/* Counterpart Details Card (Shopper or Owner) */}
                   <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                     <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
-                      {selectedOrder.assignedTo?.shopper?.Employment_id === "VEHICLE"
+                      {selectedOrder.assignedTo?.shopper?.Employment_id ===
+                      "VEHICLE"
                         ? "Owner Details"
                         : "Shopper Details"}
                     </h4>
@@ -1285,10 +1293,14 @@ export default function DesktopMessagePage({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             {selectedOrder.assignedTo?.shopper?.Employment_id &&
-                              selectedOrder.assignedTo.shopper.Employment_id !== "VEHICLE" && (
+                              selectedOrder.assignedTo.shopper.Employment_id !==
+                                "VEHICLE" && (
                                 <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-500/20 dark:text-green-400">
                                   #00
-                                  {selectedOrder.assignedTo.shopper.Employment_id}
+                                  {
+                                    selectedOrder.assignedTo.shopper
+                                      .Employment_id
+                                  }
                                 </span>
                               )}
                           </div>
@@ -1298,7 +1310,8 @@ export default function DesktopMessagePage({
                               "Partner"}
                           </h5>
                           <p className="truncate text-xs font-medium text-gray-500 dark:text-gray-400">
-                            {selectedOrder.assignedTo?.email || "No contact info"}
+                            {selectedOrder.assignedTo?.email ||
+                              "No contact info"}
                           </p>
                         </div>
                       </div>
@@ -1321,7 +1334,9 @@ export default function DesktopMessagePage({
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-indigo-100 text-lg font-black text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
-                              {selectedOrder.orderedBy.name?.charAt(0).toUpperCase() || "C"}
+                              {selectedOrder.orderedBy.name
+                                ?.charAt(0)
+                                .toUpperCase() || "C"}
                             </div>
                           )}
                         </div>
@@ -1359,27 +1374,40 @@ export default function DesktopMessagePage({
                   {selectedOrder.orderType === "vehicle" &&
                     selectedOrder.status === "PENDING" &&
                     (selectedOrder.assignedTo?.id === session?.user?.id ||
-                      selectedOrder.assignedTo?.shopper?.id === session?.user?.id) && (
+                      selectedOrder.assignedTo?.shopper?.id ===
+                        session?.user?.id) && (
                       <div className="pt-2">
                         <button
                           disabled={isConfirming}
                           onClick={async () => {
-                            if (!window.confirm("Are you sure you want to confirm this booking?")) return;
+                            if (
+                              !window.confirm(
+                                "Are you sure you want to confirm this booking?"
+                              )
+                            )
+                              return;
                             setIsConfirming(true);
                             try {
-                              const res = await fetch("/api/mutations/update-vehicle-booking-status", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  bookingId: selectedOrder.id,
-                                  status: "ACCEPTED",
-                                }),
-                              });
+                              const res = await fetch(
+                                "/api/mutations/update-vehicle-booking-status",
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    bookingId: selectedOrder.id,
+                                    status: "ACCEPTED",
+                                  }),
+                                }
+                              );
                               const data = await res.json();
                               if (data.success) {
                                 window.location.reload();
                               } else {
-                                alert(data.error || "Failed to confirm booking");
+                                alert(
+                                  data.error || "Failed to confirm booking"
+                                );
                                 setIsConfirming(false);
                               }
                             } catch (error) {
@@ -1389,7 +1417,9 @@ export default function DesktopMessagePage({
                             }
                           }}
                           className={`group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition-all active:scale-[0.98] ${
-                            isConfirming ? "opacity-70 cursor-not-allowed" : "hover:scale-[1.02] hover:shadow-green-500/25"
+                            isConfirming
+                              ? "cursor-not-allowed opacity-70"
+                              : "hover:scale-[1.02] hover:shadow-green-500/25"
                           }`}
                         >
                           <span className="relative z-10">

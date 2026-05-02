@@ -27,25 +27,25 @@ export default function RejectionModal({
         onClick={onClose}
       />
       <div
-        className={`relative w-full max-w-md overflow-hidden rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 ${theme === "dark"
+        className={`relative w-full max-w-md overflow-hidden rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 ${
+          theme === "dark"
             ? "border border-white/5 bg-[#121212] text-white"
             : "bg-white text-gray-900"
-          }`}
+        }`}
       >
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-red-500/10 text-red-500">
           <AlertCircle className="h-8 w-8" />
         </div>
-        <h3 className="mb-2 font-outfit text-2xl font-black">
-          Reject Booking
-        </h3>
+        <h3 className="mb-2 font-outfit text-2xl font-black">Reject Booking</h3>
         <p className="mb-6 text-sm text-gray-500">
           Please provide a reason for rejecting this booking.
         </p>
         <textarea
-          className={`mb-6 h-32 w-full rounded-2xl border p-4 text-sm font-normal outline-none ${theme === "dark"
+          className={`mb-6 h-32 w-full rounded-2xl border p-4 text-sm font-normal outline-none ${
+            theme === "dark"
               ? "border-white/10 bg-white/5"
               : "border-gray-200 bg-gray-50"
-            }`}
+          }`}
           placeholder="e.g. Vehicle maintenance, fully booked..."
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -53,10 +53,11 @@ export default function RejectionModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className={`flex-1 rounded-2xl py-4 font-normal transition-all ${theme === "dark"
+            className={`flex-1 rounded-2xl py-4 font-normal transition-all ${
+              theme === "dark"
                 ? "bg-white/5 hover:bg-white/10"
                 : "bg-gray-100 hover:bg-gray-200"
-              }`}
+            }`}
           >
             Cancel
           </button>

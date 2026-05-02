@@ -103,7 +103,7 @@ export default function PetPartnerOnboarding() {
         setIsChecking(false);
       }
     };
-    
+
     if (session?.user) {
       checkAccount();
     } else if (session === null) {
