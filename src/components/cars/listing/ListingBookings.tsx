@@ -9,12 +9,16 @@ import {
   X,
   AlertCircle,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Camera,
+  Check
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
+import CameraCapture from "../../ui/CameraCapture";
+import { uploadToFirebase } from "../../../lib/firebase";
 
 interface ListingBookingsProps {
   bookings: any[];
@@ -52,6 +56,7 @@ function BookingCard({ booking }: { booking: any }) {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isConfirmingPickup, setIsConfirmingPickup] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const statusLabel = useMemo(() => {
     switch (booking.status) {
@@ -105,28 +110,46 @@ function BookingCard({ booking }: { booking: any }) {
     }
   };
 
-  const handleConfirmPickup = async () => {
-    if (!confirm("Confirm that you have picked up the car? This will release funds to the owner (excluding deposit).")) return;
-    
+  const handleConfirmPickup = () => {
+    setIsCameraOpen(true);
+  };
+
+  const handlePickupVideoCapture = async (videoUrl: string) => {
+    const loadingToast = toast.loading("Uploading pickup confirmation video...");
     setIsConfirmingPickup(true);
     try {
+      // 1. Fetch blob
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `pickup_${booking.bookingId}.webm`, { type: "video/webm" });
+
+      // 2. Upload to Firebase
+      const storagePath = `bookings/${booking.bookingId}/pickup_video.webm`;
+      const downloadUrl = await uploadToFirebase(file, storagePath);
+
+      // 3. API call
       const res = await fetch("/api/mutations/confirm-pickup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: booking.bookingId }),
+        body: JSON.stringify({ 
+          bookingId: booking.bookingId,
+          carVideo_Status: downloadUrl 
+        }),
       });
       const data = await res.json();
 
       if (data.success) {
-        toast.success("Pickup confirmed! Ride is now active.");
+        toast.success("Pickup confirmed! Ride is now active.", { id: loadingToast });
+        window.location.reload(); // Refresh to update status
       } else {
-        toast.error(data.error || "Failed to confirm pickup");
+        toast.error(data.error || "Failed to confirm pickup", { id: loadingToast });
       }
     } catch (error) {
       console.error("Pickup confirmation error:", error);
-      toast.error("An error occurred.");
+      toast.error("An error occurred during pickup.", { id: loadingToast });
     } finally {
       setIsConfirmingPickup(false);
+      setIsCameraOpen(false);
     }
   };
 
@@ -196,22 +219,6 @@ function BookingCard({ booking }: { booking: any }) {
           </div>
 
           <div className="flex flex-col gap-3">
-            {booking.status === "approved" && (
-              <button
-                onClick={handleConfirmPickup}
-                disabled={isConfirmingPickup}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 py-4 text-sm font-black !text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50"
-              >
-                {isConfirmingPickup ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    Confirm Car Picked Up
-                  </>
-                )}
-              </button>
-            )}
 
             <div className="flex items-center gap-3">
               <Link
@@ -245,6 +252,18 @@ function BookingCard({ booking }: { booking: any }) {
                 {showMenu && (
                   <div className="absolute bottom-full right-0 mb-4 w-48 animate-in fade-in slide-in-from-bottom-2">
                     <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl dark:border-white/5 dark:bg-[#1A1A1A]">
+                      {booking.status === "approved" && (
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            handleConfirmPickup();
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-blue-500 transition-colors hover:bg-blue-50 dark:hover:bg-blue-500/10"
+                        >
+                          <Camera className="h-4 w-4" />
+                          Confirm Pickup
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setShowMenu(false);
@@ -273,6 +292,15 @@ function BookingCard({ booking }: { booking: any }) {
           isCancelling={isCancelling}
         />
       )}
+
+      <CameraCapture
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onCapture={handlePickupVideoCapture}
+        mode="video"
+        title="Confirm Vehicle Pickup"
+        maxVideoDuration={60}
+      />
     </>
   );
 }

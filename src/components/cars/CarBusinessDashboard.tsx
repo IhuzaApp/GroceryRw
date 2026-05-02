@@ -1193,15 +1193,6 @@ function BookingItem({
               </button>
             </>
           )}
-          {status === "approved" && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onConfirmPickup(); }}
-              className="flex items-center gap-2 rounded-xl bg-purple-500 px-6 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/30"
-            >
-              <Camera className="h-4 w-4 !text-white" />
-              <span className="!text-white">Confirm Pickup</span>
-            </button>
-          )}
         </div>
       </div>
 
