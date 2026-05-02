@@ -24,13 +24,14 @@ const GET_BOOKING = gql`
 `;
 
 const UPDATE_STATUS = gql`
-  mutation ConfirmPickup($id: uuid!, $status: String!) {
+  mutation ConfirmPickup($id: uuid!, $status: String!, $carVideo: String) {
     update_vehicleBookings_by_pk(
       pk_columns: { id: $id }
-      _set: { status: $status }
+      _set: { status: $status, carVideo_Status: $carVideo }
     ) {
       id
       status
+      carVideo_Status
     }
   }
 `;
@@ -71,7 +72,7 @@ export default async function handler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { bookingId } = req.body;
+  const { bookingId, carVideo_Status } = req.body;
   if (!bookingId) {
     return res.status(400).json({ error: "Missing bookingId" });
   }
@@ -85,7 +86,11 @@ export default async function handler(
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    if (booking.customer_id !== session.user.id) {
+    const isCustomer = booking.customer_id === session.user.id;
+    const isPartner = booking.RentalVehicles?.logisticAccount_id === (session.user as any).logisticsAccountId || 
+                      booking.RentalVehicles?.logisticAccount_id === session.user.id; // Fallback
+
+    if (!isCustomer && !isPartner) {
       return res.status(403).json({ error: "Not authorized for this booking" });
     }
 
@@ -97,6 +102,7 @@ export default async function handler(
     await hasuraClient.request<any>(UPDATE_STATUS, {
       id: bookingId,
       status: "picked_up",
+      carVideo: carVideo_Status || null,
     });
 
     // 3. Transfer funds to business wallet (excluding refundable deposit)

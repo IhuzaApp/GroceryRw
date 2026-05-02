@@ -31,6 +31,12 @@ const GET_LOGISTICS_BOOKINGS = gql`
         category
         price
       }
+      Ratings {
+        id
+        rating
+        review
+        professionalism
+      }
     }
   }
 `;

@@ -5,7 +5,7 @@ import { gql } from "graphql-request";
 const GET_ALL_VEHICLES = gql`
   query GetAllVehicles {
     RentalVehicles(
-      where: { disabled: { _eq: false } }
+      where: { disabled: { _eq: false }, status: { _eq: "active" } }
       order_by: { updated_at: desc }
     ) {
       id

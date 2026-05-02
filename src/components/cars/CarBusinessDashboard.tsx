@@ -38,6 +38,7 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { uploadToFirebase } from "../../lib/firebase";
 import LoadingScreen from "../ui/LoadingScreen";
 import {
   PendingReviewMessage,
@@ -74,6 +75,8 @@ export default function CarBusinessDashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isPickupCameraOpen, setIsPickupCameraOpen] = useState(false);
+  const [selectedBookingForPickup, setSelectedBookingForPickup] = useState<any>(null);
   const { walletBalance, fetchWalletBalance: refreshWallet } = useBusinessWallet();
   const [cars, setCars] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
@@ -187,15 +190,27 @@ export default function CarBusinessDashboard() {
     }
   }, [session, router]);
 
-  const handleToggleStatus = (id: string) => {
-    setCars((prev) =>
-      prev.map((car) =>
-        car.id === id
-          ? { ...car, status: car.status === "active" ? "disabled" : "active" }
-          : car
-      )
-    );
-    toast.success("Status updated");
+  const handleToggleStatus = async (vehicleId: string, currentActive: boolean) => {
+    try {
+      const response = await fetch("/api/mutations/update-vehicle-active-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicleId,
+          active: !currentActive,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(`Vehicle ${!currentActive ? "enabled" : "disabled"}`);
+        if (logisticsAccountId) fetchVehicles(logisticsAccountId);
+      } else {
+        toast.error("Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error toggling status:", error);
+      toast.error("An error occurred");
+    }
   };
 
   const handleEdit = (car: Car) => {
@@ -308,6 +323,51 @@ export default function CarBusinessDashboard() {
     }
   };
 
+  const handleConfirmPickup = (booking: any) => {
+    setSelectedBookingForPickup(booking);
+    setIsPickupCameraOpen(true);
+  };
+
+  const handlePickupVideoCapture = async (videoUrl: string) => {
+    if (!selectedBookingForPickup) return;
+
+    const loadingToast = toast.loading("Uploading condition video...");
+    try {
+      // 1. Fetch the blob from the local object URL
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `pickup_${selectedBookingForPickup.id}.webm`, { type: "video/webm" });
+
+      // 2. Upload to Firebase
+      const storagePath = `bookings/${selectedBookingForPickup.id}/pickup_video.webm`;
+      const downloadUrl = await uploadToFirebase(file, storagePath);
+
+      // 3. Confirm pickup via API
+      const confirmResponse = await fetch("/api/mutations/confirm-pickup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: selectedBookingForPickup.id,
+          carVideo_Status: downloadUrl,
+        }),
+      });
+
+      if (confirmResponse.ok) {
+        toast.success("Pickup confirmed! Funds transferred to wallet.", { id: loadingToast });
+        if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        refreshWallet();
+      } else {
+        toast.error("Failed to confirm pickup", { id: loadingToast });
+      }
+    } catch (error) {
+      console.error("Error confirming pickup:", error);
+      toast.error("An error occurred during pickup confirmation", { id: loadingToast });
+    } finally {
+      setIsPickupCameraOpen(false);
+      setSelectedBookingForPickup(null);
+    }
+  };
+
   if (accountStatus === "loading") {
     return <LoadingScreen />;
   }
@@ -359,8 +419,8 @@ export default function CarBusinessDashboard() {
               label="Revenue"
               value={formatCurrencySync(
                 bookings
-                  .filter((b) => b.status === "ACCEPTED" || b.status === "COMPLETED")
-                  .reduce((acc, b) => acc + (b.amount || 0), 0)
+                  .filter((b) => b.status === "approved" || b.status === "picked_up" || b.status === "COMPLETED")
+                  .reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0)
               )}
               icon={<TrendingUp />}
               color="green"
@@ -382,7 +442,10 @@ export default function CarBusinessDashboard() {
             />
             <StatsCard
               label="Rating"
-              value="5.0"
+              value={(() => {
+                const ratings = bookings.flatMap(b => b.Ratings || []).map(r => r.rating);
+                return ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "5.0";
+              })()}
               icon={<Star />}
               color="orange"
               theme={theme}
@@ -437,7 +500,7 @@ export default function CarBusinessDashboard() {
                   car={car}
                   theme={theme}
                   onEdit={() => handleEdit(car)}
-                  onToggleStatus={() => handleToggleStatus(car.id)}
+                  onToggleStatus={() => handleToggleStatus(car.id, car.status === "active")}
                   onView={() => handleViewDetails(car)}
                 />
               ))}
@@ -463,6 +526,10 @@ export default function CarBusinessDashboard() {
                   theme={theme}
                   onConfirm={() => handleConfirmBooking(booking)}
                   onReject={() => handleRejectBooking(booking)}
+                  onConfirmPickup={() => handleConfirmPickup(booking)}
+                  rating={booking.Ratings?.[0]?.rating}
+                  review={booking.Ratings?.[0]?.review}
+                  professionalism={booking.Ratings?.[0]?.professionalism}
                 />
               ))
             )}
@@ -552,12 +619,12 @@ export default function CarBusinessDashboard() {
       )}
 
       <CameraCapture
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onCapture={handleCaptureComplete}
+        isOpen={isPickupCameraOpen}
+        onClose={() => setIsPickupCameraOpen(false)}
+        onCapture={handlePickupVideoCapture}
         mode="video"
-        title="Vehicle Condition Report"
-        maxVideoDuration={15}
+        title="Pickup Condition Report"
+        maxVideoDuration={60}
       />
     </div>
   );
@@ -713,7 +780,7 @@ function FleetItem({
                 }`}
             >
               <Circle className="h-2 w-2 fill-current" />
-              {car.status}
+              {car.status === "active" ? "Active" : "Disabled"}
             </div>
             <span className="text-sm font-normal text-green-600">
               {formatCurrencySync(car.price)}/day
@@ -1020,13 +1087,19 @@ function BookingItem({
   theme,
   onConfirm,
   onReject,
+  onConfirmPickup,
   driverProvided,
+  rating,
+  review,
+  professionalism,
 }: any) {
   const statusColors: any = {
     ACCEPTED: "text-blue-500 bg-blue-500/10",
     COMPLETED: "text-green-500 bg-green-500/10",
     PENDING: "text-orange-500 bg-orange-500/10",
     CANCELLED: "text-red-500 bg-red-500/10",
+    approved: "text-emerald-500 bg-emerald-500/10",
+    picked_up: "text-purple-500 bg-purple-500/10",
   };
 
   const statusLabels: any = {
@@ -1034,6 +1107,8 @@ function BookingItem({
     COMPLETED: "Completed",
     PENDING: "Pending",
     CANCELLED: "Cancelled",
+    approved: "Ready for Pickup",
+    picked_up: "Picked Up",
   };
 
   return (
@@ -1089,25 +1164,64 @@ function BookingItem({
           </span>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={onReject}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${theme === "dark"
-                ? "bg-white/5 text-red-500 hover:bg-red-500/10"
-                : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
-              }`}
-          >
-            <X className="h-4 w-4" />
-            Reject
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/30"
-          >
-            <Check className="h-4 w-4 !text-white" />
-            <span className="!text-white">Confirm</span>
-          </button>
+          {(status === "PENDING" || status === "Paid") && (
+            <>
+              <button
+                onClick={onReject}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${theme === "dark"
+                    ? "bg-white/5 text-red-500 hover:bg-red-500/10"
+                    : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
+                  }`}
+              >
+                <X className="h-4 w-4" />
+                Reject
+              </button>
+              <button
+                onClick={onConfirm}
+                className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/30"
+              >
+                <Check className="h-4 w-4 !text-white" />
+                <span className="!text-white">Confirm</span>
+              </button>
+            </>
+          )}
+          {status === "approved" && (
+            <button
+              onClick={onConfirmPickup}
+              className="flex items-center gap-2 rounded-xl bg-purple-500 px-6 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/30"
+            >
+              <Camera className="h-4 w-4 !text-white" />
+              <span className="!text-white">Confirm Pickup</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {rating && (
+        <div className={`mt-2 rounded-2xl p-4 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-3 w-3 ${i < rating ? "fill-orange-500 text-orange-500" : "text-gray-300"}`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] font-black uppercase text-orange-500">
+                Customer Review
+              </span>
+            </div>
+            {professionalism && (
+              <span className="text-[9px] font-black uppercase text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">
+                Professionalism: {professionalism}/5
+              </span>
+            )}
+          </div>
+          <p className="text-xs italic text-gray-500">"{review}"</p>
+        </div>
+      )}
     </div>
   );
 }
