@@ -105,11 +105,11 @@ export default async function handler(
       carVideo: carVideo_Status || null,
     });
 
-    // 3. Transfer funds to business wallet (excluding refundable deposit)
+    // 3. Transfer funds to business wallet (excluding refundable deposit and service fee)
     const totalAmount = parseFloat(booking.amount || "0");
     const serviceFee = parseFloat(booking.services_fee || "0");
     const refundableDeposit = parseFloat(booking.refundable_fee || "0");
-    const amountToCredit = totalAmount + serviceFee - refundableDeposit;
+    const amountToCredit = totalAmount - refundableDeposit - serviceFee;
 
     const logisticsId = booking.RentalVehicles?.logisticsAccounts?.id;
 

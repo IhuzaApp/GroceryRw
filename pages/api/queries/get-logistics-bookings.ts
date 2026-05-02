@@ -18,6 +18,7 @@ const GET_LOGISTICS_BOOKINGS = gql`
       customer_id
       driving_license
       guests
+      refundable_fee
       carVideo_Status
       created_at
       orderedBy: Users {
