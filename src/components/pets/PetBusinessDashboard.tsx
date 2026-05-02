@@ -34,6 +34,7 @@ import PetDashboardHeader from "./PetDashboardHeader";
 import Image from "next/image";
 import AddPetModal from "./modals/AddPetModal";
 import EditPetModal from "./modals/EditPetModal";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
 
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
@@ -50,7 +51,7 @@ export default function PetBusinessDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"pets" | "interests">("pets");
   const [pets, setPets] = useState(DUMMY_PETS);
-  const [walletBalance] = useState(3450000); // 3.4M RWF
+  const { walletBalance } = useBusinessWallet();
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

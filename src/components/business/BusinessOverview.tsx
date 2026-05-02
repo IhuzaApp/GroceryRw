@@ -30,6 +30,7 @@ import {
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { RequestWithdrawModal } from "./RequestWithdrawModal";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
 
 // Helper function to format currency with abbreviations
 const formatCurrencyAbbreviated = (
@@ -60,11 +61,9 @@ interface BusinessOverviewProps {
 
 export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [showDetailedStats, setShowDetailedStats] = useState(false);
-  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const { walletBalance, businessWalletId, isLoading: loadingWallet } = useBusinessWallet();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
-  const [loadingWallet, setLoadingWallet] = useState(false);
-  const [businessWalletId, setBusinessWalletId] = useState<string | null>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -110,7 +109,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   useEffect(() => {
     if (businessAccount?.id) {
       fetchStats();
-      fetchWalletData();
       fetchTransactions();
       fetchMonthlyRevenue();
       fetchRfqResponsesTrend();
@@ -513,30 +511,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       // Error fetching stats
     } finally {
       setLoadingStats(false);
-    }
-  };
-
-  const fetchWalletData = async () => {
-    if (!businessAccount?.id) return;
-
-    setLoadingWallet(true);
-    try {
-      const response = await fetch(
-        `/api/queries/check-business-wallet?business_id=${businessAccount.id}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.wallet) {
-          setWalletBalance(parseFloat(data.wallet.amount || "0"));
-          setBusinessWalletId(data.wallet.id || null);
-        } else {
-          setBusinessWalletId(null);
-        }
-      }
-    } catch (error) {
-      // Error fetching wallet
-    } finally {
-      setLoadingWallet(false);
     }
   };
 

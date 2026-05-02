@@ -214,6 +214,7 @@ import { AuthProvider } from "../src/context/AuthContext";
 import { CartProvider } from "../src/context/CartContext";
 import { FoodCartProvider } from "../src/context/FoodCartContext";
 import { ChatProvider } from "../src/context/ChatContext";
+import { BusinessWalletProvider } from "../src/context/BusinessWalletContext";
 import { Toaster } from "react-hot-toast";
 import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
 import { ApolloProvider } from "@apollo/client";
@@ -482,18 +483,20 @@ export default function App({ Component, pageProps }: AppProps) {
         >
           <ApolloProvider client={apolloClient}>
             <AuthProvider>
-              <CartProvider>
-                <FoodCartProvider>
-                  <ChatProvider>
-                    <GoogleMapProvider>
-                      <SessionRefreshHandler>
-                        <Toaster />
-                        <Component {...pageProps} />
-                      </SessionRefreshHandler>
-                    </GoogleMapProvider>
-                  </ChatProvider>
-                </FoodCartProvider>
-              </CartProvider>
+              <BusinessWalletProvider>
+                <CartProvider>
+                  <FoodCartProvider>
+                    <ChatProvider>
+                      <GoogleMapProvider>
+                        <SessionRefreshHandler>
+                          <Toaster />
+                          <Component {...pageProps} />
+                        </SessionRefreshHandler>
+                      </GoogleMapProvider>
+                    </ChatProvider>
+                  </FoodCartProvider>
+                </CartProvider>
+              </BusinessWalletProvider>
             </AuthProvider>
           </ApolloProvider>
         </SessionProvider>

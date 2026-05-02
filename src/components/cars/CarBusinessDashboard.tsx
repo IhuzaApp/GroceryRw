@@ -27,6 +27,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
 import { Car } from "../../constants/dummyCars";
 import AddVehicleModal from "./modals/AddVehicleModal";
 import EditVehicleModal from "./modals/EditVehicleModal";
@@ -73,9 +74,11 @@ export default function CarBusinessDashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [walletBalance] = useState(2450800);
+  const { walletBalance, fetchWalletBalance: refreshWallet } = useBusinessWallet();
   const [cars, setCars] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [isVehiclesLoading, setIsVehiclesLoading] = useState(true);
+  const [isBookingsLoading, setIsBookingsLoading] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
   const [accountStatus, setAccountStatus] = useState<
@@ -84,6 +87,22 @@ export default function CarBusinessDashboard() {
   const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(
     null
   );
+
+  const fetchBookings = async (accountId: string) => {
+    try {
+      const response = await fetch(
+        `/api/queries/get-logistics-bookings?logisticAccount_id=${accountId}`
+      );
+      const data = await response.json();
+      if (data.bookings) {
+        setBookings(data.bookings);
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    } finally {
+      setIsBookingsLoading(false);
+    }
+  };
 
   const fetchVehicles = async (accountId: string) => {
     try {
@@ -132,6 +151,8 @@ export default function CarBusinessDashboard() {
     }
   };
 
+
+
   useEffect(() => {
     const checkAccount = async () => {
       try {
@@ -148,6 +169,7 @@ export default function CarBusinessDashboard() {
 
         setLogisticsAccountId(data.account.id);
         fetchVehicles(data.account.id);
+        fetchBookings(data.account.id);
 
         if (data.account.disabled) {
           setAccountStatus("disabled");
@@ -266,7 +288,11 @@ export default function CarBusinessDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <StatsCard
               label="Revenue"
-              value={formatCurrencySync(12400)}
+              value={formatCurrencySync(
+                bookings
+                  .filter((b) => b.status === "ACCEPTED" || b.status === "COMPLETED")
+                  .reduce((acc, b) => acc + (b.amount || 0), 0)
+              )}
               icon={<TrendingUp />}
               color="green"
               theme={theme}
@@ -280,14 +306,14 @@ export default function CarBusinessDashboard() {
             />
             <StatsCard
               label="Bookings"
-              value="12"
+              value={bookings.length.toString()}
               icon={<CalendarCheck />}
               color="purple"
               theme={theme}
             />
             <StatsCard
               label="Rating"
-              value="4.8"
+              value="5.0"
               icon={<Star />}
               color="orange"
               theme={theme}
@@ -350,38 +376,27 @@ export default function CarBusinessDashboard() {
           </div>
         ) : (
           <div className="space-y-4">
-            <BookingItem
-              customer="John Doe"
-              car="Tesla Model 3"
-              date="Oct 24 - Oct 26"
-              amount={formatCurrencySync(160)}
-              status="Ongoing"
-              driverProvided={false}
-              theme={theme}
-              onConfirm={() =>
-                handleConfirmBooking({
-                  customer: "John Doe",
-                  driverProvided: false,
-                })
-              }
-              onReject={() => handleRejectBooking({ customer: "John Doe" })}
-            />
-            <BookingItem
-              customer="Jane Smith"
-              car="Toyota RAV4"
-              date="Oct 22 - Oct 23"
-              amount={formatCurrencySync(65)}
-              status="Completed"
-              driverProvided={true}
-              theme={theme}
-              onConfirm={() =>
-                handleConfirmBooking({
-                  customer: "Jane Smith",
-                  driverProvided: true,
-                })
-              }
-              onReject={() => handleRejectBooking({ customer: "Jane Smith" })}
-            />
+            {bookings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CalendarCheck className="mb-4 h-12 w-12 text-gray-500 opacity-20" />
+                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">No bookings yet</p>
+              </div>
+            ) : (
+              bookings.map((booking) => (
+                <BookingItem
+                  key={booking.id}
+                  customer={booking.orderedBy?.name || "Customer"}
+                  car={booking.RentalVehicles?.name || "Vehicle"}
+                  date={booking.pickup_date ? `${new Date(booking.pickup_date).toLocaleDateString()} - ${new Date(booking.return_date).toLocaleDateString()}` : "No dates"}
+                  amount={formatCurrencySync(booking.amount)}
+                  status={booking.status}
+                  driverProvided={false}
+                  theme={theme}
+                  onConfirm={() => handleConfirmBooking(booking)}
+                  onReject={() => handleRejectBooking(booking)}
+                />
+              ))
+            )}
           </div>
         )}
       </div>
@@ -939,9 +954,17 @@ function BookingItem({
   driverProvided,
 }: any) {
   const statusColors: any = {
-    Ongoing: "text-blue-500 bg-blue-500/10",
-    Completed: "text-green-500 bg-green-500/10",
-    Upcoming: "text-orange-500 bg-orange-500/10",
+    ACCEPTED: "text-blue-500 bg-blue-500/10",
+    COMPLETED: "text-green-500 bg-green-500/10",
+    PENDING: "text-orange-500 bg-orange-500/10",
+    CANCELLED: "text-red-500 bg-red-500/10",
+  };
+
+  const statusLabels: any = {
+    ACCEPTED: "Ongoing",
+    COMPLETED: "Completed",
+    PENDING: "Pending",
+    CANCELLED: "Cancelled",
   };
 
   return (
@@ -974,9 +997,9 @@ function BookingItem({
         <div className="text-right">
           <p className="text-xl font-black text-green-500">{amount}</p>
           <div
-            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusColors[status]}`}
+            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusColors[status] || "text-gray-500 bg-gray-500/10"}`}
           >
-            {status}
+            {statusLabels[status] || status}
           </div>
         </div>
       </div>

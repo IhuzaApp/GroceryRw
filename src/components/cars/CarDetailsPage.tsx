@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { toast } from "react-hot-toast";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
