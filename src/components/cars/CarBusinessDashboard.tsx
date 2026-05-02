@@ -73,6 +73,7 @@ export default function CarBusinessDashboard() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [isBookingDetailsOpen, setIsBookingDetailsOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isPickupCameraOpen, setIsPickupCameraOpen] = useState(false);
@@ -224,37 +225,25 @@ export default function CarBusinessDashboard() {
   };
 
   const handleConfirmBooking = async (booking: any) => {
-    setSelectedBooking(booking);
-    
-    const confirmAction = async () => {
-      try {
-        const response = await fetch("/api/mutations/update-vehicle-booking-status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            status: "approved"
-          }),
-        });
+    try {
+      const response = await fetch("/api/mutations/update-vehicle-booking-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          status: "approved"
+        }),
+      });
 
-        if (response.ok) {
-          toast.success("Booking confirmed! It is now waiting for pickup.");
-          if (logisticsAccountId) fetchBookings(logisticsAccountId);
-        } else {
-          toast.error("Failed to confirm booking");
-        }
-      } catch (error) {
-        console.error("Error confirming booking:", error);
-        toast.error("An error occurred");
+      if (response.ok) {
+        toast.success("Booking confirmed! It is now waiting for pickup.");
+        if (logisticsAccountId) fetchBookings(logisticsAccountId);
+      } else {
+        toast.error("Failed to confirm booking");
       }
-    };
-
-    // If no driver provided, require camera capture (optional logic, but we'll keep it as a UI step)
-    if (!booking.driverProvided) {
-      setIsCameraOpen(true);
-      // The actual API call will happen in handleCaptureComplete
-    } else {
-      await confirmAction();
+    } catch (error) {
+      console.error("Error confirming booking:", error);
+      toast.error("An error occurred");
     }
   };
 
@@ -366,6 +355,11 @@ export default function CarBusinessDashboard() {
       setIsPickupCameraOpen(false);
       setSelectedBookingForPickup(null);
     }
+  };
+
+  const handleViewBookingDetails = (booking: any) => {
+    setSelectedBooking(booking);
+    setIsBookingDetailsOpen(true);
   };
 
   if (accountStatus === "loading") {
@@ -527,6 +521,7 @@ export default function CarBusinessDashboard() {
                   onConfirm={() => handleConfirmBooking(booking)}
                   onReject={() => handleRejectBooking(booking)}
                   onConfirmPickup={() => handleConfirmPickup(booking)}
+                  onClick={() => handleViewBookingDetails(booking)}
                   rating={booking.Ratings?.[0]?.rating}
                   review={booking.Ratings?.[0]?.review}
                   professionalism={booking.Ratings?.[0]?.professionalism}
@@ -625,6 +620,13 @@ export default function CarBusinessDashboard() {
         mode="video"
         title="Pickup Condition Report"
         maxVideoDuration={60}
+      />
+
+      <BookingDetailsModal
+        booking={selectedBooking}
+        isOpen={isBookingDetailsOpen}
+        onClose={() => setIsBookingDetailsOpen(false)}
+        theme={theme}
       />
     </div>
   );
@@ -1092,6 +1094,7 @@ function BookingItem({
   rating,
   review,
   professionalism,
+  onClick,
 }: any) {
   const statusColors: any = {
     ACCEPTED: "text-blue-500 bg-blue-500/10",
@@ -1100,6 +1103,8 @@ function BookingItem({
     CANCELLED: "text-red-500 bg-red-500/10",
     approved: "text-emerald-500 bg-emerald-500/10",
     picked_up: "text-purple-500 bg-purple-500/10",
+    Paid: "text-green-600 bg-green-500/10",
+    paid: "text-green-600 bg-green-500/10",
   };
 
   const statusLabels: any = {
@@ -1109,11 +1114,14 @@ function BookingItem({
     CANCELLED: "Cancelled",
     approved: "Ready for Pickup",
     picked_up: "Picked Up",
+    Paid: "Payment Received",
+    paid: "Payment Received",
   };
 
   return (
     <div
-      className={`flex flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${theme === "dark"
+      onClick={onClick}
+      className={`flex cursor-pointer flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${theme === "dark"
           ? "border-white/5 bg-[#121212]"
           : "border-gray-100 bg-white shadow-sm"
         }`}
@@ -1164,10 +1172,10 @@ function BookingItem({
           </span>
         </div>
         <div className="flex gap-2">
-          {(status === "PENDING" || status === "Paid") && (
+          {(status?.toUpperCase() === "PENDING" || status?.toUpperCase() === "PAID") && (
             <>
               <button
-                onClick={onReject}
+                onClick={(e) => { e.stopPropagation(); onReject(); }}
                 className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${theme === "dark"
                     ? "bg-white/5 text-red-500 hover:bg-red-500/10"
                     : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
@@ -1177,7 +1185,7 @@ function BookingItem({
                 Reject
               </button>
               <button
-                onClick={onConfirm}
+                onClick={(e) => { e.stopPropagation(); onConfirm(); }}
                 className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/30"
               >
                 <Check className="h-4 w-4 !text-white" />
@@ -1187,7 +1195,7 @@ function BookingItem({
           )}
           {status === "approved" && (
             <button
-              onClick={onConfirmPickup}
+              onClick={(e) => { e.stopPropagation(); onConfirmPickup(); }}
               className="flex items-center gap-2 rounded-xl bg-purple-500 px-6 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/30"
             >
               <Camera className="h-4 w-4 !text-white" />
@@ -1222,6 +1230,128 @@ function BookingItem({
           <p className="text-xs italic text-gray-500">"{review}"</p>
         </div>
       )}
+    </div>
+  );
+}
+
+function BookingDetailsModal({
+  booking,
+  isOpen,
+  onClose,
+  theme,
+}: {
+  booking: any;
+  isOpen: boolean;
+  onClose: () => void;
+  theme: string;
+}) {
+  if (!isOpen || !booking) return null;
+
+  return (
+    <div className="fixed inset-0 z-[400] flex items-end justify-center sm:items-center sm:p-6">
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        onClick={onClose}
+      />
+      <div
+        className={`relative flex h-full w-full max-w-2xl flex-col overflow-hidden shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95 ${theme === "dark"
+            ? "border border-white/5 bg-[#121212] text-white"
+            : "bg-white text-gray-900"
+          }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 p-8 dark:border-white/5">
+          <div>
+            <h2 className="font-outfit text-2xl font-black">Booking Details</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+              Ref: {booking.id.slice(0, 8)}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className={`rounded-full p-3 transition-colors ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
+              }`}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
+          <div className="space-y-8">
+            {/* Customer Info */}
+            <section>
+              <h3 className="mb-4 text-xs font-normal uppercase tracking-[0.2em] text-gray-400">
+                Customer Information
+              </h3>
+              <div className={`flex items-center gap-4 rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
+                <div className="h-16 w-16 overflow-hidden rounded-full">
+                  <img
+                    src={booking.orderedBy?.profile_picture || "https://ui-avatars.com/api/?name=" + (booking.orderedBy?.name || "Customer")}
+                    alt={booking.orderedBy?.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-lg font-black">{booking.orderedBy?.name}</h4>
+                  <p className="text-sm text-gray-500">{booking.orderedBy?.email}</p>
+                  <p className="text-sm font-black text-green-500">{booking.orderedBy?.phone}</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Booking Specifics */}
+            <section className="grid grid-cols-2 gap-4">
+              <div className={`rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
+                <p className="text-[10px] font-normal uppercase tracking-widest text-gray-400">Guests</p>
+                <p className="text-lg font-black">{booking.guests || 1} Person(s)</p>
+              </div>
+              <div className={`rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
+                <p className="text-[10px] font-normal uppercase tracking-widest text-gray-400">Status</p>
+                <p className="text-lg font-black uppercase text-blue-500">{booking.status}</p>
+              </div>
+            </section>
+
+            {/* Driving License */}
+            <section>
+              <h3 className="mb-4 text-xs font-normal uppercase tracking-[0.2em] text-gray-400">
+                Driving License
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {booking.driving_license ? (
+                  <div className="overflow-hidden rounded-2xl border border-white/5 shadow-lg">
+                    <img
+                      src={booking.driving_license}
+                      alt="Driving License"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className={`flex h-40 items-center justify-center rounded-3xl border-2 border-dashed ${theme === "dark" ? "border-white/10" : "border-gray-200"}`}>
+                    <p className="text-sm text-gray-400 font-normal">No license images uploaded</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Condition Video if exists */}
+            {booking.carVideo_Status && (
+              <section>
+                <h3 className="mb-4 text-xs font-normal uppercase tracking-[0.2em] text-gray-400">
+                  Pickup Condition Video
+                </h3>
+                <div className="aspect-video overflow-hidden rounded-2xl border border-white/5 shadow-lg">
+                  <video
+                    src={booking.carVideo_Status}
+                    controls
+                    className="h-full w-full"
+                  />
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

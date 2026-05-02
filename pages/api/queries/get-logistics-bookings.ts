@@ -16,6 +16,9 @@ const GET_LOGISTICS_BOOKINGS = gql`
       pickup_date
       return_date
       customer_id
+      driving_license
+      guests
+      carVideo_Status
       created_at
       orderedBy: Users {
         id
