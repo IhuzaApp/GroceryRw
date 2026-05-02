@@ -34,8 +34,8 @@ export default function CarDetail() {
                 v.logisticsAccounts?.fullname ||
                 "Verified Host",
               image:
-                v.logisticsAccounts?.Users?.profile_picture ||
-                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+                v.logisticsAccounts?.Users?.image ||
+                null,
               isVerified: true,
             },
             images: [
@@ -48,6 +48,7 @@ export default function CarDetail() {
             rating: 5.0,
             description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
             licenseInfo: "Verified License & Insurance",
+            bookings: v.vehicleBookings || [],
           };
           setCar(mappedCar);
         }

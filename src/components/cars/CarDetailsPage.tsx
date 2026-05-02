@@ -1,16 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/router";
 
 import Image from "next/image";
 import Link from "next/link";
 import {
   Users,
+  User,
   Fuel,
   Settings2,
   Star,
   ChevronRight,
+  ChevronLeft,
   MessageSquare,
   ShieldCheck,
   ArrowLeft,
@@ -42,7 +45,7 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import CameraCapture from "../ui/CameraCapture";
 import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
 
-export default function CarDetailsPage({ car }: { car: Car }) {
+export default function CarDetailsPage({ car }: { car: Car & { bookings?: any[] } }) {
   const router = useRouter();
   const { theme } = useTheme();
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -291,14 +294,18 @@ export default function CarDetailsPage({ car }: { car: Car }) {
 
                 <div className="mb-8 flex items-center justify-between rounded-3xl bg-gray-50 p-4 dark:bg-white/5 md:p-5">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 overflow-hidden rounded-full ring-4 ring-green-500/10">
-                      <Image
-                        src={car.owner.image}
-                        alt={car.owner.name}
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200 ring-4 ring-green-500/10 dark:bg-white/10">
+                      {car.owner?.image ? (
+                        <Image
+                          src={car.owner.image}
+                          alt={car.owner.name || "Owner"}
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-6 w-6 text-gray-400" />
+                      )}
                     </div>
                     <div>
                       <p className="font-outfit text-[10px] font-normal uppercase tracking-widest text-gray-400">
@@ -403,6 +410,41 @@ function BookingModal({
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const isNavigatingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isDateBooked = (date: Date) => {
+    const bookings = (car as any).bookings || [];
+    if (bookings.length === 0) return false;
+    const targetTime = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    for (const booking of bookings) {
+      if (booking.status !== "PAID" && booking.status !== "approved") continue;
+      const s = new Date(booking.pickup_date);
+      const startTime = new Date(s.getFullYear(), s.getMonth(), s.getDate()).getTime();
+      const e = new Date(booking.return_date);
+      const endTime = new Date(e.getFullYear(), e.getMonth(), e.getDate()).getTime();
+      if (targetTime >= startTime && targetTime <= endTime) return true;
+    }
+    return false;
+  };
+
+  const shouldDisableDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date < today) return true;
+    return isDateBooked(date);
+  };
+
+  const hasBookedDatesInRange = (start: string, end: string) => {
+    if (!start || !end) return false;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (e < s) return false;
+    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+      if (isDateBooked(d)) return true;
+    }
+    return false;
+  };
+
+  const isRangeInvalid = hasBookedDatesInRange(startDate, endDate);
 
   useEffect(() => {
     return () => {
@@ -706,16 +748,43 @@ function BookingModal({
                 <DateInput
                   label="Pick-up Date"
                   value={startDate}
-                  onChange={setStartDate}
+                  onChange={(val: string) => {
+                    if (val && isDateBooked(new Date(val))) {
+                      toast.error("This date is already booked. Please choose another.");
+                      return;
+                    }
+                    setStartDate(val);
+                    // Clear end date if it's before the new start
+                    if (endDate && val > endDate) setEndDate("");
+                  }}
                   theme={theme}
+                  min={new Date().toISOString().split("T")[0]}
+                  isDateBooked={isDateBooked}
                 />
                 <DateInput
                   label="Return Date"
                   value={endDate}
-                  onChange={setEndDate}
+                  onChange={(val: string) => {
+                    if (val && isDateBooked(new Date(val))) {
+                      toast.error("This date is already booked. Please choose another.");
+                      return;
+                    }
+                    setEndDate(val);
+                  }}
                   theme={theme}
+                  min={startDate || new Date().toISOString().split("T")[0]}
+                  isDateBooked={isDateBooked}
                 />
               </div>
+
+              {isRangeInvalid && (
+                <div className="flex items-center gap-2 rounded-2xl bg-red-500/10 p-4 text-red-500">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-xs font-medium">
+                    The selected dates overlap with an existing booking. Please choose different dates.
+                  </span>
+                </div>
+              )}
 
               <div className="flex flex-col gap-5 md:gap-6">
                 <div>
@@ -1005,6 +1074,7 @@ function BookingModal({
                 onClick={handleBooking}
                 disabled={
                   loading ||
+                  isRangeInvalid ||
                   (car.driverOption === "none" && !licensePhoto) ||
                   (paymentMethod === "momo" && !phoneNumber) ||
                   (paymentMethod === "wallet" && walletBalance < totalUpfront)
@@ -1026,24 +1096,221 @@ function BookingModal({
   );
 }
 
-function DateInput({ label, value, onChange, theme }: any) {
+function DateInput({ label, value, onChange, theme, min, isDateBooked }: any) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0, width: 288 });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const minDate = min ? new Date(min + "T00:00:00") : today;
+  minDate.setHours(0, 0, 0, 0);
+
+  const parsed = value ? new Date(value + "T00:00:00") : null;
+  const [viewYear, setViewYear] = useState(parsed?.getFullYear() ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(parsed?.getMonth() ?? today.getMonth());
+
+  // Sync view when value changes externally
+  useEffect(() => {
+    if (value) {
+      const d = new Date(value + "T00:00:00");
+      setViewYear(d.getFullYear());
+      setViewMonth(d.getMonth());
+    }
+  }, [value]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (
+        containerRef.current && !containerRef.current.contains(target) &&
+        !target?.closest("[data-cal-portal]")
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const openCalendar = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const top = spaceBelow >= 340 ? rect.bottom + 8 : rect.top - 350;
+      setPopupPos({ top, left: rect.left, width: Math.max(rect.width, 288) });
+    }
+    setIsOpen(o => !o);
+  };
+
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DAY_NAMES = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  const handleSelect = (day: number) => {
+    const d = new Date(viewYear, viewMonth, day);
+    d.setHours(0, 0, 0, 0);
+    if (d < minDate) return;
+    if (isDateBooked && isDateBooked(d)) return;
+    const iso = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    onChange(iso);
+    setIsOpen(false);
+  };
+
+  const displayValue = parsed
+    ? parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : "Select date";
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
+  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+
   return (
-    <div>
+    <div ref={containerRef} className="relative">
       <label className="mb-2 block font-outfit text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400">
         {label}
       </label>
-      <div className="relative">
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full rounded-[1.25rem] border p-3 text-xs font-normal outline-none transition-all focus:ring-4 focus:ring-green-500/20 md:p-4 md:text-sm ${
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={openCalendar}
+        className={`flex w-full items-center justify-between rounded-[1.25rem] border p-3 text-left text-xs font-normal outline-none transition-all focus:ring-4 focus:ring-green-500/20 md:p-4 md:text-sm ${
+          theme === "dark"
+            ? "border-white/10 bg-white/5 text-white"
+            : "border-gray-200 bg-white text-gray-900"
+        } ${
+          !value ? (theme === "dark" ? "text-gray-500" : "text-gray-400") : ""
+        }`}
+      >
+        <span>{displayValue}</span>
+        <Calendar className="h-4 w-4 shrink-0 text-gray-400" />
+      </button>
+
+      {isOpen && typeof window !== "undefined" && createPortal(
+        <div
+          data-cal-portal="true"
+          style={{
+            position: "fixed",
+            top: popupPos.top,
+            left: popupPos.left,
+            width: popupPos.width,
+            zIndex: 99999,
+          }}
+          className={`overflow-hidden rounded-[1.5rem] border shadow-2xl ${
             theme === "dark"
-              ? "border-white/10 bg-white/5 text-white"
-              : "border-gray-200 bg-white text-gray-900"
+              ? "border-white/10 bg-[#1a1a1a]"
+              : "border-gray-100 bg-white"
           }`}
-        />
-      </div>
+        >
+          {/* Header */}
+          <div className={`flex items-center justify-between px-4 py-3 ${
+            theme === "dark" ? "border-b border-white/5" : "border-b border-gray-100"
+          }`}>
+            <button
+              type="button"
+              onClick={prevMonth}
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100"
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="font-outfit text-sm font-black">
+              {MONTH_NAMES[viewMonth]} {viewYear}
+            </span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100"
+              }`}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 px-3 pt-3">
+            {DAY_NAMES.map(d => (
+              <div key={d} className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400">{d}</div>
+            ))}
+          </div>
+
+          {/* Days grid */}
+          <div className="grid grid-cols-7 gap-y-0.5 px-3 pb-3">
+            {cells.map((day, idx) => {
+              if (!day) return <div key={idx} />;
+
+              const cellDate = new Date(viewYear, viewMonth, day);
+              cellDate.setHours(0, 0, 0, 0);
+              const isPast = cellDate < minDate;
+              const isBooked = isDateBooked ? isDateBooked(cellDate) : false;
+              const isDisabled = isPast || isBooked;
+              const isSelected = value === `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const isToday = cellDate.getTime() === today.getTime();
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => handleSelect(day)}
+                  className={`relative mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all ${
+                    isSelected
+                      ? "bg-green-500 font-black text-white shadow-md shadow-green-500/30"
+                      : isBooked
+                      ? theme === "dark"
+                        ? "cursor-not-allowed text-red-400/50 line-through"
+                        : "cursor-not-allowed text-red-400/60 line-through"
+                      : isPast
+                      ? "cursor-not-allowed opacity-25"
+                      : isToday
+                      ? theme === "dark"
+                        ? "font-black text-green-400 ring-2 ring-green-500/40"
+                        : "font-black text-green-600 ring-2 ring-green-500/30"
+                      : theme === "dark"
+                      ? "text-white hover:bg-white/10"
+                      : "text-gray-900 hover:bg-gray-100"
+                  }`}
+                  title={isBooked ? "Already booked" : isPast ? "Past date" : undefined}
+                >
+                  {day}
+                  {isBooked && (
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <span className={`h-px w-5 rotate-[30deg] ${
+                        theme === "dark" ? "bg-red-400/60" : "bg-red-400/70"
+                      }`} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className={`flex items-center gap-3 border-t px-4 py-2.5 text-[10px] font-medium ${
+            theme === "dark" ? "border-white/5 text-gray-500" : "border-gray-100 text-gray-400"
+          }`}>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-green-500" /> Selected</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-400/50" /> Booked</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-gray-300/50" /> Unavailable</span>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

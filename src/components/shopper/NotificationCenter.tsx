@@ -8,6 +8,7 @@ import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
+import { requestNotificationPermission } from "../../services/fcmClient";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -305,9 +306,9 @@ export default function NotificationCenter() {
 
       // Filter notifications based on user role
       let filteredHistory = history.filter((n: NotificationItem) => {
-        // Regular users (non-shoppers): ONLY show chat_message notifications
+        // Regular users (non-shoppers): ONLY show chat_message and partner notifications
         if (!isShopper) {
-          return n.type === "chat_message";
+          return n.type === "chat_message" || n.type === "vehicle_booking" || n.type === "pet_adoption";
         }
 
         // Shoppers: show all notification types, but filter out already-assigned orders
@@ -445,6 +446,40 @@ export default function NotificationCenter() {
             />
           </svg>
         );
+      case "vehicle_booking":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7h8M4 11h16a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2zm0 0V7a2 2 0 012-2h8a2 2 0 012 2v4M6 15a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z"
+            />
+          </svg>
+        );
+      case "pet_adoption":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
       case "new_order":
         return (
           <svg
@@ -559,6 +594,10 @@ export default function NotificationCenter() {
     switch (type) {
       case "chat_message":
         return theme === "dark" ? "text-blue-400" : "text-blue-600";
+      case "vehicle_booking":
+        return theme === "dark" ? "text-emerald-400" : "text-emerald-600";
+      case "pet_adoption":
+        return theme === "dark" ? "text-rose-400" : "text-rose-600";
       case "new_order":
         return theme === "dark" ? "text-green-400" : "text-green-600";
       case "batch_orders":
@@ -819,9 +858,27 @@ export default function NotificationCenter() {
                               : "bg-red-500"
                           }`}
                         ></div>
-                        <span
-                          className={`text-[10px] font-bold ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        <button
+                          onClick={async () => {
+                            if (!hasPermission) {
+                              const granted = await requestNotificationPermission();
+                              if (granted) {
+                                window.location.reload();
+                              } else {
+                                toast.error(
+                                  "Please enable notifications in your browser settings."
+                                );
+                              }
+                            }
+                          }}
+                          className={`text-[10px] font-bold outline-none transition-colors ${
+                            theme === "dark"
+                              ? "text-gray-400 hover:text-white"
+                              : "text-gray-600 hover:text-black"
+                          } ${
+                            !hasPermission
+                              ? "cursor-pointer underline decoration-dashed underline-offset-4"
+                              : "cursor-default"
                           }`}
                         >
                           FCM STATUS:{" "}
@@ -829,8 +886,8 @@ export default function NotificationCenter() {
                             ? isInitialized
                               ? "CONNECTED"
                               : "SYNCING..."
-                            : "DISABLED"}
-                        </span>
+                            : "DISABLED - CLICK TO ENABLE"}
+                        </button>
                       </div>
                     </div>
                   </div>

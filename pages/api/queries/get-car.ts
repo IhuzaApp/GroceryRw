@@ -33,6 +33,12 @@ const GET_CAR_BY_ID = gql`
           image: profile_picture
         }
       }
+      vehicleBookings(where: { status: { _in: ["PAID", "approved"] } }) {
+        id
+        pickup_date
+        return_date
+        status
+      }
     }
   }
 `;
