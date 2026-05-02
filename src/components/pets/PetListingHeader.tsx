@@ -24,13 +24,13 @@ export default function PetListingHeader({ onListPet }: PetListingHeaderProps) {
       <div className="relative mx-auto flex h-full max-w-[1600px] items-center justify-between px-12">
         <div className="flex items-center gap-6">
           <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md">
-            <Dog className="h-10 w-10 text-white" />
+            <Dog className="h-10 w-10 !text-white text-white" />
           </div>
           <div>
             <h1 className="font-outfit text-5xl font-black tracking-tight !text-white text-white">
               Pet Marketplace
             </h1>
-            <p className="mt-2 font-medium text-white/60">
+            <p className="mt-2 font-medium !text-white text-white">
               Manage your listings and reach thousands of pet lovers
             </p>
           </div>

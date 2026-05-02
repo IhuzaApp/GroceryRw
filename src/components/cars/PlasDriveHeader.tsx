@@ -26,12 +26,14 @@ interface PlasDriveHeaderProps {
   activeTab: "explore" | "bookings";
   onTabChange: (tab: "explore" | "bookings") => void;
   onBecomePartner: () => void;
+  isPartner?: boolean;
 }
 
 export default function PlasDriveHeader({
   activeTab,
   onTabChange,
   onBecomePartner,
+  isPartner,
 }: PlasDriveHeaderProps) {
   return (
     <div className="relative hidden h-[300px] w-full overflow-hidden md:block">
@@ -48,7 +50,7 @@ export default function PlasDriveHeader({
       <div className="relative mx-auto flex h-full max-w-[1600px] items-center justify-between px-8">
         <div className="flex items-center gap-6">
           <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md">
-            <CarIcon className="h-12 w-12 text-white" />
+            <CarIcon className="h-12 w-12 !text-white text-white" />
           </div>
           <div>
             <h1 className="font-outfit text-5xl font-black tracking-tight !text-white text-white">
@@ -84,7 +86,7 @@ export default function PlasDriveHeader({
             onClick={onBecomePartner}
             className="rounded-[1.25rem] bg-green-500 px-8 py-4 text-sm font-black !text-white text-white shadow-2xl shadow-green-500/40 transition-all hover:scale-[1.05] active:scale-[0.98]"
           >
-            Join Plas Ride
+            {isPartner ? "Dashboard" : "Join Plas Ride"}
           </button>
         </div>
       </div>

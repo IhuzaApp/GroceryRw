@@ -23,6 +23,7 @@ import { useGoogleMap } from "../../context/GoogleMapProvider";
 import { Autocomplete } from "@react-google-maps/api";
 import { useEffect, useRef } from "react";
 import { uploadToFirebase } from "../../utils/firebaseUtils";
+import LoadingScreen from "../ui/LoadingScreen";
 
 const STEPS = [
   {
@@ -65,6 +66,7 @@ export default function PetPartnerOnboarding() {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [isChecking, setIsChecking] = useState(true);
   const [formData, setFormData] = useState({
     accountType: "personal" as "business" | "personal",
     businessName: "",
@@ -92,15 +94,20 @@ export default function PetPartnerOnboarding() {
           const data = await response.json();
           if (data.hasAccount) {
             router.push("/Pets/dashboard");
+            return;
           }
         }
+        setIsChecking(false);
       } catch (error) {
         console.error("Error checking pet vendor account:", error);
+        setIsChecking(false);
       }
     };
-
+    
     if (session?.user) {
       checkAccount();
+    } else if (session === null) {
+      setIsChecking(false);
     }
   }, [session, router]);
 
@@ -627,6 +634,10 @@ export default function PetPartnerOnboarding() {
         return null;
     }
   };
+
+  if (isChecking) {
+    return <LoadingScreen showProgressBar={false} />;
+  }
 
   if (isSubmitted) {
     return (

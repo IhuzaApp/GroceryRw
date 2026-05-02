@@ -51,10 +51,22 @@ function BookingCard({ booking }: { booking: any }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isConfirmingPickup, setIsConfirmingPickup] = useState(false);
+
+  const statusLabel = useMemo(() => {
+    switch (booking.status) {
+      case "PAID": return "Booked";
+      case "approved": return "Waiting for Pickup";
+      case "picked_up": return "Active Ride";
+      case "COMPLETED": return "Completed";
+      case "CANCELLED": return "Cancelled";
+      default: return booking.status || "Confirmed";
+    }
+  }, [booking.status]);
 
   const cancellationDetails = useMemo(() => {
     const total = parseFloat(booking.total || "0");
-    const isAccepted = booking.status === "ACCEPTED";
+    const isAccepted = booking.status === "approved" || booking.status === "picked_up";
     const feePercent = isAccepted ? 0.05 : 0.02;
     const feeAmount = total * feePercent;
     const refundAmount = total - feeAmount;
@@ -80,13 +92,8 @@ function BookingCard({ booking }: { booking: any }) {
 
       if (data.success) {
         toast.success(`Refunded: ${formatCurrencySync(data.refundAmount)}`);
-        const saved = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-        const updated = saved.map((b: any) =>
-          b.bookingId === booking.bookingId ? { ...b, status: "CANCELLED" } : b
-        );
-        localStorage.setItem("car_bookings", JSON.stringify(updated));
-        window.dispatchEvent(new Event("storage"));
         setShowCancelModal(false);
+        // Page will refresh via CarListing interval
       } else {
         toast.error(data.error || "Failed to cancel booking");
       }
@@ -95,6 +102,31 @@ function BookingCard({ booking }: { booking: any }) {
       toast.error("An error occurred while cancelling.");
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleConfirmPickup = async () => {
+    if (!confirm("Confirm that you have picked up the car? This will release funds to the owner (excluding deposit).")) return;
+    
+    setIsConfirmingPickup(true);
+    try {
+      const res = await fetch("/api/mutations/confirm-pickup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: booking.bookingId }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("Pickup confirmed! Ride is now active.");
+      } else {
+        toast.error(data.error || "Failed to confirm pickup");
+      }
+    } catch (error) {
+      console.error("Pickup confirmation error:", error);
+      toast.error("An error occurred.");
+    } finally {
+      setIsConfirmingPickup(false);
     }
   };
 
@@ -108,17 +140,22 @@ function BookingCard({ booking }: { booking: any }) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div
-            className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase shadow-lg backdrop-blur-md ${booking.status === "CANCELLED"
+            className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-black uppercase shadow-lg backdrop-blur-md ${
+              booking.status === "CANCELLED"
                 ? "bg-red-500/90 text-white"
+                : booking.status === "approved"
+                ? "bg-blue-500/90 text-white"
+                : booking.status === "picked_up"
+                ? "bg-purple-500/90 text-white"
                 : "bg-white/90 text-green-500 dark:bg-black/80"
-              }`}
+            }`}
           >
             {booking.status === "CANCELLED" ? (
               <CheckCircle2 className="h-3 w-3 rotate-45" />
             ) : (
               <CheckCircle2 className="h-3 w-3" />
             )}
-            {booking.status || "Confirmed"}
+            {statusLabel}
           </div>
         </div>
 
@@ -127,9 +164,16 @@ function BookingCard({ booking }: { booking: any }) {
             <h4 className="font-outfit text-lg font-black text-gray-900 dark:text-white">
               {booking.name}
             </h4>
-            <span className="font-outfit text-xl font-black text-green-500">
-              {formatCurrencySync(booking.total)}
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="font-outfit text-xl font-black text-green-500">
+                {formatCurrencySync(booking.total)}
+              </span>
+              {booking.securityDeposit > 0 && (
+                <span className="text-[10px] font-bold text-gray-400">
+                  +{formatCurrencySync(booking.securityDeposit)} Deposit
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="mb-6 grid grid-cols-2 gap-3">
@@ -151,52 +195,71 @@ function BookingCard({ booking }: { booking: any }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/Messages/${booking.bookingId}?chat=true`}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 text-sm font-black !text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Contact Owner
-            </Link>
-
-            <div className="relative">
+          <div className="flex flex-col gap-3">
+            {booking.status === "approved" && (
               <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 transition-colors hover:text-gray-900 dark:bg-white/5 dark:hover:text-white"
+                onClick={handleConfirmPickup}
+                disabled={isConfirmingPickup}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 py-4 text-sm font-black !text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50"
               >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
+                {isConfirmingPickup ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Confirm Car Picked Up
+                  </>
+                )}
               </button>
+            )}
 
-              {showMenu && (
-                <div className="absolute bottom-full right-0 mb-4 w-48 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl dark:border-white/5 dark:bg-[#1A1A1A]">
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        setShowCancelModal(true);
-                      }}
-                      disabled={booking.status === "CANCELLED"}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-500/10"
-                    >
-                      <X className="h-4 w-4" />
-                      Cancel Booking
-                    </button>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/Messages/${booking.bookingId}?chat=true`}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 text-sm font-black !text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Contact Owner
+              </Link>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 transition-colors hover:text-gray-900 dark:bg-white/5 dark:hover:text-white"
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </button>
+
+                {showMenu && (
+                  <div className="absolute bottom-full right-0 mb-4 w-48 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl dark:border-white/5 dark:bg-[#1A1A1A]">
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          setShowCancelModal(true);
+                        }}
+                        disabled={booking.status === "CANCELLED" || booking.status === "picked_up" || booking.status === "COMPLETED"}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-500/10"
+                      >
+                        <X className="h-4 w-4" />
+                        Cancel Booking
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

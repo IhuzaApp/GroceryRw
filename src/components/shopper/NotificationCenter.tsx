@@ -294,52 +294,69 @@ export default function NotificationCenter() {
     };
   }, [isOpen, isMobile, setHideFloatingUI]);
 
-  const loadNotifications = () => {
+  const loadNotifications = async () => {
     try {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
+
+      // Also fetch from DB if session exists
+      let dbNotifications: NotificationItem[] = [];
+      if (session?.user?.id) {
+        try {
+          const resp = await fetch("/api/queries/notifications");
+          if (resp.ok) {
+            const data = await resp.json();
+            dbNotifications = (data.notifications || []).map((n: any) => ({
+              title: n.type?.replace(/_/g, " ").toUpperCase() || "Notification",
+              body: n.message,
+              timestamp: new Date(n.created_at).getTime(),
+              type: n.type,
+              read: n.is_read,
+              id: n.id
+            }));
+          }
+        } catch (e) {
+          console.error("Error fetching DB notifications:", e);
+        }
+      }
+
+      // Merge and sort by timestamp desc
+      const combinedHistory = [...history, ...dbNotifications].sort((a, b) => b.timestamp - a.timestamp);
+      
+      // Deduplicate by ID if both sources have same notification
+      const seenIds = new Set();
+      const uniqueHistory = combinedHistory.filter(n => {
+        if (!n.id) return true;
+        if (seenIds.has(n.id)) return false;
+        seenIds.add(n.id);
+        return true;
+      });
 
       // Check user role to filter notifications
       const role = (session?.user as any)?.role;
       const isShopper = role === "shopper";
 
       // Filter notifications based on user role
-      let filteredHistory = history.filter((n: NotificationItem) => {
+      // Filter notifications based on user role
+      let filteredHistory = uniqueHistory.filter((n: NotificationItem) => {
         // Regular users (non-shoppers): ONLY show chat_message and partner notifications
         if (!isShopper) {
-          return n.type === "chat_message" || n.type === "vehicle_booking" || n.type === "pet_adoption";
+          return n.type === "chat_message" || n.type === "vehicle_booking" || n.type === "pet_adoption" || n.type === "system";
         }
 
         // Shoppers: show all notification types, but filter out already-assigned orders
-        // If notification has an orderId, check if it's in assignedOrderIds
         if (n.orderId && assignedOrderIds.size > 0) {
-          // For combined orders, check if any order in the group is assigned
           if (n.orderIds) {
             try {
-              // Handle both string (JSON) and array formats
-              const orderIdsArray =
-                typeof n.orderIds === "string"
-                  ? JSON.parse(n.orderIds)
-                  : Array.isArray(n.orderIds)
-                  ? n.orderIds
-                  : [];
-              const hasAssignedOrder = orderIdsArray.some((id: string) =>
-                assignedOrderIds.has(String(id))
-              );
-              if (hasAssignedOrder) {
-                return false; // Filter out - order is already assigned
-              }
-            } catch {
-              // If parsing fails, check the main orderId
-            }
+              const orderIdsArray = typeof n.orderIds === "string" ? JSON.parse(n.orderIds) : (Array.isArray(n.orderIds) ? n.orderIds : []);
+              const hasAssignedOrder = orderIdsArray.some((id: string) => assignedOrderIds.has(String(id)));
+              if (hasAssignedOrder) return false;
+            } catch {}
           }
-          // Check if the main orderId is assigned
-          if (assignedOrderIds.has(String(n.orderId))) {
-            return false; // Filter out - order is already assigned
-          }
+          if (assignedOrderIds.has(String(n.orderId))) return false;
         }
-        return true; // Keep notification
+        return true;
       });
 
       // Deduplicate order notifications: show at most one per order (avoid same reel/order twice)

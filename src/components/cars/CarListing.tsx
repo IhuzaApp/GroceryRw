@@ -50,6 +50,7 @@ export default function CarListing() {
   const [selectedFuel, setSelectedFuel] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [bookedCars, setBookedCars] = useState<any[]>([]);
+  const [hasAccount, setHasAccount] = useState(false);
 
   // Unified Modal state
   const [showSearchFilter, setShowSearchFilter] = useState(false);
@@ -98,20 +99,50 @@ export default function CarListing() {
   }, []);
 
   useEffect(() => {
+    const checkLogistics = async () => {
+      try {
+        const response = await fetch("/api/queries/check-logistics-account");
+        if (response.ok) {
+          const data = await response.json();
+          setHasAccount(data.hasAccount);
+        }
+      } catch (err) {
+        console.error("Error checking logistics account:", err);
+      }
+    };
+    checkLogistics();
+  }, []);
+
+  useEffect(() => {
     if (router.isReady && router.query.tab === "bookings") {
       setActiveMainTab("bookings");
     }
   }, [router.isReady, router.query.tab]);
 
   useEffect(() => {
-    const loadBookings = () => {
-      const saved = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-      setBookedCars(saved);
+    const loadBookings = async () => {
+      try {
+        const response = await fetch("/api/queries/get-user-bookings");
+        if (response.ok) {
+          const data = await response.json();
+          setBookedCars(data.bookings || []);
+        }
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      }
     };
-    loadBookings();
-    window.addEventListener("storage", loadBookings);
-    return () => window.removeEventListener("storage", loadBookings);
-  }, []);
+    
+    if (activeMainTab === "bookings") {
+      loadBookings();
+    }
+    
+    // Refresh bookings periodically if on bookings tab
+    const interval = setInterval(() => {
+      if (activeMainTab === "bookings") loadBookings();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [activeMainTab]);
 
   const filteredCars = useMemo(() => {
     return cars.filter((car) => {
@@ -140,7 +171,8 @@ export default function CarListing() {
       <PlasDriveHeader
         activeTab={activeMainTab}
         onTabChange={setActiveMainTab}
-        onBecomePartner={() => router.push("/Cars/become-partner")}
+        onBecomePartner={() => router.push(hasAccount ? "/Cars/dashboard" : "/Cars/become-partner")}
+        isPartner={hasAccount}
       />
 
       <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">

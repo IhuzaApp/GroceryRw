@@ -208,20 +208,67 @@ export default function CarBusinessDashboard() {
     setIsDetailsModalOpen(true);
   };
 
-  const handleConfirmBooking = (booking: any) => {
+  const handleConfirmBooking = async (booking: any) => {
     setSelectedBooking(booking);
-    // If no driver provided, require camera capture
+    
+    const confirmAction = async () => {
+      try {
+        const response = await fetch("/api/mutations/update-vehicle-booking-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            status: "approved"
+          }),
+        });
+
+        if (response.ok) {
+          toast.success("Booking confirmed! It is now waiting for pickup.");
+          if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        } else {
+          toast.error("Failed to confirm booking");
+        }
+      } catch (error) {
+        console.error("Error confirming booking:", error);
+        toast.error("An error occurred");
+      }
+    };
+
+    // If no driver provided, require camera capture (optional logic, but we'll keep it as a UI step)
     if (!booking.driverProvided) {
       setIsCameraOpen(true);
+      // The actual API call will happen in handleCaptureComplete
     } else {
-      toast.success("Booking confirmed!");
+      await confirmAction();
     }
   };
 
-  const handleCaptureComplete = (imageData: string) => {
+  const handleCaptureComplete = async (imageData: string) => {
     console.log("Vehicle condition captured:", imageData);
     setIsCameraOpen(false);
-    toast.success("Booking confirmed with condition report!");
+    
+    if (selectedBooking) {
+      try {
+        const response = await fetch("/api/mutations/update-vehicle-booking-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: selectedBooking.id,
+            status: "approved"
+          }),
+        });
+
+        if (response.ok) {
+          toast.success("Booking confirmed with condition report!");
+          if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        } else {
+          toast.error("Failed to confirm booking");
+        }
+      } catch (error) {
+        console.error("Error confirming booking:", error);
+        toast.error("An error occurred");
+      }
+    }
   };
 
   const handleRejectBooking = (booking: any) => {
@@ -229,14 +276,36 @@ export default function CarBusinessDashboard() {
     setIsRejectionModalOpen(true);
   };
 
-  const submitRejection = () => {
+  const submitRejection = async () => {
     if (!rejectionReason) {
       toast.error("Please provide a reason");
       return;
     }
-    toast.success("Booking rejected");
-    setIsRejectionModalOpen(false);
-    setRejectionReason("");
+    
+    if (selectedBooking) {
+      try {
+        const response = await fetch("/api/mutations/update-vehicle-booking-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: selectedBooking.id,
+            status: "CANCELLED"
+          }),
+        });
+
+        if (response.ok) {
+          toast.success("Booking rejected");
+          setIsRejectionModalOpen(false);
+          setRejectionReason("");
+          if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        } else {
+          toast.error("Failed to reject booking");
+        }
+      } catch (error) {
+        console.error("Error rejecting booking:", error);
+        toast.error("An error occurred");
+      }
+    }
   };
 
   if (accountStatus === "loading") {

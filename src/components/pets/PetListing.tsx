@@ -67,7 +67,7 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
       onClick={onClick}
       className="group relative cursor-pointer overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white shadow-sm transition-all hover:translate-y-[-4px] hover:shadow-xl dark:border-white/5 dark:bg-white/5"
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden">
+      <div className="relative aspect-[4/3.2] w-full overflow-hidden">
         <Image
           src={pet.images[0].url}
           alt={pet.name}
@@ -75,8 +75,8 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute right-4 top-4 z-10">
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-md transition-colors hover:bg-red-500">
-            <Heart className="h-5 w-5" />
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 !text-white text-white backdrop-blur-md transition-colors hover:bg-green-500">
+            <Dog className="h-5 w-5 !text-white text-white" />
           </button>
         </div>
         <div className="absolute bottom-4 left-4 z-10 flex gap-2">
@@ -188,6 +188,10 @@ export default function PetListing() {
         (selectedStatus === "Available" && pet.status === "available") ||
         (selectedStatus === "Sold" && pet.status === "sold");
       return matchesSearch && matchesType && matchesStatus;
+    }).sort((a, b) => {
+      if (a.status === "sold" && b.status !== "sold") return 1;
+      if (a.status !== "sold" && b.status === "sold") return -1;
+      return 0;
     });
   }, [searchQuery, selectedType, selectedStatus, pets]);
 
