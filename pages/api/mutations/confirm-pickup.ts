@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendSMS } from "../../../src/lib/pindo";
 
 const GET_BOOKING = gql`
   query GetBookingForPickup($id: uuid!) {
@@ -17,21 +18,48 @@ const GET_BOOKING = gql`
         logisticAccount_id
         logisticsAccounts {
           id
+          fullname
+          businessName
+          Users {
+            phone
+          }
         }
       }
     }
   }
 `;
 
-const UPDATE_STATUS = gql`
-  mutation ConfirmPickup($id: uuid!, $status: String!, $carVideo: String) {
+const UPDATE_BUSINESS_WALLET = gql`
+  mutation CreditBusinessWallet($id: uuid!, $new_amount: String!) {
+    update_business_wallet_by_pk(
+      pk_columns: { id: $id }
+      _set: { amount: $new_amount }
+    ) {
+      id
+      amount
+    }
+  }
+`;
+
+const UPDATE_CAR_VIDEO = gql`
+  mutation UpdateCarVideo($id: uuid!, $carVideo: String) {
     update_vehicleBookings_by_pk(
       pk_columns: { id: $id }
-      _set: { status: $status, carVideo_Status: $carVideo }
+      _set: { carVideo_Status: $carVideo }
+    ) {
+      id
+    }
+  }
+`;
+
+const UPDATE_BOOKING_STATUS = gql`
+  mutation UpdateStatus($id: uuid!, $status: String!) {
+    update_vehicleBookings_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status }
     ) {
       id
       status
-      carVideo_Status
     }
   }
 `;
@@ -40,18 +68,6 @@ const GET_BUSINESS_WALLET = gql`
   query GetBusinessWallet($logistics_id: uuid!) {
     business_wallet(
       where: { logisticsAccount: { id: { _eq: $logistics_id } } }
-    ) {
-      id
-      amount
-    }
-  }
-`;
-
-const UPDATE_BUSINESS_WALLET = gql`
-  mutation CreditBusinessWallet($id: uuid!, $new_amount: numeric!) {
-    update_business_wallet_by_pk(
-      pk_columns: { id: $id }
-      _set: { amount: $new_amount }
     ) {
       id
       amount
@@ -77,6 +93,11 @@ export default async function handler(
     return res.status(400).json({ error: "Missing bookingId" });
   }
 
+  // Mandatory video check for payout
+  if (!carVideo_Status) {
+    return res.status(400).json({ error: "Vehicle condition video is required for pickup confirmation." });
+  }
+
   try {
     // 1. Get booking details
     const bookingData = await hasuraClient.request<any>(GET_BOOKING, { id: bookingId });
@@ -88,7 +109,7 @@ export default async function handler(
 
     const isCustomer = booking.customer_id === session.user.id;
     const isPartner = booking.RentalVehicles?.logisticAccount_id === (session.user as any).logisticsAccountId || 
-                      booking.RentalVehicles?.logisticAccount_id === session.user.id; // Fallback
+                      booking.RentalVehicles?.logisticAccount_id === session.user.id;
 
     if (!isCustomer && !isPartner) {
       return res.status(403).json({ error: "Not authorized for this booking" });
@@ -98,18 +119,16 @@ export default async function handler(
       return res.status(400).json({ error: "Booking must be approved before confirming pickup" });
     }
 
-    // 2. Mark booking as picked_up
-    await hasuraClient.request<any>(UPDATE_STATUS, {
+    // 2. Step 1: Update the video report field
+    await hasuraClient.request<any>(UPDATE_CAR_VIDEO, {
       id: bookingId,
-      status: "picked_up",
-      carVideo: carVideo_Status || null,
+      carVideo: carVideo_Status,
     });
 
-    // 3. Transfer funds to business wallet (excluding refundable deposit and service fee)
+    // 3. Step 2: Transfer funds to business wallet
     const totalAmount = parseFloat(booking.amount || "0");
-    const serviceFee = parseFloat(booking.services_fee || "0");
     const refundableDeposit = parseFloat(booking.refundable_fee || "0");
-    const amountToCredit = totalAmount - refundableDeposit - serviceFee;
+    const amountToCredit = totalAmount - refundableDeposit;
 
     const logisticsId = booking.RentalVehicles?.logisticsAccounts?.id;
 
@@ -125,15 +144,35 @@ export default async function handler(
 
         await hasuraClient.request<any>(UPDATE_BUSINESS_WALLET, {
           id: wallet.id,
-          new_amount: newBalance,
+          new_amount: newBalance.toFixed(0).toString(),
         });
       }
     }
 
+    // 4. Step 3: Finally mark booking as picked_up
+    await hasuraClient.request<any>(UPDATE_BOOKING_STATUS, {
+      id: bookingId,
+      status: "picked_up",
+    });
+
+    // Notify Owner via SMS
+    try {
+      const vehicleName = booking.RentalVehicles?.name || "Vehicle";
+      const ownerPhone = booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
+      const ownerName = booking.RentalVehicles?.logisticsAccounts?.businessName || booking.RentalVehicles?.logisticsAccounts?.fullname || "Vendor";
+
+      if (ownerPhone) {
+        const message = `Hello ${ownerName}, your vehicle "${vehicleName}" has been successfully picked up! The condition video report is uploaded and funds have been credited.`;
+        await sendSMS(ownerPhone, message);
+      }
+    } catch (smsErr) {
+      console.error("SMS notification failed:", smsErr);
+    }
+
     return res.status(200).json({
       success: true,
+      status: "picked_up",
       amountCredited: amountToCredit,
-      refundableDeposit,
     });
   } catch (error: any) {
     console.error("Error confirming pickup:", error);

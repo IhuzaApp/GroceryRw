@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendSMS } from "../../../src/lib/pindo";
 
 const GET_BOOKING_DETAILS = gql`
   query GetBookingDetails($id: uuid!) {
@@ -15,6 +16,13 @@ const GET_BOOKING_DETAILS = gql`
       RentalVehicles {
         name
         logisticAccount_id
+        logisticsAccounts {
+          businessName
+          fullname
+          Users {
+            phone
+          }
+        }
       }
     }
   }
@@ -161,6 +169,20 @@ export default async function handler(
       id: bookingId,
       status: "CANCELLED",
     });
+
+    // Notify Owner via SMS
+    try {
+      const vehicleName = booking.RentalVehicles?.name;
+      const ownerPhone = booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
+      const ownerName = booking.RentalVehicles?.logisticsAccounts?.businessName || booking.RentalVehicles?.logisticsAccounts?.fullname || "Vendor";
+
+      if (ownerPhone) {
+        const message = `Hello ${ownerName}, the booking for your vehicle "${vehicleName}" has been CANCELLED by the customer. The vehicle is now available again for booking.`;
+        await sendSMS(ownerPhone, message);
+      }
+    } catch (smsErr) {
+      console.error("SMS notification failed:", smsErr);
+    }
 
     return res.status(200).json({
       success: true,

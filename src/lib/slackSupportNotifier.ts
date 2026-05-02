@@ -137,6 +137,94 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
   }
 }
 
+export interface VehicleComplaintPayload {
+  bookingId: string;
+  vehicleName: string;
+  customerName: string;
+  ownerName: string;
+  amount: string;
+  videoUrl: string;
+  description: string;
+  ticketNum?: number;
+}
+
+export async function sendVehicleComplaintToSlack(complaint: VehicleComplaintPayload) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🚨 Vehicle Damage Complaint",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Ticket #*\n\`${complaint.ticketNum ?? "—"}\`` },
+        { type: "mrkdwn", text: `*Booking ID*\n\`${complaint.bookingId}\`` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Vehicle*\n${complaint.vehicleName}` },
+        { type: "mrkdwn", text: `*Claim Amount*\n${complaint.amount}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Owner*\n${complaint.ownerName}` },
+        { type: "mrkdwn", text: `*Customer*\n${complaint.customerName}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Description*\n${complaint.description}`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*🎥 Condition Video*\n<${complaint.videoUrl}|View Evidence Video>`,
+      },
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `🚨 Vehicle Damage Complaint #${complaint.ticketNum ?? complaint.bookingId}`,
+        attachments: [
+          {
+            color: "#FF4444",
+            blocks,
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send vehicle complaint to Slack", error);
+    throw error;
+  }
+}
+
 // --- New shopper registration (waiting for review) ---
 
 export interface NewShopperRegistrationPayload {

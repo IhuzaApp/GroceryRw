@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendSMS } from "../../../src/lib/pindo";
 
 const UPDATE_BOOKING_STATUS = gql`
   mutation UpdateBookingStatus($id: uuid!, $status: String!) {
@@ -10,6 +11,14 @@ const UPDATE_BOOKING_STATUS = gql`
     ) {
       id
       status
+      RentalVehicles {
+        name
+      }
+      Users {
+        phone
+        name
+      }
+      pickup_date
     }
   }
 `;
@@ -35,13 +44,34 @@ export default async function handler(
       status: status,
     });
 
-    if (!data.update_vehicleBookings_by_pk) {
+    const booking = data.update_vehicleBookings_by_pk;
+    if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
+    }
+
+    // Send SMS Notification to Customer
+    try {
+      const customerPhone = booking.Users?.phone;
+      const vehicleName = booking.RentalVehicles?.name;
+      const pickupDate = booking.pickup_date ? new Date(booking.pickup_date).toLocaleDateString() : "";
+      
+      if (customerPhone) {
+        let message = "";
+        if (status === "approved") {
+          message = `Hello ${booking.Users.name}, your booking for "${vehicleName}" on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
+        } else if (status === "CANCELLED") {
+          message = `Hello ${booking.Users.name}, unfortunately your booking for "${vehicleName}" on ${pickupDate} was declined by the owner. Any payments made will be refunded to your wallet.`;
+        }
+        
+        if (message) await sendSMS(customerPhone, message);
+      }
+    } catch (smsErr) {
+      console.error("SMS notification failed:", smsErr);
     }
 
     return res.status(200).json({ 
       success: true, 
-      booking: data.update_vehicleBookings_by_pk 
+      booking: booking 
     });
   } catch (error: any) {
     console.error("Error updating booking status:", error);

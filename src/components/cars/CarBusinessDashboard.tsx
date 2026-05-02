@@ -31,6 +31,9 @@ import { useBusinessWallet } from "../../context/BusinessWalletContext";
 import { Car } from "../../constants/dummyCars";
 import AddVehicleModal from "./modals/AddVehicleModal";
 import EditVehicleModal from "./modals/EditVehicleModal";
+import BookingDetailsModal from "./modals/BookingDetailsModal";
+import RaiseComplaintModal from "./modals/RaiseComplaintModal";
+import RejectionModal from "./modals/RejectionModal";
 import DashboardHeader from "./DashboardHeader";
 import CameraCapture from "../ui/CameraCapture";
 import toast from "react-hot-toast";
@@ -79,10 +82,15 @@ export default function CarBusinessDashboard() {
   const [isPickupCameraOpen, setIsPickupCameraOpen] = useState(false);
   const [selectedBookingForPickup, setSelectedBookingForPickup] = useState<any>(null);
   const { walletBalance, fetchWalletBalance: refreshWallet } = useBusinessWallet();
+  const [isNavigating, setIsNavigating] = useState(false);
   const [cars, setCars] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [isVehiclesLoading, setIsVehiclesLoading] = useState(true);
   const [isBookingsLoading, setIsBookingsLoading] = useState(true);
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
+  const [isComplaintCameraOpen, setIsComplaintCameraOpen] = useState(false);
+  const [selectedBookingForComplaint, setSelectedBookingForComplaint] = useState<any>(null);
+  const [complaintData, setComplaintData] = useState({ title: "", description: "", amount: "" });
   const router = useRouter();
   const { data: session } = useSession();
   const [accountStatus, setAccountStatus] = useState<
@@ -167,7 +175,10 @@ export default function CarBusinessDashboard() {
         }
         const data = await response.json();
         if (!data.hasAccount) {
-          router.push("/Cars/become-partner");
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push("/Cars/become-partner");
+          }
           return;
         }
 
@@ -244,6 +255,59 @@ export default function CarBusinessDashboard() {
     } catch (error) {
       console.error("Error confirming booking:", error);
       toast.error("An error occurred");
+    }
+  };
+
+  const handleRaiseComplaint = (booking: any) => {
+    setSelectedBookingForComplaint(booking);
+    setComplaintData({
+      title: `Damage Report: ${booking.RentalVehicles?.name}`,
+      description: "",
+      amount: booking.refundable_fee?.toString() || "0"
+    });
+    setIsComplaintModalOpen(true);
+  };
+
+  const onComplaintCaptureComplete = async (videoUrl: string) => {
+    if (!selectedBookingForComplaint) return;
+    
+    const loadingToast = toast.loading("Uploading damage report video...");
+    try {
+      // 1. Fetch blob
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `complaint_${selectedBookingForComplaint.id}.webm`, { type: "video/webm" });
+
+      // 2. Upload to Firebase
+      const storagePath = `complaints/${selectedBookingForComplaint.id}/damage_report.webm`;
+      const downloadUrl = await uploadToFirebase(file, storagePath);
+
+      // 3. API call to raise complaint
+      const res = await fetch("/api/mutations/raise-vehicle-complaint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: selectedBookingForComplaint.id,
+          videoUrl: downloadUrl,
+          title: complaintData.title,
+          description: complaintData.description,
+          amount: complaintData.amount
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("Complaint raised! Our team will review the damage report.", { id: loadingToast });
+        if (logisticsAccountId) fetchBookings(logisticsAccountId);
+      } else {
+        toast.error(data.error || "Failed to raise complaint", { id: loadingToast });
+      }
+    } catch (error) {
+      console.error("Complaint error:", error);
+      toast.error("An error occurred while reporting damage.", { id: loadingToast });
+    } finally {
+      setIsComplaintCameraOpen(false);
+      setSelectedBookingForComplaint(null);
     }
   };
 
@@ -519,8 +583,13 @@ export default function CarBusinessDashboard() {
                   driverProvided={false}
                   theme={theme}
                   onConfirm={() => handleConfirmBooking(booking)}
-                  onReject={() => handleRejectBooking(booking)}
+                  onReject={() => {
+                    setSelectedBooking(booking);
+                    setIsRejectionModalOpen(true);
+                  }}
                   onConfirmPickup={() => handleConfirmPickup(booking)}
+                  onRaiseComplaint={() => handleRaiseComplaint(booking)}
+                  rawReturnDate={booking.return_date}
                   onClick={() => handleViewBookingDetails(booking)}
                   rating={booking.Ratings?.[0]?.rating}
                   review={booking.Ratings?.[0]?.review}
@@ -567,51 +636,14 @@ export default function CarBusinessDashboard() {
       )}
 
       {/* Rejection Modal */}
-      {isRejectionModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsRejectionModalOpen(false)}
-          />
-          <div
-            className={`relative w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl ${theme === "dark"
-                ? "border border-white/10 bg-[#121212]"
-                : "bg-white"
-              }`}
-          >
-            <h3 className="mb-4 text-2xl font-black">Reject Booking</h3>
-            <p className="mb-6 font-normal text-gray-500">
-              Please provide a reason for rejecting this booking.
-            </p>
-            <textarea
-              className={`mb-6 h-32 w-full rounded-2xl border p-4 text-sm font-normal outline-none ${theme === "dark"
-                  ? "border-white/10 bg-white/5"
-                  : "border-gray-200 bg-gray-50"
-                }`}
-              placeholder="e.g. Vehicle maintenance, fully booked..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsRejectionModalOpen(false)}
-                className={`flex-1 rounded-2xl py-4 font-normal transition-all ${theme === "dark"
-                    ? "bg-white/5 hover:bg-white/10"
-                    : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitRejection}
-                className="flex-1 rounded-2xl bg-red-500 py-4 font-black text-white shadow-xl shadow-red-500/30 transition-all hover:scale-[1.02]"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RejectionModal
+        isOpen={isRejectionModalOpen}
+        onClose={() => setIsRejectionModalOpen(false)}
+        onSubmit={submitRejection}
+        reason={rejectionReason}
+        setReason={setRejectionReason}
+        theme={theme}
+      />
 
       <CameraCapture
         isOpen={isPickupCameraOpen}
@@ -621,6 +653,29 @@ export default function CarBusinessDashboard() {
         title="Pickup Condition Report"
         maxVideoDuration={60}
       />
+      
+      <CameraCapture
+        isOpen={isComplaintCameraOpen}
+        onClose={() => setIsComplaintCameraOpen(false)}
+        onCapture={onComplaintCaptureComplete}
+        mode="video"
+        title="Report Issue"
+        maxVideoDuration={60}
+      />
+
+      {isComplaintModalOpen && (
+        <RaiseComplaintModal
+          booking={selectedBookingForComplaint}
+          data={complaintData}
+          setData={setComplaintData}
+          onClose={() => setIsComplaintModalOpen(false)}
+          onStartCapture={() => {
+            setIsComplaintModalOpen(false);
+            setIsComplaintCameraOpen(true);
+          }}
+          theme={theme}
+        />
+      )}
 
       <BookingDetailsModal
         booking={selectedBooking}
@@ -1090,6 +1145,8 @@ function BookingItem({
   onConfirm,
   onReject,
   onConfirmPickup,
+  onRaiseComplaint,
+  rawReturnDate,
   driverProvided,
   rating,
   review,
@@ -1193,6 +1250,15 @@ function BookingItem({
               </button>
             </>
           )}
+          {status === "picked_up" && rawReturnDate && new Date(rawReturnDate) <= new Date() && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRaiseComplaint(); }}
+              className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/30"
+            >
+              <AlertCircle className="h-4 w-4 !text-white" />
+              <span className="!text-white">Raise Complaint</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1225,146 +1291,3 @@ function BookingItem({
   );
 }
 
-function BookingDetailsModal({
-  booking,
-  isOpen,
-  onClose,
-  theme,
-}: {
-  booking: any;
-  isOpen: boolean;
-  onClose: () => void;
-  theme: string;
-}) {
-  if (!isOpen || !booking) return null;
-
-  const pickupDate = new Date(booking.pickup_date);
-  const returnDate = new Date(booking.return_date);
-  const diffTime = Math.abs(returnDate.getTime() - pickupDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-
-  return (
-    <div className="fixed inset-0 z-[400] flex items-end justify-center sm:items-center sm:p-6">
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
-        onClick={onClose}
-      />
-      <div
-        className={`relative flex h-full w-full max-w-2xl flex-col overflow-hidden shadow-2xl duration-300 animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95 ${theme === "dark"
-            ? "border border-white/5 bg-[#121212] text-white"
-            : "bg-white text-gray-900"
-          }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 p-8 dark:border-white/5">
-          <div>
-            <h2 className="font-outfit text-2xl font-black">Booking Information</h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-              Ref: {booking.id.slice(0, 8)} • Booked on {new Date(booking.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className={`rounded-full p-3 transition-colors ${theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
-              }`}
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto p-8">
-          <div className="space-y-8">
-            {/* Customer Info */}
-            <section>
-              <h3 className="mb-4 text-xs font-normal uppercase tracking-[0.2em] text-gray-400">
-                Customer Profile
-              </h3>
-              <div className={`flex items-center gap-4 rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
-                <div className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-green-500/20">
-                  <img
-                    src={booking.orderedBy?.profile_picture || "https://ui-avatars.com/api/?name=" + (booking.orderedBy?.name || "Customer")}
-                    alt={booking.orderedBy?.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="text-lg font-black">{booking.orderedBy?.name}</h4>
-                  <p className="text-sm text-gray-500">{booking.orderedBy?.email}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-sm font-black text-green-500">{booking.orderedBy?.phone}</span>
-                    <span className="h-1 w-1 rounded-full bg-gray-300" />
-                    <span className="text-[10px] font-black uppercase text-gray-400">{booking.guests || 1} Guests</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Trip Details */}
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className={`rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
-                <p className="mb-1 text-[10px] font-normal uppercase tracking-widest text-gray-400">Duration</p>
-                <p className="text-lg font-black">{diffDays} Day(s)</p>
-                <div className="mt-2 text-xs text-gray-500">
-                  {new Date(booking.pickup_date).toLocaleDateString()} - {new Date(booking.return_date).toLocaleDateString()}
-                </div>
-              </div>
-              <div className={`rounded-3xl p-6 ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
-                <p className="mb-1 text-[10px] font-normal uppercase tracking-widest text-gray-400">Total Price Paid</p>
-                <p className="text-2xl font-black text-green-500">{formatCurrencySync(booking.amount)}</p>
-                <div className="mt-1 flex flex-col gap-1">
-                  <div className="text-[10px] font-black uppercase text-gray-400">Payment Status: {booking.status}</div>
-                  {booking.refundable_fee && parseFloat(booking.refundable_fee) > 0 && (
-                    <div className="text-[10px] font-black uppercase text-orange-500">Includes Refundable Deposit: {formatCurrencySync(booking.refundable_fee)}</div>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* Driving License */}
-            <section>
-              <h3 className="mb-4 text-xs font-normal uppercase tracking-[0.2em] text-gray-400">
-                Driver Verification
-              </h3>
-              <div className="relative aspect-[16/10] overflow-hidden rounded-[2.5rem] border border-white/5 shadow-2xl">
-                {booking.driving_license ? (
-                  <img
-                    src={booking.driving_license}
-                    alt="Driving License"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className={`flex h-full w-full flex-col items-center justify-center ${theme === "dark" ? "bg-white/5" : "bg-gray-50"}`}>
-                    <AlertCircle className="mb-2 h-8 w-8 text-orange-500/50" />
-                    <p className="text-sm font-normal text-gray-400">License document not available</p>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Condition Video - ONLY SHOW IF PICKED UP OR COMPLETED */}
-            {booking.carVideo_Status && (booking.status === "picked_up" || booking.status === "COMPLETED") && (
-              <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-xs font-normal uppercase tracking-[0.2em] text-gray-400">
-                    Vehicle Handover Report
-                  </h3>
-                  <span className="rounded-full bg-green-500/10 px-3 py-1 text-[10px] font-black uppercase text-green-500">
-                    Verified Video
-                  </span>
-                </div>
-                <div className="overflow-hidden rounded-[2.5rem] border border-white/5 shadow-2xl">
-                  <video
-                    src={booking.carVideo_Status}
-                    controls
-                    className="h-full w-full"
-                  />
-                </div>
-              </section>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
