@@ -19,17 +19,14 @@ function formatMessageTime(timestamp: any): string {
   );
 
   if (messageDate.getTime() === today.getTime()) {
-    // Today - show time
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
   } else if (messageDate.getTime() === yesterday.getTime()) {
-    // Yesterday
     return "Yesterday";
   } else {
-    // Older - show date
     return date.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "2-digit",
@@ -44,6 +41,102 @@ function formatOrderID(id?: string | number): string {
   const s = id.toString();
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
+
+// Conversation type info helper
+type ConvTypeKey =
+  | "order"
+  | "business"
+  | "restaurant"
+  | "reel"
+  | "car"
+  | "pet"
+  | "package";
+
+interface ConvTypeInfo {
+  key: ConvTypeKey;
+  label: string;
+  emoji: string;
+  bg: string;
+  text: string;
+}
+
+function getConvType(
+  conversation: Conversation,
+  orders: Record<string, any>
+): ConvTypeInfo {
+  if (conversation.collectionPath === "business_conversations") {
+    return {
+      key: "business",
+      label: "Business",
+      emoji: "💼",
+      bg: "bg-purple-100 dark:bg-purple-900/40",
+      text: "text-purple-700 dark:text-purple-300",
+    };
+  }
+  const order = conversation.orderId ? orders[conversation.orderId] : null;
+  switch (order?.orderType) {
+    case "restaurant":
+      return {
+        key: "restaurant",
+        label: "Restaurant",
+        emoji: "🍔",
+        bg: "bg-orange-100 dark:bg-orange-900/40",
+        text: "text-orange-700 dark:text-orange-300",
+      };
+    case "reel":
+      return {
+        key: "reel",
+        label: "Reel",
+        emoji: "🎬",
+        bg: "bg-pink-100 dark:bg-pink-900/40",
+        text: "text-pink-700 dark:text-pink-300",
+      };
+    case "vehicle":
+      return {
+        key: "car",
+        label: "Car",
+        emoji: "🚗",
+        bg: "bg-blue-100 dark:bg-blue-900/40",
+        text: "text-blue-700 dark:text-blue-300",
+      };
+    case "pet":
+      return {
+        key: "pet",
+        label: "Pet",
+        emoji: "🐾",
+        bg: "bg-amber-100 dark:bg-amber-900/40",
+        text: "text-amber-700 dark:text-amber-300",
+      };
+    case "package":
+      return {
+        key: "package",
+        label: "Package",
+        emoji: "📦",
+        bg: "bg-teal-100 dark:bg-teal-900/40",
+        text: "text-teal-700 dark:text-teal-300",
+      };
+    default:
+      return {
+        key: "order",
+        label: "Order",
+        emoji: "🛍️",
+        bg: "bg-green-100 dark:bg-green-900/40",
+        text: "text-green-700 dark:text-green-300",
+      };
+  }
+}
+
+const FILTER_TABS: { key: ConvTypeKey | "all"; label: string; emoji: string }[] =
+  [
+    { key: "all", label: "All", emoji: "💬" },
+    { key: "order", label: "Orders", emoji: "🛍️" },
+    { key: "business", label: "Business", emoji: "💼" },
+    { key: "restaurant", label: "Restaurant", emoji: "🍔" },
+    { key: "reel", label: "Reels", emoji: "🎬" },
+    { key: "car", label: "Cars", emoji: "🚗" },
+    { key: "pet", label: "Pets", emoji: "🐾" },
+    { key: "package", label: "Packages", emoji: "📦" },
+  ];
 
 // Define conversation interface
 interface Conversation {
@@ -74,7 +167,11 @@ interface MobileMessagePageProps {
   setShowUnreadOnly: (show: boolean) => void;
   sortOrder: "newest" | "oldest";
   setSortOrder: (order: "newest" | "oldest") => void;
-  onConversationClick: (orderId?: string, conversationId?: string) => void;
+  onConversationClick: (
+    orderId?: string,
+    conversationId?: string,
+    type?: string
+  ) => void;
   selectedOrder?: any;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
@@ -98,9 +195,29 @@ export default function MobileMessagePage({
   const { theme } = useTheme();
   const router = useRouter();
 
+  // Active filter from URL
+  const activeFilter = (router.query.filter as string) || "all";
+
+  const setFilter = (key: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, filter: key },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
   // Filter and sort conversations
   const filteredConversations = conversations
     .filter((conversation) => {
+      // Apply type filter
+      if (activeFilter !== "all") {
+        const typeInfo = getConvType(conversation, orders);
+        if (typeInfo.key !== activeFilter) return false;
+      }
+
       // Apply search filter
       if (searchQuery) {
         const isBusinessChat =
@@ -123,12 +240,14 @@ export default function MobileMessagePage({
           order?.OrderID || conversation.orderId
         ).toLowerCase();
         const messageText = conversation.lastMessage?.toLowerCase() || "";
+        const titleText = conversation.title?.toLowerCase() || "";
 
         const searchLower = searchQuery.toLowerCase();
         return (
           contactName.includes(searchLower) ||
           orderNumber.includes(searchLower) ||
-          messageText.includes(searchLower)
+          messageText.includes(searchLower) ||
+          titleText.includes(searchLower)
         );
       }
 
@@ -147,20 +266,22 @@ export default function MobileMessagePage({
         ? new Date(b.lastMessageTime).getTime()
         : 0;
 
-      // Sort by time
       if (sortOrder === "newest") {
-        return timeB - timeA; // newest first
+        return timeB - timeA;
       } else {
-        return timeA - timeB; // oldest first
+        return timeA - timeB;
       }
     });
 
-  // Determine if shopper is online (you can customize this logic)
-  const isShopperOnline = (shopperId?: string) => {
-    // For now, we'll assume they're online if they have recent activity
-    // You can implement actual online status checking here
-    return true; // Placeholder
-  };
+  // Count per type for tab badges
+  const countByType = React.useMemo(() => {
+    const map: Record<string, number> = { all: conversations.length };
+    conversations.forEach((c) => {
+      const key = getConvType(c, orders).key;
+      map[key] = (map[key] || 0) + 1;
+    });
+    return map;
+  }, [conversations, orders]);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--bg-primary)]">
@@ -193,40 +314,24 @@ export default function MobileMessagePage({
           </div>
           <div className="flex items-center gap-4">
             <button
-              className="text-green-500 transition-opacity active:opacity-50"
-              aria-label="Camera"
+              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+              className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${
+                showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
+              }`}
+              aria-label="Filter Unread"
             >
               <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            </button>
-            <button
-              className="text-green-500 transition-opacity active:opacity-50"
-              aria-label="New Chat"
-            >
-              <svg
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth={2}
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
               </svg>
             </button>
           </div>
@@ -258,27 +363,45 @@ export default function MobileMessagePage({
               className="w-full rounded-[10px] bg-[var(--bg-secondary)] py-2.5 pl-10 pr-4 text-[16px] text-[var(--text-primary)] placeholder-gray-500 transition-colors focus:outline-none"
             />
           </div>
-          <button
-            onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-            className={`flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${
-              showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
-            }`}
-            aria-label="Filter Unread"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
-            </svg>
-          </button>
+        </div>
+
+        {/* Type Filter Tabs */}
+        <div className="mt-3 -mx-4 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 px-4 pb-1">
+            {FILTER_TABS.filter((tab) => {
+              // Only show tabs that have conversations (or "all")
+              if (tab.key === "all") return true;
+              return (countByType[tab.key] || 0) > 0;
+            }).map((tab) => {
+              const isActive = activeFilter === tab.key;
+              const count = countByType[tab.key] || 0;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 ${
+                    isActive
+                      ? "bg-green-500 text-white shadow-md"
+                      : "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  <span>{tab.emoji}</span>
+                  <span>{tab.label}</span>
+                  {count > 0 && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                        isActive
+                          ? "bg-white/30 text-white"
+                          : "bg-black/10 dark:bg-white/10 text-[var(--text-secondary)]"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -298,10 +421,14 @@ export default function MobileMessagePage({
             <div className="text-center">
               <div className="mb-4 text-6xl">💬</div>
               <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-                No conversations yet
+                {activeFilter === "all"
+                  ? "No conversations yet"
+                  : `No ${FILTER_TABS.find((t) => t.key === activeFilter)?.label} chats`}
               </h3>
               <p className="text-sm text-[var(--text-secondary)]">
-                You'll see your chat conversations here once you place orders.
+                {activeFilter === "all"
+                  ? "You'll see your chat conversations here once you place orders."
+                  : "Try switching to a different filter tab."}
               </p>
             </div>
           </div>
@@ -315,7 +442,6 @@ export default function MobileMessagePage({
                 : {};
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
 
-              // Handle name display for business chats
               let fullName = "Business Chat";
               if (isBusinessChat) {
                 fullName =
@@ -342,14 +468,20 @@ export default function MobileMessagePage({
                   order?.assignedTo?.profile_picture ||
                   order?.shopper?.avatar ||
                   "/images/ProfileImage.png";
-              const isOnline = isShopperOnline(conversation.shopperId);
+
+              const typeInfo = getConvType(conversation, orders);
 
               return (
                 <div
                   key={conversation.id}
-                  onClick={() =>
-                    onConversationClick(conversation.orderId, conversation.id!)
-                  }
+                  onClick={() => {
+                    const typeInfo = getConvType(conversation, orders);
+                    onConversationClick(
+                      conversation.orderId,
+                      conversation.id!,
+                      typeInfo.key
+                    );
+                  }}
                   className="flex cursor-pointer items-center transition-colors hover:bg-black/5 active:bg-black/10 dark:hover:bg-white/5 dark:active:bg-white/10"
                 >
                   {/* Left Side: Avatar */}
@@ -368,14 +500,26 @@ export default function MobileMessagePage({
                         </span>
                       )}
                     </div>
+                    {/* Type emoji badge on avatar */}
+                    <div className="absolute bottom-2.5 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow-md dark:bg-gray-800">
+                      {typeInfo.emoji}
+                    </div>
                   </div>
 
-                  {/* Right Side: Content with perfectly aligned inner bottom border common in iOS WhatsApp */}
+                  {/* Right Side */}
                   <div className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-gray-100 py-3 pr-4 dark:border-white/5">
                     <div className="flex items-center justify-between pb-[1px]">
-                      <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
-                        {contactName}
-                      </h3>
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
+                          {contactName}
+                        </h3>
+                        {/* Type label badge */}
+                        <span
+                          className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${typeInfo.bg} ${typeInfo.text}`}
+                        >
+                          {typeInfo.label}
+                        </span>
+                      </div>
                       <span
                         className={`whitespace-nowrap pl-2 text-xs ${
                           conversation.unreadCount > 0

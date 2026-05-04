@@ -28,7 +28,7 @@ const GET_CAR_BY_ID = gql`
         id
         fullname
         businessName
-        Users {
+        user {
           id
           image: profile_picture
         }

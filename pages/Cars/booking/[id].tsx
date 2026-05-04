@@ -418,7 +418,7 @@ export default function BookingDetailsPage() {
                         booking.RentalVehicles?.logisticsAccounts?.fullname}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {booking.RentalVehicles?.logisticsAccounts?.Users?.phone}
+                      {booking.RentalVehicles?.logisticsAccounts?.user?.phone}
                     </p>
                   </div>
                 </div>

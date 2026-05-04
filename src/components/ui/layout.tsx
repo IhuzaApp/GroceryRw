@@ -63,6 +63,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isPlasBusinessPage &&
         !isStoresPage &&
         !isBecomeShopperPage &&
+        !isMessagesList &&
+        !isMessagesChat &&
         (isOrderDetailsPage || isPackageDetailsPage || isCarsPage ? (
           <div className="hidden md:block">
             <HeaderLayout />
@@ -84,12 +86,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           isCarsPage ||
           isPetsPage ||
           isStoresPage ||
-          isBecomeShopperPage
+          isBecomeShopperPage ||
+          isMessagesList ||
+          isMessagesChat
             ? ""
-            : isMessagesList
-            ? "flex-1 overflow-hidden pb-[60px] md:pb-0"
-            : isMessagesChat
-            ? "flex-1 overflow-hidden"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
@@ -109,7 +109,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           <SideBar />
         )}
         <div
-          className="[&_*]:text-inherit"
+          className={`mx-auto flex h-full w-full flex-col [&_*]:text-inherit ${
+            isMessagesList || isMessagesChat ? "flex-1 overflow-hidden" : ""
+          } ${isMessagesList ? "pb-[60px] md:pb-0" : ""}`}
           style={
             isReelsPage ||
             isPlasBusinessPage ||

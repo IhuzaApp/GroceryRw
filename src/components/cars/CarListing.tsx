@@ -76,7 +76,7 @@ export default function CarListing() {
                 v.logisticsAccounts?.fullname ||
                 "Verified Host",
               image:
-                v.logisticsAccounts?.Users?.image ||
+                v.logisticsAccounts?.user?.image ||
                 "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
               isVerified: true,
             },

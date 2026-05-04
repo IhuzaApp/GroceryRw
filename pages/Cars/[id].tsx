@@ -28,12 +28,12 @@ export default function CarDetail() {
             securityDeposit: v.refundable_amount,
             driverOption: v.drive_provided ? "offered" : "none",
             owner: {
-              id: v.logisticsAccounts?.Users?.id || v.logisticAccount_id,
+              id: v.logisticsAccounts?.user?.id || v.logisticAccount_id,
               name:
                 v.logisticsAccounts?.businessName ||
                 v.logisticsAccounts?.fullname ||
                 "Verified Host",
-              image: v.logisticsAccounts?.Users?.image || null,
+              image: v.logisticsAccounts?.user?.image || null,
               isVerified: true,
             },
             images: [

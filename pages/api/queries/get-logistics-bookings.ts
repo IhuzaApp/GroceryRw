@@ -23,7 +23,7 @@ const GET_LOGISTICS_BOOKINGS = gql`
       refundable_fee
       carVideo_Status
       created_at
-      orderedBy: Users {
+      orderedBy: User {
         id
         name
         email

@@ -61,7 +61,7 @@ const GET_VENDER_AND_PET_INFO = gql`
       pet_vendors {
         fullname
         organisationName
-        user: Users {
+        user {
           id
           phone
         }

@@ -21,7 +21,7 @@ const GET_BOOKING_DETAILS = gql`
         logisticsAccounts {
           businessName
           fullname
-          Users {
+          user {
             phone
           }
         }
@@ -225,7 +225,7 @@ export default async function handler(
     try {
       const vehicleName = booking.RentalVehicles?.name;
       const ownerPhone =
-        booking.RentalVehicles?.logisticsAccounts?.Users?.phone;
+        booking.RentalVehicles?.logisticsAccounts?.user?.phone;
       const ownerName =
         booking.RentalVehicles?.logisticsAccounts?.businessName ||
         booking.RentalVehicles?.logisticsAccounts?.fullname ||

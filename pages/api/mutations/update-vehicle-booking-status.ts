@@ -15,7 +15,7 @@ const UPDATE_BOOKING_STATUS = gql`
         name
         platNumber
       }
-      Users {
+      user {
         phone
         name
       }
@@ -56,7 +56,7 @@ export default async function handler(
 
     // Send SMS Notification to Customer
     try {
-      const customerPhone = booking.Users?.phone;
+      const customerPhone = booking.user?.phone;
       const vehicleName = booking.RentalVehicles?.name;
       const pickupDate = booking.pickup_date
         ? new Date(booking.pickup_date).toLocaleDateString()
@@ -68,9 +68,9 @@ export default async function handler(
           const platNum = booking.RentalVehicles?.platNumber
             ? `(${booking.RentalVehicles.platNumber})`
             : "";
-          message = `Hello ${booking.Users.name}, your booking for "${vehicleName}" ${platNum} on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
+          message = `Hello ${booking.user.name}, your booking for "${vehicleName}" ${platNum} on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
         } else if (status === "CANCELLED") {
-          message = `Hello ${booking.Users.name}, unfortunately your booking for "${vehicleName}" on ${pickupDate} was declined by the owner. Any payments made will be refunded to your wallet.`;
+          message = `Hello ${booking.user.name}, unfortunately your booking for "${vehicleName}" on ${pickupDate} was declined by the owner. Any payments made will be refunded to your wallet.`;
         }
 
         if (message) await sendSMS(customerPhone, message);

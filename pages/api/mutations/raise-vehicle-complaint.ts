@@ -72,7 +72,7 @@ const GET_BOOKING_FOR_COMPLAINT = gql`
           businessName
         }
       }
-      Users {
+      user {
         name
       }
     }
@@ -116,7 +116,7 @@ export default async function handler(
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    const customerName = booking.Users?.name || "Customer";
+    const customerName = booking.user?.name || "Customer";
     const vehicleName = booking.RentalVehicles?.name || "Vehicle";
     const ownerName =
       booking.RentalVehicles?.logisticsAccounts?.businessName ||

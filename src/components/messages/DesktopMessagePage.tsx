@@ -26,6 +26,7 @@ import {
 } from "../../lib/chatPiiBlock";
 import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 import { useTheme } from "../../context/ThemeContext";
+import HeaderLayout from "../ui/NavBar/headerLayout";
 
 // Helper to format time (e.g., "01:09 am", "08:24PM")
 function formatTime(timestamp: any): string {
@@ -130,6 +131,101 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
+// Conversation type info helper
+type ConvTypeKey =
+  | "order"
+  | "business"
+  | "restaurant"
+  | "reel"
+  | "car"
+  | "pet"
+  | "package";
+
+interface ConvTypeInfo {
+  key: ConvTypeKey;
+  label: string;
+  emoji: string;
+  bg: string;
+  text: string;
+}
+
+function getConvType(
+  conversation: any,
+  orders: Record<string, any>
+): ConvTypeInfo {
+  if (conversation.collectionPath === "business_conversations") {
+    return {
+      key: "business",
+      label: "Business",
+      emoji: "💼",
+      bg: "bg-purple-100 dark:bg-purple-900/40",
+      text: "text-purple-700 dark:text-purple-300",
+    };
+  }
+  const order = conversation.orderId ? orders[conversation.orderId] : null;
+  switch (order?.orderType) {
+    case "restaurant":
+      return {
+        key: "restaurant",
+        label: "Restaurant",
+        emoji: "🍔",
+        bg: "bg-orange-100 dark:bg-orange-900/40",
+        text: "text-orange-700 dark:text-orange-300",
+      };
+    case "reel":
+      return {
+        key: "reel",
+        label: "Reel",
+        emoji: "🎬",
+        bg: "bg-pink-100 dark:bg-pink-900/40",
+        text: "text-pink-700 dark:text-pink-300",
+      };
+    case "vehicle":
+      return {
+        key: "car",
+        label: "Car",
+        emoji: "🚗",
+        bg: "bg-blue-100 dark:bg-blue-900/40",
+        text: "text-blue-700 dark:text-blue-300",
+      };
+    case "pet":
+      return {
+        key: "pet",
+        label: "Pet",
+        emoji: "🐾",
+        bg: "bg-amber-100 dark:bg-amber-900/40",
+        text: "text-amber-700 dark:text-amber-300",
+      };
+    case "package":
+      return {
+        key: "package",
+        label: "Package",
+        emoji: "📦",
+        bg: "bg-teal-100 dark:bg-teal-900/40",
+        text: "text-teal-700 dark:text-teal-300",
+      };
+    default:
+      return {
+        key: "order",
+        label: "Order",
+        emoji: "🛍️",
+        bg: "bg-green-100 dark:bg-green-900/40",
+        text: "text-green-700 dark:text-green-300",
+      };
+  }
+}
+
+const FILTER_TABS: { key: ConvTypeKey | "all"; label: string; emoji: string }[] = [
+  { key: "all", label: "All", emoji: "💬" },
+  { key: "order", label: "Orders", emoji: "🛍️" },
+  { key: "business", label: "Business", emoji: "💼" },
+  { key: "restaurant", label: "Food", emoji: "🍔" },
+  { key: "reel", label: "Reels", emoji: "🎬" },
+  { key: "car", label: "Cars", emoji: "🚗" },
+  { key: "pet", label: "Pets", emoji: "🐾" },
+  { key: "package", label: "Packages", emoji: "📦" },
+];
+
 // Define message interface
 interface Message {
   id: string;
@@ -171,7 +267,11 @@ interface DesktopMessagePageProps {
   conversations: Conversation[];
   orders: Record<string, any>;
   loading: boolean;
-  onConversationSelect: (orderId?: string, conversationId?: string) => void;
+  onConversationSelect: (
+    orderId?: string,
+    conversationId?: string,
+    type?: string
+  ) => void;
   selectedOrderId?: string;
   selectedConversationId?: string;
 }
@@ -199,6 +299,7 @@ export default function DesktopMessagePage({
   const [isConfirming, setIsConfirming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [activeFilter, setActiveFilter] = useState<string>("all");
 
   const isBusinessChat =
     !!selectedConversation &&
@@ -218,8 +319,13 @@ export default function DesktopMessagePage({
     }
   );
 
-  // Filter conversations based on search
+  // Filter conversations based on search and type
   const filteredConversations = conversations.filter((conversation) => {
+    // Type filter
+    if (activeFilter !== "all") {
+      const typeInfo = getConvType(conversation, orders);
+      if (typeInfo.key !== activeFilter) return false;
+    }
     if (!searchQuery) return true;
 
     const order = conversation.orderId
@@ -230,12 +336,24 @@ export default function DesktopMessagePage({
       order?.customer?.name?.toLowerCase() ||
       "";
     const messageText = conversation.lastMessage?.toLowerCase() || "";
+    const titleText = conversation.title?.toLowerCase() || "";
 
     return (
       customerName.includes(searchQuery.toLowerCase()) ||
-      messageText.includes(searchQuery.toLowerCase())
+      messageText.includes(searchQuery.toLowerCase()) ||
+      titleText.includes(searchQuery.toLowerCase())
     );
   });
+
+  // Count per type for tab badges
+  const countByType = React.useMemo(() => {
+    const map: Record<string, number> = { all: conversations.length };
+    conversations.forEach((c) => {
+      const key = getConvType(c, orders).key;
+      map[key] = (map[key] || 0) + 1;
+    });
+    return map;
+  }, [conversations, orders]);
 
   // Set selected conversation when selectedOrderId or selectedConversationId changes
   useEffect(() => {
@@ -490,34 +608,26 @@ export default function DesktopMessagePage({
   // Handle conversation click
   const handleConversationClick = (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    onConversationSelect(conversation.orderId, conversation.id);
+    const typeInfo = getConvType(conversation, orders);
+    onConversationSelect(conversation.orderId, conversation.id, typeInfo.key);
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[var(--bg-primary)]">
+    <div className="flex h-screen flex-col bg-white dark:bg-[#0A0A0A] !mt-0 !pt-0 overflow-hidden relative">
+      <style jsx global>{`
+        body, html, #__next {
+          margin-top: 0 !important;
+          padding-top: 0 !important;
+          top: 0 !important;
+        }
+      `}</style>
+      <HeaderLayout fullWidth compact hideLogo />
+      <div className="flex flex-1 overflow-hidden">
       {/* Left Column - Conversation List */}
       <div className="flex h-full w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-white/10">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 !text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 [&_svg]:!text-white"
-            >
-              <svg
-                className="h-5 w-5 text-white transition-transform group-hover:scale-110"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-            </Link>
             <h1 className="text-xl font-bold text-[var(--text-primary)]">
               Messages
             </h1>
@@ -537,7 +647,7 @@ export default function DesktopMessagePage({
         </div>
 
         {/* Search Bar */}
-        <div className="flex-shrink-0 px-4 pb-4">
+        <div className="flex-shrink-0 px-4 pb-2">
           <div className="relative">
             <input
               type="text"
@@ -559,6 +669,31 @@ export default function DesktopMessagePage({
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
+          </div>
+        </div>
+
+        {/* Type Filter Tabs */}
+        <div className="flex-shrink-0 overflow-x-auto scrollbar-hide px-4 pb-3">
+          <div className="flex gap-1.5">
+            {FILTER_TABS.filter((tab) =>
+              tab.key === "all" ? true : (countByType[tab.key] || 0) > 0
+            ).map((tab) => {
+              const isActive = activeFilter === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveFilter(tab.key)}
+                  className={`flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                    isActive
+                      ? "bg-green-600 text-white shadow-sm"
+                      : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <span>{tab.emoji}</span>
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -674,15 +809,28 @@ export default function DesktopMessagePage({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <h3
-                            className={`truncate text-sm font-bold tracking-tight ${
-                              isSelected
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-900 dark:text-white"
-                            }`}
-                          >
-                            {contactName}
-                          </h3>
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <h3
+                              className={`truncate text-sm font-bold tracking-tight ${
+                                isSelected
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-900 dark:text-white"
+                              }`}
+                            >
+                              {contactName}
+                            </h3>
+                            {/* Type badge */}
+                            {(() => {
+                              const ti = getConvType(conversation, orders);
+                              return (
+                                <span
+                                  className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${ti.bg} ${ti.text}`}
+                                >
+                                  {ti.emoji} {ti.label}
+                                </span>
+                              );
+                            })()}
+                          </div>
                           <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
                             {formatTime(conversation.lastMessageTime)}
                           </span>
@@ -710,7 +858,7 @@ export default function DesktopMessagePage({
       </div>
 
       {/* Middle Column - Chat Window */}
-      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         {selectedConversation ? (
           <>
             {/* Chat Header */}
@@ -829,7 +977,10 @@ export default function DesktopMessagePage({
             </div>
 
             {/* Messages Area */}
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto bg-[var(--bg-primary)] px-8 pb-32 pt-6 scrollbar-hide"
+            >
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center">
@@ -1020,8 +1171,8 @@ export default function DesktopMessagePage({
                 </p>
               </div>
             )}
-            {/* Message Input */}
-            <div className="mb-4 flex-shrink-0 px-8 pb-6 pt-2">
+            {/* Message Input - Fixed to bottom */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-gray-200/50 bg-white/80 px-8 pb-8 pt-4 backdrop-blur-md dark:border-white/5 dark:bg-gray-900/80">
               <form
                 onSubmit={handleSendMessage}
                 className="relative mx-auto flex max-w-4xl items-center gap-3"
@@ -1548,6 +1699,7 @@ export default function DesktopMessagePage({
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

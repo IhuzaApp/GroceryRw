@@ -665,10 +665,10 @@ export default function NotificationCenter() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 ${
+        className={`group relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 active:scale-90 ${
           theme === "dark"
-            ? "bg-gradient-to-br from-white/10 to-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ring-1 ring-white/10 hover:from-white/15 hover:to-white/10"
-            : "bg-gradient-to-br from-white to-gray-50 text-emerald-600 shadow-md ring-1 ring-black/5 hover:shadow-lg"
+            ? "text-gray-300 hover:bg-green-900/20 hover:text-green-400"
+            : "text-gray-600 hover:bg-green-50 hover:text-green-600"
         }`}
         title="Notifications"
       >

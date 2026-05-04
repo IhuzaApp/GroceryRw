@@ -31,7 +31,7 @@ const GET_ALL_VEHICLES = gql`
         id
         fullname
         businessName
-        Users {
+        user {
           image: profile_picture
         }
       }

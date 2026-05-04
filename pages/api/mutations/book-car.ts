@@ -13,7 +13,7 @@ const GET_VEHICLE_OWNER_INFO = gql`
       logisticsAccounts {
         fullname
         businessName
-        Users {
+        user {
           id
           phone
         }
@@ -133,10 +133,10 @@ export default async function handler(
           { id: vehicle_id }
         );
         const vehicle = infoResult.RentalVehicles_by_pk;
-        if (vehicle && vehicle.logisticsAccounts?.Users) {
+        if (vehicle && vehicle.logisticsAccounts?.user) {
           const owner = vehicle.logisticsAccounts;
-          const ownerPhone = owner.Users.phone;
-          const ownerUserId = owner.Users.id;
+          const ownerPhone = owner.user.phone;
+          const ownerUserId = owner.user.id;
           const vehicleName = vehicle.name;
           const vendorName = owner.businessName || owner.fullname || "Vendor";
 
