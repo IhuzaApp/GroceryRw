@@ -523,7 +523,7 @@ export default function UserPaymentCards({
             {/* Action Button */}
             <button
               onClick={() => setShowAddMoneyModal(true)}
-              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all hover:scale-105 hover:from-green-400 hover:to-emerald-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest !text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all hover:scale-105 hover:from-green-400 hover:to-emerald-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] active:scale-95"
             >
               <svg
                 className="h-4 w-4"
@@ -636,7 +636,7 @@ export default function UserPaymentCards({
                   disabled={
                     businessWalletBalance <= 0 || isLoadingBusinessWallet
                   }
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:from-emerald-400 hover:to-green-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-xs font-black uppercase tracking-widest !text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:from-emerald-400 hover:to-green-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                 >
                   <ArrowUpRight className="h-4 w-4" />
                   Withdraw
