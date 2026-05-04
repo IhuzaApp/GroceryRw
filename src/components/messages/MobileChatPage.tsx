@@ -121,7 +121,21 @@ const CustomerMessage: React.FC<{
           </span>
           {isCurrentUser && statusLabel && (
             <span className="select-none text-[11px] font-bold tracking-wide text-green-100">
-              {statusLabel === "Sending..." ? "..." : "✓"}
+              {statusLabel === "Sending..." ? (
+                "..."
+              ) : (
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              )}
             </span>
           )}
         </div>
@@ -501,7 +515,7 @@ export default function MobileChatPage({
 
             const convRef = doc(db!, collectionPath, conversationId);
             await updateDoc(convRef, {
-              lastMessage: "📎 Attachment",
+              lastMessage: "Attachment",
               lastMessageTime: serverTimestamp(),
               unreadCount: 1,
             });

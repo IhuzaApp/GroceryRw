@@ -55,7 +55,7 @@ type ConvTypeKey =
 interface ConvTypeInfo {
   key: ConvTypeKey;
   label: string;
-  emoji: string;
+  icon: React.ReactNode;
   bg: string;
   text: string;
 }
@@ -65,13 +65,27 @@ function getConvType(
   orders: Record<string, any>
 ): ConvTypeInfo {
   if (conversation.collectionPath === "business_conversations") {
-    return {
-      key: "business",
-      label: "Business",
-      emoji: "💼",
-      bg: "bg-purple-100 dark:bg-purple-900/40",
-      text: "text-purple-700 dark:text-purple-300",
-    };
+      return {
+        key: "business",
+        label: "Business",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+        ),
+        bg: "bg-purple-100 dark:bg-purple-900/40",
+        text: "text-purple-700 dark:text-purple-300",
+      };
   }
   const order = conversation.orderId ? orders[conversation.orderId] : null;
   switch (order?.orderType) {
@@ -79,7 +93,21 @@ function getConvType(
       return {
         key: "restaurant",
         label: "Restaurant",
-        emoji: "🍔",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+            />
+          </svg>
+        ),
         bg: "bg-orange-100 dark:bg-orange-900/40",
         text: "text-orange-700 dark:text-orange-300",
       };
@@ -87,7 +115,21 @@ function getConvType(
       return {
         key: "reel",
         label: "Reel",
-        emoji: "🎬",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+            />
+          </svg>
+        ),
         bg: "bg-pink-100 dark:bg-pink-900/40",
         text: "text-pink-700 dark:text-pink-300",
       };
@@ -95,7 +137,21 @@ function getConvType(
       return {
         key: "car",
         label: "Car",
-        emoji: "🚗",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+        ),
         bg: "bg-blue-100 dark:bg-blue-900/40",
         text: "text-blue-700 dark:text-blue-300",
       };
@@ -103,7 +159,21 @@ function getConvType(
       return {
         key: "pet",
         label: "Pet",
-        emoji: "🐾",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        ),
         bg: "bg-amber-100 dark:bg-amber-900/40",
         text: "text-amber-700 dark:text-amber-300",
       };
@@ -111,7 +181,21 @@ function getConvType(
       return {
         key: "package",
         label: "Package",
-        emoji: "📦",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+        ),
         bg: "bg-teal-100 dark:bg-teal-900/40",
         text: "text-teal-700 dark:text-teal-300",
       };
@@ -119,24 +203,185 @@ function getConvType(
       return {
         key: "order",
         label: "Order",
-        emoji: "🛍️",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+            />
+          </svg>
+        ),
         bg: "bg-green-100 dark:bg-green-900/40",
         text: "text-green-700 dark:text-green-300",
       };
   }
 }
 
-const FILTER_TABS: { key: ConvTypeKey | "all"; label: string; emoji: string }[] =
-  [
-    { key: "all", label: "All", emoji: "💬" },
-    { key: "order", label: "Orders", emoji: "🛍️" },
-    { key: "business", label: "Business", emoji: "💼" },
-    { key: "restaurant", label: "Restaurant", emoji: "🍔" },
-    { key: "reel", label: "Reels", emoji: "🎬" },
-    { key: "car", label: "Cars", emoji: "🚗" },
-    { key: "pet", label: "Pets", emoji: "🐾" },
-    { key: "package", label: "Packages", emoji: "📦" },
-  ];
+const FILTER_TABS: {
+  key: ConvTypeKey | "all";
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    key: "all",
+    label: "All",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "order",
+    label: "Orders",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "business",
+    label: "Business",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "restaurant",
+    label: "Restaurant",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "reel",
+    label: "Reels",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "car",
+    label: "Cars",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "pet",
+    label: "Pets",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "package",
+    label: "Packages",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        />
+      </svg>
+    ),
+  },
+];
 
 // Define conversation interface
 interface Conversation {
@@ -385,7 +630,7 @@ export default function MobileMessagePage({
                       : "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
                   }`}
                 >
-                  <span>{tab.emoji}</span>
+                  <span>{tab.icon}</span>
                   <span>{tab.label}</span>
                   {count > 0 && (
                     <span
@@ -419,7 +664,21 @@ export default function MobileMessagePage({
         ) : filteredConversations.length === 0 ? (
           <div className="flex h-full items-center justify-center px-4">
             <div className="text-center">
-              <div className="mb-4 text-6xl">💬</div>
+              <div className="mb-4 flex justify-center text-gray-400">
+                <svg
+                  className="h-16 w-16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
               <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
                 {activeFilter === "all"
                   ? "No conversations yet"
@@ -501,8 +760,8 @@ export default function MobileMessagePage({
                       )}
                     </div>
                     {/* Type emoji badge on avatar */}
-                    <div className="absolute bottom-2.5 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] shadow-md dark:bg-gray-800">
-                      {typeInfo.emoji}
+                    <div className="absolute bottom-2.5 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-0.5 text-gray-500 shadow-md dark:bg-gray-800">
+                      {typeInfo.icon}
                     </div>
                   </div>
 
