@@ -8,6 +8,9 @@ import { momoService } from "../../../src/lib/momoService";
 import bcrypt from "bcryptjs";
 import { sendSMS } from "../../../src/lib/pindo";
 import { sendWithdrawalInvoice } from "../../../src/lib/resend";
+import { insertSystemLog } from "../queries/system-logs";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { sendLargeWithdrawalRequestToSlack } from "../../../src/lib/slackSupportNotifier";
 
 const WITHDRAW_OTP_KEY_PREFIX = "withdraw-";
 
@@ -261,15 +264,19 @@ export default async function handler(
 
         // Send Email Invoice
         try {
-          if (user.email) {
+          const emailToSend = user.email || session.user.email;
+          if (emailToSend) {
+            console.log(`Sending withdrawal invoice to email: ${emailToSend}`);
             await sendWithdrawalInvoice({
-              to: user.email,
+              to: emailToSend,
               customerName: user.name || "Customer",
               amount: numericAmount.toString(),
               fee: feeAmount.toString(),
               newBalance: newBalance.toString(),
               referenceId: momoRefId,
             });
+          } else {
+            console.warn("No email found for user (both DB and Session were empty). Skipping invoice email.");
           }
         } catch (emailErr) {
           console.error("Failed to send withdrawal Email", emailErr);
@@ -277,8 +284,37 @@ export default async function handler(
 
       } catch (err: any) {
         console.error("❌ [Withdrawal] Auto-disbursement failed:", err);
+        
+        await insertSystemLog(
+          "error",
+          `Auto-disbursement failed for ${amount} RWF`,
+          "RequestWithdraw API",
+          { error: err.message || err, business_id, businessWallet_id, phone: phoneNumber }
+        );
+        
+        await logErrorToSlack(
+          "RequestWithdraw API (Auto-Disbursement)",
+          err,
+          { business_id, businessWallet_id, phone: phoneNumber, amount }
+        );
+
         // Throw the error so the request fails and the user gets informed
         throw new Error(err.message || "Auto-disbursement processing failed");
+      }
+    } else if (numericAmount >= 200000) {
+      // Send Slack notification for large manual withdrawal
+      try {
+        await sendLargeWithdrawalRequestToSlack({
+          amount: numericAmount.toString(),
+          businessName: user.name || "Unknown Business",
+          businessWalletId: businessWallet_id,
+          contactName: user.name || "Customer",
+          email: user.email,
+          phone: phoneNumber,
+          userId: user.id,
+        });
+      } catch (slackErr) {
+        console.error("Failed to notify Slack for large withdrawal", slackErr);
       }
     }
 
@@ -309,6 +345,16 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error creating withdrawal request:", error);
+
+    await insertSystemLog(
+      "error",
+      `Withdrawal request failed: ${error.message || "Unknown error"}`,
+      "RequestWithdraw API",
+      { error: error.message || error, body: req.body }
+    );
+
+    await logErrorToSlack("RequestWithdraw API", error, { body: req.body });
+
     return res.status(500).json({
       error: "Failed to submit withdrawal request",
       message: error.message,

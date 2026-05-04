@@ -53,11 +53,14 @@ export function RequestWithdrawModal({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   // Fetch system config for withdraw charges (on open, step 1)
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
     setConfigLoaded(false);
+    setNotification(null);
     fetch("/api/queries/system-configuration")
       .then((res) => res.json())
       .then((data) => {
@@ -115,18 +118,18 @@ export function RequestWithdrawModal({
     };
     start();
     return () => {
-      stream?.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-      if (videoRef.current) videoRef.current.srcObject = null;
+      stopCamera();
     };
   }, [isOpen, step]);
 
   const handleAmountChange = (value: string) => {
+    setNotification(null);
     const regex = /^\d*\.?\d*$/;
     if (regex.test(value) || value === "") setWithdrawAmount(value);
   };
 
   const setPercentage = (percentage: number) => {
+    setNotification(null);
     setWithdrawAmount((walletBalance * percentage).toFixed(2));
   };
 
@@ -144,9 +147,40 @@ export function RequestWithdrawModal({
   const handleNextStep1 = () => {
     if (!canProceedStep1) return;
     if (amount > walletBalance) {
-      toast.error("Insufficient balance");
+      setNotification({ type: "error", text: "Insufficient balance" });
       return;
     }
+    setNotification(null);
+    setStep(2);
+  };
+
+  const handleNextStep2 = () => {
+    setNotification(null);
+    setStep(3);
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const handleNextStep3 = () => {
+    setNotification(null);
+    stopCamera();
+    setStep(4);
+    handleSendOtp();
+  };
+
+  const handleBackStep2 = () => {
+    setNotification(null);
+    setStep(1);
+  };
+
+  const handleBackStep3 = () => {
+    setNotification(null);
+    stopCamera();
     setStep(2);
   };
 
@@ -166,6 +200,7 @@ export function RequestWithdrawModal({
 
   const handleSendOtp = async () => {
     setSendingOtp(true);
+    setNotification(null);
     try {
       const res = await fetch("/api/auth/send-withdraw-otp", {
         method: "POST",
@@ -173,9 +208,9 @@ export function RequestWithdrawModal({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       setOtpSent(true);
-      toast.success("OTP sent successfully");
+      setNotification({ type: "success", text: "OTP sent successfully" });
     } catch (e: any) {
-      toast.error(e?.message || "Failed to send OTP");
+      setNotification({ type: "error", text: e?.message || "Failed to send OTP" });
     } finally {
       setSendingOtp(false);
     }
@@ -183,18 +218,29 @@ export function RequestWithdrawModal({
 
   const handleConfirm = async () => {
     if (!canProceedStep4 || password.trim().length === 0) return;
+    setNotification(null);
     try {
       setIsProcessing(true);
+
+      let finalImageUrl = verificationImage;
+      if (verificationImage.startsWith("data:image")) {
+        const { uploadToFirebase } = await import("../../lib/firebase");
+        const res = await fetch(verificationImage);
+        const blob = await res.blob();
+        const file = new File([blob], `withdraw-verification-${Date.now()}.jpg`, { type: "image/jpeg" });
+        finalImageUrl = await uploadToFirebase(file, `withdrawals/${file.name}`);
+      }
+
       await onSubmit({
         amount,
-        verificationImage,
+        verificationImage: finalImageUrl,
         otp,
         password,
       });
-      toast.success("Withdrawal request submitted successfully");
-      resetAndClose();
+      setNotification({ type: "success", text: "Withdrawal request submitted successfully" });
+      setTimeout(() => resetAndClose(), 2000);
     } catch (e: any) {
-      toast.error(e?.message || "Failed to submit withdrawal request");
+      setNotification({ type: "error", text: e?.message || "Failed to submit withdrawal request" });
       setOtp("");
       setPassword("");
     } finally {
@@ -207,7 +253,11 @@ export function RequestWithdrawModal({
     setWithdrawAmount("");
     setVerificationImage("");
     setOtp("");
+    setPassword("");
     setOtpSent(false);
+    setCameraError(null);
+    stopCamera();
+    setNotification(null);
     onClose();
   };
 
@@ -223,7 +273,7 @@ export function RequestWithdrawModal({
       onClick={handleBackdropClick}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -246,6 +296,19 @@ export function RequestWithdrawModal({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {/* Notification Alert */}
+        {notification && (
+          <div
+            className={`px-4 py-3 text-sm font-semibold text-center ${
+              notification.type === "success"
+                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+            }`}
+          >
+            {notification.text}
+          </div>
+        )}
 
         {/* Step indicator */}
         <div className="flex border-b border-gray-100 px-6 py-4 dark:border-gray-700">
