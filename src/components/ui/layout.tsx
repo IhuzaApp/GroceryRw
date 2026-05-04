@@ -138,6 +138,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </main>
       {/* AI Chat - Available on all pages except chat pages and specific marketplaces */}
       {!isChatPage &&
+        !isMessagesList &&
         !isMessagesChat &&
         !isCarsPage &&
         !isPetsPage &&
