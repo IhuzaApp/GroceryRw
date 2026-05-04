@@ -547,42 +547,45 @@ export default function UserPaymentCards({
           initialPhoneNumber={userPhone}
         />
 
-        {/* Business Wallet Card (VIP Credit Card Design) - Show only if exists */}
+        {/* Business Wallet Card (Premium Emerald Design) - Show only if exists */}
         {businessWalletId && (
-          <div
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl"
-            style={{ backgroundColor: "#000000" }}
-          >
-            {/* Decorative background elements */}
-            <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-2xl"></div>
-            <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-xl"></div>
+          <div className="group relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.3)]">
+            {/* Glassmorphic overlay effects */}
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-emerald-500 opacity-10 blur-3xl transition-all duration-500 group-hover:scale-150 group-hover:bg-emerald-400 group-hover:opacity-20"></div>
+            <div className="absolute bottom-0 left-0 -mb-16 -ml-16 h-32 w-32 rounded-full bg-green-500 opacity-10 blur-2xl transition-all duration-500 group-hover:opacity-20"></div>
 
             {/* Card Content */}
             <div className="relative z-10">
               {/* Card Header */}
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-12 rounded bg-gradient-to-br from-yellow-400 to-yellow-600"></div>
-                  <span
-                    className="text-xs font-semibold tracking-wider"
-                    style={{ color: "#facc15" }}
-                  >
-                    VIP
+                  <div className="h-8 w-12 rounded bg-gradient-to-br from-green-400 to-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
+                  <span className="text-xs font-black tracking-[0.2em] text-emerald-400 uppercase">
+                    Premium
                   </span>
                 </div>
-                <Wallet className="h-6 w-6" style={{ color: "#facc15" }} />
+                <div className="flex items-center">
+                  <div className="relative z-20 h-6 w-6 rounded-full bg-emerald-400 opacity-90 mix-blend-screen shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                  <div className="relative z-10 -ml-3 h-6 w-6 rounded-full bg-green-500 opacity-90 mix-blend-screen shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                </div>
               </div>
 
               {/* Chip */}
-              <div className="mb-6 flex items-center gap-3">
-                <div className="h-10 w-14 rounded-md border border-yellow-400/30 bg-gradient-to-br from-yellow-300/30 to-yellow-500/30 backdrop-blur-sm"></div>
+              <div className="mb-6 flex items-center gap-4">
+                <div className="flex h-10 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-inner backdrop-blur-md">
+                  <img
+                    className="h-6 w-6 object-contain opacity-80"
+                    src="/assets/images/chip.png"
+                    alt="Chip"
+                  />
+                </div>
                 <div className="flex-1">
-                  <p className="text-xs" style={{ color: "#ffffff" }}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">
                     Available Balance
                   </p>
-                  <p className="text-2xl font-bold" style={{ color: "#ffffff" }}>
+                  <p className="font-mono text-3xl font-black tracking-tight text-white drop-shadow-md">
                     {isLoadingBusinessWallet ? (
-                      <span style={{ color: "#ffffff" }}>Loading...</span>
+                      <span className="text-gray-400 text-xl">Loading...</span>
                     ) : (
                       formatCurrencySync(businessWalletBalance)
                     )}
@@ -592,38 +595,35 @@ export default function UserPaymentCards({
 
               {/* Card Number Pattern */}
               <div className="mb-4 flex items-center gap-2">
-                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span className="mx-2" style={{ color: "#ffffff" }}>
+                <span className="mx-2 text-emerald-500/50">
                   •
                 </span>
-                <span
-                  className="ml-auto font-mono text-xs"
-                  style={{ color: "#ffffff" }}
-                >
+                <span className="ml-auto font-mono text-xs font-bold tracking-widest text-emerald-400">
                   BUSINESS
                 </span>
               </div>
@@ -631,22 +631,19 @@ export default function UserPaymentCards({
               {/* Card Footer */}
               <div className="mt-6 flex items-end justify-between">
                 <div>
-                  <p className="text-xs" style={{ color: "#ffffff" }}>
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                     Card Holder
                   </p>
-                  <p
-                    className="text-sm font-semibold"
-                    style={{ color: "#ffffff" }}
-                  >
+                  <p className="text-sm font-bold tracking-wide text-gray-200">
                     Business Account
                   </p>
                 </div>
                 <button
                   onClick={handleRequestWithdraw}
                   disabled={businessWalletBalance <= 0 || isLoadingBusinessWallet}
-                  className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-2 text-xs font-semibold text-black transition-all hover:from-yellow-400 hover:to-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-yellow-500 disabled:hover:to-yellow-600"
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:from-emerald-400 hover:to-green-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                 >
-                  <ArrowUpRight className="mr-1 inline h-3 w-3" />
+                  <ArrowUpRight className="h-4 w-4" />
                   Withdraw
                 </button>
               </div>

@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { otpStore } from "../../../lib/otpStore";
+import { momoService } from "../../../src/lib/momoService";
 
 const WITHDRAW_OTP_KEY_PREFIX = "withdraw-";
 
@@ -132,6 +133,30 @@ export default async function handler(
 
     otpStore.delete(`${WITHDRAW_OTP_KEY_PREFIX}${userId}`);
 
+    const numericAmount = parseFloat(amount);
+    let finalStatus = "pending";
+
+    // Auto-disburse via MoMo Disbursement API for withdrawals < 200,000
+    if (numericAmount < 200000 && phoneNumber) {
+      try {
+        await momoService.transfer({
+          amount: numericAmount,
+          currency: "RWF", // MoMo disbursement format
+          payeeId: phoneNumber,
+          partyIdType: "MSISDN",
+          externalId: `WITHDRAW-${Date.now()}`,
+          payerMessage: "Plas payout",
+          payeeNote: "Thank you",
+        });
+        console.log("✅ [Withdrawal] Auto-disbursement initiated.");
+        finalStatus = "processing";
+      } catch (err: any) {
+        console.error("❌ [Withdrawal] Auto-disbursement failed:", err);
+        // Keep status as pending to allow manual review/retry
+        finalStatus = "pending";
+      }
+    }
+
     const result = await hasuraClient.request<{
       insert_withDraweRequest: { affected_rows: number };
     }>(REQUEST_WITHDRAW, {
@@ -141,7 +166,7 @@ export default async function handler(
       phoneNumber: phoneNumber || "",
       shopperWallet_id: null,
       shopper_id: null,
-      status: "pending",
+      status: finalStatus,
       update_at: new Date().toISOString(),
       verification_image: verification_image || "",
     });

@@ -72,7 +72,7 @@ class MomoService {
     if (
       cachedToken &&
       cachedToken.generated_at + cachedToken.expires_in >
-        now + this.TOKEN_EXPIRY_BUFFER
+      now + this.TOKEN_EXPIRY_BUFFER
     ) {
       return cachedToken.access_token;
     }
