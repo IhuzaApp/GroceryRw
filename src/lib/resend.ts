@@ -122,3 +122,86 @@ export async function sendRentalInvoice({
     return null;
   }
 }
+
+export async function sendWithdrawalInvoice({
+  to,
+  customerName,
+  amount,
+  fee,
+  newBalance,
+  referenceId,
+}: {
+  to: string;
+  customerName: string;
+  amount: string;
+  fee: string;
+  newBalance: string;
+  referenceId: string;
+}) {
+  try {
+    const subject = `Withdrawal Receipt: RWF ${amount}`;
+    const html = `
+      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #f0f0f0; border-radius: 24px;">
+        <div style="margin-bottom: 40px;">
+          <h1 style="font-size: 24px; font-weight: 800; color: #111827; margin: 0;">Withdrawal Receipt</h1>
+          <p style="color: #6b7280; font-size: 14px;">Hello ${customerName}, your withdrawal request was processed successfully.</p>
+        </div>
+
+        <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #f3f4f6;">
+          <h2 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Transaction Details</h2>
+          <p style="font-size: 14px; font-weight: 600; color: #10b981; margin: 0;">Ref ID: ${referenceId}</p>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+          <h2 style="font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Summary</h2>
+          <div style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #6b7280; font-size: 14px;">Withdrawal Amount</span>
+              <span style="color: #111827; font-size: 14px; font-weight: 600;">RWF ${amount}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #6b7280; font-size: 14px;">Service Fee</span>
+              <span style="color: #111827; font-size: 14px; font-weight: 600;">RWF ${fee}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb;">
+              <span style="color: #6b7280; font-size: 14px;">Total Deducted</span>
+              <span style="color: #ef4444; font-size: 14px; font-weight: 700;">RWF ${parseFloat(amount) + parseFloat(fee)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 24px; background-color: #f9fafb; border-radius: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 800; color: #111827;">New Balance</span>
+            <span style="font-size: 24px; font-weight: 900; color: #10b981;">RWF ${newBalance}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center;">
+          <p style="font-size: 12px; color: #9ca3af; line-height: 1.5;">
+            Thank you for using Plas Wallet.<br/>
+            If you did not authorize this transaction, please contact support immediately.
+          </p>
+        </div>
+      </div>
+    `;
+
+    const result = await resend.emails.send({
+      from: "Plas <onboarding@resend.dev>",
+      to,
+      subject,
+      html,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Failed to send withdrawal invoice email:", error);
+    await insertSystemLog(
+      "error",
+      "Failed to send withdrawal invoice email",
+      "ResendLib",
+      { error, to }
+    );
+    return null;
+  }
+}

@@ -337,6 +337,7 @@ export default function UserPaymentCards({
     amount: number;
     verificationImage: string;
     otp: string;
+    password: string;
   }) => {
     if (!businessId || !businessWalletId) {
       throw new Error("Business or wallet not found");
@@ -351,6 +352,7 @@ export default function UserPaymentCards({
         phoneNumber: userPhone || "",
         verification_image: payload.verificationImage,
         otp: payload.otp,
+        password: payload.password,
       }),
     });
     const data = await response.json();

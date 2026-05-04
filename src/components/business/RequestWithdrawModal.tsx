@@ -28,6 +28,7 @@ interface RequestWithdrawModalProps {
     amount: number;
     verificationImage: string;
     otp: string;
+    password: string;
   }) => Promise<void>;
 }
 
@@ -43,6 +44,7 @@ export function RequestWithdrawModal({
   const [configLoaded, setConfigLoaded] = useState(false);
   const [verificationImage, setVerificationImage] = useState<string>("");
   const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -171,12 +173,7 @@ export function RequestWithdrawModal({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       setOtpSent(true);
-      const code = data.otp ?? data.devOTP;
-      if (code) {
-        // Show OTP in a popup on screen (same as PaymentModal)
-        alert(`Your withdrawal verification code is: ${code}`);
-      }
-      toast.success("Enter the code below to confirm.");
+      toast.success("OTP sent successfully");
     } catch (e: any) {
       toast.error(e?.message || "Failed to send OTP");
     } finally {
@@ -185,13 +182,14 @@ export function RequestWithdrawModal({
   };
 
   const handleConfirm = async () => {
-    if (!canProceedStep4) return;
+    if (!canProceedStep4 || password.trim().length === 0) return;
     try {
       setIsProcessing(true);
       await onSubmit({
         amount,
         verificationImage,
         otp,
+        password,
       });
       toast.success("Withdrawal request submitted successfully");
       resetAndClose();
@@ -253,16 +251,16 @@ export function RequestWithdrawModal({
             <div
               key={s.id}
               className={`flex flex-1 items-center justify-center gap-1 text-xs font-bold tracking-wide ${step >= s.id
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-gray-400 dark:text-gray-500"
+                ? "text-green-600 dark:text-green-400"
+                : "text-gray-400 dark:text-gray-500"
                 }`}
             >
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300 ${step > s.id
-                    ? "bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.4)]"
-                    : step === s.id
-                      ? "border-2 border-green-500 bg-green-50 text-green-700 shadow-inner dark:bg-green-900/20 dark:text-green-300"
-                      : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                  ? "bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+                  : step === s.id
+                    ? "border-2 border-green-500 bg-green-50 text-green-700 shadow-inner dark:bg-green-900/20 dark:text-green-300"
+                    : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                   }`}
               >
                 {step > s.id ? <CheckCircle className="h-4 w-4" /> : s.id}
@@ -510,14 +508,32 @@ export function RequestWithdrawModal({
                       disabled={isProcessing}
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={sendingOtp}
-                    className="text-sm font-bold text-green-600 transition-colors hover:text-green-500 hover:underline dark:text-green-400"
-                  >
-                    Resend OTP
-                  </button>
+
+                  <div className="flex justify-end mt-2">
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={sendingOtp}
+                      className="text-xs font-bold text-green-600 transition-colors hover:text-green-500 hover:underline dark:text-green-400"
+                    >
+                      Resend OTP
+                    </button>
+                  </div>
+
+                  {/* Password Input */}
+                  <div className="w-full mt-4">
+                    <label className="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-300">
+                      Confirm with Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your account password"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-900 shadow-inner outline-none transition-all focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-green-500 dark:focus:bg-gray-900"
+                      disabled={isProcessing}
+                    />
+                  </div>
                 </>
               )}
             </div>
@@ -609,7 +625,7 @@ export function RequestWithdrawModal({
               <button
                 type="button"
                 onClick={handleConfirm}
-                disabled={!canProceedStep4}
+                disabled={!canProceedStep4 || password.trim().length === 0}
                 className="ml-auto flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isProcessing ? (

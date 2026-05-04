@@ -243,7 +243,7 @@ class MomoService {
     referenceId?: string;
   }): Promise<{ referenceId: string }> {
     const referenceId = params.referenceId || randomUUID();
-    const { subscriptionKey, baseUrl, environment } = this.getEnv();
+    const { subscriptionKey, disbursementSubscriptionKey, baseUrl, environment } = this.getEnv();
 
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
 

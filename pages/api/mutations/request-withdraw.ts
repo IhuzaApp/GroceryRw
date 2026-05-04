@@ -5,6 +5,9 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { otpStore } from "../../../lib/otpStore";
 import { momoService } from "../../../src/lib/momoService";
+import bcrypt from "bcryptjs";
+import { sendSMS } from "../../../src/lib/pindo";
+import { sendWithdrawalInvoice } from "../../../src/lib/resend";
 
 const WITHDRAW_OTP_KEY_PREFIX = "withdraw-";
 
@@ -34,6 +37,41 @@ const REQUEST_WITHDRAW = gql`
       }
     ) {
       affected_rows
+    }
+  }
+`;
+
+const GET_USER_AND_WALLET_AND_CONFIG = gql`
+  query GetUserAndWalletAndConfig($user_id: uuid!, $wallet_id: uuid!) {
+    Users_by_pk(id: $user_id) {
+      password_hash
+      name
+      email
+    }
+    business_wallet_by_pk(id: $wallet_id) {
+      amount
+    }
+    System_configuratioins(limit: 1) {
+      withDrawCharges
+    }
+  }
+`;
+
+const PROCESS_AUTO_DISBURSEMENT = gql`
+  mutation ProcessAutoDisbursement(
+    $wallet_id: uuid!
+    $new_amount: String!
+    $transaction_obj: businessTransactions_insert_input!
+  ) {
+    update_business_wallet_by_pk(
+      pk_columns: { id: $wallet_id }
+      _set: { amount: $new_amount }
+    ) {
+      id
+      amount
+    }
+    insert_businessTransactions_one(object: $transaction_obj) {
+      id
     }
   }
 `;
@@ -81,10 +119,15 @@ export default async function handler(
       phoneNumber = "",
       verification_image = "",
       otp: otpCode,
+      password,
     } = req.body;
 
     if (!amount || amount === "" || parseFloat(amount) <= 0) {
       return res.status(400).json({ error: "Valid amount is required" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
     }
 
     if (!business_id) {
@@ -136,24 +179,106 @@ export default async function handler(
     const numericAmount = parseFloat(amount);
     let finalStatus = "pending";
 
+    // Fetch user hash, wallet balance and config in one query
+    const dataRes = await hasuraClient.request<any>(GET_USER_AND_WALLET_AND_CONFIG, {
+      user_id: userId,
+      wallet_id: businessWallet_id,
+    });
+
+    const user = dataRes.Users_by_pk;
+    const wallet = dataRes.business_wallet_by_pk;
+    const config = dataRes.System_configuratioins?.[0] || {};
+
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+    if (!wallet) {
+      return res.status(400).json({ error: "Business wallet not found" });
+    }
+
+    // Verify Password
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    // Calculate fee
+    const feePct = parseFloat(config.withDrawCharges || "0");
+    const feeAmount = (numericAmount * feePct) / 100;
+    const totalDeduction = numericAmount + feeAmount;
+    const currentBalance = parseFloat(wallet.amount);
+
+    if (currentBalance < totalDeduction) {
+      return res.status(400).json({ error: "Insufficient balance including service fee" });
+    }
+
     // Auto-disburse via MoMo Disbursement API for withdrawals < 200,000
     if (numericAmount < 200000 && phoneNumber) {
       try {
+        const momoRefId = `WITHDRAW-${Date.now()}`;
         await momoService.transfer({
           amount: numericAmount,
           currency: "RWF", // MoMo disbursement format
           payeeId: phoneNumber,
           partyIdType: "MSISDN",
-          externalId: `WITHDRAW-${Date.now()}`,
+          externalId: momoRefId,
           payerMessage: "Plas payout",
           payeeNote: "Thank you",
         });
         console.log("✅ [Withdrawal] Auto-disbursement initiated.");
-        finalStatus = "processing";
+        
+        finalStatus = "completed"; // Mark success
+
+        // Calculate new balance
+        const newBalance = currentBalance - totalDeduction;
+
+        // Process deduction and transaction logging
+        await hasuraClient.request(PROCESS_AUTO_DISBURSEMENT, {
+          wallet_id: businessWallet_id,
+          new_amount: newBalance.toString(),
+          transaction_obj: {
+            action: "Withdrawal",
+            amount: numericAmount.toString(),
+            description: `Auto-disbursement withdrawal of ${numericAmount} RWF. Fee: ${feeAmount} RWF.`,
+            mtn_response: "SUCCESSFUL",
+            phone: phoneNumber,
+            reference_id: momoRefId,
+            status: "SUCCESSFUL",
+            type: "debit",
+            wallet_id: businessWallet_id,
+            related_order: null,
+          }
+        });
+
+        // Send SMS
+        try {
+          const shortRef = momoRefId.slice(-5);
+          const smsText = `Plas Wallet : your witthdrwal of ${numericAmount} RWF was successfullt. fee ${feeAmount} RWF. new balance is ${newBalance} RWF. tracking code ${shortRef}. thank you`;
+          await sendSMS(phoneNumber, smsText);
+        } catch (smsErr) {
+          console.error("Failed to send withdrawal SMS", smsErr);
+        }
+
+        // Send Email Invoice
+        try {
+          if (user.email) {
+            await sendWithdrawalInvoice({
+              to: user.email,
+              customerName: user.name || "Customer",
+              amount: numericAmount.toString(),
+              fee: feeAmount.toString(),
+              newBalance: newBalance.toString(),
+              referenceId: momoRefId,
+            });
+          }
+        } catch (emailErr) {
+          console.error("Failed to send withdrawal Email", emailErr);
+        }
+
       } catch (err: any) {
         console.error("❌ [Withdrawal] Auto-disbursement failed:", err);
-        // Keep status as pending to allow manual review/retry
-        finalStatus = "pending";
+        // Throw the error so the request fails and the user gets informed
+        throw new Error(err.message || "Auto-disbursement processing failed");
       }
     }
 
