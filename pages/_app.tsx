@@ -453,6 +453,59 @@ export default function App({ Component, pageProps }: AppProps) {
               }),
             }}
           />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                itemListElement: [
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 1,
+                    name: "About us",
+                    url: "https://plas.rw/about",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 2,
+                    name: "Life at Plas",
+                    url: "https://plas.rw/life-at-plas",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 3,
+                    name: "Our teams",
+                    url: "https://plas.rw/ourTeams",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 4,
+                    name: "Careers at Plas",
+                    url: "https://plas.rw/careers",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 5,
+                    name: "Our locations",
+                    url: "https://plas.rw/locations",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 6,
+                    name: "Contact us",
+                    url: "https://plas.rw/contact",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 7,
+                    name: "Sign in",
+                    url: "https://plas.rw/Auth/Login",
+                  },
+                ],
+              }),
+            }}
+          />
         </Head>
 
         {/* Google Translate Integration */}

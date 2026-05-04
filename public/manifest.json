@@ -1,5 +1,5 @@
 {
-  "name": "Plasa - Grocery App",
+  "name": "Plas - Grocery App",
   "short_name": "Plasa",
   "description": "Your convenient grocery shopping and delivery app",
   "start_url": "/",
@@ -9,7 +9,11 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": ["shopping", "food", "lifestyle"],
+  "categories": [
+    "shopping",
+    "food",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "/icon-72x72.png",
