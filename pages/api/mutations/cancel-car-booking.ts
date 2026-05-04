@@ -159,11 +159,9 @@ export default async function handler(
     }
 
     if (now > pickup6AM) {
-      return res
-        .status(400)
-        .json({
-          error: "Cannot cancel a booking after the pickup time has passed.",
-        });
+      return res.status(400).json({
+        error: "Cannot cancel a booking after the pickup time has passed.",
+      });
     }
     // ------------------------------
 
@@ -224,8 +222,7 @@ export default async function handler(
     // Notify Owner via SMS
     try {
       const vehicleName = booking.RentalVehicles?.name;
-      const ownerPhone =
-        booking.RentalVehicles?.logisticsAccounts?.User?.phone;
+      const ownerPhone = booking.RentalVehicles?.logisticsAccounts?.User?.phone;
       const ownerName =
         booking.RentalVehicles?.logisticsAccounts?.businessName ||
         booking.RentalVehicles?.logisticsAccounts?.fullname ||

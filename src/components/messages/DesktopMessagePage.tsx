@@ -317,159 +317,159 @@ const FILTER_TABS: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-    {
-      key: "all",
-      label: "All",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "order",
-      label: "Orders",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "business",
-      label: "Business",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "restaurant",
-      label: "Food",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "reel",
-      label: "Reels",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "car",
-      label: "Cars",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "pet",
-      label: "Pets",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-          />
-        </svg>
-      ),
-    },
-    {
-      key: "package",
-      label: "Packages",
-      icon: (
-        <svg
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          />
-        </svg>
-      ),
-    },
-  ];
+  {
+    key: "all",
+    label: "All",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "order",
+    label: "Orders",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "business",
+    label: "Business",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "restaurant",
+    label: "Food",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "reel",
+    label: "Reels",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "car",
+    label: "Cars",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "pet",
+    label: "Pets",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "package",
+    label: "Packages",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        />
+      </svg>
+    ),
+  },
+];
 
 // Define message interface
 interface Message {
@@ -799,8 +799,8 @@ export default function DesktopMessagePage({
           session.user.id === selectedConversation.customerId
             ? "customer"
             : session.user.id === selectedConversation.shopperId
-              ? "shopper"
-              : "business",
+            ? "shopper"
+            : "business",
         recipientId,
         timestamp: serverTimestamp(),
         read: false,
@@ -858,9 +858,11 @@ export default function DesktopMessagePage({
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white dark:bg-[#0A0A0A] !mt-0 !pt-0 overflow-hidden relative">
+    <div className="relative !mt-0 flex h-screen flex-col overflow-hidden bg-white !pt-0 dark:bg-[#0A0A0A]">
       <style jsx global>{`
-        body, html, #__next {
+        body,
+        html,
+        #__next {
           margin-top: 0 !important;
           padding-top: 0 !important;
           top: 0 !important;
@@ -918,7 +920,7 @@ export default function DesktopMessagePage({
           </div>
 
           {/* Type Filter Tabs */}
-          <div className="flex-shrink-0 overflow-x-auto scrollbar-hide px-4 pb-3">
+          <div className="scrollbar-hide flex-shrink-0 overflow-x-auto px-4 pb-3">
             <div className="flex gap-1.5">
               {FILTER_TABS.filter((tab) =>
                 tab.key === "all" ? true : (countByType[tab.key] || 0) > 0
@@ -928,10 +930,11 @@ export default function DesktopMessagePage({
                   <button
                     key={tab.key}
                     onClick={() => setActiveFilter(tab.key)}
-                    className={`flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${isActive
+                    className={`flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                      isActive
                         ? "bg-green-600 text-white shadow-sm"
                         : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-gray-200 dark:hover:bg-gray-700"
-                      }`}
+                    }`}
                   >
                     <span>{tab.icon}</span>
                     <span>{tab.label}</span>
@@ -1012,12 +1015,12 @@ export default function DesktopMessagePage({
 
                 const contactAvatar = isBusinessChat
                   ? conversation.counterpartAvatar ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    fullName
-                  )}&background=10b981&color=fff`
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      fullName
+                    )}&background=10b981&color=fff`
                   : order?.assignedTo?.shopper?.profile_photo ||
-                  order?.assignedTo?.profile_picture ||
-                  "/images/ProfileImage.png";
+                    order?.assignedTo?.profile_picture ||
+                    "/images/ProfileImage.png";
                 const isSelected = selectedConversation?.id === conversation.id;
                 const typeInfo = getConvType(conversation, orders);
 
@@ -1025,10 +1028,11 @@ export default function DesktopMessagePage({
                   <React.Fragment key={conversation.id}>
                     <div
                       onClick={() => handleConversationClick(conversation)}
-                      className={`group relative cursor-pointer px-5 py-4 transition-all duration-200 ${isSelected
+                      className={`group relative cursor-pointer px-5 py-4 transition-all duration-200 ${
+                        isSelected
                           ? "bg-white/70 shadow-sm ring-1 ring-black/5 backdrop-blur-sm dark:bg-gray-800/70 dark:ring-white/10"
                           : "hover:bg-white/40 dark:hover:bg-gray-800/40"
-                        }`}
+                      }`}
                     >
                       {isSelected && (
                         <div className="absolute left-0 top-0 h-full w-1 bg-green-600 dark:bg-green-500"></div>
@@ -1037,7 +1041,7 @@ export default function DesktopMessagePage({
                         <div className="relative flex-shrink-0">
                           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
                             {contactAvatar &&
-                              contactAvatar !== "/images/ProfileImage.png" ? (
+                            contactAvatar !== "/images/ProfileImage.png" ? (
                               <img
                                 src={contactAvatar}
                                 alt={contactName}
@@ -1065,7 +1069,9 @@ export default function DesktopMessagePage({
                           </div>
                           {conversation.unreadCount > 0 && (
                             <div className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-600 px-1 text-[10px] font-bold text-white shadow-lg ring-2 ring-white dark:ring-gray-800">
-                              {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+                              {conversation.unreadCount > 9
+                                ? "9+"
+                                : conversation.unreadCount}
                             </div>
                           )}
                         </div>
@@ -1073,16 +1079,17 @@ export default function DesktopMessagePage({
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex min-w-0 items-center gap-1.5">
                               <h3
-                                className={`truncate text-sm font-bold tracking-tight ${isSelected
+                                className={`truncate text-sm font-bold tracking-tight ${
+                                  isSelected
                                     ? "text-green-600 dark:text-green-400"
                                     : "text-gray-900 dark:text-white"
-                                  }`}
+                                }`}
                               >
                                 {contactName}
                               </h3>
                               {/* Type badge */}
                               <span
-                                className={`flex-shrink-0 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${typeInfo.bg} ${typeInfo.text}`}
+                                className={`flex flex-shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${typeInfo.bg} ${typeInfo.text}`}
                               >
                                 {typeInfo.icon} {typeInfo.label}
                               </span>
@@ -1092,10 +1099,11 @@ export default function DesktopMessagePage({
                             </span>
                           </div>
                           <p
-                            className={`mt-1 line-clamp-1 text-xs leading-relaxed ${conversation.unreadCount > 0
+                            className={`mt-1 line-clamp-1 text-xs leading-relaxed ${
+                              conversation.unreadCount > 0
                                 ? "font-semibold text-gray-900 dark:text-gray-100"
                                 : "text-gray-500 dark:text-gray-400"
-                              }`}
+                            }`}
                           >
                             {conversation.lastMessage || "No messages yet"}
                           </p>
@@ -1127,8 +1135,8 @@ export default function DesktopMessagePage({
                             selectedConversation.counterpartAvatar ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
                               selectedConversation.title ||
-                              selectedConversation.counterpartName ||
-                              "Business"
+                                selectedConversation.counterpartName ||
+                                "Business"
                             )}&background=10b981&color=fff`
                           }
                           alt={selectedConversation.title || "Business"}
@@ -1177,9 +1185,11 @@ export default function DesktopMessagePage({
                           {selectedOrder?.assignedTo?.shopper?.full_name ||
                             selectedOrder?.assignedTo?.name ||
                             "Shopper"}
-                          {selectedOrder?.assignedTo?.shopper?.Employment_id && (
+                          {selectedOrder?.assignedTo?.shopper
+                            ?.Employment_id && (
                             <span className="ml-2 text-xs font-semibold text-gray-400 dark:text-gray-500">
-                              #00{selectedOrder.assignedTo.shopper.Employment_id}
+                              #00
+                              {selectedOrder.assignedTo.shopper.Employment_id}
                             </span>
                           )}
                         </>
@@ -1192,7 +1202,8 @@ export default function DesktopMessagePage({
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Phone Display for Car Bookings */}
-                  {(selectedOrder?.orderType === "vehicle" || isBusinessChat) && (
+                  {(selectedOrder?.orderType === "vehicle" ||
+                    isBusinessChat) && (
                     <div className="mr-2 flex flex-col items-end">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
                         Contact
@@ -1243,18 +1254,24 @@ export default function DesktopMessagePage({
                         strokeWidth="2"
                       >
                         <polygon points="23 7 16 12 23 17 23 7" />
-                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                        <rect
+                          x="1"
+                          y="5"
+                          width="15"
+                          height="14"
+                          rx="2"
+                          ry="2"
+                        />
                       </svg>
                     </button>
                   )}
-
                 </div>
               </div>
 
               {/* Messages Area */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto bg-[var(--bg-primary)] px-8 pb-32 pt-6 scrollbar-hide"
+                className="scrollbar-hide flex-1 overflow-y-auto bg-[var(--bg-primary)] px-8 pb-32 pt-6"
               >
                 {messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center">
@@ -1300,10 +1317,11 @@ export default function DesktopMessagePage({
                             return (
                               <React.Fragment key={message.id}>
                                 <div
-                                  className={`flex items-end gap-3 ${isCurrentUser
+                                  className={`flex items-end gap-3 ${
+                                    isCurrentUser
                                       ? "flex-row-reverse"
                                       : "flex-row"
-                                    }`}
+                                  }`}
                                 >
                                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
                                     {isCurrentUser ? (
@@ -1315,11 +1333,13 @@ export default function DesktopMessagePage({
                                         />
                                       ) : (
                                         <span className="text-[10px] font-bold uppercase text-white">
-                                          {(session?.user?.name || "Y").charAt(0)}
+                                          {(session?.user?.name || "Y").charAt(
+                                            0
+                                          )}
                                         </span>
                                       )
                                     ) : selectedOrder?.assignedTo?.shopper
-                                      ?.profile_photo ||
+                                        ?.profile_photo ||
                                       selectedOrder?.assignedTo
                                         ?.profile_picture ? (
                                       <img
@@ -1338,8 +1358,8 @@ export default function DesktopMessagePage({
                                           selectedConversation.counterpartAvatar ||
                                           `https://ui-avatars.com/api/?name=${encodeURIComponent(
                                             selectedConversation.title ||
-                                            selectedConversation.counterpartName ||
-                                            "Business"
+                                              selectedConversation.counterpartName ||
+                                              "Business"
                                           )}&background=10b981&color=fff`
                                         }
                                         alt="Business"
@@ -1362,8 +1382,11 @@ export default function DesktopMessagePage({
                                     )}
                                   </div>
                                   <div
-                                    className={`flex max-w-[70%] flex-col ${isCurrentUser ? "items-end" : "items-start"
-                                      }`}
+                                    className={`flex max-w-[70%] flex-col ${
+                                      isCurrentUser
+                                        ? "items-end"
+                                        : "items-start"
+                                    }`}
                                   >
                                     {(message as any).image && (
                                       <div className="mb-2 max-w-sm overflow-hidden rounded-xl border border-gray-100 shadow-sm dark:border-white/5">
@@ -1371,15 +1394,21 @@ export default function DesktopMessagePage({
                                           src={(message as any).image}
                                           alt="Attachment"
                                           className="h-auto w-full cursor-pointer transition-transform hover:scale-105"
-                                          onClick={() => window.open((message as any).image, "_blank")}
+                                          onClick={() =>
+                                            window.open(
+                                              (message as any).image,
+                                              "_blank"
+                                            )
+                                          }
                                         />
                                       </div>
                                     )}
                                     <div
-                                      className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${isCurrentUser
+                                      className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
+                                        isCurrentUser
                                           ? "rounded-br-none border-2 border-green-500/20 bg-green-500/5 font-medium text-green-700 dark:text-green-400"
                                           : "rounded-bl-none border-2 border-gray-200/50 bg-[var(--bg-secondary)] text-[var(--text-primary)] backdrop-blur-sm dark:border-white/5"
-                                        }`}
+                                      }`}
                                     >
                                       {message.product ? (
                                         <div className="mb-3 flex overflow-hidden rounded-xl bg-black/5 p-2 dark:bg-white/5">
@@ -1407,10 +1436,11 @@ export default function DesktopMessagePage({
                                       </p>
                                     </div>
                                     <div
-                                      className={`mt-1.5 flex items-center gap-1.5 px-1 ${isCurrentUser
+                                      className={`mt-1.5 flex items-center gap-1.5 px-1 ${
+                                        isCurrentUser
                                           ? "flex-row-reverse"
                                           : "flex-row"
-                                        }`}
+                                      }`}
                                     >
                                       <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                                         {formatTime(message.timestamp)}
@@ -1565,8 +1595,8 @@ export default function DesktopMessagePage({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
-                            {selectedOrder.Order_Items?.[0]?.product?.ProductName
-                              ?.name ||
+                            {selectedOrder.Order_Items?.[0]?.product
+                              ?.ProductName?.name ||
                               selectedOrder.shop?.name ||
                               "Store"}
                           </h3>
@@ -1584,16 +1614,17 @@ export default function DesktopMessagePage({
                           Status
                         </span>
                         <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${selectedOrder.status === "completed" ||
-                              selectedOrder.status === "PAID"
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                            selectedOrder.status === "completed" ||
+                            selectedOrder.status === "PAID"
                               ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400"
                               : selectedOrder.status === "in_progress" ||
                                 selectedOrder.status === "ACCEPTED"
-                                ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-                                : selectedOrder.status === "pending"
-                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
-                                  : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
-                            }`}
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                              : selectedOrder.status === "pending"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
+                          }`}
                         >
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>
                           {selectedOrder.status || "Pending"}
@@ -1636,7 +1667,7 @@ export default function DesktopMessagePage({
                     <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                       <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
                         {selectedOrder.assignedTo?.shopper?.Employment_id ===
-                          "VEHICLE"
+                        "VEHICLE"
                           ? "Owner Details"
                           : "Shopper Details"}
                       </h4>
@@ -1644,7 +1675,7 @@ export default function DesktopMessagePage({
                         <div className="flex items-center gap-4">
                           <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
                             {selectedOrder.assignedTo?.shopper?.profile_photo ||
-                              selectedOrder.assignedTo?.profile_picture ? (
+                            selectedOrder.assignedTo?.profile_picture ? (
                               <img
                                 src={
                                   selectedOrder.assignedTo?.shopper
@@ -1672,9 +1703,10 @@ export default function DesktopMessagePage({
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              {selectedOrder.assignedTo?.shopper?.Employment_id &&
-                                selectedOrder.assignedTo.shopper.Employment_id !==
-                                "VEHICLE" && (
+                              {selectedOrder.assignedTo?.shopper
+                                ?.Employment_id &&
+                                selectedOrder.assignedTo.shopper
+                                  .Employment_id !== "VEHICLE" && (
                                   <span className="rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-500/20 dark:text-green-400">
                                     #00
                                     {
@@ -1699,63 +1731,64 @@ export default function DesktopMessagePage({
                     </div>
 
                     {/* Customer Details Card */}
-                    {selectedOrder.orderedBy && selectedOrder.orderType !== "vehicle" && (
-                      <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
-                        <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
-                          Customer Details
-                        </h4>
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md ring-2 ring-white dark:ring-gray-700">
-                            {selectedOrder.orderedBy.profile_picture ? (
-                              <img
-                                src={selectedOrder.orderedBy.profile_picture}
-                                alt="Customer"
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-indigo-100 text-lg font-black text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
-                                {selectedOrder.orderedBy.name
-                                  ?.charAt(0)
-                                  .toUpperCase() || "C"}
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h5 className="truncate text-sm font-bold text-gray-900 dark:text-white">
-                              {selectedOrder.orderedBy.name || "Customer"}
-                            </h5>
-                            {selectedOrder.orderedBy.phone && (
-                              <a
-                                href={`tel:${selectedOrder.orderedBy.phone}`}
-                                className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                              >
-                                <svg
-                                  className="h-3.5 w-3.5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                    {selectedOrder.orderedBy &&
+                      selectedOrder.orderType !== "vehicle" && (
+                        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                          <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
+                            Customer Details
+                          </h4>
+                          <div className="flex items-center gap-4">
+                            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md ring-2 ring-white dark:ring-gray-700">
+                              {selectedOrder.orderedBy.profile_picture ? (
+                                <img
+                                  src={selectedOrder.orderedBy.profile_picture}
+                                  alt="Customer"
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-indigo-100 text-lg font-black text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                                  {selectedOrder.orderedBy.name
+                                    ?.charAt(0)
+                                    .toUpperCase() || "C"}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate text-sm font-bold text-gray-900 dark:text-white">
+                                {selectedOrder.orderedBy.name || "Customer"}
+                              </h5>
+                              {selectedOrder.orderedBy.phone && (
+                                <a
+                                  href={`tel:${selectedOrder.orderedBy.phone}`}
+                                  className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2.5}
-                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                  />
-                                </svg>
-                                {selectedOrder.orderedBy.phone}
-                              </a>
-                            )}
+                                  <svg
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2.5}
+                                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                    />
+                                  </svg>
+                                  {selectedOrder.orderedBy.phone}
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Confirmation Action Button */}
                     {selectedOrder.orderType === "vehicle" &&
                       selectedOrder.status === "PENDING" &&
                       (selectedOrder.assignedTo?.id === session?.user?.id ||
                         selectedOrder.assignedTo?.shopper?.id ===
-                        session?.user?.id) && (
+                          session?.user?.id) && (
                         <div className="pt-2">
                           <button
                             disabled={isConfirming}
@@ -1791,18 +1824,24 @@ export default function DesktopMessagePage({
                                   setIsConfirming(false);
                                 }
                               } catch (error) {
-                                console.error("Error confirming booking:", error);
+                                console.error(
+                                  "Error confirming booking:",
+                                  error
+                                );
                                 alert("An error occurred. Please try again.");
                                 setIsConfirming(false);
                               }
                             }}
-                            className={`group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition-all active:scale-[0.98] ${isConfirming
+                            className={`group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition-all active:scale-[0.98] ${
+                              isConfirming
                                 ? "cursor-not-allowed opacity-70"
                                 : "hover:scale-[1.02] hover:shadow-green-500/25"
-                              }`}
+                            }`}
                           >
                             <span className="relative z-10">
-                              {isConfirming ? "Confirming..." : "Confirm Booking"}
+                              {isConfirming
+                                ? "Confirming..."
+                                : "Confirm Booking"}
                             </span>
                             {!isConfirming && (
                               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
@@ -1855,12 +1894,13 @@ export default function DesktopMessagePage({
                             Urgency
                           </p>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${selectedRfq.urgency === "high"
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                              selectedRfq.urgency === "high"
                                 ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
                                 : selectedRfq.urgency === "medium"
-                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
-                                  : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
-                              }`}
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                                : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
+                            }`}
                           >
                             {selectedRfq.urgency || "normal"}
                           </span>

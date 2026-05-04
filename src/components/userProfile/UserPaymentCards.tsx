@@ -7,7 +7,14 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 import Barcode from "react-barcode";
 import BarcodeScanner from "../shopper/BarcodeScanner";
-import { Camera, Gift, Scissors, ShoppingCart, ArrowUpRight, Wallet } from "lucide-react";
+import {
+  Camera,
+  Gift,
+  Scissors,
+  ShoppingCart,
+  ArrowUpRight,
+  Wallet,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useBusinessWallet } from "../../context/BusinessWalletContext";
 import { RequestWithdrawModal } from "../business/RequestWithdrawModal";
@@ -562,7 +569,7 @@ export default function UserPaymentCards({
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-12 rounded bg-gradient-to-br from-green-400 to-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
-                  <span className="text-xs font-black tracking-[0.2em] text-emerald-400 uppercase">
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-400">
                     Premium
                   </span>
                 </div>
@@ -582,12 +589,12 @@ export default function UserPaymentCards({
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                     Available Balance
                   </p>
                   <p className="font-mono text-3xl font-black tracking-tight text-white drop-shadow-md">
                     {isLoadingBusinessWallet ? (
-                      <span className="text-gray-400 text-xl">Loading...</span>
+                      <span className="text-xl text-gray-400">Loading...</span>
                     ) : (
                       formatCurrencySync(businessWalletBalance)
                     )}
@@ -601,30 +608,14 @@ export default function UserPaymentCards({
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
-                <span className="mx-2 text-emerald-500/50">
-                  •
-                </span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
                 <span className="ml-auto font-mono text-xs font-bold tracking-widest text-emerald-400">
                   BUSINESS
                 </span>
@@ -642,7 +633,9 @@ export default function UserPaymentCards({
                 </div>
                 <button
                   onClick={handleRequestWithdraw}
-                  disabled={businessWalletBalance <= 0 || isLoadingBusinessWallet}
+                  disabled={
+                    businessWalletBalance <= 0 || isLoadingBusinessWallet
+                  }
                   className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:from-emerald-400 hover:to-green-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                 >
                   <ArrowUpRight className="h-4 w-4" />

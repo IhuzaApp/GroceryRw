@@ -9,11 +9,7 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": [
-    "shopping",
-    "food",
-    "lifestyle"
-  ],
+  "categories": ["shopping", "food", "lifestyle"],
   "icons": [
     {
       "src": "/icon-72x72.png",

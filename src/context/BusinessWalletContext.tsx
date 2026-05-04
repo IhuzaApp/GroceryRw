@@ -73,7 +73,13 @@ export function BusinessWalletProvider({
 
   return (
     <BusinessWalletContext.Provider
-      value={{ walletBalance, businessWalletId, businessId, isLoading, fetchWalletBalance }}
+      value={{
+        walletBalance,
+        businessWalletId,
+        businessId,
+        isLoading,
+        fetchWalletBalance,
+      }}
     >
       {children}
     </BusinessWalletContext.Provider>

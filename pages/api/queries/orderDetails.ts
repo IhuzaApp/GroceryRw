@@ -346,7 +346,9 @@ export default async function handler(
     return res.status(400).json({ error: "Invalid order ID format" });
   }
 
-  console.log(`[OrderDetails] Fetching details for ID: ${orderId}, Type: ${type || 'all'}`);
+  console.log(
+    `[OrderDetails] Fetching details for ID: ${orderId}, Type: ${type || "all"}`
+  );
 
   try {
     if (!hasuraClient) {
@@ -365,7 +367,10 @@ export default async function handler(
             RecentReviews: Ratings(
               where: {
                 shopper_id: { _eq: $shopperId }
-                _and: [{ review: { _is_null: false } }, { review: { _neq: "" } }]
+                _and: [
+                  { review: { _is_null: false } }
+                  { review: { _neq: "" } }
+                ]
               }
               order_by: { reviewed_at: desc_nulls_last }
               limit: 5
@@ -421,9 +426,9 @@ export default async function handler(
         const averageRating =
           statsData.Ratings.length > 0
             ? statsData.Ratings.reduce(
-              (sum: number, r: any) => sum + parseFloat(r.rating || "0"),
-              0
-            ) / statsData.Ratings.length
+                (sum: number, r: any) => sum + parseFloat(r.rating || "0"),
+                0
+              ) / statsData.Ratings.length
             : 0;
 
         const totalDeliveredOrders =
@@ -451,13 +456,13 @@ export default async function handler(
         }),
         assignedTo: order.Shoppers
           ? {
-            ...order.Shoppers,
-            rating: shopperStats?.rating || 0,
-            orders_aggregate: shopperStats?.orders_aggregate || {
-              aggregate: { count: 0 },
-            },
-            recentReviews: shopperStats?.recentReviews || [],
-          }
+              ...order.Shoppers,
+              rating: shopperStats?.rating || 0,
+              orders_aggregate: shopperStats?.orders_aggregate || {
+                aggregate: { count: 0 },
+              },
+              recentReviews: shopperStats?.recentReviews || [],
+            }
           : null,
       };
 
@@ -493,15 +498,15 @@ export default async function handler(
         },
         assignedTo: ownerUser
           ? {
-            id: ownerUser.id,
-            name: vendor?.fullname || vendor?.businessName || "Owner",
-            profile_picture: ownerUser.profile_picture || null,
-            shopper: {
-              full_name: vendor?.fullname || vendor?.businessName || "Owner",
-              profile_photo: ownerUser.profile_picture || null,
-              Employment_id: "VEHICLE",
-            },
-          }
+              id: ownerUser.id,
+              name: vendor?.fullname || vendor?.businessName || "Owner",
+              profile_picture: ownerUser.profile_picture || null,
+              shopper: {
+                full_name: vendor?.fullname || vendor?.businessName || "Owner",
+                profile_photo: ownerUser.profile_picture || null,
+                Employment_id: "VEHICLE",
+              },
+            }
           : null,
         orderedBy: customerUser || null,
         Order_Items: [
@@ -554,11 +559,11 @@ export default async function handler(
           orderedBy: restOrder.orderedBy || null,
           shop: restOrder.Restaurant
             ? {
-              id: restOrder.Restaurant.id,
-              name: restOrder.Restaurant.name,
-              address: restOrder.Restaurant.location,
-              logo: restOrder.Restaurant.logo,
-            }
+                id: restOrder.Restaurant.id,
+                name: restOrder.Restaurant.name,
+                address: restOrder.Restaurant.location,
+                logo: restOrder.Restaurant.logo,
+              }
             : null,
         },
       });
@@ -626,11 +631,11 @@ export default async function handler(
           },
           assignedTo: pkg.shopper
             ? {
-              id: pkg.shopper_id,
-              name: pkg.shopper.full_name,
-              profile_picture: pkg.shopper.profile_photo,
-              shopper: pkg.shopper,
-            }
+                id: pkg.shopper_id,
+                name: pkg.shopper.full_name,
+                profile_picture: pkg.shopper.profile_photo,
+                shopper: pkg.shopper,
+              }
             : null,
           Order_Items: [
             {
@@ -651,39 +656,65 @@ export default async function handler(
       const typeStr = Array.isArray(type) ? type[0] : type;
       switch (typeStr) {
         case "order": {
-          const data = await hasuraClient.request<any>(GET_ORDER_DETAILS, { id: orderId });
-          if (data.Orders?.length > 0) return handleRegularOrder(data.Orders[0]);
+          const data = await hasuraClient.request<any>(GET_ORDER_DETAILS, {
+            id: orderId,
+          });
+          if (data.Orders?.length > 0)
+            return handleRegularOrder(data.Orders[0]);
           break;
         }
         case "vehicle":
         case "car": {
-          const data = await hasuraClient.request<any>(GET_VEHICLE_BOOKING_DETAILS, { id: orderId });
-          if (data.vehicleBookings_by_pk) return handleVehicleBooking(data.vehicleBookings_by_pk);
+          const data = await hasuraClient.request<any>(
+            GET_VEHICLE_BOOKING_DETAILS,
+            { id: orderId }
+          );
+          if (data.vehicleBookings_by_pk)
+            return handleVehicleBooking(data.vehicleBookings_by_pk);
           break;
         }
         case "reel": {
-          const data = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, { id: orderId });
-          if (data.reel_orders_by_pk) return handleReelOrder(data.reel_orders_by_pk);
+          const data = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, {
+            id: orderId,
+          });
+          if (data.reel_orders_by_pk)
+            return handleReelOrder(data.reel_orders_by_pk);
           break;
         }
         case "restaurant": {
-          const data = await hasuraClient.request<any>(GET_RESTAURANT_ORDER_DETAILS, { id: orderId });
-          if (data.restaurant_orders_by_pk) return handleRestaurantOrder(data.restaurant_orders_by_pk);
+          const data = await hasuraClient.request<any>(
+            GET_RESTAURANT_ORDER_DETAILS,
+            { id: orderId }
+          );
+          if (data.restaurant_orders_by_pk)
+            return handleRestaurantOrder(data.restaurant_orders_by_pk);
           break;
         }
         case "business": {
-          const data = await hasuraClient.request<any>(GET_BUSINESS_ORDER_DETAILS, { id: orderId });
-          if (data.businessProductOrders_by_pk) return handleBusinessOrder(data.businessProductOrders_by_pk);
+          const data = await hasuraClient.request<any>(
+            GET_BUSINESS_ORDER_DETAILS,
+            { id: orderId }
+          );
+          if (data.businessProductOrders_by_pk)
+            return handleBusinessOrder(data.businessProductOrders_by_pk);
           break;
         }
         case "pet": {
-          const data = await hasuraClient.request<any>(GET_PET_ADOPTION_DETAILS, { id: orderId });
-          if (data.petAdoption_by_pk) return handlePetAdoption(data.petAdoption_by_pk);
+          const data = await hasuraClient.request<any>(
+            GET_PET_ADOPTION_DETAILS,
+            { id: orderId }
+          );
+          if (data.petAdoption_by_pk)
+            return handlePetAdoption(data.petAdoption_by_pk);
           break;
         }
         case "package": {
-          const data = await hasuraClient.request<any>(GET_PACKAGE_DELIVERY_DETAILS, { id: orderId });
-          if (data.package_delivery_by_pk) return handlePackageDelivery(data.package_delivery_by_pk);
+          const data = await hasuraClient.request<any>(
+            GET_PACKAGE_DELIVERY_DETAILS,
+            { id: orderId }
+          );
+          if (data.package_delivery_by_pk)
+            return handlePackageDelivery(data.package_delivery_by_pk);
           break;
         }
       }
@@ -696,28 +727,51 @@ export default async function handler(
       return handleRegularOrder(data.Orders[0]);
     }
 
-    const vehicleData = await hasuraClient.request<any>(GET_VEHICLE_BOOKING_DETAILS, { id: orderId });
-    if (vehicleData.vehicleBookings_by_pk) return handleVehicleBooking(vehicleData.vehicleBookings_by_pk);
+    const vehicleData = await hasuraClient.request<any>(
+      GET_VEHICLE_BOOKING_DETAILS,
+      { id: orderId }
+    );
+    if (vehicleData.vehicleBookings_by_pk)
+      return handleVehicleBooking(vehicleData.vehicleBookings_by_pk);
 
-    const reelData = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, { id: orderId });
-    if (reelData.reel_orders_by_pk) return handleReelOrder(reelData.reel_orders_by_pk);
+    const reelData = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, {
+      id: orderId,
+    });
+    if (reelData.reel_orders_by_pk)
+      return handleReelOrder(reelData.reel_orders_by_pk);
 
-    const restData = await hasuraClient.request<any>(GET_RESTAURANT_ORDER_DETAILS, { id: orderId });
-    if (restData.restaurant_orders_by_pk) return handleRestaurantOrder(restData.restaurant_orders_by_pk);
+    const restData = await hasuraClient.request<any>(
+      GET_RESTAURANT_ORDER_DETAILS,
+      { id: orderId }
+    );
+    if (restData.restaurant_orders_by_pk)
+      return handleRestaurantOrder(restData.restaurant_orders_by_pk);
 
-    const bizData = await hasuraClient.request<any>(GET_BUSINESS_ORDER_DETAILS, { id: orderId });
-    if (bizData.businessProductOrders_by_pk) return handleBusinessOrder(bizData.businessProductOrders_by_pk);
+    const bizData = await hasuraClient.request<any>(
+      GET_BUSINESS_ORDER_DETAILS,
+      { id: orderId }
+    );
+    if (bizData.businessProductOrders_by_pk)
+      return handleBusinessOrder(bizData.businessProductOrders_by_pk);
 
-    const petData = await hasuraClient.request<any>(GET_PET_ADOPTION_DETAILS, { id: orderId });
-    if (petData.petAdoption_by_pk) return handlePetAdoption(petData.petAdoption_by_pk);
+    const petData = await hasuraClient.request<any>(GET_PET_ADOPTION_DETAILS, {
+      id: orderId,
+    });
+    if (petData.petAdoption_by_pk)
+      return handlePetAdoption(petData.petAdoption_by_pk);
 
-    const pkgData = await hasuraClient.request<any>(GET_PACKAGE_DELIVERY_DETAILS, { id: orderId });
-    if (pkgData.package_delivery_by_pk) return handlePackageDelivery(pkgData.package_delivery_by_pk);
+    const pkgData = await hasuraClient.request<any>(
+      GET_PACKAGE_DELIVERY_DETAILS,
+      { id: orderId }
+    );
+    if (pkgData.package_delivery_by_pk)
+      return handlePackageDelivery(pkgData.package_delivery_by_pk);
 
     return res.status(404).json({ error: "Order or Booking not found" });
-
   } catch (error: any) {
     console.error("Order Details Error:", error);
-    return res.status(500).json({ error: error.message || "Internal server error" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
   }
 }

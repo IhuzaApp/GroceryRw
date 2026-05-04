@@ -49,10 +49,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)] ${isMessagesList || isMessagesChat
+      className={`min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)] ${
+        isMessagesList || isMessagesChat
           ? "flex h-screen flex-col overflow-hidden"
           : ""
-        }`}
+      }`}
     >
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
@@ -77,26 +78,27 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       )}
       {/* Main content */}
       <main
-        className={`text-gray-900 transition-colors duration-200 dark:text-white ${isReelsPage ||
-            isPlasBusinessPage ||
-            isCarsPage ||
-            isPetsPage ||
-            isStoresPage ||
-            isBecomeShopperPage ||
-            isMessagesList ||
-            isMessagesChat
+        className={`text-gray-900 transition-colors duration-200 dark:text-white ${
+          isReelsPage ||
+          isPlasBusinessPage ||
+          isCarsPage ||
+          isPetsPage ||
+          isStoresPage ||
+          isBecomeShopperPage ||
+          isMessagesList ||
+          isMessagesChat
             ? ""
             : isOrderDetailsPage || isPackageDetailsPage
-              ? "pb-20 md:pb-0 md:pt-16"
-              : "px-4 pb-20 pt-6 md:pb-0"
-          }`}
+            ? "pb-20 md:pb-0 md:pt-16"
+            : "px-4 pb-20 pt-6 md:pb-0"
+        }`}
         style={
           isReelsPage || isMessagesList || isMessagesChat
             ? {
-              margin: 0,
-              padding: 0,
-              overflow: "hidden",
-            }
+                margin: 0,
+                padding: 0,
+                overflow: "hidden",
+              }
             : {}
         }
       >
@@ -105,19 +107,20 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           <SideBar />
         )}
         <div
-          className={`mx-auto flex h-full w-full flex-col [&_*]:text-inherit ${isMessagesList || isMessagesChat ? "flex-1 overflow-hidden" : ""
-            } ${isMessagesList ? "pb-[60px] md:pb-0" : ""}`}
+          className={`mx-auto flex h-full w-full flex-col [&_*]:text-inherit ${
+            isMessagesList || isMessagesChat ? "flex-1 overflow-hidden" : ""
+          } ${isMessagesList ? "pb-[60px] md:pb-0" : ""}`}
           style={
             isReelsPage ||
-              isPlasBusinessPage ||
-              isCarsPage ||
-              isPetsPage ||
-              isStoresPage ||
-              isMessagesList ||
-              isMessagesChat ||
-              isOrderDetailsPage ||
-              isPackageDetailsPage ||
-              isBecomeShopperPage
+            isPlasBusinessPage ||
+            isCarsPage ||
+            isPetsPage ||
+            isStoresPage ||
+            isMessagesList ||
+            isMessagesChat ||
+            isOrderDetailsPage ||
+            isPackageDetailsPage ||
+            isBecomeShopperPage
               ? { height: "100%", width: "100%" }
               : {}
           }

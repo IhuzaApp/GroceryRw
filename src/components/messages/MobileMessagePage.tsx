@@ -65,27 +65,27 @@ function getConvType(
   orders: Record<string, any>
 ): ConvTypeInfo {
   if (conversation.collectionPath === "business_conversations") {
-      return {
-        key: "business",
-        label: "Business",
-        icon: (
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-        ),
-        bg: "bg-purple-100 dark:bg-purple-900/40",
-        text: "text-purple-700 dark:text-purple-300",
-      };
+    return {
+      key: "business",
+      label: "Business",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+      bg: "bg-purple-100 dark:bg-purple-900/40",
+      text: "text-purple-700 dark:text-purple-300",
+    };
   }
   const order = conversation.orderId ? orders[conversation.orderId] : null;
   switch (order?.orderType) {
@@ -611,7 +611,7 @@ export default function MobileMessagePage({
         </div>
 
         {/* Type Filter Tabs */}
-        <div className="mt-3 -mx-4 overflow-x-auto scrollbar-hide">
+        <div className="scrollbar-hide -mx-4 mt-3 overflow-x-auto">
           <div className="flex gap-2 px-4 pb-1">
             {FILTER_TABS.filter((tab) => {
               // Only show tabs that have conversations (or "all")
@@ -637,7 +637,7 @@ export default function MobileMessagePage({
                       className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                         isActive
                           ? "bg-white/30 text-white"
-                          : "bg-black/10 dark:bg-white/10 text-[var(--text-secondary)]"
+                          : "bg-black/10 text-[var(--text-secondary)] dark:bg-white/10"
                       }`}
                     >
                       {count}
@@ -682,7 +682,9 @@ export default function MobileMessagePage({
               <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
                 {activeFilter === "all"
                   ? "No conversations yet"
-                  : `No ${FILTER_TABS.find((t) => t.key === activeFilter)?.label} chats`}
+                  : `No ${
+                      FILTER_TABS.find((t) => t.key === activeFilter)?.label
+                    } chats`}
               </h3>
               <p className="text-sm text-[var(--text-secondary)]">
                 {activeFilter === "all"

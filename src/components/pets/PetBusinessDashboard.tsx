@@ -227,7 +227,6 @@ export default function PetBusinessDashboard() {
         <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Wallet Card */}
 
-
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <StatsCard
@@ -416,8 +415,6 @@ function StatsCard({ label, value, icon, color, theme }: any) {
     </div>
   );
 }
-
-
 
 function PetManagementItem({
   pet,

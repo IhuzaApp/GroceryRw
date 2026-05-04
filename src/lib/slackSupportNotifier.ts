@@ -1184,7 +1184,10 @@ export async function sendLargeWithdrawalRequestToSlack(
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Business Wallet ID*\n\`${payload.businessWalletId}\`` },
+        {
+          type: "mrkdwn",
+          text: `*Business Wallet ID*\n\`${payload.businessWalletId}\``,
+        },
         { type: "mrkdwn", text: `*Requested By*\n${userDisplay}` },
       ],
     },

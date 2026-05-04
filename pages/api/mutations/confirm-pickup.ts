@@ -103,11 +103,9 @@ export default async function handler(
 
   // Mandatory video check for payout
   if (!carVideo_Status) {
-    return res
-      .status(400)
-      .json({
-        error: "Vehicle condition video is required for pickup confirmation.",
-      });
+    return res.status(400).json({
+      error: "Vehicle condition video is required for pickup confirmation.",
+    });
   }
 
   try {

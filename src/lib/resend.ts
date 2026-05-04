@@ -165,7 +165,9 @@ export async function sendWithdrawalInvoice({
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb;">
               <span style="color: #6b7280; font-size: 14px;">Total Deducted</span>
-              <span style="color: #ef4444; font-size: 14px; font-weight: 700;">RWF ${parseFloat(amount) + parseFloat(fee)}</span>
+              <span style="color: #ef4444; font-size: 14px; font-weight: 700;">RWF ${
+                parseFloat(amount) + parseFloat(fee)
+              }</span>
             </div>
           </div>
         </div>

@@ -53,7 +53,10 @@ export function RequestWithdrawModal({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Body scroll lock
   useEffect(() => {
@@ -83,8 +86,8 @@ export function RequestWithdrawModal({
           typeof raw === "number"
             ? raw
             : typeof raw === "string"
-              ? parseFloat(raw) || 0
-              : 0;
+            ? parseFloat(raw) || 0
+            : 0;
         setWithDrawChargesPct(pct);
         setConfigLoaded(true);
       })
@@ -222,7 +225,10 @@ export function RequestWithdrawModal({
       setOtpSent(true);
       setNotification({ type: "success", text: "OTP sent successfully" });
     } catch (e: any) {
-      setNotification({ type: "error", text: e?.message || "Failed to send OTP" });
+      setNotification({
+        type: "error",
+        text: e?.message || "Failed to send OTP",
+      });
     } finally {
       setSendingOtp(false);
     }
@@ -239,8 +245,15 @@ export function RequestWithdrawModal({
         const { uploadToFirebase } = await import("../../lib/firebase");
         const res = await fetch(verificationImage);
         const blob = await res.blob();
-        const file = new File([blob], `withdraw-verification-${Date.now()}.jpg`, { type: "image/jpeg" });
-        finalImageUrl = await uploadToFirebase(file, `withdrawals/${file.name}`);
+        const file = new File(
+          [blob],
+          `withdraw-verification-${Date.now()}.jpg`,
+          { type: "image/jpeg" }
+        );
+        finalImageUrl = await uploadToFirebase(
+          file,
+          `withdrawals/${file.name}`
+        );
       }
 
       await onSubmit({
@@ -249,10 +262,16 @@ export function RequestWithdrawModal({
         otp,
         password,
       });
-      setNotification({ type: "success", text: "Withdrawal request submitted successfully" });
+      setNotification({
+        type: "success",
+        text: "Withdrawal request submitted successfully",
+      });
       setTimeout(() => resetAndClose(), 2000);
     } catch (e: any) {
-      setNotification({ type: "error", text: e?.message || "Failed to submit withdrawal request" });
+      setNotification({
+        type: "error",
+        text: e?.message || "Failed to submit withdrawal request",
+      });
       setOtp("");
       setPassword("");
     } finally {
@@ -316,7 +335,7 @@ export function RequestWithdrawModal({
         {/* Notification Alert */}
         {notification && (
           <div
-            className={`px-4 py-3 text-sm font-semibold text-center ${
+            className={`px-4 py-3 text-center text-sm font-semibold ${
               notification.type === "success"
                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -331,18 +350,20 @@ export function RequestWithdrawModal({
           {STEPS.map((s, i) => (
             <div
               key={s.id}
-              className={`flex flex-1 items-center justify-center gap-1 text-xs font-bold tracking-wide ${step >= s.id
-                ? "text-green-600 dark:text-green-400"
-                : "text-gray-400 dark:text-gray-500"
-                }`}
+              className={`flex flex-1 items-center justify-center gap-1 text-xs font-bold tracking-wide ${
+                step >= s.id
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-gray-400 dark:text-gray-500"
+              }`}
             >
               <span
-                className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300 ${step > s.id
-                  ? "bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.4)]"
-                  : step === s.id
+                className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300 ${
+                  step > s.id
+                    ? "bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+                    : step === s.id
                     ? "border-2 border-green-500 bg-green-50 text-green-700 shadow-inner dark:bg-green-900/20 dark:text-green-300"
                     : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-                  }`}
+                }`}
               >
                 {step > s.id ? <CheckCircle className="h-4 w-4" /> : s.id}
               </span>
@@ -368,8 +389,18 @@ export function RequestWithdrawModal({
                   {/* Service fee badge */}
                   {configLoaded && withDrawChargesPct > 0 && (
                     <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v3m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       {withDrawChargesPct}% service fee
                     </span>
@@ -412,7 +443,7 @@ export function RequestWithdrawModal({
                       type="button"
                       onClick={() => setPercentage(pct)}
                       disabled={isProcessing || walletBalance <= 0}
-                      className="rounded-xl border-2 border-green-500 bg-transparent py-3 text-sm font-bold text-black dark:text-white shadow-sm transition-all hover:bg-green-500/10 hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
+                      className="rounded-xl border-2 border-green-500 bg-transparent py-3 text-sm font-bold text-black shadow-sm transition-all hover:bg-green-500/10 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 dark:text-white"
                     >
                       {pct === 1 ? "Max" : `${pct * 100}%`}
                     </button>
@@ -590,7 +621,7 @@ export function RequestWithdrawModal({
                     />
                   </div>
 
-                  <div className="flex justify-end mt-2">
+                  <div className="mt-2 flex justify-end">
                     <button
                       type="button"
                       onClick={handleSendOtp}
@@ -602,7 +633,7 @@ export function RequestWithdrawModal({
                   </div>
 
                   {/* Password Input */}
-                  <div className="w-full mt-4">
+                  <div className="mt-4 w-full">
                     <label className="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-300">
                       Confirm with Password *
                     </label>
@@ -622,7 +653,7 @@ export function RequestWithdrawModal({
         </div>
 
         {/* Footer */}
-        <div className="flex w-full gap-4 border-t border-gray-100 bg-gray-50/50 p-5 pb-8 sm:p-6 dark:border-gray-700 dark:bg-gray-800/50">
+        <div className="flex w-full gap-4 border-t border-gray-100 bg-gray-50/50 p-5 pb-8 dark:border-gray-700 dark:bg-gray-800/50 sm:p-6">
           <button
             type="button"
             onClick={step === 1 ? resetAndClose : () => setStep((s) => s - 1)}
@@ -667,7 +698,7 @@ export function RequestWithdrawModal({
               type="button"
               onClick={handleConfirm}
               disabled={!canProceedStep4 || password.trim().length === 0}
-              className="flex-1 flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
+              className="flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
             >
               {isProcessing ? (
                 <span className="flex items-center gap-2">

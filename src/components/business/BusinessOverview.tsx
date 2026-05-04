@@ -1080,7 +1080,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Wallet Balance Card - VIP Credit Card Design */}
 
-
         {/* Monthly Revenue Chart */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="mb-4 flex items-center justify-between">

@@ -507,7 +507,8 @@ export default function MobileChatPage({
               image: url,
               senderId: session.user.id,
               senderName: session.user.name || "User",
-              senderType: counterpart.role === "business" ? "business" : "customer",
+              senderType:
+                counterpart.role === "business" ? "business" : "customer",
               recipientId: counterpart.id,
               timestamp: serverTimestamp(),
               read: false,
@@ -560,7 +561,6 @@ export default function MobileChatPage({
 
       {/* Input Box */}
       <div className="z-10 flex flex-shrink-0 items-end gap-2 bg-[var(--bg-secondary)] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-colors">
-
         <div className="flex flex-1 items-end rounded-[24px] bg-[var(--bg-primary)]">
           <textarea
             value={newMessage}

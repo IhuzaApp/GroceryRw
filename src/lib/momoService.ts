@@ -72,7 +72,7 @@ class MomoService {
     if (
       cachedToken &&
       cachedToken.generated_at + cachedToken.expires_in >
-      now + this.TOKEN_EXPIRY_BUFFER
+        now + this.TOKEN_EXPIRY_BUFFER
     ) {
       return cachedToken.access_token;
     }
@@ -243,7 +243,12 @@ class MomoService {
     referenceId?: string;
   }): Promise<{ referenceId: string }> {
     const referenceId = params.referenceId || randomUUID();
-    const { subscriptionKey, disbursementSubscriptionKey, baseUrl, environment } = this.getEnv();
+    const {
+      subscriptionKey,
+      disbursementSubscriptionKey,
+      baseUrl,
+      environment,
+    } = this.getEnv();
 
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
 

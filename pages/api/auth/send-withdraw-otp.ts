@@ -65,7 +65,7 @@ export default async function handler(
       fullName: "Withdraw",
       gender: "other",
       expiresAt,
-      phone: ""
+      phone: "",
     });
 
     // Send OTP via SMS

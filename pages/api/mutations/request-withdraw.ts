@@ -183,10 +183,13 @@ export default async function handler(
     let finalStatus = "pending";
 
     // Fetch user hash, wallet balance and config in one query
-    const dataRes = await hasuraClient.request<any>(GET_USER_AND_WALLET_AND_CONFIG, {
-      user_id: userId,
-      wallet_id: businessWallet_id,
-    });
+    const dataRes = await hasuraClient.request<any>(
+      GET_USER_AND_WALLET_AND_CONFIG,
+      {
+        user_id: userId,
+        wallet_id: businessWallet_id,
+      }
+    );
 
     const user = dataRes.Users_by_pk;
     const wallet = dataRes.business_wallet_by_pk;
@@ -212,7 +215,9 @@ export default async function handler(
     const currentBalance = parseFloat(wallet.amount);
 
     if (currentBalance < totalDeduction) {
-      return res.status(400).json({ error: "Insufficient balance including service fee" });
+      return res
+        .status(400)
+        .json({ error: "Insufficient balance including service fee" });
     }
 
     // Auto-disburse via MoMo Disbursement API for withdrawals < 200,000
@@ -229,7 +234,7 @@ export default async function handler(
           payeeNote: "Thank you",
         });
         console.log("✅ [Withdrawal] Auto-disbursement initiated.");
-        
+
         finalStatus = "completed"; // Mark success
 
         // Calculate new balance
@@ -250,7 +255,7 @@ export default async function handler(
             type: "debit",
             wallet_id: businessWallet_id,
             related_order: null,
-          }
+          },
         });
 
         // Send SMS
@@ -276,27 +281,34 @@ export default async function handler(
               referenceId: momoRefId,
             });
           } else {
-            console.warn("No email found for user (both DB and Session were empty). Skipping invoice email.");
+            console.warn(
+              "No email found for user (both DB and Session were empty). Skipping invoice email."
+            );
           }
         } catch (emailErr) {
           console.error("Failed to send withdrawal Email", emailErr);
         }
-
       } catch (err: any) {
         console.error("❌ [Withdrawal] Auto-disbursement failed:", err);
-        
+
         await insertSystemLog(
           "error",
           `Auto-disbursement failed for ${amount} RWF`,
           "RequestWithdraw API",
-          { error: err.message || err, business_id, businessWallet_id, phone: phoneNumber }
+          {
+            error: err.message || err,
+            business_id,
+            businessWallet_id,
+            phone: phoneNumber,
+          }
         );
-        
-        await logErrorToSlack(
-          "RequestWithdraw API (Auto-Disbursement)",
-          err,
-          { business_id, businessWallet_id, phone: phoneNumber, amount }
-        );
+
+        await logErrorToSlack("RequestWithdraw API (Auto-Disbursement)", err, {
+          business_id,
+          businessWallet_id,
+          phone: phoneNumber,
+          amount,
+        });
 
         // Throw the error so the request fails and the user gets informed
         throw new Error(err.message || "Auto-disbursement processing failed");

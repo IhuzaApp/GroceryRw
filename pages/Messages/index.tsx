@@ -512,8 +512,7 @@ function MessagesPage() {
             next[orderId] = order;
             changed = true;
           } else if (!prev[orderId]) {
-            const isPermanent =
-              order?.status === 404 || order?.status === 400;
+            const isPermanent = order?.status === 404 || order?.status === 400;
             next[orderId] = order
               ? { ...order, permanent: isPermanent }
               : { error: true, permanent: true };

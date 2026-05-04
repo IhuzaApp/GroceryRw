@@ -311,20 +311,22 @@ const AdoptionModal = ({
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPaymentMethod("momo")}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${paymentMethod === "momo"
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
+                      paymentMethod === "momo"
                         ? "bg-yellow-400 font-bold text-black shadow-lg"
                         : "bg-gray-100 text-gray-400 dark:bg-white/5"
-                      }`}
+                    }`}
                   >
                     <CreditCard className="h-4 w-4" />
                     MoMo
                   </button>
                   <button
                     onClick={() => setPaymentMethod("wallet")}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${paymentMethod === "wallet"
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
+                      paymentMethod === "wallet"
                         ? "bg-green-500 font-bold text-white shadow-lg"
                         : "bg-gray-100 text-gray-400 dark:bg-white/5"
-                      }`}
+                    }`}
                   >
                     <Wallet className="h-4 w-4" />
                     Wallet
@@ -451,8 +453,9 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
               </button>
               <button
                 onClick={() => setIsLiked(!isLiked)}
-                className={`flex h-10 w-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-md transition-all active:scale-90 ${isLiked ? "text-red-500" : "!text-white text-white"
-                  }`}
+                className={`flex h-10 w-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-md transition-all active:scale-90 ${
+                  isLiked ? "text-red-500" : "!text-white text-white"
+                }`}
               >
                 <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
               </button>
@@ -627,8 +630,9 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 {pet.images.map((img, i) => (
                   <div
                     key={i}
-                    className={`relative aspect-video overflow-hidden rounded-[2rem] shadow-sm transition-transform hover:scale-[1.02] ${i === 0 && !pet.videoUrl ? "col-span-2" : ""
-                      }`}
+                    className={`relative aspect-video overflow-hidden rounded-[2rem] shadow-sm transition-transform hover:scale-[1.02] ${
+                      i === 0 && !pet.videoUrl ? "col-span-2" : ""
+                    }`}
                   >
                     <Image
                       src={img.url}
@@ -657,33 +661,79 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 </div>
                 <div className="space-y-6">
                   {pet.reviews.length > 0 ? (
-                    pet.reviews.map((rev: { user: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; rating: number; comment: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; date: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; }, i: React.Key | null | undefined) => (
-                      <div
-                        key={i}
-                        className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <h4 className="font-outfit font-black">{rev.user}</h4>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, idx) => (
-                              <Star
-                                key={idx}
-                                className={`h-3 w-3 ${idx < rev.rating
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-200 dark:text-white/10"
+                    pet.reviews.map(
+                      (
+                        rev: {
+                          user:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                any,
+                                string | React.JSXElementConstructor<any>
+                              >
+                            | React.ReactFragment
+                            | React.ReactPortal
+                            | null
+                            | undefined;
+                          rating: number;
+                          comment:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                any,
+                                string | React.JSXElementConstructor<any>
+                              >
+                            | React.ReactFragment
+                            | React.ReactPortal
+                            | null
+                            | undefined;
+                          date:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                any,
+                                string | React.JSXElementConstructor<any>
+                              >
+                            | React.ReactFragment
+                            | React.ReactPortal
+                            | null
+                            | undefined;
+                        },
+                        i: React.Key | null | undefined
+                      ) => (
+                        <div
+                          key={i}
+                          className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <h4 className="font-outfit font-black">
+                              {rev.user}
+                            </h4>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, idx) => (
+                                <Star
+                                  key={idx}
+                                  className={`h-3 w-3 ${
+                                    idx < rev.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-gray-200 dark:text-white/10"
                                   }`}
-                              />
-                            ))}
+                                />
+                              ))}
+                            </div>
                           </div>
+                          <p className="font-sans text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            {rev.comment}
+                          </p>
+                          <span className="mt-4 block text-[10px] font-normal uppercase tracking-widest text-gray-400">
+                            {rev.date}
+                          </span>
                         </div>
-                        <p className="font-sans text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                          {rev.comment}
-                        </p>
-                        <span className="mt-4 block text-[10px] font-normal uppercase tracking-widest text-gray-400">
-                          {rev.date}
-                        </span>
-                      </div>
-                    ))
+                      )
+                    )
                   ) : (
                     <p className="py-10 text-center font-normal italic text-gray-400">
                       No reviews yet.
@@ -756,8 +806,8 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                         ? "Adopt Another One"
                         : "Buy Another One"
                       : pet.isDonation
-                        ? "Adopt Now"
-                        : "Buy Now"}
+                      ? "Adopt Now"
+                      : "Buy Now"}
                   </span>
                   <ChevronRight className="h-6 w-6 !text-white" />
                 </button>
@@ -824,8 +874,9 @@ function SectionTitle({
 }) {
   return (
     <h3
-      className={`font-outfit text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 ${noMargin ? "" : "mb-6"
-        }`}
+      className={`font-outfit text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 ${
+        noMargin ? "" : "mb-6"
+      }`}
     >
       {title}
     </h3>
@@ -835,10 +886,11 @@ function SectionTitle({
 function StatItem({ icon, label, value, theme }: any) {
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-[2rem] border py-6 transition-all duration-300 md:py-8 ${theme === "dark"
+      className={`flex flex-col items-center justify-center rounded-[2rem] border py-6 transition-all duration-300 md:py-8 ${
+        theme === "dark"
           ? "border-white/5 bg-white/[0.03] hover:bg-white/[0.05]"
           : "border-gray-100 bg-gray-50 shadow-sm hover:bg-gray-100/50"
-        }`}
+      }`}
     >
       <div className="mb-3 text-green-500 md:mb-4">{icon}</div>
       <span className="mb-1 font-outfit text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
