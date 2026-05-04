@@ -55,6 +55,18 @@ export function RequestWithdrawModal({
 
   const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   // Fetch system config for withdraw charges (on open, step 1)
   useEffect(() => {
     if (!isOpen) return;
@@ -269,13 +281,17 @@ export function RequestWithdrawModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={handleBackdropClick}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col"
+        className="flex w-full flex-col overflow-hidden rounded-t-[2.5rem] bg-white shadow-2xl dark:bg-gray-900 sm:max-w-md sm:rounded-[2rem]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Handle */}
+        <div className="flex justify-center pt-3 sm:hidden">
+          <div className="h-1.5 w-12 rounded-full bg-gray-200 dark:bg-gray-700" />
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
           <div>
@@ -606,7 +622,7 @@ export function RequestWithdrawModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-800/50">
+        <div className="flex items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/50 p-5 pb-8 sm:p-6 dark:border-gray-700 dark:bg-gray-800/50">
           {step > 1 && step < 4 && (
             <button
               type="button"
