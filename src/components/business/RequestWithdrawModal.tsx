@@ -195,6 +195,8 @@ export function RequestWithdrawModal({
       resetAndClose();
     } catch (e: any) {
       toast.error(e?.message || "Failed to submit withdrawal request");
+      setOtp("");
+      setPassword("");
     } finally {
       setIsProcessing(false);
     }
