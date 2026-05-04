@@ -31,7 +31,7 @@ const GET_BOOKING_DETAILS = gql`
         logisticsAccounts {
           businessName
           fullname
-          user {
+          User {
             phone
           }
         }

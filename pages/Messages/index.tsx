@@ -419,6 +419,7 @@ function MessagesPage() {
               avatar:
                 userSnap.data().profile_picture ||
                 userSnap.data().profile_photo,
+              phone: userSnap.data().phone,
             };
           }
           return { id: uid, name: "Unknown User" };
@@ -438,6 +439,7 @@ function MessagesPage() {
               ...conv,
               counterpartName: result.name,
               counterpartAvatar: result.avatar,
+              counterpartPhone: result.phone,
             };
           }
           return conv;
@@ -735,7 +737,10 @@ function MessagesPage() {
                   "business_conversations"
                     ? "business"
                     : "shopper",
-                phone: "",
+                phone:
+                  orders[selectedConversation.orderId!]?.orderedBy?.phone ||
+                  (selectedConversation as any).counterpartPhone ||
+                  "",
               }}
               onBack={() => {
                 // Remove chat from query to return to list

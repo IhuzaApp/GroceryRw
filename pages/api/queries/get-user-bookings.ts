@@ -35,6 +35,9 @@ const GET_USER_BOOKINGS = gql`
           id
           businessName
           fullname
+          User {
+            id
+          }
         }
       }
     }
@@ -91,6 +94,7 @@ export default async function handler(
         b.RentalVehicles?.logisticsAccounts?.businessName ||
         b.RentalVehicles?.logisticsAccounts?.fullname ||
         "Host",
+      ownerId: b.RentalVehicles?.logisticsAccounts?.User?.id,
     }));
 
     return res.status(200).json({ bookings });

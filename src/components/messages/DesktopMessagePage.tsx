@@ -16,7 +16,8 @@ import {
   serverTimestamp,
   getDoc,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { db, uploadToFirebase } from "../../lib/firebase";
+import { toast } from "react-hot-toast";
 import { Avatar } from "rsuite";
 import { formatCurrency } from "../../lib/formatCurrency";
 import {
@@ -299,7 +300,9 @@ export default function DesktopMessagePage({
   const [isConfirming, setIsConfirming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [isUploading, setIsUploading] = useState(false);
 
   const isBusinessChat =
     !!selectedConversation &&
@@ -936,7 +939,34 @@ export default function DesktopMessagePage({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="rounded-xl p-2.5 text-[var(--text-secondary)] transition-all hover:bg-gray-100 dark:hover:bg-gray-700">
+                {/* Phone Display for Car Bookings */}
+                {(selectedOrder?.orderType === "vehicle" || isBusinessChat) && (
+                  <div className="mr-2 flex flex-col items-end">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      Contact
+                    </span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {selectedOrder?.orderedBy?.phone ||
+                        (selectedConversation as any).counterpartPhone ||
+                        "N/A"}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    const phone =
+                      selectedOrder?.orderedBy?.phone ||
+                      (selectedConversation as any).counterpartPhone;
+                    if (phone) {
+                      window.open(`tel:${phone}`, "_self");
+                    } else {
+                      toast.error("Phone number not available");
+                    }
+                  }}
+                  className="rounded-xl p-2.5 text-[var(--text-secondary)] transition-all hover:bg-gray-100 dark:hover:bg-gray-700"
+                  title="Call"
+                >
                   <svg
                     width="20"
                     height="20"
@@ -948,19 +978,24 @@ export default function DesktopMessagePage({
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
                 </button>
-                <button className="rounded-xl p-2.5 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <polygon points="23 7 16 12 23 17 23 7" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-                  </svg>
-                </button>
+
+                {/* Hide video for car bookings as requested */}
+                {selectedOrder?.orderType !== "vehicle" && (
+                  <button className="rounded-xl p-2.5 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polygon points="23 7 16 12 23 17 23 7" />
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                    </svg>
+                  </button>
+                )}
+                
                 <button className="rounded-xl p-2.5 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
                   <svg
                     width="20"
@@ -1092,6 +1127,16 @@ export default function DesktopMessagePage({
                                     isCurrentUser ? "items-end" : "items-start"
                                   }`}
                                 >
+                                  {(message as any).image && (
+                                    <div className="mb-2 max-w-sm overflow-hidden rounded-xl border border-gray-100 shadow-sm dark:border-white/5">
+                                      <img
+                                        src={(message as any).image}
+                                        alt="Attachment"
+                                        className="h-auto w-full cursor-pointer transition-transform hover:scale-105"
+                                        onClick={() => window.open((message as any).image, "_blank")}
+                                      />
+                                    </div>
+                                  )}
                                   <div
                                     className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
                                       isCurrentUser
@@ -1171,8 +1216,68 @@ export default function DesktopMessagePage({
                 </p>
               </div>
             )}
-            {/* Message Input - Fixed to bottom */}
             <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-gray-200/50 bg-white/80 px-8 pb-8 pt-4 backdrop-blur-md dark:border-white/5 dark:bg-gray-900/80">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*,application/pdf"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !conversationId || !selectedConversation || !session?.user?.id) return;
+                  
+                  const toastId = toast.loading("Uploading attachment...");
+                  setIsUploading(true);
+                  try {
+                    const path = `chats/${conversationId}/${Date.now()}_${file.name}`;
+                    const url = await uploadToFirebase(file, path);
+                    
+                    const messagesRef = collection(
+                      db!,
+                      selectedConversation.collectionPath,
+                      conversationId,
+                      "messages"
+                    );
+                    
+                    const recipientId =
+                      selectedConversation.shopperId ||
+                      (selectedConversation as any).businessId ||
+                      selectedConversation.customerId;
+
+                    await addDoc(messagesRef, {
+                      text: `Attachment: ${file.name}`,
+                      message: `Attachment: ${file.name}`,
+                      image: url,
+                      senderId: session.user.id,
+                      senderName: session.user.name || "User",
+                      senderType:
+                        session.user.id === selectedConversation.customerId
+                          ? "customer"
+                          : session.user.id === selectedConversation.shopperId
+                          ? "shopper"
+                          : "business",
+                      recipientId,
+                      timestamp: serverTimestamp(),
+                      read: false,
+                    });
+
+                    const convRef = doc(db!, selectedConversation.collectionPath, conversationId);
+                    await updateDoc(convRef, {
+                      lastMessage: "📎 Attachment",
+                      lastMessageTime: serverTimestamp(),
+                      unreadCount: 1,
+                    });
+
+                    toast.success("Attachment sent", { id: toastId });
+                  } catch (err) {
+                    console.error("Upload error:", err);
+                    toast.error("Failed to upload attachment", { id: toastId });
+                  } finally {
+                    setIsUploading(false);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }
+                }}
+              />
               <form
                 onSubmit={handleSendMessage}
                 className="relative mx-auto flex max-w-4xl items-center gap-3"
@@ -1180,7 +1285,9 @@ export default function DesktopMessagePage({
                 <div className="flex gap-1">
                   <button
                     type="button"
-                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400 disabled:opacity-50"
                   >
                     <svg
                       width="22"
@@ -1197,7 +1304,9 @@ export default function DesktopMessagePage({
                   </button>
                   <button
                     type="button"
-                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400 disabled:opacity-50"
                   >
                     <svg
                       width="22"
@@ -1220,7 +1329,8 @@ export default function DesktopMessagePage({
                       reportTyping();
                     }}
                     onBlur={clearTyping}
-                    placeholder="Write a message..."
+                    placeholder={isUploading ? "Uploading..." : "Write a message..."}
+                    disabled={isUploading}
                     className="h-12 w-full rounded-2xl border-none bg-white/40 px-6 pr-12 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:bg-white/60 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-800/40 dark:text-white dark:placeholder-gray-500 dark:focus:bg-gray-700/60"
                   />
                   <button
@@ -1242,7 +1352,7 @@ export default function DesktopMessagePage({
                 </div>
                 <button
                   type="submit"
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || isUploading}
                   className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
                   aria-label="Send message"
                 >
@@ -1470,7 +1580,7 @@ export default function DesktopMessagePage({
                   </div>
 
                   {/* Customer Details Card */}
-                  {selectedOrder.orderedBy && (
+                  {selectedOrder.orderedBy && selectedOrder.orderType !== "vehicle" && (
                     <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
                       <h4 className="mb-5 text-sm font-bold uppercase tracking-wider text-gray-400">
                         Customer Details

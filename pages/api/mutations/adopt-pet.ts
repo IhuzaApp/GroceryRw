@@ -61,7 +61,7 @@ const GET_VENDER_AND_PET_INFO = gql`
       pet_vendors {
         fullname
         organisationName
-        user {
+        User {
           id
           phone
         }
@@ -136,8 +136,8 @@ export default async function handler(
           }
 
           const petName = petInfo.name;
-          const vendorPhone = petInfo.pet_vendors?.user?.phone;
-          const vendorUserId = petInfo.pet_vendors?.user?.id;
+          const vendorPhone = petInfo.pet_vendors?.User?.phone;
+          const vendorUserId = petInfo.pet_vendors?.User?.id;
           const vendorName =
             petInfo.pet_vendors?.organisationName ||
             petInfo.pet_vendors?.fullname ||

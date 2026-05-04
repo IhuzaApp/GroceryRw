@@ -20,12 +20,17 @@ import { toast } from "react-hot-toast";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import CameraCapture from "../../ui/CameraCapture";
 import { uploadToFirebase } from "../../../lib/firebase";
+import { useSession } from "next-auth/react";
+import { createConversation } from "../../../services/chatService";
+import { useRouter } from "next/router";
 
 interface ListingBookingsProps {
   bookings: any[];
 }
 
 export default function ListingBookings({ bookings }: ListingBookingsProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
   if (bookings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -49,13 +54,24 @@ export default function ListingBookings({ bookings }: ListingBookingsProps) {
         <BookingCard
           key={`${booking.bookingId || index}-${index}`}
           booking={booking}
+          session={session}
+          router={router}
         />
       ))}
     </div>
   );
 }
 
-function BookingCard({ booking }: { booking: any }) {
+function BookingCard({
+  booking,
+  session,
+  router,
+}: {
+  booking: any;
+  session: any;
+  router: any;
+}) {
+  const [isMessaging, setIsMessaging] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -205,6 +221,38 @@ function BookingCard({ booking }: { booking: any }) {
     }
   };
 
+  const handleContactOwner = async () => {
+    if (!session?.user?.id) {
+      toast.error("Please sign in to message the owner");
+      return;
+    }
+
+    if (!booking.ownerId) {
+      toast.error("Owner information not available");
+      return;
+    }
+
+    setIsMessaging(true);
+    try {
+      const conversationId = await createConversation(
+        booking.bookingId,
+        session.user.id,
+        booking.ownerId,
+        "order",
+        {
+          title: `Vehicle: ${booking.name}`,
+        }
+      );
+
+      router.push(`/Messages/${booking.bookingId}?chat=${conversationId}`);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      toast.error("Failed to start conversation");
+    } finally {
+      setIsMessaging(false);
+    }
+  };
+
   return (
     <div className="contents">
       <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white p-5 shadow-sm transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-white/5 dark:bg-[#121212]">
@@ -287,13 +335,18 @@ function BookingCard({ booking }: { booking: any }) {
                 View Details
               </Link>
 
-              <Link
-                href={`/Messages/${booking.bookingId}?chat=true`}
+              <button
+                onClick={handleContactOwner}
+                disabled={isMessaging}
                 title="Contact Owner"
-                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500 text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500 text-white shadow-lg shadow-green-500/20 transition-all hover:bg-green-600 active:scale-95 disabled:opacity-50"
               >
-                <MessageSquare className="h-5 w-5" />
-              </Link>
+                {isMessaging ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <MessageSquare className="h-5 w-5" />
+                )}
+              </button>
 
               <div className="relative">
                 <button

@@ -25,9 +25,11 @@ import PackageDeliveryModal from "./PackageDeliveryModal";
 export default function HeaderLayout({
   fullWidth = false,
   compact = false,
+  hideLogo = false,
 }: {
   fullWidth?: boolean;
   compact?: boolean;
+  hideLogo?: boolean;
 }) {
   const router = useRouter();
   const { count } = useCart();
@@ -230,18 +232,20 @@ export default function HeaderLayout({
           {/* ── Left: Logo + Address ── */}
           <div className="flex shrink-0 items-center gap-3">
             {/* Logo */}
-            <Link
-              href="/"
-              className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
-            >
-              <Image
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                width={28}
-                height={28}
-                className="h-7 w-7 drop-shadow-sm"
-              />
-            </Link>
+            {!hideLogo && (
+              <Link
+                href="/"
+                className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
+              >
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 drop-shadow-sm"
+                />
+              </Link>
+            )}
 
             {/* Address block */}
             <button

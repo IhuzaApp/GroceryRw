@@ -32,7 +32,7 @@ const GET_LOGISTICS_VEHICLES = gql`
         id
         fullname
         businessName
-        user {
+        User {
           image: profile_picture
         }
       }

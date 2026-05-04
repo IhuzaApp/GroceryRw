@@ -31,7 +31,7 @@ const GET_PET_BY_ID = gql`
         id
         fullname
         organisationName
-        user {
+        User {
           image: profile_picture
         }
       }

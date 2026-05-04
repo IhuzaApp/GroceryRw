@@ -421,9 +421,9 @@ export default async function handler(
         const averageRating =
           statsData.Ratings.length > 0
             ? statsData.Ratings.reduce(
-                (sum: number, r: any) => sum + parseFloat(r.rating || "0"),
-                0
-              ) / statsData.Ratings.length
+              (sum: number, r: any) => sum + parseFloat(r.rating || "0"),
+              0
+            ) / statsData.Ratings.length
             : 0;
 
         const totalDeliveredOrders =
@@ -451,13 +451,13 @@ export default async function handler(
         }),
         assignedTo: order.Shoppers
           ? {
-              ...order.Shoppers,
-              rating: shopperStats?.rating || 0,
-              orders_aggregate: shopperStats?.orders_aggregate || {
-                aggregate: { count: 0 },
-              },
-              recentReviews: shopperStats?.recentReviews || [],
-            }
+            ...order.Shoppers,
+            rating: shopperStats?.rating || 0,
+            orders_aggregate: shopperStats?.orders_aggregate || {
+              aggregate: { count: 0 },
+            },
+            recentReviews: shopperStats?.recentReviews || [],
+          }
           : null,
       };
 
@@ -493,15 +493,15 @@ export default async function handler(
         },
         assignedTo: ownerUser
           ? {
-              id: ownerUser.id,
-              name: vendor?.fullname || vendor?.businessName || "Owner",
-              profile_picture: ownerUser.profile_picture || null,
-              shopper: {
-                full_name: vendor?.fullname || vendor?.businessName || "Owner",
-                profile_photo: ownerUser.profile_picture || null,
-                Employment_id: "VEHICLE",
-              },
-            }
+            id: ownerUser.id,
+            name: vendor?.fullname || vendor?.businessName || "Owner",
+            profile_picture: ownerUser.profile_picture || null,
+            shopper: {
+              full_name: vendor?.fullname || vendor?.businessName || "Owner",
+              profile_photo: ownerUser.profile_picture || null,
+              Employment_id: "VEHICLE",
+            },
+          }
           : null,
         orderedBy: customerUser || null,
         Order_Items: [
@@ -554,11 +554,11 @@ export default async function handler(
           orderedBy: restOrder.orderedBy || null,
           shop: restOrder.Restaurant
             ? {
-                id: restOrder.Restaurant.id,
-                name: restOrder.Restaurant.name,
-                address: restOrder.Restaurant.location,
-                logo: restOrder.Restaurant.logo,
-              }
+              id: restOrder.Restaurant.id,
+              name: restOrder.Restaurant.name,
+              address: restOrder.Restaurant.location,
+              logo: restOrder.Restaurant.logo,
+            }
             : null,
         },
       });
@@ -626,11 +626,11 @@ export default async function handler(
           },
           assignedTo: pkg.shopper
             ? {
-                id: pkg.shopper_id,
-                name: pkg.shopper.full_name,
-                profile_picture: pkg.shopper.profile_photo,
-                shopper: pkg.shopper,
-              }
+              id: pkg.shopper_id,
+              name: pkg.shopper.full_name,
+              profile_picture: pkg.shopper.profile_photo,
+              shopper: pkg.shopper,
+            }
             : null,
           Order_Items: [
             {
