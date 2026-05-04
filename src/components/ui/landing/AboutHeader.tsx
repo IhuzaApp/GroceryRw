@@ -166,54 +166,31 @@ export default function AboutHeader({
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
             {status === "authenticated" ? (
-              <Dropdown
-                renderToggle={(props, ref) => (
-                  <div
-                    {...props}
-                    ref={ref}
-                    className={`flex cursor-pointer items-center gap-2 rounded-full border px-2 py-1 transition-all ${
-                      isScrolled
-                        ? "border-gray-200 bg-gray-50 text-gray-900 hover:border-[#022C22] hover:bg-gray-100"
-                        : "border-white/20 bg-white/10 text-white hover:bg-white/20"
-                    }`}
-                  >
-                    <Avatar
-                      src={user?.image || undefined}
-                      alt={user?.name || "User"}
-                      size="xs"
-                      circle
-                      className="border border-white/20"
-                    >
-                      {user?.name?.[0].toUpperCase() || "U"}
-                    </Avatar>
-                    <span className="hidden max-w-[120px] truncate text-sm font-semibold lg:block">
-                      {user?.name?.split(" ")[0]}
-                    </span>
-                    <ChevronDown className="h-4 w-4 opacity-60" />
-                  </div>
-                )}
-                placement="bottomEnd"
+              <button
+                onClick={() => router.push("/Myprofile")}
+                className={`flex cursor-pointer items-center gap-2 rounded-full border px-2 py-1 transition-all ${
+                  isScrolled
+                    ? "border-gray-200 bg-gray-50 text-gray-900 hover:border-[#022C22] hover:bg-gray-100"
+                    : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                }`}
               >
-                <Dropdown.Item
-                  icon={<LayoutDashboard className="h-4 w-4" />}
-                  onClick={() => router.push("/")}
-                >
-                  Go to App
-                </Dropdown.Item>
-                <Dropdown.Item
-                  icon={<User className="h-4 w-4" />}
-                  onClick={() => router.push("/Myprofile")}
-                >
-                  My Profile
-                </Dropdown.Item>
-                <Dropdown.Separator />
-                <Dropdown.Item
-                  icon={<LogOut className="h-4 w-4 text-red-500" />}
-                  onClick={() => signOut()}
-                >
-                  <span className="text-red-500">Sign out</span>
-                </Dropdown.Item>
-              </Dropdown>
+                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-[#022c22] text-white">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user?.name || "User"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold">
+                      {user?.name?.[0].toUpperCase() || "U"}
+                    </span>
+                  )}
+                </div>
+                <span className="hidden max-w-[120px] truncate text-sm font-semibold lg:block">
+                  {user?.name?.split(" ")[0]}
+                </span>
+              </button>
             ) : (
               <button
                 className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${

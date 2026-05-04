@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, User } from "lucide-react";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 
 interface LandingPageHeaderProps {
   isScrolled: boolean;
@@ -27,6 +28,8 @@ export default function LandingPageHeader({
   isMobile,
 }: LandingPageHeaderProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
   return (
     <header
@@ -120,35 +123,81 @@ export default function LandingPageHeader({
           {/* Navigation Links - Only shown when NOT scrolled */}
           {!isScrolled && (
             <nav className="mx-4 hidden items-center gap-6 lg:flex">
-              <Link href="/about" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+              <Link
+                href="/about"
+                className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white"
+              >
                 About us
               </Link>
-              <Link href="/life-at-plas" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+              <Link
+                href="/life-at-plas"
+                className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white"
+              >
                 Life at Plas
               </Link>
-              <Link href="/ourTeams" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+              <Link
+                href="/ourTeams"
+                className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white"
+              >
                 Our teams
               </Link>
-              <Link href="/careers" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+              <Link
+                href="/careers"
+                className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white"
+              >
                 Careers at Plas
               </Link>
-              <Link href="/locations" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+              <Link
+                href="/locations"
+                className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white"
+              >
                 Our locations
               </Link>
-              <Link href="/contact" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+              <Link
+                href="/contact"
+                className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white"
+              >
                 Contact us
               </Link>
             </nav>
           )}
 
-          {/* Login Button */}
-          <button
-            onClick={() => router.push("/Auth/Login")}
-            className="flex flex-shrink-0 items-center gap-2 rounded-full bg-[#022c22] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#011a14]"
-          >
-            <User className="h-5 w-5" />
-            <span className="hidden sm:inline">Login</span>
-          </button>
+          {/* Login Button / User Profile */}
+          {status === "authenticated" ? (
+            <button
+              onClick={() => router.push("/Myprofile")}
+              className={`flex flex-shrink-0 cursor-pointer items-center gap-2 rounded-full border px-2 py-1 transition-all ${
+                isScrolled
+                  ? "border-gray-200 bg-gray-50 text-gray-900 hover:border-[#022C22] hover:bg-gray-100"
+                  : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-[#022c22] text-white">
+                {user?.image ? (
+                  <img
+                    src={user.image}
+                    alt={user?.name || "User"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold">
+                    {user?.name?.[0].toUpperCase() || "U"}
+                  </span>
+                )}
+              </div>
+              <span className="hidden max-w-[120px] truncate text-sm font-semibold sm:block">
+                {user?.name?.split(" ")[0]}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => router.push("/Auth/Login")}
+              className="flex flex-shrink-0 items-center gap-2 rounded-full bg-[#022c22] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#011a14]"
+            >
+              <User className="h-5 w-5" />
+              <span className="hidden sm:inline">Login</span>
+            </button>
+          )}
         </div>
       </div>
     </header>
