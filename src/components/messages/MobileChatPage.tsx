@@ -94,8 +94,8 @@ const CustomerMessage: React.FC<{
       <div
         className={`relative max-w-[85%] px-4 py-2 text-[15px] leading-relaxed shadow-sm transition-all ${
           isCurrentUser
-            ? "rounded-2xl rounded-tr-sm bg-green-600 text-white"
-            : "rounded-2xl rounded-tl-sm bg-[var(--bg-secondary)] text-[var(--text-primary)]"
+            ? "rounded-2xl rounded-tr-sm bg-green-600 !text-white"
+            : "rounded-2xl rounded-tl-sm bg-gray-700 !text-white"
         }`}
       >
         {"image" in message && message.image && (
@@ -108,13 +108,13 @@ const CustomerMessage: React.FC<{
             />
           </div>
         )}
-        <div className="whitespace-pre-wrap break-words font-normal">
+        <div className="whitespace-pre-wrap break-words font-normal !text-white">
           {messageContent}
         </div>
         <div className="mt-0.5 flex items-center justify-end gap-1">
           <span
             className={`select-none text-[11px] ${
-              isCurrentUser ? "text-green-100" : "text-[var(--text-secondary)]"
+              isCurrentUser ? "text-green-100" : "!text-white/70"
             }`}
           >
             {formatMessageTime(message.timestamp)}
@@ -455,11 +455,6 @@ export default function MobileChatPage({
               </svg>
             </button>
           )}
-          <button className="rounded-full p-2.5 text-[var(--text-secondary)]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -551,26 +546,6 @@ export default function MobileChatPage({
 
       {/* Input Box */}
       <div className="z-10 flex flex-shrink-0 items-end gap-2 bg-[var(--bg-secondary)] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-colors">
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="p-3 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] disabled:opacity-50"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
 
         <div className="flex flex-1 items-end rounded-[24px] bg-[var(--bg-primary)]">
           <textarea
@@ -591,9 +566,9 @@ export default function MobileChatPage({
         {newMessage.trim() ? (
           <button
             onClick={handleSendMessage}
-            className="ml-1 flex items-center justify-center rounded-full bg-green-500 p-3 text-white shadow-sm transition-transform active:scale-95"
+            className="ml-1 flex items-center justify-center rounded-full bg-green-500 p-3 shadow-sm transition-transform active:scale-95"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </button>

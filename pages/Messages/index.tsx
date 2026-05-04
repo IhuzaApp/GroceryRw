@@ -717,31 +717,71 @@ function MessagesPage() {
               conversationId={selectedConversation.id!}
               collectionPath={selectedConversation.collectionPath}
               orderId={selectedConversation.orderId}
-              counterpart={{
-                id:
-                  selectedConversation.shopperId ||
-                  selectedConversation.businessId ||
-                  selectedConversation.counterpartId ||
-                  selectedConversation.customerId ||
-                  "",
-                name:
-                  selectedConversation.title ||
-                  selectedConversation.counterpartName ||
-                  "User",
-                avatar:
-                  orders[selectedConversation.orderId!]?.shopper?.avatar ||
-                  selectedConversation.counterpartAvatar ||
-                  "/images/ProfileImage.png",
-                role:
+              counterpart={(() => {
+                const currentUserId = session?.user?.id;
+                const isMeCustomer =
+                  currentUserId === selectedConversation.customerId;
+                const order = selectedConversation.orderId
+                  ? orders[selectedConversation.orderId]
+                  : null;
+
+                if (
                   selectedConversation.collectionPath ===
                   "business_conversations"
-                    ? "business"
-                    : "shopper",
-                phone:
-                  orders[selectedConversation.orderId!]?.orderedBy?.phone ||
-                  (selectedConversation as any).counterpartPhone ||
-                  "",
-              }}
+                ) {
+                  return {
+                    id:
+                      selectedConversation.counterpartId === currentUserId
+                        ? selectedConversation.businessId || ""
+                        : selectedConversation.counterpartId || "",
+                    name:
+                      selectedConversation.title ||
+                      selectedConversation.counterpartName ||
+                      "Business",
+                    avatar:
+                      selectedConversation.counterpartAvatar ||
+                      "/images/ProfileImage.png",
+                    role: "business",
+                    phone: (selectedConversation as any).counterpartPhone || "",
+                  };
+                }
+
+                if (isMeCustomer) {
+                  return {
+                    id: selectedConversation.shopperId || "",
+                    name:
+                      order?.assignedTo?.shopper?.full_name ||
+                      order?.assignedTo?.name ||
+                      selectedConversation.counterpartName ||
+                      "Shopper",
+                    avatar:
+                      order?.assignedTo?.shopper?.profile_photo ||
+                      order?.assignedTo?.profile_picture ||
+                      selectedConversation.counterpartAvatar ||
+                      "/images/ProfileImage.png",
+                    role: "shopper",
+                    phone: order?.assignedTo?.phone || "",
+                  };
+                }
+
+                // I am the shopper/business, counterpart is the customer
+                return {
+                  id: selectedConversation.customerId || "",
+                  name:
+                    order?.orderedBy?.name ||
+                    selectedConversation.counterpartName ||
+                    "Customer",
+                  avatar:
+                    order?.orderedBy?.profile_picture ||
+                    selectedConversation.counterpartAvatar ||
+                    "/images/ProfileImage.png",
+                  role: "customer",
+                  phone:
+                    order?.orderedBy?.phone ||
+                    (selectedConversation as any).counterpartPhone ||
+                    "",
+                };
+              })()}
               onBack={() => {
                 // Remove chat from query to return to list
                 const newQuery = { ...router.query };
