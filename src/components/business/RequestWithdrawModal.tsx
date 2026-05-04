@@ -412,7 +412,7 @@ export function RequestWithdrawModal({
                       type="button"
                       onClick={() => setPercentage(pct)}
                       disabled={isProcessing || walletBalance <= 0}
-                      className="rounded-xl border border-gray-200 bg-white py-3 text-sm font-bold !text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-green-500 hover:bg-green-50 hover:!text-green-700 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:!text-gray-400 dark:hover:border-green-500 dark:hover:bg-green-900/30"
+                      className="rounded-xl border-2 border-green-500 bg-transparent py-3 text-sm font-bold text-black dark:text-white shadow-sm transition-all hover:bg-green-500/10 hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
                     >
                       {pct === 1 ? "Max" : `${pct * 100}%`}
                     </button>
@@ -565,7 +565,7 @@ export function RequestWithdrawModal({
                   type="button"
                   onClick={handleSendOtp}
                   disabled={sendingOtp}
-                  className="w-full rounded-2xl border border-green-500 bg-green-50 py-4 text-sm font-bold text-green-700 shadow-sm transition hover:bg-green-100 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/30"
+                  className="w-full rounded-2xl bg-green-600 py-4 text-sm font-bold !text-white shadow-sm transition hover:bg-green-700 hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
                 >
                   {sendingOtp ? "Sending..." : "Send OTP"}
                 </button>
@@ -595,7 +595,7 @@ export function RequestWithdrawModal({
                       type="button"
                       onClick={handleSendOtp}
                       disabled={sendingOtp}
-                      className="text-xs font-bold text-green-600 transition-colors hover:text-green-500 hover:underline dark:text-green-400"
+                      className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold !text-white shadow-sm transition-colors hover:bg-green-700 disabled:opacity-50"
                     >
                       Resend OTP
                     </button>
@@ -622,103 +622,62 @@ export function RequestWithdrawModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/50 p-5 pb-8 sm:p-6 dark:border-gray-700 dark:bg-gray-800/50">
-          {step > 1 && step < 4 && (
+        <div className="flex w-full gap-4 border-t border-gray-100 bg-gray-50/50 p-5 pb-8 sm:p-6 dark:border-gray-700 dark:bg-gray-800/50">
+          <button
+            type="button"
+            onClick={step === 1 ? resetAndClose : () => setStep((s) => s - 1)}
+            disabled={isProcessing}
+            className="flex-1 rounded-xl bg-gray-500 py-4 text-sm font-bold !text-white shadow-sm transition hover:bg-gray-600 disabled:opacity-50"
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </button>
+
+          {step === 1 && (
             <button
               type="button"
-              onClick={() => setStep((s) => s - 1)}
-              disabled={isProcessing}
-              className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 shadow-sm transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              onClick={handleNextStep1}
+              disabled={!canProceedStep1}
+              className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-sm font-bold !text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
             >
-              Back
+              Next Step
             </button>
           )}
-          {step === 1 && (
-            <>
-              <button
-                type="button"
-                onClick={resetAndClose}
-                disabled={isProcessing}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleNextStep1}
-                disabled={!canProceedStep1}
-                className="ml-auto rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold !text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
-              >
-                Next Step
-              </button>
-            </>
-          )}
           {step === 2 && (
-            <div className="flex w-full justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                disabled={isProcessing}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                disabled={!canProceedStep2}
-                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold !text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
-              >
-                Next Step
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              disabled={!canProceedStep2}
+              className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-sm font-bold !text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
+            >
+              Next Step
+            </button>
           )}
           {step === 3 && (
-            <div className="flex w-full justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                disabled={isProcessing}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(4)}
-                disabled={!canProceedStep3}
-                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold !text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
-              >
-                Verify & Next
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setStep(4)}
+              disabled={!canProceedStep3}
+              className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-sm font-bold !text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
+            >
+              Verify & Next
+            </button>
           )}
           {step === 4 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                disabled={isProcessing}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirm}
-                disabled={!canProceedStep4 || password.trim().length === 0}
-                className="ml-auto flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
-              >
-                {isProcessing ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Processing...
-                  </span>
-                ) : (
-                  "Confirm Withdrawal"
-                )}
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!canProceedStep4 || password.trim().length === 0}
+              className="flex-1 flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:from-green-400 hover:to-emerald-500 disabled:pointer-events-none disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Processing...
+                </span>
+              ) : (
+                "Confirm"
+              )}
+            </button>
           )}
         </div>
       </div>
