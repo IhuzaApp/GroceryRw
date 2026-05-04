@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface Car {
   id: string;
   name: string;
@@ -22,6 +24,11 @@ export interface Car {
 }
 
 export interface Pet {
+  ageInMonths: number;
+  healthInfo: ReactNode;
+  reviews: any;
+  rating: ReactNode;
+  owner: any;
   id: string;
   name: string;
   type: string;

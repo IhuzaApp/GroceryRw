@@ -546,9 +546,7 @@ export default function DesktopMessagePage({
   const [isConfirming, setIsConfirming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [isUploading, setIsUploading] = useState(false);
 
   const isBusinessChat =
     !!selectedConversation &&
@@ -870,12 +868,12 @@ export default function DesktopMessagePage({
           top: 0 !important;
         }
       `}</style>
-      <HeaderLayout fullWidth compact hideLogo />
+      <HeaderLayout fullWidth />
       <div className="flex flex-1 overflow-hidden">
       {/* Left Column - Conversation List */}
       <div className="flex h-full w-80 flex-shrink-0 flex-col border-r border-gray-200 dark:border-white/10">
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
+        <div className="flex flex-shrink-0 items-center justify-between px-5 py-3">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-[var(--text-primary)]">
               Messages
@@ -1256,18 +1254,6 @@ export default function DesktopMessagePage({
                   </button>
                 )}
                 
-                <button className="rounded-xl p-2.5 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                  </svg>
-                </button>
               </div>
             </div>
 
@@ -1477,109 +1463,10 @@ export default function DesktopMessagePage({
               </div>
             )}
             <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-gray-200/50 bg-white/80 px-8 pb-8 pt-4 backdrop-blur-md dark:border-white/5 dark:bg-gray-900/80">
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*,application/pdf"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file || !conversationId || !selectedConversation || !session?.user?.id) return;
-                  
-                  const toastId = toast.loading("Uploading attachment...");
-                  setIsUploading(true);
-                  try {
-                    const path = `chats/${conversationId}/${Date.now()}_${file.name}`;
-                    const url = await uploadToFirebase(file, path);
-                    
-                    const messagesRef = collection(
-                      db!,
-                      selectedConversation.collectionPath,
-                      conversationId,
-                      "messages"
-                    );
-                    
-                    const recipientId =
-                      selectedConversation.shopperId ||
-                      (selectedConversation as any).businessId ||
-                      selectedConversation.customerId;
-
-                    await addDoc(messagesRef, {
-                      text: `Attachment: ${file.name}`,
-                      message: `Attachment: ${file.name}`,
-                      image: url,
-                      senderId: session.user.id,
-                      senderName: session.user.name || "User",
-                      senderType:
-                        session.user.id === selectedConversation.customerId
-                          ? "customer"
-                          : session.user.id === selectedConversation.shopperId
-                          ? "shopper"
-                          : "business",
-                      recipientId,
-                      timestamp: serverTimestamp(),
-                      read: false,
-                    });
-
-                    const convRef = doc(db!, selectedConversation.collectionPath, conversationId);
-                    await updateDoc(convRef, {
-                      lastMessage: "Attachment",
-                      lastMessageTime: serverTimestamp(),
-                      unreadCount: 1,
-                    });
-
-                    toast.success("Attachment sent", { id: toastId });
-                  } catch (err) {
-                    console.error("Upload error:", err);
-                    toast.error("Failed to upload attachment", { id: toastId });
-                  } finally {
-                    setIsUploading(false);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }
-                }}
-              />
               <form
                 onSubmit={handleSendMessage}
                 className="relative mx-auto flex max-w-4xl items-center gap-3"
               >
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400 disabled:opacity-50"
-                  >
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400 disabled:opacity-50"
-                  >
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
-                  </button>
-                </div>
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -1589,30 +1476,13 @@ export default function DesktopMessagePage({
                       reportTyping();
                     }}
                     onBlur={clearTyping}
-                    placeholder={isUploading ? "Uploading..." : "Write a message..."}
-                    disabled={isUploading}
+                    placeholder="Write a message..."
                     className="h-12 w-full rounded-2xl border-none bg-white/40 px-6 pr-12 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:bg-white/60 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-800/40 dark:text-white dark:placeholder-gray-500 dark:focus:bg-gray-700/60"
                   />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition-all hover:text-green-600 dark:hover:text-green-400"
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
-                    </svg>
-                  </button>
                 </div>
                 <button
                   type="submit"
-                  disabled={!newMessage.trim() || isUploading}
+                  disabled={!newMessage.trim()}
                   className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
                   aria-label="Send message"
                 >
