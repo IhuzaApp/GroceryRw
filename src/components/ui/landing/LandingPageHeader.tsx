@@ -117,6 +117,30 @@ export default function LandingPageHeader({
             </div>
           )}
 
+          {/* Navigation Links - Only shown when NOT scrolled */}
+          {!isScrolled && (
+            <nav className="mx-4 hidden items-center gap-6 lg:flex">
+              <Link href="/about" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+                About us
+              </Link>
+              <Link href="/life-at-plas" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+                Life at Plas
+              </Link>
+              <Link href="/ourTeams" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+                Our teams
+              </Link>
+              <Link href="/careers" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+                Careers at Plas
+              </Link>
+              <Link href="/locations" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+                Our locations
+              </Link>
+              <Link href="/contact" className="whitespace-nowrap font-medium text-white/90 transition-colors hover:text-white">
+                Contact us
+              </Link>
+            </nav>
+          )}
+
           {/* Login Button */}
           <button
             onClick={() => router.push("/Auth/Login")}

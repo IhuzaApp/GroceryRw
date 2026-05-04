@@ -164,6 +164,19 @@ export default function AboutFooter() {
                   <span className="text-sm font-medium">Google Play</span>
                 </div>
               </button>
+              <button className="flex w-full items-center gap-2 rounded-lg bg-[#282828] px-4 py-3 text-white transition-opacity hover:opacity-90 md:w-auto">
+                <svg
+                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M4 5.319l6.394-1.026v7.352H4V5.319zm7.394-1.18l8.606-1.42v8.926h-8.606V4.138zM4 12.63h6.394v7.352L4 18.956v-6.326zm7.394 0h8.606v8.926l-8.606-1.42V12.63z" />
+                </svg>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-[10px] text-gray-300">Download for</span>
+                  <span className="text-sm font-medium">Windows</span>
+                </div>
+              </button>
             </div>
 
             {/* Legal and Policy Links */}
