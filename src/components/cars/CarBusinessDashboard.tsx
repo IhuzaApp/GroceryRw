@@ -511,7 +511,7 @@ export default function CarBusinessDashboard() {
         {/* Wallet & Stats Section */}
         <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Wallet Card */}
-          <WalletBalanceCard balance={walletBalance} theme={theme} />
+
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
@@ -805,62 +805,7 @@ function StatsCard({
   );
 }
 
-function WalletBalanceCard({
-  balance,
-  theme,
-}: {
-  balance: number;
-  theme: string;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8 shadow-2xl shadow-black/20">
-      {/* Decorative elements */}
-      <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-3xl" />
-      <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-2xl" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-12 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg shadow-yellow-500/20" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">
-              VIP PARTNER
-            </span>
-          </div>
-          <Wallet className="h-6 w-6 text-yellow-500" />
-        </div>
-
-        <div className="mb-8">
-          <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
-            Available Balance
-          </p>
-          <h2 className="text-3xl font-black tracking-tight text-white">
-            {formatCurrencySync(balance)}
-          </h2>
-        </div>
-
-        <div className="flex items-end justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-yellow-500/40"
-                />
-              ))}
-            </div>
-            <span className="font-mono text-xs tracking-widest text-gray-500">
-              BUSINESS CARD
-            </span>
-          </div>
-          <button className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] active:scale-[0.98]">
-            <ArrowUpRight className="h-3 w-3 !text-white" />
-            <span className="!text-white">Withdraw</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function FleetItem({
   car,

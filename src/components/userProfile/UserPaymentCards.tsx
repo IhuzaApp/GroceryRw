@@ -7,8 +7,10 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 import Barcode from "react-barcode";
 import BarcodeScanner from "../shopper/BarcodeScanner";
-import { Camera, Gift, Scissors, ShoppingCart } from "lucide-react";
+import { Camera, Gift, Scissors, ShoppingCart, ArrowUpRight, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
+import { RequestWithdrawModal } from "../business/RequestWithdrawModal";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -159,6 +161,16 @@ export default function UserPaymentCards({
     }
   );
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+  // Business Wallet
+  const {
+    walletBalance: businessWalletBalance,
+    businessWalletId,
+    businessId,
+    isLoading: isLoadingBusinessWallet,
+    fetchWalletBalance: refreshBusinessWallet,
+  } = useBusinessWallet();
 
   // Loyalty and Scanner state
   const [showScanner, setShowScanner] = useState(false);
@@ -303,6 +315,49 @@ export default function UserPaymentCards({
     } catch (error) {
       console.error("Error refreshing wallet balance:", error);
     }
+  };
+
+  const handleRequestWithdraw = () => {
+    if (!businessId) {
+      toast.error("Business account not found");
+      return;
+    }
+    if (!businessWalletId) {
+      toast.error("Business wallet not found");
+      return;
+    }
+    if (businessWalletBalance <= 0) {
+      toast.error("No funds available to withdraw");
+      return;
+    }
+    setShowWithdrawModal(true);
+  };
+
+  const handleSubmitWithdraw = async (payload: {
+    amount: number;
+    verificationImage: string;
+    otp: string;
+  }) => {
+    if (!businessId || !businessWalletId) {
+      throw new Error("Business or wallet not found");
+    }
+    const response = await fetch("/api/mutations/request-withdraw", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: String(payload.amount),
+        business_id: businessId,
+        businessWallet_id: businessWalletId,
+        phoneNumber: userPhone || "",
+        verification_image: payload.verificationImage,
+        otp: payload.otp,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || data.error || "Failed to submit request");
+    }
+    refreshBusinessWallet();
   };
 
   // Refresh functions
@@ -490,6 +545,120 @@ export default function UserPaymentCards({
           currentBalance={walletBalance}
           walletId={balances.wallet?.id}
           initialPhoneNumber={userPhone}
+        />
+
+        {/* Business Wallet Card (VIP Credit Card Design) - Show only if exists */}
+        {businessWalletId && (
+          <div
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl"
+            style={{ backgroundColor: "#000000" }}
+          >
+            {/* Decorative background elements */}
+            <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-xl"></div>
+
+            {/* Card Content */}
+            <div className="relative z-10">
+              {/* Card Header */}
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-12 rounded bg-gradient-to-br from-yellow-400 to-yellow-600"></div>
+                  <span
+                    className="text-xs font-semibold tracking-wider"
+                    style={{ color: "#facc15" }}
+                  >
+                    VIP
+                  </span>
+                </div>
+                <Wallet className="h-6 w-6" style={{ color: "#facc15" }} />
+              </div>
+
+              {/* Chip */}
+              <div className="mb-6 flex items-center gap-3">
+                <div className="h-10 w-14 rounded-md border border-yellow-400/30 bg-gradient-to-br from-yellow-300/30 to-yellow-500/30 backdrop-blur-sm"></div>
+                <div className="flex-1">
+                  <p className="text-xs" style={{ color: "#ffffff" }}>
+                    Available Balance
+                  </p>
+                  <p className="text-2xl font-bold" style={{ color: "#ffffff" }}>
+                    {isLoadingBusinessWallet ? (
+                      <span style={{ color: "#ffffff" }}>Loading...</span>
+                    ) : (
+                      formatCurrencySync(businessWalletBalance)
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Card Number Pattern */}
+              <div className="mb-4 flex items-center gap-2">
+                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+                <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span className="mx-2" style={{ color: "#ffffff" }}>
+                  •
+                </span>
+                <span
+                  className="ml-auto font-mono text-xs"
+                  style={{ color: "#ffffff" }}
+                >
+                  BUSINESS
+                </span>
+              </div>
+
+              {/* Card Footer */}
+              <div className="mt-6 flex items-end justify-between">
+                <div>
+                  <p className="text-xs" style={{ color: "#ffffff" }}>
+                    Card Holder
+                  </p>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#ffffff" }}
+                  >
+                    Business Account
+                  </p>
+                </div>
+                <button
+                  onClick={handleRequestWithdraw}
+                  disabled={businessWalletBalance <= 0 || isLoadingBusinessWallet}
+                  className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-2 text-xs font-semibold text-black transition-all hover:from-yellow-400 hover:to-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-yellow-500 disabled:hover:to-yellow-600"
+                >
+                  <ArrowUpRight className="mr-1 inline h-3 w-3" />
+                  Withdraw
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <RequestWithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          walletBalance={businessWalletBalance}
+          onSubmit={handleSubmitWithdraw}
         />
       </div>
 

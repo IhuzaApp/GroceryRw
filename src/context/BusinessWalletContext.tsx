@@ -6,6 +6,7 @@ import { useAuth } from "./AuthContext";
 interface BusinessWalletContextType {
   walletBalance: number;
   businessWalletId: string | null;
+  businessId: string | null;
   isLoading: boolean;
   fetchWalletBalance: () => Promise<void>;
 }
@@ -13,6 +14,7 @@ interface BusinessWalletContextType {
 const BusinessWalletContext = createContext<BusinessWalletContextType>({
   walletBalance: 0,
   businessWalletId: null,
+  businessId: null,
   isLoading: true,
   fetchWalletBalance: async () => {},
 });
@@ -25,6 +27,7 @@ export function BusinessWalletProvider({
   const { isLoggedIn, role, authReady } = useAuth();
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [businessWalletId, setBusinessWalletId] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchWalletBalance = async () => {
@@ -41,18 +44,22 @@ export function BusinessWalletProvider({
         if (data.wallet) {
           setWalletBalance(parseFloat(data.wallet.amount || "0"));
           setBusinessWalletId(data.wallet.id || null);
+          setBusinessId(data.wallet.business_id || null);
         } else {
           setWalletBalance(0);
           setBusinessWalletId(null);
+          setBusinessId(null);
         }
       } else {
         setWalletBalance(0);
         setBusinessWalletId(null);
+        setBusinessId(null);
       }
     } catch (error) {
       console.error("Error fetching global business wallet balance:", error);
       setWalletBalance(0);
       setBusinessWalletId(null);
+      setBusinessId(null);
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +73,7 @@ export function BusinessWalletProvider({
 
   return (
     <BusinessWalletContext.Provider
-      value={{ walletBalance, businessWalletId, isLoading, fetchWalletBalance }}
+      value={{ walletBalance, businessWalletId, businessId, isLoading, fetchWalletBalance }}
     >
       {children}
     </BusinessWalletContext.Provider>

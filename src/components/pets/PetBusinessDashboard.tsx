@@ -226,7 +226,7 @@ export default function PetBusinessDashboard() {
         {/* Wallet & Stats Section */}
         <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Wallet Card */}
-          <WalletBalanceCard balance={walletBalance} theme={theme} />
+
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
@@ -417,62 +417,7 @@ function StatsCard({ label, value, icon, color, theme }: any) {
   );
 }
 
-function WalletBalanceCard({
-  balance,
-  theme,
-}: {
-  balance: number;
-  theme: string;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-10 shadow-2xl shadow-black/40">
-      {/* Decorative elements */}
-      <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-gradient-to-br from-green-400/20 to-transparent blur-3xl" />
-      <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-2xl" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="mb-10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-12 rounded-lg bg-gradient-to-br from-green-400 to-green-600 shadow-lg shadow-green-500/20" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-500">
-              PET PARTNER PRO
-            </span>
-          </div>
-          <Wallet className="h-6 w-6 text-green-500" />
-        </div>
-
-        <div className="mb-10">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-            Available Earnings
-          </p>
-          <h2 className="text-4xl font-black tracking-tight text-white">
-            {formatCurrencySync(balance)}
-          </h2>
-        </div>
-
-        <div className="flex items-end justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-green-500/40"
-                />
-              ))}
-            </div>
-            <span className="font-mono text-xs tracking-widest text-gray-500">
-              ECOMMERCE PAY
-            </span>
-          </div>
-          <button className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-black !text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.05] active:scale-[0.95]">
-            <ArrowUpRight className="h-4 w-4 !text-white" />
-            <span className="!text-white">Withdraw</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function PetManagementItem({
   pet,
