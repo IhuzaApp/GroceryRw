@@ -26,6 +26,7 @@ interface NavItemProps {
 
 function NavItem({ icon, label, href }: NavItemProps) {
   const router = useRouter();
+  const isActive = router.pathname.startsWith(href) && href !== "/";
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,7 +35,13 @@ function NavItem({ icon, label, href }: NavItemProps) {
 
   return (
     <Link href={href} passHref onClick={handleClick}>
-      <div className="flex flex-col items-center text-xs text-gray-600 transition-colors duration-200 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400">
+      <div
+        className={`flex flex-col items-center text-xs transition-colors duration-200 ${
+          isActive
+            ? "text-green-500 dark:text-green-400"
+            : "text-gray-600 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400"
+        }`}
+      >
         <span className="text-lg">{icon}</span>
       </div>
     </Link>
@@ -731,16 +738,10 @@ export default function BottomBar() {
             )}
 
             {/* Cars - Second icon */}
-            <NavItem
-              href="/Cars"
-              icon={
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-all ${
-                    router.pathname.startsWith("/Cars")
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400"
-                  }`}
-                >
+            {session?.user && (
+              <NavItem
+                href="/Cars"
+                icon={
                   <svg
                     width="24"
                     height="24"
@@ -756,10 +757,10 @@ export default function BottomBar() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                </div>
-              }
-              label="Plas Drive"
-            />
+                }
+                label="Plas Drive"
+              />
+            )}
 
             {/* Central Home Button - Third (middle) */}
             <div className="z-50 -mt-12">
@@ -804,17 +805,11 @@ export default function BottomBar() {
               </div>
             </div>
 
-            {/* Pets - Fourth icon - Show for all signed in users including guests */}
-            <NavItem
-              href="/Pets"
-              icon={
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-all hover:scale-110 active:scale-95 ${
-                    router.pathname.startsWith("/Pets")
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400"
-                  }`}
-                >
+            {/* Pets - Fourth icon */}
+            {session?.user && (
+              <NavItem
+                href="/Pets"
+                icon={
                   <svg
                     width="24px"
                     height="24px"
@@ -831,26 +826,18 @@ export default function BottomBar() {
                     <g id="SVGRepo_iconCarrier">
                       <path
                         d="M792.5 558.4c-46.8-27-44-118.7-14-170.7 26.9-46.6 86.5-62.6 133.1-35.7s62.6 86.5 35.7 133.1c-30.1 52.1-108 100.4-154.8 73.3zM623.4 390c-60.7-16.3-86.1-124.4-67.4-194 16.5-61.5 79.7-98.1 141.3-81.6 61.5 16.5 98.1 79.7 81.6 141.3-18.7 69.6-94.8 150.6-155.5 134.3zM233.5 558.7c-46.9 27.1-125.1-21.3-155.2-73.4-27-46.7-11-106.4 35.8-133.4 46.7-27 106.5-11 133.4 35.7 30 52.2 32.9 144-14 171.1zM374.6 390c-60.7 16.3-136.8-64.7-155.4-134.3-16.5-61.5 20-124.8 81.6-141.3S425.6 134.4 442.1 196c18.6 69.6-6.8 177.7-67.5 194zM513 436.3c111.7 0 279.9 170.1 279.9 307.6 0 91.3-28.3 143.3-79.1 161.4-17.5 6.2-32 7.4-54.3 6.7-4.4-0.1-5.2-0.2-6.5-0.2-11.7 0-23.4-3.8-39.7-11.2-5.4-2.5-11.1-5.3-19.2-9.4 5.8 2.9-15.2-7.7-20.1-10.1-16.3-8.1-28.8-13.7-40.5-17.8-9-3.2-17.2-5.3-24.5-6.3h8c-7.3 1.1-15.4 3.2-24.5 6.4-11.8 4.2-24.2 9.7-40.5 17.9-4.9 2.4-25.8 13.1-20.1 10.2-8.1 4.1-13.8 6.9-19.2 9.4-16.2 7.5-28 11.3-39.7 11.3-1.3 0-2.1 0-6.5 0.2-22.3 0.7-36.8-0.5-54.3-6.7-50.8-18.1-79.1-70.1-79.1-161.4 0-137.5 168.2-308 279.9-308z"
-                        fill={
-                          router.pathname.startsWith("/Pets")
-                            ? "#FFFFFF"
-                            : "#cccccc"
-                        }
+                        fill="currentColor"
                       ></path>
                       <path
                         d="M823.5 509.9c11.9 6.9 61.8-24 78.4-52.8 11.5-19.8 4.7-45.2-15.2-56.7-19.8-11.5-45.2-4.7-56.7 15.2-16.6 28.9-18.4 87.5-6.5 94.3zM637.9 335.9c21.7 5.8 75.1-51 86.9-94.7 8.5-31.7-10.3-64.2-42-72.7s-64.2 10.3-72.7 42c-11.8 43.7 6 119.6 27.8 125.4zM202.9 510.2c12-6.9 10.2-65.7-6.5-94.6-11.5-19.9-37-26.7-56.9-15.2s-26.7 37-15.2 56.9c16.6 28.9 66.6 59.8 78.6 52.9zM360.1 335.9c21.7-5.8 39.6-81.8 27.9-125.5-8.5-31.7-41-50.5-72.7-42s-50.5 41-42 72.7c11.7 43.8 65.1 100.6 86.8 94.8zM513 492.3c-80.6 0-223.9 145.2-223.9 251.9 0 69.7 16.2 99.5 41.8 108.7 9.2 3.3 18.1 4 33.9 3.5 5.2-0.2 6.1-0.2 8.2-0.2 3.9 0 3.7 0.1 54-25 18.2-9.1 32.5-15.5 46.9-20.6 12.3-4.3 23.9-7.4 35.1-9l4-0.6 4 0.6c11.2 1.6 22.7 4.6 35 8.9 14.4 5 28.7 11.4 46.9 20.5 50.3 25 50.1 24.9 54 24.9 2.2 0 3 0 8.2 0.2 15.8 0.5 24.7-0.2 33.9-3.5 25.6-9.1 41.8-39 41.8-108.7 0.1-106.7-143.1-251.6-223.8-251.6z"
-                        fill={
-                          router.pathname.startsWith("/Pets")
-                            ? "#FFFFFF"
-                            : "#FFFFFF"
-                        }
+                        fill="currentColor"
                       ></path>
                     </g>
                   </svg>
-                </div>
-              }
-              label="Pets"
-            />
+                }
+                label="Pets"
+              />
+            )}
 
             {/* More Menu */}
             <div className="relative">
@@ -1108,35 +1095,46 @@ export default function BottomBar() {
                         icon={
                           <div className="relative inline-block">
                             <svg
-                              version="1.1"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 290.625 290.625"
                               width="20px"
                               height="20px"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
                             >
-                              <g>
-                                <polygon
-                                  style={{ fill: "#2aea63" }}
-                                  points="39.511,192.188 147.323,192.188 137.948,239.063 53.573,239.063"
-                                />
-                                <rect
-                                  x="58.261"
-                                  y="187.5"
-                                  style={{ fill: "currentColor" }}
-                                  width="70.313"
-                                  height="9.375"
-                                />
-                                <rect
-                                  x="62.948"
-                                  y="210.938"
-                                  style={{ fill: "currentColor" }}
-                                  width="60.938"
-                                  height="9.375"
-                                />
+                              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                              <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                              <g id="SVGRepo_iconCarrier">
                                 <path
-                                  style={{ fill: "currentColor" }}
-                                  d="M278.573,267.923l-84.722-55.069l-7.252-50.742l14.813-3.173l28.181-32.878l46.514-11.63 l-6.675,20.02l8.892,2.967l10.289-30.872l-20.798-20.798l-6.628,6.628l12.895,12.895l-49.669,12.417l-28.069,32.747l-11.086,2.377 l-5.592-39.155l-48.22-16.073l-47.475,66.478H64.669l29.658-93.211l92.841,13.927l44.072-70.519l5.639,11.273l8.386-4.195 L234.595,0h-26.334v9.375h14.981L182.48,74.597L87.82,60.398L54.834,164.063h-5.948v9.375h97.406l-12.188,60.938H52.645 L33.895,150H2.011v9.375h24.366l16.927,76.167c-4.983,2.17-8.48,7.125-8.48,12.895c0,5.62,3.338,10.444,8.114,12.694 c-2.142,3.052-3.427,6.741-3.427,10.744c0,10.341,8.409,18.75,18.75,18.75s18.75-8.409,18.75-18.75 c0-3.431-0.994-6.605-2.606-9.375h47.405c-1.617,2.77-2.611,5.944-2.611,9.375c0,10.341,8.409,18.75,18.75,18.75 s18.75-8.409,18.75-18.75s-8.409-18.75-18.75-18.75H48.886c-2.583,0-4.688-2.105-4.688-4.688s2.105-4.688,4.688-4.688h92.906 l15.052-75.258l20.569-4.406l7.758,54.309l87.956,57.173l-15.047,6.019l3.483,8.705l26.386-10.556v-31.298h-9.375L278.573,267.923 L278.573,267.923z M67.636,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375s4.205-9.375,9.375-9.375 S67.636,266.705,67.636,271.875z M147.323,271.875c0,5.17-4.205,9.375-9.375,9.375s-9.375-4.205-9.375-9.375 s4.205-9.375,9.375-9.375S147.323,266.705,147.323,271.875z M132.759,164.063H95.494l39.567-55.397l36.155,12.052l4.866,34.059 L132.759,164.063z"
-                                />
+                                  opacity="0.4"
+                                  d="M2.80408 15.4771C2.80408 15.4771 2.94608 17.2151 2.97908 17.7631C3.02308 18.4981 3.30708 19.3191 3.78108 19.8891C4.45008 20.6971 5.23808 20.9821 6.29008 20.9841C7.52708 20.9861 16.5221 20.9861 17.7591 20.9841C18.8111 20.9821 19.5991 20.6971 20.2681 19.8891C20.7421 19.3191 21.0261 18.4981 21.0711 17.7631C21.1031 17.2151 21.2451 15.4771 21.2451 15.4771"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                ></path>
+                                <path
+                                  d="M8.49597 5.32949V4.95849C8.49597 3.73849 9.48397 2.75049 10.704 2.75049H13.286C14.505 2.75049 15.494 3.73849 15.494 4.95849L15.495 5.32949"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                ></path>
+                                <path
+                                  d="M11.995 16.6783V15.3843"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                ></path>
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M2.74988 8.38905V11.8561C4.66788 13.1211 6.96588 14.0071 9.48788 14.3581C9.78988 13.2571 10.7829 12.4501 11.9899 12.4501C13.1779 12.4501 14.1909 13.2571 14.4729 14.3681C17.0049 14.0171 19.3119 13.1311 21.2399 11.8561V8.38905C21.2399 6.69505 19.8769 5.33105 18.1829 5.33105H5.81688C4.12288 5.33105 2.74988 6.69505 2.74988 8.38905Z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                ></path>
                               </g>
                             </svg>
                             {marketplaceNotificationCount > 0 && (
