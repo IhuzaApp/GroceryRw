@@ -741,7 +741,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         />
 
         <div
-          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] border shadow-2xl transition-all duration-300 sm:max-h-[90vh] sm:rounded-[3rem]`}
+          className={`relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-t-[1.5rem] border shadow-2xl transition-all duration-300 sm:max-h-[80vh] sm:rounded-[1.5rem]`}
           style={{
             backgroundColor: "var(--bg-primary)",
             borderColor:
@@ -749,19 +749,19 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+          <div className="absolute left-0 right-0 top-0 h-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600" />
 
           <div
-            className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${
+            className={`flex flex-shrink-0 items-center justify-between px-5 py-4 sm:px-6 ${
               theme === "dark"
-                ? "border-b border-gray-700"
-                : "border-b border-gray-200"
+                ? "border-b border-white/5"
+                : "border-b border-black/5"
             }`}
           >
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
                 <svg
-                  className="h-7 w-7 text-white"
+                  className="h-5 w-5 text-white animate-pulse"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -776,44 +776,42 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </div>
               <div>
                 <h3
-                  className={`text-xl font-black tracking-tight ${
+                  className={`text-lg font-black tracking-tight ${
                     theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
                   {photoUploading
-                    ? "Uploading Photo..."
+                    ? "Securing Photo..."
                     : confirmingDelivery
-                    ? "Confirming..."
+                    ? "Finalizing..."
                     : deliveryConfirmed
-                    ? "Confirmed!"
+                    ? "Delivered!"
                     : orderType === "combined_customer"
-                    ? "Combined Delivery"
+                    ? "Batch Delivery"
                     : "Confirm Delivery"}
                 </h3>
                 <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  className={`text-xs font-medium ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
                   {orderType === "combined_customer"
-                    ? `${
-                        invoiceData.combinedOrderNumbers?.length || 1
-                      } Orders: ${invoiceData.orderNumber}`
-                    : `Order #${invoiceData.orderNumber}`}
+                    ? `${invoiceData.combinedOrderNumbers?.length || 1} Orders • Batch`
+                    : `Order ID: ${invoiceData.orderNumber}`}
                 </p>
               </div>
             </div>
             {!photoUploading && !confirmingDelivery && (
               <button
                 onClick={handleClose}
-                className={`rounded-lg p-2 transition-colors ${
+                className={`group rounded-xl p-2 transition-all duration-300 ${
                   theme === "dark"
-                    ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
-                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    ? "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                    : "bg-black/5 text-gray-500 hover:bg-black/10 hover:text-gray-900"
                 }`}
               >
                 <svg
-                  className="h-5 w-5"
+                  className="h-5 w-5 transition-transform group-hover:rotate-90"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -830,59 +828,43 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </div>
 
           <div
-            className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-4 sm:px-8 sm:py-8 ${
-              theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
-            } ${
-              currentVerificationStep === "pin" && !photoUploaded
-                ? "pb-24 sm:pb-8"
-                : ""
+            className={`max-h-[75vh] flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 ${
+              theme === "dark" ? "bg-[#0B0F1A]" : "bg-white"
             }`}
           >
-            <div className="space-y-6">
-              {/* Address section hidden on mobile to focus on action */}
+            <div className="mx-auto max-w-sm space-y-6">
+              {/* Animated Progress Dots */}
+              {!deliveryConfirmed && (
+                <div className="flex justify-center gap-3">
+                  <div className={`h-2 w-8 rounded-full transition-all duration-500 ${currentVerificationStep === 'pin' && !photoUploaded ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40 w-12' : 'bg-gray-300 dark:bg-gray-700'}`} />
+                  <div className={`h-2 w-8 rounded-full transition-all duration-500 ${(currentVerificationStep === 'photo' && !photoUploaded) || (photoUploaded && !deliveryConfirmed) ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40 w-12' : 'bg-gray-300 dark:bg-gray-700'}`} />
+                </div>
+              )}
+
+              {/* Delivery Context */}
               <div
-                className={`hidden rounded-2xl border-2 p-6 sm:block ${
+                className={`group relative overflow-hidden rounded-xl border p-4 transition-all duration-500 hover:border-emerald-500/50 ${
                   theme === "dark"
-                    ? "border-gray-700 bg-gray-900/40"
-                    : "border-gray-100 bg-gray-50/50"
+                    ? "border-white/5 bg-white/[0.02]"
+                    : "border-black/5 bg-gray-50/50"
                 }`}
               >
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`rounded-2xl p-3 ${
-                      theme === "dark"
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "bg-emerald-50 text-emerald-600"
-                    }`}
-                  >
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
+                <div className="flex items-start gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-500 group-hover:scale-110 ${
+                    theme === "dark" ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-600"
+                  }`}>
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </div>
-                  <div>
-                    <h4 className="font-bold">Delivery Address</h4>
-                    <p className="mt-1 text-sm opacity-70">
+                  <div className="flex-1">
+                    <h4 className={`text-base font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Delivery To</h4>
+                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}>
                       {invoiceData.customer}
                     </p>
-                    <p className="text-sm opacity-70">
-                      {invoiceData?.deliveryStreet ||
-                        invoiceData?.deliveryAddress}
+                    <p className={`mt-0.5 text-xs font-medium leading-relaxed opacity-60 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {invoiceData?.deliveryStreet || invoiceData?.deliveryAddress}
                     </p>
                   </div>
                 </div>
@@ -890,80 +872,54 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
               {/* PIN Verification Section */}
               {currentVerificationStep === "pin" && !photoUploaded && (
-                <div
-                  className={`rounded-[2.5rem] border-2 p-8 text-center transition-all ${
-                    theme === "dark"
-                      ? "border-emerald-500/30 bg-emerald-500/5"
-                      : "border-emerald-100 bg-emerald-50/30"
-                  }`}
-                >
-                  <h3 className="text-2xl font-black tracking-tight">
-                    Enter Delivery PIN
-                  </h3>
-                  <p className="mt-2 text-sm opacity-60">
-                    Please ask the customer for their 4-digit security PIN
-                  </p>
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="text-center space-y-1">
+                    <h3 className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Security PIN</h3>
+                    <p className={`text-[10px] font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Ask customer for their verification code
+                    </p>
+                  </div>
 
-                  <div className="mt-8 flex justify-center gap-3">
-                    {[0, 1, 2, 3].map((index) => (
-                      <input
-                        key={index}
-                        id={`otp-${index}`}
-                        type="text"
-                        maxLength={1}
-                        value={pinInput[index] || ""}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "");
-                          if (val.length <= 1) {
-                            const newPin = pinInput.split("");
-                            newPin[index] = val;
-                            setPinInput(newPin.join(""));
-                            if (val && index < 3) {
-                              document
-                                .getElementById(`otp-${index + 1}`)
-                                ?.focus();
-                            }
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (
-                            e.key === "Backspace" &&
-                            !pinInput[index] &&
-                            index > 0
-                          ) {
-                            document
-                              .getElementById(`otp-${index - 1}`)
-                              ?.focus();
-                          }
-                        }}
-                        className={`h-16 w-14 rounded-2xl border-2 text-center text-3xl font-black transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10`}
-                        style={{
-                          backgroundColor: "var(--bg-secondary)",
-                          color: "var(--text-primary)",
-                          borderColor:
-                            theme === "dark"
-                              ? "rgba(255,255,255,0.1)"
-                              : "rgba(0,0,0,0.1)",
-                        }}
-                      />
-                    ))}
+                  <div className="mt-6 group relative">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Enter Code"
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ""))}
+                      className={`h-12 w-full rounded-xl border bg-transparent text-center text-2xl font-black tracking-[0.4em] transition-all duration-300 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-white/10 text-white placeholder-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/10"
+                          : "border-black/10 text-gray-900 placeholder-black/5 focus:border-emerald-500/50 focus:ring-emerald-500/10"
+                      }`}
+                    />
+                    <div className="pointer-events-none absolute -right-1.5 -top-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-md shadow-emerald-500/40">
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
                   </div>
 
                   {pinError && (
-                    <div className="mt-6 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500">
+                    <div className="mt-6 animate-in shake duration-500 rounded-2xl bg-red-500/10 p-5 text-center text-sm font-black text-red-500 ring-2 ring-red-500/20">
                       {pinError}
                     </div>
                   )}
 
                   <button
                     onClick={handleVerifyPin}
-                    disabled={verifyingPin || pinInput.length !== 4}
-                    className="mt-8 hidden w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-8 py-5 text-lg font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 sm:flex"
+                    disabled={verifyingPin || pinInput.length < 2}
+                    className={`mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-md transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:grayscale disabled:scale-100`}
                   >
                     {verifyingPin ? (
-                      <div className="border-3 h-6 w-6 animate-spin rounded-full border-white border-t-transparent" />
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     ) : (
-                      "VERIFY PIN"
+                      <>
+                        <span>VERIFY PIN</span>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </>
                     )}
                   </button>
                 </div>
@@ -971,108 +927,112 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
               {/* Photo Proof Section */}
               {currentVerificationStep === "photo" && !photoUploaded && (
-                <div
-                  className={`rounded-[2.5rem] border-2 p-8 text-center transition-all ${
-                    theme === "dark"
-                      ? "border-amber-500/30 bg-amber-500/5"
-                      : "border-amber-100 bg-amber-50/30"
-                  }`}
-                >
-                  <h3 className="text-2xl font-black tracking-tight">
-                    Photo Proof Required
-                  </h3>
-                  <p className="mt-2 text-sm opacity-60">
-                    PIN verification skipped - please take a photo of the
-                    delivery
-                  </p>
+                <div className="animate-in fade-in zoom-in-95 duration-700 text-center space-y-4">
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Visual Proof</h3>
+                    <p className={`text-[10px] font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Take a photo of the delivery
+                    </p>
+                  </div>
 
                   {!capturedImage ? (
                     <button
                       onClick={() => setShowCameraCapture(true)}
-                      className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-5 text-lg font-black text-white shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.02]"
+                      className="group relative flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 transition-all duration-500 hover:border-amber-500 hover:bg-amber-500/10"
                     >
-                      <svg
-                        className="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                        />
-                      </svg>
-                      OPEN CAMERA
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-black text-amber-600">OPEN CAMERA</span>
                     </button>
                   ) : (
-                    <div className="mt-8 space-y-4">
-                      <div className="relative h-48 w-full overflow-hidden rounded-[2rem] border-4 border-white shadow-xl">
+                    <div className="space-y-3">
+                      <div className="relative h-48 w-full overflow-hidden rounded-xl border-2 border-white shadow-md dark:border-white/10">
                         <Image
                           src={capturedImage}
                           alt="Proof"
                           fill
-                          className="object-cover"
+                          className="object-cover transition-transform duration-700 hover:scale-110"
                         />
                       </div>
                       <button
                         onClick={() => setCapturedImage(null)}
-                        className="text-sm font-bold text-amber-600"
+                        className={`flex mx-auto items-center gap-2 rounded-2xl px-6 py-3 text-sm font-black transition-all ${
+                          theme === 'dark' ? 'bg-white/5 text-amber-400 hover:bg-white/10' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                        }`}
                       >
-                        Retake Photo
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        RETAKE PHOTO
                       </button>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Success Message */}
+              {/* Success Finalize Section */}
               {photoUploaded && !deliveryConfirmed && (
-                <div className="text-center">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-                    <svg
-                      className="h-10 w-10"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={3}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                <div className="animate-in zoom-in-50 duration-1000 text-center space-y-4">
+                  <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
+                    <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
+                    <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-500/50">
+                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                   </div>
-                  <h3 className="mt-4 text-2xl font-black">Ready to Confirm</h3>
+                  
+                  <div className="space-y-1">
+                    <h3 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Verified!</h3>
+                    <p className={`text-[10px] font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Ready to complete delivery
+                    </p>
+                  </div>
+
                   <button
                     onClick={handleConfirmDelivery}
-                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 px-8 py-5 text-lg font-black text-white shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+                    disabled={confirmingDelivery}
+                    className="group relative w-full overflow-hidden rounded-xl bg-gray-900 px-4 py-3.5 transition-all hover:scale-[1.01] active:scale-[0.99] dark:bg-white"
                   >
-                    COMPLETE DELIVERY
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                    <div className="relative flex items-center justify-center gap-2 text-sm font-black transition-colors duration-500 group-hover:text-white dark:text-gray-900">
+                      {confirmingDelivery ? (
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      ) : (
+                        <>
+                          <span>COMPLETE ORDER</span>
+                          <svg className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </>
+                      )}
+                    </div>
                   </button>
+                </div>
+              )}
+
+              {/* Already Confirmed State */}
+              {deliveryConfirmed && (
+                <div className="text-center py-4 space-y-4 animate-in fade-in duration-1000">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
+                    <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className={`text-xl font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Done!</h2>
+                    <p className={`text-xs font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Delivery confirmed.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Mobile Actions */}
-          {currentVerificationStep === "pin" && !photoUploaded && (
-            <div className="p-4 sm:hidden">
-              <button
-                onClick={handleVerifyPin}
-                disabled={verifyingPin || pinInput.length !== 4}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-5 text-lg font-black text-white shadow-xl"
-              >
-                {verifyingPin ? (
-                  <div className="border-3 h-6 w-6 animate-spin rounded-full border-white border-t-transparent" />
-                ) : (
-                  "VERIFY PIN"
-                )}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
