@@ -44,6 +44,7 @@ export default function ShopperSidebar({
   const { data: session } = useSession();
   const [isMobile, setIsMobile] = useState(false);
   const [dailyEarnings, setDailyEarnings] = useState(0);
+  const [activeBatchCount, setActiveBatchCount] = useState(0);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
@@ -82,6 +83,9 @@ export default function ShopperSidebar({
           typeof data.earnings.total === "number"
         ) {
           setDailyEarnings(data.earnings.total);
+          if (data.orderCounts && typeof data.orderCounts.active === "number") {
+            setActiveBatchCount(data.orderCounts.active);
+          }
         } else {
           logger.warn(
             "Earnings data incomplete or invalid",
@@ -243,17 +247,35 @@ export default function ShopperSidebar({
                 active={isActive("/Plasa/active-batches")}
                 collapsed={isCollapsed}
                 theme={theme === "dark" ? "dark" : "light"}
+                badge={activeBatchCount > 0 ? activeBatchCount.toString() : null}
               />
               <SidebarItem
                 href="/Plasa/Earnings"
                 icon={
                   <svg
                     className="h-5 w-5"
-                    fill="none"
                     viewBox="0 0 24 24"
-                    stroke="currentColor"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <path d="M12 1v6l3-3m-6 3l3 3M12 8v13M20 12h2l-2 2-2-2M4 12H2l2-2 2 2M12 20l2-2-2-2M12 4l2 2-2 2" />
+                    <path
+                      d="M3.17157 20.8284C4.34315 22 6.22876 22 10 22H14C17.7712 22 19.6569 22 20.8284 20.8284C22 19.6569 22 17.7712 22 14C22 12.8302 22 11.8419 21.965 11M20.8284 7.17157C19.6569 6 17.7712 6 14 6H10C6.22876 6 4.34315 6 3.17157 7.17157C2 8.34315 2 10.2288 2 14C2 15.1698 2 16.1581 2.03496 17"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M12 2C13.8856 2 14.8284 2 15.4142 2.58579C16 3.17157 16 4.11438 16 6M8.58579 2.58579C8 3.17157 8 4.11438 8 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M12 17.3333C13.1046 17.3333 14 16.5871 14 15.6667C14 14.7462 13.1046 14 12 14C10.8954 14 10 13.2538 10 12.3333C10 11.4129 10.8954 10.6667 12 10.6667M12 17.3333C10.8954 17.3333 10 16.5871 10 15.6667M12 17.3333V18M12 10V10.6667M12 10.6667C13.1046 10.6667 14 11.4129 14 12.3333"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 }
                 label="Earnings"
@@ -270,11 +292,17 @@ export default function ShopperSidebar({
                   <div className="relative">
                     <svg
                       className="h-5 w-5"
-                      fill="none"
                       viewBox="0 0 24 24"
+                      fill="none"
                       stroke="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
                     >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      <path
+                        d="M8 10.5H16M8 14.5H11M21.0039 12C21.0039 16.9706 16.9745 21 12.0039 21C9.9675 21 3.00463 21 3.00463 21C3.00463 21 4.56382 17.2561 3.93982 16.0008C3.34076 14.7956 3.00391 13.4372 3.00391 12C3.00391 7.02944 7.03334 3 12.0039 3C16.9745 3 21.0039 7.02944 21.0039 12Z"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     {unreadMessageCount > 0 && (
                       <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-black">
@@ -283,7 +311,7 @@ export default function ShopperSidebar({
                     )}
                   </div>
                 }
-                label="Chat"
+                label="Messages"
                 active={isActive("/Plasa/chat")}
                 collapsed={isCollapsed}
                 theme={theme === "dark" ? "dark" : "light"}
