@@ -58,11 +58,23 @@ function formatMessageDate(timestamp: any) {
       minute: "2-digit",
     })}`;
   } else {
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+    return date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })}`;
+    });
   }
+}
+
+function formatMessageTime(timestamp: any) {
+  if (!timestamp) return "";
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 // Define message interface

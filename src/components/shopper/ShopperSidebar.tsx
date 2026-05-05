@@ -156,20 +156,17 @@ export default function ShopperSidebar({
     <>
       {/* Desktop sidebar */}
       <div
-        className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] border-r shadow-sm backdrop-blur-2xl transition-all duration-300 md:block ${
-          isCollapsed ? "w-20" : "w-64"
-        } ${
-          theme === "dark"
+        className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] border-r shadow-sm backdrop-blur-2xl transition-all duration-300 md:block ${isCollapsed ? "w-20" : "w-64"
+          } ${theme === "dark"
             ? "border-white/10 bg-[#0A0A0A]/80 text-white"
             : "border-black/5 bg-white/90 text-gray-900"
-        }`}
+          }`}
       >
         <div className="flex h-full flex-col">
           {/* Toggle Button & Branding Padding */}
           <div
-            className={`flex items-center p-4 ${
-              isCollapsed ? "justify-center" : "justify-between"
-            }`}
+            className={`flex items-center p-4 ${isCollapsed ? "justify-center" : "justify-between"
+              }`}
           >
             {!isCollapsed && (
               <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
@@ -178,16 +175,14 @@ export default function ShopperSidebar({
             )}
             <button
               onClick={onToggle}
-              className={`flex h-8 w-8 items-center justify-center rounded-lg border border-transparent transition-all duration-200 ${
-                theme === "dark"
+              className={`flex h-8 w-8 items-center justify-center rounded-lg border border-transparent transition-all duration-200 ${theme === "dark"
                   ? "hover:border-white/10 hover:bg-white/5"
                   : "hover:border-black/5 hover:bg-black/5"
-              }`}
+                }`}
             >
               <svg
-                className={`h-4 w-4 transition-transform duration-300 ${
-                  isCollapsed ? "" : "rotate-180"
-                }`}
+                className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? "" : "rotate-180"
+                  }`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -342,9 +337,8 @@ export default function ShopperSidebar({
 
           {/* Settings & Logout Section */}
           <div
-            className={`border-t p-3 ${
-              theme === "dark" ? "border-white/10" : "border-black/5"
-            }`}
+            className={`border-t p-3 ${theme === "dark" ? "border-white/10" : "border-black/5"
+              }`}
           >
             <SidebarItem
               href="/Plasa/ShopperProfile"
@@ -464,9 +458,8 @@ function SidebarItem({
 }: SidebarItemProps) {
   const isDark = theme === "dark";
 
-  const baseClasses = `group relative flex items-center transition-all duration-300 rounded-xl overflow-hidden ${
-    collapsed ? "justify-center px-0 h-11" : "px-4 py-3"
-  } ${className}`;
+  const baseClasses = `group relative flex items-center transition-all duration-300 rounded-xl overflow-hidden ${collapsed ? "justify-center px-0 h-11" : "px-4 py-3"
+    } ${className}`;
 
   const activeClasses = active
     ? colorVariant === "emerald"
@@ -475,8 +468,8 @@ function SidebarItem({
         : "bg-emerald-50 text-emerald-600 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.1)]"
       : ""
     : isDark
-    ? "text-gray-400 hover:bg-white/5 hover:text-white"
-    : "text-gray-600 hover:bg-black/5 hover:text-gray-900";
+      ? "text-gray-400 hover:bg-white/5 hover:text-white"
+      : "text-gray-600 hover:bg-black/5 hover:text-gray-900";
 
   const hoverColorClass =
     colorVariant === "red" ? "hover:text-red-500 hover:bg-red-500/10" : "";
@@ -488,9 +481,8 @@ function SidebarItem({
       onClick={onClick}
     >
       <div
-        className={`flex items-center justify-center transition-transform duration-300 ${
-          collapsed ? "group-hover:scale-110" : ""
-        }`}
+        className={`flex items-center justify-center transition-transform duration-300 ${collapsed ? "group-hover:scale-110" : ""
+          }`}
       >
         {icon}
       </div>
@@ -502,13 +494,12 @@ function SidebarItem({
           </span>
           {badge && (
             <span
-              className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                active
+              className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${active
                   ? "bg-emerald-500 text-white"
                   : isDark
-                  ? "bg-white/10 text-gray-400"
-                  : "bg-black/5 text-gray-500"
-              }`}
+                    ? "bg-white/10 text-gray-400"
+                    : "bg-black/5 text-gray-500"
+                }`}
             >
               {badge}
             </span>

@@ -307,8 +307,8 @@ export const markMessagesAsRead = async (
  */
 export const listenForMessages = (
   conversationId: string,
-  collectionPath: ChatCollection,
-  callback: (messages: ChatMessage[]) => void
+  callback: (messages: ChatMessage[]) => void,
+  collectionPath: ChatCollection = "chat_conversations"
 ): (() => void) => {
   try {
     const messagesRef = collection(
