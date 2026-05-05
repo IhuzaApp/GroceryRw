@@ -111,6 +111,7 @@ export default function ShopperSidebar({
   useEffect(() => {
     if (!session?.user?.id) return;
 
+    if (!db) return;
     const conversationsRef = collection(db, "chat_conversations");
     const q = query(
       conversationsRef,

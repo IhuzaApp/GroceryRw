@@ -39,6 +39,12 @@ import {
 } from "../../../src/lib/chatPiiBlock";
 import { useChatTypingIndicator } from "../../../src/hooks/useChatTypingIndicator";
 
+import { ShopperChatSkeleton } from "../../../src/components/chat/ShopperChatSkeleton";
+import { ShopperChatHeader } from "../../../src/components/chat/ShopperChatHeader";
+import { ShopperChatMessage } from "../../../src/components/chat/ShopperChatMessage";
+import { ShopperChatSidebar } from "../../../src/components/chat/ShopperChatSidebar";
+import { ShopperChatInput } from "../../../src/components/chat/ShopperChatInput";
+
 // Define message interface
 interface Message {
   id: string;
@@ -88,6 +94,7 @@ function ChatPage() {
     name: string;
     avatar: string;
     lastSeen: string;
+    phone?: string;
   } | null>(null);
   const [order, setOrder] = useState<any>(null);
   const [piiError, setPiiError] = useState<string | null>(null);
@@ -102,7 +109,6 @@ function ChatPage() {
   );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize chat and fetch customer data
   useEffect(() => {
@@ -137,6 +143,7 @@ function ChatPage() {
             name: customerName,
             avatar: orderedBy?.profile_picture || "/images/userProfile.png",
             lastSeen: "Online now",
+            phone: orderedBy?.phone || o.customerPhone,
           };
 
           setCustomerData(customerDataToSet);
@@ -160,6 +167,7 @@ function ChatPage() {
     customerId: string
   ) => {
     try {
+      if (!db) return;
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderIdStr));
@@ -206,6 +214,8 @@ function ChatPage() {
   // Set up messages listener
   useEffect(() => {
     if (!conversationId || !user?.id) return;
+
+    if (!db) return;
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
@@ -260,7 +270,7 @@ function ChatPage() {
 
       // Mark messages as read if they were sent to the current user
       messagesList.forEach(async (msg) => {
-        if (msg.senderType === "customer" && !msg.read) {
+        if (msg.senderType === "customer" && !msg.read && db) {
           const messageRef = doc(
             db,
             "chat_conversations",
@@ -296,14 +306,14 @@ function ChatPage() {
 
   // Combined list for display: server messages + pending (optimistic), sorted by time
   const displayMessages = React.useMemo(() => {
-    const pendingAsDisplay: (Message | PendingMessage)[] = pendingMessages.map(
+    const pendingAsDisplay = pendingMessages.map(
       (p) => ({
         ...p,
         id: p.tempId,
         timestamp: p.timestamp,
       })
     );
-    const combined = [...messages, ...pendingAsDisplay];
+    const combined = [...messages, ...pendingAsDisplay] as any[];
     combined.sort((a, b) => {
       const tA =
         a.timestamp instanceof Date
@@ -350,6 +360,7 @@ function ChatPage() {
     scrollToBottom();
 
     try {
+      if (!db) return;
       const messagesRef = collection(
         db,
         "chat_conversations",
@@ -389,80 +400,13 @@ function ChatPage() {
         // FCM non-critical
       }
     } catch (error) {
-      console.error("❌ [Shopper Chat] Error sending message:", error);
+      console.error("\u274c [Shopper Chat] Error sending message:", error);
       setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Group display messages by date for better display
-  const groupMessagesByDate = (list: (Message | PendingMessage)[]) => {
-    const groups: { date: string; messages: (Message | PendingMessage)[] }[] =
-      [];
-    let currentDate = "";
-    let currentGroup: (Message | PendingMessage)[] = [];
-
-    list.forEach((msg) => {
-      const messageDate = formatMessageDate(msg.timestamp);
-
-      if (messageDate !== currentDate) {
-        if (currentGroup.length > 0) {
-          groups.push({ date: currentDate, messages: currentGroup });
-        }
-        currentDate = messageDate;
-        currentGroup = [msg];
-      } else {
-        currentGroup.push(msg);
-      }
-    });
-
-    if (currentGroup.length > 0) {
-      groups.push({ date: currentDate, messages: currentGroup });
-    }
-
-    return groups;
-  };
-
-  const messageGroups = groupMessagesByDate(displayMessages);
-
-  // Premium Skeleton Loader
-  const ChatSkeleton = () => (
-    <div className={`flex h-screen w-screen flex-col ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
-      <div className={`flex items-center gap-4 border-b px-6 py-4 ${isDark ? "border-white/10" : "border-black/5"}`}>
-        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
-          <div className="h-3 w-20 animate-pulse rounded bg-gray-100 dark:bg-gray-900" />
-        </div>
-      </div>
-      <div className="flex-1 space-y-8 p-6">
-        <div className="flex items-end gap-3">
-          <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800" />
-          <div className="h-16 w-48 animate-pulse rounded-2xl rounded-bl-none bg-gray-100 dark:bg-gray-800" />
-        </div>
-        <div className="flex flex-row-reverse items-end gap-3">
-          <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800" />
-          <div className="h-20 w-64 animate-pulse rounded-2xl rounded-br-none bg-emerald-500/10" />
-        </div>
-        <div className="flex items-end gap-3">
-          <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800" />
-          <div className="h-12 w-40 animate-pulse rounded-2xl rounded-bl-none bg-gray-100 dark:bg-gray-800" />
-        </div>
-      </div>
-      <div className="p-6">
-        <div className="h-14 w-full animate-pulse rounded-full bg-gray-200 dark:bg-gray-800" />
-      </div>
-    </div>
-  );
-
   if (!customerData && isLoading) {
-    return <ChatSkeleton />;
+    return <ShopperChatSkeleton isDark={isDark} />;
   }
 
   if (!customerData && !isLoading) {
@@ -488,47 +432,13 @@ function ChatPage() {
   return (
     <ShopperLayout>
       <div className="flex h-full w-full overflow-hidden bg-[var(--bg-primary)]">
-
-
         {/* Main Chat Area */}
         <div className="flex flex-1 flex-col bg-gray-50 dark:bg-black/40">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-white/50 p-4 backdrop-blur-md dark:border-white/5 dark:bg-black/50">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => router.push("/Plasa/chat")}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/5 transition-all active:scale-90 dark:bg-white/5"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-              </button>
-              
-              <div className="flex items-center gap-3">
-                <Avatar
-                  src={customerData?.profile_picture || customerData?.avatar}
-                  circle
-                  size={isMobile ? "sm" : "md"}
-                  className="ring-2 ring-emerald-500/20"
-                />
-                <div>
-                  <h2 className="text-sm font-black tracking-tight md:text-base">
-                    {customerData?.name || "Customer"}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
-                      Active Now
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Link href={`/Plasa/orders/${orderId}`}>
-              <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/5 transition-transform active:scale-90 dark:bg-white/5" title="Order Details">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </button>
-            </Link>
-          </div>
+          <ShopperChatHeader
+            orderId={orderId as string}
+            customerData={customerData}
+            isMobile={isMobile}
+          />
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto scroll-smooth p-6">
@@ -541,38 +451,15 @@ function ChatPage() {
                 const showDate = idx === 0 || formatMessageDate(msg.timestamp) !== formatMessageDate(displayMessages[idx-1].timestamp);
 
                 return (
-                  <React.Fragment key={msg.id}>
-                    {showDate && (
-                      <div className="flex items-center gap-4 py-4">
-                        <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">{formatMessageDate(msg.timestamp)}</span>
-                        <div className="h-px flex-1 bg-black/5 dark:bg-white/5" />
-                      </div>
-                    )}
-                    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`group relative max-w-[80%] rounded-3xl px-5 py-3 shadow-sm transition-all duration-300 md:max-w-[60%] ${
-                        isMe
-                          ? "rounded-br-none bg-emerald-500 text-white shadow-emerald-500/20"
-                          : isDark
-                          ? "rounded-bl-none border border-white/5 bg-white/5 text-gray-100 backdrop-blur-md"
-                          : "rounded-bl-none border border-black/5 bg-white text-gray-900"
-                      }`}>
-                        <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed">
-                          {sanitizeMessageForDisplay(("text" in msg ? msg.text : (msg as Message).text || (msg as Message).message) ?? "")}
-                        </div>
-                        <div className={`mt-1.5 flex items-center gap-2 opacity-40 transition-opacity group-hover:opacity-100 ${isMe ? "justify-end text-white" : ""}`}>
-                          {isMe && (
-                            <span className="text-[8px] font-black uppercase tracking-tighter">
-                              {isPending ? "Sending..." : isRead ? "Read" : "Sent"}
-                            </span>
-                          )}
-                          <span className="text-[8px] font-black">
-                            {formatMessageTime(msg.timestamp)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </React.Fragment>
+                  <ShopperChatMessage
+                    key={msg.id}
+                    msg={msg}
+                    isDark={isDark}
+                    isMe={isMe}
+                    isPending={isPending}
+                    isRead={isRead}
+                    showDate={showDate}
+                  />
                 );
               })}
               {otherTypingName && (
@@ -587,91 +474,22 @@ function ChatPage() {
             </div>
           </div>
 
-          {/* Input Area */}
-          <div className="p-4 md:p-8">
-            <div className="mx-auto max-w-4xl">
-              <form
-                onSubmit={handleSendMessage}
-                className="relative flex items-center gap-3"
-              >
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => {
-                      setMessage(e.target.value);
-                      reportTyping();
-                    }}
-                    onBlur={clearTyping}
-                    placeholder="Type a message..."
-                    className="w-full rounded-[2rem] bg-white px-6 py-4 text-sm font-medium outline-none shadow-sm transition-all focus:shadow-md dark:bg-white/5 dark:focus:bg-white/10"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!message.trim()}
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:hover:scale-100"
-                >
-                  <svg className="h-6 w-6 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                </button>
-              </form>
-              {piiError && (
-                <p className="mt-3 text-center text-[10px] font-black uppercase tracking-widest text-red-500">
-                  {piiError}
-                </p>
-              )}
-            </div>
-          </div>
+          <ShopperChatInput
+            message={message}
+            setMessage={setMessage}
+            handleSendMessage={handleSendMessage}
+            reportTyping={reportTyping}
+            clearTyping={clearTyping}
+            piiError={piiError}
+          />
         </div>
 
-        {/* Right Sidebar - Order Details (Desktop only) */}
-        {!isMobile && (
-          <div className="hidden w-80 flex-col border-l border-gray-100 bg-white dark:border-gray-800 dark:bg-black/20 xl:flex">
-             <div className="p-6">
-                <h2 className="text-sm font-black uppercase tracking-[0.2em] opacity-30 mb-8">Order Summary</h2>
-                
-                {/* Status Card */}
-                <div className="p-6 rounded-[2rem] bg-gray-50 dark:bg-white/5 mb-8">
-                   <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Current Status</span>
-                      <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase tracking-widest">Active</span>
-                   </div>
-                   <h3 className="text-xl font-black mb-1">#{formatOrderID(orderId)}</h3>
-                   <p className="text-xs opacity-50 font-bold">{formatCurrency(order?.Total_Amount || 0)} • {order?.Order_Items?.length || 0} items</p>
-                </div>
-
-                {/* Details Sections */}
-                <div className="space-y-8">
-                   <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30 mb-4">Customer Info</h4>
-                      <div className="flex items-center gap-4">
-                         <Avatar src={customerData?.profile_picture || customerData?.avatar} circle size="md" className="ring-2 ring-emerald-500/10" />
-                         <div>
-                            <p className="text-sm font-black">{customerData?.name || "Customer"}</p>
-                            <p className="text-[10px] font-bold opacity-40">{customerData?.phone || "No phone provided"}</p>
-                         </div>
-                      </div>
-                   </div>
-
-                   <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30 mb-4">Delivery To</h4>
-                      <div className="flex gap-3">
-                         <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0">
-                            <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                         </div>
-                         <p className="text-xs leading-relaxed font-medium opacity-60">{order?.delivery_address || "No address specified"}</p>
-                      </div>
-                   </div>
-
-                   <Link href={`/Plasa/orders/${orderId}`}>
-                      <button className="w-full py-4 bg-black text-white dark:bg-white dark:text-black rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg">
-                         Manage Order
-                      </button>
-                   </Link>
-                </div>
-             </div>
-          </div>
-        )}
+        <ShopperChatSidebar
+          orderId={orderId as string}
+          order={order}
+          customerData={customerData}
+          formatOrderID={formatOrderID}
+        />
       </div>
     </ShopperLayout>
   );
