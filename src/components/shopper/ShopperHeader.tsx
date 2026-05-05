@@ -68,14 +68,16 @@ export default function ShopperHeader() {
       <header className="bg-[var(--bg-primary)]/80 sticky top-0 z-[100] flex w-full items-center justify-between border-b border-transparent px-4 py-3 backdrop-blur-2xl transition-all duration-300 dark:border-white/5">
         {/* Logo Section - Mobile */}
         <div className="flex items-center">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center transition-opacity hover:opacity-80">
             <Image
-              src="/assets/logos/plas.png"
-              alt="Plas Logo"
-              width={80}
-              height={30}
-              className={`h-8 w-auto ${theme === "dark" ? "brightness-0 invert" : ""
-                }`}
+              src="/assets/logos/plasLogoPNG.png"
+              alt="Plasa Logo"
+              width={100}
+              height={32}
+              className={`h-7 w-auto sm:h-8 ${
+                theme === "dark" ? "brightness-0 invert" : ""
+              }`}
+              priority
             />
           </Link>
         </div>
@@ -128,8 +130,8 @@ export default function ShopperHeader() {
               window.dispatchEvent(new Event("toggleGoLive"));
             }}
             className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:shadow-lg active:scale-90 ${isOnline
-                ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
-                : "bg-green-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white"
+              ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
+              : "bg-green-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white"
               }`}
             title={isOnline ? "Go Offline" : "Go Online"}
           >
@@ -161,14 +163,15 @@ export default function ShopperHeader() {
     <header className="bg-[var(--bg-primary)]/80 sticky top-0 z-[100] flex items-center justify-between border-b border-transparent px-6 py-4 shadow-sm backdrop-blur-2xl transition-all duration-300 dark:border-white/5">
       {/* Logo Section */}
       <div className="flex items-center">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center transition-opacity hover:opacity-80">
           <Image
-            src="/assets/logos/PlasLogo.svg"
-            alt="Plas Logo"
-            width={120}
+            src="/assets/logos/plasLogoPNG.png"
+            alt="Plasa Logo"
+            width={130}
             height={40}
-            className={`ml-8 h-8 w-auto ${theme === "dark" ? "brightness-0 invert" : ""
-              }`}
+            className={`ml-4 h-9 w-auto lg:h-10 ${
+              theme === "dark" ? "brightness-0 invert" : ""
+            }`}
             priority
           />
         </Link>
