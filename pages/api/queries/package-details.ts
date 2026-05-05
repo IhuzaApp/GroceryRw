@@ -43,7 +43,7 @@ const GET_PACKAGE_DETAILS = gql`
         profile_photo
         active
       }
-      Users {
+      User {
         email
         name
         phone

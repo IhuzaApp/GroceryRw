@@ -167,7 +167,7 @@ const GET_PACKAGE_ORDERS = gql`
       user_id
       payment_method
       shopper_id
-      Users {
+      User {
         id
         name
         email
@@ -444,7 +444,7 @@ export default async function handler(
             user_id: string | null;
             payment_method: string | null;
             shopper_id: string | null;
-            Users: {
+            User: {
               id: string;
               name: string | null;
               email: string | null;
@@ -808,11 +808,11 @@ export default async function handler(
       status: o.status,
       createdAt: o.created_at,
       deliveryTime: o.timeAndDate || undefined,
-      shopName: o.Users?.name
-        ? `Package from ${o.Users.name}`
+      shopName: o.User?.name
+        ? `Package from ${o.User.name}`
         : "Package Delivery",
       shopNames: [
-        o.Users?.name ? `Package from ${o.Users.name}` : "Package Delivery",
+        o.User?.name ? `Package from ${o.User.name}` : "Package Delivery",
       ],
       shopAddress: o.pickupLocation || "—",
       shopLat: parseFloat(String(o.pickup_latitude || "0")),

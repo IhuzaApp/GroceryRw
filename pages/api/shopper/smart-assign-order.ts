@@ -257,7 +257,7 @@ const GET_ELIGIBLE_PACKAGE_ORDERS = gql`
       user_id
       payment_method
       shopper_id
-      Users {
+      User {
         name
       }
     }
@@ -416,7 +416,7 @@ const GET_PACKAGE_ORDER_BY_PK = gql`
       user_id
       payment_method
       shopper_id
-      Users {
+      User {
         name
       }
     }
@@ -956,8 +956,8 @@ function formatOrderForResponse(
     displayOrderId: order.OrderID != null ? String(order.OrderID) : null,
     shopName:
       order.orderType === "package"
-        ? order.Users?.name
-          ? `Package from ${order.Users.name}`
+        ? order.User?.name
+          ? `Package from ${order.User.name}`
           : "Package Delivery"
         : order.Shop?.name ||
           order.Reel?.title ||

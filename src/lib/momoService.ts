@@ -236,7 +236,7 @@ class MomoService {
     amount: number | string;
     currency: string;
     payeeId: string;
-    partyIdType?: "MSISDN" | "EMAIL" | "PERSONAL_ID";
+    partyIdType?: "MSISDN" | "EMAIL" | "PERSONAL_ID" | "ALIAS";
     externalId: string;
     payerMessage?: string;
     payeeNote?: string;
@@ -252,9 +252,11 @@ class MomoService {
 
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
 
-    // For MoMo codes, we often use MSISDN if it looks like a code, or the provided type
+    // For MoMo codes (ALIAS), we use the ID directly without formatting as a phone number
     const partyId =
-      params.partyIdType === "MSISDN" || !params.partyIdType
+      params.partyIdType === "ALIAS"
+        ? params.payeeId
+        : params.partyIdType === "MSISDN" || !params.partyIdType
         ? this.formatPhoneNumber(params.payeeId)
         : params.payeeId;
 

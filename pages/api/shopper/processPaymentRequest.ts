@@ -5,6 +5,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import { sendPaymentRequestToSlack } from "../../../src/lib/slackSupportNotifier";
+import { momoService } from "../../../src/lib/momoService";
 
 const GET_MERCHANT_WALLET = gql`
   query GetMerchantWallet($shop_id: uuid!) {
@@ -53,6 +54,38 @@ const GET_SHOPPER_ID = gql`
   }
 `;
 
+const GET_SHOP_DETAILS = gql`
+  query GetShopDetails($id: uuid!) {
+    shops_by_pk(id: $id) {
+      id
+      name
+      ssd
+      has_wallet
+    }
+  }
+`;
+
+const CHECK_EXISTING_REQUEST = gql`
+  query CheckExistingRequest($order_id: uuid!) {
+    payment_requests(where: { order_id: { _eq: $order_id } }) {
+      id
+      status
+      transactionCode
+    }
+  }
+`;
+
+const GET_RESERVED_FUNDS = gql`
+  query GetReservedFunds($order_id: uuid!) {
+    Wallet_Transactions(where: { 
+      related_order_id: { _eq: $order_id }, 
+      type: { _eq: "reserve" } 
+    }) {
+      amount
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -91,7 +124,62 @@ export default async function handler(
       throw new Error("Shopper profile not found for this user.");
     }
 
-    if (hasWallet) {
+    // Fetch shop details to check for SSD (MoMo Merchant ID)
+    const shopRes = await hasuraClient.request<any>(GET_SHOP_DETAILS, {
+      id: shopId,
+    });
+    const shop = shopRes.shops_by_pk;
+
+    if (!shop) {
+      throw new Error("Shop not found.");
+    }
+
+    const numericAmount = parseFloat(amount.toString());
+
+    // Check for existing payment requests to prevent duplicates
+    const existingReqRes = await hasuraClient.request<any>(CHECK_EXISTING_REQUEST, {
+      order_id: orderId,
+    });
+    const existingReq = existingReqRes.payment_requests[0];
+
+    if (existingReq) {
+      if (existingReq.status === "APPROVED") {
+        return res.status(200).json({
+          success: true,
+          status: "AUTOMATED_PAYMENT_SUCCESSFUL",
+          message: "Payment was already processed and approved.",
+          referenceId: existingReq.transactionCode,
+        });
+      }
+      if (existingReq.status === "PENDING_PAYMENT") {
+        return res.status(200).json({
+          success: true,
+          status: "PENDING_PAYMENT",
+          message: "A payment request is already pending approval.",
+        });
+      }
+    }
+
+    // BUDGET VALIDATION: Ensure payout does not exceed reserved funds for this order
+    const reservedFundsRes = await hasuraClient.request<any>(GET_RESERVED_FUNDS, {
+      order_id: orderId,
+    });
+    
+    const reservedAmount = reservedFundsRes.Wallet_Transactions.reduce(
+      (sum: number, tx: any) => sum + parseFloat(tx.amount),
+      0
+    );
+
+    if (numericAmount > reservedAmount) {
+      console.warn(`🛑 Budget Violation: Requested ${numericAmount} but only ${reservedAmount} was reserved for order ${orderId}`);
+      return res.status(400).json({
+        error: "payout_exceeds_budget",
+        message: `The requested amount (${numericAmount} RWF) exceeds the budget reserved for this order (${reservedAmount} RWF).`,
+        reservedAmount
+      });
+    }
+
+    if (hasWallet || shop.has_wallet) {
       // Path 1: Shop has an internal wallet - Direct payout
       const walletRes = await hasuraClient.request<any>(GET_MERCHANT_WALLET, {
         shop_id: shopId,
@@ -117,38 +205,90 @@ export default async function handler(
           message: `Merchant wallet updated with ${amount} RWF.`,
         });
       } else {
-        throw new Error("Merchant wallet not found for the provided shop ID.");
+        // Fallback: If wallet not found but hasWallet was true, proceed to check for SSD or manual request
+        console.warn(`Wallet flag was true but no wallet found for shop ${shopId}`);
       }
-    } else {
-      // Path 2: Shop does NOT have wallet - Create Payment Request
-      await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
-        object: {
-          order_id: orderId,
-          shop_id: shopId,
-          shopper_id: shopperId,
-          amount: amount.toString(),
-          status: "PENDING_PAYMENT",
-          agent_approved_id: null,
-          transactionCode: null,
-        },
-      });
-
-      // Notify Slack
-      const shopperData = shopperRes.shoppers[0];
-      await sendPaymentRequestToSlack({
-        orderId,
-        shopName: shopName || "Unknown Merchant",
-        amount: amount.toString(),
-        shopperName: shopperData?.user?.name || "Unknown Shopper",
-        shopperPhone: shopperData?.phone_number || "Unknown Phone",
-      });
-
-      return res.status(200).json({
-        success: true,
-        status: "PENDING_PAYMENT",
-        message: "Payment request created successfully.",
-      });
     }
+
+    // Path 2: Check if shop has MoMo SSD (Merchant ID) for automated transfer
+    // AUTOMATED PAYMENT RULES:
+    // 1. Shop must have SSD (Merchant ID)
+    // 2. Amount must be <= 100,000 RWF
+    if (shop.ssd && numericAmount <= 100000) {
+      try {
+        console.log(`🚀 Initiating automated MoMo transfer to shop: ${shop.name} (${shop.ssd}) for ${numericAmount} RWF`);
+        
+        const transferRes = await momoService.transfer({
+          amount: numericAmount,
+          currency: "RWF",
+          payeeId: shop.ssd,
+          partyIdType: "ALIAS",
+          externalId: `ORD-${orderId.toString().slice(0, 15)}`, // Stable unique external ID
+          payerMessage: `Payment for Order #${orderId}`,
+          payeeNote: `Grocery Platform Payment - Order #${orderId}`,
+        });
+
+        // Record the successful automated payment
+        await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
+          object: {
+            order_id: orderId,
+            shop_id: shopId,
+            shopper_id: shopperId,
+            amount: numericAmount.toString(),
+            status: "APPROVED", // Mark as approved immediately
+            agent_approved_id: null,
+            transactionCode: transferRes.referenceId,
+          },
+        });
+
+        return res.status(200).json({
+          success: true,
+          status: "AUTOMATED_PAYMENT_SUCCESSFUL",
+          message: "Payment transferred successfully via MoMo.",
+          referenceId: transferRes.referenceId,
+        });
+      } catch (transferError: any) {
+        console.error("❌ MoMo Transfer failed, falling back to manual request:", transferError);
+        // Log to Slack but continue to manual request fallback
+        await logErrorToSlack("shopper/processPaymentRequest:momoTransfer", transferError, {
+          orderId,
+          shopId,
+          amount,
+          ssd: shop.ssd,
+        });
+      }
+    } else if (shop.ssd && numericAmount > 100000) {
+      console.log(`⚠️ Amount ${numericAmount} exceeds 100k limit. Falling back to manual request.`);
+    }
+
+    // Path 3: Fallback to manual Payment Request
+    await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
+      object: {
+        order_id: orderId,
+        shop_id: shopId,
+        shopper_id: shopperId,
+        amount: amount.toString(),
+        status: "PENDING_PAYMENT",
+        agent_approved_id: null,
+        transactionCode: null,
+      },
+    });
+
+    // Notify Slack
+    const shopperData = shopperRes.shoppers[0];
+    await sendPaymentRequestToSlack({
+      orderId,
+      shopName: shopName || "Unknown Merchant",
+      amount: amount.toString(),
+      shopperName: shopperData?.user?.name || "Unknown Shopper",
+      shopperPhone: shopperData?.phone_number || "Unknown Phone",
+    });
+
+    return res.status(200).json({
+      success: true,
+      status: "PENDING_PAYMENT",
+      message: "Payment request created successfully (Manual approval required).",
+    });
   } catch (error) {
     await logErrorToSlack("shopper/processPaymentRequest", error, {
       orderId,

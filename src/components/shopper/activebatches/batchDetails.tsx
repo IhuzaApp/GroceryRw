@@ -1055,6 +1055,7 @@ export default function BatchDetails({
       // Same-shop combined: batch total (all orders). Different-shop: target order only.
       const orderAmount = getPaymentOrderAmount();
       const originalOrderTotal = getOriginalOrderTotalForPayment();
+      let momoRef = "INTERNAL";
 
       // NEW PAYMENT FLOW FOR REGULAR ORDERS
       if (targetOrderForPayment.orderType === "regular") {
@@ -1087,8 +1088,18 @@ export default function BatchDetails({
             </Notification>,
             { placement: "topEnd" }
           );
+        } else if (data.status === "AUTOMATED_PAYMENT_SUCCESSFUL") {
+          // Path 2: MoMo Transfer successful
+          toaster.push(
+            <Notification type="success" header="MoMo Transfer Successful" closable>
+              {data.message}
+            </Notification>,
+            { placement: "topEnd" }
+          );
+          // Pass the MoMo reference ID to finalizeOrderPayment
+          momoRef = data.referenceId;
         } else if (data.status === "PENDING_PAYMENT") {
-          // Path 2: Shop does NOT have wallet - Create Payment Request + Firebase Listener
+          // Path 3: Shop does NOT have wallet/MoMo - Create Payment Request + Firebase Listener
           setPaymentRequestStatus("PENDING_PAYMENT");
           setShowPaymentRequestModal(true);
           setOtpVerifyLoading(false);
@@ -1101,7 +1112,8 @@ export default function BatchDetails({
       await finalizeOrderPayment(
         orderAmount,
         originalOrderTotal,
-        targetOrderForPayment
+        targetOrderForPayment,
+        momoRef
       );
     } catch (err) {
       reportErrorToSlackClient("BatchDetails (OTP verification)", err, {
@@ -1125,7 +1137,8 @@ export default function BatchDetails({
   const finalizeOrderPayment = async (
     orderAmount: number,
     originalOrderTotal: number,
-    targetOrderForPayment: any
+    targetOrderForPayment: any,
+    momoReferenceId: string = "INTERNAL"
   ) => {
     let paymentSuccess = false;
     let walletUpdated = false;
@@ -1145,7 +1158,7 @@ export default function BatchDetails({
           orderAmount: orderAmount,
           originalOrderTotal: originalOrderTotal,
           orderType: targetOrderForPayment.orderType || "regular",
-          momoReferenceId: "INTERNAL", // Bypassing MoMo disbursement
+          momoReferenceId: momoReferenceId, // Pass reference from MoMo transfer or "INTERNAL"
           momoSuccess: true,
           isSameShopCombined: hasSameShopCombinedOrders,
           combinedOrders: hasCombinedOrders ? order.combinedOrders : undefined,
