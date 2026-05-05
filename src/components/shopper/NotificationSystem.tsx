@@ -10,6 +10,20 @@ import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 // Create a separate toast instance for batch notifications
 const batchToast = toast;
 
+// Check if mobile
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  return isMobile;
+};
+
 interface Order {
   id: string;
   OrderID?: string | number | null;
@@ -160,6 +174,7 @@ export default function NotificationSystem({
 }: NotificationSystemProps) {
   const { data: session } = useSession();
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const [isListening, setIsListening] = useState(false);
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
@@ -996,8 +1011,10 @@ export default function NotificationSystem({
       (t) => (
         <div
           className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md flex-col overflow-hidden rounded-3xl border-4 ${
+            t.visible 
+              ? (isMobile ? "animate-in fade-in slide-in-from-top-4" : "animate-enter") 
+              : (isMobile ? "animate-out fade-out slide-out-to-top-4" : "animate-leave")
+          } pointer-events-auto flex w-full ${isMobile ? "max-w-[92vw]" : "max-w-md"} flex-col overflow-hidden rounded-3xl border-4 ${
             theme === "dark" ? "border-emerald-500/50 bg-[#1A1A1A]" : "border-emerald-500 bg-white"
           } shadow-2xl backdrop-blur-xl ring-1 ring-black/5`}
         >
@@ -1087,7 +1104,10 @@ export default function NotificationSystem({
           </div>
         </div>
       ),
-      { duration: 90000, position: "bottom-center" }
+      { 
+        duration: 90000, 
+        position: isMobile ? "top-center" : "bottom-center" 
+      }
     );
 
     activeToasts.current.set(order.id, toastId);
@@ -1811,7 +1831,7 @@ export default function NotificationSystem({
     <>
       {/* Separate Toaster for batch notifications - positioned independently */}
       <Toaster
-        position="bottom-center"
+        position={isMobile ? "top-center" : "bottom-center"}
         containerClassName="batch-notification-container"
         toastOptions={{
           // Only show toasts with our batch notification classes
