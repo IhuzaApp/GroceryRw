@@ -4,12 +4,10 @@ import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useLanguage } from "../../../context/LanguageContext";
-import { Input, Modal, Button, Loader } from "rsuite";
 import { useSession } from "next-auth/react";
 import { useAuth } from "../../../context/AuthContext";
 import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
-import { Briefcase, Car } from "lucide-react";
 import GuestUpgradeModal from "../GuestUpgradeModal";
 import HomeActionsModal from "./HomeActionsModal";
 import PackageDeliveryModal from "./PackageDeliveryModal";
@@ -17,6 +15,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import { useHideBottomBar } from "../../../context/HideBottomBarContext";
 import { useAnyModalOpen } from "../../../hooks/useAnyModalOpen";
+import { Briefcase, Car } from "lucide-react";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -36,11 +35,10 @@ function NavItem({ icon, label, href }: NavItemProps) {
   return (
     <Link href={href} passHref onClick={handleClick}>
       <div
-        className={`flex flex-col items-center text-xs transition-colors duration-200 ${
-          isActive
-            ? "text-green-500 dark:text-green-400"
-            : "text-gray-600 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400"
-        }`}
+        className={`flex flex-col items-center text-xs transition-colors duration-200 ${isActive
+          ? "text-green-500 dark:text-green-400"
+          : "text-gray-600 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400"
+          }`}
       >
         <span className="text-lg">{icon}</span>
       </div>
@@ -75,25 +73,22 @@ function MoreMenuItem({
   return (
     <Link href={href} passHref onClick={handleClick}>
       <div
-        className={`group relative mx-2 flex items-center space-x-4 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-300 ${
-          theme === "dark"
-            ? "text-gray-300 hover:bg-white/5 hover:text-emerald-400"
-            : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-        }`}
+        className={`group relative mx-2 flex items-center space-x-4 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-300 ${theme === "dark"
+          ? "text-gray-300 hover:bg-white/5 hover:text-emerald-400"
+          : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+          }`}
       >
         <span
-          className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px] shadow-sm transition-transform duration-300 group-hover:scale-110 ${
-            theme === "dark"
-              ? "border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02]"
-              : "border border-black/5 bg-white"
-          }`}
+          className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px] shadow-sm transition-transform duration-300 group-hover:scale-110 ${theme === "dark"
+            ? "border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02]"
+            : "border border-black/5 bg-white"
+            }`}
         >
           {icon}
           {badgeCount > 0 && (
             <span
-              className={`absolute -right-1.5 -top-1.5 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ${
-                theme === "dark" ? "ring-[#0A0A0A]" : "ring-white"
-              }`}
+              className={`absolute -right-1.5 -top-1.5 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ${theme === "dark" ? "ring-[#0A0A0A]" : "ring-white"
+                }`}
             >
               {badgeCount > 99 ? "99+" : badgeCount}
             </span>
@@ -124,9 +119,8 @@ const ActionButton = ({
   tooltip,
   bgColor = "bg-white",
 }: ActionButtonProps) => {
-  const classes = `flex items-center justify-center ${
-    isCircle ? "h-12 w-12 rounded-full" : "px-3 py-2 rounded-md"
-  } ${bgColor} text-white shadow-md cursor-pointer hover:opacity-90`;
+  const classes = `flex items-center justify-center ${isCircle ? "h-12 w-12 rounded-full" : "px-3 py-2 rounded-md"
+    } ${bgColor} text-white shadow-md cursor-pointer hover:opacity-90`;
 
   const content = (
     <button
@@ -504,7 +498,7 @@ export default function BottomBar() {
                       </svg>
                     }
                     tooltip="AI Support"
-                    onClick={() => {}}
+                    onClick={() => { }}
                     bgColor="bg-[#c2a2ff] hover:bg-[#c6aafc]"
                   />
                 )}
@@ -897,11 +891,10 @@ export default function BottomBar() {
                     onClick={() => setMoreOpen(false)}
                   />
                   <div
-                    className={`fixed bottom-[5.5rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-b-[1.5rem] rounded-t-[2.5rem] border p-3 shadow-2xl backdrop-blur-2xl duration-300 animate-in slide-in-from-bottom ${
-                      theme === "dark"
-                        ? "border-white/10 bg-[#0A0A0A]/95 text-white shadow-[0_30px_60px_-10px_rgba(0,0,0,1)]"
-                        : "border-black/5 bg-white/95 text-gray-900 shadow-black/10"
-                    }`}
+                    className={`fixed bottom-[5.5rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-b-[1.5rem] rounded-t-[2.5rem] border p-3 shadow-2xl backdrop-blur-2xl duration-300 animate-in slide-in-from-bottom ${theme === "dark"
+                      ? "border-white/10 bg-[#0A0A0A]/95 text-white shadow-[0_30px_60px_-10px_rgba(0,0,0,1)]"
+                      : "border-black/5 bg-white/95 text-gray-900 shadow-black/10"
+                      }`}
                     ref={moreRef}
                   >
                     {/* Guest Badge - Show for guest users */}
@@ -915,11 +908,10 @@ export default function BottomBar() {
                           className="group w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                         >
                           <div
-                            className={`flex items-center gap-4 rounded-[1.25rem] border px-5 py-4 shadow-sm transition-colors ${
-                              theme === "dark"
-                                ? "border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 group-hover:from-orange-500/20"
-                                : "border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100 group-hover:to-orange-200"
-                            }`}
+                            className={`flex items-center gap-4 rounded-[1.25rem] border px-5 py-4 shadow-sm transition-colors ${theme === "dark"
+                              ? "border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 group-hover:from-orange-500/20"
+                              : "border-orange-200 bg-gradient-to-r from-orange-50 to-orange-100 group-hover:to-orange-200"
+                              }`}
                           >
                             <svg
                               className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
@@ -1251,9 +1243,8 @@ export default function BottomBar() {
                     )}
 
                     <div
-                      className={`mx-3 my-2 border-t ${
-                        theme === "dark" ? "border-white/10" : "border-black/5"
-                      }`}
+                      className={`mx-3 my-2 border-t ${theme === "dark" ? "border-white/10" : "border-black/5"
+                        }`}
                     ></div>
 
                     {!session?.user && (

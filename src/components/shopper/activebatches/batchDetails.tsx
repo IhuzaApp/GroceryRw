@@ -186,6 +186,9 @@ export default function BatchDetails({
   const [momoCode, setMomoCode] = useState("");
   const [privateKey, setPrivateKey] = useState("");
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | undefined>(
+    undefined
+  );
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
@@ -1024,7 +1027,7 @@ export default function BatchDetails({
   // Handle OTP verification
   const handleVerifyOtp = async () => {
     if (!otp || !generatedOtp || !order?.id) return;
-
+    setPaymentError(undefined);
     setOtpVerifyLoading(true);
     try {
       // Get the target order for payment (main order or specific combined order)
@@ -1127,6 +1130,9 @@ export default function BatchDetails({
             : "Failed to verify OTP. Please try again."}
         </Notification>,
         { placement: "topEnd" }
+      );
+      setPaymentError(
+        err instanceof Error ? err.message : "Failed to verify OTP"
       );
     } finally {
       setOtpVerifyLoading(false);
@@ -3930,6 +3936,7 @@ export default function BatchDetails({
             setPrivateKey("");
             setOtp("");
             setGeneratedOtp("");
+            setPaymentError(undefined);
           }}
           onSubmit={handlePaymentSubmit}
           momoCode={momoCode}
@@ -3947,18 +3954,21 @@ export default function BatchDetails({
                 )?.OrderID || order?.OrderID
               : order?.OrderID
           }
-          hasWallet={
-            (paymentTargetOrderId
-              ? order?.combinedOrders?.find(
-                  (co) => co.id === paymentTargetOrderId
-                )?.shop?.has_wallet
-              : order?.shop?.has_wallet) ?? true
-          }
+          hasWallet={(() => {
+            const target = paymentTargetOrderId
+              ? order?.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+              : order;
+            const shop = target?.shop || target?.Shop;
+            const amount = getPaymentOrderAmount();
+            // Show "COMPLETE" if merchant has internal wallet OR we can do automated MoMo payout
+            return !!(shop?.has_wallet || (shop?.ssd && amount <= 100000));
+          })()}
           otp={otp}
           setOtp={setOtp}
           otpLoading={otpVerifyLoading}
           onVerifyOtp={handleVerifyOtp}
           generatedOtp={generatedOtp}
+          error={paymentError}
         />
 
         {/* Payment Request Waiting Modal */}

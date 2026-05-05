@@ -47,7 +47,7 @@ const GET_SHOPPER_ID = gql`
     shoppers(where: { user_id: { _eq: $user_id } }) {
       id
       phone_number
-      user {
+      User {
         name
       }
     }
@@ -56,7 +56,7 @@ const GET_SHOPPER_ID = gql`
 
 const GET_SHOP_DETAILS = gql`
   query GetShopDetails($id: uuid!) {
-    shops_by_pk(id: $id) {
+    Shops_by_pk(id: $id) {
       id
       name
       ssd
@@ -114,21 +114,21 @@ export default async function handler(
     }
 
     // Fetch the correct shopper_id from the users table id
-    const shopperRes = await hasuraClient.request<any>(GET_SHOPPER_ID, {
-      user_id: userId,
-    });
-
-    const shopperId = shopperRes.shoppers[0]?.id;
+    const shopperDataRes = await hasuraClient.request<{
+      shoppers: Array<{ id: string; phone_number: string; User: { name: string } }>;
+    }>(GET_SHOPPER_ID, { user_id: userId });
+    const shopperId = shopperDataRes.shoppers[0]?.id;
 
     if (!shopperId) {
       throw new Error("Shopper profile not found for this user.");
     }
 
     // Fetch shop details to check for SSD (MoMo Merchant ID)
-    const shopRes = await hasuraClient.request<any>(GET_SHOP_DETAILS, {
-      id: shopId,
-    });
-    const shop = shopRes.shops_by_pk;
+    const shopDetailsRes = await hasuraClient.request<{ Shops_by_pk: any }>(
+      GET_SHOP_DETAILS,
+      { id: shopId }
+    );
+    const shop = shopDetailsRes.Shops_by_pk;
 
     if (!shop) {
       throw new Error("Shop not found.");
@@ -216,19 +216,19 @@ export default async function handler(
     // 2. Amount must be <= 100,000 RWF
     if (shop.ssd && numericAmount <= 100000) {
       try {
-        console.log(`🚀 Initiating automated MoMo transfer to shop: ${shop.name} (${shop.ssd}) for ${numericAmount} RWF`);
+        console.log(`💰 [Payment API] Initiating automated MoMo transfer to ${shop.name} (${shop.ssd}) for ${numericAmount} RWF`);
         
         const transferRes = await momoService.transfer({
           amount: numericAmount,
           currency: "RWF",
           payeeId: shop.ssd,
           partyIdType: "ALIAS",
-          externalId: `ORD-${orderId.toString().slice(0, 15)}`, // Stable unique external ID
-          payerMessage: `Payment for Order #${orderId}`,
-          payeeNote: `Grocery Platform Payment - Order #${orderId}`,
+          externalId: Date.now().toString(),
+          payerMessage: `Order ${orderId.toString().slice(-8)}`,
+          payeeNote: `Platform Payment`,
         });
 
-        // Record the successful automated payment
+        console.log(`✨ [Payment API] MoMo transfer successful! Reference: ${transferRes.referenceId}`);
         await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
           object: {
             order_id: orderId,
@@ -275,12 +275,12 @@ export default async function handler(
     });
 
     // Notify Slack
-    const shopperData = shopperRes.shoppers[0];
+    const shopperData = shopperDataRes.shoppers[0];
     await sendPaymentRequestToSlack({
       orderId,
       shopName: shopName || "Unknown Merchant",
       amount: amount.toString(),
-      shopperName: shopperData?.user?.name || "Unknown Shopper",
+      shopperName: shopperData?.User?.name || "Unknown Shopper",
       shopperPhone: shopperData?.phone_number || "Unknown Phone",
     });
 
