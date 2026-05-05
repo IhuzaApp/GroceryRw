@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { useShopperProfile } from "../../hooks/useShopperProfile";
 import TelegramStatusButton from "./TelegramStatusButton";
 import NotificationCenter from "./NotificationCenter";
+import { toast } from "react-hot-toast";
 
 export default function ShopperHeader() {
   const { data: session } = useSession();
@@ -69,13 +70,12 @@ export default function ShopperHeader() {
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
             <Image
-              src="/assets/logos/PlasLogo.svg"
+              src="/assets/logos/plas.png"
               alt="Plas Logo"
               width={80}
               height={30}
-              className={`h-8 w-auto ${
-                theme === "dark" ? "brightness-0 invert" : ""
-              }`}
+              className={`h-8 w-auto ${theme === "dark" ? "brightness-0 invert" : ""
+                }`}
             />
           </Link>
         </div>
@@ -127,11 +127,10 @@ export default function ShopperHeader() {
               }
               window.dispatchEvent(new Event("toggleGoLive"));
             }}
-            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:shadow-lg active:scale-90 ${
-              isOnline
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:shadow-lg active:scale-90 ${isOnline
                 ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
                 : "bg-green-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white"
-            }`}
+              }`}
             title={isOnline ? "Go Offline" : "Go Online"}
           >
             {isOnline && (
@@ -168,9 +167,8 @@ export default function ShopperHeader() {
             alt="Plas Logo"
             width={120}
             height={40}
-            className={`ml-8 h-8 w-auto ${
-              theme === "dark" ? "brightness-0 invert" : ""
-            }`}
+            className={`ml-8 h-8 w-auto ${theme === "dark" ? "brightness-0 invert" : ""
+              }`}
             priority
           />
         </Link>
@@ -253,9 +251,8 @@ export default function ShopperHeader() {
             alt={displayName}
             circle
             size="sm"
-            className={`cursor-pointer border border-transparent ring-2 ring-emerald-500/10 transition-all duration-300 hover:border-emerald-500 ${
-              isProfileLoading ? "animate-pulse opacity-50" : ""
-            }`}
+            className={`cursor-pointer border border-transparent ring-2 ring-emerald-500/10 transition-all duration-300 hover:border-emerald-500 ${isProfileLoading ? "animate-pulse opacity-50" : ""
+              }`}
           >
             {displayName ? displayName[0].toUpperCase() : "U"}
           </Avatar>

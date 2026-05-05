@@ -317,15 +317,16 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   // Delete all Firebase chat messages and conversations for a delivered order
   const deleteFirebaseChatForOrder = async (orderId: string) => {
     if (!db) return;
+    const firestore = db;
     try {
-      const conversationsRef = collection(db, "chat_conversations");
+      const conversationsRef = collection(firestore, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderId));
       const snapshot = await getDocs(q);
 
       for (const conversationDoc of snapshot.docs) {
         const conversationId = conversationDoc.id;
         const messagesRef = collection(
-          db,
+          firestore,
           "chat_conversations",
           conversationId,
           "messages"
@@ -334,11 +335,17 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         await Promise.all(
           messagesSnapshot.docs.map((d) =>
             deleteDoc(
-              doc(db, "chat_conversations", conversationId, "messages", d.id)
+              doc(
+                firestore,
+                "chat_conversations",
+                conversationId,
+                "messages",
+                d.id
+              )
             )
           )
         );
-        await deleteDoc(doc(db, "chat_conversations", conversationId));
+        await deleteDoc(doc(firestore, "chat_conversations", conversationId));
       }
     } catch (error) {
       console.error("Error deleting Firebase chat for order:", orderId, error);
@@ -728,6 +735,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         </div>
       );
     }
+
+    if (!invoiceData) return null;
 
     // Main modal content
     return (
