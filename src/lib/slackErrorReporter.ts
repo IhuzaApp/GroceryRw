@@ -1,4 +1,5 @@
 const SLACK_ERRORS_WEBHOOK = process.env.SLACK_ERRORS_WEBHOOK;
+import { logger } from "../utils/logger";
 
 type ExtraContext = Record<string, unknown>;
 
@@ -15,7 +16,7 @@ export async function logErrorToSlack(
   if (!SLACK_ERRORS_WEBHOOK) {
     // Avoid throwing if Slack isn't configured; just log locally
     // so we don't break the main request flow.
-    console.error("SLACK_ERRORS_WEBHOOK is not configured");
+    logger.warn("SLACK_ERRORS_WEBHOOK is not configured", "SlackErrorReporter");
     return;
   }
 
@@ -137,6 +138,6 @@ export async function logErrorToSlack(
     });
   } catch (sendError) {
     // Last resort: log locally; don't throw
-    console.error("Failed to send error to Slack", sendError);
+    logger.error("Failed to send error to Slack", "SlackErrorReporter", { error: sendError, originalError: err.message, where });
   }
 }

@@ -256,7 +256,7 @@ export default function DeliveryRouteSection({
 
                       {address?.placeDetails && (
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {Object.entries(address.placeDetails).map(
+                          {Object.entries(address.placeDetails as Record<string, any>).map(
                             ([key, val]) =>
                               val && (
                                 <span
@@ -267,7 +267,7 @@ export default function DeliveryRouteSection({
                                       : "border border-black/5 bg-white text-gray-500"
                                   }`}
                                 >
-                                  {key}: {val}
+                                  {key}: {val as any}
                                 </span>
                               )
                           )}
@@ -330,10 +330,17 @@ export default function DeliveryRouteSection({
                           </div>
                         ));
                       } else {
+                        // Hide individual action buttons on mobile if it's a single order for a single customer
+                        // (because BottomActionButton will already show the confirm delivery button)
+                        // But keep them for combined orders (orders.length > 1) as requested
+                        const isSingleOrderBatch = ordersByCustomer.size === 1 && orders.length === 1;
+                        
                         return orders.map((o) => (
                           <div
                             key={o.id}
-                            className="[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!py-5 [&>button]:!text-xs [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!transition-all [&>button]:active:scale-95"
+                            className={`[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!py-5 [&>button]:!text-xs [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!transition-all [&>button]:active:scale-95 ${
+                              isSingleOrderBatch ? "hidden" : ""
+                            }`}
                           >
                             {getActionButton(o)}
                           </div>

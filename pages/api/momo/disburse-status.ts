@@ -3,6 +3,7 @@ import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { insertSystemLog } from "../queries/system-logs";
+import { logger } from "../../../src/utils/logger";
 
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
@@ -58,10 +59,7 @@ export default async function handler(
 
   try {
     const data = await momoService.getTransferStatus(referenceId);
-    console.log(
-      "✅ [MoMo Disbursement Status] Real status received:",
-      data.status
-    );
+    console.log("✅ [MoMo Disbursement Status] Real status received:", data.status);
 
     const newStatus =
       data.status === "SUCCESSFUL"
@@ -88,16 +86,11 @@ export default async function handler(
               mtn_response: JSON.stringify(data),
               updated_at: new Date().toISOString(),
             });
-            console.log(
-              `📝 [MoMo Disbursement Status] Order Transaction ${orderTransaction.id} updated to ${newStatus}`
-            );
+            console.log(`📝 [MoMo Disbursement Status] Order Transaction ${orderTransaction.id} updated to ${newStatus}`);
           }
         }
       } catch (dbError: any) {
-        console.error(
-          "❌ [MoMo Disbursement Status] DB Update Error:",
-          dbError
-        );
+        logger.error("❌ [MoMo Disbursement Status] DB Update Error", "MomoDisburseStatusAPI:DB", { error: dbError, referenceId });
         await insertSystemLog(
           "error",
           `MoMo Disbursement DB Update Error: ${dbError.message || "Unknown"}`,
@@ -109,7 +102,7 @@ export default async function handler(
 
     return res.status(200).json(data);
   } catch (error: any) {
-    console.error("💥 [MoMo Disbursement Status] Exception:", error);
+    logger.error("💥 [MoMo Disbursement Status] Exception", "MomoDisburseStatusAPI:Main", { error, referenceId });
     await insertSystemLog(
       "error",
       `MoMo Disbursement Status Exception: ${error.message || "Unknown"}`,

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
 import { insertSystemLog } from "../queries/system-logs";
+import { logger } from "../../../src/utils/logger";
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,7 +37,7 @@ export default async function handler(
       status: "PENDING",
     });
   } catch (error: any) {
-    console.error("💥 [MoMo Transfer API] Error:", error);
+    logger.error("💥 [MoMo Transfer API] Error", "MomoTransferAPI", { error, amount, payerNumber });
     await insertSystemLog(
       "error",
       `MoMo Transfer API failure: ${error.message || "Unknown"}`,

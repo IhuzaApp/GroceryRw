@@ -1,12 +1,11 @@
 import { PindoSMS, SMSPayload } from "pindo-sms";
 import { insertSystemLog } from "../../pages/api/queries/system-logs";
+import { logger } from "../utils/logger";
 
 const pindoToken = process.env.PINDO_API_TOKEN;
 
 if (!pindoToken) {
-  console.warn(
-    "PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked."
-  );
+  logger.warn("PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked.", "PindoLib");
 }
 
 // Ensure constructor doesn't throw if token is missing
@@ -28,12 +27,7 @@ const formatPhoneForPindo = (phone: string) => {
 
 export const sendSMS = async (to: string, text: string) => {
   if (!pindoToken || !pindo) {
-    console.warn(
-      "[MOCK] SMS sending disabled due to missing PINDO_API_TOKEN. To:",
-      to,
-      "Text:",
-      text
-    );
+    logger.warn("[MOCK] SMS sending disabled due to missing PINDO_API_TOKEN", "PindoLib", { to, text });
     return { status: "mocked" };
   }
 
@@ -48,7 +42,7 @@ export const sendSMS = async (to: string, text: string) => {
     const response = await pindo.sendSMS(payload);
     return response;
   } catch (error: any) {
-    console.error("Failed to send SMS:", error);
+    logger.error("Failed to send SMS", "PindoLib:sendSMS", { error, to, text });
     await insertSystemLog(
       "error",
       `Pindo SMS failure: ${error.message || "Unknown error"}`,

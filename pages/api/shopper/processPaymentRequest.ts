@@ -6,6 +6,9 @@ import { gql } from "graphql-request";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import { sendPaymentRequestToSlack } from "../../../src/lib/slackSupportNotifier";
 import { momoService } from "../../../src/lib/momoService";
+import { recordPaymentTransactions } from "../../../src/lib/walletTransactions";
+import { insertSystemLog } from "../queries/system-logs";
+import { logger } from "../../../src/utils/logger";
 
 const GET_MERCHANT_WALLET = gql`
   query GetMerchantWallet($shop_id: uuid!) {
@@ -38,6 +41,14 @@ const INSERT_PAYMENT_REQUEST = gql`
     insert_payment_requests_one(object: $object) {
       id
       status
+    }
+  }
+`;
+
+const CREATE_ORDER_TRANSACTION = gql`
+  mutation CreateOrderTransaction($object: order_transactions_insert_input!) {
+    insert_order_transactions_one(object: $object) {
+      id
     }
   }
 `;
@@ -171,7 +182,7 @@ export default async function handler(
     );
 
     if (numericAmount > reservedAmount) {
-      console.warn(`🛑 Budget Violation: Requested ${numericAmount} but only ${reservedAmount} was reserved for order ${orderId}`);
+      logger.warn(`🛑 Budget Violation: Requested ${numericAmount} but only ${reservedAmount} was reserved for order ${orderId}`, "PaymentAPI", { orderId, numericAmount, reservedAmount });
       return res.status(400).json({
         error: "payout_exceeds_budget",
         message: `The requested amount (${numericAmount} RWF) exceeds the budget reserved for this order (${reservedAmount} RWF).`,
@@ -206,7 +217,7 @@ export default async function handler(
         });
       } else {
         // Fallback: If wallet not found but hasWallet was true, proceed to check for SSD or manual request
-        console.warn(`Wallet flag was true but no wallet found for shop ${shopId}`);
+        logger.warn(`Wallet flag was true but no wallet found for shop ${shopId}`, "PaymentAPI", { shopId });
       }
     }
 
@@ -229,17 +240,55 @@ export default async function handler(
         });
 
         console.log(`✨ [Payment API] MoMo transfer successful! Reference: ${transferRes.referenceId}`);
+        
+        // 1. Record Payment Request
         await hasuraClient.request(INSERT_PAYMENT_REQUEST, {
           object: {
             order_id: orderId,
             shop_id: shopId,
             shopper_id: shopperId,
             amount: numericAmount.toString(),
-            status: "APPROVED", // Mark as approved immediately
+            status: "APPROVED",
             agent_approved_id: null,
             transactionCode: transferRes.referenceId,
           },
         });
+
+        // 2. Record Wallet Transaction (Deduct from shopper's reserved balance)
+        try {
+          await recordPaymentTransactions(
+            shopperId,
+            orderId,
+            numericAmount,
+            undefined, // We don't have originalOrderTotal here, it will use numericAmount
+            transferRes.referenceId,
+            true
+          );
+          console.log(`✅ [Payment API] Wallet transaction recorded for shopper ${shopperId}`);
+        } catch (walletError) {
+          logger.error("⚠️ [Payment API] Failed to record wallet transaction", "PaymentAPI", { error: walletError, shopperId, orderId });
+          // Don't fail the whole request if wallet recording fails, but log it
+        }
+
+        // 3. Record Order Transaction (For financial monitoring)
+        try {
+          await hasuraClient.request(CREATE_ORDER_TRANSACTION, {
+            object: {
+              amount: numericAmount.toString(),
+              currency: "RWF",
+              phone: shop.ssd,
+              type: "disbursement",
+              status: "SUCCESSFUL",
+              reference_id: transferRes.referenceId,
+              order_id: orderId,
+              user_id: userId || null,
+              mtn_response: JSON.stringify({ status: "SUCCESSFUL", referenceId: transferRes.referenceId })
+            },
+          });
+          console.log(`✅ [Payment API] Order transaction recorded for order ${orderId}`);
+        } catch (orderTxError) {
+          logger.error("⚠️ [Payment API] Failed to record order transaction", "PaymentAPI", { error: orderTxError, orderId });
+        }
 
         return res.status(200).json({
           success: true,
@@ -248,7 +297,7 @@ export default async function handler(
           referenceId: transferRes.referenceId,
         });
       } catch (transferError: any) {
-        console.error("❌ MoMo Transfer failed, falling back to manual request:", transferError);
+        logger.error("❌ MoMo Transfer failed, falling back to manual request", "PaymentAPI", { error: transferError, orderId });
         // Log to Slack but continue to manual request fallback
         await logErrorToSlack("shopper/processPaymentRequest:momoTransfer", transferError, {
           orderId,
@@ -296,7 +345,7 @@ export default async function handler(
       amount,
       hasWallet,
     });
-    console.error("Payment request processing failed:", error);
+    logger.error("Payment request processing failed", "PaymentAPI", { error, orderId });
     return res.status(500).json({
       error:
         error instanceof Error
