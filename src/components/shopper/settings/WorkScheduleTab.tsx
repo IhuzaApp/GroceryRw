@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../hooks/useAuth";
 import { Toggle, SelectPicker, Button, Message, Loader } from "rsuite";
+import WorkScheduleSkeleton from "./WorkScheduleSkeleton";
 
 interface TimeSlot {
   day: string;
@@ -301,11 +302,7 @@ export default function WorkScheduleTab() {
   }
 
   if (scheduleLoading && schedule.length === 0) {
-    return (
-      <div className="flex h-48 items-center justify-center sm:h-64">
-        <Loader size="md" content="Loading schedule..." />
-      </div>
-    );
+    return <WorkScheduleSkeleton />;
   }
 
   return (
@@ -452,21 +449,47 @@ export default function WorkScheduleTab() {
         <p className={`text-[10px] md:text-xs font-medium text-center sm:text-left ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
           * Changes take effect immediately after saving.
         </p>
-        <Button
+        <button
           onClick={saveScheduleUpdates}
-          loading={scheduleLoading}
-          className={`group relative w-full sm:w-auto px-10 py-4 font-black uppercase tracking-widest text-xs transition-all duration-300 rounded-2xl overflow-hidden shadow-xl ${
+          disabled={scheduleLoading}
+          className={`group relative w-full sm:w-auto px-10 py-4 font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-500 rounded-2xl overflow-hidden shadow-2xl active:scale-95 disabled:opacity-70 ${
             theme === 'dark' 
-              ? 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20' 
-              : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20'
+              ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-emerald-500/30' 
+              : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white shadow-emerald-600/30'
           }`}
         >
-          <span className="relative z-10">Save Schedule</span>
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-        </Button>
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
+          
+          <div className="relative z-10 flex items-center justify-center gap-3">
+            {scheduleLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <svg 
+                className="h-4 w-4 transition-transform duration-500 group-hover:rotate-12" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth={3}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            <span>{scheduleLoading ? "Saving..." : "Update Schedule"}</span>
+          </div>
+
+          {/* Hover glow */}
+          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </button>
       </div>
       
       <style jsx global>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 1.5s infinite;
+        }
         .custom-toggle.rs-toggle-checked .rs-toggle-presentation {
           background-color: #10b981 !important;
         }
