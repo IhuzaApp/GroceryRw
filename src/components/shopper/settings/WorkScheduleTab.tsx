@@ -21,6 +21,14 @@ export default function WorkScheduleTab() {
     type: "success" | "error" | "info";
     text: string;
   } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Ref to track if initial fetch has been done
   const initialFetchDone = useRef(false);
@@ -301,128 +309,199 @@ export default function WorkScheduleTab() {
   }
 
   return (
-    <div className="p-8">
-      <h3
-        className={`mb-2 text-xl font-bold ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}
-      >
-        Work Schedule
-      </h3>
-      <p
-        className={`mb-8 text-sm ${
-          theme === "dark" ? "text-gray-400" : "text-gray-600"
-        }`}
-      >
-        Set your availability for each day of the week. Toggle availability and
-        select your preferred working hours.
-      </p>
-
-      {saveMessage && (
-        <Message
-          type={saveMessage.type}
-          className="mb-6 text-sm sm:text-base"
-          closable
-          onClose={() => setSaveMessage(null)}
+    <div className="p-0">
+      <div className={`p-6 md:p-8 border-b ${theme === 'dark' ? 'border-white/5 bg-white/[0.02]' : 'border-black/5 bg-black/[0.01]'}`}>
+        <h3
+          className={`mb-1 md:mb-2 text-xl md:text-2xl font-black ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
         >
-          {saveMessage.text}
-        </Message>
-      )}
+          Weekly Availability
+        </h3>
+        <p
+          className={`text-xs md:text-sm ${
+            theme === "dark" ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
+          Define your active working windows to receive batch requests.
+        </p>
 
-      <div className="space-y-4">
+        {saveMessage && (
+          <div className="mt-4 md:mt-6">
+            <Message
+              type={saveMessage.type}
+              className={`text-xs md:text-sm rounded-xl border ${
+                saveMessage.type === 'success' 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' 
+                  : 'bg-red-500/10 border-red-500/20 text-red-500'
+              }`}
+              closable
+              onClose={() => setSaveMessage(null)}
+            >
+              {saveMessage.text}
+            </Message>
+          </div>
+        )}
+      </div>
+
+      <div className="divide-y divide-transparent">
         {schedule.map((slot, index) => (
           <div
             key={slot.day}
-            className={`flex flex-col space-y-4 pb-6 ${
+            className={`group px-6 md:px-8 py-5 md:py-6 transition-all duration-300 ${
+              slot.available 
+                ? theme === 'dark' ? 'bg-white/[0.01]' : 'bg-black/[0.01]'
+                : ''
+            } ${
               index < schedule.length - 1
                 ? `border-b ${
-                    theme === "dark" ? "border-gray-700" : "border-gray-200"
+                    theme === "dark" ? "border-white/5" : "border-black/5"
                   }`
                 : ""
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span
-                className={`text-base font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {slot.day}
-              </span>
-              <Toggle
-                checked={slot.available}
-                onChange={(checked) =>
-                  handleAvailabilityToggle(slot.day, checked)
-                }
-                size="md"
-                checkedChildren="Available"
-                unCheckedChildren="Off"
-                className="min-w-[100px]"
-              />
-            </div>
-
-            {slot.available && (
-              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
-                <div className="flex w-full items-center gap-3 sm:w-auto">
-                  <span
-                    className={`whitespace-nowrap text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                  >
-                    Start:
-                  </span>
-                  <SelectPicker
-                    data={timeSlots}
-                    value={formatTimeForDisplay(slot.startTime)}
-                    onChange={(value) =>
-                      handleTimeChange(
-                        slot.day,
-                        "startTime",
-                        value || "09:00:00"
-                      )
-                    }
-                    cleanable={false}
-                    searchable={false}
-                    className="w-full sm:w-36"
-                    menuStyle={{ zIndex: 1060 }}
-                  />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className={`flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl font-bold text-[10px] md:text-xs transition-colors duration-300 ${
+                  slot.available 
+                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' 
+                    : theme === 'dark' ? 'bg-white/5 text-gray-500' : 'bg-black/5 text-gray-400'
+                }`}>
+                  {slot.day.substring(0, 3).toUpperCase()}
                 </div>
-                <div className="flex w-full items-center gap-3 sm:w-auto">
+                <div>
                   <span
-                    className={`whitespace-nowrap text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    className={`text-base md:text-lg font-bold tracking-tight ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    End:
+                    {slot.day}
                   </span>
-                  <SelectPicker
-                    data={timeSlots}
-                    value={formatTimeForDisplay(slot.endTime)}
-                    onChange={(value) =>
-                      handleTimeChange(slot.day, "endTime", value || "17:00:00")
-                    }
-                    cleanable={false}
-                    searchable={false}
-                    className="w-full sm:w-36"
-                    menuStyle={{ zIndex: 1060 }}
-                  />
+                  <div className={`text-[10px] md:text-xs mt-0.5 ${slot.available ? 'text-emerald-500' : 'text-gray-500'}`}>
+                    {slot.available ? 'Actively receiving batches' : 'Not available for orders'}
+                  </div>
                 </div>
               </div>
-            )}
+
+              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4 md:gap-8">
+                {slot.available && (
+                  <div className="flex items-center gap-2 md:gap-3 bg-transparent p-0 rounded-2xl">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <div className="flex flex-col min-w-[80px] md:min-w-[128px]">
+                        <span className="text-[9px] md:text-[10px] uppercase font-black tracking-widest text-gray-500 ml-1 mb-1">Start</span>
+                        <div className={`relative transition-all duration-300 rounded-xl overflow-hidden border ${
+                          theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'
+                        } hover:border-emerald-500/50`}>
+                          <SelectPicker
+                            data={timeSlots}
+                            value={formatTimeForDisplay(slot.startTime)}
+                            onChange={(value) =>
+                              handleTimeChange(
+                                slot.day,
+                                "startTime",
+                                value || "09:00:00"
+                              )
+                            }
+                            cleanable={false}
+                            searchable={false}
+                            appearance="subtle"
+                            className="w-full border-none ring-0 shadow-none hover:bg-transparent"
+                            menuStyle={{ zIndex: 1060 }}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4 text-gray-500 font-light px-0.5 md:px-1">→</div>
+                      <div className="flex flex-col min-w-[80px] md:min-w-[128px]">
+                        <span className="text-[9px] md:text-[10px] uppercase font-black tracking-widest text-gray-500 ml-1 mb-1">End</span>
+                        <div className={`relative transition-all duration-300 rounded-xl overflow-hidden border ${
+                          theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'
+                        } hover:border-emerald-500/50`}>
+                          <SelectPicker
+                            data={timeSlots}
+                            value={formatTimeForDisplay(slot.endTime)}
+                            onChange={(value) =>
+                              handleTimeChange(slot.day, "endTime", value || "17:00:00")
+                            }
+                            cleanable={false}
+                            searchable={false}
+                            appearance="subtle"
+                            className="w-full border-none ring-0 shadow-none hover:bg-transparent"
+                            menuStyle={{ zIndex: 1060 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <Toggle
+                  checked={slot.available}
+                  onChange={(checked) =>
+                    handleAvailabilityToggle(slot.day, checked)
+                  }
+                  size={isMobile ? "md" : "lg"}
+                  className="custom-toggle"
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 flex justify-end">
+      <div className={`p-6 md:p-8 mt-4 flex flex-col sm:flex-row gap-4 justify-between items-center ${theme === 'dark' ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
+        <p className={`text-[10px] md:text-xs font-medium text-center sm:text-left ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+          * Changes take effect immediately after saving.
+        </p>
         <Button
-          appearance="primary"
           onClick={saveScheduleUpdates}
           loading={scheduleLoading}
-          className="px-6 py-2 font-medium"
+          className={`group relative w-full sm:w-auto px-10 py-4 font-black uppercase tracking-widest text-xs transition-all duration-300 rounded-2xl overflow-hidden shadow-xl ${
+            theme === 'dark' 
+              ? 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20' 
+              : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20'
+          }`}
         >
-          Save Schedule
+          <span className="relative z-10">Save Schedule</span>
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
         </Button>
       </div>
+      
+      <style jsx global>{`
+        .custom-toggle.rs-toggle-checked .rs-toggle-presentation {
+          background-color: #10b981 !important;
+        }
+        .rs-picker-subtle .rs-picker-toggle {
+          background-color: transparent !important;
+          border: none !important;
+          color: inherit !important;
+          font-weight: 700 !important;
+          font-size: 12px !important;
+          padding: 8px 12px !important;
+        }
+        @media (min-width: 768px) {
+          .rs-picker-subtle .rs-picker-toggle {
+            font-size: 13px !important;
+          }
+        }
+        .rs-picker-subtle .rs-picker-toggle:hover {
+          background-color: transparent !important;
+        }
+        .rs-picker-menu {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          border: 1px solid rgba(16, 185, 129, 0.1) !important;
+          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+        }
+        .rs-picker-select-menu-item {
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          padding: 8px 16px !important;
+        }
+        .rs-picker-select-menu-item-active {
+          color: #10b981 !important;
+          background-color: rgba(16, 185, 129, 0.05) !important;
+        }
+      `}</style>
     </div>
   );
 }
