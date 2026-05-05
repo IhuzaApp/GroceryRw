@@ -143,9 +143,8 @@ export default function NotificationCenter() {
           // ignore sound errors
         }
 
-        // Show small toast if shopping
-        if (isShopping) {
-          toast.custom(
+        // Show small toast for new notifications
+        toast.custom(
             (t) => (
               <div
                 className={`${
@@ -215,7 +214,6 @@ export default function NotificationCenter() {
             ),
             { duration: 5000, position: "top-center" }
           );
-        }
       } else if (lastSeenTimestamp === 0) {
         // Initialize on first load
         setLastSeenTimestamp(latest.timestamp);

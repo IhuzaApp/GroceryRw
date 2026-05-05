@@ -473,10 +473,8 @@ export default function MobileMessagePage({
         const employeeId = order?.assignedTo?.shopper?.Employment_id;
         const fullName =
           order?.assignedTo?.shoppers?.full_name ||
-          order?.assignedTo?.shoppers?.name ||
           order?.assignedTo?.name ||
           order?.shoppers?.full_name ||
-          order?.shoppers?.name ||
           "Shopper";
         const contactName =
           (employeeId
@@ -716,7 +714,6 @@ export default function MobileMessagePage({
                   order?.assignedTo?.shoppers?.full_name ||
                   order?.assignedTo?.name ||
                   order?.shoppers?.full_name ||
-                  order?.shoppers?.name ||
                   "Shopper";
               }
 

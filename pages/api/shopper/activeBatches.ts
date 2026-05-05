@@ -237,7 +237,6 @@ export default async function handler(
     hasSession: !!session,
     userRole: (session as any)?.user?.role,
   });
-
   if (!userId) {
     logger.warn("Unauthorized access attempt", "ActiveBatchesAPI", {
       hasSession: !!session,
@@ -249,24 +248,33 @@ export default async function handler(
     });
   }
 
-  // Check if the user is a shopper
-  const userRole = (session as any)?.user?.role;
-  if (userRole !== "shopper") {
-    logger.warn("Non-shopper access attempt", "ActiveBatchesAPI", {
-      userId,
-      userRole,
-    });
-    return res.status(403).json({
-      batches: [],
-      error: "Access denied",
-      message: "This API endpoint is only accessible to shoppers.",
-    });
-  }
-
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
+
+    // Resolve the shopper's actual shoppers.id from their user_id.
+    const GET_SHOPPER_ID = gql`
+      query GetShopperId($user_id: uuid!) {
+        shoppers(where: { user_id: { _eq: $user_id } }) {
+          id
+        }
+      }
+    `;
+
+    const shopperLookupData = (await hasuraClient!.request(GET_SHOPPER_ID, {
+      user_id: userId,
+    })) as any;
+
+    const shopperRecord = shopperLookupData.shoppers?.[0];
+    if (!shopperRecord) {
+      return res.status(400).json({
+        batches: [],
+        error: "Shopper profile not found. Please complete your registration.",
+        message: "Shopper record missing.",
+      });
+    }
+    const shopperId = shopperRecord.id;
 
     // Fetch regular, reel, restaurant, business, and package orders in parallel
     let regularOrdersData,
@@ -283,7 +291,7 @@ export default async function handler(
         businessOrdersData,
         packageOrdersData,
       ] = await Promise.all([
-        hasuraClient.request<{
+        hasuraClient!.request<{
           Orders: Array<{
             id: string;
             OrderID: number;
@@ -319,8 +327,8 @@ export default async function handler(
               } | null;
             };
           }>;
-        }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
-        hasuraClient.request<{
+        }>(GET_ACTIVE_ORDERS, { shopperId: shopperId }),
+        hasuraClient!.request<{
           reel_orders: Array<{
             id: string;
             OrderID: string | number | null;
@@ -355,8 +363,8 @@ export default async function handler(
               city: string;
             };
           }>;
-        }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
-        hasuraClient.request<{
+        }>(GET_ACTIVE_REEL_ORDERS, { shopperId: shopperId }),
+        hasuraClient!.request<{
           restaurant_orders: Array<{
             id: string;
             OrderID: string | number | null;
@@ -389,8 +397,8 @@ export default async function handler(
               quantity: string;
             }>;
           }>;
-        }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
-        hasuraClient.request<{
+        }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: shopperId }),
+        hasuraClient!.request<{
           businessProductOrders: Array<{
             id: string;
             OrderID: string | number | null;
@@ -417,8 +425,8 @@ export default async function handler(
               phone: string | null;
             } | null;
           }>;
-        }>(GET_ACTIVE_BUSINESS_ORDERS, { shopperId: userId }),
-        hasuraClient.request<{
+        }>(GET_ACTIVE_BUSINESS_ORDERS, { shopperId: shopperId }),
+        hasuraClient!.request<{
           package_delivery: Array<{
             id: string;
             DeliveryCode: string | null;
@@ -451,7 +459,7 @@ export default async function handler(
               phone: string | null;
             } | null;
           }>;
-        }>(GET_PACKAGE_ORDERS, { shopperId: userId }),
+        }>(GET_PACKAGE_ORDERS, { shopperId: shopperId }),
       ]);
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);

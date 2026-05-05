@@ -118,6 +118,11 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
 
   // Function to delete messages from Firebase for an order
   const deleteFirebaseMessages = async (orderId: string) => {
+    if (!db) {
+      console.warn("Firebase DB not initialized, skipping message deletion");
+      return;
+    }
+
     try {
       // First, find the conversation for this order
       const conversationsRef = collection(db, "chat_conversations");
@@ -254,7 +259,7 @@ export const getServerSideProps: GetServerSideProps<
   }
 
   // Check authentication
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = (await getServerSession(context.req, context.res, authOptions)) as any;
   if (!session || !session.user) {
     return {
       redirect: {
@@ -262,6 +267,34 @@ export const getServerSideProps: GetServerSideProps<
         permanent: false,
       },
     };
+  }
+
+  if (!hasuraClient) {
+    return {
+      props: {
+        orderData: null,
+        error: "Database client not initialized",
+      },
+    };
+  }
+
+  // Resolve the shopper's actual shoppers.id from their user_id.
+  const GET_SHOPPER_ID = gql`
+    query GetShopperId($user_id: uuid!) {
+      shoppers(where: { user_id: { _eq: $user_id } }) {
+        id
+      }
+    }
+  `;
+
+  let actualShopperId: string | null = null;
+  try {
+    const shopperLookupData = (await hasuraClient!.request(GET_SHOPPER_ID, {
+      user_id: session.user.id,
+    })) as any;
+    actualShopperId = shopperLookupData.shoppers?.[0]?.id || null;
+  } catch (error) {
+    console.error("Error looking up shopper ID:", error);
   }
 
   // GraphQL query to fetch a single regular order with nested details
@@ -454,13 +487,9 @@ export const getServerSideProps: GetServerSideProps<
   `;
 
   try {
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
-    }
-
     // First try to fetch as a regular order
     console.log("🔄 Trying regular order query...");
-    let data = await hasuraClient.request<{ Orders: any[] }>(
+    let data = await hasuraClient!.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id }
     );
@@ -475,7 +504,7 @@ export const getServerSideProps: GetServerSideProps<
     // If no regular order found, try as a reel order
     if (!order) {
       console.log("🔄 Trying reel order query...");
-      const reelData = await hasuraClient.request<{ reel_orders: any[] }>(
+      const reelData = await hasuraClient!.request<{ reel_orders: any[] }>(
         GET_REEL_ORDER_DETAILS,
         { id }
       );
@@ -574,7 +603,7 @@ export const getServerSideProps: GetServerSideProps<
               dish_id
               order_id
             }
-            shopper {
+            shoppers {
               id
               name
               profile_picture
@@ -595,7 +624,7 @@ export const getServerSideProps: GetServerSideProps<
         }
       `;
 
-      const restaurantData = await hasuraClient.request<{
+      const restaurantData = await hasuraClient!.request<{
         restaurant_orders: any[];
       }>(GET_RESTAURANT_ORDER_DETAILS, { id });
 
@@ -658,7 +687,7 @@ export const getServerSideProps: GetServerSideProps<
           }
         }
       `;
-      const businessData = await hasuraClient.request<{
+      const businessData = await hasuraClient!.request<{
         businessProductOrders: any[];
       }>(GET_BUSINESS_ORDER_DETAILS, { id });
       order = businessData.businessProductOrders?.[0];
@@ -713,7 +742,7 @@ export const getServerSideProps: GetServerSideProps<
           }
         }
       `;
-      const packageData = await hasuraClient.request<{
+      const packageData = await hasuraClient!.request<{
         package_delivery: any[];
       }>(GET_PACKAGE_ORDER_DETAILS, { id });
       order = packageData.package_delivery?.[0];
@@ -786,13 +815,16 @@ export const getServerSideProps: GetServerSideProps<
       isBusinessShopper,
       isBusinessCustomer,
       orderType,
-      assignedToUserId: order.shopper?.id,
-      shopperId: order.shopper?.id,
+      assignedToUserId: order.shopper?.id || order.shoppers?.id,
+      shopperId: order.shopper?.id || order.shoppers?.id,
       sessionUserId: session.user.id,
+      actualShopperId,
     });
 
+    const orderShopperId = order.shoppers?.id || order.shopper?.id;
+
     if (
-      !isAssignedShopper &&
+      (!actualShopperId || orderShopperId !== actualShopperId) &&
       !isCustomer &&
       !isReelCustomer &&
       !isReelShopper &&

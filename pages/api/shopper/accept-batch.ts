@@ -337,6 +337,31 @@ export default async function handler(
         .json({ error: "Database connection not available" });
     }
 
+    // ======================================================================
+    // Resolve the shopper's actual shoppers.id from their user_id.
+    // order_offers.shopper_id and shoppers.id are FK targets, NOT users.id.
+    // ======================================================================
+    const GET_SHOPPER_ID = gql`
+      query GetShopperId($user_id: uuid!) {
+        shoppers(where: { user_id: { _eq: $user_id } }) {
+          id
+        }
+      }
+    `;
+
+    const shopperLookupData = (await hasuraClient.request(GET_SHOPPER_ID, {
+      user_id: userId,
+    })) as any;
+
+    const shopperRecord = shopperLookupData.shoppers?.[0];
+    if (!shopperRecord) {
+      return res.status(400).json({
+        error: "Shopper profile not found. Please complete your registration.",
+        code: "SHOPPER_NOT_FOUND",
+      });
+    }
+    const actualShopperId = shopperRecord.id;
+
     // ========================================================================
     // STEP 0: Determine whether this is a single orderId or a combined_order_id
     // ========================================================================
@@ -379,7 +404,7 @@ export default async function handler(
       const activeOrdersData = (await hasuraClient.request(
         CHECK_ACTIVE_ORDERS,
         {
-          shopper_id: userId,
+          shopper_id: actualShopperId,
         }
       )) as any;
       const activeOrders = [
@@ -400,7 +425,7 @@ export default async function handler(
       // Verify ALL offers exist for this shopper
       const offersResp = (await hasuraClient.request(VERIFY_COMBINED_OFFERS, {
         orderIds: combinedOrderIds,
-        shopperId: userId,
+        shopperId: actualShopperId,
       })) as any;
 
       const offers = offersResp.order_offers || [];
@@ -414,7 +439,7 @@ export default async function handler(
 
       // Check all orders are still available
       for (const o of combinedOrders) {
-        if (o.shopper_id && o.shopper_id !== userId) {
+        if (o.shopper_id && o.shopper_id !== actualShopperId) {
           return res.status(409).json({
             error: "This batch has already been assigned to another shopper",
             code: "ALREADY_ASSIGNED",
@@ -484,7 +509,7 @@ export default async function handler(
       await hasuraClient.request(ACCEPT_COMBINED_OFFERS, { offerIds });
       const assignResp = (await hasuraClient.request(ASSIGN_COMBINED_ORDERS, {
         orderIds: combinedOrderIds,
-        shopperId: userId,
+        shopperId: actualShopperId,
         assigned_at: assignedAt,
       })) as any;
 
@@ -511,7 +536,7 @@ export default async function handler(
 
     const offerResponse = (await hasuraClient.request(VERIFY_ORDER_OFFER, {
       orderId,
-      shopperId: userId,
+      shopperId: actualShopperId,
     })) as any;
 
     const offer = offerResponse.order_offers?.[0];
@@ -543,7 +568,7 @@ export default async function handler(
     // ========================================================================
 
     const activeOrdersData = (await hasuraClient.request(CHECK_ACTIVE_ORDERS, {
-      shopper_id: userId,
+      shopper_id: actualShopperId,
     })) as any;
 
     const activeOrders = [
@@ -598,7 +623,7 @@ export default async function handler(
     const order = regularOrder || reelOrder || restaurantOrder || businessOrder;
 
     // Check if order is already assigned to someone else
-    if (order.shopper_id && order.shopper_id !== userId) {
+    if (order.shopper_id && order.shopper_id !== actualShopperId) {
       console.warn(
         "❌ Order already assigned to another shopper:",
         order.shopper_id
@@ -732,7 +757,7 @@ export default async function handler(
         ACCEPT_BUSINESS_BATCH_MUTATION,
         {
           orderId,
-          shopperId: userId,
+          shopperId: actualShopperId,
         }
       )) as any;
     } else if (isRestaurantOrder) {
@@ -741,7 +766,7 @@ export default async function handler(
         ACCEPT_RESTAURANT_BATCH_MUTATION,
         {
           orderId,
-          shopperId: userId,
+          shopperId: actualShopperId,
           assigned_at: assignedAt,
         }
       )) as any;
@@ -749,13 +774,13 @@ export default async function handler(
       // Reel orders: update reel_orders row and set status to "accepted"
       acceptResponse = (await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
         orderId,
-        shopperId: userId,
+        shopperId: actualShopperId,
         assigned_at: assignedAt,
       })) as any;
     } else {
       acceptResponse = (await hasuraClient.request(ACCEPT_BATCH_MUTATION, {
         orderId,
-        shopperId: userId,
+        shopperId: actualShopperId,
         assigned_at: assignedAt,
       })) as any;
     }

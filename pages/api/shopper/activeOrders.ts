@@ -64,12 +64,30 @@ export default async function handler(
       }
     `;
 
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
-    }
+    // Resolve the shopper's actual shoppers.id from their user_id.
+    const GET_SHOPPER_ID = gql`
+      query GetShopperId($user_id: uuid!) {
+        shoppers(where: { user_id: { _eq: $user_id } }) {
+          id
+        }
+      }
+    `;
 
-    const data = await hasuraClient.request<OrdersResponse>(GET_ACTIVE_ORDERS, {
-      shopperId: userId,
+    const shopperLookupData = (await hasuraClient!.request(GET_SHOPPER_ID, {
+      user_id: userId,
+    })) as any;
+
+    const shopperRecord = shopperLookupData.shoppers?.[0];
+    if (!shopperRecord) {
+      return res.status(400).json({
+        orders: [],
+        error: "Shopper profile not found.",
+      });
+    }
+    const shopperId = shopperRecord.id;
+
+    const data = await hasuraClient!.request<OrdersResponse>(GET_ACTIVE_ORDERS, {
+      shopperId: shopperId,
     });
 
     const allOrders = [
