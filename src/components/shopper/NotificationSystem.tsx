@@ -1088,17 +1088,18 @@ export default function NotificationSystem({
                 Accept Order
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   batchToast.dismiss(t.id);
-                  lastDeclineTime.current = Date.now();
-                  declinedOrders.current.set(order.id, Date.now() + 300000);
-                  removeToastForOrder(order.id);
+                  await handleDeclineOffer(order.id, "DECLINED");
                 }}
+                disabled={decliningOrders.has(order.id)}
                 className={`rounded-xl px-6 py-3 text-sm font-black transition-all active:scale-95 ${
+                  decliningOrders.has(order.id) ? 'opacity-50 cursor-not-allowed' : ''
+                } ${
                   theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                Skip
+                {decliningOrders.has(order.id) ? 'Skipping...' : 'Skip'}
               </button>
             </div>
           </div>
@@ -1116,8 +1117,7 @@ export default function NotificationSystem({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           if (timerRef.current) clearInterval(timerRef.current);
-          batchToast.dismiss(toastId);
-          setSelectedOrder(null);
+          handleDeclineOffer(order.id, "DELAYED"); // Mark as delayed in backend
           return 0;
         }
         return prev - 1;
@@ -1130,6 +1130,53 @@ export default function NotificationSystem({
     }
 
     return "map-modal";
+  };
+
+
+
+  const handleDeclineOffer = async (orderId: string, status: "DECLINED" | "DELAYED" = "DECLINED") => {
+    if (!session?.user?.id) return;
+    
+    try {
+      setDecliningOrders(prev => new Set(prev).add(orderId));
+      
+      const response = await fetch("/api/shopper/decline-offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          shopperId: session.user.id,
+          status
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to decline offer");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Update local state
+        lastDeclineTime.current = Date.now();
+        declinedOrders.current.set(orderId, Date.now() + 300000); // Block locally for 5 mins
+        removeToastForOrder(orderId);
+        
+        if (status === "DELAYED") {
+          toast.error("Offer timed out and has been rotated.", {
+            style: { fontWeight: "bold", borderRadius: "1rem" }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error declining offer:", error);
+      toast.error("Failed to update offer status.");
+    } finally {
+      setDecliningOrders(prev => {
+        const next = new Set(prev);
+        next.delete(orderId);
+        return next;
+      });
+    }
   };
 
   const playNotificationSound = async (soundSettings?: {
@@ -1460,7 +1507,23 @@ export default function NotificationSystem({
       }
 
       if (data.success && data.order) {
-        // Smart order finder found order
+        // Smart order finder found NEW order
+        setActiveOrderCount(data.activeOrderCount || 0);
+        await showNewOrderNotification(data.order, currentTime);
+      } else if (data.existingOffer?.order) {
+        // Smart order finder returned an EXISTING pending offer (e.g. after refresh)
+        // This is critical for restoring UI state in the action-based system
+        const order = data.existingOffer.order;
+        
+        // Skip if already showing to prevent flicker
+        if (!activeToasts.current.has(order.id)) {
+          console.log("Restoring existing pending offer card:", order.id);
+          await showNewOrderNotification(order, currentTime);
+        }
+      }
+
+      if (data.success && data.order) {
+        // Update lastNotificationTime to prevent rapid API calls
         setActiveOrderCount(data.activeOrderCount || 0); // Update count if provided
 
         // Update lastNotificationTime to prevent rapid API calls
@@ -1569,6 +1632,13 @@ export default function NotificationSystem({
           if (timerRef.current) clearInterval(timerRef.current);
         }
 
+        lastNotificationTime.current = currentTime;
+      } else if (data.reason === "SHOPPER_SUSPENDED") {
+        toast.error(data.message || "Your account is temporarily suspended from receiving new offers.", {
+          duration: 10000,
+          id: "shopper-suspended-alert",
+          style: { fontWeight: "bold", borderRadius: "1rem" }
+        });
         lastNotificationTime.current = currentTime;
       } else {
         // Update lastNotificationTime even when no orders found to prevent rapid polling

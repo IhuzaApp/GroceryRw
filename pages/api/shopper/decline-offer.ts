@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
+import { suspendShopper } from "../../../src/lib/redisClient";
 
 // ============================================================================
 // DECLINE OFFER
@@ -53,10 +54,10 @@ const VERIFY_ORDER_OFFER = gql`
 
 // Mutation to mark offer as declined
 const DECLINE_ORDER_OFFER = gql`
-  mutation DeclineOrderOffer($offerId: uuid!) {
+  mutation DeclineOrderOffer($offerId: uuid!, $status: String!) {
     update_order_offers_by_pk(
       pk_columns: { id: $offerId }
-      _set: { status: "DECLINED", updated_at: "now()" }
+      _set: { status: $status, updated_at: "now()" }
     ) {
       id
       status
@@ -95,10 +96,10 @@ const VERIFY_COMBINED_OFFERS = gql`
 `;
 
 const DECLINE_COMBINED_OFFERS = gql`
-  mutation DeclineCombinedOffers($offerIds: [uuid!]!) {
+  mutation DeclineCombinedOffers($offerIds: [uuid!]!, $status: String!) {
     update_order_offers(
       where: { id: { _in: $offerIds } }
-      _set: { status: "DECLINED", updated_at: "now()" }
+      _set: { status: $status, updated_at: "now()" }
     ) {
       affected_rows
     }
@@ -119,7 +120,7 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { orderId, shopperId } = req.body;
+  const { orderId, shopperId, status = "DECLINED" } = req.body;
 
   if (!orderId || !shopperId) {
     return res.status(400).json({
@@ -185,6 +186,7 @@ export default async function handler(
         if (combinedOffers.length === combinedOrderIds.length) {
           await hasuraClient.request(DECLINE_COMBINED_OFFERS, {
             offerIds: combinedOffers.map((o: any) => o.id),
+            status: status,
           });
 
           return res.status(200).json({
@@ -284,6 +286,7 @@ export default async function handler(
 
     const declineResponse = (await hasuraClient.request(DECLINE_ORDER_OFFER, {
       offerId: offer.id,
+      status: status,
     })) as any;
 
     if (!declineResponse.update_order_offers_by_pk) {
@@ -325,5 +328,47 @@ export default async function handler(
       error: "Failed to decline offer",
       details: error instanceof Error ? error.message : "Unknown error",
     });
+  } finally {
+    // ========================================================================
+    // PUNISHMENT LOGIC (Background)
+    // ========================================================================
+    // - 3 skips (DECLINED) today -> 2h suspension
+    // - 2 timeouts (DELAYED) today -> 2h suspension
+    // ========================================================================
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const HISTORY_QUERY = gql`
+        query GetShopperHistory($shopper_id: uuid!, $since: timestamptz!) {
+          order_offers(
+            where: {
+              shopper_id: { _eq: $shopper_id }
+              updated_at: { _gte: $since }
+              status: { _in: ["DECLINED", "DELAYED"] }
+            }
+          ) {
+            status
+          }
+        }
+      `;
+
+      const historyData = (await hasuraClient.request(HISTORY_QUERY, {
+        shopper_id: shopperId,
+        since: today.toISOString(),
+      })) as any;
+
+      const history = historyData.order_offers || [];
+      const declinedCount = history.filter((o: any) => o.status === "DECLINED").length;
+      const delayedCount = history.filter((o: any) => o.status === "DELAYED").length;
+
+      console.log(`📊 Shopper ${shopperId} history today: DECLINED=${declinedCount}, DELAYED=${delayedCount}`);
+
+      if (declinedCount >= 3 || delayedCount >= 2) {
+        await suspendShopper(shopperId);
+      }
+    } catch (punishError) {
+      console.error("⚠️ Error in punishment logic:", punishError);
+    }
   }
 }

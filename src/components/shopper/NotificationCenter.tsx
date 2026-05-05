@@ -62,6 +62,13 @@ export default function NotificationCenter() {
   const router = useRouter();
   const isShopping = router.pathname.includes("/Plasa/active-batches");
   const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
+  const [now, setNow] = useState(Date.now());
+
+  // Real-time ticker for countdowns
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Ensure FCM is initialized anywhere the notification bell exists
   // (singleton guarded in fcmClient to prevent duplicate listeners)
@@ -643,9 +650,7 @@ export default function NotificationCenter() {
   };
 
   const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = now - timestamp;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -654,7 +659,36 @@ export default function NotificationCenter() {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    return new Date(timestamp).toLocaleDateString();
+  };
+
+  const renderRealtimeTime = (notification: NotificationItem) => {
+    if (
+      notification.type === "new_order" ||
+      notification.type === "batch_orders"
+    ) {
+      const elapsed = now - notification.timestamp;
+      const remaining = 90 - Math.floor(elapsed / 1000);
+      if (remaining > 0) {
+        return (
+          <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5">
+            <span className="h-1 w-1 animate-ping rounded-full bg-emerald-500"></span>
+            <span className="font-mono text-[10px] font-black text-emerald-500">
+              {remaining}S LEFT
+            </span>
+          </div>
+        );
+      }
+    }
+    return (
+      <span
+        className={`whitespace-nowrap text-[10px] font-bold uppercase tracking-wider opacity-40 ${
+          theme === "dark" ? "text-white" : "text-gray-500"
+        }`}
+      >
+        {formatTime(notification.timestamp)}
+      </span>
+    );
   };
 
   return (
@@ -1004,15 +1038,7 @@ export default function NotificationCenter() {
                             >
                               {notification.title}
                             </h4>
-                            <span
-                              className={`whitespace-nowrap text-[10px] font-bold uppercase tracking-wider opacity-40 ${
-                                theme === "dark"
-                                  ? "text-white"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {formatTime(notification.timestamp)}
-                            </span>
+                            {renderRealtimeTime(notification)}
                           </div>
                           <p
                             className={`line-clamp-2 text-xs leading-relaxed ${

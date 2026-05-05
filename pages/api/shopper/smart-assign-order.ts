@@ -6,6 +6,7 @@ import { sendNewOrderNotification } from "../../../src/services/fcmService";
 import {
   getShopperLocation,
   isShopperOnline,
+  isShopperSuspended,
   logOfferSkip,
 } from "../../../src/lib/redisClient";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
@@ -1180,6 +1181,19 @@ export default async function handler(
     const isCourier = shopperRecord.courier === true;
 
     // ========================================================================
+    // STEP -1: Check if shopper is suspended (2-hour penalty)
+    // ========================================================================
+    const isSuspended = await isShopperSuspended(shopperId);
+    if (isSuspended) {
+      console.log(`🚫 Shopper ${shopperId} is suspended - cannot receive new offers`);
+      return res.status(200).json({
+        success: false,
+        message: "Your account is temporarily suspended from receiving new offers due to multiple missed or declined orders. Please try again later.",
+        reason: "SHOPPER_SUSPENDED",
+      });
+    }
+
+    // ========================================================================
     // STEP 0: Check if shopper already has active orders
     // ========================================================================
     // ONE ORDER AT A TIME: Shopper cannot get new offers if they're working
@@ -1599,6 +1613,20 @@ export default async function handler(
     }
 
     // Combine all orders with type information
+    console.log("📍 Smart Assignment Order Discovery:", {
+      regular: availableOrders.length,
+      reel: availableReelOrders.length,
+      restaurant: availableRestaurantOrders.length,
+      business: availableBusinessOrders.length,
+      package: availablePackageOrders.length,
+      total:
+        availableOrders.length +
+        availableReelOrders.length +
+        availableRestaurantOrders.length +
+        availableBusinessOrders.length +
+        availablePackageOrders.length,
+    });
+
     const allOrders = [
       ...availableOrders.map((order: any) => ({
         ...order,

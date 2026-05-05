@@ -17,7 +17,7 @@ import { logErrorToSlack } from "./slackErrorReporter";
 let redis: Redis | null = null;
 let lastLoggedErrorAt = 0;
 let lastLoggedConnectAt = 0;
-const REDIS_LOG_THROTTLE_MS = 60_000; // Log at most once per minute
+const REDIS_LOG_THROTTLE_MS = 3600_000; // Log at most once per hour to prevent Slack spam
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
@@ -45,7 +45,7 @@ export const getRedisClient = (): Redis | null => {
                 message:
                   "Running in degraded mode (no location tracking) failed after 3 attempts",
               }
-            ).catch(() => {});
+            ).catch(() => { });
           }
           return null; // Stop retrying
         }
@@ -75,7 +75,7 @@ export const getRedisClient = (): Redis | null => {
           title: "✅ Redis connected successfully",
           message: "Redis is available. Location tracking is active.",
           context: { env: process.env.NODE_ENV },
-        }).catch(() => {});
+        }).catch(() => { });
       }
     });
 
@@ -83,6 +83,22 @@ export const getRedisClient = (): Redis | null => {
       const now = Date.now();
       if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
         lastLoggedErrorAt = now;
+
+        // Suppress Slack alerts for Redis connection errors in development
+        // to avoid spamming the user when cloud Redis is inaccessible locally.
+        const isDev = process.env.NODE_ENV === "development";
+        const isConnectionError =
+          err.message.includes("ENOTFOUND") ||
+          err.message.includes("ECONNREFUSED");
+
+        if (isDev && isConnectionError) {
+          console.warn(
+            "⚠️ Redis Connection Error (Suppressed from Slack in Dev):",
+            err.message
+          );
+          return;
+        }
+
         logErrorToSlack("redisClient", err, {
           degradedMode: true,
           message: `System will work in degraded mode (no location tracking) ${err.message}`,
@@ -106,7 +122,7 @@ export const getRedisClient = (): Redis | null => {
         logErrorToSlack("redisClient", err, {
           degradedMode: true,
           message: `Will retry on next operation ${err.message} Will retry on next operation`,
-        }).catch(() => {});
+        }).catch(() => { });
       }
     });
 
@@ -114,10 +130,9 @@ export const getRedisClient = (): Redis | null => {
   } catch (error) {
     logErrorToSlack("redisClient", error, {
       degradedMode: true,
-      message: `Failed to initialize Redis ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
-    }).catch(() => {});
+      message: `Failed to initialize Redis ${error instanceof Error ? error.message : "Unknown error"
+        }`,
+    }).catch(() => { });
   }
   return null;
 };
@@ -134,7 +149,10 @@ export interface ShopperLocation {
 }
 
 const LOCATION_KEY_PREFIX = "shopper:location:";
-const LOCATION_TTL = 45; // 45 seconds - if not updated, shopper is offline
+const LOCATION_TTL = 90; // 90 seconds - if not updated, shopper is offline
+
+const SUSPENSION_KEY_PREFIX = "shopper:suspended:";
+const SUSPENSION_TTL = 7200; // 2 hours in seconds
 
 /**
  * Store shopper location (volatile, high-frequency)
@@ -381,9 +399,8 @@ export const logOfferSkip = async (log: OfferSkipLog): Promise<void> => {
       return;
     }
 
-    const key = `${SKIP_LOG_PREFIX}${log.orderId}:${
-      log.shopperId
-    }:${Date.now()}`;
+    const key = `${SKIP_LOG_PREFIX}${log.orderId}:${log.shopperId
+      }:${Date.now()}`;
     const value = JSON.stringify({
       ...log,
       timestamp: Date.now(),
@@ -469,6 +486,60 @@ export const checkRedisHealth = async (): Promise<{
       connected: false,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  }
+};
+
+/**
+ * Temporarily suspend a shopper from receiving new offers
+ */
+export const suspendShopper = async (shopperId: string): Promise<void> => {
+  try {
+    const client = getRedisClient();
+    if (!client) return;
+
+    // Check if client is connected and ready
+    if (client.status !== "ready") {
+      if (client.status === "end" || client.status === "close") {
+        await client.connect();
+      } else {
+        return;
+      }
+    }
+
+    const key = SUSPENSION_KEY_PREFIX + shopperId;
+    await client.setex(key, SUSPENSION_TTL, "true");
+
+    console.log(`🚫 Shopper ${shopperId} suspended for 2 hours`);
+  } catch (error) {
+    console.error("❌ Error suspending shopper in Redis:", error);
+  }
+};
+
+/**
+ * Check if a shopper is currently suspended
+ */
+export const isShopperSuspended = async (
+  shopperId: string
+): Promise<boolean> => {
+  try {
+    const client = getRedisClient();
+    if (!client) return false;
+
+    // Check if client is connected and ready
+    if (client.status !== "ready") {
+      if (client.status === "end" || client.status === "close") {
+        await client.connect();
+      } else {
+        return false;
+      }
+    }
+
+    const key = SUSPENSION_KEY_PREFIX + shopperId;
+    const res = await client.get(key);
+    return !!res;
+  } catch (error) {
+    console.error("❌ Error checking shopper suspension in Redis:", error);
+    return false;
   }
 };
 
