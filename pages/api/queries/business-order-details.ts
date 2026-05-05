@@ -59,9 +59,9 @@ const GET_BUSINESS_ORDER = gql`
         phone
         email
       }
-      shopper {
+      shoppers {
         id
-        name
+        full_name
         profile_picture
         phone
         email
@@ -122,9 +122,9 @@ const GET_BUSINESS_ORDER_FOR_SHOPPER = gql`
         phone
         email
       }
-      shopper {
+      shoppers {
         id
-        name
+        full_name
         profile_picture
         phone
         email
@@ -220,9 +220,9 @@ export default async function handler(
         phone: string | null;
         email: string | null;
       } | null;
-      shopper?: {
+      shoppers?: {
         id: string;
-        name: string | null;
+        full_name: string | null;
         profile_picture: string | null;
         phone: string | null;
         email: string | null;
@@ -311,7 +311,7 @@ export default async function handler(
 
     // Enrich with assigned shopper and their ratings (for right-side "Your Plaser" panel)
     let Shoppers: any = null;
-    if (row.shopper_id && row.shopper) {
+    if (row.shopper_id && row.shoppers) {
       let ratings: any[] = [];
       try {
         const ratingsData = await hasuraClient.request<{
@@ -329,15 +329,15 @@ export default async function handler(
       } catch {
         // leave ratings empty
       }
-      const s = row.shopper;
+      const s = row.shoppers;
       Shoppers = {
         id: row.shopper_id,
-        name: s.name,
+        name: s.full_name,
         phone: s.phone,
         email: s.email,
         profile_picture: s.profile_picture,
         shopper: {
-          full_name: s.name,
+          full_name: s.full_name,
           profile_photo: s.profile_picture,
           phone_number: s.phone,
         },

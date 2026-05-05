@@ -56,12 +56,12 @@ interface Order {
   latitude: string;
   longitude: string;
   allProducts: Product[];
-  shopper?: {
+  shoppers?: {
     id: string;
-    name: string;
-    profile_picture: string;
-    phone: string;
-    email: string;
+    full_name: string;
+    profile_photo: string | null;
+    phone_number: string | null;
+    email: string | null;
   } | null;
   shopper_id?: string | null;
   orderedBy?: {
@@ -186,7 +186,7 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
 
       const exportData = toExport.map((order, index) => {
         const customerName =
-          order.orderedBy?.name || order.shopper?.name || "—";
+          order.orderedBy?.name || order.shoppers?.full_name || "—";
         const itemsText = Array.isArray(order.allProducts)
           ? order.allProducts
               .map((p: Product) => {
@@ -698,14 +698,14 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
 
             <div className="space-y-6 p-6">
               {/* Shopper Information Section */}
-              {selectedOrder.shopper_id && selectedOrder.shopper && (
+              {selectedOrder.shopper_id && selectedOrder.shoppers && (
                 <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 dark:border-blue-800 dark:from-blue-900/20 dark:to-cyan-900/20">
                   <div className="flex items-center gap-4">
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-blue-500 bg-blue-100 dark:bg-blue-900/30">
-                      {selectedOrder.shopper.profile_picture ? (
+                      {selectedOrder.shoppers.profile_photo ? (
                         <Image
-                          src={selectedOrder.shopper.profile_picture}
-                          alt={selectedOrder.shopper.name || "Shopper"}
+                          src={selectedOrder.shoppers.profile_photo}
+                          alt={selectedOrder.shoppers.full_name || "Shopper"}
                           width={64}
                           height={64}
                           className="h-full w-full object-cover"
@@ -722,11 +722,11 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                         </h3>
                       </div>
                       <p className="text-base font-semibold text-gray-900 dark:text-white">
-                        {selectedOrder.shopper.name || "Unknown Shopper"}
+                        {selectedOrder.shoppers.full_name || "Unknown Shopper"}
                       </p>
-                      {selectedOrder.shopper.phone && (
+                      {selectedOrder.shoppers.phone_number && (
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {selectedOrder.shopper.phone}
+                          {selectedOrder.shoppers.phone_number}
                         </p>
                       )}
                     </div>

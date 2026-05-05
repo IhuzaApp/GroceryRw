@@ -66,12 +66,12 @@ export default function UserBusinessOrderDetails({
   const shop = order?.shop;
 
   // Shopper details (same shape as regular orders for "Your Plaser" panel)
-  const shopper = order?.Shoppers?.shopper;
-  const shopperPhone = shopper?.phone_number || order?.Shoppers?.phone;
-  const shopperName = shopper?.full_name || order?.Shoppers?.name || "Plaser";
+  const shopper = order?.shoppers?.shopper;
+  const shopperPhone = shopper?.phone_number || order?.shoppers?.phone_number;
+  const shopperName = shopper?.full_name || order?.shoppers?.full_name || "Plasa";
   const shopperProfilePhoto =
-    shopper?.profile_photo || order?.Shoppers?.profile_picture;
-  const hasShopper = order?.Shoppers && (shopper || order?.shopper_id);
+    shopper?.profile_photo || order?.shoppers?.profile_photo;
+  const hasShopper = order?.shoppers && (shopper || order?.shopper_id);
 
   return (
     <div className="space-y-6">
@@ -340,6 +340,11 @@ export default function UserBusinessOrderDetails({
                         {shopperPhone}
                       </p>
                     )}
+                    {order?.shoppers?.email && (
+                      <div className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+                        {order.shoppers.email}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -395,19 +400,19 @@ export default function UserBusinessOrderDetails({
                   </button>
                 </div>
 
-                {order?.Shoppers?.Ratings && order.Shoppers.Ratings.length > 0 && (
+                {order?.shoppers?.Ratings && order.shoppers.Ratings.length > 0 && (
                   <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
                     <div className="mb-3 flex items-center justify-between">
                       <h3 className="text-base font-bold text-gray-900 dark:text-white">
                         Ratings &amp; Reviews
                       </h3>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {order.Shoppers.Ratings.length} review
-                        {order.Shoppers.Ratings.length !== 1 ? "s" : ""}
+                        {order.shoppers.Ratings.length} review
+                        {order.shoppers.Ratings.length !== 1 ? "s" : ""}
                       </span>
                     </div>
                     <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
-                      {order.Shoppers.Ratings.map((rating: any) => (
+                      {order.shoppers.Ratings.map((rating: any) => (
                         <div
                           key={rating.id}
                           className="rounded-xl border border-gray-200 bg-gray-50/50 p-3 dark:border-gray-700 dark:bg-gray-800/50"

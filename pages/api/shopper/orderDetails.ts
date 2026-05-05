@@ -65,7 +65,7 @@ interface OrderDetailsResponse {
       updated_at: string;
       role: string;
     } | null;
-    Shoppers: {
+    shoppers: {
       id: string;
       name: string;
       email: string;
@@ -180,7 +180,7 @@ const GET_ORDER_DETAILS = gql`
         }
         is_guest
       }
-      Shoppers {
+      shoppers {
         id
         name
         email
@@ -272,7 +272,7 @@ const GET_REEL_ORDER_DETAILS = gql`
         phone
         profile_picture
       }
-      Shoppers {
+      shoppers {
         id
         name
         email
@@ -398,7 +398,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
           }
         }
       }
-      shopper {
+      shoppers {
         id
         name
         profile_picture
@@ -510,7 +510,7 @@ const GET_RELATED_REGULAR_ORDERS = gql`
           user_id
         }
       }
-      Shoppers {
+      shoppers {
         id
         name
         phone

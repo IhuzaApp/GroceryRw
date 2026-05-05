@@ -472,9 +472,11 @@ export default function MobileMessagePage({
           : null;
         const employeeId = order?.assignedTo?.shopper?.Employment_id;
         const fullName =
-          order?.assignedTo?.shopper?.full_name ||
+          order?.assignedTo?.shoppers?.full_name ||
+          order?.assignedTo?.shoppers?.name ||
           order?.assignedTo?.name ||
-          order?.shopper?.name ||
+          order?.shoppers?.full_name ||
+          order?.shoppers?.name ||
           "Shopper";
         const contactName =
           (employeeId
@@ -711,9 +713,10 @@ export default function MobileMessagePage({
                   "Business Chat";
               } else {
                 fullName =
-                  order?.assignedTo?.shopper?.full_name ||
+                  order?.assignedTo?.shoppers?.full_name ||
                   order?.assignedTo?.name ||
-                  order?.shopper?.name ||
+                  order?.shoppers?.full_name ||
+                  order?.shoppers?.name ||
                   "Shopper";
               }
 
@@ -725,9 +728,10 @@ export default function MobileMessagePage({
               const contactAvatar = isBusinessChat
                 ? conversation.counterpartAvatar ||
                   "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
-                : order?.assignedTo?.shopper?.profile_photo ||
+                : order?.assignedTo?.shoppers?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
-                  order?.shopper?.avatar ||
+                  order?.shoppers?.profile_photo ||
+                  order?.shoppers?.avatar ||
                   "/images/ProfileImage.png";
 
               const typeInfo = getConvType(conversation, orders);

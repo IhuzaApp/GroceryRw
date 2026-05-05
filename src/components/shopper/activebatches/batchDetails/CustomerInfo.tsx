@@ -77,7 +77,6 @@ export default function CustomerInfo({
     }
   };
 
-  return (
   const containerClasses = `rounded-[1.25rem] border transition-all duration-500 overflow-hidden shadow-sm ${
     theme === "dark" ? "bg-[#0B0F1A] border-white/5" : "bg-white border-black/5"
   }`;

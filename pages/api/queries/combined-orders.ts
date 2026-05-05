@@ -80,9 +80,9 @@ const GET_COMBINED_ORDERS = gql`
           user_id
         }
       }
-      Shoppers {
+      shoppers {
         id
-        name
+        full_name
         phone
         profile_picture
       }

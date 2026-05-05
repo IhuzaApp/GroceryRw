@@ -338,15 +338,12 @@ export const getServerSideProps: GetServerSideProps<
           longitude
           placeDetails
         }
-        shopper: Shoppers {
+        shopper: shoppers {
           id
           name
           email
           phone
           profile_picture
-          shopper {
-            id
-          }
           orders: Orders_aggregate {
             aggregate {
               count
@@ -440,15 +437,12 @@ export const getServerSideProps: GetServerSideProps<
           user_id
           is_default
         }
-        shopper: Shoppers {
+        shopper: shoppers {
           id
           name
           email
           phone
           profile_picture
-          shopper {
-            id
-          }
           orders: Orders_aggregate {
             aggregate {
               count
@@ -745,8 +739,7 @@ export const getServerSideProps: GetServerSideProps<
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper =
-      order.shopper?.id === session.user.id ||
-      order.shopper?.shopper?.id === session.user.id;
+      order.shopper?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
 
     // For reel orders, also check if user is the customer via user field
@@ -794,7 +787,7 @@ export const getServerSideProps: GetServerSideProps<
       isBusinessCustomer,
       orderType,
       assignedToUserId: order.shopper?.id,
-      shopperId: order.shopper?.shopper?.id,
+      shopperId: order.shopper?.id,
       sessionUserId: session.user.id,
     });
 

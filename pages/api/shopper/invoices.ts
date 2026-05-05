@@ -44,7 +44,7 @@ const GET_SHOPPER_INVOICES = gql`
         profile_picture
         role
         updated_at
-        shopper {
+        shoppers {
           Employment_id
           Police_Clearance_Cert
           active
@@ -307,7 +307,7 @@ export default async function handler(
           name: string;
           email: string;
           phone: string;
-          shopper?: {
+          shoppers: {
             id: string;
             phone: string;
             status: string;

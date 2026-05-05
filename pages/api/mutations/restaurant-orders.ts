@@ -208,24 +208,22 @@ const GET_RESTAURANT_ORDER = `
       updated_at
       user_id
     }
-    shopper {
+    shoppers {
       id
-      name
-      shopper {
-        Employment_id
-        Police_Clearance_Cert
-        active
-        address
-        background_check_completed
-        full_name
-        guarantor
-        guarantorPhone
-        profile_photo
-        phone
-        status
-        telegram_id
-        transport_mode
-      }
+      full_name
+      Employment_id
+      Police_Clearance_Cert
+      active
+      address
+      background_check_completed
+      guarantor
+      guarantorPhone
+      profile_photo
+      phone
+      phone_number
+      status
+      telegram_id
+      transport_mode
       updated_at
     }
   }

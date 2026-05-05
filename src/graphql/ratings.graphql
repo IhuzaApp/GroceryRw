@@ -16,7 +16,6 @@ query getRatings {
       OrderID
       combined_order_id
       id
-      found
       discount
       delivery_time
       delivery_photo_url

@@ -501,7 +501,7 @@ export function OrderDetailContent({
         </div>
       )}
 
-      {order.shopper && (
+      {order.shoppers && (
         <div className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="mb-4 flex items-center gap-3">
             <div className="rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 p-3 dark:from-cyan-900/30 dark:to-blue-900/30">
@@ -517,10 +517,10 @@ export function OrderDetailContent({
                 Shopper Name
               </p>
               <p className="text-base font-bold text-gray-900 dark:text-white">
-                {order.shopper.name || "Not assigned"}
+                {order.shoppers.full_name || "Not assigned"}
               </p>
             </div>
-            {order.shopper.phone && (
+            {order.shoppers.phone_number && (
               <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
                 <Phone className="h-4 w-4 flex-shrink-0 text-gray-500" />
                 <div className="flex-1">
@@ -528,7 +528,7 @@ export function OrderDetailContent({
                     Phone
                   </p>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {order.shopper.phone}
+                    {order.shoppers.phone_number}
                   </p>
                 </div>
               </div>

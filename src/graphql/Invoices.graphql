@@ -24,7 +24,6 @@ query getInvoiceDetials {
       delivery_photo_url
       delivery_time
       discount
-      found
       id
       service_fee
       shop_id

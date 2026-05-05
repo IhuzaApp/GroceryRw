@@ -28,11 +28,8 @@ const GET_ORDER_FOR_REVIEW = gql`
       Shop {
         name
       }
-      Shoppers {
-        name
-        shopper {
-          full_name
-        }
+      shoppers {
+        full_name
       }
     }
   }
@@ -45,8 +42,8 @@ const GET_REEL_ORDER_FOR_REVIEW = gql`
       Reel {
         title
       }
-      Shoppers {
-        name
+      shoppers {
+        full_name
       }
     }
   }
@@ -130,9 +127,8 @@ export default async function handler(
             Orders_by_pk: {
               OrderID: number;
               Shop: { name: string } | null;
-              Shoppers: {
-                name: string;
-                shopper: { full_name: string } | null;
+              shoppers: {
+                full_name: string | null;
               } | null;
             } | null;
           }>(GET_ORDER_FOR_REVIEW, { order_id });
@@ -141,7 +137,7 @@ export default async function handler(
             orderNumber =
               o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
             storeName = o.Shop?.name;
-            shopperName = o.Shoppers?.shopper?.full_name ?? o.Shoppers?.name;
+            shopperName = o.shoppers?.full_name ?? "Shopper";
           }
         } catch (e) {
           console.error("Failed to fetch order for review notification", e);
@@ -152,7 +148,7 @@ export default async function handler(
             reel_orders_by_pk: {
               OrderID: number;
               Reel: { title: string } | null;
-              Shoppers: { name: string } | null;
+              shoppers: { full_name: string | null; } | null;
             } | null;
           }>(GET_REEL_ORDER_FOR_REVIEW, { reel_order_id: reel_order_id });
           const r = reelRes?.reel_orders_by_pk;
@@ -160,7 +156,7 @@ export default async function handler(
             orderNumber =
               r.OrderID != null ? String(r.OrderID).padStart(4, "0") : "—";
             storeName = r.Reel?.title ?? "Reel order";
-            shopperName = r.Shoppers?.name;
+            shopperName = r.shoppers?.full_name ?? "Shopper";
           }
         } catch (e) {
           console.error(

@@ -19,7 +19,6 @@ query getRevenue {
       shop_id
       service_fee
       discount
-      found
       delivery_notes
       delivery_photo_url
       delivery_time
@@ -43,7 +42,7 @@ query getRevenue {
       latitude
       address
     }
-    shopper {
+    shoppers {
       Employment_id
       address
       active

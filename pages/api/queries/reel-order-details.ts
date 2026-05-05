@@ -60,11 +60,29 @@ const GET_REEL_ORDER_DETAILS = gql`
         role
         updated_at
       }
-      Shoppers {
+      shoppers {
         id
-        name
-        profile_picture
+        full_name
+        profile_photo
+        phone_number
         phone
+        address
+        Employment_id
+        Police_Clearance_Cert
+        active
+        collection_comment
+        created_at
+        guarantor
+        guarantorPhone
+        guarantorRelationship
+        mutual_status
+        signature
+        status
+        transport_mode
+        proofOfResidency
+        telegram_id
+        updated_at
+        user_id
         Ratings {
           created_at
           customer_id
@@ -81,30 +99,6 @@ const GET_REEL_ORDER_DETAILS = gql`
           updated_at
           businessProduct_id
           package_id
-        }
-        shopper {
-          id
-          full_name
-          profile_photo
-          phone_number
-          address
-          Employment_id
-          Police_Clearance_Cert
-          active
-          collection_comment
-          created_at
-          guarantor
-          guarantorPhone
-          guarantorRelationship
-          mutual_status
-          phone
-          signature
-          status
-          transport_mode
-          proofOfResidency
-          telegram_id
-          updated_at
-          user_id
         }
       }
     }
@@ -142,6 +136,7 @@ export default async function handler(
     // Fetch reel order details
     const data = await hasuraClient.request<{
       reel_orders_by_pk: {
+        pin: null;
         id: string;
         OrderID: string;
         user_id: string;
@@ -191,19 +186,14 @@ export default async function handler(
           role: string | null;
           updated_at: string | null;
         };
-        Shoppers: {
+        shoppers: {
           id: string;
-          name: string;
-          profile_picture: string | null;
-          phone: string;
-          shopper: {
-            id: string;
-            full_name: string;
-            profile_photo: string | null;
-            phone_number: string | null;
-            address: string | null;
-            Employment_id: string | null;
-          } | null;
+          full_name: string;
+          profile_photo: string | null;
+          phone_number: string | null;
+          phone: string | null;
+          address: string | null;
+          Employment_id: string | null;
           Ratings: Array<{
             created_at: string;
             customer_id: string;
@@ -230,7 +220,7 @@ export default async function handler(
     }
 
     let shopperStats = null;
-    if (orderData.Shoppers && orderData.shopper_id) {
+    if (orderData.shoppers && orderData.shopper_id) {
       const shopperId = orderData.shopper_id;
 
       // Query to get all ratings for this shopper and count of delivered orders
@@ -319,9 +309,9 @@ export default async function handler(
       const averageRating =
         statsData.Ratings.length > 0
           ? statsData.Ratings.reduce(
-              (sum, rating) => sum + parseFloat(rating.rating || "0"),
-              0
-            ) / statsData.Ratings.length
+            (sum, rating) => sum + parseFloat(rating.rating || "0"),
+            0
+          ) / statsData.Ratings.length
           : 0;
 
       // Count total delivered orders (regular + reel + restaurant)
@@ -382,38 +372,35 @@ export default async function handler(
         orderData.pin != null && String(orderData.pin).trim() !== ""
           ? String(orderData.pin)
           : orderData.OrderID != null
-          ? String(orderData.OrderID).padStart(4, "0").slice(-4)
-          : orderData.id
-          ? orderData.id.slice(0, 4).toUpperCase()
-          : "",
+            ? String(orderData.OrderID).padStart(4, "0").slice(-4)
+            : orderData.id
+              ? orderData.id.slice(0, 4).toUpperCase()
+              : "",
       orderType: "reel" as const,
       reel: orderData.Reel,
-      assignedTo: orderData.Shoppers
+      assignedTo: orderData.shoppers
         ? {
-            id: orderData.shopper_id || orderData.Shoppers.id || "",
-            name:
-              orderData.Shoppers.shopper?.full_name ||
-              orderData.Shoppers.name ||
-              "Plaser",
-            phone:
-              orderData.Shoppers.shopper?.phone_number ||
-              orderData.Shoppers.shopper?.phone ||
-              orderData.Shoppers.phone ||
-              "",
-            email: "",
-            profile_photo:
-              orderData.Shoppers.shopper?.profile_photo ||
-              orderData.Shoppers.profile_picture ||
-              null,
-            gender: null,
-            rating: shopperStats?.rating || 0,
-            orders_aggregate: shopperStats?.orders_aggregate || {
-              aggregate: {
-                count: 0,
-              },
+          id: orderData.shopper_id || orderData.shoppers.id || "",
+          name:
+            orderData.shoppers.full_name ||
+            "Plasa",
+          phone:
+            orderData.shoppers.phone_number ||
+            orderData.shoppers.phone ||
+            "",
+          email: "",
+          profile_photo:
+            orderData.shoppers.profile_photo ||
+            null,
+          gender: null,
+          rating: shopperStats?.rating || 0,
+          orders_aggregate: shopperStats?.orders_aggregate || {
+            aggregate: {
+              count: 0,
             },
-            recentReviews: shopperStats?.recentReviews || [],
-          }
+          },
+          recentReviews: shopperStats?.recentReviews || [],
+        }
         : null,
     };
 

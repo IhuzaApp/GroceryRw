@@ -1,0 +1,499 @@
+lib/otpStore.ts(35,34): error TS2802: Type 'IterableIterator<[string, OTPData]>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+pages/api/ai/search-plas-data.ts(670,48): error TS2304: Cannot find name 'sanitizedStores'.
+pages/api/ai/search-plas-data.ts(672,46): error TS2304: Cannot find name 'sanitizedStores'.
+pages/api/ai/search-plas-data.ts(854,17): error TS2304: Cannot find name 'session'.
+pages/api/auth/profile/request-otp.ts(27,17): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/auth/profile/request-otp.ts(31,26): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/auth/profile/request-otp.ts(62,25): error TS2345: Argument of type '{ otp: string; email: string; phone: string; fullName: string; expiresAt: number; }' is not assignable to parameter of type 'OTPData'.
+  Property 'gender' is missing in type '{ otp: string; email: string; phone: string; fullName: string; expiresAt: number; }' but required in type 'OTPData'.
+pages/api/auth/profile/verify-and-change.ts(25,17): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/auth/profile/verify-and-change.ts(59,25): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/auth/send-upgrade-otp.ts(51,35): error TS2345: Argument of type '{ otp: string; email: any; fullName: any; gender: any; expiresAt: number; }' is not assignable to parameter of type 'OTPData'.
+  Property 'phone' is missing in type '{ otp: string; email: any; fullName: any; gender: any; expiresAt: number; }' but required in type 'OTPData'.
+pages/api/mutations/adopt-pet.ts(6,25): error TS2691: An import path cannot end with a '.ts' extension. Consider importing '../../../src/lib/pindo.js' instead.
+pages/api/mutations/register-logistics-account.ts(110,30): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/mutations/register-logistics-account.ts(114,30): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/mutations/register-logistics-account.ts(129,35): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-logistics-account.ts(146,25): error TS18046: 'logisticsResult' is of type 'unknown'.
+pages/api/mutations/register-logistics-account.ts(149,32): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-logistics-account.ts(152,28): error TS18046: 'businessInfo' is of type 'unknown'.
+pages/api/mutations/register-logistics-account.ts(153,29): error TS18046: 'businessInfo' is of type 'unknown'.
+pages/api/mutations/register-logistics-account.ts(157,13): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-logistics-account.ts(163,13): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-pet-vendor.ts(115,30): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/mutations/register-pet-vendor.ts(119,30): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/mutations/register-pet-vendor.ts(133,35): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-pet-vendor.ts(146,25): error TS18046: 'petVendorResult' is of type 'unknown'.
+pages/api/mutations/register-pet-vendor.ts(149,32): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-pet-vendor.ts(152,28): error TS18046: 'businessInfo' is of type 'unknown'.
+pages/api/mutations/register-pet-vendor.ts(153,29): error TS18046: 'businessInfo' is of type 'unknown'.
+pages/api/mutations/register-pet-vendor.ts(157,13): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/mutations/register-pet-vendor.ts(163,13): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/queries/business-order-details.ts(370,29): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(374,18): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(375,19): error TS2339: Property 'latitude' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(375,42): error TS2339: Property 'longitude' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(376,25): error TS2339: Property 'latitude' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(376,41): error TS2339: Property 'longitude' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(386,26): error TS2339: Property 'latitude' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(387,27): error TS2339: Property 'longitude' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(389,19): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(390,20): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(393,34): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(395,38): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(397,24): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(398,37): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(399,38): error TS2339: Property 'business_account' does not exist on type '{ id: string; name: string; image: string | null; }'.
+pages/api/queries/business-order-details.ts(404,27): error TS2339: Property 'delivery_proof' does not exist on type 'BusinessOrderRow'.
+pages/api/queries/business-order-details.ts(405,21): error TS2339: Property 'latitude' does not exist on type 'BusinessOrderRow'.
+pages/api/queries/business-order-details.ts(406,22): error TS2339: Property 'longitude' does not exist on type 'BusinessOrderRow'.
+pages/api/queries/business-transactions.ts(86,25): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/queries/business-transactions.ts(96,32): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/queries/business-transactions.ts(108,28): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/queries/contract-details.ts(308,31): error TS2339: Property 'estimated_quantity' does not exist on type '{ id: string; title: string | null; description: string | null; business_id: string | null; user_id: string; business_account: { id: string; business_name: string | null; business_email: string | null; ... 4 more ...; status: string | null; } | null; contact_name: string | null; email: string | null; phone: string |...'.
+pages/api/queries/get-all-notification-users.ts(1,1): error TS1208: 'get-all-notification-users.ts' cannot be compiled under '--isolatedModules' because it is considered a global script file. Add an import, export, or an empty 'export {}' statement to make it a module.
+pages/api/queries/get-user-bookings.ts(65,24): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/queries/public-contract-details.ts(279,31): error TS2339: Property 'estimated_quantity' does not exist on type '{ id: string; title: string | null; description: string | null; business_id: string | null; user_id: string; business_account: { id: string; business_name: string | null; business_email: string | null; ... 4 more ...; status: string | null; } | null; contact_name: string | null; email: string | null; phone: string |...'.
+pages/api/queries/register-shopper.ts(576,9): error TS2345: Argument of type 'FunctionComponentElement<ShopperContractPDFProps>' is not assignable to parameter of type 'ReactElement<DocumentProps, string | JSXElementConstructor<any>>'.
+  Types of property 'props' are incompatible.
+    Type 'ShopperContractPDFProps' has no properties in common with type 'DocumentProps'.
+pages/api/queries/search.ts(149,34): error TS2339: Property 'address' does not exist on type '{ name: string; image: string; is_active: boolean; }'.
+pages/api/queries/system-config.ts(66,24): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/queries/ticket-by-order.ts(32,17): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/queries/ticket-by-order.ts(62,24): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/queries/user-packages.ts(66,17): error TS18046: 'data' is of type 'unknown'.
+pages/api/ratings/product-rating.ts(39,19): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/ratings/product-rating.ts(54,24): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/ratings/product-rating.ts(60,50): error TS2698: Spread types may only be created from object types.
+pages/api/refunds/create.ts(193,31): error TS2339: Property 'ProductName' does not exist on type '{ name: string; }'.
+pages/api/refunds/create.ts(204,31): error TS2339: Property 'ProductName' does not exist on type '{ name: string; }'.
+pages/api/restaurant/update-order-status.ts(59,26): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/restaurant/update-order-status.ts(64,9): error TS18046: 'result' is of type 'unknown'.
+pages/api/restaurant/update-order-status.ts(71,13): error TS18046: 'result' is of type 'unknown'.
+pages/api/shopper/cleanup-notification.ts(69,26): error TS18046: 'orderData' is of type 'unknown'.
+pages/api/shopper/cleanup-notification.ts(70,23): error TS18046: 'orderData' is of type 'unknown'.
+pages/api/shopper/process-orders-batch.ts(409,29): error TS2304: Cannot find name 'sendToCluster'.
+pages/api/shopper/rotate-expired-offers.ts(403,24): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/rotate-expired-offers.ts(409,24): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/rotate-expired-offers.ts(415,24): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/rotate-expired-offers.ts(548,35): error TS2304: Cannot find name 'availableShoppersData'.
+pages/api/shopper/rotate-expired-offers.ts(599,40): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/rotate-expired-offers.ts(691,13): error TS2345: Argument of type '{ id: any; shopName: any; customerAddress: string; distance: number; itemsCount: number; travelTimeMinutes: number; estimatedEarnings: number; orderType: any; expiresInMs: number; }' is not assignable to parameter of type '{ id: string; shopName: string; distance: number; travelTimeMinutes: number; estimatedEarnings: number; orderType: string; customerAddress: string; expiresInMs?: number | undefined; isCombinedOrder?: boolean | undefined; ... 6 more ...; tag?: string | undefined; }'.
+  Object literal may only specify known properties, and 'itemsCount' does not exist in type '{ id: string; shopName: string; distance: number; travelTimeMinutes: number; estimatedEarnings: number; orderType: string; customerAddress: string; expiresInMs?: number | undefined; isCombinedOrder?: boolean | undefined; ... 6 more ...; tag?: string | undefined; }'.
+pages/api/shopper/send-otp.ts(36,18): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/shopper/send-otp.ts(39,48): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/shopper/send-otp.ts(78,7): error TS2322: Type 'Promise<CreateEmailResponse>' is not assignable to type 'Promise<null>'.
+  Type 'CreateEmailResponse' is not assignable to type 'null'.
+    Type '{ error: ErrorResponse; data: null; } & { headers: Record<string, string> | null; }' is not assignable to type 'null'.
+pages/api/shopper/todayCompletedEarnings.ts(107,44): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/updateOrderStatus.ts(435,11): error TS2345: Argument of type 'NextApiRequest' is not assignable to parameter of type 'boolean | undefined'.
+pages/api/shopper/updateOrderStatus.ts(1157,11): error TS2345: Argument of type 'NextApiRequest' is not assignable to parameter of type 'boolean | undefined'.
+pages/api/shopper/uploadShopperPhoto.ts(198,57): error TS2345: Argument of type '[{ user_id: any; photo_type: any; photo_data: any; } | { user_id: any; national_id_photo_front: any; national_id_photo_back: any; } | { user_id: any; driving_license: any; } | { user_id: any; signature: any; }]' is not assignable to parameter of type '[variables: { user_id: any; photo_type: any; photo_data: any; national_id_photo_front?: undefined; national_id_photo_back?: undefined; driving_license?: undefined; signature?: undefined; }, requestHeaders?: HeadersInit | undefined] | [variables: ...] | [variables: ...] | [variables: ...]'.
+  Type '[{ user_id: any; photo_type: any; photo_data: any; } | { user_id: any; national_id_photo_front: any; national_id_photo_back: any; } | { user_id: any; driving_license: any; } | { user_id: any; signature: any; }]' is not assignable to type '[variables: { user_id: any; signature: any; photo_type?: undefined; photo_data?: undefined; national_id_photo_front?: undefined; national_id_photo_back?: undefined; driving_license?: undefined; }, requestHeaders?: HeadersInit | undefined]'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type '{ user_id: any; photo_type: any; photo_data: any; } | { user_id: any; national_id_photo_front: any; national_id_photo_back: any; } | { user_id: any; driving_license: any; } | { user_id: any; signature: any; }' is not assignable to type '{ user_id: any; signature: any; photo_type?: undefined; photo_data?: undefined; national_id_photo_front?: undefined; national_id_photo_back?: undefined; driving_license?: undefined; }'.
+        Property 'signature' is missing in type '{ user_id: any; photo_type: any; photo_data: any; }' but required in type '{ user_id: any; signature: any; photo_type?: undefined; photo_data?: undefined; national_id_photo_front?: undefined; national_id_photo_back?: undefined; driving_license?: undefined; }'.
+pages/api/shopper/uploadShopperPhoto.ts(200,9): error TS18046: 'result' is of type 'unknown'.
+pages/api/shopper/uploadShopperPhoto.ts(205,24): error TS18046: 'result' is of type 'unknown'.
+pages/api/shopper/verifyOrderPin.ts(37,30): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/verifyOrderPin.ts(59,30): error TS2802: Type 'Set<unknown>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+pages/api/shopper/verifyOrderPin.ts(104,31): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/verifyOrderPin.ts(170,24): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/shopper/walletOperations.ts(52,7): error TS2345: Argument of type 'NextApiRequest' is not assignable to parameter of type 'boolean | undefined'.
+pages/api/telegram/connect.ts(20,19): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/telegram/connect.ts(33,31): error TS2339: Property 'user' does not exist on type '{}'.
+pages/api/telegram/month-earnings.ts(98,44): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/telegram/today-earnings.ts(105,44): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/api/telegram/week-earnings.ts(116,44): error TS18047: 'hasuraClient' is possibly 'null'.
+pages/Messages/index.tsx(402,14): error TS2551: Property 'counterpartName' does not exist on type 'ChatConversation'. Did you mean 'counterpartId'?
+pages/Messages/index.tsx(437,31): error TS2551: Property 'counterpartName' does not exist on type 'ChatConversation'. Did you mean 'counterpartId'?
+pages/Messages/index.tsx(544,26): error TS2551: Property 'counterpartName' does not exist on type 'ChatConversation'. Did you mean 'counterpartId'?
+pages/Messages/index.tsx(692,15): error TS2322: Type 'ChatConversation[]' is not assignable to type 'Conversation[]'.
+  Type 'ChatConversation' is not assignable to type 'Conversation'.
+    Types of property 'id' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+pages/Messages/index.tsx(713,21): error TS2322: Type '{ children: Element; hideNavigation: boolean; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; }'.
+  Property 'hideNavigation' does not exist on type 'IntrinsicAttributes & { children: ReactNode; }'.
+pages/Messages/index.tsx(718,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+pages/Messages/index.tsx(738,44): error TS2551: Property 'counterpartName' does not exist on type 'ChatConversation'. Did you mean 'counterpartId'?
+pages/Messages/index.tsx(741,44): error TS2339: Property 'counterpartAvatar' does not exist on type 'ChatConversation'.
+pages/Messages/index.tsx(754,44): error TS2551: Property 'counterpartName' does not exist on type 'ChatConversation'. Did you mean 'counterpartId'?
+pages/Messages/index.tsx(759,44): error TS2339: Property 'counterpartAvatar' does not exist on type 'ChatConversation'.
+pages/Messages/index.tsx(771,42): error TS2551: Property 'counterpartName' does not exist on type 'ChatConversation'. Did you mean 'counterpartId'?
+pages/Messages/index.tsx(775,42): error TS2339: Property 'counterpartAvatar' does not exist on type 'ChatConversation'.
+pages/Messages/index.tsx(807,13): error TS2322: Type 'ChatConversation[]' is not assignable to type 'Conversation[]'.
+  Type 'ChatConversation' is not assignable to type 'Conversation'.
+    Types of property 'id' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+pages/Pets/[id].tsx(4,21): error TS2307: Cannot find module '../../src/constants/dummyPets' or its corresponding type declarations.
+pages/Plasa/active-batches/batch/[id]/index.tsx(123,43): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+pages/Plasa/active-batches/batch/[id]/index.tsx(139,11): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+pages/plasBusiness/portal/index.tsx(180,13): error TS2322: Type '{ selectedQuote: any; setSelectedQuote: Dispatch<any>; isQuoteModalOpen: boolean; setIsQuoteModalOpen: Dispatch<SetStateAction<boolean>>; isCreateRFQOpen: boolean; ... 7 more ...; setIsContractDrawerOpen: Dispatch<...>; }' is not assignable to type 'IntrinsicAttributes & MobilePortalProps'.
+  Property 'selectedQuote' does not exist on type 'IntrinsicAttributes & MobilePortalProps'. Did you mean 'setSelectedQuote'?
+pages/Reels/index.tsx(1961,36): error TS2339: Property 'user' does not exist on type '{}'.
+pages/Reels/index.tsx(1961,52): error TS2339: Property 'user' does not exist on type '{}'.
+pages/shopper/batch/[orderId]/details.tsx(79,53): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+pages/shopper/batch/[orderId]/details.tsx(112,17): error TS2339: Property 'success' does not exist on type 'RsRefForwardingComponent<"div", MessageProps>'.
+pages/shopper/batch/[orderId]/details.tsx(119,46): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+pages/shopper/batch/[orderId]/details.tsx(120,15): error TS2339: Property 'error' does not exist on type 'RsRefForwardingComponent<"div", MessageProps>'.
+pages/shopper/batch/[orderId]/details.tsx(284,23): error TS2322: Type 'Promise<string>' is not assignable to type 'ReactNode'.
+pages/shopper/batch/[orderId]/details.tsx(356,17): error TS2322: Type 'Promise<string>' is not assignable to type 'ReactNode'.
+pages/shopper/batch/[orderId]/details.tsx(368,17): error TS2322: Type 'Promise<string>' is not assignable to type 'ReactNode'.
+pages/shopper/batch/[orderId]/details.tsx(377,19): error TS2322: Type 'Promise<string>' is not assignable to type 'ReactNode'.
+pages/shopper/batch/[orderId]/details.tsx(387,19): error TS2322: Type 'Promise<string>' is not assignable to type 'ReactNode'.
+pages/shopper/batch/[orderId]/details.tsx(401,15): error TS2322: Type 'Promise<string>' is not assignable to type 'ReactNode'.
+src/components/ai-chat/AIChatWindow.tsx(1877,14): error TS2304: Cannot find name 'DeliveryIssueSetupPayload'.
+src/components/ai-chat/AIChatWindow.tsx(1886,19): error TS2552: Cannot find name 'storage'. Did you mean 'Storage'?
+src/components/ai-chat/AIChatWindow.tsx(1887,28): error TS2304: Cannot find name 'ref'.
+src/components/ai-chat/AIChatWindow.tsx(1888,11): error TS2304: Cannot find name 'storage'.
+src/components/ai-chat/AIChatWindow.tsx(1891,32): error TS2304: Cannot find name 'uploadBytes'.
+src/components/ai-chat/AIChatWindow.tsx(1892,23): error TS2304: Cannot find name 'getDownloadURL'.
+src/components/ai-chat/AIChatWindow.tsx(1933,20): error TS2339: Property 'deliveryIssueSetup' does not exist on type 'Message'.
+src/components/ai-chat/AIChatWindow.tsx(1934,45): error TS2339: Property 'deliveryIssueSetup' does not exist on type 'Message'.
+src/components/business/BusinessOverview.tsx(923,5): error TS2304: Cannot find name 'fetchWalletData'.
+src/components/business/mobile/MobileBusinessDashboard.tsx(855,13): error TS2304: Cannot find name 'loadSectionData'.
+src/components/business/mobile/MobilePlasBusinessExplorer.tsx(397,13): error TS2322: Type '{ rfqs: any[]; "rfq-opportunities": any[]; }' is not assignable to type '{ rfqs: any[]; quotes: any[]; orders: any[]; services: any[]; stores: any[]; contracts: any[]; rfqOpportunities?: any[] | undefined; }'.
+  Object literal may only specify known properties, and '"rfq-opportunities"' does not exist in type '{ rfqs: any[]; quotes: any[]; orders: any[]; services: any[]; stores: any[]; contracts: any[]; rfqOpportunities?: any[] | undefined; }'.
+src/components/business/MobilePortal.tsx(51,3): error TS2339: Property 'setIsCreateRFQOpen' does not exist on type 'MobilePortalProps'.
+src/components/chat/ShopperChatDrawer.tsx(123,52): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/components/chat/ShopperChatDrawer.tsx(240,43): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/chat/ShopperChatDrawer.tsx(276,7): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/chat/ShopperChatDrawer.tsx(328,15): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path?: string | undefined, ...pathSegments: string[]): DocumentReference<unknown, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/chat/ShopperChatDrawer.tsx(337,33): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path?: string | undefined, ...pathSegments: string[]): DocumentReference<unknown, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/chat/ShopperChatDrawer.tsx(436,9): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/chat/ShopperChatDrawer.tsx(453,27): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path?: string | undefined, ...pathSegments: string[]): DocumentReference<unknown, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/chat/ShopperChatDrawer.tsx(653,34): error TS2339: Property 'id' does not exist on type 'Message | PendingMessage'.
+  Property 'id' does not exist on type 'PendingMessage'.
+src/components/invoices/InvoicesTable.tsx(408,19): error TS2367: This comparison appears to be unintentional because the types '"pending" | "paid" | "overdue"' and '"completed"' have no overlap.
+src/components/pets/forms/PetForm.tsx(144,30): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(152,32): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(159,32): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(193,32): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(203,32): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(210,32): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(224,30): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(272,30): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(279,30): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/pets/forms/PetForm.tsx(609,30): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/components/Reels/CommentsDrawer.tsx(368,10): error TS2746: This JSX tag's 'children' prop expects a single child of type 'ReactNode', but multiple children were provided.
+src/components/shopper/activebatches/activeBatchesCard.tsx(365,13): error TS2322: Type '{ orders: Order[]; isLoading: boolean; onRefresh: () => Promise<(() => void) | undefined>; isRefreshing: boolean; }' is not assignable to type 'IntrinsicAttributes & ResponsiveBatchViewProps'.
+  Property 'onRefresh' does not exist on type 'IntrinsicAttributes & ResponsiveBatchViewProps'.
+src/components/shopper/activebatches/batchDetails.tsx(314,12): error TS18048: 'order.combinedOrders' is possibly 'undefined'.
+src/components/shopper/activebatches/batchDetails.tsx(640,33): error TS2339: Property 'items' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails.tsx(663,36): error TS2339: Property 'items' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails.tsx(971,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+src/components/shopper/activebatches/batchDetails.tsx(1019,65): error TS2551: Property 'Shop' does not exist on type 'OrderDetailsType'. Did you mean 'shop'?
+src/components/shopper/activebatches/batchDetails.tsx(1680,42): error TS2339: Property 'customerPhone' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails.tsx(1754,27): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1755,9): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1756,13): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1758,31): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1759,9): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1759,26): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1760,13): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1766,25): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1767,24): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1767,41): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1768,18): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1769,22): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1769,39): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1770,19): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1770,44): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1771,24): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1771,50): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1772,24): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1772,50): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1773,15): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1774,22): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1775,25): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1776,23): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1777,29): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1778,31): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1779,26): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1780,16): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1780,47): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1781,15): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1781,48): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1808,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1809,22): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1809,39): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1810,16): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1811,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1811,37): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1812,17): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1812,42): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1813,22): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1813,48): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1814,22): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1814,48): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1815,13): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1816,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1817,23): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1818,21): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1819,27): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1820,29): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1821,24): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1822,14): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1822,45): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1823,13): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1823,46): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1830,9): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1841,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1842,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1843,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1844,30): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1845,31): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1846,25): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1847,18): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1848,20): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(1849,26): error TS18047: 'order' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(2241,19): error TS2339: Property 'businessOrderPickup' does not exist on type 'never'.
+src/components/shopper/activebatches/batchDetails.tsx(2244,18): error TS2339: Property 'businessOrderPickup' does not exist on type 'never'.
+src/components/shopper/activebatches/batchDetails.tsx(2706,13): error TS2322: Type '"pink"' is not assignable to type 'Color | undefined'.
+src/components/shopper/activebatches/batchDetails.tsx(2725,15): error TS2322: Type '"pink"' is not assignable to type 'Color | undefined'.
+src/components/shopper/activebatches/batchDetails.tsx(2854,44): error TS18047: 'o' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(2854,46): error TS2339: Property 'customerPhone' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails.tsx(2856,41): error TS18047: 'o' is possibly 'null'.
+src/components/shopper/activebatches/batchDetails.tsx(2953,42): error TS2339: Property 'customerPhone' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails.tsx(3950,11): error TS2322: Type 'string' is not assignable to type 'number'.
+src/components/shopper/activebatches/batchDetails.tsx(3961,50): error TS2551: Property 'Shop' does not exist on type 'OrderDetailsType'. Did you mean 'shop'?
+src/components/shopper/activebatches/batchDetails.tsx(4161,21): error TS2322: Type '{ order: OrderDetailsType; uniqueCustomers: { name: string; email: string; profile_picture: string | null; phone: string | undefined; address: any; id: string; }[]; onDirectionsClick: (address: string) => void; onChatClick: (targetCustomerId?: string | undefined, targetCustomerName?: string | undefined, targetCustom...' is not assignable to type 'IntrinsicAttributes & CustomerInfoCardProps'.
+  Property 'theme' does not exist on type 'IntrinsicAttributes & CustomerInfoCardProps'.
+src/components/shopper/activebatches/batchDetails.tsx(4187,17): error TS2367: This comparison appears to be unintentional because the types '"regular" | "combined" | undefined' and '"package"' have no overlap.
+src/components/shopper/activebatches/batchDetails.tsx(4222,25): error TS2339: Property 'customerPhone' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/CustomerInfo.tsx(6,32): error TS2307: Cannot find module '../../../lib/formatters' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/CustomerInfoCard.tsx(5,34): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/HeaderSection.tsx(5,34): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/OrderItemsSection.tsx(7,27): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/OrderSummary.tsx(4,32): error TS2307: Cannot find module '../../../lib/formatCurrency' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/OrderSummary.tsx(6,28): error TS2307: Cannot find module '../../../hooks/useTaxRate' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/OrderSummarySection.tsx(5,34): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/ProgressStepsSection.tsx(4,34): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(113,16): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(116,19): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(127,31): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(152,28): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(155,28): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(157,27): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(159,33): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(162,26): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(163,34): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(164,39): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfo.tsx(171,49): error TS2339: Property 'Restaurant' does not exist on type 'OrderDetailsType'.
+src/components/shopper/activebatches/batchDetails/ShopInfoCard.tsx(6,34): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/BatchDetailsResponsive.tsx(4,26): error TS2691: An import path cannot end with a '.tsx' extension. Consider importing './batchDetails.js' instead.
+src/components/shopper/activebatches/index.tsx(11,41): error TS2691: An import path cannot end with a '.tsx' extension. Consider importing './batchDetails.js' instead.
+src/components/shopper/activebatches/OrderItemCard.tsx(6,27): error TS2307: Cannot find module '../../types' or its corresponding type declarations.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(73,3): error TS2339: Property 'onRefresh' does not exist on type 'ResponsiveBatchViewProps'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(74,3): error TS2339: Property 'isRefreshing' does not exist on type 'ResponsiveBatchViewProps'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(130,36): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(167,11): error TS18048: 'order.customerName' is possibly 'undefined'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(168,11): error TS18048: 'order.shopName' is possibly 'undefined'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(169,11): error TS18048: 'order.customerAddress' is possibly 'undefined'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(226,25): error TS2719: Type 'Order[]' is not assignable to type 'Order[]'. Two different types with this name exist, but they are unrelated.
+  Type 'Order' is not assignable to type 'Order'. Two different types with this name exist, but they are unrelated.
+    Types of property 'createdAt' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/components/shopper/activebatches/ResponsiveBatchView.tsx(245,23): error TS2719: Type 'Order' is not assignable to type 'Order'. Two different types with this name exist, but they are unrelated.
+  Types of property 'createdAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/components/shopper/BiometricCameraModal.tsx(58,19): error TS2367: This comparison appears to be unintentional because the types '"license" | "national_id_front" | "national_id_back"' and '"profile_photo"' have no overlap.
+src/components/shopper/BiometricCameraModal.tsx(65,19): error TS2367: This comparison appears to be unintentional because the types '"license" | "national_id_front" | "national_id_back"' and '"profile_photo"' have no overlap.
+src/components/shopper/BiometricCameraModal.tsx(103,46): error TS2367: This comparison appears to be unintentional because the types '"license" | "national_id_front" | "national_id_back"' and '"profile_photo"' have no overlap.
+src/components/shopper/BiometricCameraModal.tsx(111,46): error TS2367: This comparison appears to be unintentional because the types '"license" | "national_id_front" | "national_id_back"' and '"profile_photo"' have no overlap.
+src/components/shopper/BiometricCameraModal.tsx(178,23): error TS2367: This comparison appears to be unintentional because the types '"license" | "national_id_front" | "national_id_back"' and '"profile_photo"' have no overlap.
+src/components/shopper/dashboard/MapSection.tsx(2334,21): error TS18047: 'mapInstanceRef.current' is possibly 'null'.
+src/components/shopper/dashboard/MapSection.tsx(2652,27): error TS2339: Property 'getMap' does not exist on type 'Marker<any>'.
+src/components/shopper/dashboard/MapSection.tsx(2653,30): error TS2339: Property 'getMap' does not exist on type 'Marker<any>'.
+src/components/shopper/dashboard/MapSection.tsx(2725,25): error TS2339: Property 'shopLat' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'shopLat' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2725,42): error TS2339: Property 'shop_latitude' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'shop_latitude' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2725,65): error TS2339: Property 'shopLatitude' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'shopLatitude' does not exist on type 'PendingOrder'.
+src/components/shopper/dashboard/MapSection.tsx(2726,25): error TS2339: Property 'shopLng' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'shopLng' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2726,42): error TS2339: Property 'shop_longitude' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'shop_longitude' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2726,66): error TS2339: Property 'shopLongitude' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'shopLongitude' does not exist on type 'PendingOrder'.
+src/components/shopper/dashboard/MapSection.tsx(2739,42): error TS2339: Property 'earnings' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'earnings' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2739,60): error TS2339: Property 'earning' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'earning' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2756,32): error TS2339: Property 'earnings' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'earnings' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/dashboard/MapSection.tsx(2756,50): error TS2339: Property 'earning' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; } | PendingOrder'.
+  Property 'earning' does not exist on type '{ id: string; shopName: string; shopAddress: string; customerAddress: string; distance: string; items: number; total: string; estimatedEarnings: string; createdAt: string; rawCreatedAt?: string | undefined; ... 14 more ...; customerPhone?: string | undefined; }'.
+src/components/shopper/earnings/EarningOverviewChart.tsx(166,17): error TS2719: Type 'DailyEarning[]' is not assignable to type 'DailyEarning[]'. Two different types with this name exist, but they are unrelated.
+  Type 'DailyEarning' is missing the following properties from type 'DailyEarning': day, earnings
+src/components/shopper/earnings/EarningsMobileMenu.tsx(82,17): error TS7022: 'accentConfig' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+src/components/shopper/earnings/EarningsMobileMenu.tsx(82,32): error TS7053: Element implicitly has an 'any' type because expression of type 'string | number | symbol' can't be used to index type '{ emerald: string; blue: string; orange: string; purple: string; amber: string; }'.
+src/components/shopper/earnings/EarningsMobileMenu.tsx(98,41): error TS2448: Block-scoped variable 'accentConfig' used before its declaration.
+src/components/shopper/earnings/EarningsSummaryCard.tsx(28,9): error TS2304: Cannot find name 'formatCurrencySync'.
+src/components/shopper/earnings/RecentOrdersList.tsx(35,3): error TS2339: Property 'externalCurrentPage' does not exist on type 'RecentOrdersListProps'.
+src/components/shopper/earnings/TopStoresCard.tsx(98,22): error TS2339: Property 'store' does not exist on type 'StoreBreakdown | { name: string; amount: number; percentage: number; }'.
+  Property 'store' does not exist on type '{ name: string; amount: number; percentage: number; }'.
+src/components/shopper/earnings/TopStoresCard.tsx(100,58): error TS2339: Property 'points' does not exist on type 'StoreBreakdown | { name: string; amount: number; percentage: number; }'.
+  Property 'points' does not exist on type '{ name: string; amount: number; percentage: number; }'.
+src/components/shopper/profile/ShopperProfileComponent.tsx(107,38): error TS2339: Property 'phone_number' does not exist on type 'ShopperProfile'.
+src/components/shopper/profile/ShopperProfileComponent.tsx(114,27): error TS2339: Property 'created_at' does not exist on type 'ShopperProfile'.
+src/components/shopper/profile/ShopperProfileComponent.tsx(115,52): error TS2339: Property 'created_at' does not exist on type 'ShopperProfile'.
+src/components/shopper/profile/ShopperProfileComponent.tsx(177,50): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/components/shopper/profile/ShopperProfileComponent.tsx(466,25): error TS2322: Type 'string | null' is not assignable to type 'string | StaticImport'.
+  Type 'null' is not assignable to type 'string | StaticImport'.
+src/components/shopper/profile/ShopperProfileComponent.tsx(975,11): error TS2322: Type '{ open: true; onClose: () => void; shopper: { id: string; full_name: string; phone_number: string; national_id: string; driving_license: string; transport_mode: string; profile_photo: string; }; onUpdate: (data: any) => Promise<...>; }' is not assignable to type 'IntrinsicAttributes & UpdateShopperDrawerProps'.
+  Property 'open' does not exist on type 'IntrinsicAttributes & UpdateShopperDrawerProps'.
+src/components/shopper/profile/UpdateShopperDrawer.tsx(2,31): error TS2305: Module '"next-auth/react"' has no exported member 'update'.
+src/components/shopper/profile/VehicleManagement.tsx(359,46): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/components/shopper/profile/VehicleManagement.tsx(384,47): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/components/shopper/profile/VehicleManagement.tsx(410,45): error TS2322: Type '{ rows: number; width: number; }' is not assignable to type 'IntrinsicAttributes & Omit<Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "key" | keyof HTMLAttributes<...>> & { ...; }, WithAsProps<...> & PlaceholderParagraphProps> & WithAsProps<...> & PlaceholderParagraphProps & { ...; }'.
+  Property 'width' does not exist on type 'IntrinsicAttributes & Omit<Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "key" | keyof HTMLAttributes<...>> & { ...; }, WithAsProps<...> & PlaceholderParagraphProps> & WithAsProps<...> & PlaceholderParagraphProps & { ...; }'.
+src/components/shopper/profile/VehicleManagement.tsx(411,45): error TS2322: Type '{ rows: number; width: number; }' is not assignable to type 'IntrinsicAttributes & Omit<Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "key" | keyof HTMLAttributes<...>> & { ...; }, WithAsProps<...> & PlaceholderParagraphProps> & WithAsProps<...> & PlaceholderParagraphProps & { ...; }'.
+  Property 'width' does not exist on type 'IntrinsicAttributes & Omit<Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "key" | keyof HTMLAttributes<...>> & { ...; }, WithAsProps<...> & PlaceholderParagraphProps> & WithAsProps<...> & PlaceholderParagraphProps & { ...; }'.
+src/components/ui/InlinePOSScanner.tsx(171,15): error TS2322: Type '("Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode")[]' is not assignable to type 'ReadInputBarcodeFormat[]'.
+src/components/ui/InlinePOSScanner.tsx(171,24): error TS2352: Conversion of type '("EAN_13" | "EAN_8" | "UPC_A" | "UPC_E" | "Code_128" | "Code_39")[]' to type '("Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode")[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/components/ui/InlinePOSScanner.tsx(171,24): error TS2352: Conversion of type '("EAN_13" | "EAN_8" | "UPC_A" | "UPC_E" | "Code_128" | "Code_39")[]' to type '("Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode")[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '"EAN_13" | "EAN_8" | "UPC_A" | "UPC_E" | "Code_128" | "Code_39"' is not comparable to type '"Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode"'.
+    Type '"Code_39"' is not comparable to type '"Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode"'.
+src/components/ui/NavBar/headerLayout.tsx(185,38): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): CollectionReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/components/ui/NavBar/PackageDeliveryModal.tsx(418,7): error TS2345: Argument of type '{ pickup: string; pickupType: string; pickupOfficeName: string; pickupFloor: string; pickupGateNumber: string; pickupGateColor: string; pickupRoomNumber: string; pickupApartmentName: string; ... 21 more ...; paymentMethod: string; }' is not assignable to parameter of type 'SetStateAction<{ pickup: string; pickupType: string; pickupOfficeName: string; pickupFloor: string; pickupGateNumber: string; pickupGateColor: string; pickupRoomNumber: string; pickupApartmentName: string; ... 24 more ...; dropoffLng: string; }>'.
+  Object literal may only specify known properties, and 'paymentMethod' does not exist in type 'SetStateAction<{ pickup: string; pickupType: string; pickupOfficeName: string; pickupFloor: string; pickupGateNumber: string; pickupGateColor: string; pickupRoomNumber: string; pickupApartmentName: string; ... 24 more ...; dropoffLng: string; }>'.
+src/components/ui/POSBarcodeScanner.tsx(236,15): error TS2322: Type '("Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode")[]' is not assignable to type 'ReadInputBarcodeFormat[]'.
+  Type '"Codabar" | "Code39" | "Code39Std" | "Code39Ext" | "Code32" | "PZN" | "Code93" | "Code128" | "ITF" | "ITF14" | "DataBar" | "DataBarOmni" | "DataBarStk" | "DataBarStkOmni" | "DataBarLtd" | ... 24 more ... | "MaxiCode"' is not assignable to type 'ReadInputBarcodeFormat'.
+    Type '"EAN5"' is not assignable to type 'ReadInputBarcodeFormat'.
+src/components/user/dashboard/shared/UserDashboardLogic.tsx(612,15): error TS2322: Type '{ distance: string; time: string; fee: string; open: boolean; rating: number; ratingCount: number; }' is not assignable to type '{ distance: string; time: string; fee: string; open: boolean; }'.
+  Object literal may only specify known properties, and 'rating' does not exist in type '{ distance: string; time: string; fee: string; open: boolean; }'.
+src/components/user/dashboard/shared/UserDashboardLogic.tsx(617,25): error TS2345: Argument of type 'Record<string, { distance: string; time: string; fee: string; open: boolean; }>' is not assignable to parameter of type 'SetStateAction<Record<string, { distance: string; time: string; fee: string; open: boolean; rating: number; ratingCount: number; }>>'.
+src/components/user/dashboard/UserDashboard.tsx(1552,23): error TS2739: Type '{ distance: string; time: string; fee: string; open: boolean; }' is missing the following properties from type '{ distance: string; time: string; fee: string; open: boolean; rating: number; ratingCount: number; }': rating, ratingCount
+src/context/ChatContext.tsx(80,5): error TS2322: Type '"business" | "customer" | "shopper"' is not assignable to type '"customer" | "shopper"'.
+  Type '"business"' is not assignable to type '"customer" | "shopper"'.
+src/context/ChatContext.tsx(382,11): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/generated/graphql.ts(44891,13): error TS2300: Duplicate identifier 'GetProductsQueryVariables'.
+src/generated/graphql.ts(44894,13): error TS2300: Duplicate identifier 'GetProductsQuery'.
+src/generated/graphql.ts(44896,13): error TS2300: Duplicate identifier 'GetProductsQueryVariables'.
+src/generated/graphql.ts(44899,13): error TS2300: Duplicate identifier 'GetProductsQuery'.
+src/generated/graphql.ts(45772,14): error TS2451: Cannot redeclare block-scoped variable 'GetProductsDocument'.
+src/generated/graphql.ts(45830,14): error TS2451: Cannot redeclare block-scoped variable 'GetProductsDocument'.
+src/hooks/useChatTypingIndicator.ts(99,9): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path?: string | undefined, ...pathSegments: string[]): DocumentReference<unknown, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/hooks/useChatTypingIndicator.ts(125,9): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(firestore: Firestore, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'Firestore'.
+      Type 'null' is not assignable to type 'Firestore'.
+  Overload 2 of 3, '(reference: CollectionReference<unknown, DocumentData>, path?: string | undefined, ...pathSegments: string[]): DocumentReference<unknown, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'CollectionReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'CollectionReference<unknown, DocumentData>'.
+  Overload 3 of 3, '(reference: DocumentReference<unknown, DocumentData>, path: string, ...pathSegments: string[]): DocumentReference<DocumentData, DocumentData>', gave the following error.
+    Argument of type 'Firestore | null' is not assignable to parameter of type 'DocumentReference<unknown, DocumentData>'.
+      Type 'null' is not assignable to type 'DocumentReference<unknown, DocumentData>'.
+src/hooks/useShopperForm.ts(276,38): error TS2304: Cannot find name 'setIdVerified'.
+src/hooks/useShopperForm.ts(835,9): error TS1117: An object literal cannot have multiple properties with the same name.
+src/hooks/useWakeLock.ts(10,30): error TS2304: Cannot find name 'WakeLockSentinel'.
+src/test-momo-integration.ts(14,37): error TS2554: Expected 1 arguments, but got 0.
+src/utils/logger/serverLogger.ts(94,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/utils/logger/serverLogger.ts(100,39): error TS2345: Argument of type '"log"' is not assignable to parameter of type 'LogLevel'.
+src/utils/renderReactToString.tsx(1,1): error TS1208: 'renderReactToString.tsx' cannot be compiled under '--isolatedModules' because it is considered a global script file. Add an import, export, or an empty 'export {}' statement to make it a module.

@@ -50,7 +50,6 @@ query GetOrderItems {
       shop_id
       service_fee
       discount
-      found
       delivery_fee
       OrderID
     }

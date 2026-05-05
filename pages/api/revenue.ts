@@ -58,7 +58,7 @@ const GET_REVENUE = gql`
         ssd
         tin
       }
-      shopper {
+      shoppers {
         Employment_id
         address
         active

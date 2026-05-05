@@ -46,11 +46,11 @@ const GET_BUSINESS_PRODUCT_ORDERS = gql`
         business_id
         created_at
       }
-      shopper {
+      shoppers {
         id
-        name
-        profile_picture
-        phone
+        full_name
+        profile_photo
+        phone_number
         email
       }
       orderedBy {
@@ -168,12 +168,12 @@ export default async function handler(
           business_id: string;
           created_at: string;
         };
-        shopper: {
+        shoppers: {
           id: string;
-          name: string;
-          profile_picture: string;
-          phone: string;
-          email: string;
+          full_name: string;
+          profile_photo: string | null;
+          phone_number: string | null;
+          email: string | null;
         } | null;
         orderedBy: {
           id: string;
@@ -282,7 +282,7 @@ export default async function handler(
         latitude: order.latitude,
         longitude: order.longitude,
         allProducts: enrichedProducts, // Use enriched products with images
-        shopper: order.shopper,
+        shoppers: order.shoppers || null,
         shopper_id: order.shopper_id,
         orderedBy: order.orderedBy,
       };

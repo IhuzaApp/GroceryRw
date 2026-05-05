@@ -16,11 +16,9 @@ const GET_ORDER_BY_ID = gql`
       orderedBy {
         phone
       }
-      Shoppers {
+      shoppers {
         phone
-        shopper {
-          phone_number
-        }
+        phone_number
       }
     }
   }
@@ -39,12 +37,10 @@ const GET_REEL_ORDER_BY_ID = gql`
       User {
         phone
       }
-      Shoppers {
+      shoppers {
         name
         phone
-        shopper {
-          phone_number
-        }
+        phone_number
       }
     }
   }
@@ -66,14 +62,12 @@ const GET_RESTAURANT_ORDER_BY_ID = gql`
         name
         phone
       }
-      shopper {
-        shopper {
-          active
-          address
-          full_name
-          phone
-          phone_number
-        }
+      shoppers {
+        active
+        address
+        full_name
+        phone
+        phone_number
       }
     }
   }
@@ -141,9 +135,9 @@ export default async function handler(
           status: string;
           Shop: { name: string } | null;
           orderedBy: { phone: string | null } | null;
-          Shoppers: {
+          shoppers: {
             phone: string | null;
-            shopper: { phone_number: string | null } | null;
+            phone_number: string | null;
           } | null;
         } | null;
       }>(GET_ORDER_BY_ID, { id: orderId });
@@ -156,8 +150,7 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
-      shopperPhone =
-        o.Shoppers?.shopper?.phone_number ?? o.Shoppers?.phone ?? undefined;
+        o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
       storeName = o.Shop?.name ?? undefined;
     } else if (orderType === "reel") {
       const data = await hasuraClient.request<{
@@ -166,9 +159,9 @@ export default async function handler(
           status: string;
           Reel: { title: string } | null;
           User: { phone: string | null } | null;
-          Shoppers: {
+          shoppers: {
             phone: string | null;
-            shopper: { phone_number: string | null } | null;
+            phone_number: string | null;
           } | null;
         } | null;
       }>(GET_REEL_ORDER_BY_ID, { id: orderId });
@@ -181,8 +174,7 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.User?.phone ?? undefined;
-      shopperPhone =
-        o.Shoppers?.shopper?.phone_number ?? o.Shoppers?.phone ?? undefined;
+        o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
       storeName = o.Reel?.title ?? "Reel order";
     } else if (orderType === "restaurant") {
       const data = await hasuraClient.request<{
@@ -196,14 +188,12 @@ export default async function handler(
             name: string | null;
             phone: string | null;
           } | null;
-          shopper: {
-            shopper: {
-              active: boolean;
-              address: string | null;
-              full_name: string | null;
-              phone: string | null;
-              phone_number: string | null;
-            } | null;
+          shoppers: {
+            active: boolean;
+            address: string | null;
+            full_name: string | null;
+            phone: string | null;
+            phone_number: string | null;
           } | null;
         } | null;
       }>(GET_RESTAURANT_ORDER_BY_ID, { id: orderId });
@@ -216,9 +206,8 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
-      shopperPhone =
-        o.shopper?.shopper?.phone_number ??
-        o.shopper?.shopper?.phone ??
+        o.shoppers?.phone_number ??
+        o.shoppers?.phone ??
         undefined;
       storeName = o.Restaurant?.name ?? undefined;
     } else if (orderType === "business") {

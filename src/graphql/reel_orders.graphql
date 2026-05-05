@@ -9,7 +9,6 @@ query getReelOrders {
     delivery_photo_url
     delivery_time
     discount
-    found
     id
     reel_id
     service_fee

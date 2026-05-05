@@ -100,6 +100,8 @@ export default function ActionButtons({
                 </>
               )}
             </button>
+          );
+        }
       }
 
       // For regular orders, check if any items are marked as found

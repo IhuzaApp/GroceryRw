@@ -64,20 +64,16 @@ const GET_ORDER_DETAILS = gql`
         }
         order_id
       }
-      Shoppers {
+      shoppers {
         id
-        name
         email
         phone
         profile_picture
-        shopper {
-          id
-          full_name
-          profile_photo
-          phone_number
-          address
-          Employment_id
-        }
+        full_name
+        profile_photo
+        phone_number
+        address
+        Employment_id
         Ratings {
           created_at
           customer_id
@@ -307,7 +303,7 @@ const GET_PACKAGE_DELIVERY_DETAILS = gql`
       distance
       user_id
       shopper_id
-      shopper {
+      shoppers {
         id
         full_name
         profile_photo
@@ -357,8 +353,8 @@ export default async function handler(
 
     const handleRegularOrder = async (order: any) => {
       let shopperStats = null;
-      if (order.Shoppers) {
-        const shopperId = order.Shoppers.id;
+      if (order.shoppers) {
+        const shopperId = order.shoppers.id;
         const GET_SHOPPER_STATS = gql`
           query GetShopperStats($shopperId: uuid!) {
             Ratings(where: { shopper_id: { _eq: $shopperId } }) {
@@ -419,7 +415,7 @@ export default async function handler(
           }
         `;
 
-        const statsData = await hasuraClient.request<any>(GET_SHOPPER_STATS, {
+        const statsData = await hasuraClient!.request<any>(GET_SHOPPER_STATS, {
           shopperId,
         });
 
@@ -454,9 +450,9 @@ export default async function handler(
           dateStyle: "medium",
           timeStyle: "short",
         }),
-        assignedTo: order.Shoppers
+        assignedTo: order.shoppers
           ? {
-              ...order.Shoppers,
+              ...order.shoppers,
               rating: shopperStats?.rating || 0,
               orders_aggregate: shopperStats?.orders_aggregate || {
                 aggregate: { count: 0 },
@@ -629,12 +625,12 @@ export default async function handler(
             name: "Package Delivery",
             image: pkg.package_image,
           },
-          assignedTo: pkg.shopper
+          assignedTo: pkg.shoppers
             ? {
                 id: pkg.shopper_id,
-                name: pkg.shopper.full_name,
-                profile_picture: pkg.shopper.profile_photo,
-                shopper: pkg.shopper,
+                name: pkg.shoppers.full_name,
+                profile_picture: pkg.shoppers.profile_photo,
+                shopper: pkg.shoppers,
               }
             : null,
           Order_Items: [
