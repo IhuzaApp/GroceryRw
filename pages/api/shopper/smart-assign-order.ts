@@ -1518,34 +1518,9 @@ export default async function handler(
             shopperLocation,
             null
           );
-          // Re-trigger the notification to ensure the shopper sees it
-          try {
-            const distance = formattedOrder.distance || 0;
-            const estimatedEarnings = formattedOrder.estimatedEarnings || 0;
-
-            await sendNewOrderNotification(user_id, {
-              id: orderId,
-              shopName: formattedOrder.shopName || "Unknown Shop",
-              customerAddress:
-                formattedOrder.customerAddress || "Unknown Address",
-              distance,
-              itemsCount: formattedOrder.itemsCount || 1,
-              travelTimeMinutes: Math.round((distance / 20) * 60),
-              estimatedEarnings,
-              orderType: orderType,
-              expiresInMs: 120000, // Matching the 2-minute timeout
-              // Add unique tag to force re-pop and sound
-              tag: `new_order_${orderId}_${Date.now()}`,
-            } as any);
-          } catch (fcmError: any) {
-            console.error("Failed to re-trigger notification:", fcmError);
-            await insertSystemLog(
-              "error",
-              `FCM Notification failure: ${fcmError.message || "Unknown"}`,
-              "SmartAssignOrderAPI:FCM",
-              { orderId, error: fcmError.message || fcmError }
-            );
-          }
+          // Action-based system: Shopper has already been notified of this pending offer.
+          // We return the offer details so the client can restore the UI card, 
+          // but we DO NOT re-trigger the FCM notification to avoid spamming alerts.
 
           return res.status(200).json({
             success: false,
@@ -2476,6 +2451,8 @@ export default async function handler(
             storeNames: responseOrder.storeNames,
             combinedOrderId: responseOrder.combinedOrderId,
             orderIds: responseOrder.orderIds,
+            // Stable tag for deduplication on the device (Android replacement logic)
+            tag: `new_order_${responseOrder.id}`,
           });
 
           console.log(

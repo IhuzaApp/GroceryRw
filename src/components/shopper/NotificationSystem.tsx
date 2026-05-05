@@ -462,8 +462,10 @@ export default function NotificationSystem({
         offerId: order.offerId,
       };
 
-      // Play sound even if duplicate (re-trigger)
-      playNotificationSound({ enabled: true, volume: 0.8 });
+      // Play sound ONLY if the order isn't already being shown to the user
+      if (!activeToasts.current.has(order.id)) {
+        playNotificationSound({ enabled: true, volume: 0.8 });
+      }
 
       // Show notification
       showToast(orderForNotification);
@@ -957,13 +959,10 @@ export default function NotificationSystem({
       return;
     }
 
-    // Check if this order is already being shown - prevent duplicates
+    // Check if this order is already being shown - prevent duplicates and flickering
     const existingToast = activeToasts.current.get(order.id);
-    if (
-      existingToast === "map-modal" &&
-      showMapModal &&
-      selectedOrder?.id === order.id
-    ) {
+    if (existingToast && selectedOrder?.id === order.id) {
+      // If already shown as a toast or map modal, just keep it (no flicker)
       return;
     }
 
@@ -1356,6 +1355,16 @@ export default function NotificationSystem({
     // CRITICAL: Prevent concurrent API calls with early return
     if (isCheckingOrders.current) {
       return; // Silent skip - already checking
+    }
+
+    // STRICT SINGLETON LOCK: Only the first active instance performs API calls
+    const instances = (window as any).__notificationSystemInstances;
+    if (instances && instances.size > 1) {
+      const activeInstances = Array.from(instances);
+      // Only the first instance (earliest in set) is allowed to perform checks
+      if (activeInstances[0] !== componentId.current) {
+        return; // This instance is not the leader
+      }
     }
 
     if (!session?.user?.id || !currentLocation) {
