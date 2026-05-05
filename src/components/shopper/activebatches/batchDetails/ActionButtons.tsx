@@ -44,14 +44,9 @@ export default function ActionButtons({
     case "accepted":
     case "Ready for Pickup":
       return (
-        <Button
-          appearance="primary"
-          color="green"
-          size="lg"
-          block
+        <button
           onClick={() => {
             if (activeOrder.orderType === "reel" && isRestaurantUserReel) {
-              // Skip shopping and go straight to delivery for restaurant/user reels
               handleUpdateStatus("on_the_way", activeOrder.id);
             } else if (isRestaurantOrder || isBusinessOrder) {
               handleUpdateStatus("on_the_way", activeOrder.id);
@@ -59,15 +54,26 @@ export default function ActionButtons({
               handleUpdateStatus("shopping", activeOrder.id);
             }
           }}
-          loading={loading}
-          className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+          disabled={loading}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50`}
         >
-          {activeOrder.orderType === "reel" && isRestaurantUserReel
-            ? "Start Delivery"
-            : isRestaurantOrder || isBusinessOrder
-            ? "Start Delivery"
-            : "Start Shopping"}
-        </Button>
+          {loading ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <>
+              <span>
+                {activeOrder.orderType === "reel" && isRestaurantUserReel
+                  ? "Start Delivery"
+                  : isRestaurantOrder || isBusinessOrder
+                  ? "Start Delivery"
+                  : "Start Shopping"}
+              </span>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </>
+          )}
+        </button>
       );
     case "shopping":
       // For restaurant/user reel orders, they shouldn't be in shopping status
@@ -76,33 +82,24 @@ export default function ActionButtons({
         if (isRestaurantUserReel) {
           // This shouldn't happen, but handle gracefully
           return (
-            <Button
-              appearance="primary"
-              color="green"
-              size="lg"
-              block
+            <button
               onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
-              loading={loading}
-              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+              disabled={loading}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50`}
             >
-              Complete Delivery
-            </Button>
-          );
-        } else {
-          return (
-            <Button
-              appearance="primary"
-              color="green"
-              size="lg"
-              block
-              onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
-              loading={loading}
-              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
-            >
-              Make Payment
-            </Button>
-          );
-        }
+              {loading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <span>
+                    {isRestaurantUserReel ? "Complete Delivery" : "Make Payment"}
+                  </span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </>
+              )}
+            </button>
       }
 
       // For regular orders, check if any items are marked as found
@@ -134,18 +131,28 @@ export default function ActionButtons({
       // Shopping status calculated
 
       return (
-        <Button
-          appearance="primary"
-          color="green"
-          size="lg"
-          block
+        <button
           onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
-          loading={loading}
-          disabled={!hasFoundItems}
-          className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+          disabled={loading || !hasFoundItems}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all duration-300 ${
+            hasFoundItems 
+              ? "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.99]" 
+              : "bg-gray-400 cursor-not-allowed opacity-50"
+          }`}
         >
-          {hasFoundItems ? "Make Payment" : "Mark Items as Found to Continue"}
-        </Button>
+          {loading ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <>
+              <span>{hasFoundItems ? "Make Payment" : "Mark Items as Found"}</span>
+              {hasFoundItems && (
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              )}
+            </>
+          )}
+        </button>
       );
     case "on_the_way":
     case "at_customer":
@@ -153,62 +160,52 @@ export default function ActionButtons({
       if (!uploadedProofs[activeOrder.id]) {
         return (
           <div
-            className={`flex flex-col items-center justify-center rounded-xl border-2 p-6 text-center ${
+            className={`flex flex-col items-center justify-center rounded-2xl border-2 p-5 text-center transition-all duration-500 ${
               theme === "dark"
-                ? "border-yellow-600 bg-yellow-900/20"
-                : "border-yellow-400 bg-yellow-50"
+                ? "border-amber-500/20 bg-amber-500/5"
+                : "border-amber-200 bg-amber-50"
             }`}
           >
-            <svg
-              className={`mx-auto mb-3 h-12 w-12 ${
-                theme === "dark" ? "text-yellow-400" : "text-yellow-600"
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            <p
-              className={`mb-4 font-semibold ${
-                theme === "dark" ? "text-yellow-300" : "text-yellow-800"
-              }`}
-            >
-              Invoice proof required before delivery
+            <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${
+              theme === "dark" ? "bg-amber-500/20 text-amber-500" : "bg-amber-100 text-amber-600"
+            }`}>
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            
+            <h4 className={`text-sm font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Proof Required</h4>
+            <p className={`mt-1 text-xs font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Please upload the invoice photo
             </p>
-            <Button
-              appearance="primary"
-              color="yellow"
+
+            <button
               onClick={onShowInvoiceProofModal}
-              className="rounded-lg px-6 py-2 font-bold shadow-md hover:scale-105"
+              className={`mt-4 w-full rounded-xl bg-amber-500 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]`}
             >
               Upload Invoice Photo
-            </Button>
+            </button>
           </div>
         );
       }
       return (
-        <Button
-          appearance="primary"
-          color="green"
-          size="lg"
-          block
+        <button
           onClick={onDeliveryConfirmationClick}
-          className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+          disabled={loading}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50`}
         >
-          Confirm Delivery
-        </Button>
+          {loading ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <>
+              <span>Confirm Delivery</span>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </>
+          )}
+        </button>
       );
     case "delivered":
       // No button for delivered status

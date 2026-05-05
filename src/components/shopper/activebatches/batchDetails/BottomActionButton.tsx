@@ -112,14 +112,14 @@ export default function BottomActionButton({
                 });
               }
             }}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[0_10px_25px_rgba(16,185,129,0.4)] transition-all hover:bg-emerald-700 active:scale-95"
+            className={`flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50`}
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
-              className="h-5 w-5"
+              className="h-4 w-4"
             >
               <path
                 strokeLinecap="round"
@@ -130,7 +130,7 @@ export default function BottomActionButton({
             Deliver {readyCustomerGroup[1].length} Orders
           </button>
         ) : (
-          <div className="[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!border-none [&>button]:!bg-emerald-600 [&>button]:!py-4 [&>button]:!text-[11px] [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!shadow-[0_10px_25px_rgba(16,185,129,0.3)] [&>button]:!transition-all [&>button]:active:scale-95">
+          <div className="[&>button]:!w-full [&>button]:!flex [&>button]:!items-center [&>button]:!justify-center [&>button]:!gap-2 [&>button]:!rounded-xl [&>button]:!border-none [&>button]:!bg-gradient-to-br [&>button]:!from-emerald-400 [&>button]:!to-teal-600 [&>button]:!py-3.5 [&>button]:!text-[10px] [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-widest [&>button]:!text-white [&>button]:!shadow-lg [&>button]:!shadow-emerald-500/20 [&>button]:!transition-all [&>button]:active:scale-[0.99]">
             {defaultButton}
           </div>
         )}

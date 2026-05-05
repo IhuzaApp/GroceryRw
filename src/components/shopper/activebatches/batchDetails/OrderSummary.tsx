@@ -29,10 +29,10 @@ export default function OrderSummary({
 
   return (
     <div
-      className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
+      className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-xl ${
         order.status === "shopping"
-          ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-t-3xl border-x-0 border-b-0 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] sm:relative sm:bottom-auto sm:z-auto sm:rounded-2xl sm:border sm:shadow-lg"
-          : "rounded-t-2xl border-x-0 border-t-0 shadow-lg sm:rounded-2xl sm:border"
+          ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-t-3xl border-x-0 border-b-0 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] sm:relative sm:bottom-auto sm:z-auto sm:rounded-xl sm:border sm:shadow-lg"
+          : "rounded-t-xl border-x-0 border-t-0 shadow-lg sm:rounded-xl sm:border"
       }`}
     >
       {/* Header with Gradient */}
@@ -48,9 +48,9 @@ export default function OrderSummary({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
               <svg
-                className="h-5 w-5 text-green-600 dark:text-green-400"
+                className="h-4.5 w-4.5 text-green-600 dark:text-green-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -64,11 +64,11 @@ export default function OrderSummary({
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h2 className="text-base font-black uppercase tracking-tight text-gray-900 dark:text-white">
                 Order Summary
               </h2>
               {order.status === "shopping" && !isSummaryExpanded && (
-                <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
+                <span className="text-xs font-bold text-green-600 dark:text-green-400 sm:hidden">
                   {formatCurrency(calculateFoundItemsTotal())}
                 </span>
               )}
@@ -144,11 +144,11 @@ export default function OrderSummary({
                   </div>
                 )}
                 <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
-                <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
-                  <span className="font-bold text-gray-900 dark:text-white">
+                <div className="flex justify-between rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+                  <span className="text-xs font-black uppercase tracking-tight text-gray-900 dark:text-white">
                     Order Total
                   </span>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  <span className="text-base font-black text-green-600 dark:text-green-400">
                     {formatCurrency(finalTotal)}
                   </span>
                 </div>
@@ -232,11 +232,11 @@ export default function OrderSummary({
               </>
             )}
             <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
-            <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
-              <span className="font-bold text-gray-900 dark:text-white">
+            <div className="flex justify-between rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+              <span className="text-xs font-black uppercase tracking-tight text-gray-900 dark:text-white">
                 Order Total
               </span>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+              <span className="text-base font-black text-green-600 dark:text-green-400">
                 {formatCurrency(order.total)}
               </span>
             </div>

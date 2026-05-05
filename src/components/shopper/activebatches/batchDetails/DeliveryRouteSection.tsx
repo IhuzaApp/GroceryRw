@@ -109,12 +109,12 @@ export default function DeliveryRouteSection({
             return (
               <div
                 key={customerId}
-                className={`group relative rounded-[2.5rem] border p-6 transition-all duration-500 sm:p-8 ${
+                className={`group relative rounded-[1.25rem] border p-5 transition-all duration-500 sm:p-6 ${
                   isDelivered
                     ? "border-transparent bg-black/5 opacity-60 grayscale dark:bg-white/5"
                     : isDark
-                    ? "border-white/10 bg-white/5 shadow-2xl shadow-emerald-500/5 hover:border-emerald-500/50 hover:bg-white/[0.07]"
-                    : "border-black/5 bg-white shadow-xl hover:border-emerald-200 hover:shadow-2xl"
+                    ? "border-white/10 bg-white/5 shadow-sm hover:border-emerald-500/50 hover:bg-white/[0.07]"
+                    : "border-black/5 bg-white shadow-sm hover:border-emerald-200 hover:shadow-md"
                 }`}
                 style={{
                   backdropFilter: "blur(20px)",
@@ -170,12 +170,12 @@ export default function DeliveryRouteSection({
                             }, ${address?.city || ""}`
                           )
                         }
-                        variant="blue"
+                        variant="emerald"
                         icon={
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            d="M9 6.75l6 3m0 0l-6 3m6-3H3.75m16.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         }
                       />
@@ -188,7 +188,7 @@ export default function DeliveryRouteSection({
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
                           />
                         }
                       />
@@ -197,12 +197,12 @@ export default function DeliveryRouteSection({
                           onClick={() => {
                             window.location.href = `tel:${customer.phone}`;
                           }}
-                          variant="emerald"
+                          variant="blue"
                           icon={
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                              d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
                             />
                           }
                         />
@@ -338,7 +338,7 @@ export default function DeliveryRouteSection({
                         return orders.map((o) => (
                           <div
                             key={o.id}
-                            className={`[&>button]:!w-full [&>button]:!rounded-2xl [&>button]:!py-5 [&>button]:!text-xs [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-[0.2em] [&>button]:!transition-all [&>button]:active:scale-95 ${
+                            className={`[&>button]:!w-full [&>button]:!rounded-xl [&>button]:!py-3.5 [&>button]:!text-[10px] [&>button]:!font-black [&>button]:!uppercase [&>button]:!tracking-widest [&>button]:!transition-all [&>button]:active:scale-[0.99] ${
                               isSingleOrderBatch ? "hidden" : ""
                             }`}
                           >
@@ -368,17 +368,17 @@ function ActionButton({
   variant: "blue" | "purple" | "emerald";
 }) {
   const colors = {
-    blue: "bg-blue-500 shadow-blue-500/30",
-    purple: "bg-purple-500 shadow-purple-500/30",
-    emerald: "bg-emerald-500 shadow-emerald-500/30",
+    blue: "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/30",
+    purple: "bg-gradient-to-br from-purple-500 to-indigo-600 shadow-purple-500/30",
+    emerald: "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/30",
   };
   return (
     <button
       onClick={onClick}
-      className={`flex h-14 flex-1 items-center justify-center rounded-2xl text-white shadow-lg transition-all hover:scale-105 active:scale-95 sm:h-12 sm:w-12 ${colors[variant]}`}
+      className={`flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg transition-all hover:scale-110 active:scale-95 sm:h-11 sm:w-11 ${colors[variant]}`}
     >
       <svg
-        className="h-6 w-6"
+        className="h-5 w-5"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
