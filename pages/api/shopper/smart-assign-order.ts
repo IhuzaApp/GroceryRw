@@ -424,8 +424,8 @@ const GET_PACKAGE_ORDER_BY_PK = gql`
 `;
 
 const GET_SHOPPER_PERFORMANCE = gql`
-  query GetShopperPerformance($user_id: uuid!) {
-    Orders_aggregate(where: { shopper_id: { _eq: $user_id } }) {
+  query GetShopperPerformance($shopper_id: uuid!) {
+    Orders_aggregate(where: { shopper_id: { _eq: $shopper_id } }) {
       aggregate {
         count
       }
@@ -1602,7 +1602,7 @@ export default async function handler(
       hasuraClient.request(GET_ELIGIBLE_RESTAURANT_ORDERS) as any,
       hasuraClient.request(GET_ELIGIBLE_BUSINESS_ORDERS) as any,
       hasuraClient.request(GET_SHOPPER_PERFORMANCE, {
-        user_id: user_id,
+        shopper_id: shopperId,
       }) as any,
     ]);
 
