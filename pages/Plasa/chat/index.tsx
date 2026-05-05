@@ -70,6 +70,9 @@ function formatTime(timestamp: any): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
 }
 
+// Global cache to persist between navigations
+const orderCache = new Map<string, any>();
+
 export default function ShopperChatPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -82,8 +85,6 @@ export default function ShopperChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-
 
   // Mobile detection
   useEffect(() => {
@@ -100,11 +101,11 @@ export default function ShopperChatPage() {
 
     const fetchConversations = async () => {
       try {
-        setLoading(true);
         if (!db) {
           console.error("Firebase database not initialized");
           return;
         }
+        
         const conversationsRef = collection(db, "chat_conversations");
         const q = query(
           conversationsRef,
@@ -113,16 +114,32 @@ export default function ShopperChatPage() {
         );
 
         unsubscribe = onSnapshot(q, async (snapshot) => {
-          const conversationsList: Conversation[] = [];
-          for (const doc of snapshot.docs) {
-            const data = doc.data();
-            let orderData = null;
-            try {
-              const res = await fetch(`/api/shopper/orderDetails?id=${data.orderId}`);
-              if (res.ok) orderData = (await res.json()).order;
-            } catch {}
+          // If we already have conversations, don't show the full-page loader again
+          // unless it's the very first load
+          if (conversations.length === 0) {
+            setLoading(true);
+          }
 
-            conversationsList.push({
+          const conversationPromises = snapshot.docs.map(async (doc) => {
+            const data = doc.data();
+            const orderId = data.orderId;
+            
+            let orderData = orderCache.get(orderId);
+            
+            if (!orderData) {
+              try {
+                const res = await fetch(`/api/shopper/orderDetails?id=${orderId}`);
+                if (res.ok) {
+                  const result = await res.json();
+                  orderData = result.order;
+                  orderCache.set(orderId, orderData);
+                }
+              } catch (err) {
+                console.error(`Failed to fetch order details for ${orderId}:`, err);
+              }
+            }
+
+            return {
               id: doc.id,
               orderId: data.orderId,
               customerId: data.customerId,
@@ -132,22 +149,28 @@ export default function ShopperChatPage() {
               lastMessageTime: data.lastMessageTime,
               unreadCount: data.unreadCount || 0,
               order: orderData,
-            });
-          }
+            };
+          });
+
+          const conversationsList = await Promise.all(conversationPromises);
+          
           // Manual sort as fallback if index isn't ready
           conversationsList.sort((a, b) => {
             const timeA = a.lastMessageTime?.toDate?.() || new Date(a.lastMessageTime || 0);
             const timeB = b.lastMessageTime?.toDate?.() || new Date(b.lastMessageTime || 0);
             return timeB.getTime() - timeA.getTime();
           });
+
           setConversations(conversationsList);
           setLoading(false);
         });
       } catch (err) {
+        console.error("Error setting up conversations listener:", err);
         setError("Failed to load conversations");
         setLoading(false);
       }
     };
+
     fetchConversations();
     return () => unsubscribe?.();
   }, [session?.user?.id]);
