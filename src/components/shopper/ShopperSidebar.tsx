@@ -11,7 +11,6 @@ import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
 import { useSession } from "next-auth/react";
 import { logger } from "../../utils/logger";
-import TelegramStatusButton from "./TelegramStatusButton";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";

@@ -998,7 +998,9 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md flex-col overflow-hidden rounded-3xl border-4 border-emerald-500/50 bg-[#1A1A1A] shadow-2xl backdrop-blur-xl ring-1 ring-black/5`}
+          } pointer-events-auto flex w-full max-w-md flex-col overflow-hidden rounded-3xl border-4 ${
+            theme === "dark" ? "border-emerald-500/50 bg-[#1A1A1A]" : "border-emerald-500 bg-white"
+          } shadow-2xl backdrop-blur-xl ring-1 ring-black/5`}
         >
           {/* Header with Countdown */}
           <div className="flex items-center justify-between bg-emerald-500 px-5 py-3">
@@ -1022,10 +1024,10 @@ export default function NotificationSystem({
             {/* Store & Earnings */}
             <div className="mb-4 flex items-start justify-between">
               <div className="flex-1 pr-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   Merchant
                 </p>
-                <p className="line-clamp-1 text-lg font-black text-white">
+                <p className={`line-clamp-1 text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   {formatStoreList(order.shopName)}
                 </p>
               </div>
@@ -1040,14 +1042,14 @@ export default function NotificationSystem({
             </div>
 
             {/* Route Info */}
-            <div className="mb-5 flex items-center justify-between rounded-2xl bg-white/5 p-3">
+            <div className={`mb-5 flex items-center justify-between rounded-2xl p-3 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-100'}`}>
               <div className="flex items-center space-x-3">
                 <div className="flex flex-col items-center">
                   <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
                   <div className="h-4 w-px border-l border-dashed border-emerald-500/30"></div>
                   <div className="h-2 w-2 rounded-full bg-blue-500"></div>
                 </div>
-                <div className="flex flex-col text-[10px] font-bold text-gray-400">
+                <div className={`flex flex-col text-[10px] font-bold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   <span className="line-clamp-1">{order.shopName}</span>
                   <span className="mt-1 line-clamp-1">{order.customerAddress}</span>
                 </div>
@@ -1076,7 +1078,9 @@ export default function NotificationSystem({
                   declinedOrders.current.set(order.id, Date.now() + 300000);
                   removeToastForOrder(order.id);
                 }}
-                className="rounded-xl bg-white/10 px-6 py-3 text-sm font-black text-white transition-all hover:bg-white/20 active:scale-95"
+                className={`rounded-xl px-6 py-3 text-sm font-black transition-all active:scale-95 ${
+                  theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
               >
                 Skip
               </button>
@@ -1084,7 +1088,7 @@ export default function NotificationSystem({
           </div>
         </div>
       ),
-      { duration: 90000, position: "top-right" }
+      { duration: 90000, position: "bottom-center" }
     );
 
     activeToasts.current.set(order.id, toastId);
@@ -1798,7 +1802,7 @@ export default function NotificationSystem({
     <>
       {/* Separate Toaster for batch notifications - positioned independently */}
       <Toaster
-        position="top-right"
+        position="bottom-center"
         containerClassName="batch-notification-container"
         toastOptions={{
           // Only show toasts with our batch notification classes

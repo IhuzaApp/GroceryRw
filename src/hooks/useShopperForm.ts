@@ -18,7 +18,7 @@ export type Step = {
 export const steps: Step[] = [
   { title: "Welcome", description: "Get started as a Plasa" },
   { title: "Personal Info", description: "Basic information" },
-  { title: "Contact Details", description: "Phone & Telegram" },
+  { title: "Contact Details", description: "Phone & Contact" },
   { title: "Address & Location", description: "Residence details" },
   { title: "Guarantor Info", description: "Reference person" },
   { title: "Documents", description: "Required documents" },

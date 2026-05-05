@@ -70,7 +70,6 @@ const GET_SHOPPER_INVOICES = gql`
           proofOfResidency
           updated_at
           transport_mode
-          telegram_id
           status
           signature
         }

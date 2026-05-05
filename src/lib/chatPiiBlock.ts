@@ -9,7 +9,7 @@ const PHONE_PATTERN =
   /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}(?:[-.\s]?\d{2,4})?|\b\d{7,15}\b/g;
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const KEYWORD_PATTERN =
-  /\b(whatsapp|number|email|contact|call|phone|reach me|talk outside|telegram|instagram|ig|dm me)\b/i;
+  /\b(whatsapp|number|email|contact|call|phone|reach me|talk outside|instagram|ig|dm me)\b/i;
 
 const MASK_PHONE = "[phone not allowed]";
 const MASK_EMAIL = "[email not allowed]";

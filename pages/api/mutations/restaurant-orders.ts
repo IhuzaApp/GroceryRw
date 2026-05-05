@@ -222,7 +222,6 @@ const GET_RESTAURANT_ORDER = `
       phone
       phone_number
       status
-      telegram_id
       transport_mode
       updated_at
     }

@@ -111,7 +111,6 @@ query GetRestaurantOrders($user_id: uuid!) {
       user_id
       verification_metadata
       transport_mode
-      telegram_id
     }
   }
 }
@@ -231,7 +230,6 @@ query GetAllRestaurantOrders {
       user_id
       verification_metadata
       updated_at
-      telegram_id
       transport_mode
     }
   }

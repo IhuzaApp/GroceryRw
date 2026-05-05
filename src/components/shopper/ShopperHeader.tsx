@@ -9,7 +9,6 @@ import { useTheme } from "@context/ThemeContext";
 import { Avatar, Button } from "rsuite";
 import { useSession } from "next-auth/react";
 import { useShopperProfile } from "../../hooks/useShopperProfile";
-import TelegramStatusButton from "./TelegramStatusButton";
 import NotificationCenter from "./NotificationCenter";
 import { toast } from "react-hot-toast";
 
@@ -207,11 +206,6 @@ export default function ShopperHeader() {
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 md:flex">
           <NotificationCenter />
-          <TelegramStatusButton
-            variant="primary"
-            size="md"
-            className="bg-blue-500 text-white hover:bg-blue-600"
-          />
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-secondary)] text-[var(--text-secondary)] transition-all duration-300 hover:text-[var(--text-primary)] hover:shadow-md active:scale-90"

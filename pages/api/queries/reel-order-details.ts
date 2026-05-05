@@ -80,7 +80,6 @@ const GET_REEL_ORDER_DETAILS = gql`
         status
         transport_mode
         proofOfResidency
-        telegram_id
         updated_at
         user_id
         Ratings {

@@ -1,8 +1,5 @@
 {
   "functions": {
-    "pages/api/telegram/webhook.ts": {
-      "maxDuration": 30
-    },
     "pages/api/cleanup/system-logs-cleanup.ts": {
       "maxDuration": 30
     }
@@ -12,8 +9,5 @@
       "path": "/api/cleanup/system-logs-cleanup",
       "schedule": "0 2 * * *"
     }
-  ],
-  "env": {
-    "TELEGRAM_BOT_TOKEN": "8108990584:AAEYZ6mqRIAxYCPdT8Ax74k7Fuglzy4kKsU"
-  }
+  ]
 }

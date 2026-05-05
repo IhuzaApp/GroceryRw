@@ -56,7 +56,6 @@ interface ShopperData {
   national_id_photo_front?: string;
   national_id_photo_back?: string;
   drivingLicense_Image?: string;
-  telegram_id?: string;
   guarantor?: string;
   guarantorPhone?: string;
   guarantorRelationship?: string;
@@ -905,7 +904,7 @@ export default function ShopperProfileComponent() {
             </div>
 
             {/* ADDITIONAL INFO Section */}
-            {(shopperData?.guarantor || shopperData?.telegram_id) && (
+            {shopperData?.guarantor && (
               <div
                 className={`rounded-[2.5rem] border backdrop-blur-2xl transition-all duration-300 ${
                   theme === "dark"
@@ -947,19 +946,6 @@ export default function ShopperProfileComponent() {
                         </div>
                       </div>
                     )}
-                    {shopperData?.telegram_id && (
-                      <div className="space-y-2">
-                        <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                          Telegram Handle
-                        </label>
-                        <div
-                          className={`rounded-2xl px-5 py-4 text-sm font-bold text-blue-500 ${
-                            theme === "dark" ? "bg-white/5" : "bg-gray-50"
-                          }`}
-                        >
-                          @{shopperData.telegram_id}
-                        </div>
-                      </div>
                     )}
                   </div>
                 </div>

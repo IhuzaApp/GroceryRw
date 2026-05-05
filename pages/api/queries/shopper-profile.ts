@@ -38,7 +38,6 @@ const GET_SHOPPER_PROFILE = gql`
       phone
       proofOfResidency
       signature
-      telegram_id
       User {
         email
         created_at
