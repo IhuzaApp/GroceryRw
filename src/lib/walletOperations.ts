@@ -4,6 +4,7 @@ import type { NextApiRequest } from "next";
 import { logErrorToSlack } from "./slackErrorReporter";
 import { sendSMS } from "./pindo";
 import { insertSystemLog } from "../../pages/api/queries/system-logs";
+import { logger } from "../utils/logger";
 
 // GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
@@ -156,6 +157,24 @@ const CREATE_REFUND = gql`
       amount
       status
       reason
+    }
+  }
+`;
+
+const GET_USER_PHONE = gql`
+  query GetUserPhone($id: uuid!) {
+    Users_by_pk(id: $id) {
+      phone
+    }
+  }
+`;
+
+const GET_SHOPPER_PHONE = gql`
+  query GetShopperPhone($user_id: uuid!) {
+    shoppers(where: { user_id: { _eq: $user_id } }) {
+      User {
+        phone
+      }
     }
   }
 `;
@@ -477,29 +496,17 @@ export async function handleDeliveredOperation(
 
     // Send confirmation SMS to shopper
     try {
-      const shopperIdForQuery = order.shopper_id;
+      const shopperIdForQuery = wallet.user_id; // Using user_id from wallet which is the shopper's user_id
       if (shopperIdForQuery) {
-        const GET_SHOPPER_PHONE = gql`
-          query GetShopperPhone($user_id: uuid!) {
-            shoppers(where: { user_id: { _eq: $user_id } }) {
-              phone_number
-            }
-          }
-        `;
         const shopperData = await hasuraClient!.request<{
-          shoppers: Array<{ phone_number: string }>;
+          shoppers: Array<{ User: { phone: string } }>;
         }>(GET_SHOPPER_PHONE, { user_id: shopperIdForQuery });
 
-        const shopperPhone = shopperData.shoppers[0]?.phone_number;
+        const shopperPhone = shopperData.shoppers?.[0]?.User?.phone;
         if (shopperPhone) {
-          const message = `Plas: You earned RWF ${remainingEarnings.toLocaleString()} from order #${orderId.slice(
-            0,
-            8
-          )}. (Total: ${totalEarnings.toLocaleString()}, Fee: ${platformFee.toLocaleString()})`;
+          const message = `Plas Agent: You earned RWF ${remainingEarnings.toLocaleString()}. (Total Fee: ${totalEarnings.toLocaleString()}, Deducted: ${platformFee.toLocaleString()}). New Wallet Balance: RWF ${parseFloat(newAvailableBalance).toLocaleString()}.`;
           await sendSMS(shopperPhone, message);
-          console.log(
-            `✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}`
-          );
+          console.log(`✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}: ${message}`);
         }
       }
     } catch (smsError) {
@@ -570,6 +577,30 @@ export async function handleCancelledOperation(
     await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
+  }
+
+  // Send SMS notification to customer via Pindo
+  try {
+    const customerData = await hasuraClient!.request<{
+      Users_by_pk: { phone: string } | null;
+    }>(GET_USER_PHONE, { id: order.user_id });
+
+    const customerPhone = customerData.Users_by_pk?.phone;
+
+    if (customerPhone) {
+      const message = `Plas Pay: Your order #${order.OrderID || orderId} has been cancelled. A refund of RWF ${orderTotal.toLocaleString()} has been credited to your wallet.`;
+      
+      await sendSMS(customerPhone, message);
+      console.log(`[Customer Cancel SMS] Sent to ${customerPhone}: ${message}`);
+    }
+  } catch (smsError) {
+    console.error("[Customer Cancel SMS] Error sending notification:", smsError);
+    await logger.warn(
+      `Failed to send customer cancellation SMS for order ${order.OrderID || orderId}: ${
+        smsError instanceof Error ? smsError.message : String(smsError)
+      }`,
+      "CustomerNotification"
+    );
   }
 
   return {
@@ -884,7 +915,6 @@ export async function processWalletOperation(
         orderId,
         isReelOrderFinal,
         isRestaurantOrderFinal,
-        isPackageOrderFinal,
         req
       );
 

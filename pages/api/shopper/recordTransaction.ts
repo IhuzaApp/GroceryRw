@@ -37,6 +37,7 @@ const GET_ORDER_DETAILS = gql`
         foundQuantity
         Product {
           name
+          final_price
         }
       }
     }
@@ -247,46 +248,37 @@ export default async function handler(
       if (orderData) {
         // Check if refund is needed
         // If originalOrderTotal is provided, use it; otherwise get from orderData
-        const totalOrderValue =
-          originalOrderTotal || parseFloat(orderData.total);
+        // Calculate refund based on missing items' final_price
+        let calculatedRefund = 0;
+        orderData.Order_Items.forEach((item: any) => {
+          const quantity = item.quantity || 0;
+          const foundQuantity = item.found ? (item.foundQuantity ?? quantity) : 0;
+          const missingQuantity = Math.max(0, quantity - foundQuantity);
+          
+          if (missingQuantity > 0) {
+            const finalPrice = parseFloat(item.Product?.final_price || item.price || "0");
+            calculatedRefund += missingQuantity * finalPrice;
+          }
+        });
 
-        // Calculate if there's a difference between original total and found items total
-        if (totalOrderValue > formattedOrderAmount) {
-          refundAmount = parseFloat(
-            (totalOrderValue - formattedOrderAmount).toFixed(2)
-          );
+        if (calculatedRefund > 0) {
+          refundAmount = parseFloat(calculatedRefund.toFixed(2));
           refundNeeded = true;
 
           // Get shop name
           const shopName = orderData.Shop?.name || "Unknown Shop";
 
-          // Get information about found and not found items
-          const foundItems = orderData.Order_Items.filter((item) => item.found);
-          const notFoundItems = orderData.Order_Items.filter(
-            (item) => !item.found
-          );
-
-          // Create detailed reason with found/not found items
-          refundReason = `Refund for items not found during shopping at ${shopName}. `;
-
-          if (foundItems.length > 0) {
-            refundReason += `Found items: ${foundItems
-              .map(
-                (item) =>
-                  `${item.Product.name} (${
-                    item.foundQuantity || item.quantity
-                  })`
-              )
-              .join(", ")}. `;
-          }
-
+          // Create detailed reason
+          refundReason = `Refund of RWF ${refundAmount.toLocaleString()} for items not found during shopping at ${shopName}.`;
+          
+          const notFoundItems = orderData.Order_Items.filter(item => !item.found || (item.foundQuantity ?? 0) < item.quantity);
           if (notFoundItems.length > 0) {
-            refundReason += `Not found items: ${notFoundItems
-              .map((item) => `${item.Product.name} (${item.quantity})`)
-              .join(", ")}.`;
+            const itemList = notFoundItems.map(item => {
+              const missing = item.quantity - (item.found ? (item.foundQuantity ?? item.quantity) : 0);
+              return `${item.Product.name} (${missing} missing)`;
+            }).join(", ");
+            refundReason += ` Missing items: ${itemList}.`;
           }
-
-          refundReason += ` Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}.`;
         }
       }
     } catch (orderError) {

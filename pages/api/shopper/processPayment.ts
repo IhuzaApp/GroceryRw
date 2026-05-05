@@ -4,6 +4,8 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
+import { sendSMS } from "../../../src/lib/pindo";
+import { logger } from "../../../src/utils/logger";
 
 // GraphQL query to get regular order details
 const GET_ORDER_DETAILS = gql`
@@ -26,12 +28,34 @@ const GET_ORDER_DETAILS = gql`
         id
         quantity
         price
+        found
+        foundQuantity
         Product {
+          id
+          name
+          price
+          final_price
           ProductName {
             name
           }
         }
       }
+    }
+  }
+`;
+
+const GET_USER_PHONE = gql`
+  query GetUserPhone($id: uuid!) {
+    Users_by_pk(id: $id) {
+      phone
+    }
+  }
+`;
+
+const GET_SHOP_DETAILS = gql`
+  query GetShopDetails($id: uuid!) {
+    shops_by_pk(id: $id) {
+      name
     }
   }
 `;
@@ -198,6 +222,8 @@ interface OrderDetails {
       id: string;
       quantity: number;
       price: string;
+      found: boolean;
+      foundQuantity: number;
       Product: {
         ProductName: {
           name: string;
@@ -298,9 +324,6 @@ export default async function handler(
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
 
-    // In a real-world scenario, this would integrate with a payment processor
-    // For now, we'll skip that and just update the database directly
-
     // Get the order details to verify it exists and get associated data
     if (!hasuraClient) {
       return res.status(500).json({ error: "Database client not available" });
@@ -374,17 +397,12 @@ export default async function handler(
             0
           );
 
-          // For same-shop combined orders, formattedOrderAmount is the batch total
-          // For different-shop combined orders, formattedOrderAmount is the specific order amount
-          // We'll use formattedOrderAmount for same-shop, but calculate actual batch total for reference
           if (isSameShopCombined) {
-            batchTotal = formattedOrderAmount; // Frontend sends batch total for same-shop
+            batchTotal = formattedOrderAmount; 
           } else {
-            // For different-shop, batchTotal is sum of all orders (for reference only, not used in calculations)
             batchTotal = storedTotalSum;
           }
         }
-      } else {
       }
     }
 
@@ -418,123 +436,119 @@ export default async function handler(
       });
     }
 
-    // Calculate refunds - ONLY create refunds when items are NOT found
-    // Logic: Compare original order total vs found items total
-    // - If original total > found items total: items were not found, create refund
-    // - If original total <= found items total: all items found, no refund needed
     let refundsData: any[] = [];
     let totalRefundAmount = 0;
 
+    // Logic: Calculate refund based on missing items' final_price
+    const calculateOrderRefund = async (order: any, paidAmount: number, origTotal?: number) => {
+      let refund = 0;
+      const originalTotal = origTotal || parseFloat(order.total);
+      
+      // Calculate missing items' final_price
+      order.Order_Items?.forEach((item: any) => {
+        const quantity = item.quantity || 0;
+        const foundQuantity = item.found ? (item.foundQuantity ?? quantity) : 0;
+        const missingQuantity = Math.max(0, quantity - foundQuantity);
+        
+        if (missingQuantity > 0) {
+          const finalPrice = parseFloat(item.Product?.final_price || item.price || "0");
+          refund += missingQuantity * finalPrice;
+        }
+      });
+
+      refund = parseFloat(refund.toFixed(2));
+      const amountUsed = parseFloat((originalTotal - refund).toFixed(2));
+
+      if (refund > 0) {
+        try {
+          // 1. Get customer phone number
+          const customerData = await hasuraClient!.request<{
+            Users_by_pk: { phone: string } | null;
+          }>(GET_USER_PHONE, { id: order.user_id });
+          
+          const customerPhone = customerData.Users_by_pk?.phone;
+          
+          // 2. Get shop name
+          const shopName = order.Shop?.name || "Merchant";
+
+          if (customerPhone) {
+            const message = `Plas Pay: Your order #${order.OrderID} from ${shopName} has been processed. Total used: RWF ${amountUsed.toLocaleString()}. Refund of RWF ${refund.toLocaleString()} has been credited to your wallet for items not found.`;
+            
+            await sendSMS(customerPhone, message);
+            console.log(`[Customer Refund SMS] Sent to ${customerPhone}: ${message}`);
+          }
+        } catch (smsError) {
+          console.error("[Customer Refund SMS] Error sending notification:", smsError);
+          await logger.warn(
+            `Failed to send customer refund SMS for order ${order.OrderID}: ${
+              smsError instanceof Error ? smsError.message : String(smsError)
+            }`,
+            "CustomerNotification"
+          );
+        }
+
+        // Record the refund transaction via internal API
+        try {
+          await fetch(`${process.env.NEXTAUTH_URL}/api/shopper/recordTransaction`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              shopperId: order.shopper_id,
+              orderId: order.id,
+              orderAmount: paidAmount, // What shopper actually paid
+              originalOrderTotal: originalTotal, // What customer originally paid
+              type: "refund",
+            }),
+          });
+        } catch (recordError) {
+          console.error("Error calling recordTransaction:", recordError);
+        }
+      }
+
+      return {
+        refundAmount: refund,
+        amountUsed,
+        refundReason: `Refund of RWF ${refund.toLocaleString()} for items not found in order #${order.OrderID}.`
+      };
+    };
+
     if (hasCombinedOrders && !isReelOrder) {
-      if (isSameShopCombined) {
-        // For same-shop combined orders, no refunds are needed
-        // The shopper gets paid for all found items and receives fees
-        // Refunds only apply when specific items are not found, but for same-shop
-        // combined orders, the shopper either finds all items or none
-      } else {
-        // For different-shop combined orders, only calculate refund for the specific order being paid for
-        // Find the specific order being paid for in the batch
+      if (!isSameShopCombined) {
         const currentOrder = allOrdersInBatch.find(
           (order) => order.id === orderId
         );
-
         if (currentOrder) {
-          // Only create refund for this specific order if items were not found
-          // The frontend sends originalOrderTotal (total of all ordered items) and orderAmount (total of found items)
-          const orderOriginalTotal =
-            originalOrderTotal || parseFloat(currentOrder.total);
-
-          // CRITICAL: Only create refund if some items were NOT found
-          // If all items are found, orderOriginalTotal should equal formattedOrderAmount
-          const allItemsFound = orderOriginalTotal <= formattedOrderAmount;
-
-          if (!allItemsFound) {
-            // Only create refund when items are not found
-            const orderRefundAmount = parseFloat(
-              (orderOriginalTotal - formattedOrderAmount).toFixed(2)
-            );
-            totalRefundAmount += orderRefundAmount;
-
-            // Create refund reason for this specific order
-            const shopName = currentOrder.Shop?.name || "Unknown Shop";
-            let orderRefundReason = `Refund for items not found during shopping at ${shopName}. `;
-
-            // List items for this specific order
-            const orderItems =
-              currentOrder.Order_Items?.map(
-                (item: any) =>
-                  `${item.Product.ProductName?.name || "Unknown Product"} (${
-                    item.quantity
-                  })`
-              ).join(", ") || "No items found";
-
-            orderRefundReason += `Order items: ${orderItems}. `;
-            orderRefundReason += `Original total: ${orderOriginalTotal}, found items total: ${formattedOrderAmount}, refund amount: ${orderRefundAmount}.`;
-
+          const result = await calculateOrderRefund(currentOrder, formattedOrderAmount, originalOrderTotal);
+          totalRefundAmount = result.refundAmount;
+          
+          if (totalRefundAmount > 0) {
             refundsData.push({
               order_id: currentOrder.id,
-              amount: orderRefundAmount.toString(),
-              reason: orderRefundReason,
+              amount: totalRefundAmount.toString(),
+              reason: result.refundReason,
               user_id: currentOrder.user_id,
               status: "pending",
               generated_by: "System",
               paid: false,
             });
-          } else {
           }
         }
       }
     } else {
-      // For single orders or reel orders, use existing logic
-      const totalOrderValue =
-        originalOrderTotal ||
-        parseFloat(isReelOrder ? orderData.total : orderData.total);
+      // Single order or Reel order
+      const result = await calculateOrderRefund(orderData, formattedOrderAmount, originalOrderTotal);
+      totalRefundAmount = result.refundAmount;
 
-      // CRITICAL: Only create refund if some items were NOT found
-      // If all items are found, totalOrderValue should equal formattedOrderAmount
-      const allItemsFound = totalOrderValue <= formattedOrderAmount;
-
-      if (!allItemsFound) {
-        // Only create refund when items are not found
-        totalRefundAmount = parseFloat(
-          (totalOrderValue - formattedOrderAmount).toFixed(2)
-        );
-
-        // Get shop/restaurant name
-        const shopName = isReelOrder
-          ? orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
-          : orderData.Shop?.name || "Unknown Shop";
-
-        // Create detailed reason for the refund
-        let refundReason = `Refund for items not found during shopping at ${shopName}. `;
-
-        if (isReelOrder) {
-          refundReason += `Reel order: ${
-            orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
-          }. `;
-        } else {
-          // List all order items for regular single orders
-          const allItems = orderData.Order_Items.map(
-            (item: any) =>
-              `${item.Product.ProductName?.name || "Unknown Product"} (${
-                item.quantity
-              })`
-          ).join(", ");
-          refundReason += `Order items: ${allItems}. `;
-        }
-
-        refundReason += `Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}, refund amount: ${totalRefundAmount}.`;
-
+      if (totalRefundAmount > 0) {
         refundsData.push({
           order_id: orderId,
           amount: totalRefundAmount.toString(),
-          reason: refundReason,
+          reason: result.refundReason,
           user_id: orderData.user_id,
           status: "pending",
           generated_by: "System",
           paid: false,
         });
-      } else {
       }
     }
 
