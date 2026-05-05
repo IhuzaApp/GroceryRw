@@ -91,6 +91,7 @@ export const getRedisClient = (): Redis | null => {
           err.message.includes("ENOTFOUND") ||
           err.message.includes("ECONNREFUSED");
 
+        /*
         if (isDev && isConnectionError) {
           console.warn(
             "⚠️ Redis Connection Error (Suppressed from Slack in Dev):",
@@ -98,6 +99,7 @@ export const getRedisClient = (): Redis | null => {
           );
           return;
         }
+        */
 
         logErrorToSlack("redisClient", err, {
           degradedMode: true,

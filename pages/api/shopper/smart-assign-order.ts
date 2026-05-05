@@ -1122,7 +1122,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("=== Smart Assignment API (with Exclusive Offers) ===");
+  // console.log("=== Smart Assignment API (with Exclusive Offers) ===");
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -1130,7 +1130,7 @@ export default async function handler(
 
   try {
     const { current_location, user_id } = req.body;
-    console.log("Request body received", { user_id, current_location });
+    // console.log("Request body received", { user_id, current_location });
 
     if (!user_id) {
       logger.warn("Missing user_id in request", "SmartAssignAPI");
@@ -1271,6 +1271,7 @@ export default async function handler(
     const activeOrderCount = activeOrders.length;
 
     if (activeOrderCount >= 1) {
+      /*
       console.log(
         `🚫 Shopper already has ${activeOrderCount} active orders (not delivered) - cannot receive new offers:`,
         {
@@ -1282,6 +1283,7 @@ export default async function handler(
           })),
         }
       );
+      */
 
       return res.status(200).json({
         success: false,
@@ -1297,7 +1299,7 @@ export default async function handler(
       });
     }
 
-    console.log("✅ Shopper has no active orders - can receive new offers");
+    // console.log("✅ Shopper has no active orders - can receive new offers");
 
     // ========================================================================
     // Check if shopper already has an active OFFERED offer
@@ -1565,9 +1567,11 @@ export default async function handler(
       }
     }
 
+    /*
     console.log(
       "✅ Shopper has no active orders or pending offers - can receive new offer"
     );
+    */
 
     // ========================================================================
     // STEP 1: Find Eligible Orders
@@ -1578,7 +1582,7 @@ export default async function handler(
     // - NO active offer (status=OFFERED, expires_at > now())
     // ========================================================================
 
-    console.log("Fetching eligible orders (no active offers)...");
+    // console.log("Fetching eligible orders (no active offers)...");
     const [
       regularOrdersData,
       reelOrdersData,
@@ -1613,6 +1617,7 @@ export default async function handler(
     }
 
     // Combine all orders with type information
+    /*
     console.log("📍 Smart Assignment Order Discovery:", {
       regular: availableOrders.length,
       reel: availableReelOrders.length,
@@ -1626,6 +1631,7 @@ export default async function handler(
         availableBusinessOrders.length +
         availablePackageOrders.length,
     });
+    */
 
     const allOrders = [
       ...availableOrders.map((order: any) => ({
@@ -1651,7 +1657,7 @@ export default async function handler(
     ];
 
     if (allOrders.length === 0) {
-      console.log("No eligible orders found");
+      // console.log("No eligible orders found");
       return res.status(200).json({
         success: false,
         message: "No available orders at the moment",
@@ -1668,7 +1674,7 @@ export default async function handler(
     // 3. Log all skips for audit/debugging
     // ========================================================================
 
-    console.log("📍 Performing distance gating checks...");
+    // console.log("📍 Performing distance gating checks...");
 
     // Check if shopper has fresh location in Redis
     const redisLocation = await getShopperLocation(user_id);
@@ -2095,10 +2101,12 @@ export default async function handler(
           offerId = offerResult.insert_order_offers_one.id;
           offerRound = nextRound;
 
+          /*
           console.log("✅ Exclusive offer created:", {
             offerId,
             round: offerRound,
           });
+          */
         }
         } catch (error: any) {
           // Handle potential unique constraint violation
@@ -2106,6 +2114,7 @@ export default async function handler(
             error.message?.includes("duplicate") ||
             error.message?.includes("unique constraint")
           ) {
+            /*
             console.warn(
               "⚠️ Duplicate offer detected during creation, checking for existing offer:",
               {
@@ -2113,6 +2122,7 @@ export default async function handler(
                 shopperId: user_id,
               }
             );
+            */
             await insertSystemLog(
               "warn",
               `Duplicate offer detected: ${bestOrder.id}`,
@@ -2184,6 +2194,7 @@ export default async function handler(
               offerRound = recoveryOffer.round_number;
               isExtendingOffer = true; // Mark that we're extending, not creating
 
+              /*
               console.log(
                 "✅ Recovered from duplicate - extended existing offer:",
                 {
@@ -2191,6 +2202,7 @@ export default async function handler(
                   round: offerRound,
                 }
               );
+              */
             } else {
               throw error; // Re-throw if we can't recover
             }
@@ -2297,6 +2309,7 @@ export default async function handler(
               (o: any) => o.shopper_id === user_id
             );
 
+            /*
             console.log(
               `❌ BLOCKING notification: Combined order group has ${assignedOrders.length} assigned order(s)`,
               {
@@ -2308,6 +2321,7 @@ export default async function handler(
                 })),
               }
             );
+            */
           }
         } else {
           // For single orders, check the specific order
@@ -2350,6 +2364,7 @@ export default async function handler(
             orderStillUnassigned = false;
             orderAssignedToShopper = order.shopper_id === user_id;
 
+            /*
             console.log(
               `❌ BLOCKING notification: Order ${bestOrder.id} is already assigned`,
               {
@@ -2360,18 +2375,15 @@ export default async function handler(
                 status: order.status,
               }
             );
+            */
           }
         }
 
         if (!orderStillUnassigned) {
           if (orderAssignedToShopper) {
-            console.log(
-              `⚠️ Order ${bestOrder.id} is already assigned to this shopper - skipping notification (order already accepted)`
-            );
+            // console.log(`⚠️ Order ${bestOrder.id} is already assigned to this shopper - skipping notification (order already accepted)`);
           } else {
-            console.log(
-              `⚠️ Order ${bestOrder.id} is already assigned to another shopper - skipping notification`
-            );
+            // console.log(`⚠️ Order ${bestOrder.id} is already assigned to another shopper - skipping notification`);
           }
           // Don't send notification - order is already assigned
           return res.status(200).json({
@@ -2397,9 +2409,7 @@ export default async function handler(
             reelDeclinedCheck.order_offers &&
             reelDeclinedCheck.order_offers.length > 0
           ) {
-            console.log(
-              `⏭️ Skipping FCM for reel order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
-            );
+            // console.log(`⏭️ Skipping FCM for reel order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`);
             skipFcmForDeclined = true;
           }
         } else if (bestOrder.orderType === "restaurant") {
@@ -2414,9 +2424,7 @@ export default async function handler(
             restaurantDeclinedCheck.order_offers &&
             restaurantDeclinedCheck.order_offers.length > 0
           ) {
-            console.log(
-              `⏭️ Skipping FCM for restaurant order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
-            );
+            // console.log(`⏭️ Skipping FCM for restaurant order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`);
             skipFcmForDeclined = true;
           }
         } else if (bestOrder.orderType === "business") {
@@ -2431,9 +2439,7 @@ export default async function handler(
             businessDeclinedCheck.order_offers &&
             businessDeclinedCheck.order_offers.length > 0
           ) {
-            console.log(
-              `⏭️ Skipping FCM for business order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
-            );
+            // console.log(`⏭️ Skipping FCM for business order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`);
             skipFcmForDeclined = true;
           }
         } else if (bestOrder.orderType === "package") {
@@ -2448,18 +2454,14 @@ export default async function handler(
             packageDeclinedCheck.order_offers &&
             packageDeclinedCheck.order_offers.length > 0
           ) {
-            console.log(
-              `⏭️ Skipping FCM for package order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
-            );
+            // console.log(`⏭️ Skipping FCM for package order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`);
             skipFcmForDeclined = true;
           }
         }
 
         // Order is still unassigned - safe to send notification (unless skipped for declined)
         if (!skipFcmForDeclined) {
-          console.log(
-            `✅ Verified order ${bestOrder.id} is still unassigned - sending notification`
-          );
+          // console.log(`✅ Verified order ${bestOrder.id} is still unassigned - sending notification`);
 
           // Send notification aligned with what the UI should display/accept
           await sendNewOrderNotification(user_id, {
@@ -2483,6 +2485,7 @@ export default async function handler(
             tag: `new_order_${responseOrder.id}`,
           });
 
+          /*
           console.log(
             "✅ FCM notification sent to shopper:",
             user_id,
@@ -2493,6 +2496,7 @@ export default async function handler(
               : "",
             "| No time limit - waiting for explicit action"
           );
+          */
         }
       } catch (fcmError) {
         console.error("Failed to send FCM notification:", fcmError);

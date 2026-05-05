@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "rsuite";
-import { OrderDetailsType } from "../../types";
+import { OrderDetailsType } from "../types";
 import { useTheme } from "../../../../context/ThemeContext";
 
 interface HeaderSectionProps {
@@ -74,7 +74,7 @@ export default function HeaderSection({
               #
               {(order as any).orderIDs && (order as any).orderIDs.length > 1
                 ? (order as any).orderIDs.join(" & ")
-                : order.OrderID || order.id.slice(0, 8)}
+                : order.OrderID || order.id?.slice(0, 8) || "..."}
             </h1>
           </div>
         </div>

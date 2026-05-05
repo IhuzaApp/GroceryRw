@@ -62,9 +62,11 @@ const GET_BUSINESS_ORDER = gql`
       shoppers {
         id
         full_name
-        profile_picture
+        profile_photo
         phone
-        email
+        User {
+          email
+        }
       }
     }
   }
@@ -125,9 +127,11 @@ const GET_BUSINESS_ORDER_FOR_SHOPPER = gql`
       shoppers {
         id
         full_name
-        profile_picture
+        profile_photo
         phone
-        email
+        User {
+          email
+        }
       }
     }
   }
@@ -213,7 +217,33 @@ export default async function handler(
       comment: string | null;
       allProducts: any;
       shopper_id?: string | null;
-      business_store: { id: string; name: string; image: string | null } | null;
+      delivery_proof?: string | null;
+      latitude?: number | string | null;
+      longitude?: number | string | null;
+      business_store: {
+        id: string;
+        name: string;
+        image: string | null;
+        address?: string | null;
+        description?: string | null;
+        latitude?: number | string | null;
+        longitude?: number | string | null;
+        operating_hours?: any;
+        business_account?: {
+          business_email?: string | null;
+          business_location?: string | null;
+          business_name?: string | null;
+          business_phone?: string | null;
+          user_id?: string | null;
+          Users?: {
+            phone?: string | null;
+          } | null;
+        } | null;
+        Category?: {
+          name?: string | null;
+          description?: string | null;
+        } | null;
+      } | null;
       orderedBy: {
         id: string;
         name: string;
@@ -329,16 +359,16 @@ export default async function handler(
       } catch {
         // leave ratings empty
       }
-      const s = row.shoppers;
+      const s = Array.isArray(row.shoppers) ? row.shoppers[0] : row.shoppers;
       Shoppers = {
         id: row.shopper_id,
         name: s.full_name,
         phone: s.phone,
-        email: s.email,
-        profile_picture: s.profile_picture,
+        email: s.User?.email || s.email,
+        profile_picture: s.profile_photo || s.profile_picture,
         shopper: {
           full_name: s.full_name,
-          profile_photo: s.profile_picture,
+          profile_photo: s.profile_photo || s.profile_picture,
           phone_number: s.phone,
         },
         Ratings: ratings,

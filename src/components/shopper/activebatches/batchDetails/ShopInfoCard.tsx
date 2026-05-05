@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../../lib/formatCurrency";
-import { OrderDetailsType } from "../../types";
+import { OrderDetailsType } from "../types";
 import { useTheme } from "../../../../context/ThemeContext";
 
 interface ShopInfoCardProps {

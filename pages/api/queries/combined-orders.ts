@@ -84,7 +84,7 @@ const GET_COMBINED_ORDERS = gql`
         id
         full_name
         phone
-        profile_picture
+        profile_photo
       }
       shop_id
       total

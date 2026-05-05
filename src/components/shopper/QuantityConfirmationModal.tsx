@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { OrderItem } from "../../types/order";
 import { useTheme } from "../../context/ThemeContext";
 import Image from "next/image";
@@ -47,6 +48,12 @@ export default function QuantityConfirmationModal({
   const [refundAmount, setRefundAmount] = useState(0);
   const [missingWeight, setMissingWeight] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // SSR compatibility
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Mobile detection
   useEffect(() => {
@@ -189,9 +196,9 @@ export default function QuantityConfirmationModal({
     });
   };
 
-  if (!currentItem || !open) return null;
+  if (!currentItem || !open || !mounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Barcode Scanner Modal */}
       {showBarcodeScanner && (
@@ -203,33 +210,32 @@ export default function QuantityConfirmationModal({
 
       {/* Quantity Confirmation Modal */}
       <div
-        className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
+        className="fixed inset-0 z-[99999] flex items-end justify-center p-0 sm:items-center sm:p-4"
         onClick={onClose}
       >
         <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
           aria-hidden="true"
         />
 
         <div
-          className={`relative z-10 w-full max-w-md transform overflow-hidden rounded-[2rem] border shadow-2xl transition-all duration-300 sm:rounded-[2.5rem] ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          className={`relative z-[100001] w-full max-w-sm transform overflow-hidden rounded-t-[2rem] border shadow-2xl transition-all duration-300 sm:rounded-[2rem] ${
+            theme === "dark" ? "border-white/10" : "border-gray-200"
           }`}
           style={{
-            zIndex: 10001,
-            backgroundColor: "var(--bg-primary)",
+            backgroundColor: theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "#ffffff",
             color: "var(--text-primary)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Gradient */}
-          <div className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500" />
+          <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600" />
 
-          <div className="flex items-center justify-between px-6 pb-6 pt-10 sm:px-10">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/20">
+          <div className="flex items-center justify-between px-5 pb-4 pt-8 sm:px-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
                 <svg
-                  className="h-7 w-7 text-white"
+                  className="h-5 w-5 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -244,7 +250,7 @@ export default function QuantityConfirmationModal({
               </div>
               <div>
                 <h2
-                  className={`text-2xl font-black tracking-tight ${
+                  className={`text-base font-black tracking-tight ${
                     theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
@@ -253,26 +259,24 @@ export default function QuantityConfirmationModal({
                     : "Select Amount"}
                 </h2>
                 <p
-                  className={`text-sm font-bold ${
-                    theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                    theme === "dark" ? "text-emerald-400/80" : "text-emerald-600/80"
                   }`}
                 >
-                  {!isWeightBased && !barcodeValidation.isValid
-                    ? "Security check required"
-                    : currentItem.product.ProductName?.name || "Premium Item"}
+                  {currentItem.product.ProductName?.name || "Premium Item"}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
                 theme === "dark"
-                  ? "bg-gray-800 text-gray-400 hover:text-white"
+                  ? "bg-white/5 text-gray-400 hover:text-white"
                   : "bg-gray-100 text-gray-500 hover:text-gray-800"
               }`}
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -287,35 +291,28 @@ export default function QuantityConfirmationModal({
             </button>
           </div>
 
-          <div className="max-h-[70vh] overflow-y-auto px-6 pb-10 sm:px-10">
-            <div className="space-y-6">
+          <div className="max-h-[60vh] overflow-y-auto px-5 pb-8 sm:px-8">
+            <div className="space-y-4">
               {/* Product Preview Card */}
               <div
-                className={`flex items-center gap-5 rounded-3xl border p-5`}
+                className={`flex items-center gap-3 rounded-2xl border p-3`}
                 style={{
-                  backgroundColor: "var(--bg-secondary)",
-                  borderColor:
-                    theme === "dark"
-                      ? "rgba(255,255,255,0.05)"
-                      : "rgba(0,0,0,0.05)",
+                  backgroundColor: theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
                 }}
               >
-                <div className="h-20 w-20 overflow-hidden rounded-2xl border border-gray-200/50 bg-white p-2 shadow-sm">
+                <div className="h-14 w-14 overflow-hidden rounded-xl border border-white/10 bg-white p-1.5 shadow-sm">
                   {currentItem.product.ProductName?.image ? (
                     <Image
                       src={currentItem.product.ProductName.image}
                       alt="Product"
-                      width={80}
-                      height={80}
+                      width={56}
+                      height={56}
                       className="h-full w-full object-contain"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-gray-300">
-                      <svg
-                        className="h-10 w-10"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
+                      <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
                       </svg>
                     </div>
@@ -323,197 +320,108 @@ export default function QuantityConfirmationModal({
                 </div>
                 <div>
                   <h4
-                    className={`text-lg font-black leading-tight ${
+                    className={`text-sm font-black leading-tight ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
                     {currentItem.product.ProductName?.name || "Product"}
                   </h4>
                   <p
-                    className={`text-sm font-bold opacity-60 ${
+                    className={`text-xs font-bold opacity-60 ${
                       theme === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
-                    {currentItem.quantity}{" "}
-                    {isWeightBased ? measurementUnit : "units"} requested
+                    {currentItem.quantity} {isWeightBased ? measurementUnit : "units"} requested
                   </p>
                 </div>
               </div>
 
               {!isWeightBased && !barcodeValidation.isValid && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {!showBarcodeScanner && !showManualInput && (
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-2 gap-3">
                       {/* Scan with Camera Card */}
                       <button
                         onClick={() => setShowBarcodeScanner(true)}
-                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${
+                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all duration-300 ${
                           theme === "dark"
-                            ? "border-gray-700 bg-gray-800/40 shadow-lg shadow-emerald-500/10 hover:border-emerald-500 hover:bg-emerald-500/10"
-                            : "border-gray-100 bg-white shadow-xl shadow-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-50"
+                            ? "border-white/5 bg-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                            : "border-gray-50 bg-white hover:border-emerald-500 hover:bg-emerald-50"
                         }`}
                       >
                         <div
-                          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
-                            theme === "dark"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-emerald-100 text-emerald-600"
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${
+                            theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
                           }`}
                         >
-                          <svg
-                            className="h-8 w-8"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
                         </div>
-                        <div className="text-center">
-                          <span
-                            className={`block text-sm font-black tracking-tighter ${
-                              theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            SCANNER
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold opacity-50 ${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            CAMERA
-                          </span>
-                        </div>
+                        <span className={`text-[10px] font-black tracking-widest ${theme === "dark" ? "text-white" : "text-gray-900"}`}>SCANNER</span>
                       </button>
 
                       {/* Manual Entry Card */}
                       <button
                         onClick={() => setShowManualInput(true)}
-                        className={`group flex flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${
+                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all duration-300 ${
                           theme === "dark"
-                            ? "border-gray-700 bg-gray-800/40 shadow-lg shadow-emerald-500/10 hover:border-emerald-500 hover:bg-emerald-500/10"
-                            : "border-gray-100 bg-white shadow-xl shadow-emerald-500/5 hover:border-emerald-500 hover:bg-emerald-50"
+                            ? "border-white/5 bg-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                            : "border-gray-50 bg-white hover:border-emerald-500 hover:bg-emerald-50"
                         }`}
                       >
                         <div
-                          className={`flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
-                            theme === "dark"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-emerald-100 text-emerald-600"
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${
+                            theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
                           }`}
                         >
-                          <svg
-                            className="h-8 w-8"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </div>
-                        <div className="text-center">
-                          <span
-                            className={`block text-sm font-black tracking-tighter ${
-                              theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            MANUAL
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold opacity-50 ${
-                              theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            TYPE CODE
-                          </span>
-                        </div>
+                        <span className={`text-[10px] font-black tracking-widest ${theme === "dark" ? "text-white" : "text-gray-900"}`}>MANUAL</span>
                       </button>
                     </div>
                   )}
 
                   {showManualInput && (
-                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4">
                       <div
-                        className={`space-y-6 rounded-3xl border p-6`}
+                        className={`space-y-4 rounded-2xl border p-4`}
                         style={{
-                          backgroundColor: "var(--bg-secondary)",
-                          borderColor:
-                            theme === "dark"
-                              ? "rgba(255,255,255,0.1)"
-                              : "rgba(0,0,0,0.1)",
+                          backgroundColor: theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                          borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
                         }}
                       >
                         <div className="flex items-center justify-between">
-                          <h3
-                            className={`font-black tracking-tight ${
-                              theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            ENTER CODE
-                          </h3>
+                          <h3 className={`text-xs font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>ENTER CODE</h3>
                           <button
-                            onClick={() => {
-                              setShowManualInput(false);
-                              setManualSku("");
-                            }}
-                            className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                            onClick={() => { setShowManualInput(false); setManualSku(""); }}
+                            className="text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-emerald-500"
                           >
                             BACK
                           </button>
                         </div>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={manualSku}
-                            onChange={(e) => setManualSku(e.target.value)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" &&
-                              manualSku.trim() &&
-                              handleBarcodeScanned(manualSku.trim())
-                            }
-                            placeholder="Type Barcode or SKU..."
-                            className={`w-full rounded-2xl border-2 px-6 py-5 text-center text-xl font-bold tracking-tight transition-all focus:border-emerald-500`}
-                            style={{
-                              backgroundColor: "var(--bg-primary)",
-                              color: "var(--text-primary)",
-                              borderColor:
-                                theme === "dark"
-                                  ? "rgba(255,255,255,0.1)"
-                                  : "rgba(0,0,0,0.1)",
-                            }}
-                            autoFocus
-                          />
-                        </div>
+                        <input
+                          type="text"
+                          value={manualSku}
+                          onChange={(e) => setManualSku(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
+                          placeholder="Type Barcode or SKU..."
+                          className={`w-full rounded-xl border-2 px-4 py-3 text-center text-sm font-bold tracking-tight transition-all focus:border-emerald-500`}
+                          style={{
+                            backgroundColor: theme === "dark" ? "rgba(0,0,0,0.2)" : "#ffffff",
+                            color: "var(--text-primary)",
+                            borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                          }}
+                          autoFocus
+                        />
                         <button
-                          onClick={() =>
-                            manualSku.trim() &&
-                            handleBarcodeScanned(manualSku.trim())
-                          }
+                          onClick={() => manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
                           disabled={!manualSku.trim()}
-                          className={`w-full rounded-2xl py-4 font-black tracking-widest text-white shadow-xl transition-all ${
-                            manualSku.trim()
-                              ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/20 active:scale-95"
-                              : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
+                          className={`w-full rounded-xl py-3 text-[10px] font-black tracking-widest text-white shadow-lg transition-all ${
+                            manualSku.trim() ? "bg-gradient-to-r from-emerald-600 to-teal-700 active:scale-95" : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
                           }`}
                         >
                           VALIDATE
@@ -523,61 +431,21 @@ export default function QuantityConfirmationModal({
                   )}
 
                   {barcodeValidation.message && (
-                    <div
-                      className={`flex items-center gap-4 rounded-[1.5rem] border-2 p-5 animate-in zoom-in-95 ${
-                        barcodeValidation.isValid
-                          ? "border-emerald-500/20 bg-emerald-500/10"
-                          : "border-red-500/20 bg-red-500/10"
-                      }`}
-                    >
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-lg ${
-                          barcodeValidation.isValid
-                            ? "bg-emerald-500"
-                            : "bg-red-500"
-                        }`}
-                      >
-                        <svg
-                          className="h-7 w-7"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                        >
+                    <div className={`flex items-center gap-3 rounded-xl border p-3 animate-in zoom-in-95 ${barcodeValidation.isValid ? "border-emerald-500/20 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}>
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white ${barcodeValidation.isValid ? "bg-emerald-500" : "bg-red-500"}`}>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                           {barcodeValidation.isValid ? (
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           ) : (
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                           )}
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p
-                          className={`font-black tracking-tight ${
-                            barcodeValidation.isValid
-                              ? "text-emerald-700 dark:text-emerald-400"
-                              : "text-red-700 dark:text-red-400"
-                          }`}
-                        >
-                          {barcodeValidation.isValid
-                            ? "MATCH FOUND!"
-                            : "NO MATCH"}
+                        <p className={`text-[10px] font-black tracking-tight ${barcodeValidation.isValid ? "text-emerald-500" : "text-red-500"}`}>
+                          {barcodeValidation.isValid ? "MATCH FOUND!" : "NO MATCH"}
                         </p>
-                        <p
-                          className={`text-xs font-bold opacity-80 ${
-                            barcodeValidation.isValid
-                              ? "text-emerald-600 dark:text-emerald-500"
-                              : "text-red-600 dark:text-red-500"
-                          }`}
-                        >
+                        <p className={`text-[9px] font-bold opacity-80 ${barcodeValidation.isValid ? "text-emerald-400" : "text-red-400"}`}>
                           {barcodeValidation.message}
                         </p>
                       </div>
@@ -587,32 +455,16 @@ export default function QuantityConfirmationModal({
               )}
 
               {(barcodeValidation.isValid || isWeightBased) && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                   <div className="group relative">
-                    <div
-                      className={`pointer-events-none absolute inset-y-0 left-6 flex items-center transition-colors ${
-                        theme === "dark" ? "text-gray-600" : "text-gray-300"
-                      }`}
-                    >
-                      <svg
-                        className="h-8 w-8"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                        />
+                    <div className={`pointer-events-none absolute inset-y-0 left-4 flex items-center transition-colors ${theme === "dark" ? "text-gray-600" : "text-gray-300"}`}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                       </svg>
                     </div>
                     <input
                       type="number"
-                      value={
-                        isWeightBased ? foundWeight || "" : foundQuantity || ""
-                      }
+                      value={isWeightBased ? foundWeight || "" : foundQuantity || ""}
                       onChange={(e) => {
                         const val = e.target.value;
                         const numValue = val === "" ? 0 : parseFloat(val);
@@ -625,14 +477,11 @@ export default function QuantityConfirmationModal({
                           setFoundQuantity(Math.floor(validValue));
                         }
                       }}
-                      className={`w-full rounded-[2rem] border-2 py-8 pl-20 pr-8 text-center text-5xl font-black tracking-tighter transition-all focus:border-emerald-500`}
+                      className={`w-full rounded-2xl border-2 py-4 pl-12 pr-6 text-center text-3xl font-black tracking-tighter transition-all focus:border-emerald-500`}
                       style={{
-                        backgroundColor: "var(--bg-secondary)",
+                        backgroundColor: theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.02)",
                         color: "var(--text-primary)",
-                        borderColor:
-                          theme === "dark"
-                            ? "rgba(255,255,255,0.1)"
-                            : "rgba(0,0,0,0.1)",
+                        borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
                       }}
                       placeholder="0"
                       autoFocus
@@ -644,76 +493,33 @@ export default function QuantityConfirmationModal({
                       <button
                         key={mult}
                         onClick={() => {
-                          const val = isWeightBased
-                            ? (currentItem.quantity * mult).toFixed(2)
-                            : Math.floor(currentItem.quantity * mult);
+                          const val = isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult);
                           if (isWeightBased) setFoundWeight(Number(val));
                           setFoundQuantity(Number(val));
                         }}
-                        className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                          (isWeightBased ? foundWeight : foundQuantity) ===
-                          Number(
-                            isWeightBased
-                              ? (currentItem.quantity * mult).toFixed(2)
-                              : Math.floor(currentItem.quantity * mult)
-                          )
-                            ? "scale-105 bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
-                            : theme === "dark"
-                            ? "bg-gray-800 text-gray-400"
-                            : "bg-gray-100 text-gray-500"
+                        className={`rounded-full px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${
+                          (isWeightBased ? foundWeight : foundQuantity) === Number(isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult))
+                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                            : theme === "dark" ? "bg-white/5 text-gray-400" : "bg-gray-100 text-gray-500"
                         }`}
                       >
-                        {mult === 1 ? "FULL" : "HALF"} AMOUNT
+                        {mult === 1 ? "FULL" : "HALF"}
                       </button>
                     ))}
                   </div>
 
                   {isWeightBased && (
-                    <div
-                      className={`rounded-3xl border-2 p-6 ${
-                        exceedsBudget
-                          ? "border-red-500/10 bg-red-500/5"
-                          : "border-emerald-500/10 bg-emerald-500/5"
-                      }`}
-                    >
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                            BUDGET
-                          </p>
-                          <p
-                            className={`text-lg font-black ${
-                              theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            {customerBudget.toLocaleString()} RWF
-                          </p>
+                    <div className={`rounded-2xl border-2 p-4 ${exceedsBudget ? "border-red-500/10 bg-red-500/5" : "border-emerald-500/10 bg-emerald-500/5"}`}>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">BUDGET</p>
+                          <p className={`text-xs font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{customerBudget.toLocaleString()} RWF</p>
                         </div>
-                        <div className="space-y-1 text-right">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                            EST. COST
-                          </p>
-                          <p
-                            className={`text-lg font-black ${
-                              exceedsBudget
-                                ? "text-red-500"
-                                : "text-emerald-500"
-                            }`}
-                          >
-                            {(foundWeight * pricePerUnit).toLocaleString()} RWF
-                          </p>
+                        <div className="space-y-0.5 text-right">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">EST. COST</p>
+                          <p className={`text-xs font-black ${exceedsBudget ? "text-red-500" : "text-emerald-500"}`}>{(foundWeight * pricePerUnit).toLocaleString()} RWF</p>
                         </div>
                       </div>
-                      {refundAmount > 0 && (
-                        <div className="mt-4 flex items-center justify-between border-t border-dashed border-gray-500/20 pt-4">
-                          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                            Refund:
-                          </p>
-                          <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                            {refundAmount.toLocaleString()} RWF
-                          </p>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -722,79 +528,39 @@ export default function QuantityConfirmationModal({
           </div>
 
           <div
-            className={`flex gap-4 border-t p-6 sm:p-10`}
+            className={`flex gap-3 border-t p-5 sm:p-8`}
             style={{
-              backgroundColor: "var(--bg-secondary)",
-              borderTopColor:
-                theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+              backgroundColor: theme === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+              borderTopColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
             }}
           >
             <button
               onClick={onClose}
-              className={`flex-1 rounded-2xl border py-4 font-black tracking-tight transition-all active:scale-95`}
+              className={`flex-1 rounded-xl border py-3 text-[10px] font-black tracking-widest transition-all active:scale-95`}
               style={{
-                backgroundColor: "var(--bg-primary)",
+                backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "#ffffff",
                 color: "var(--text-secondary)",
-                borderColor:
-                  theme === "dark"
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.1)",
+                borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.1)",
               }}
             >
               CANCEL
             </button>
             <button
               onClick={onConfirm}
-              disabled={
-                (!isWeightBased && !barcodeValidation.isValid) ||
-                (isWeightBased ? foundWeight : foundQuantity) <= 0
-              }
-              className={`flex flex-[2] items-center justify-center gap-3 rounded-2xl py-4 font-black tracking-tight shadow-xl transition-all active:scale-95 ${
-                (barcodeValidation.isValid || isWeightBased) &&
-                (isWeightBased ? foundWeight : foundQuantity) > 0
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/30 hover:scale-[1.02]"
+              disabled={(!isWeightBased && !barcodeValidation.isValid) || (isWeightBased ? foundWeight : foundQuantity) <= 0}
+              className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black tracking-widest shadow-lg transition-all active:scale-95 ${
+                (barcodeValidation.isValid || isWeightBased) && (isWeightBased ? foundWeight : foundQuantity) > 0
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/30"
                   : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
               }`}
+              style={{ color: "white" }}
             >
-              {!isWeightBased && !barcodeValidation.isValid ? (
-                <>
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  VERIFY FIRST
-                </>
-              ) : (
-                <>
-                  CONFIRM FOUND
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </>
-              )}
+              {!isWeightBased && !barcodeValidation.isValid ? "VERIFY FIRST" : "CONFIRM FOUND"}
             </button>
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

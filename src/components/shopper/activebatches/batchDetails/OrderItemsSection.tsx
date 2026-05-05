@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../../lib/formatCurrency";
 import { resolveImageUrl } from "../../../../lib/imageUrl";
-import { OrderItem } from "../../types";
+import { OrderItem } from "../types";
 import OrderItemCard from "../OrderItemCard";
 import { useTheme } from "../../../../context/ThemeContext";
 

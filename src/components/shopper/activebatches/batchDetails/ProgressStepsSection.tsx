@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { OrderDetailsType } from "../../types";
+import { OrderDetailsType } from "../types";
 import { useTheme } from "../../../../context/ThemeContext";
 
 interface ProgressStepsSectionProps {

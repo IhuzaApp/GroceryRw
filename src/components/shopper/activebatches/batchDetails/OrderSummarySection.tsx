@@ -2,7 +2,7 @@
 
 import React from "react";
 import { formatCurrency } from "../../../../lib/formatCurrency";
-import { OrderDetailsType } from "../../types";
+import { OrderDetailsType } from "../types";
 import { useTaxRate } from "../../../../hooks/useTaxRate";
 import { useTheme } from "../../../../context/ThemeContext";
 

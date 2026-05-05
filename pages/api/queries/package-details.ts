@@ -35,13 +35,9 @@ const GET_PACKAGE_DETAILS = gql`
       shopper_id
       updated_at
       shoppers {
-        Employment_id
-        Police_Clearance_Cert
         full_name
         phone
-        phone_number
         profile_photo
-        active
       }
       User {
         email

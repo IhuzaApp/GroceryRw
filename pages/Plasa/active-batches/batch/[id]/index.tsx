@@ -73,16 +73,18 @@ interface BatchOrderDetailsType {
     longitude: string;
     placeDetails?: any;
   };
-  Shoppers: {
+  shopper: {
     id: string;
     name: string;
     profile_picture: string;
+    email?: string;
+    phone?: string;
     orders: {
       aggregate: {
         count: number;
       };
     };
-  };
+  } | null;
   // Add order type and reel-specific fields
   orderType?: "regular" | "reel" | "restaurant" | "business" | "package";
   reel?: {
@@ -373,10 +375,12 @@ export const getServerSideProps: GetServerSideProps<
         }
         shopper: shoppers {
           id
-          name
-          email
+          name: full_name
           phone
-          profile_picture
+          profile_picture: profile_photo
+          User {
+            email
+          }
           orders: Orders_aggregate {
             aggregate {
               count
@@ -472,10 +476,12 @@ export const getServerSideProps: GetServerSideProps<
         }
         shopper: shoppers {
           id
-          name
-          email
+          name: full_name
           phone
-          profile_picture
+          profile_picture: profile_photo
+          User {
+            email
+          }
           orders: Orders_aggregate {
             aggregate {
               count
@@ -603,20 +609,20 @@ export const getServerSideProps: GetServerSideProps<
               dish_id
               order_id
             }
-            shoppers {
+            shopper: shoppers {
               id
-              name
-              profile_picture
+              name: full_name
+              profile_picture: profile_photo
+              phone
+              User {
+                email
+                gender
+              }
               orders: Orders_aggregate {
                 aggregate {
                   count
                 }
               }
-              email
-              gender
-              phone
-              password_hash
-              updated_at
             }
             voucher_code
             updated_at
@@ -680,8 +686,8 @@ export const getServerSideProps: GetServerSideProps<
             }
             shopper {
               id
-              name
-              profile_picture
+              name: full_name
+              profile_picture: profile_photo
               phone
             }
           }
@@ -735,8 +741,8 @@ export const getServerSideProps: GetServerSideProps<
             }
             shopper {
               id
-              name
-              profile_photo
+              name: full_name
+              profile_picture: profile_photo
               phone
             }
           }
@@ -821,7 +827,8 @@ export const getServerSideProps: GetServerSideProps<
       actualShopperId,
     });
 
-    const orderShopperId = order.shoppers?.id || order.shopper?.id;
+    const rawShopper = Array.isArray(order.shopper) ? order.shopper[0] : order.shopper;
+    const orderShopperId = rawShopper?.id;
 
     if (
       (!actualShopperId || orderShopperId !== actualShopperId) &&
@@ -863,6 +870,12 @@ export const getServerSideProps: GetServerSideProps<
             timeStyle: "short",
           })
         : null,
+      shopper: rawShopper ? {
+        ...rawShopper,
+        email: rawShopper.User?.email || rawShopper.email || null,
+        name: rawShopper.name || rawShopper.full_name || "Shopper",
+        profile_picture: rawShopper.profile_picture || rawShopper.profile_photo || null
+      } : null,
     };
 
     // For restaurant orders, set shop from Restaurant so ShopInfo/ShopInfoCard display name, location, phone

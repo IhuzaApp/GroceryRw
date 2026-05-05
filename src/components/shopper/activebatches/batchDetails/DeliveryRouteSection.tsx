@@ -108,7 +108,7 @@ export default function DeliveryRouteSection({
 
             return (
               <div
-                key={customerId}
+                key={customerId || index}
                 className={`group relative rounded-[1.25rem] border p-5 transition-all duration-500 sm:p-6 ${
                   isDelivered
                     ? "border-transparent bg-black/5 opacity-60 grayscale dark:bg-white/5"

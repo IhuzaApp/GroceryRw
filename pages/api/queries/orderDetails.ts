@@ -66,28 +66,11 @@ const GET_ORDER_DETAILS = gql`
       }
       shoppers {
         id
-        email
-        phone
-        profile_picture
         full_name
+        phone
         profile_photo
-        phone_number
-        address
-        Employment_id
-        Ratings {
-          created_at
-          customer_id
-          delivery_experience
-          id
-          order_id
-          packaging_quality
-          professionalism
-          rating
-          reel_order_id
-          review
-          reviewed_at
-          shopper_id
-          updated_at
+        User {
+          email
         }
       }
       address: Address {
@@ -306,8 +289,8 @@ const GET_PACKAGE_DELIVERY_DETAILS = gql`
       shoppers {
         id
         full_name
+        phone
         profile_photo
-        Employment_id
       }
       orderedBy: User {
         id
@@ -353,8 +336,9 @@ export default async function handler(
 
     const handleRegularOrder = async (order: any) => {
       let shopperStats = null;
-      if (order.shoppers) {
-        const shopperId = order.shoppers.id;
+      const rawShopper = Array.isArray(order.shoppers) ? order.shoppers[0] : order.shoppers;
+      if (rawShopper) {
+        const shopperId = rawShopper.id;
         const GET_SHOPPER_STATS = gql`
           query GetShopperStats($shopperId: uuid!) {
             Ratings(where: { shopper_id: { _eq: $shopperId } }) {
@@ -450,9 +434,12 @@ export default async function handler(
           dateStyle: "medium",
           timeStyle: "short",
         }),
-        assignedTo: order.shoppers
+        assignedTo: rawShopper
           ? {
-              ...order.shoppers,
+              ...rawShopper,
+              name: rawShopper.full_name,
+              profile_picture: rawShopper.profile_photo,
+              email: rawShopper.User?.email,
               rating: shopperStats?.rating || 0,
               orders_aggregate: shopperStats?.orders_aggregate || {
                 aggregate: { count: 0 },

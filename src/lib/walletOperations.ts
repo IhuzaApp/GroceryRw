@@ -276,7 +276,6 @@ export async function handleShoppingOperation(
   };
 }
 
-// Handle delivered operation - calculate earnings and update balances
 export async function handleDeliveredOperation(
   wallet: any,
   order: any,
@@ -285,7 +284,8 @@ export async function handleDeliveredOperation(
   isRestaurantOrder: boolean,
   isBusinessOrder: boolean = false,
   isPackageOrder: boolean = false,
-  req?: NextApiRequest
+  req?: NextApiRequest,
+  userId?: string
 ) {
   // Get system configuration for platform fee calculation
   const systemConfigResponse = await hasuraClient!.request<{
@@ -496,7 +496,7 @@ export async function handleDeliveredOperation(
 
     // Send confirmation SMS to shopper
     try {
-      const shopperIdForQuery = wallet.user_id; // Using user_id from wallet which is the shopper's user_id
+      const shopperIdForQuery = userId; // Use the provided userId (session ID)
       if (shopperIdForQuery) {
         const shopperData = await hasuraClient!.request<{
           shoppers: Array<{ User: { phone: string } }>;
@@ -815,6 +815,22 @@ export async function processWalletOperation(
   const isBusinessOrderFinal = resolvedBusiness;
   const isPackageOrderFinal = resolvedPackage;
 
+  // Resolve the shopper_id from the provided userId (session ID)
+  const shopperRecord = await hasuraClient!.request<{
+    shoppers: Array<{ id: string }>;
+  }>(
+    gql`
+      query GetShopperIdForWallet($user_id: uuid!) {
+        shoppers(where: { user_id: { _eq: $user_id } }) {
+          id
+        }
+      }
+    `,
+    { user_id: userId }
+  );
+
+  const resolvedShopperId = shopperRecord.shoppers?.[0]?.id || order.shopper_id || userId;
+
   // Get shopper wallet
   const walletData = await hasuraClient!.request<{
     Wallets: Array<{
@@ -823,7 +839,7 @@ export async function processWalletOperation(
       reserved_balance: string;
     }>;
   }>(GET_SHOPPER_WALLET, {
-    shopper_id: userId,
+    shopper_id: resolvedShopperId,
   });
 
   if (!walletData.Wallets || walletData.Wallets.length === 0) {
@@ -927,7 +943,8 @@ export async function processWalletOperation(
         isRestaurantOrderFinal,
         isBusinessOrderFinal,
         isPackageOrderFinal,
-        req
+        req,
+        userId
       );
 
     case "cancelled":

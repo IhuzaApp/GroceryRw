@@ -182,10 +182,12 @@ const GET_ORDER_DETAILS = gql`
       }
       shoppers {
         id
-        name
-        email
+        name: full_name
+        profile_picture: profile_photo
         phone
-        profile_picture
+        User {
+          email
+        }
       }
       shop_id
       shopper_id
@@ -274,10 +276,12 @@ const GET_REEL_ORDER_DETAILS = gql`
       }
       shoppers {
         id
-        name
-        email
+        name: full_name
+        profile_picture: profile_photo
         phone
-        profile_picture
+        User {
+          email
+        }
       }
       address: Address {
         latitude
@@ -400,16 +404,13 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
       }
       shoppers {
         id
-        name
-        profile_picture
-        email
+        name: full_name
+        profile_picture: profile_photo
         phone
-        gender
-        is_active
-        password_hash
-        role
-        created_at
-        updated_at
+        User {
+          email
+          gender
+        }
         orders: Orders_aggregate {
           aggregate {
             count
@@ -512,9 +513,9 @@ const GET_RELATED_REGULAR_ORDERS = gql`
       }
       shoppers {
         id
-        name
+        name: full_name
         phone
-        profile_picture
+        profile_picture: profile_photo
       }
       shop_id
       total
@@ -909,7 +910,7 @@ export default async function handler(
         total: subTotal + serviceFee + deliveryFee,
         estimatedEarnings: totalEarnings,
         orderedBy: orderData.orderedBy, // Include orderedBy data (actual customer)
-        assignedTo: orderData.Shoppers, // Include assignedTo data (shopper)
+        assignedTo: Array.isArray(orderData.shoppers) ? orderData.shoppers[0] : orderData.shoppers, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
         shop: orderData.shop, // Include shop data
         combinedOrderId: orderData.combined_order_id,
@@ -972,7 +973,7 @@ export default async function handler(
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
         orderedBy: orderData.user, // Add orderedBy for compatibility
-        assignedTo: orderData.Shoppers, // Include assignedTo data (shopper)
+        assignedTo: Array.isArray(orderData.shoppers) ? orderData.shoppers[0] : orderData.shoppers, // Include assignedTo data (shopper)
         customerId: orderData.user?.id, // Add customerId for compatibility
         discount: orderData.discount || 0, // Add discount field
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL

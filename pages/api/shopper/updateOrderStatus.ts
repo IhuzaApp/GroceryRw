@@ -217,6 +217,31 @@ export default async function handler(
   }
 
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
+    // Resolve the shopper's actual shoppers.id from their user_id.
+    const GET_SHOPPER_ID = gql`
+      query GetShopperId($user_id: uuid!) {
+        shoppers(where: { user_id: { _eq: $user_id } }) {
+          id
+        }
+      }
+    `;
+
+    const shopperLookupData = (await hasuraClient.request(GET_SHOPPER_ID, {
+      user_id: userId,
+    })) as any;
+
+    const shopperRecord = shopperLookupData.shoppers?.[0];
+    if (!shopperRecord) {
+      return res.status(400).json({
+        error: "Shopper profile not found. Please complete your registration.",
+      });
+    }
+    const shopperId = shopperRecord.id;
+
     // First check if this is a regular order or reel order
     const CHECK_REGULAR_ORDER = gql`
       query CheckRegularOrder($orderId: uuid!, $shopperId: uuid!) {
@@ -285,7 +310,7 @@ export default async function handler(
       }>;
     }>(CHECK_REGULAR_ORDER, {
       orderId,
-      shopperId: userId,
+      shopperId: shopperId,
     });
 
     if (regularOrderCheck.Orders && regularOrderCheck.Orders.length > 0) {
@@ -301,7 +326,7 @@ export default async function handler(
         }>;
       }>(CHECK_REEL_ORDER, {
         orderId,
-        shopperId: userId,
+        shopperId: shopperId,
       });
 
       if (reelOrderCheck.reel_orders && reelOrderCheck.reel_orders.length > 0) {
@@ -318,7 +343,7 @@ export default async function handler(
           }>;
         }>(CHECK_RESTAURANT_ORDER, {
           orderId,
-          shopperId: userId,
+          shopperId: shopperId,
         });
 
         if (
@@ -338,7 +363,7 @@ export default async function handler(
             }>;
           }>(CHECK_BUSINESS_ORDER, {
             orderId,
-            shopperId: userId,
+            shopperId: shopperId,
           });
 
           if (
@@ -356,7 +381,7 @@ export default async function handler(
               }>;
             }>(CHECK_PACKAGE_ORDER, {
               orderId,
-              shopperId: userId,
+              shopperId: shopperId,
             });
 
             if (
@@ -429,6 +454,7 @@ export default async function handler(
           userId,
           orderId,
           "shopping",
+          false,
           false,
           false,
           false,
@@ -697,7 +723,7 @@ export default async function handler(
           ASSIGN_PACKAGE_TO_SHOPPER,
           {
             orderId,
-            shopperId: userId,
+            shopperId: shopperId,
             updated_at: currentTimestamp,
           }
         );
@@ -867,7 +893,7 @@ export default async function handler(
             ASSIGN_PACKAGE_TO_SHOPPER,
             {
               orderId,
-              shopperId: userId,
+              shopperId: shopperId,
               updated_at: currentTimestamp,
             }
           );
@@ -1153,6 +1179,7 @@ export default async function handler(
           "cancelled",
           isReelOrder,
           isRestaurantOrder,
+          false,
           false,
           req
         );

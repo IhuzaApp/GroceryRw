@@ -178,7 +178,7 @@ export default function HeaderLayout({
 
   useEffect(() => {
     // Listen for unread messages if user is logged in
-    if (session?.user?.id) {
+    if (session?.user?.id && db) {
       const userId = session.user.id;
 
       // Create a query for messages where the user is the recipient and messages are unread
