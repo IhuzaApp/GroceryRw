@@ -1,15 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/router";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
   Users,
+  User,
   Fuel,
   Settings2,
   Star,
   ChevronRight,
+  ChevronLeft,
   MessageSquare,
   ShieldCheck,
   ArrowLeft,
@@ -30,23 +34,33 @@ import {
   Phone,
   CheckCircle2,
   Loader2,
-  Scan,
+  Image as ImageIcon,
 } from "lucide-react";
-import { Car } from "../../constants/dummyCars";
+import { uploadToFirebase } from "../../lib/firebase";
+import toast from "react-hot-toast";
+import { Car } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import CameraCapture from "../ui/CameraCapture";
+import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
 
-export default function CarDetailsPage({ car }: { car: Car }) {
+export default function CarDetailsPage({
+  car,
+}: {
+  car: Car & { bookings?: any[] };
+}) {
   const router = useRouter();
   const { theme } = useTheme();
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [activeBooking, setActiveBooking] = useState<any>(null);
   const [isBooked, setIsBooked] = useState(false);
 
   useEffect(() => {
     const bookings = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-    setIsBooked(bookings.some((b: any) => b.id === car.id));
+    const found = bookings.find((b: any) => b.id === car.id);
+    setActiveBooking(found);
+    setIsBooked(!!found);
   }, [car.id]);
 
   return (
@@ -284,14 +298,18 @@ export default function CarDetailsPage({ car }: { car: Car }) {
 
                 <div className="mb-8 flex items-center justify-between rounded-3xl bg-gray-50 p-4 dark:bg-white/5 md:p-5">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 overflow-hidden rounded-full ring-4 ring-green-500/10">
-                      <Image
-                        src={car.owner.image}
-                        alt={car.owner.name}
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200 ring-4 ring-green-500/10 dark:bg-white/10">
+                      {car.owner?.image ? (
+                        <Image
+                          src={car.owner.image}
+                          alt={car.owner.name || "Owner"}
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-6 w-6 text-gray-400" />
+                      )}
                     </div>
                     <div>
                       <p className="font-outfit text-[10px] font-normal uppercase tracking-widest text-gray-400">
@@ -304,7 +322,9 @@ export default function CarDetailsPage({ car }: { car: Car }) {
                   </div>
                   {isBooked && (
                     <Link
-                      href={`/Messages?chat=${car.owner.id}`}
+                      href={`/Messages/${
+                        activeBooking?.bookingId || activeBooking?.id
+                      }?chat=true`}
                       className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-green-500 shadow-lg transition-transform hover:scale-110 active:scale-90 dark:bg-white/10"
                     >
                       <MessageSquare className="h-5 w-5" />
@@ -386,9 +406,99 @@ function BookingModal({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [walletBalance, setWalletBalance] = useState(0);
   const [licensePhoto, setLicensePhoto] = useState<string | null>(null);
+  const [uploadingLicense, setUploadingLicense] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<
+    null | "initiating_payment" | "awaiting_approval" | "success"
+  >(null);
+  const [momoReference, setMomoReference] = useState<string | null>(null);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const isNavigatingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isDateBooked = (date: Date) => {
+    const bookings = (car as any).bookings || [];
+    if (bookings.length === 0) return false;
+    const targetTime = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    ).getTime();
+    for (const booking of bookings) {
+      if (booking.status !== "PAID" && booking.status !== "approved") continue;
+      const s = new Date(booking.pickup_date);
+      const startTime = new Date(
+        s.getFullYear(),
+        s.getMonth(),
+        s.getDate()
+      ).getTime();
+      const e = new Date(booking.return_date);
+      const endTime = new Date(
+        e.getFullYear(),
+        e.getMonth(),
+        e.getDate()
+      ).getTime();
+      if (targetTime >= startTime && targetTime <= endTime) return true;
+    }
+    return false;
+  };
+
+  const shouldDisableDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date < today) return true;
+    return isDateBooked(date);
+  };
+
+  const hasBookedDatesInRange = (start: string, end: string) => {
+    if (!start || !end) return false;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (e < s) return false;
+    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+      if (isDateBooked(d)) return true;
+    }
+    return false;
+  };
+
+  const isRangeInvalid = hasBookedDatesInRange(startDate, endDate);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
+  const base64ToBlob = (base64: string) => {
+    const byteString = atob(base64.split(",")[1]);
+    const mimeString = base64.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  };
+
+  const handleLicenseCapture = async (imageDataUrl: string) => {
+    setUploadingLicense(true);
+    try {
+      const blob = base64ToBlob(imageDataUrl);
+      const file = new File([blob], `license-${Date.now()}.jpg`, {
+        type: "image/jpeg",
+      });
+      const path = `licenses/${Date.now()}-car-rental.jpg`;
+      const url = await uploadToFirebase(file, path);
+      setLicensePhoto(url);
+      toast.success("License uploaded successfully!");
+    } catch (error) {
+      console.error("License upload failed:", error);
+      toast.error("Failed to upload license. Please try again.");
+    } finally {
+      setUploadingLicense(false);
+    }
+  };
 
   useEffect(() => {
     if (step === 2) {
@@ -452,41 +562,167 @@ function BookingModal({
   };
 
   const days = calculateDays();
-  const subtotal = car.price * days;
+  const subtotal = Number(car.price || 0) * days;
   const serviceFee = Number((subtotal * 0.015).toFixed(2));
-  const deposit = car.driverOption === "none" ? car.securityDeposit : 0;
+  const deposit =
+    car.driverOption === "none" ? Number(car.securityDeposit || 0) : 0;
   const totalUpfront = subtotal + serviceFee + deposit;
 
   const handleBooking = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Please select pick-up and return dates.");
+      return;
+    }
+
+    if (car.driverOption === "none" && !licensePhoto) {
+      toast.error("Please capture your driving license first.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const bookings = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-      bookings.push({
-        ...car,
-        bookingId: Math.random().toString(36).substr(2, 9),
-        startDate,
-        endDate,
-        guests,
-        total: totalUpfront,
-        securityDeposit: deposit,
-        paymentMethod,
-        phoneNumber,
-        licensePhoto,
-        bookedAt: new Date().toISOString(),
+    try {
+      // 1. Create the booking in DB first
+      const response = await fetch("/api/mutations/book-car", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: subtotal.toString(),
+          carVideo_Status: "pending",
+          driving_license: licensePhoto || "",
+          guests: guests.toString(),
+          pickup_date: new Date(startDate).toISOString(),
+          refundable_fee: deposit.toString(),
+          return_date: new Date(endDate).toISOString(),
+          services_fee: serviceFee.toString(),
+          status: paymentMethod === "momo" ? "PENDING_PAYMENT" : "PAID",
+          vehicle_id: car.id,
+        }),
       });
-      localStorage.setItem("car_bookings", JSON.stringify(bookings));
-      setLoading(false);
-      onSuccess();
-    }, 2000);
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Booking failed");
+
+      const bookingId = data.booking?.id;
+
+      // 2. If MoMo, initiate payment flow
+      if (paymentMethod === "momo") {
+        setPaymentStep("initiating_payment");
+        const momoRes = await fetch("/api/momo/request-to-pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: totalUpfront.toString(),
+            payerNumber: phoneNumber,
+            vehicleBookingsId: bookingId,
+            payerMessage: `Booking for ${car.name}`,
+            externalId: bookingId,
+          }),
+        });
+
+        const momoData = await momoRes.json();
+        if (momoData.referenceId) {
+          setMomoReference(momoData.referenceId);
+          setPaymentStep("awaiting_approval");
+          startPolling(momoData.referenceId, bookingId);
+        } else {
+          throw new Error(momoData.error || "MoMo payment initiation failed");
+        }
+      } else {
+        // Successful non-MoMo booking
+        finalizeBooking(bookingId);
+      }
+    } catch (error: any) {
+      console.error("Booking failed:", error);
+      toast.error(error.message || "Failed to confirm booking.");
+      setPaymentStep(null);
+    } finally {
+      if (paymentMethod !== "momo") setLoading(false);
+    }
+  };
+
+  const startPolling = async (referenceId: string, bookingId: string) => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    let attempts = 0;
+    const maxAttempts = 40; // ~2 minutes
+
+    pollRef.current = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        setPaymentStep(null);
+        setLoading(false);
+        toast.error("Payment timeout. Please check your MoMo app.");
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `/api/momo/request-to-pay-status?referenceId=${referenceId}`
+        );
+        const data = await res.json();
+
+        if (data.status === "SUCCESSFUL") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setPaymentStep("success");
+          setTimeout(() => {
+            finalizeBooking(bookingId);
+          }, 2000);
+        } else if (data.status === "FAILED") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setPaymentStep(null);
+          setLoading(false);
+          toast.error("Payment failed or was cancelled.");
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 3000);
+  };
+
+  const finalizeBooking = (bookingId: string) => {
+    if (isNavigatingRef.current) return;
+
+    const bookings = JSON.parse(localStorage.getItem("car_bookings") || "[]");
+    const newBooking = {
+      ...car,
+      bookingId: bookingId || Math.random().toString(36).substr(2, 9),
+      startDate,
+      endDate,
+      guests,
+      total: totalUpfront,
+      securityDeposit: deposit,
+      paymentMethod,
+      phoneNumber,
+      licensePhoto,
+      bookedAt: new Date().toISOString(),
+    };
+
+    // Deduplicate by bookingId
+    const existingIndex = bookings.findIndex(
+      (b: any) => b.bookingId === newBooking.bookingId
+    );
+    if (existingIndex !== -1) {
+      bookings[existingIndex] = newBooking;
+    } else {
+      bookings.push(newBooking);
+    }
+
+    localStorage.setItem("car_bookings", JSON.stringify(bookings));
+    setLoading(false);
+    setPaymentStep(null);
+    toast.success("Booking confirmed! 🚗");
+
+    isNavigatingRef.current = true;
+    onSuccess();
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 md:items-center md:p-4">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={onClose}
       />
-      <div className="relative flex h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-[3rem] border border-white/5 bg-white font-sans text-gray-900 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] duration-300 animate-in slide-in-from-bottom-10 dark:bg-[#121212] dark:text-white md:h-auto md:rounded-[3rem] md:zoom-in-95">
+      <div className="relative flex h-[100dvh] w-full max-w-xl flex-col overflow-hidden border border-white/5 bg-white font-sans text-gray-900 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] duration-300 animate-in slide-in-from-bottom-10 dark:bg-[#121212] dark:text-white sm:h-auto sm:max-h-[90vh] sm:rounded-[3rem] sm:zoom-in-95">
         <div className="flex items-center justify-between border-b border-gray-100 p-6 dark:border-white/5 md:p-8">
           <div>
             <h2 className="font-outfit text-xl font-black md:text-2xl">
@@ -533,16 +769,48 @@ function BookingModal({
                 <DateInput
                   label="Pick-up Date"
                   value={startDate}
-                  onChange={setStartDate}
+                  onChange={(val: string) => {
+                    if (val && isDateBooked(new Date(val))) {
+                      toast.error(
+                        "This date is already booked. Please choose another."
+                      );
+                      return;
+                    }
+                    setStartDate(val);
+                    // Clear end date if it's before the new start
+                    if (endDate && val > endDate) setEndDate("");
+                  }}
                   theme={theme}
+                  min={new Date().toISOString().split("T")[0]}
+                  isDateBooked={isDateBooked}
                 />
                 <DateInput
                   label="Return Date"
                   value={endDate}
-                  onChange={setEndDate}
+                  onChange={(val: string) => {
+                    if (val && isDateBooked(new Date(val))) {
+                      toast.error(
+                        "This date is already booked. Please choose another."
+                      );
+                      return;
+                    }
+                    setEndDate(val);
+                  }}
                   theme={theme}
+                  min={startDate || new Date().toISOString().split("T")[0]}
+                  isDateBooked={isDateBooked}
                 />
               </div>
+
+              {isRangeInvalid && (
+                <div className="flex items-center gap-2 rounded-2xl bg-red-500/10 p-4 text-red-500">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-xs font-medium">
+                    The selected dates overlap with an existing booking. Please
+                    choose different dates.
+                  </span>
+                </div>
+              )}
 
               <div className="flex flex-col gap-5 md:gap-6">
                 <div>
@@ -671,7 +939,14 @@ function BookingModal({
                         : "border-gray-200 bg-gray-50/50 hover:bg-gray-100 dark:border-white/10 dark:bg-white/[0.02] dark:hover:bg-white/5"
                     }`}
                   >
-                    {licensePhoto ? (
+                    {uploadingLicense ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-green-500">
+                          Uploading to Secure Storage...
+                        </span>
+                      </div>
+                    ) : licensePhoto ? (
                       <div className="relative h-32 w-full overflow-hidden rounded-2xl shadow-xl">
                         <img
                           src={licensePhoto}
@@ -685,7 +960,7 @@ function BookingModal({
                     ) : (
                       <>
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
-                          <Scan className="h-8 w-8" />
+                          <ImageIcon className="h-8 w-8" />
                         </div>
                         <div className="text-center">
                           <p className="font-outfit text-sm font-normal">
@@ -702,7 +977,7 @@ function BookingModal({
                   <CameraCapture
                     isOpen={showCamera}
                     onClose={() => setShowCamera(false)}
-                    onCapture={(img) => setLicensePhoto(img)}
+                    onCapture={handleLicenseCapture}
                     title="Capture Driving License"
                   />
                 </div>
@@ -825,6 +1100,7 @@ function BookingModal({
                 onClick={handleBooking}
                 disabled={
                   loading ||
+                  isRangeInvalid ||
                   (car.driverOption === "none" && !licensePhoto) ||
                   (paymentMethod === "momo" && !phoneNumber) ||
                   (paymentMethod === "wallet" && walletBalance < totalUpfront)
@@ -841,28 +1117,294 @@ function BookingModal({
           )}
         </div>
       </div>
+      {paymentStep && <PaymentProcessingOverlay processingStep={paymentStep} />}
     </div>
   );
 }
 
-function DateInput({ label, value, onChange, theme }: any) {
+function DateInput({ label, value, onChange, theme, min, isDateBooked }: any) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0, width: 288 });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const minDate = min ? new Date(min + "T00:00:00") : today;
+  minDate.setHours(0, 0, 0, 0);
+
+  const parsed = value ? new Date(value + "T00:00:00") : null;
+  const [viewYear, setViewYear] = useState(
+    parsed?.getFullYear() ?? today.getFullYear()
+  );
+  const [viewMonth, setViewMonth] = useState(
+    parsed?.getMonth() ?? today.getMonth()
+  );
+
+  // Sync view when value changes externally
+  useEffect(() => {
+    if (value) {
+      const d = new Date(value + "T00:00:00");
+      setViewYear(d.getFullYear());
+      setViewMonth(d.getMonth());
+    }
+  }, [value]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        !target?.closest("[data-cal-portal]")
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const openCalendar = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const top = spaceBelow >= 340 ? rect.bottom + 8 : rect.top - 350;
+      setPopupPos({ top, left: rect.left, width: Math.max(rect.width, 288) });
+    }
+    setIsOpen((o) => !o);
+  };
+
+  const getDaysInMonth = (year: number, month: number) =>
+    new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) =>
+    new Date(year, month, 1).getDay();
+
+  const MONTH_NAMES = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else setViewMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else setViewMonth((m) => m + 1);
+  };
+
+  const handleSelect = (day: number) => {
+    const d = new Date(viewYear, viewMonth, day);
+    d.setHours(0, 0, 0, 0);
+    if (d < minDate) return;
+    if (isDateBooked && isDateBooked(d)) return;
+    const iso = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+    onChange(iso);
+    setIsOpen(false);
+  };
+
+  const displayValue = parsed
+    ? parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Select date";
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
   return (
-    <div>
+    <div ref={containerRef} className="relative">
       <label className="mb-2 block font-outfit text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400">
         {label}
       </label>
-      <div className="relative">
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full rounded-[1.25rem] border p-3 text-xs font-normal outline-none transition-all focus:ring-4 focus:ring-green-500/20 md:p-4 md:text-sm ${
-            theme === "dark"
-              ? "border-white/10 bg-white/5 text-white"
-              : "border-gray-200 bg-white text-gray-900"
-          }`}
-        />
-      </div>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={openCalendar}
+        className={`flex w-full items-center justify-between rounded-[1.25rem] border p-3 text-left text-xs font-normal outline-none transition-all focus:ring-4 focus:ring-green-500/20 md:p-4 md:text-sm ${
+          theme === "dark"
+            ? "border-white/10 bg-white/5 text-white"
+            : "border-gray-200 bg-white text-gray-900"
+        } ${
+          !value ? (theme === "dark" ? "text-gray-500" : "text-gray-400") : ""
+        }`}
+      >
+        <span>{displayValue}</span>
+        <Calendar className="h-4 w-4 shrink-0 text-gray-400" />
+      </button>
+
+      {isOpen &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div
+            data-cal-portal="true"
+            style={{
+              position: "fixed",
+              top: popupPos.top,
+              left: popupPos.left,
+              width: popupPos.width,
+              zIndex: 99999,
+            }}
+            className={`overflow-hidden rounded-[1.5rem] border shadow-2xl ${
+              theme === "dark"
+                ? "border-white/10 bg-[#1a1a1a]"
+                : "border-gray-100 bg-white"
+            }`}
+          >
+            {/* Header */}
+            <div
+              className={`flex items-center justify-between px-4 py-3 ${
+                theme === "dark"
+                  ? "border-b border-white/5"
+                  : "border-b border-gray-100"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={prevMonth}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                  theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="font-outfit text-sm font-black">
+                {MONTH_NAMES[viewMonth]} {viewYear}
+              </span>
+              <button
+                type="button"
+                onClick={nextMonth}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                  theme === "dark" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                }`}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 px-3 pt-3">
+              {DAY_NAMES.map((d) => (
+                <div
+                  key={d}
+                  className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Days grid */}
+            <div className="grid grid-cols-7 gap-y-0.5 px-3 pb-3">
+              {cells.map((day, idx) => {
+                if (!day) return <div key={idx} />;
+
+                const cellDate = new Date(viewYear, viewMonth, day);
+                cellDate.setHours(0, 0, 0, 0);
+                const isPast = cellDate < minDate;
+                const isBooked = isDateBooked ? isDateBooked(cellDate) : false;
+                const isDisabled = isPast || isBooked;
+                const isSelected =
+                  value ===
+                  `${viewYear}-${String(viewMonth + 1).padStart(
+                    2,
+                    "0"
+                  )}-${String(day).padStart(2, "0")}`;
+                const isToday = cellDate.getTime() === today.getTime();
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => handleSelect(day)}
+                    className={`relative mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all ${
+                      isSelected
+                        ? "bg-green-500 font-black text-white shadow-md shadow-green-500/30"
+                        : isBooked
+                        ? theme === "dark"
+                          ? "cursor-not-allowed text-red-400/50 line-through"
+                          : "cursor-not-allowed text-red-400/60 line-through"
+                        : isPast
+                        ? "cursor-not-allowed opacity-25"
+                        : isToday
+                        ? theme === "dark"
+                          ? "font-black text-green-400 ring-2 ring-green-500/40"
+                          : "font-black text-green-600 ring-2 ring-green-500/30"
+                        : theme === "dark"
+                        ? "text-white hover:bg-white/10"
+                        : "text-gray-900 hover:bg-gray-100"
+                    }`}
+                    title={
+                      isBooked
+                        ? "Already booked"
+                        : isPast
+                        ? "Past date"
+                        : undefined
+                    }
+                  >
+                    {day}
+                    {isBooked && (
+                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        <span
+                          className={`h-px w-5 rotate-[30deg] ${
+                            theme === "dark" ? "bg-red-400/60" : "bg-red-400/70"
+                          }`}
+                        />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div
+              className={`flex items-center gap-3 border-t px-4 py-2.5 text-[10px] font-medium ${
+                theme === "dark"
+                  ? "border-white/5 text-gray-500"
+                  : "border-gray-100 text-gray-400"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-green-500" /> Selected
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-red-400/50" /> Booked
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-gray-300/50" />{" "}
+                Unavailable
+              </span>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

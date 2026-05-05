@@ -1,0 +1,97 @@
+/* Hyper-Modern Command Center Dashboard */
+:root {
+  --dev-bg: #fdfdfd;
+  --dev-card-bg: rgba(255, 255, 255, 0.7);
+  --dev-border: rgba(0, 0, 0, 0.04);
+  --dev-text-main: #0f172a;
+  --dev-accent: #8b5cf6;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+.dev-page-container {
+  min-height: 100vh;
+  background-color: var(--dev-bg);
+  background-image: radial-gradient(
+      at 0% 0%,
+      rgba(99, 102, 241, 0.05) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+  color: var(--dev-text-main);
+  font-family: "Inter", sans-serif;
+}
+
+.premium-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-card {
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+.premium-input {
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.premium-input:focus {
+  background: white;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+  outline: none;
+}
+
+.premium-button {
+  background: #0f172a;
+  border-radius: 1rem;
+  padding: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: all 0.3s;
+}
+
+.premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom Scrollbar for the Command Center */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 20px;
+  border: 2px solid #f8fafc;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* RSuite Overrides for Premium feel */
+.rs-picker-toggle {
+  border-radius: 1rem !important;
+  border: none !important;
+  background: #f1f5f9 !important;
+}
+
+.rs-btn-subtle:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Mask for long messages in table */
+.mask-fade-right {
+  mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+}

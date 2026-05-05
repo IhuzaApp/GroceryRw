@@ -16,6 +16,13 @@ import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { PendingReviewMessage } from "../business/PendingReviewMessage";
+import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
+import { useGoogleMap } from "../../context/GoogleMapProvider";
+import { Autocomplete } from "@react-google-maps/api";
+import { useEffect, useRef } from "react";
+import { uploadToFirebase } from "../../utils/firebaseUtils";
+import LoadingScreen from "../ui/LoadingScreen";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -72,7 +79,12 @@ const STEPS = [
 export default function CarPartnerOnboarding() {
   const { theme } = useTheme();
   const router = useRouter();
+  const { data: session } = useSession();
+  const { isLoaded } = useGoogleMap();
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [isChecking, setIsChecking] = useState(true);
   const [formData, setFormData] = useState({
     accountType: "business" as "business" | "personal",
     businessName: "",
@@ -82,15 +94,134 @@ export default function CarPartnerOnboarding() {
     fleetSize: "",
     carTypes: [] as string[],
     documentsUploaded: false,
+    nationalIdOrPassport: "",
+    license: "",
+    business_cert: "",
+    proof_address: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch("/api/queries/check-logistics-account");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasAccount) {
+            router.push("/Cars/dashboard");
+            return;
+          }
+        }
+        setIsChecking(false);
+      } catch (error) {
+        console.error("Error checking logistics account:", error);
+        setIsChecking(false);
+      }
+    };
+
+    if (session?.user) {
+      checkAccount();
+    } else if (session === null) {
+      setIsChecking(false);
+    }
+  }, [session, router]);
+
+  useEffect(() => {
+    if (session?.user && formData.accountType === "personal") {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || session.user?.name || "",
+      }));
+
+      fetch("/api/queries/addresses")
+        .then((res) => res.json())
+        .then((data) => {
+          const defaultAddr =
+            data.addresses?.find((a: any) => a.is_default) ||
+            data.addresses?.[0];
+          if (defaultAddr) {
+            setFormData((prev) => ({
+              ...prev,
+              personalAddress: prev.personalAddress || defaultAddr.street || "",
+            }));
+          }
+        })
+        .catch((err) => console.error("Error fetching address:", err));
+    }
+  }, [session, formData.accountType]);
+
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      const address = place.formatted_address || "";
+      if (formData.accountType === "business") {
+        setFormData({ ...formData, businessAddress: address });
+      } else {
+        setFormData({ ...formData, personalAddress: address });
+      }
+    }
+  };
 
   const nextStep = () =>
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-  const handleFinish = () => {
-    setIsSubmitted(true);
+  const handleFileUpload = async (file: File, fieldName: string) => {
+    if (!session?.user?.id) return;
+
+    const toastId = toast.loading(
+      `Uploading ${fieldName.replace(/_/g, " ")}...`
+    );
+    try {
+      const path = `verifications/cars/${session.user.id}/${fieldName}`;
+      const url = await uploadToFirebase(file, path);
+      setFormData((prev) => ({ ...prev, [fieldName]: url }));
+      toast.success("File uploaded successfully", { id: toastId });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload file", { id: toastId });
+    }
+  };
+
+  const handleFinish = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        "/api/mutations/register-logistics-account",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address:
+              formData.accountType === "business"
+                ? formData.businessAddress
+                : formData.personalAddress,
+            businessName:
+              formData.accountType === "business" ? formData.businessName : "",
+            fullname: formData.fullName || formData.businessName,
+            nationalIdOrPassport: formData.nationalIdOrPassport,
+            license: formData.license,
+            business_cert: formData.business_cert,
+            proof_address: formData.proof_address,
+            num_of_cars: formData.fleetSize,
+            type: formData.accountType,
+            status: "pending",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to register");
+      }
+
+      setIsSubmitted(true);
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderStep = () => {
@@ -230,21 +361,21 @@ export default function CarPartnerOnboarding() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
-                      Business Address
+                      Business Registration Number
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 123 Rental St, Kigali"
+                      placeholder="e.g. RDB-123456"
                       className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
                         theme === "dark"
                           ? "border-white/10 bg-white/5 text-white"
                           : "border-gray-200 bg-gray-50 text-gray-900"
                       }`}
-                      value={formData.businessAddress}
+                      value={formData.business_cert}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          businessAddress: e.target.value,
+                          business_cert: e.target.value,
                         })
                       }
                     />
@@ -272,24 +403,89 @@ export default function CarPartnerOnboarding() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
-                      Home Address
+                      National ID / Passport
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Kimironko, Kigali"
+                      placeholder="Enter ID number"
                       className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
                         theme === "dark"
                           ? "border-white/10 bg-white/5 text-white"
                           : "border-gray-200 bg-gray-50 text-gray-900"
                       }`}
-                      value={formData.personalAddress}
+                      value={formData.nationalIdOrPassport}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          personalAddress: e.target.value,
+                          nationalIdOrPassport: e.target.value,
                         })
                       }
                     />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
+                      Driver's License Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter license number"
+                      className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
+                        theme === "dark"
+                          ? "border-white/10 bg-white/5 text-white"
+                          : "border-gray-200 bg-gray-50 text-gray-900"
+                      }`}
+                      value={formData.license}
+                      onChange={(e) =>
+                        setFormData({ ...formData, license: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-black uppercase tracking-widest text-gray-400">
+                      Home Address
+                    </label>
+                    {isLoaded ? (
+                      <Autocomplete
+                        onLoad={(autocomplete) =>
+                          (autocompleteRef.current = autocomplete)
+                        }
+                        onPlaceChanged={onPlaceChanged}
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search home address..."
+                          className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
+                            theme === "dark"
+                              ? "border-white/10 bg-white/5 text-white"
+                              : "border-gray-200 bg-gray-50 text-gray-900"
+                          }`}
+                          value={formData.personalAddress}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              personalAddress: e.target.value,
+                            })
+                          }
+                        />
+                      </Autocomplete>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. Kimironko, Kigali"
+                        className={`w-full rounded-2xl border p-4 text-lg font-normal outline-none transition-all focus:ring-2 focus:ring-green-500/50 ${
+                          theme === "dark"
+                            ? "border-white/10 bg-white/5 text-white"
+                            : "border-gray-200 bg-gray-50 text-gray-900"
+                        }`}
+                        value={formData.personalAddress}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            personalAddress: e.target.value,
+                          })
+                        }
+                      />
+                    )}
                   </div>
                 </>
               )}
@@ -335,15 +531,28 @@ export default function CarPartnerOnboarding() {
             </p>
             <div className="space-y-4">
               {(formData.accountType === "business"
-                ? ["Business License", "Trading Permit", "Owner ID / Passport"]
+                ? [
+                    { label: "Business License", field: "business_cert" },
+                    { label: "Trading Permit", field: "proof_address" },
+                    {
+                      label: "Owner ID / Passport",
+                      field: "nationalIdOrPassport",
+                    },
+                  ]
                 : [
-                    "National ID / Passport",
-                    "Driver's License",
-                    "Proof of Address",
+                    {
+                      label: "National ID / Passport",
+                      field: "nationalIdOrPassport",
+                    },
+                    { label: "Driver's License", field: "license" },
+                    {
+                      label: "Proof of Address (from irembo.com)",
+                      field: "proof_address",
+                    },
                   ]
               ).map((doc) => (
                 <div
-                  key={doc}
+                  key={doc.label}
                   className={`flex items-center justify-between rounded-3xl border p-6 ${
                     theme === "dark"
                       ? "border-white/10 bg-white/5"
@@ -351,19 +560,48 @@ export default function CarPartnerOnboarding() {
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-500/10 text-gray-500">
-                      <FileText className="h-6 w-6" />
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                        formData[doc.field as keyof typeof formData]
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-500/10 text-gray-500"
+                      }`}
+                    >
+                      {formData[doc.field as keyof typeof formData] ? (
+                        <Check className="h-6 w-6" />
+                      ) : (
+                        <FileText className="h-6 w-6" />
+                      )}
                     </div>
                     <div>
-                      <h4 className="font-black">{doc}</h4>
-                      <p className="text-xs font-black uppercase tracking-widest text-green-500">
-                        Required
+                      <h4 className="font-black">{doc.label}</h4>
+                      <p
+                        className={`text-xs font-black uppercase tracking-widest ${
+                          formData[doc.field as keyof typeof formData]
+                            ? "text-green-500"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {formData[doc.field as keyof typeof formData]
+                          ? "Uploaded"
+                          : "Required"}
                       </p>
                     </div>
                   </div>
-                  <button className="rounded-xl bg-green-500/10 px-4 py-2 text-sm font-black text-green-500 hover:bg-green-500/20">
-                    Upload
-                  </button>
+                  <label className="cursor-pointer rounded-xl bg-green-500/10 px-4 py-2 text-sm font-black text-green-500 hover:bg-green-500/20">
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, doc.field);
+                      }}
+                      accept="image/*,.pdf"
+                    />
+                    {formData[doc.field as keyof typeof formData]
+                      ? "Replace"
+                      : "Upload"}
+                  </label>
                 </div>
               ))}
             </div>
@@ -448,6 +686,10 @@ export default function CarPartnerOnboarding() {
         return null;
     }
   };
+
+  if (isChecking) {
+    return <LoadingScreen showProgressBar={false} />;
+  }
 
   if (isSubmitted) {
     return (
@@ -551,13 +793,22 @@ export default function CarPartnerOnboarding() {
             </button>
             <button
               onClick={currentStep === STEPS.length ? handleFinish : nextStep}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black !text-white text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12"
+              disabled={isLoading}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black !text-white text-white shadow-xl shadow-green-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] sm:flex-none sm:px-12 ${
+                isLoading ? "pointer-events-none opacity-70" : ""
+              }`}
             >
-              {currentStep === STEPS.length ? "Finish Application" : "Continue"}
-              {currentStep !== STEPS.length && (
+              {isLoading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : currentStep === STEPS.length ? (
+                "Finish Application"
+              ) : (
+                "Continue"
+              )}
+              {!isLoading && currentStep !== STEPS.length && (
                 <ChevronRight className="h-5 w-5" />
               )}
-              {currentStep === STEPS.length && (
+              {!isLoading && currentStep === STEPS.length && (
                 <ArrowRight className="h-5 w-5" />
               )}
             </button>

@@ -5,8 +5,16 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const CHECK_BUSINESS_WALLET = gql`
-  query CheckBusinessWallet($business_id: uuid!) {
-    business_wallet(where: { business_id: { _eq: $business_id } }) {
+  query CheckBusinessWallet($user_id: uuid!) {
+    business_wallet(
+      where: {
+        _or: [
+          { business_account: { user_id: { _eq: $user_id } } }
+          { pet_vendor: { user_id: { _eq: $user_id } } }
+          { logisticsAccount: { user_id: { _eq: $user_id } } }
+        ]
+      }
+    ) {
       id
       business_id
       amount
@@ -50,11 +58,7 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const { business_id } = req.method === "GET" ? req.query : req.body;
-
-    if (!business_id) {
-      return res.status(400).json({ error: "Business ID is required" });
-    }
+    const user_id = session.user.id;
 
     const result = await hasuraClient.request<{
       business_wallet: Array<{
@@ -62,7 +66,7 @@ export default async function handler(
         business_id: string;
         amount: string;
       }>;
-    }>(CHECK_BUSINESS_WALLET, { business_id });
+    }>(CHECK_BUSINESS_WALLET, { user_id });
 
     const hasWallet =
       result.business_wallet && result.business_wallet.length > 0;

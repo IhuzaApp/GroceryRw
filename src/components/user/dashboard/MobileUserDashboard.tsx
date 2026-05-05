@@ -283,7 +283,7 @@ export default function MobileUserDashboard({
         >
           {/* Background Image */}
           <div
-            className="duration-[20s] absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform hover:scale-110"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform [transition-duration:20s] hover:scale-110"
             style={{
               backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
             }}

@@ -22,7 +22,15 @@ import GuestUpgradeModal from "../GuestUpgradeModal";
 import NotificationCenter from "../../shopper/NotificationCenter";
 import PackageDeliveryModal from "./PackageDeliveryModal";
 
-export default function HeaderLayout() {
+export default function HeaderLayout({
+  fullWidth = false,
+  compact = false,
+  hideLogo = false,
+}: {
+  fullWidth?: boolean;
+  compact?: boolean;
+  hideLogo?: boolean;
+}) {
   const router = useRouter();
   const { count } = useCart();
   const { data: session } = useSession();
@@ -206,9 +214,9 @@ export default function HeaderLayout() {
       {/* ── Desktop Header ── */}
       <header
         className="
-          sticky top-0 z-40 mx-auto hidden
-          w-full
-          border-b border-white/20 bg-white/80
+          sticky !top-0 z-40 !mt-0 hidden w-full
+          border-b
+          border-white/20 bg-white/80 !pt-0
           shadow-[0_2px_24px_0_rgba(0,0,0,0.08)] backdrop-blur-xl
           transition-all
           duration-300 dark:border-white/10
@@ -216,22 +224,28 @@ export default function HeaderLayout() {
           dark:shadow-[0_2px_24px_0_rgba(0,0,0,0.4)] md:block
         "
       >
-        <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-6 px-6 py-2.5">
+        <div
+          className={`mx-auto flex items-center justify-between gap-6 px-6 ${
+            fullWidth ? "max-w-full" : "max-w-screen-xl"
+          } ${compact ? "py-0" : "py-2.5"}`}
+        >
           {/* ── Left: Logo + Address ── */}
           <div className="flex shrink-0 items-center gap-3">
             {/* Logo */}
-            <Link
-              href="/"
-              className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
-            >
-              <Image
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                width={28}
-                height={28}
-                className="h-7 w-7 drop-shadow-sm"
-              />
-            </Link>
+            {!hideLogo && (
+              <Link
+                href="/"
+                className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 hover:scale-105 active:scale-95"
+              >
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 drop-shadow-sm"
+                />
+              </Link>
+            )}
 
             {/* Address block */}
             <button
@@ -410,19 +424,51 @@ export default function HeaderLayout() {
                   dark:hover:text-green-400
                 "
               >
-                {/* Shopping bag icon */}
+                {/* Shopping cart icon */}
                 <svg
-                  className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5"
+                  className="h-6 w-6 transition-transform duration-200 group-hover:-translate-y-0.5"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 01-8 0" />
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g
+                    id="SVGRepo_tracerCarrier"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></g>
+                  <g id="SVGRepo_iconCarrier">
+                    <path
+                      d="M2 3L2.26491 3.0883C3.58495 3.52832 4.24497 3.74832 4.62248 4.2721C5 4.79587 5 5.49159 5 6.88304V9.5C5 12.3284 5 13.7426 5.87868 14.6213C6.75736 15.5 8.17157 15.5 11 15.5H19"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    ></path>
+                    <path
+                      opacity="0.5"
+                      d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    ></path>
+                    <path
+                      opacity="0.5"
+                      d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    ></path>
+                    <path
+                      opacity="0.5"
+                      d="M11 9H8"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    ></path>
+                    <path
+                      d="M5 6H16.4504C18.5054 6 19.5328 6 19.9775 6.67426C20.4221 7.34853 20.0173 8.29294 19.2078 10.1818L18.7792 11.1818C18.4013 12.0636 18.2123 12.5045 17.8366 12.7523C17.4609 13 16.9812 13 16.0218 13H5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    ></path>
+                  </g>
                 </svg>
 
                 {/* Badge bubble */}

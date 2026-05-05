@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { resend } from "../../../src/lib/resend";
 import { sendSMS } from "../../../src/lib/pindo";
 import { generatePosInvoicePdf } from "../../../src/lib/posInvoiceGenerator";
+import { insertSystemLog } from "../queries/system-logs";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 export default async function handler(
   req: NextApiRequest,
@@ -127,9 +129,35 @@ export default async function handler(
       adminSmsPromise,
     ]);
 
+    await insertSystemLog(
+      "info",
+      `POS Registration successful: ${formData.name}`,
+      "POS:Registration",
+      {
+        business: formData.name,
+        email: formData.email,
+        owner: formData.fullnames,
+      }
+    );
+
     return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error("Error sending POS registration notifications:", error);
+
+    const log = await insertSystemLog(
+      "error",
+      `POS Registration failed: ${formData.name || "Unknown"}`,
+      "POS:Registration",
+      { error: error.message, stack: error.stack }
+    );
+
+    await logErrorToSlack(
+      "POS Registration API",
+      error,
+      { formData, selectedPlan, billingCycle },
+      log?.id
+    );
+
     return res
       .status(500)
       .json({ error: "Failed to send notifications", details: error.message });

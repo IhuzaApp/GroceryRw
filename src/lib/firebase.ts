@@ -18,7 +18,26 @@ const firebaseConfig = {
 // Initialize Firebase with proper guards to prevent duplicate apps
 let app;
 try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  const isConfigValid =
+    !!firebaseConfig.apiKey &&
+    !!firebaseConfig.projectId &&
+    !!firebaseConfig.appId;
+  if (!isConfigValid) {
+    console.error(
+      "Firebase config is incomplete. Check environment variables."
+    );
+    console.log("Config keys status:", {
+      apiKey: !!firebaseConfig.apiKey,
+      projectId: !!firebaseConfig.projectId,
+      appId: !!firebaseConfig.appId,
+    });
+  }
+  app =
+    getApps().length === 0
+      ? isConfigValid
+        ? initializeApp(firebaseConfig)
+        : null
+      : getApps()[0];
 } catch (error) {
   console.warn("Firebase initialization failed:", error);
   app = null;
@@ -41,13 +60,39 @@ export const ai = app ? getAI(app, { backend: new GoogleAIBackend() }) : null;
 export const authenticateWithFirebase = async (customToken: string) => {
   try {
     if (!auth) {
-      console.warn("Firebase Auth not initialized");
       return;
     }
     await signInWithCustomToken(auth, customToken);
     console.log("Successfully authenticated with Firebase");
   } catch (error) {
     console.error("Error authenticating with Firebase:", error);
+  }
+};
+
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+/**
+ * Uploads a file to Firebase Storage and returns the download URL.
+ * @param file The file to upload
+ * @param path The path in storage (e.g., 'pets/buddy-main.jpg')
+ * @returns The download URL of the uploaded file
+ */
+export const uploadToFirebase = async (
+  file: File,
+  path: string
+): Promise<string> => {
+  if (!storage) {
+    throw new Error("Firebase Storage not initialized");
+  }
+
+  try {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error("Error uploading to Firebase:", error);
+    throw error;
   }
 };
 

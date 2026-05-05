@@ -1,4 +1,5 @@
 const SLACK_ERRORS_WEBHOOK = process.env.SLACK_ERRORS_WEBHOOK;
+import { logger } from "../utils/logger";
 
 type ExtraContext = Record<string, unknown>;
 
@@ -9,12 +10,13 @@ type ExtraContext = Record<string, unknown>;
 export async function logErrorToSlack(
   where: string,
   error: unknown,
-  extra?: ExtraContext
+  extra?: ExtraContext,
+  logId?: string
 ) {
   if (!SLACK_ERRORS_WEBHOOK) {
     // Avoid throwing if Slack isn't configured; just log locally
     // so we don't break the main request flow.
-    console.error("SLACK_ERRORS_WEBHOOK is not configured");
+    logger.warn("SLACK_ERRORS_WEBHOOK is not configured", "SlackErrorReporter");
     return;
   }
 
@@ -94,6 +96,23 @@ export async function logErrorToSlack(
         ]
       : []),
     { type: "divider" },
+    ...(logId
+      ? [
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: { type: "plain_text", text: "🔍 View Full Details" },
+                url: `${
+                  process.env.API_BASE_URL || "https://www.plas.rw"
+                }/dev/error/${logId}`,
+                style: "primary",
+              },
+            ],
+          },
+        ]
+      : []),
     {
       type: "context",
       elements: [
@@ -119,6 +138,6 @@ export async function logErrorToSlack(
     });
   } catch (sendError) {
     // Last resort: log locally; don't throw
-    console.error("Failed to send error to Slack", sendError);
+    logger.error("Failed to send error to Slack", "SlackErrorReporter", { error: sendError, originalError: err.message, where });
   }
 }

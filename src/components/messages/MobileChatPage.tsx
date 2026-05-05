@@ -16,7 +16,8 @@ import {
   getDocs,
   getDoc,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { db, uploadToFirebase } from "../../lib/firebase";
+import { toast } from "react-hot-toast";
 import soundNotification from "../../utils/soundNotification";
 import {
   containsBlockedPii,
@@ -62,6 +63,7 @@ interface Message {
   recipientId?: string;
   timestamp: any;
   read?: boolean;
+  image?: string;
 }
 
 interface PendingMessage {
@@ -70,6 +72,7 @@ interface PendingMessage {
   senderId: string;
   senderType: "customer" | "shopper" | "business";
   timestamp: Date;
+  image?: string;
 }
 
 const CustomerMessage: React.FC<{
@@ -91,24 +94,48 @@ const CustomerMessage: React.FC<{
       <div
         className={`relative max-w-[85%] px-4 py-2 text-[15px] leading-relaxed shadow-sm transition-all ${
           isCurrentUser
-            ? "rounded-2xl rounded-tr-sm bg-green-600 text-white"
-            : "rounded-2xl rounded-tl-sm bg-[var(--bg-secondary)] text-[var(--text-primary)]"
+            ? "rounded-2xl rounded-tr-sm bg-green-600 !text-white"
+            : "rounded-2xl rounded-tl-sm bg-gray-700 !text-white"
         }`}
       >
-        <div className="whitespace-pre-wrap break-words font-normal">
+        {"image" in message && message.image && (
+          <div className="mb-2 overflow-hidden rounded-lg">
+            <img
+              src={message.image}
+              alt="Attachment"
+              className="h-auto w-full max-w-[200px]"
+              onClick={() => window.open(message.image, "_blank")}
+            />
+          </div>
+        )}
+        <div className="whitespace-pre-wrap break-words font-normal !text-white">
           {messageContent}
         </div>
         <div className="mt-0.5 flex items-center justify-end gap-1">
           <span
             className={`select-none text-[11px] ${
-              isCurrentUser ? "text-green-100" : "text-[var(--text-secondary)]"
+              isCurrentUser ? "text-green-100" : "!text-white/70"
             }`}
           >
             {formatMessageTime(message.timestamp)}
           </span>
           {isCurrentUser && statusLabel && (
             <span className="select-none text-[11px] font-bold tracking-wide text-green-100">
-              {statusLabel === "Sending..." ? "..." : "✓"}
+              {statusLabel === "Sending..." ? (
+                "..."
+              ) : (
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              )}
             </span>
           )}
         </div>
@@ -144,6 +171,8 @@ export default function MobileChatPage({
     providedConversationId || null
   );
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -170,7 +199,7 @@ export default function MobileChatPage({
       const getOrCreate = async () => {
         try {
           if (!db) return;
-          const conversationsRef = collection(db, "chat_conversations");
+          const conversationsRef = collection(db!, "chat_conversations");
           const q = query(conversationsRef, where("orderId", "==", orderId));
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
@@ -202,7 +231,7 @@ export default function MobileChatPage({
     if (!db || !conversationId || !session?.user?.id) return;
 
     const messagesRef = collection(
-      db,
+      db!,
       collectionPath,
       conversationId,
       "messages"
@@ -244,7 +273,7 @@ export default function MobileChatPage({
           updateDoc(d.ref, { read: true });
       });
 
-      const convRef = doc(db, collectionPath, conversationId);
+      const convRef = doc(db!, collectionPath, conversationId);
       getDoc(convRef).then((snap) => {
         if (snap.exists() && snap.data().unreadCount > 0)
           updateDoc(convRef, { unreadCount: 0 });
@@ -295,7 +324,11 @@ export default function MobileChatPage({
       return;
 
     const text = newMessage.trim();
-    const piiCheck = containsBlockedPii(text);
+    const piiCheck = containsBlockedPii(text, {
+      senderId: session.user.id,
+      senderName: session.user.name || "User",
+      conversationId: conversationId,
+    });
     if (piiCheck.blocked && piiCheck.reason) {
       setError(getBlockedMessage(piiCheck.reason));
       return;
@@ -317,7 +350,7 @@ export default function MobileChatPage({
 
     try {
       const messagesRef = collection(
-        db,
+        db!,
         collectionPath,
         conversationId,
         "messages"
@@ -333,7 +366,7 @@ export default function MobileChatPage({
         read: false,
       });
 
-      const convRef = doc(db, collectionPath, conversationId);
+      const convRef = doc(db!, collectionPath, conversationId);
       await updateDoc(convRef, {
         lastMessage: text,
         lastMessageTime: serverTimestamp(),
@@ -436,13 +469,68 @@ export default function MobileChatPage({
               </svg>
             </button>
           )}
-          <button className="rounded-full p-2.5 text-[var(--text-secondary)]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />
-            </svg>
-          </button>
         </div>
       </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*,application/pdf"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (
+            !file ||
+            !db ||
+            !session?.user?.id ||
+            !conversationId ||
+            !counterpart?.id
+          )
+            return;
+
+          const toastId = toast.loading("Uploading attachment...");
+          setIsUploading(true);
+          try {
+            const path = `chats/${conversationId}/${Date.now()}_${file.name}`;
+            const url = await uploadToFirebase(file, path);
+
+            const messagesRef = collection(
+              db,
+              collectionPath,
+              conversationId,
+              "messages"
+            );
+
+            await addDoc(messagesRef, {
+              text: `Attachment: ${file.name}`,
+              message: `Attachment: ${file.name}`,
+              image: url,
+              senderId: session.user.id,
+              senderName: session.user.name || "User",
+              senderType:
+                counterpart.role === "business" ? "business" : "customer",
+              recipientId: counterpart.id,
+              timestamp: serverTimestamp(),
+              read: false,
+            });
+
+            const convRef = doc(db!, collectionPath, conversationId);
+            await updateDoc(convRef, {
+              lastMessage: "Attachment",
+              lastMessageTime: serverTimestamp(),
+              unreadCount: 1,
+            });
+
+            toast.success("Attachment sent", { id: toastId });
+          } catch (err) {
+            console.error("Upload error:", err);
+            toast.error("Failed to upload attachment", { id: toastId });
+          } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+          }
+        }}
+      />
 
       <div className="relative flex-1 overflow-y-auto bg-[var(--bg-primary)] px-3 py-4 sm:px-4">
         {Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
@@ -473,23 +561,6 @@ export default function MobileChatPage({
 
       {/* Input Box */}
       <div className="z-10 flex flex-shrink-0 items-end gap-2 bg-[var(--bg-secondary)] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-colors">
-        <button className="p-3 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
-
         <div className="flex flex-1 items-end rounded-[24px] bg-[var(--bg-primary)]">
           <textarea
             value={newMessage}
@@ -509,9 +580,9 @@ export default function MobileChatPage({
         {newMessage.trim() ? (
           <button
             onClick={handleSendMessage}
-            className="ml-1 flex items-center justify-center rounded-full bg-green-500 p-3 text-white shadow-sm transition-transform active:scale-95"
+            className="ml-1 flex items-center justify-center rounded-full bg-green-500 p-3 shadow-sm transition-transform active:scale-95"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </button>

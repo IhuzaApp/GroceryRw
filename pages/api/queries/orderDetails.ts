@@ -126,6 +126,204 @@ const GET_ORDER_DETAILS = gql`
   }
 `;
 
+const GET_REEL_ORDER_DETAILS = gql`
+  query GetReelOrderDetails($id: uuid!) {
+    reel_orders_by_pk(id: $id) {
+      id
+      OrderID
+      status
+      created_at
+      total
+      service_fee
+      delivery_fee
+      quantity
+      reel: Reel {
+        id
+        title
+        description
+        Price
+        Product
+        Shops {
+          id
+          name
+          address
+          image
+          logo
+        }
+      }
+      orderedBy: User {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
+const GET_RESTAURANT_ORDER_DETAILS = gql`
+  query GetRestaurantOrderDetails($id: uuid!) {
+    restaurant_orders_by_pk(id: $id) {
+      id
+      OrderID
+      status
+      created_at
+      total
+      delivery_fee
+      restaurant_id
+      Restaurant {
+        id
+        name
+        location
+        logo
+      }
+      orderedBy {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
+const GET_BUSINESS_ORDER_DETAILS = gql`
+  query GetBusinessOrderDetails($id: uuid!) {
+    businessProductOrders_by_pk(id: $id) {
+      id
+      status
+      created_at
+      total
+      service_fee
+      transportation_fee
+      store_id
+      business_store {
+        id
+        name
+        image
+      }
+      orderedBy {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
+const GET_VEHICLE_BOOKING_DETAILS = gql`
+  query GetVehicleBookingDetails($id: uuid!) {
+    vehicleBookings_by_pk(id: $id) {
+      id
+      amount
+      status
+      pickup_date
+      return_date
+      customer_id
+      RentalVehicles {
+        id
+        name
+        main_photo
+        category
+        location
+        logisticsAccounts {
+          id
+          fullname
+          businessName
+          User {
+            id
+            name
+            profile_picture
+          }
+        }
+      }
+      orderedBy: User {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
+const GET_PET_ADOPTION_DETAILS = gql`
+  query GetPetAdoptionDetails($id: uuid!) {
+    petAdoption_by_pk(id: $id) {
+      id
+      status
+      created_at
+      amount
+      pet_id
+      customer_id
+      address
+      comment
+      pets {
+        id
+        name
+        image
+        pet_vendors {
+          id
+          organisationName
+          fullname
+          user: User {
+            id
+            name
+            profile_picture
+          }
+        }
+      }
+      orderedBy: User {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
+const GET_PACKAGE_DELIVERY_DETAILS = gql`
+  query GetPackageDeliveryDetails($id: uuid!) {
+    package_delivery_by_pk(id: $id) {
+      id
+      DeliveryCode
+      pickupLocation
+      dropoffLocation
+      status
+      delivery_fee
+      created_at
+      package_image
+      receiverName
+      receiverPhone
+      comment
+      deliveryMethod
+      distance
+      user_id
+      shopper_id
+      shopper {
+        id
+        full_name
+        profile_photo
+        Employment_id
+      }
+      orderedBy: User {
+        id
+        name
+        email
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -135,316 +333,445 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { id } = req.query;
+  const { id, type } = req.query;
   if (!id || (Array.isArray(id) && id.length === 0)) {
     return res.status(400).json({ error: "Missing order ID" });
   }
 
-  // Ensure we have a single string ID
   const orderId = Array.isArray(id) ? id[0] : id;
 
-  // Validate the UUID format
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(orderId)) {
     return res.status(400).json({ error: "Invalid order ID format" });
   }
 
+  console.log(
+    `[OrderDetails] Fetching details for ID: ${orderId}, Type: ${type || "all"}`
+  );
+
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<{
-      Orders: Array<{
-        id: string;
-        OrderID: string;
-        placedAt: string;
-        estimatedDelivery: string | null;
-        deliveryNotes: string | null;
-        total: string;
-        serviceFee: string;
-        deliveryFee: string;
-        status: string;
-        deliveryPhotoUrl: string | null;
-        discount: string | null;
-        combinedOrderId: string | null;
-        voucherCode: string | null;
-        pin: string;
-        shop_id: string;
-        shop: {
-          id: string;
-          name: string;
-          address: string;
-          image: string | null;
-          phone: string;
-          latitude: number;
-          longitude: number;
-          operating_hours: string | null;
-        };
-        Order_Items: Array<{
-          id: string;
-          product_id: string;
-          quantity: number;
-          price: string;
-          product: {
-            id: string;
-            price: string;
-            final_price: string;
-            measurement_unit: string;
-            category: string;
-            quantity: number;
-            sku: string;
-            image: string | null;
-            productName_id: string;
-            ProductName: {
-              barcode: string | null;
-              create_at: string;
-              description: string | null;
-              id: string;
-              image: string | null;
-              name: string;
-              sku: string | null;
-            };
-            created_at: string;
-            is_active: boolean;
-            reorder_point: number;
-            shop_id: string;
-            supplier: string | null;
-            updated_at: string;
-          };
-          order_id: string;
-        }>;
-        assignedTo: {
-          id: string;
-          name: string;
-          email: string;
-          phone: string;
-          profile_picture: string | null;
-          shopper: {
-            id: string;
-            full_name: string;
-            profile_photo: string | null;
-            phone_number: string | null;
-            address: string | null;
-            Employment_id: string | null;
-          } | null;
-          Ratings: Array<{
-            created_at: string;
-            customer_id: string;
-            delivery_experience: string;
-            id: string;
-            order_id: string | null;
-            packaging_quality: string;
-            professionalism: string;
-            rating: string;
-            reel_order_id: string | null;
-            review: string | null;
-            reviewed_at: string | null;
-            shopper_id: string;
-            updated_at: string;
-          }>;
-        } | null;
-        address: {
-          id: string;
-          street: string;
-          city: string;
-          postal_code: string;
-          latitude: number;
-          longitude: number;
-          is_default: boolean;
-        } | null;
-        delivery_address_id: string | null;
-        shopper_id: string | null;
-        updated_at: string;
-        user_id: string;
-        assigned_at: string | null;
-        orderedBy: {
-          created_at: string;
-          email: string;
-          gender: string | null;
-          id: string;
-          is_active: boolean;
-          is_guest: boolean;
-          name: string;
-          password_hash: string;
-          profile_picture: string | null;
-          phone: string;
-          updated_at: string;
-          role: string;
-        };
-      }>;
-    }>(GET_ORDER_DETAILS, { id: orderId });
-
-    // Check if order exists
-    if (!data.Orders || data.Orders.length === 0) {
-      return res.status(404).json({ error: "Order not found" });
-    }
-
-    const order = data.Orders[0];
-
-    // If there's an assigned shopper, fetch their complete stats
-    let shopperStats = null;
-    if (order.assignedTo) {
-      const shopperId = order.assignedTo.id;
-
-      // Query to get all ratings for this shopper and count of delivered orders
-      const GET_SHOPPER_STATS = gql`
-        query GetShopperStats($shopperId: uuid!) {
-          # Get all ratings for this shopper
-          Ratings(where: { shopper_id: { _eq: $shopperId } }) {
-            rating
-          }
-          # Get recent reviews (5 most recent with reviews)
-          RecentReviews: Ratings(
-            where: {
-              shopper_id: { _eq: $shopperId }
-              _and: [{ review: { _is_null: false } }, { review: { _neq: "" } }]
+    const handleRegularOrder = async (order: any) => {
+      let shopperStats = null;
+      if (order.Shoppers) {
+        const shopperId = order.Shoppers.id;
+        const GET_SHOPPER_STATS = gql`
+          query GetShopperStats($shopperId: uuid!) {
+            Ratings(where: { shopper_id: { _eq: $shopperId } }) {
+              rating
             }
-            order_by: { reviewed_at: desc_nulls_last }
-            limit: 5
-          ) {
-            id
-            rating
-            review
-            reviewed_at
-            customer_id
-            User {
+            RecentReviews: Ratings(
+              where: {
+                shopper_id: { _eq: $shopperId }
+                _and: [
+                  { review: { _is_null: false } }
+                  { review: { _neq: "" } }
+                ]
+              }
+              order_by: { reviewed_at: desc_nulls_last }
+              limit: 5
+            ) {
               id
-              name
-              profile_picture
+              rating
+              review
+              reviewed_at
+              customer_id
+              User {
+                id
+                name
+                profile_picture
+              }
+            }
+            Orders_aggregate(
+              where: {
+                shopper_id: { _eq: $shopperId }
+                status: { _eq: "delivered" }
+              }
+            ) {
+              aggregate {
+                count
+              }
+            }
+            reel_orders_aggregate(
+              where: {
+                shopper_id: { _eq: $shopperId }
+                status: { _eq: "delivered" }
+              }
+            ) {
+              aggregate {
+                count
+              }
+            }
+            restaurant_orders_aggregate(
+              where: {
+                shopper_id: { _eq: $shopperId }
+                status: { _eq: "delivered" }
+              }
+            ) {
+              aggregate {
+                count
+              }
             }
           }
-          # Count delivered regular orders
-          Orders_aggregate(
-            where: {
-              shopper_id: { _eq: $shopperId }
-              status: { _eq: "delivered" }
-            }
-          ) {
-            aggregate {
-              count
-            }
-          }
-          # Count delivered reel orders
-          reel_orders_aggregate(
-            where: {
-              shopper_id: { _eq: $shopperId }
-              status: { _eq: "delivered" }
-            }
-          ) {
-            aggregate {
-              count
-            }
-          }
-          # Count delivered restaurant orders
-          restaurant_orders_aggregate(
-            where: {
-              shopper_id: { _eq: $shopperId }
-              status: { _eq: "delivered" }
-            }
-          ) {
-            aggregate {
-              count
-            }
-          }
-        }
-      `;
+        `;
 
-      const statsData = await hasuraClient.request<{
-        Ratings: Array<{ rating: string }>;
-        RecentReviews: Array<{
-          id: string;
-          rating: number;
-          review: string;
-          reviewed_at: string | null;
-          customer_id: string;
-          User: {
-            id: string;
-            name: string;
-            profile_picture: string | null;
-          };
-        }>;
-        Orders_aggregate: { aggregate: { count: number } };
-        reel_orders_aggregate: { aggregate: { count: number } };
-        restaurant_orders_aggregate: { aggregate: { count: number } };
-      }>(GET_SHOPPER_STATS, { shopperId });
+        const statsData = await hasuraClient.request<any>(GET_SHOPPER_STATS, {
+          shopperId,
+        });
 
-      // Calculate average rating from all ratings
-      const averageRating =
-        statsData.Ratings.length > 0
-          ? statsData.Ratings.reduce(
-              (sum, rating) => sum + parseFloat(rating.rating || "0"),
-              0
-            ) / statsData.Ratings.length
-          : 0;
+        const averageRating =
+          statsData.Ratings.length > 0
+            ? statsData.Ratings.reduce(
+                (sum: number, r: any) => sum + parseFloat(r.rating || "0"),
+                0
+              ) / statsData.Ratings.length
+            : 0;
 
-      // Count total delivered orders (regular + reel + restaurant)
-      const regularOrdersCount =
-        statsData.Orders_aggregate?.aggregate?.count || 0;
-      const reelOrdersCount =
-        statsData.reel_orders_aggregate?.aggregate?.count || 0;
-      const restaurantOrdersCount =
-        statsData.restaurant_orders_aggregate?.aggregate?.count || 0;
-      const totalDeliveredOrders =
-        regularOrdersCount + reelOrdersCount + restaurantOrdersCount;
+        const totalDeliveredOrders =
+          (statsData.Orders_aggregate?.aggregate?.count || 0) +
+          (statsData.reel_orders_aggregate?.aggregate?.count || 0) +
+          (statsData.restaurant_orders_aggregate?.aggregate?.count || 0);
 
-      shopperStats = {
-        rating: averageRating,
-        orders_aggregate: {
-          aggregate: {
-            count: totalDeliveredOrders,
+        shopperStats = {
+          rating: averageRating,
+          orders_aggregate: {
+            aggregate: {
+              count: totalDeliveredOrders,
+            },
           },
-        },
-        recentReviews: statsData.RecentReviews || [],
-      };
-    }
+          recentReviews: statsData.RecentReviews || [],
+        };
+      }
 
-    // Format timestamps to human-readable strings
-    const formattedOrder = {
-      ...order,
-      placedAt: new Date(order.placedAt).toLocaleString("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-      // Handle case where estimatedDelivery might be null
-      estimatedDelivery: order.estimatedDelivery
-        ? new Date(order.estimatedDelivery).toISOString()
-        : null,
-      // Use calculated shopper stats if available
-      assignedTo:
-        order.Shoppers && shopperStats
+      const formattedOrder = {
+        ...order,
+        orderType: "order",
+        placedAt: new Date(order.placedAt).toLocaleString("en-US", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }),
+        assignedTo: order.Shoppers
           ? {
               ...order.Shoppers,
-              rating: shopperStats.rating,
-              orders_aggregate: shopperStats.orders_aggregate,
-              recentReviews: shopperStats.recentReviews,
-            }
-          : order.Shoppers
-          ? {
-              ...order.Shoppers,
-              rating: 0,
-              orders_aggregate: {
-                aggregate: {
-                  count: 0,
-                },
+              rating: shopperStats?.rating || 0,
+              orders_aggregate: shopperStats?.orders_aggregate || {
+                aggregate: { count: 0 },
               },
-              recentReviews: [],
+              recentReviews: shopperStats?.recentReviews || [],
             }
           : null,
+      };
+
+      return res.status(200).json({ order: formattedOrder });
     };
 
-    res.status(200).json({ order: formattedOrder });
-  } catch (error) {
-    console.error("❌ Order Details API Error:", error);
-    console.error(
-      "❌ Error details:",
-      error instanceof Error ? error.message : "Unknown error"
-    );
-    res.status(500).json({
-      error: "Failed to fetch order details",
-      details: error instanceof Error ? error.message : "Unknown error",
-      fullError: JSON.stringify(error, null, 2),
+    const handleVehicleBooking = (booking: any) => {
+      const vendor = booking.RentalVehicles?.logisticsAccounts;
+      const ownerUser = Array.isArray(vendor?.User)
+        ? vendor.User[0]
+        : vendor?.User;
+
+      const customerUser = Array.isArray(booking.orderedBy)
+        ? booking.orderedBy[0]
+        : booking.orderedBy;
+
+      const formattedBooking = {
+        id: booking.id,
+        OrderID: booking.id.substring(0, 8).toUpperCase(),
+        placedAt: new Date(booking.pickup_date).toLocaleString("en-US", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }),
+        total: booking.amount,
+        status: booking.status,
+        pickup_date: booking.pickup_date,
+        return_date: booking.return_date,
+        orderType: "vehicle",
+        shop: {
+          id: vendor?.id || "vehicle-vendor",
+          name: vendor?.businessName || vendor?.fullname || "Vehicle Partner",
+          image: ownerUser?.profile_picture || null,
+        },
+        assignedTo: ownerUser
+          ? {
+              id: ownerUser.id,
+              name: vendor?.fullname || vendor?.businessName || "Owner",
+              profile_picture: ownerUser.profile_picture || null,
+              shopper: {
+                full_name: vendor?.fullname || vendor?.businessName || "Owner",
+                profile_photo: ownerUser.profile_picture || null,
+                Employment_id: "VEHICLE",
+              },
+            }
+          : null,
+        orderedBy: customerUser || null,
+        Order_Items: [
+          {
+            id: booking.id,
+            product: {
+              ProductName: {
+                name: booking.RentalVehicles?.name || "Rental Vehicle",
+              },
+              image: booking.RentalVehicles?.main_photo,
+              category: booking.RentalVehicles?.category,
+              location: booking.RentalVehicles?.location,
+            },
+          },
+        ],
+      };
+      return res.status(200).json({ order: formattedBooking });
+    };
+
+    const handleReelOrder = (reelOrder: any) => {
+      return res.status(200).json({
+        order: {
+          ...reelOrder,
+          orderType: "reel",
+          placedAt: new Date(reelOrder.created_at).toLocaleString(),
+          shop: reelOrder.reel?.Shops,
+          orderedBy: reelOrder.orderedBy || null,
+          Order_Items: [
+            {
+              id: reelOrder.id,
+              product: {
+                ProductName: {
+                  name: reelOrder.reel?.title || "Reel Product",
+                },
+                image:
+                  reelOrder.reel?.Shops?.image || reelOrder.reel?.Shops?.logo,
+              },
+            },
+          ],
+        },
+      });
+    };
+
+    const handleRestaurantOrder = (restOrder: any) => {
+      return res.status(200).json({
+        order: {
+          ...restOrder,
+          orderType: "restaurant",
+          placedAt: new Date(restOrder.created_at).toLocaleString(),
+          orderedBy: restOrder.orderedBy || null,
+          shop: restOrder.Restaurant
+            ? {
+                id: restOrder.Restaurant.id,
+                name: restOrder.Restaurant.name,
+                address: restOrder.Restaurant.location,
+                logo: restOrder.Restaurant.logo,
+              }
+            : null,
+        },
+      });
+    };
+
+    const handleBusinessOrder = (bizOrder: any) => {
+      return res.status(200).json({
+        order: {
+          ...bizOrder,
+          orderType: "business",
+          placedAt: new Date(bizOrder.created_at).toLocaleString(),
+          orderedBy: bizOrder.orderedBy || null,
+          shop: bizOrder.business_store,
+        },
+      });
+    };
+
+    const handlePetAdoption = (petAdoption: any) => {
+      return res.status(200).json({
+        order: {
+          id: petAdoption.id,
+          OrderID: petAdoption.id.substring(0, 8).toUpperCase(),
+          status: petAdoption.status,
+          created_at: petAdoption.created_at,
+          placedAt: new Date(petAdoption.created_at).toLocaleString(),
+          total: petAdoption.amount,
+          orderType: "pet",
+          orderedBy: petAdoption.orderedBy || null,
+          shop: {
+            id: petAdoption.pets?.pet_vendors?.id,
+            name:
+              petAdoption.pets?.pet_vendors?.organisationName ||
+              petAdoption.pets?.pet_vendors?.fullname,
+            image: petAdoption.pets?.pet_vendors?.user?.profile_picture,
+          },
+          Order_Items: [
+            {
+              id: petAdoption.id,
+              product: {
+                ProductName: {
+                  name: petAdoption.pets?.name || "Pet",
+                },
+                image: petAdoption.pets?.image,
+              },
+            },
+          ],
+        },
+      });
+    };
+
+    const handlePackageDelivery = (pkg: any) => {
+      return res.status(200).json({
+        order: {
+          id: pkg.id,
+          OrderID: pkg.DeliveryCode || pkg.id.substring(0, 8).toUpperCase(),
+          status: pkg.status,
+          created_at: pkg.created_at,
+          placedAt: new Date(pkg.created_at).toLocaleString(),
+          total: pkg.delivery_fee,
+          orderType: "package",
+          orderedBy: pkg.orderedBy || null,
+          shop: {
+            name: "Package Delivery",
+            image: pkg.package_image,
+          },
+          assignedTo: pkg.shopper
+            ? {
+                id: pkg.shopper_id,
+                name: pkg.shopper.full_name,
+                profile_picture: pkg.shopper.profile_photo,
+                shopper: pkg.shopper,
+              }
+            : null,
+          Order_Items: [
+            {
+              id: pkg.id,
+              product: {
+                ProductName: {
+                  name: `Package to ${pkg.receiverName}`,
+                },
+                image: pkg.package_image,
+              },
+            },
+          ],
+        },
+      });
+    };
+
+    if (type) {
+      const typeStr = Array.isArray(type) ? type[0] : type;
+      switch (typeStr) {
+        case "order": {
+          const data = await hasuraClient.request<any>(GET_ORDER_DETAILS, {
+            id: orderId,
+          });
+          if (data.Orders?.length > 0)
+            return handleRegularOrder(data.Orders[0]);
+          break;
+        }
+        case "vehicle":
+        case "car": {
+          const data = await hasuraClient.request<any>(
+            GET_VEHICLE_BOOKING_DETAILS,
+            { id: orderId }
+          );
+          if (data.vehicleBookings_by_pk)
+            return handleVehicleBooking(data.vehicleBookings_by_pk);
+          break;
+        }
+        case "reel": {
+          const data = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, {
+            id: orderId,
+          });
+          if (data.reel_orders_by_pk)
+            return handleReelOrder(data.reel_orders_by_pk);
+          break;
+        }
+        case "restaurant": {
+          const data = await hasuraClient.request<any>(
+            GET_RESTAURANT_ORDER_DETAILS,
+            { id: orderId }
+          );
+          if (data.restaurant_orders_by_pk)
+            return handleRestaurantOrder(data.restaurant_orders_by_pk);
+          break;
+        }
+        case "business": {
+          const data = await hasuraClient.request<any>(
+            GET_BUSINESS_ORDER_DETAILS,
+            { id: orderId }
+          );
+          if (data.businessProductOrders_by_pk)
+            return handleBusinessOrder(data.businessProductOrders_by_pk);
+          break;
+        }
+        case "pet": {
+          const data = await hasuraClient.request<any>(
+            GET_PET_ADOPTION_DETAILS,
+            { id: orderId }
+          );
+          if (data.petAdoption_by_pk)
+            return handlePetAdoption(data.petAdoption_by_pk);
+          break;
+        }
+        case "package": {
+          const data = await hasuraClient.request<any>(
+            GET_PACKAGE_DELIVERY_DETAILS,
+            { id: orderId }
+          );
+          if (data.package_delivery_by_pk)
+            return handlePackageDelivery(data.package_delivery_by_pk);
+          break;
+        }
+      }
+    }
+
+    const data = await hasuraClient.request<any>(GET_ORDER_DETAILS, {
+      id: orderId,
     });
+    if (data.Orders && data.Orders.length > 0) {
+      return handleRegularOrder(data.Orders[0]);
+    }
+
+    const vehicleData = await hasuraClient.request<any>(
+      GET_VEHICLE_BOOKING_DETAILS,
+      { id: orderId }
+    );
+    if (vehicleData.vehicleBookings_by_pk)
+      return handleVehicleBooking(vehicleData.vehicleBookings_by_pk);
+
+    const reelData = await hasuraClient.request<any>(GET_REEL_ORDER_DETAILS, {
+      id: orderId,
+    });
+    if (reelData.reel_orders_by_pk)
+      return handleReelOrder(reelData.reel_orders_by_pk);
+
+    const restData = await hasuraClient.request<any>(
+      GET_RESTAURANT_ORDER_DETAILS,
+      { id: orderId }
+    );
+    if (restData.restaurant_orders_by_pk)
+      return handleRestaurantOrder(restData.restaurant_orders_by_pk);
+
+    const bizData = await hasuraClient.request<any>(
+      GET_BUSINESS_ORDER_DETAILS,
+      { id: orderId }
+    );
+    if (bizData.businessProductOrders_by_pk)
+      return handleBusinessOrder(bizData.businessProductOrders_by_pk);
+
+    const petData = await hasuraClient.request<any>(GET_PET_ADOPTION_DETAILS, {
+      id: orderId,
+    });
+    if (petData.petAdoption_by_pk)
+      return handlePetAdoption(petData.petAdoption_by_pk);
+
+    const pkgData = await hasuraClient.request<any>(
+      GET_PACKAGE_DELIVERY_DETAILS,
+      { id: orderId }
+    );
+    if (pkgData.package_delivery_by_pk)
+      return handlePackageDelivery(pkgData.package_delivery_by_pk);
+
+    return res.status(404).json({ error: "Order or Booking not found" });
+  } catch (error: any) {
+    console.error("Order Details Error:", error);
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
   }
 }

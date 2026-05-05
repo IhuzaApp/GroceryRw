@@ -10,7 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
-import { Car } from "../../../constants/dummyCars";
+import { Car } from "../../../types/models";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface ListingCardProps {

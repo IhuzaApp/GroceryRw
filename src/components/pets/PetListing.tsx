@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Search,
   Heart,
@@ -10,11 +8,14 @@ import {
   Cat,
   Bird,
   Info,
+  Loader2,
 } from "lucide-react";
-import { DUMMY_PETS, Pet } from "../../constants/dummyPets";
+import { Pet } from "../../types/models";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import PetListingHeader from "./PetListingHeader";
+
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const PetIcon = ({ className }: { className?: string }) => (
   <Dog className={className} />
@@ -66,7 +67,7 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
       onClick={onClick}
       className="group relative cursor-pointer overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white shadow-sm transition-all hover:translate-y-[-4px] hover:shadow-xl dark:border-white/5 dark:bg-white/5"
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden">
+      <div className="relative aspect-[4/3.2] w-full overflow-hidden">
         <Image
           src={pet.images[0].url}
           alt={pet.name}
@@ -74,8 +75,8 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute right-4 top-4 z-10">
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white backdrop-blur-md transition-colors hover:bg-red-500">
-            <Heart className="h-5 w-5" />
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 !text-white text-white backdrop-blur-md transition-colors hover:bg-green-500">
+            <Dog className="h-5 w-5 !text-white text-white" />
           </button>
         </div>
         <div className="absolute bottom-4 left-4 z-10 flex gap-2">
@@ -96,7 +97,7 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
             {pet.name}
           </h3>
           <span className="whitespace-nowrap text-sm font-black text-green-500 md:text-lg">
-            {pet.isDonation ? "FREE" : `$${pet.price}`}
+            {pet.isDonation ? "FREE" : formatCurrencySync(pet.price)}
           </span>
         </div>
 
@@ -110,7 +111,7 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
           </span>
           <span className="flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5" />
-            {pet.location.split(",")[0]}
+            {pet.location ? pet.location.split(",")[0] : "Kigali"}
           </span>
         </div>
 
@@ -127,23 +128,77 @@ const STATUS_OPTIONS = ["All", "Available", "Sold"];
 
 export default function PetListing() {
   const router = useRouter();
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
 
+  useEffect(() => {
+    const fetchAllPets = async () => {
+      try {
+        const response = await fetch("/api/queries/get-all-pets");
+        const data = await response.json();
+        if (data.pets) {
+          const mappedPets = data.pets.map((p: any) => ({
+            ...p,
+            type: p.pet_type,
+            price: p.amount,
+            isDonation: p.free,
+            isVaccinated: p.vaccinated,
+            images: p.image
+              ? [{ url: p.image, label: "Main" }, ...(p.parent_images || [])]
+              : p.parent_images || [],
+            videoUrl: p.video,
+            vaccinationCertificateUrl: p.vaccination_cert,
+            owner: {
+              id: p.vendor_id,
+              name:
+                p.pet_vendors?.organisationName ||
+                p.pet_vendors?.fullname ||
+                "Verified Vendor",
+              image:
+                p.pet_vendors?.user?.image ||
+                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+              isVerified: true,
+            },
+            reviews: [],
+            status:
+              parseInt(p.quantity || "0") <= parseInt(p.quantity_sold || "0")
+                ? "sold"
+                : "available",
+          }));
+          setPets(mappedPets);
+        }
+      } catch (error) {
+        console.error("Error fetching pets:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllPets();
+  }, []);
+
   const filteredPets = useMemo(() => {
-    return DUMMY_PETS.filter((pet) => {
-      const matchesSearch =
-        pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pet.breed.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = selectedType === "All" || pet.type === selectedType;
-      const matchesStatus =
-        selectedStatus === "All" ||
-        (selectedStatus === "Available" && pet.status === "available") ||
-        (selectedStatus === "Sold" && pet.status === "sold");
-      return matchesSearch && matchesType && matchesStatus;
-    });
-  }, [searchQuery, selectedType, selectedStatus]);
+    return pets
+      .filter((pet) => {
+        const matchesSearch =
+          pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          pet.breed.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = selectedType === "All" || pet.type === selectedType;
+        const matchesStatus =
+          selectedStatus === "All" ||
+          (selectedStatus === "Available" && pet.status === "available") ||
+          (selectedStatus === "Sold" && pet.status === "sold");
+        return matchesSearch && matchesType && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (a.status === "sold" && b.status !== "sold") return 1;
+        if (a.status !== "sold" && b.status === "sold") return -1;
+        return 0;
+      });
+  }, [searchQuery, selectedType, selectedStatus, pets]);
 
   return (
     <div className="min-h-screen bg-white pb-24 font-sans text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20">
@@ -153,7 +208,7 @@ export default function PetListing() {
         />
       </div>
 
-      <PetListingHeader onListPet={() => router.push("/Pets/become-partner")} />
+      <PetListingHeader onListPet={() => router.push("/Pets/dashboard")} />
 
       <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">
         {/* Filters */}
@@ -188,17 +243,23 @@ export default function PetListing() {
         </div>
 
         {/* Listing Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredPets.map((pet) => (
-            <PetCard
-              key={pet.id}
-              pet={pet}
-              onClick={() => router.push(`/Pets/${pet.id}`)}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-green-500" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredPets.map((pet) => (
+              <PetCard
+                key={pet.id}
+                pet={pet}
+                onClick={() => router.push(`/Pets/${pet.id}`)}
+              />
+            ))}
+          </div>
+        )}
 
-        {filteredPets.length === 0 && (
+        {!isLoading && filteredPets.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <PetIcon className="mb-4 h-12 w-12 text-gray-300" />
             <h3 className="font-outfit text-lg font-black text-gray-400">
@@ -214,7 +275,7 @@ export default function PetListing() {
       {/* Become a Partner CTA (Mobile Only) */}
       <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 md:hidden">
         <button
-          onClick={() => router.push("/Pets/become-partner")}
+          onClick={() => router.push("/Pets/dashboard")}
           className="flex items-center gap-3 rounded-full bg-black px-8 py-4 font-black !text-white text-white shadow-2xl transition-all hover:scale-105 active:scale-95 dark:bg-white dark:!text-black dark:text-black"
         >
           <Dog className="h-6 w-6" />

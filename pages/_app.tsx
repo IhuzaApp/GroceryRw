@@ -70,7 +70,6 @@ if (typeof window !== "undefined" && typeof Node !== "undefined") {
 }
 import { ThemeProvider } from "../src/context/ThemeContext";
 import { LanguageProvider } from "../src/context/LanguageContext";
-import InstallPrompt from "../src/components/ui/InstallPrompt";
 import LoadingScreen from "../src/components/ui/LoadingScreen";
 import Head from "next/head";
 
@@ -215,6 +214,7 @@ import { AuthProvider } from "../src/context/AuthContext";
 import { CartProvider } from "../src/context/CartContext";
 import { FoodCartProvider } from "../src/context/FoodCartContext";
 import { ChatProvider } from "../src/context/ChatContext";
+import { BusinessWalletProvider } from "../src/context/BusinessWalletContext";
 import { Toaster } from "react-hot-toast";
 import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
 import { ApolloProvider } from "@apollo/client";
@@ -336,10 +336,6 @@ export default function App({ Component, pageProps }: AppProps) {
             href="https://fonts.gstatic.com"
             crossOrigin="anonymous"
           />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap"
-            rel="stylesheet"
-          />
           <meta
             name="google-site-verification"
             content="OksRl63kpYWafgir4UK5IxTx7wYZY5cnkoL7CFrv1wM"
@@ -457,6 +453,59 @@ export default function App({ Component, pageProps }: AppProps) {
               }),
             }}
           />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                itemListElement: [
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 1,
+                    name: "About us",
+                    url: "https://plas.rw/about",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 2,
+                    name: "Life at Plas",
+                    url: "https://plas.rw/life-at-plas",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 3,
+                    name: "Our teams",
+                    url: "https://plas.rw/ourTeams",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 4,
+                    name: "Careers at Plas",
+                    url: "https://plas.rw/careers",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 5,
+                    name: "Our locations",
+                    url: "https://plas.rw/locations",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 6,
+                    name: "Contact us",
+                    url: "https://plas.rw/contact",
+                  },
+                  {
+                    "@type": "SiteNavigationElement",
+                    position: 7,
+                    name: "Sign in",
+                    url: "https://plas.rw/Auth/Login",
+                  },
+                ],
+              }),
+            }}
+          />
         </Head>
 
         {/* Google Translate Integration */}
@@ -487,19 +536,20 @@ export default function App({ Component, pageProps }: AppProps) {
         >
           <ApolloProvider client={apolloClient}>
             <AuthProvider>
-              <CartProvider>
-                <FoodCartProvider>
-                  <ChatProvider>
-                    <GoogleMapProvider>
-                      <SessionRefreshHandler>
-                        <Toaster />
-                        <Component {...pageProps} />
-                        <InstallPrompt />
-                      </SessionRefreshHandler>
-                    </GoogleMapProvider>
-                  </ChatProvider>
-                </FoodCartProvider>
-              </CartProvider>
+              <BusinessWalletProvider>
+                <CartProvider>
+                  <FoodCartProvider>
+                    <ChatProvider>
+                      <GoogleMapProvider>
+                        <SessionRefreshHandler>
+                          <Toaster />
+                          <Component {...pageProps} />
+                        </SessionRefreshHandler>
+                      </GoogleMapProvider>
+                    </ChatProvider>
+                  </FoodCartProvider>
+                </CartProvider>
+              </BusinessWalletProvider>
             </AuthProvider>
           </ApolloProvider>
         </SessionProvider>

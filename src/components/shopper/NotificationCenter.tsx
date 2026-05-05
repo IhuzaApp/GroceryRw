@@ -8,6 +8,7 @@ import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
+import { requestNotificationPermission } from "../../services/fcmClient";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -293,30 +294,68 @@ export default function NotificationCenter() {
     };
   }, [isOpen, isMobile, setHideFloatingUI]);
 
-  const loadNotifications = () => {
+  const loadNotifications = async () => {
     try {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
+
+      // Also fetch from DB if session exists
+      let dbNotifications: NotificationItem[] = [];
+      if (session?.user?.id) {
+        try {
+          const resp = await fetch("/api/queries/notifications");
+          if (resp.ok) {
+            const data = await resp.json();
+            dbNotifications = (data.notifications || []).map((n: any) => ({
+              title: n.type?.replace(/_/g, " ").toUpperCase() || "Notification",
+              body: n.message,
+              timestamp: new Date(n.created_at).getTime(),
+              type: n.type,
+              read: n.is_read,
+              id: n.id,
+            }));
+          }
+        } catch (e) {
+          console.error("Error fetching DB notifications:", e);
+        }
+      }
+
+      // Merge and sort by timestamp desc
+      const combinedHistory = [...history, ...dbNotifications].sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+
+      // Deduplicate by ID if both sources have same notification
+      const seenIds = new Set();
+      const uniqueHistory = combinedHistory.filter((n) => {
+        if (!n.id) return true;
+        if (seenIds.has(n.id)) return false;
+        seenIds.add(n.id);
+        return true;
+      });
 
       // Check user role to filter notifications
       const role = (session?.user as any)?.role;
       const isShopper = role === "shopper";
 
       // Filter notifications based on user role
-      let filteredHistory = history.filter((n: NotificationItem) => {
-        // Regular users (non-shoppers): ONLY show chat_message notifications
+      // Filter notifications based on user role
+      let filteredHistory = uniqueHistory.filter((n: NotificationItem) => {
+        // Regular users (non-shoppers): ONLY show chat_message and partner notifications
         if (!isShopper) {
-          return n.type === "chat_message";
+          return (
+            n.type === "chat_message" ||
+            n.type === "vehicle_booking" ||
+            n.type === "pet_adoption" ||
+            n.type === "system"
+          );
         }
 
         // Shoppers: show all notification types, but filter out already-assigned orders
-        // If notification has an orderId, check if it's in assignedOrderIds
         if (n.orderId && assignedOrderIds.size > 0) {
-          // For combined orders, check if any order in the group is assigned
           if (n.orderIds) {
             try {
-              // Handle both string (JSON) and array formats
               const orderIdsArray =
                 typeof n.orderIds === "string"
                   ? JSON.parse(n.orderIds)
@@ -326,19 +365,12 @@ export default function NotificationCenter() {
               const hasAssignedOrder = orderIdsArray.some((id: string) =>
                 assignedOrderIds.has(String(id))
               );
-              if (hasAssignedOrder) {
-                return false; // Filter out - order is already assigned
-              }
-            } catch {
-              // If parsing fails, check the main orderId
-            }
+              if (hasAssignedOrder) return false;
+            } catch {}
           }
-          // Check if the main orderId is assigned
-          if (assignedOrderIds.has(String(n.orderId))) {
-            return false; // Filter out - order is already assigned
-          }
+          if (assignedOrderIds.has(String(n.orderId))) return false;
         }
-        return true; // Keep notification
+        return true;
       });
 
       // Deduplicate order notifications: show at most one per order (avoid same reel/order twice)
@@ -442,6 +474,40 @@ export default function NotificationCenter() {
               strokeLinejoin="round"
               strokeWidth={2}
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+        );
+      case "vehicle_booking":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7h8M4 11h16a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2zm0 0V7a2 2 0 012-2h8a2 2 0 012 2v4M6 15a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z"
+            />
+          </svg>
+        );
+      case "pet_adoption":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
         );
@@ -559,6 +625,10 @@ export default function NotificationCenter() {
     switch (type) {
       case "chat_message":
         return theme === "dark" ? "text-blue-400" : "text-blue-600";
+      case "vehicle_booking":
+        return theme === "dark" ? "text-emerald-400" : "text-emerald-600";
+      case "pet_adoption":
+        return theme === "dark" ? "text-rose-400" : "text-rose-600";
       case "new_order":
         return theme === "dark" ? "text-green-400" : "text-green-600";
       case "batch_orders":
@@ -595,10 +665,10 @@ export default function NotificationCenter() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 active:scale-90 ${
+        className={`group relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 active:scale-90 ${
           theme === "dark"
-            ? "bg-gradient-to-br from-white/10 to-white/5 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ring-1 ring-white/10 hover:from-white/15 hover:to-white/10"
-            : "bg-gradient-to-br from-white to-gray-50 text-emerald-600 shadow-md ring-1 ring-black/5 hover:shadow-lg"
+            ? "text-gray-300 hover:bg-green-900/20 hover:text-green-400"
+            : "text-gray-600 hover:bg-green-50 hover:text-green-600"
         }`}
         title="Notifications"
       >
@@ -819,9 +889,28 @@ export default function NotificationCenter() {
                               : "bg-red-500"
                           }`}
                         ></div>
-                        <span
-                          className={`text-[10px] font-bold ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        <button
+                          onClick={async () => {
+                            if (!hasPermission) {
+                              const granted =
+                                await requestNotificationPermission();
+                              if (granted) {
+                                window.location.reload();
+                              } else {
+                                toast.error(
+                                  "Please enable notifications in your browser settings."
+                                );
+                              }
+                            }
+                          }}
+                          className={`text-[10px] font-bold outline-none transition-colors ${
+                            theme === "dark"
+                              ? "text-gray-400 hover:text-white"
+                              : "text-gray-600 hover:text-black"
+                          } ${
+                            !hasPermission
+                              ? "cursor-pointer underline decoration-dashed underline-offset-4"
+                              : "cursor-default"
                           }`}
                         >
                           FCM STATUS:{" "}
@@ -829,8 +918,8 @@ export default function NotificationCenter() {
                             ? isInitialized
                               ? "CONNECTED"
                               : "SYNCING..."
-                            : "DISABLED"}
-                        </span>
+                            : "DISABLED - CLICK TO ENABLE"}
+                        </button>
                       </div>
                     </div>
                   </div>

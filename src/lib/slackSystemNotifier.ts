@@ -480,3 +480,84 @@ export async function notifyPartnershipInquiryToSlack(
     );
   }
 }
+// --- PII Detection notification ---
+
+export interface PIIDetectionPayload {
+  senderId: string;
+  senderName: string;
+  recipientId?: string;
+  recipientName?: string;
+  conversationId: string;
+  message: string;
+  detectedType: "phone" | "email" | "both" | "keyword";
+}
+
+/**
+ * Send a notification to Slack when a user tries to share a phone number or email in chat.
+ */
+export async function notifyPIIDetectionToSlack(payload: PIIDetectionPayload) {
+  if (!SLACK_GENERAL_WEBHOOK) {
+    return;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🚨 PII Sharing Detected in Chat",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Sender*\n${payload.senderName} (\`${payload.senderId}\`)`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Type*\n${payload.detectedType.toUpperCase()}`,
+        },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Conversation*\n\`${payload.conversationId}\``,
+        },
+        { type: "mrkdwn", text: `*Time*\n${new Date().toLocaleString()}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Detected Message*\n> ${payload.message.slice(0, 500)}${
+          payload.message.length > 500 ? "..." : ""
+        }`,
+      },
+    },
+  ];
+
+  try {
+    await fetch(SLACK_GENERAL_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `🚨 PII sharing detected from ${payload.senderName}`,
+        attachments: [
+          {
+            color: "#E01E5A", // Red for security alerts
+            blocks,
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send PII detection notification to Slack", error);
+  }
+}

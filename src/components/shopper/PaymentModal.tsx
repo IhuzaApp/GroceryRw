@@ -23,6 +23,7 @@ interface PaymentModalProps {
   onVerifyOtp: () => void;
   generatedOtp: string;
   hasWallet?: boolean;
+  error?: string;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -44,6 +45,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onVerifyOtp,
   generatedOtp,
   hasWallet = true,
+  error: backendError,
 }) => {
   const { theme } = useTheme();
   const [paymentStatus, setPaymentStatus] = useState<
@@ -373,9 +375,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           )}
 
           {/* Error Message */}
-          {statusMessage && (
+          {(statusMessage || backendError) && (
             <div className="mt-6 rounded-2xl border-2 border-red-500/10 bg-red-500/5 p-4 text-center text-xs font-bold text-red-500">
-              {statusMessage}
+              {statusMessage || backendError}
             </div>
           )}
         </div>

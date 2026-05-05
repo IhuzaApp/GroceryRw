@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendSMS } from "../../../src/lib/pindo";
+import { insertSystemLog } from "../queries/system-logs";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const GET_TRANSACTION_BY_REF = gql`
   query GetTransactionByRef($reference_id: String!) {
@@ -18,6 +21,9 @@ const GET_TRANSACTION_BY_REF = gql`
       relate_business_order_id
       related_restaurant_order_id
       related_reel_orderId
+      description
+      petAdoptionId
+      vehicleBookingsId
     }
   }
 `;
@@ -245,6 +251,82 @@ const GET_BUSINESS_ORDER_TIMING = gql`
   }
 `;
 
+const UPDATE_PET_ADOPTION_STATUS = gql`
+  mutation UpdatePetAdoptionStatus($id: uuid!, $status: String!) {
+    update_petAdoption_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
+      id
+    }
+  }
+`;
+
+const GET_PET_ADOPTION_DETAILS = gql`
+  query GetPetAdoptionDetails($id: uuid!) {
+    petAdoption_by_pk(id: $id) {
+      id
+      phone
+      address
+      pets {
+        id
+        name
+        quantity_sold
+        pet_vendors {
+          Users {
+            id
+            phone
+          }
+        }
+      }
+    }
+  }
+`;
+
+const UPDATE_PET_QUANTITY_SOLD = gql`
+  mutation UpdatePetQuantitySold($id: uuid!, $quantity_sold: String!) {
+    update_pets_by_pk(
+      pk_columns: { id: $id }
+      _set: { quantity_sold: $quantity_sold }
+    ) {
+      id
+      quantity_sold
+    }
+  }
+`;
+
+const UPDATE_VEHICLE_BOOKING_STATUS = gql`
+  mutation UpdateVehicleBookingStatus($id: uuid!, $status: String!) {
+    update_vehicleBookings_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: "now()" }
+    ) {
+      id
+    }
+  }
+`;
+
+const GET_VEHICLE_BOOKING_DETAILS_FOR_INVOICE = gql`
+  query GetVehicleBookingDetails($id: uuid!) {
+    vehicleBookings_by_pk(id: $id) {
+      id
+      amount
+      refundable_fee
+      services_fee
+      pickup_date
+      return_date
+      orderedBy {
+        name
+        email
+      }
+      RentalVehicles {
+        name
+        platNumber
+      }
+    }
+  }
+`;
+
 const GET_ORDER_TRANSACTION_BY_REF = gql`
   query GetOrderTransactionByRef($reference_id: String!) {
     order_transactions(where: { reference_id: { _eq: $reference_id } }) {
@@ -257,6 +339,9 @@ const GET_ORDER_TRANSACTION_BY_REF = gql`
       package_id
       amount
       user_id
+      type
+      petAdoptionId
+      vehicleBookingsId
     }
   }
 `;
@@ -266,7 +351,7 @@ const UPDATE_ORDER_TRANSACTION_STATUS = gql`
     $id: uuid!
     $status: String!
     $mtn_response: String!
-    $updated_at: timestamptz!
+    $updated_at: String!
   ) {
     update_order_transactions(
       where: { id: { _eq: $id }, status: { _neq: "SUCCESSFUL" } }
@@ -567,6 +652,140 @@ export default async function handler(
                   status: "PENDING",
                 });
               }
+
+              // Handle Pet Adoption from order_transactions
+              if (
+                orderTransaction.type === "pet_adoption" ||
+                orderTransaction.petAdoptionId
+              ) {
+                const petAdoptionId = orderTransaction.petAdoptionId;
+                if (petAdoptionId) {
+                  console.log(
+                    `🚀[MoMo Status] Activating pet adoption from Order Transaction: ${petAdoptionId}`
+                  );
+
+                  await hasuraClient.request(UPDATE_PET_ADOPTION_STATUS, {
+                    id: petAdoptionId,
+                    status: "PAID",
+                  });
+
+                  // Send SMS to vendor
+                  try {
+                    const adoptionDetails = await hasuraClient.request<{
+                      petAdoption_by_pk: any;
+                    }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
+
+                    const adoption = adoptionDetails.petAdoption_by_pk;
+
+                    if (adoption && adoption.pets?.id) {
+                      try {
+                        const currentSold = parseInt(
+                          adoption.pets.quantity_sold || "0",
+                          10
+                        );
+                        const newSold = (currentSold + 1).toString();
+                        await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
+                          id: adoption.pets.id,
+                          quantity_sold: newSold,
+                        });
+                      } catch (incErr) {
+                        console.error(
+                          "Failed to increment pet quantity_sold:",
+                          incErr
+                        );
+                      }
+                    }
+
+                    if (adoption && adoption.pets?.pet_vendors?.Users?.phone) {
+                      const vendorPhone = adoption.pets.pet_vendors.Users.phone;
+                      const vendorUserId = adoption.pets.pet_vendors.Users.id;
+                      const petName = adoption.pets.name;
+                      const customerPhone = adoption.phone;
+                      const customerAddress = adoption.address;
+
+                      const smsMessage = `Hello, your pet ${petName} has been ordered and paid for! Customer Address: ${customerAddress}. Customer Phone: ${customerPhone}. Please prepare for delivery.`;
+
+                      await sendSMS(vendorPhone, smsMessage);
+                      console.log(
+                        "✅ [MoMo Status] SMS sent to vendor (Adoption):",
+                        vendorPhone
+                      );
+
+                      if (vendorUserId) {
+                        try {
+                          await sendNotificationToUser(vendorUserId, {
+                            title: "New Pet Adoption! 🐾",
+                            body: `Your pet "${petName}" has been adopted and paid for!`,
+                            data: {
+                              type: "pet_adoption",
+                              petId: adoption.pets.id,
+                            },
+                          });
+                        } catch (notifErr) {
+                          console.error(
+                            "Failed to send FCM notification:",
+                            notifErr
+                          );
+                        }
+                      }
+                    }
+                  } catch (smsErr: any) {
+                    console.error(
+                      "❌ [MoMo Status] Failed to send vendor SMS (Adoption):",
+                      smsErr
+                    );
+                    await insertSystemLog(
+                      "error",
+                      `Failed to send vendor SMS (Adoption): ${
+                        smsErr.message || "Unknown"
+                      }`,
+                      "MomoRequestToPayStatusAPI:SMS",
+                      { petAdoptionId, error: smsErr }
+                    );
+                  }
+                }
+              }
+
+              // Handle Vehicle Booking from order_transactions
+              if (orderTransaction.vehicleBookingsId) {
+                const vehicleBookingsId = orderTransaction.vehicleBookingsId;
+                console.log(
+                  `🚀[MoMo Status] Activating vehicle booking from Order Transaction: ${vehicleBookingsId}`
+                );
+
+                await hasuraClient.request(UPDATE_VEHICLE_BOOKING_STATUS, {
+                  id: vehicleBookingsId,
+                  status: "PAID",
+                });
+
+                // Send Invoice Email
+                try {
+                  const bookingDetailsRes = await hasuraClient.request<{
+                    vehicleBookings_by_pk: any;
+                  }>(GET_VEHICLE_BOOKING_DETAILS_FOR_INVOICE, {
+                    id: vehicleBookingsId,
+                  });
+
+                  const booking = bookingDetailsRes.vehicleBookings_by_pk;
+                  if (booking && booking.orderedBy?.email) {
+                    const {
+                      sendRentalInvoice,
+                    } = require("../../../src/lib/resend");
+                    await sendRentalInvoice({
+                      to: booking.orderedBy.email,
+                      customerName: booking.orderedBy.name || "Customer",
+                      vehicleName: booking.RentalVehicles?.name || "Vehicle",
+                      platNumber: booking.RentalVehicles?.platNumber || "N/A",
+                      amount: booking.amount,
+                      refundableDeposit: booking.refundable_fee || "0",
+                      serviceFee: booking.services_fee || "0",
+                      platformFee: "0",
+                    });
+                  }
+                } catch (emailErr) {
+                  console.error("Failed to send rental invoice:", emailErr);
+                }
+              }
             } else if (newStatus === "FAILED") {
               // FAILURE: Mark orders as PAYMENT_FAILED
               if (orderId) {
@@ -670,6 +889,106 @@ export default async function handler(
                   status: "PENDING",
                 });
               }
+
+              // Handle Pet Adoption
+              const petAdoptionId = transaction.petAdoptionId;
+              if (petAdoptionId) {
+                console.log(
+                  `🚀[MoMo Status] Activating pet adoption from Wallet Transaction field: ${petAdoptionId}`
+                );
+
+                await hasuraClient.request(UPDATE_PET_ADOPTION_STATUS, {
+                  id: petAdoptionId,
+                  status: "PAID",
+                });
+
+                // Send SMS to vendor
+                try {
+                  const adoptionDetails = await hasuraClient.request<{
+                    petAdoption_by_pk: any;
+                  }>(GET_PET_ADOPTION_DETAILS, { id: petAdoptionId });
+
+                  const adoption = adoptionDetails.petAdoption_by_pk;
+
+                  if (adoption && adoption.pets?.id) {
+                    try {
+                      const currentSold = parseInt(
+                        adoption.pets.quantity_sold || "0",
+                        10
+                      );
+                      const newSold = (currentSold + 1).toString();
+                      await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
+                        id: adoption.pets.id,
+                        quantity_sold: newSold,
+                      });
+                    } catch (incErr) {
+                      console.error(
+                        "Failed to increment pet quantity_sold:",
+                        incErr
+                      );
+                    }
+                  }
+
+                  if (adoption && adoption.pets?.pet_vendors?.Users?.phone) {
+                    const vendorPhone = adoption.pets.pet_vendors.Users.phone;
+                    const vendorUserId = adoption.pets.pet_vendors.Users.id;
+                    const petName = adoption.pets.name;
+                    const customerPhone = adoption.phone;
+                    const customerAddress = adoption.address;
+
+                    const smsMessage = `Hello, your pet ${petName} has been ordered and paid for! Customer Address: ${customerAddress}. Customer Phone: ${customerPhone}. Please prepare for delivery.`;
+
+                    await sendSMS(vendorPhone, smsMessage);
+                    console.log(
+                      "✅ [MoMo Status] SMS sent to vendor (Adoption):",
+                      vendorPhone
+                    );
+
+                    if (vendorUserId) {
+                      try {
+                        await sendNotificationToUser(vendorUserId, {
+                          title: "New Pet Adoption! 🐾",
+                          body: `Your pet "${petName}" has been adopted and paid for!`,
+                          data: {
+                            type: "pet_adoption",
+                            petId: adoption.pets.id,
+                          },
+                        });
+                      } catch (notifErr) {
+                        console.error(
+                          "Failed to send FCM notification:",
+                          notifErr
+                        );
+                      }
+                    }
+                  }
+                } catch (smsErr: any) {
+                  console.error(
+                    "❌ [MoMo Status] Failed to send vendor SMS (Adoption):",
+                    smsErr
+                  );
+                  await insertSystemLog(
+                    "error",
+                    `Failed to send vendor SMS (Adoption): ${
+                      smsErr.message || "Unknown"
+                    }`,
+                    "MomoRequestToPayStatusAPI:SMS",
+                    { petAdoptionId, error: smsErr }
+                  );
+                }
+              }
+
+              // Handle Vehicle Booking
+              const vehicleBookingsId = transaction.vehicleBookingsId;
+              if (vehicleBookingsId) {
+                console.log(
+                  `🚀[MoMo Status] Activating vehicle booking from Wallet Transaction: ${vehicleBookingsId}`
+                );
+                await hasuraClient.request(UPDATE_VEHICLE_BOOKING_STATUS, {
+                  id: vehicleBookingsId,
+                  status: "PAID",
+                });
+              }
             } else if (newStatus === "FAILED") {
               const orderId = transaction.related_order_id;
               const restaurantOrderId = transaction.related_restaurant_order_id;
@@ -699,8 +1018,12 @@ export default async function handler(
               }
             }
 
-            // Wallet balance update logic (Personal Wallet)
-            if (newStatus === "SUCCESSFUL" && transaction.wallet_id) {
+            // Wallet balance update logic (Personal Wallet) - ONLY if not a pet adoption payment
+            if (
+              newStatus === "SUCCESSFUL" &&
+              transaction.wallet_id &&
+              !transaction.petAdoptionId
+            ) {
               // ... (Existing wallet balance update logic remains same)
               try {
                 const walletRes = await hasuraClient.request<{
@@ -749,10 +1072,18 @@ export default async function handler(
                     `✅[MoMo Status] Wallet ${transaction.wallet_id} updated: ${currentBalance} -> ${newBalance} `
                   );
                 }
-              } catch (walletError) {
+              } catch (walletError: any) {
                 console.error(
                   "❌ [MoMo Status] Failed to update wallet balance:",
                   walletError
+                );
+                await insertSystemLog(
+                  "error",
+                  `Failed to update wallet balance: ${
+                    walletError.message || "Unknown"
+                  }`,
+                  "MomoRequestToPayStatusAPI:Wallet",
+                  { transactionId: transaction.id, error: walletError }
                 );
               }
             }
@@ -898,6 +1229,12 @@ export default async function handler(
           "❌ [MoMo Status] Failed to update transaction in DB:",
           dbError
         );
+        await insertSystemLog(
+          "error",
+          `MoMo Status DB Update failure: ${dbError.message || "Unknown"}`,
+          "MomoRequestToPayStatusAPI:DB",
+          { referenceId, error: dbError.message || dbError }
+        );
         return res
           .status(500)
           .json({ error: "Database update failed", details: dbError.message });
@@ -907,6 +1244,12 @@ export default async function handler(
     return res.status(200).json(data);
   } catch (error: any) {
     console.error("💥 [MoMo Status] Exception:", error);
+    await insertSystemLog(
+      "error",
+      `MoMo Status check Exception: ${error.message || "Unknown"}`,
+      "MomoRequestToPayStatusAPI:Main",
+      { referenceId, error: error.message || error }
+    );
     return res.status(500).json({
       error: "Status check failed",
       details: error.message,

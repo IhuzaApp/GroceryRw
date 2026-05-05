@@ -9,6 +9,7 @@ import {
   logOfferSkip,
 } from "../../../src/lib/redisClient";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { insertSystemLog } from "../queries/system-logs";
 
 // ============================================================================
 // SYSTEM DESIGN: Dispatch with Exclusive Offers + Nearby Assignment
@@ -256,7 +257,7 @@ const GET_ELIGIBLE_PACKAGE_ORDERS = gql`
       user_id
       payment_method
       shopper_id
-      Users {
+      User {
         name
       }
     }
@@ -415,7 +416,7 @@ const GET_PACKAGE_ORDER_BY_PK = gql`
       user_id
       payment_method
       shopper_id
-      Users {
+      User {
         name
       }
     }
@@ -955,8 +956,8 @@ function formatOrderForResponse(
     displayOrderId: order.OrderID != null ? String(order.OrderID) : null,
     shopName:
       order.orderType === "package"
-        ? order.Users?.name
-          ? `Package from ${order.Users.name}`
+        ? order.User?.name
+          ? `Package from ${order.User.name}`
           : "Package Delivery"
         : order.Shop?.name ||
           order.Reel?.title ||
@@ -1123,7 +1124,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   console.log("=== Smart Assignment API (with Exclusive Offers) ===");
-  console.log("Method:", req.method);
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -1131,24 +1131,24 @@ export default async function handler(
 
   try {
     const { current_location, user_id } = req.body;
-    console.log("Request body:", { user_id, current_location });
+    console.log("Request body received", { user_id, current_location });
 
     if (!user_id) {
-      console.warn("Missing user_id in request");
+      logger.warn("Missing user_id in request", "SmartAssignAPI");
       return res.status(400).json({
         error: "User ID is required",
       });
     }
 
     if (!current_location || !current_location.lat || !current_location.lng) {
-      console.warn("Missing or invalid current_location in request");
+      logger.warn("Missing or invalid current_location in request", "SmartAssignAPI");
       return res.status(400).json({
         error: "Current location is required",
       });
     }
 
     if (!hasuraClient) {
-      console.error("Hasura client is not initialized!");
+      logger.error("Hasura client is not initialized!", "SmartAssignAPI");
       throw new Error("Hasura client is not initialized");
     }
 
@@ -1533,8 +1533,14 @@ export default async function handler(
               tag: `new_order_${orderId}_${Date.now()}`,
             } as any);
             // console.log(`✅ Re-triggered notification for shopper ${user_id}`);
-          } catch (fcmError) {
+          } catch (fcmError: any) {
             console.error("Failed to re-trigger notification:", fcmError);
+            await insertSystemLog(
+              "error",
+              `FCM Notification failure: ${fcmError.message || "Unknown"}`,
+              "SmartAssignOrderAPI:FCM",
+              { orderId, error: fcmError.message || fcmError }
+            );
           }
 
           return res.status(200).json({
@@ -2333,6 +2339,12 @@ export default async function handler(
                 shopperId: user_id,
               }
             );
+            await insertSystemLog(
+              "warn",
+              `Duplicate offer detected: ${bestOrder.id}`,
+              "SmartAssignOrderAPI:OfferCreation",
+              { orderId: bestOrder.id, shopperId: user_id }
+            );
 
             // One final check - maybe another request created it
             let recoveryCheckData: any;
@@ -2731,7 +2743,7 @@ export default async function handler(
       wasExtended: isExtendingOffer,
       note: "Action-based system: offer stays until shopper accepts or declines",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("=== ERROR in Smart Assignment API ===");
     console.error("Error:", error);
     console.error(
@@ -2741,6 +2753,13 @@ export default async function handler(
     console.error(
       "Error stack:",
       error instanceof Error ? error.stack : "No stack trace"
+    );
+
+    await insertSystemLog(
+      "error",
+      `SmartAssign Dispatch Exception: ${error.message || "Unknown"}`,
+      "SmartAssignOrderAPI:Main",
+      { error: error.message || error }
     );
 
     logger.error("Error in smart assignment", "SmartAssignmentAPI", {

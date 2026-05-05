@@ -32,12 +32,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty("--text-primary", "#ffffff");
       root.style.setProperty("--bg-secondary", "#171717"); // Dark gray for contrast
       root.style.setProperty("--text-secondary", "#a1a1aa");
+      root.style.setProperty("--always-white", "#ffffff");
     } else {
       root.classList.remove("dark");
       root.style.setProperty("--bg-primary", "#ffffff"); // Pure white
       root.style.setProperty("--text-primary", "#111827"); // Gray-900 (softer than pure black)
       root.style.setProperty("--bg-secondary", "#f9fafb"); // Very light gray for contrast
       root.style.setProperty("--text-secondary", "#4b5563"); // Gray-600
+      root.style.setProperty("--always-white", "#ffffff");
     }
     localStorage.setItem("theme", newTheme);
   };

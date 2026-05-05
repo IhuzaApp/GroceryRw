@@ -3,20 +3,24 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import PetForm, { PetFormData } from "../forms/PetForm";
+import toast from "react-hot-toast";
 
 interface AddPetModalProps {
   isOpen: boolean;
   onClose: () => void;
   theme: string;
-  onSubmit?: (data: PetFormData) => void;
+  vendorId: string;
+  onSuccess?: () => void;
 }
 
 export default function AddPetModal({
   isOpen,
   onClose,
   theme,
-  onSubmit,
+  vendorId,
+  onSuccess,
 }: AddPetModalProps) {
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<PetFormData>({
     name: "",
     type: "Dog",
@@ -40,10 +44,53 @@ export default function AddPetModal({
 
   if (!isOpen) return null;
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(formData);
-    onClose();
+    if (!vendorId) {
+      toast.error("Vendor ID is missing");
+      return;
+    }
+
+    setSubmitting(true);
+    const toastId = toast.loading("Listing your pet...");
+    try {
+      const response = await fetch("/api/mutations/add-pet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          pet_type: formData.type,
+          amount: formData.price.toString(),
+          free: formData.isDonation,
+          vaccinated: formData.isVaccinated,
+          vaccination_cert: formData.vaccinationCertificateUrl,
+          vendor_id: vendorId,
+          quantity: (formData as any).quantity?.toString() || "1",
+          images: formData.images,
+          age: formData.age,
+          months: formData.ageInMonths.toString(),
+          gender: formData.gender,
+          weight: formData.weight,
+          color: formData.color,
+          story: formData.story,
+          vaccinations: formData.vaccinations,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(`${formData.name} has been listed!`, { id: toastId });
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to add pet");
+      }
+    } catch (error: any) {
+      console.error("Error adding pet:", error);
+      toast.error(error.message || "Failed to add pet", { id: toastId });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -29,14 +29,14 @@ export default async function handler(
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions as any);
+    const session: any = await getServerSession(req, res, authOptions as any);
 
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const userId = session.user.id;
-    const email = (session.user as { email?: string }).email ?? "";
+    const email = session.user.email ?? "";
 
     // Fetch shopper profile phone number
     if (!hasuraClient) {
@@ -65,10 +65,11 @@ export default async function handler(
       fullName: "Withdraw",
       gender: "other",
       expiresAt,
+      phone: "",
     });
 
     // Send OTP via SMS
-    const message = `Plas Grocery: Your withdrawal verification code is ${otp}.`;
+    const message = `Plas Pay: Your withdrawal verification code is ${otp}.`;
     let smsSent = false;
     try {
       await sendSMS(shopperPhone, message);

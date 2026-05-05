@@ -1,13 +1,66 @@
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { DUMMY_CARS } from "../../src/constants/dummyCars";
 import CarDetailsPage from "../../src/components/cars/CarDetailsPage";
 import RootLayout from "../../src/components/ui/layout";
+import LoadingScreen from "../../src/components/ui/LoadingScreen";
 
 export default function CarDetail() {
   const router = useRouter();
   const { id } = router.query;
+  const [car, setCar] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const car = DUMMY_CARS.find((c) => c.id === id);
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchCar = async () => {
+      try {
+        const response = await fetch(`/api/queries/get-car?id=${id}`);
+        const data = await response.json();
+        if (data.car) {
+          const v = data.car;
+          const mappedCar = {
+            ...v,
+            type: v.category,
+            fuelType: v.fuel_type,
+            image: v.main_photo,
+            passengers: parseInt(v.passenger || "5"),
+            securityDeposit: v.refundable_amount,
+            driverOption: v.drive_provided ? "offered" : "none",
+            owner: {
+              id: v.logisticsAccounts?.user?.id || v.logisticAccount_id,
+              name:
+                v.logisticsAccounts?.businessName ||
+                v.logisticsAccounts?.fullname ||
+                "Verified Host",
+              image: v.logisticsAccounts?.user?.image || null,
+              isVerified: true,
+            },
+            images: [
+              { url: v.main_photo, label: "Main" },
+              { url: v.exterior, label: "Exterior" },
+              { url: v.interior, label: "Interior" },
+              { url: v.seats, label: "Seats" },
+            ].filter((img: any) => img.url),
+            reviews: [],
+            rating: 5.0,
+            description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
+            licenseInfo: "Verified License & Insurance",
+            bookings: v.vehicleBookings || [],
+          };
+          setCar(mappedCar);
+        }
+      } catch (error) {
+        console.error("Error fetching car:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCar();
+  }, [id]);
+
+  if (!router.isReady || isLoading) return <LoadingScreen />;
 
   if (!car) {
     return (

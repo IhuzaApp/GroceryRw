@@ -101,10 +101,11 @@ export function RejectedAccountMessage({
     }
     setSubmitting(true);
     try {
-      const res = await fetch("/api/support/rejected-account-support", {
+      const res = await fetch("/api/support-ticket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          requestType: "rejected_account",
           message: message.trim(),
           priority,
           ...(businessAccountId && { businessAccountId }),

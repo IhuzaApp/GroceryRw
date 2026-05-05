@@ -27,13 +27,26 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-import { DUMMY_CARS, Car } from "../../constants/dummyCars";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
+import { Car } from "../../types/models";
 import AddVehicleModal from "./modals/AddVehicleModal";
 import EditVehicleModal from "./modals/EditVehicleModal";
+import BookingDetailsModal from "./modals/BookingDetailsModal";
+import RaiseComplaintModal from "./modals/RaiseComplaintModal";
+import RejectionModal from "./modals/RejectionModal";
 import DashboardHeader from "./DashboardHeader";
 import CameraCapture from "../ui/CameraCapture";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { uploadToFirebase } from "../../lib/firebase";
+import LoadingScreen from "../ui/LoadingScreen";
+import {
+  PendingReviewMessage,
+  RejectedAccountMessage,
+} from "../business/PendingReviewMessage";
 
 const CarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -63,20 +76,164 @@ export default function CarBusinessDashboard() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [isBookingDetailsOpen, setIsBookingDetailsOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [walletBalance] = useState(2450800);
-  const [cars, setCars] = useState(DUMMY_CARS);
+  const [isPickupCameraOpen, setIsPickupCameraOpen] = useState(false);
+  const [selectedBookingForPickup, setSelectedBookingForPickup] =
+    useState<any>(null);
+  const { walletBalance, fetchWalletBalance: refreshWallet } =
+    useBusinessWallet();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [cars, setCars] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isVehiclesLoading, setIsVehiclesLoading] = useState(true);
+  const [isBookingsLoading, setIsBookingsLoading] = useState(true);
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
+  const [isComplaintCameraOpen, setIsComplaintCameraOpen] = useState(false);
+  const [selectedBookingForComplaint, setSelectedBookingForComplaint] =
+    useState<any>(null);
+  const [complaintData, setComplaintData] = useState({
+    title: "",
+    description: "",
+    amount: "",
+  });
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [accountStatus, setAccountStatus] = useState<
+    "loading" | "active" | "pending" | "disabled"
+  >("loading");
+  const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(
+    null
+  );
 
-  const handleToggleStatus = (id: string) => {
-    setCars((prev) =>
-      prev.map((car) =>
-        car.id === id
-          ? { ...car, status: car.status === "active" ? "disabled" : "active" }
-          : car
-      )
-    );
-    toast.success("Status updated");
+  const fetchBookings = async (accountId: string) => {
+    try {
+      const response = await fetch(
+        `/api/queries/get-logistics-bookings?logisticAccount_id=${accountId}`
+      );
+      const data = await response.json();
+      if (data.bookings) {
+        setBookings(data.bookings);
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    } finally {
+      setIsBookingsLoading(false);
+    }
+  };
+
+  const fetchVehicles = async (accountId: string) => {
+    try {
+      const response = await fetch(
+        `/api/queries/get-logistics-vehicles?logisticAccount_id=${accountId}`
+      );
+      const data = await response.json();
+      if (data.vehicles) {
+        // Map database fields to frontend Car structure
+        const mappedCars = data.vehicles.map((v: any) => ({
+          ...v,
+          type: v.category,
+          fuelType: v.fuel_type,
+          image: v.main_photo,
+          passengers: parseInt(v.passenger || "5"),
+          securityDeposit: v.refundable_amount,
+          driverOption: v.drive_provided ? "offered" : "none",
+          owner: {
+            id: v.logisticAccount_id,
+            name:
+              v.logisticsAccounts?.businessName ||
+              v.logisticsAccounts?.fullname ||
+              "Verified Host",
+            image:
+              v.logisticsAccounts?.user?.image ||
+              "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+            isVerified: true,
+          },
+          images: [
+            { url: v.main_photo, label: "Main" },
+            { url: v.exterior, label: "Exterior" },
+            { url: v.interior, label: "Interior" },
+            { url: v.seats, label: "Seats" },
+          ].filter((img) => img.url),
+          reviews: [],
+          rating: 5.0,
+          description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
+          licenseInfo: "Verified License & Insurance",
+        }));
+        setCars(mappedCars);
+      }
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setIsVehiclesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkAccount = async () => {
+      try {
+        const response = await fetch("/api/queries/check-logistics-account");
+        if (!response.ok) {
+          router.push("/Cars/become-partner");
+          return;
+        }
+        const data = await response.json();
+        if (!data.hasAccount) {
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push("/Cars/become-partner");
+          }
+          return;
+        }
+
+        setLogisticsAccountId(data.account.id);
+        fetchVehicles(data.account.id);
+        fetchBookings(data.account.id);
+
+        if (data.account.disabled) {
+          setAccountStatus("disabled");
+        } else {
+          setAccountStatus(data.account.status);
+        }
+      } catch (error) {
+        console.error("Error checking logistics account status:", error);
+        setAccountStatus("active"); // Fallback
+      }
+    };
+
+    if (session?.user) {
+      checkAccount();
+    }
+  }, [session, router]);
+
+  const handleToggleStatus = async (
+    vehicleId: string,
+    currentActive: boolean
+  ) => {
+    try {
+      const response = await fetch(
+        "/api/mutations/update-vehicle-active-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vehicleId,
+            active: !currentActive,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success(`Vehicle ${!currentActive ? "enabled" : "disabled"}`);
+        if (logisticsAccountId) fetchVehicles(logisticsAccountId);
+      } else {
+        toast.error("Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error toggling status:", error);
+      toast.error("An error occurred");
+    }
   };
 
   const handleEdit = (car: Car) => {
@@ -89,20 +246,125 @@ export default function CarBusinessDashboard() {
     setIsDetailsModalOpen(true);
   };
 
-  const handleConfirmBooking = (booking: any) => {
-    setSelectedBooking(booking);
-    // If no driver provided, require camera capture
-    if (!booking.driverProvided) {
-      setIsCameraOpen(true);
-    } else {
-      toast.success("Booking confirmed!");
+  const handleConfirmBooking = async (booking: any) => {
+    try {
+      const response = await fetch(
+        "/api/mutations/update-vehicle-booking-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            status: "approved",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Booking confirmed! It is now waiting for pickup.");
+        if (logisticsAccountId) fetchBookings(logisticsAccountId);
+      } else {
+        toast.error("Failed to confirm booking");
+      }
+    } catch (error) {
+      console.error("Error confirming booking:", error);
+      toast.error("An error occurred");
     }
   };
 
-  const handleCaptureComplete = (imageData: string) => {
+  const handleRaiseComplaint = (booking: any) => {
+    setSelectedBookingForComplaint(booking);
+    setComplaintData({
+      title: `Damage Report: ${booking.RentalVehicles?.name}`,
+      description: "",
+      amount: booking.refundable_fee?.toString() || "0",
+    });
+    setIsComplaintModalOpen(true);
+  };
+
+  const onComplaintCaptureComplete = async (videoUrl: string) => {
+    if (!selectedBookingForComplaint) return;
+
+    const loadingToast = toast.loading("Uploading damage report video...");
+    try {
+      // 1. Fetch blob
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const file = new File(
+        [blob],
+        `complaint_${selectedBookingForComplaint.id}.webm`,
+        { type: "video/webm" }
+      );
+
+      // 2. Upload to Firebase
+      const storagePath = `complaints/${selectedBookingForComplaint.id}/damage_report.webm`;
+      const downloadUrl = await uploadToFirebase(file, storagePath);
+
+      // 3. API call to raise complaint
+      const res = await fetch("/api/mutations/raise-vehicle-complaint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: selectedBookingForComplaint.id,
+          videoUrl: downloadUrl,
+          title: complaintData.title,
+          description: complaintData.description,
+          amount: complaintData.amount,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(
+          "Complaint raised! Our team will review the damage report.",
+          { id: loadingToast }
+        );
+        if (logisticsAccountId) fetchBookings(logisticsAccountId);
+      } else {
+        toast.error(data.error || "Failed to raise complaint", {
+          id: loadingToast,
+        });
+      }
+    } catch (error) {
+      console.error("Complaint error:", error);
+      toast.error("An error occurred while reporting damage.", {
+        id: loadingToast,
+      });
+    } finally {
+      setIsComplaintCameraOpen(false);
+      setSelectedBookingForComplaint(null);
+    }
+  };
+
+  const handleCaptureComplete = async (imageData: string) => {
     console.log("Vehicle condition captured:", imageData);
     setIsCameraOpen(false);
-    toast.success("Booking confirmed with condition report!");
+
+    if (selectedBooking) {
+      try {
+        const response = await fetch(
+          "/api/mutations/update-vehicle-booking-status",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              status: "approved",
+            }),
+          }
+        );
+
+        if (response.ok) {
+          toast.success("Booking confirmed with condition report!");
+          if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        } else {
+          toast.error("Failed to confirm booking");
+        }
+      } catch (error) {
+        console.error("Error confirming booking:", error);
+        toast.error("An error occurred");
+      }
+    }
   };
 
   const handleRejectBooking = (booking: any) => {
@@ -110,15 +372,126 @@ export default function CarBusinessDashboard() {
     setIsRejectionModalOpen(true);
   };
 
-  const submitRejection = () => {
+  const submitRejection = async () => {
     if (!rejectionReason) {
       toast.error("Please provide a reason");
       return;
     }
-    toast.success("Booking rejected");
-    setIsRejectionModalOpen(false);
-    setRejectionReason("");
+
+    if (selectedBooking) {
+      try {
+        const response = await fetch(
+          "/api/mutations/update-vehicle-booking-status",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              status: "CANCELLED",
+            }),
+          }
+        );
+
+        if (response.ok) {
+          toast.success("Booking rejected");
+          setIsRejectionModalOpen(false);
+          setRejectionReason("");
+          if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        } else {
+          toast.error("Failed to reject booking");
+        }
+      } catch (error) {
+        console.error("Error rejecting booking:", error);
+        toast.error("An error occurred");
+      }
+    }
   };
+
+  const handleConfirmPickup = (booking: any) => {
+    setSelectedBookingForPickup(booking);
+    setIsPickupCameraOpen(true);
+  };
+
+  const handlePickupVideoCapture = async (videoUrl: string) => {
+    if (!selectedBookingForPickup) return;
+
+    const loadingToast = toast.loading("Uploading condition video...");
+    try {
+      // 1. Fetch the blob from the local object URL
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const file = new File(
+        [blob],
+        `pickup_${selectedBookingForPickup.id}.webm`,
+        { type: "video/webm" }
+      );
+
+      // 2. Upload to Firebase
+      const storagePath = `bookings/${selectedBookingForPickup.id}/pickup_video.webm`;
+      const downloadUrl = await uploadToFirebase(file, storagePath);
+
+      // 3. Confirm pickup via API
+      const confirmResponse = await fetch("/api/mutations/confirm-pickup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: selectedBookingForPickup.id,
+          carVideo_Status: downloadUrl,
+        }),
+      });
+
+      if (confirmResponse.ok) {
+        toast.success("Pickup confirmed! Funds transferred to wallet.", {
+          id: loadingToast,
+        });
+        if (logisticsAccountId) fetchBookings(logisticsAccountId);
+        refreshWallet();
+      } else {
+        toast.error("Failed to confirm pickup", { id: loadingToast });
+      }
+    } catch (error) {
+      console.error("Error confirming pickup:", error);
+      toast.error("An error occurred during pickup confirmation", {
+        id: loadingToast,
+      });
+    } finally {
+      setIsPickupCameraOpen(false);
+      setSelectedBookingForPickup(null);
+    }
+  };
+
+  const handleViewBookingDetails = (booking: any) => {
+    setSelectedBooking(booking);
+    setIsBookingDetailsOpen(true);
+  };
+
+  if (accountStatus === "loading") {
+    return <LoadingScreen />;
+  }
+
+  if (accountStatus === "pending") {
+    return (
+      <div
+        className={`min-h-screen pb-24 md:ml-20 ${
+          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
+      >
+        <PendingReviewMessage contactEmail={session?.user?.email} />
+      </div>
+    );
+  }
+
+  if (accountStatus === "disabled") {
+    return (
+      <div
+        className={`min-h-screen pb-24 md:ml-20 ${
+          theme === "dark" ? "bg-[#0A0A0A] text-white" : "bg-white text-black"
+        }`}
+      >
+        <RejectedAccountMessage businessAccountId={logisticsAccountId} />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -138,13 +511,21 @@ export default function CarBusinessDashboard() {
         {/* Wallet & Stats Section */}
         <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Wallet Card */}
-          <WalletBalanceCard balance={walletBalance} theme={theme} />
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <StatsCard
               label="Revenue"
-              value="$12.4k"
+              value={formatCurrencySync(
+                bookings
+                  .filter(
+                    (b) =>
+                      b.status === "approved" ||
+                      b.status === "picked_up" ||
+                      b.status === "COMPLETED"
+                  )
+                  .reduce((acc, b) => acc + (parseFloat(b.amount) || 0), 0)
+              )}
               icon={<TrendingUp />}
               color="green"
               theme={theme}
@@ -158,14 +539,23 @@ export default function CarBusinessDashboard() {
             />
             <StatsCard
               label="Bookings"
-              value="12"
+              value={bookings.length.toString()}
               icon={<CalendarCheck />}
               color="purple"
               theme={theme}
             />
             <StatsCard
               label="Rating"
-              value="4.8"
+              value={(() => {
+                const ratings = bookings
+                  .flatMap((b) => b.Ratings || [])
+                  .map((r) => r.rating);
+                return ratings.length > 0
+                  ? (
+                      ratings.reduce((a, b) => a + b, 0) / ratings.length
+                    ).toFixed(1)
+                  : "5.0";
+              })()}
               icon={<Star />}
               color="orange"
               theme={theme}
@@ -223,7 +613,9 @@ export default function CarBusinessDashboard() {
                   car={car}
                   theme={theme}
                   onEdit={() => handleEdit(car)}
-                  onToggleStatus={() => handleToggleStatus(car.id)}
+                  onToggleStatus={() =>
+                    handleToggleStatus(car.id, car.status === "active")
+                  }
                   onView={() => handleViewDetails(car)}
                 />
               ))}
@@ -231,60 +623,61 @@ export default function CarBusinessDashboard() {
           </div>
         ) : (
           <div className="space-y-4">
-            <BookingItem
-              customer="John Doe"
-              car="Tesla Model 3"
-              date="Oct 24 - Oct 26"
-              amount="$160.00"
-              status="Ongoing"
-              driverProvided={false}
-              theme={theme}
-              onConfirm={() =>
-                handleConfirmBooking({
-                  customer: "John Doe",
-                  driverProvided: false,
-                })
-              }
-              onReject={() => handleRejectBooking({ customer: "John Doe" })}
-            />
-            <BookingItem
-              customer="Jane Smith"
-              car="Toyota RAV4"
-              date="Oct 22 - Oct 23"
-              amount="$65.00"
-              status="Completed"
-              driverProvided={true}
-              theme={theme}
-              onConfirm={() =>
-                handleConfirmBooking({
-                  customer: "Jane Smith",
-                  driverProvided: true,
-                })
-              }
-              onReject={() => handleRejectBooking({ customer: "Jane Smith" })}
-            />
+            {bookings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CalendarCheck className="mb-4 h-12 w-12 text-gray-500 opacity-20" />
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                  No bookings yet
+                </p>
+              </div>
+            ) : (
+              bookings.map((booking) => (
+                <BookingItem
+                  key={booking.id}
+                  customer={booking.orderedBy?.name || "Customer"}
+                  car={booking.RentalVehicles?.name || "Vehicle"}
+                  platNumber={booking.RentalVehicles?.platNumber}
+                  date={
+                    booking.pickup_date
+                      ? `${new Date(
+                          booking.pickup_date
+                        ).toLocaleDateString()} - ${new Date(
+                          booking.return_date
+                        ).toLocaleDateString()}`
+                      : "No dates"
+                  }
+                  amount={formatCurrencySync(booking.amount)}
+                  status={booking.status}
+                  driverProvided={false}
+                  theme={theme}
+                  onConfirm={() => handleConfirmBooking(booking)}
+                  onReject={() => {
+                    setSelectedBooking(booking);
+                    setIsRejectionModalOpen(true);
+                  }}
+                  onConfirmPickup={() => handleConfirmPickup(booking)}
+                  onRaiseComplaint={() => handleRaiseComplaint(booking)}
+                  rawReturnDate={booking.return_date}
+                  onClick={() => handleViewBookingDetails(booking)}
+                  rating={booking.Ratings?.[0]?.rating}
+                  review={booking.Ratings?.[0]?.review}
+                  professionalism={booking.Ratings?.[0]?.professionalism}
+                />
+              ))
+            )}
           </div>
         )}
       </div>
 
-      <AddVehicleModal
-        isOpen={isAddVehicleOpen}
-        onClose={() => setIsAddVehicleOpen(false)}
-        theme={theme}
-        onSubmit={(data) => {
-          setCars((prev) => [
-            ...prev,
-            {
-              ...data,
-              id: Math.random().toString(36).substr(2, 9),
-              status: "active",
-              rating: 5,
-              reviews: [],
-            },
-          ]);
-          toast.success("Vehicle added to fleet!");
-        }}
-      />
+      {isAddVehicleOpen && logisticsAccountId && (
+        <AddVehicleModal
+          isOpen={isAddVehicleOpen}
+          onClose={() => setIsAddVehicleOpen(false)}
+          theme={theme}
+          logisticAccountId={logisticsAccountId}
+          onSuccess={() => fetchVehicles(logisticsAccountId)}
+        />
+      )}
 
       {selectedCar && (
         <CarDetailsModal
@@ -311,62 +704,52 @@ export default function CarBusinessDashboard() {
       )}
 
       {/* Rejection Modal */}
-      {isRejectionModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsRejectionModalOpen(false)}
-          />
-          <div
-            className={`relative w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl ${
-              theme === "dark"
-                ? "border border-white/10 bg-[#121212]"
-                : "bg-white"
-            }`}
-          >
-            <h3 className="mb-4 text-2xl font-black">Reject Booking</h3>
-            <p className="mb-6 font-normal text-gray-500">
-              Please provide a reason for rejecting this booking.
-            </p>
-            <textarea
-              className={`mb-6 h-32 w-full rounded-2xl border p-4 text-sm font-normal outline-none ${
-                theme === "dark"
-                  ? "border-white/10 bg-white/5"
-                  : "border-gray-200 bg-gray-50"
-              }`}
-              placeholder="e.g. Vehicle maintenance, fully booked..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsRejectionModalOpen(false)}
-                className={`flex-1 rounded-2xl py-4 font-normal transition-all ${
-                  theme === "dark"
-                    ? "bg-white/5 hover:bg-white/10"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitRejection}
-                className="flex-1 rounded-2xl bg-red-500 py-4 font-black text-white shadow-xl shadow-red-500/30 transition-all hover:scale-[1.02]"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RejectionModal
+        isOpen={isRejectionModalOpen}
+        onClose={() => setIsRejectionModalOpen(false)}
+        onSubmit={submitRejection}
+        reason={rejectionReason}
+        setReason={setRejectionReason}
+        theme={theme}
+      />
 
       <CameraCapture
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onCapture={handleCaptureComplete}
+        isOpen={isPickupCameraOpen}
+        onClose={() => setIsPickupCameraOpen(false)}
+        onCapture={handlePickupVideoCapture}
         mode="video"
-        title="Vehicle Condition Report"
-        maxVideoDuration={15}
+        title="Pickup Condition Report"
+        maxVideoDuration={60}
+      />
+
+      <CameraCapture
+        isOpen={isComplaintCameraOpen}
+        onClose={() => setIsComplaintCameraOpen(false)}
+        onCapture={onComplaintCaptureComplete}
+        mode="video"
+        title="Report Issue"
+        maxVideoDuration={60}
+      />
+
+      {isComplaintModalOpen && (
+        <RaiseComplaintModal
+          booking={selectedBookingForComplaint}
+          data={complaintData}
+          setData={setComplaintData}
+          onClose={() => setIsComplaintModalOpen(false)}
+          onStartCapture={() => {
+            setIsComplaintModalOpen(false);
+            setIsComplaintCameraOpen(true);
+          }}
+          theme={theme}
+        />
+      )}
+
+      <BookingDetailsModal
+        booking={selectedBooking}
+        isOpen={isBookingDetailsOpen}
+        onClose={() => setIsBookingDetailsOpen(false)}
+        theme={theme}
       />
     </div>
   );
@@ -421,63 +804,6 @@ function StatsCard({
   );
 }
 
-function WalletBalanceCard({
-  balance,
-  theme,
-}: {
-  balance: number;
-  theme: string;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8 shadow-2xl shadow-black/20">
-      {/* Decorative elements */}
-      <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-3xl" />
-      <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-2xl" />
-
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-12 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg shadow-yellow-500/20" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">
-              VIP PARTNER
-            </span>
-          </div>
-          <Wallet className="h-6 w-6 text-yellow-500" />
-        </div>
-
-        <div className="mb-8">
-          <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
-            Available Balance
-          </p>
-          <h2 className="text-3xl font-black tracking-tight text-white">
-            {formatCurrencySync(balance)}
-          </h2>
-        </div>
-
-        <div className="flex items-end justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-yellow-500/40"
-                />
-              ))}
-            </div>
-            <span className="font-mono text-xs tracking-widest text-gray-500">
-              BUSINESS CARD
-            </span>
-          </div>
-          <button className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] active:scale-[0.98]">
-            <ArrowUpRight className="h-3 w-3 !text-white" />
-            <span className="!text-white">Withdraw</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function FleetItem({
   car,
   theme,
@@ -527,10 +853,10 @@ function FleetItem({
               }`}
             >
               <Circle className="h-2 w-2 fill-current" />
-              {car.status}
+              {car.status === "active" ? "Active" : "Disabled"}
             </div>
             <span className="text-sm font-normal text-green-600">
-              ${car.price}/day
+              {formatCurrencySync(car.price)}/day
             </span>
           </div>
         </div>
@@ -646,9 +972,16 @@ function CarDetailsModal({
             </div>
             <div>
               <h2 className="font-outfit text-2xl font-black">{car.name}</h2>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                {car.year} • {car.type}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                  {car.year} • {car.type}
+                </p>
+                {car.platNumber && (
+                  <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black tracking-wider text-gray-900 dark:bg-white/10 dark:text-white">
+                    {car.platNumber}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <button
@@ -838,23 +1171,48 @@ function SpecItem({ icon, label, value, theme }: any) {
 function BookingItem({
   customer,
   car,
+  platNumber,
   date,
   amount,
   status,
   theme,
   onConfirm,
   onReject,
+  onConfirmPickup,
+  onRaiseComplaint,
+  rawReturnDate,
   driverProvided,
+  rating,
+  review,
+  professionalism,
+  onClick,
 }: any) {
   const statusColors: any = {
-    Ongoing: "text-blue-500 bg-blue-500/10",
-    Completed: "text-green-500 bg-green-500/10",
-    Upcoming: "text-orange-500 bg-orange-500/10",
+    ACCEPTED: "text-blue-500 bg-blue-500/10",
+    COMPLETED: "text-green-500 bg-green-500/10",
+    PENDING: "text-orange-500 bg-orange-500/10",
+    CANCELLED: "text-red-500 bg-red-500/10",
+    approved: "text-emerald-500 bg-emerald-500/10",
+    picked_up: "text-purple-500 bg-purple-500/10",
+    Paid: "text-green-600 bg-green-500/10",
+    paid: "text-green-600 bg-green-500/10",
+  };
+
+  const statusLabels: any = {
+    ACCEPTED: "Ongoing",
+    COMPLETED: "Completed",
+    PENDING: "Pending",
+    CANCELLED: "Cancelled",
+    approved: "Ready for Pickup",
+    picked_up: "Picked Up",
+    Paid: "Payment Received",
+    paid: "Payment Received",
   };
 
   return (
     <div
-      className={`flex flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${
+      onClick={onClick}
+      className={`flex cursor-pointer flex-col gap-4 rounded-[2.5rem] border p-6 transition-all hover:shadow-xl ${
         theme === "dark"
           ? "border-white/5 bg-[#121212]"
           : "border-gray-100 bg-white shadow-sm"
@@ -878,16 +1236,18 @@ function BookingItem({
               {customer}
             </h4>
             <p className="text-sm font-black text-gray-500">
-              {car} • {date}
+              {car} {platNumber && `(${platNumber})`} • {date}
             </p>
           </div>
         </div>
         <div className="text-right">
           <p className="text-xl font-black text-green-500">{amount}</p>
           <div
-            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusColors[status]}`}
+            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+              statusColors[status] || "bg-gray-500/10 text-gray-500"
+            }`}
           >
-            {status}
+            {statusLabels[status] || status}
           </div>
         </div>
       </div>
@@ -910,26 +1270,85 @@ function BookingItem({
           </span>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={onReject}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${
-              theme === "dark"
-                ? "bg-white/5 text-red-500 hover:bg-red-500/10"
-                : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
-            }`}
-          >
-            <X className="h-4 w-4" />
-            Reject
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/30"
-          >
-            <Check className="h-4 w-4 !text-white" />
-            <span className="!text-white">Confirm</span>
-          </button>
+          {(status?.toUpperCase() === "PENDING" ||
+            status?.toUpperCase() === "PAID") && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReject();
+                }}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-normal transition-all ${
+                  theme === "dark"
+                    ? "bg-white/5 text-red-500 hover:bg-red-500/10"
+                    : "bg-white text-red-600 hover:bg-red-50 hover:shadow-sm"
+                }`}
+              >
+                <X className="h-4 w-4" />
+                Reject
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onConfirm();
+                }}
+                className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/30"
+              >
+                <Check className="h-4 w-4 !text-white" />
+                <span className="!text-white">Confirm</span>
+              </button>
+            </>
+          )}
+          {status === "picked_up" &&
+            rawReturnDate &&
+            new Date(rawReturnDate) <= new Date() && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRaiseComplaint();
+                }}
+                className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black !text-white transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/30"
+              >
+                <AlertCircle className="h-4 w-4 !text-white" />
+                <span className="!text-white">Raise Complaint</span>
+              </button>
+            )}
         </div>
       </div>
+
+      {rating && (
+        <div
+          className={`mt-2 rounded-2xl p-4 ${
+            theme === "dark" ? "bg-white/5" : "bg-gray-50"
+          }`}
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-3 w-3 ${
+                      i < rating
+                        ? "fill-orange-500 text-orange-500"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] font-black uppercase text-orange-500">
+                Customer Review
+              </span>
+            </div>
+            {professionalism && (
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-black uppercase text-blue-500">
+                Professionalism: {professionalism}/5
+              </span>
+            )}
+          </div>
+          <p className="text-xs italic text-gray-500">"{review}"</p>
+        </div>
+      )}
     </div>
   );
 }

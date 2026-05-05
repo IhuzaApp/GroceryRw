@@ -19,17 +19,14 @@ function formatMessageTime(timestamp: any): string {
   );
 
   if (messageDate.getTime() === today.getTime()) {
-    // Today - show time
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
   } else if (messageDate.getTime() === yesterday.getTime()) {
-    // Yesterday
     return "Yesterday";
   } else {
-    // Older - show date
     return date.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "2-digit",
@@ -44,6 +41,347 @@ function formatOrderID(id?: string | number): string {
   const s = id.toString();
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
+
+// Conversation type info helper
+type ConvTypeKey =
+  | "order"
+  | "business"
+  | "restaurant"
+  | "reel"
+  | "car"
+  | "pet"
+  | "package";
+
+interface ConvTypeInfo {
+  key: ConvTypeKey;
+  label: string;
+  icon: React.ReactNode;
+  bg: string;
+  text: string;
+}
+
+function getConvType(
+  conversation: Conversation,
+  orders: Record<string, any>
+): ConvTypeInfo {
+  if (conversation.collectionPath === "business_conversations") {
+    return {
+      key: "business",
+      label: "Business",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+      bg: "bg-purple-100 dark:bg-purple-900/40",
+      text: "text-purple-700 dark:text-purple-300",
+    };
+  }
+  const order = conversation.orderId ? orders[conversation.orderId] : null;
+  switch (order?.orderType) {
+    case "restaurant":
+      return {
+        key: "restaurant",
+        label: "Restaurant",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+            />
+          </svg>
+        ),
+        bg: "bg-orange-100 dark:bg-orange-900/40",
+        text: "text-orange-700 dark:text-orange-300",
+      };
+    case "reel":
+      return {
+        key: "reel",
+        label: "Reel",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+            />
+          </svg>
+        ),
+        bg: "bg-pink-100 dark:bg-pink-900/40",
+        text: "text-pink-700 dark:text-pink-300",
+      };
+    case "vehicle":
+      return {
+        key: "car",
+        label: "Car",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+        ),
+        bg: "bg-blue-100 dark:bg-blue-900/40",
+        text: "text-blue-700 dark:text-blue-300",
+      };
+    case "pet":
+      return {
+        key: "pet",
+        label: "Pet",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        ),
+        bg: "bg-amber-100 dark:bg-amber-900/40",
+        text: "text-amber-700 dark:text-amber-300",
+      };
+    case "package":
+      return {
+        key: "package",
+        label: "Package",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+        ),
+        bg: "bg-teal-100 dark:bg-teal-900/40",
+        text: "text-teal-700 dark:text-teal-300",
+      };
+    default:
+      return {
+        key: "order",
+        label: "Order",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+            />
+          </svg>
+        ),
+        bg: "bg-green-100 dark:bg-green-900/40",
+        text: "text-green-700 dark:text-green-300",
+      };
+  }
+}
+
+const FILTER_TABS: {
+  key: ConvTypeKey | "all";
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    key: "all",
+    label: "All",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "order",
+    label: "Orders",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "business",
+    label: "Business",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "restaurant",
+    label: "Restaurant",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "reel",
+    label: "Reels",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "car",
+    label: "Cars",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "pet",
+    label: "Pets",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "package",
+    label: "Packages",
+    icon: (
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        />
+      </svg>
+    ),
+  },
+];
 
 // Define conversation interface
 interface Conversation {
@@ -74,7 +412,11 @@ interface MobileMessagePageProps {
   setShowUnreadOnly: (show: boolean) => void;
   sortOrder: "newest" | "oldest";
   setSortOrder: (order: "newest" | "oldest") => void;
-  onConversationClick: (orderId?: string, conversationId?: string) => void;
+  onConversationClick: (
+    orderId?: string,
+    conversationId?: string,
+    type?: string
+  ) => void;
   selectedOrder?: any;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
@@ -98,9 +440,29 @@ export default function MobileMessagePage({
   const { theme } = useTheme();
   const router = useRouter();
 
+  // Active filter from URL
+  const activeFilter = (router.query.filter as string) || "all";
+
+  const setFilter = (key: string) => {
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, filter: key },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
+
   // Filter and sort conversations
   const filteredConversations = conversations
     .filter((conversation) => {
+      // Apply type filter
+      if (activeFilter !== "all") {
+        const typeInfo = getConvType(conversation, orders);
+        if (typeInfo.key !== activeFilter) return false;
+      }
+
       // Apply search filter
       if (searchQuery) {
         const isBusinessChat =
@@ -123,12 +485,14 @@ export default function MobileMessagePage({
           order?.OrderID || conversation.orderId
         ).toLowerCase();
         const messageText = conversation.lastMessage?.toLowerCase() || "";
+        const titleText = conversation.title?.toLowerCase() || "";
 
         const searchLower = searchQuery.toLowerCase();
         return (
           contactName.includes(searchLower) ||
           orderNumber.includes(searchLower) ||
-          messageText.includes(searchLower)
+          messageText.includes(searchLower) ||
+          titleText.includes(searchLower)
         );
       }
 
@@ -147,20 +511,22 @@ export default function MobileMessagePage({
         ? new Date(b.lastMessageTime).getTime()
         : 0;
 
-      // Sort by time
       if (sortOrder === "newest") {
-        return timeB - timeA; // newest first
+        return timeB - timeA;
       } else {
-        return timeA - timeB; // oldest first
+        return timeA - timeB;
       }
     });
 
-  // Determine if shopper is online (you can customize this logic)
-  const isShopperOnline = (shopperId?: string) => {
-    // For now, we'll assume they're online if they have recent activity
-    // You can implement actual online status checking here
-    return true; // Placeholder
-  };
+  // Count per type for tab badges
+  const countByType = React.useMemo(() => {
+    const map: Record<string, number> = { all: conversations.length };
+    conversations.forEach((c) => {
+      const key = getConvType(c, orders).key;
+      map[key] = (map[key] || 0) + 1;
+    });
+    return map;
+  }, [conversations, orders]);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--bg-primary)]">
@@ -193,40 +559,24 @@ export default function MobileMessagePage({
           </div>
           <div className="flex items-center gap-4">
             <button
-              className="text-green-500 transition-opacity active:opacity-50"
-              aria-label="Camera"
+              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+              className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${
+                showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
+              }`}
+              aria-label="Filter Unread"
             >
               <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            </button>
-            <button
-              className="text-green-500 transition-opacity active:opacity-50"
-              aria-label="New Chat"
-            >
-              <svg
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth={2}
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
               </svg>
             </button>
           </div>
@@ -258,27 +608,45 @@ export default function MobileMessagePage({
               className="w-full rounded-[10px] bg-[var(--bg-secondary)] py-2.5 pl-10 pr-4 text-[16px] text-[var(--text-primary)] placeholder-gray-500 transition-colors focus:outline-none"
             />
           </div>
-          <button
-            onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-            className={`flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${
-              showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
-            }`}
-            aria-label="Filter Unread"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
-            </svg>
-          </button>
+        </div>
+
+        {/* Type Filter Tabs */}
+        <div className="scrollbar-hide -mx-4 mt-3 overflow-x-auto">
+          <div className="flex gap-2 px-4 pb-1">
+            {FILTER_TABS.filter((tab) => {
+              // Only show tabs that have conversations (or "all")
+              if (tab.key === "all") return true;
+              return (countByType[tab.key] || 0) > 0;
+            }).map((tab) => {
+              const isActive = activeFilter === tab.key;
+              const count = countByType[tab.key] || 0;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 ${
+                    isActive
+                      ? "bg-green-500 text-white shadow-md"
+                      : "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                  {count > 0 && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                        isActive
+                          ? "bg-white/30 text-white"
+                          : "bg-black/10 text-[var(--text-secondary)] dark:bg-white/10"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -296,12 +664,32 @@ export default function MobileMessagePage({
         ) : filteredConversations.length === 0 ? (
           <div className="flex h-full items-center justify-center px-4">
             <div className="text-center">
-              <div className="mb-4 text-6xl">💬</div>
+              <div className="mb-4 flex justify-center text-gray-400">
+                <svg
+                  className="h-16 w-16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
               <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-                No conversations yet
+                {activeFilter === "all"
+                  ? "No conversations yet"
+                  : `No ${
+                      FILTER_TABS.find((t) => t.key === activeFilter)?.label
+                    } chats`}
               </h3>
               <p className="text-sm text-[var(--text-secondary)]">
-                You'll see your chat conversations here once you place orders.
+                {activeFilter === "all"
+                  ? "You'll see your chat conversations here once you place orders."
+                  : "Try switching to a different filter tab."}
               </p>
             </div>
           </div>
@@ -315,7 +703,6 @@ export default function MobileMessagePage({
                 : {};
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
 
-              // Handle name display for business chats
               let fullName = "Business Chat";
               if (isBusinessChat) {
                 fullName =
@@ -342,14 +729,20 @@ export default function MobileMessagePage({
                   order?.assignedTo?.profile_picture ||
                   order?.shopper?.avatar ||
                   "/images/ProfileImage.png";
-              const isOnline = isShopperOnline(conversation.shopperId);
+
+              const typeInfo = getConvType(conversation, orders);
 
               return (
                 <div
                   key={conversation.id}
-                  onClick={() =>
-                    onConversationClick(conversation.orderId, conversation.id!)
-                  }
+                  onClick={() => {
+                    const typeInfo = getConvType(conversation, orders);
+                    onConversationClick(
+                      conversation.orderId,
+                      conversation.id!,
+                      typeInfo.key
+                    );
+                  }}
                   className="flex cursor-pointer items-center transition-colors hover:bg-black/5 active:bg-black/10 dark:hover:bg-white/5 dark:active:bg-white/10"
                 >
                   {/* Left Side: Avatar */}
@@ -368,14 +761,26 @@ export default function MobileMessagePage({
                         </span>
                       )}
                     </div>
+                    {/* Type emoji badge on avatar */}
+                    <div className="absolute bottom-2.5 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-0.5 text-gray-500 shadow-md dark:bg-gray-800">
+                      {typeInfo.icon}
+                    </div>
                   </div>
 
-                  {/* Right Side: Content with perfectly aligned inner bottom border common in iOS WhatsApp */}
-                  <div className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-gray-200 py-3 pr-4 dark:border-gray-800">
+                  {/* Right Side */}
+                  <div className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-gray-100 py-3 pr-4 dark:border-white/5">
                     <div className="flex items-center justify-between pb-[1px]">
-                      <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
-                        {contactName}
-                      </h3>
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
+                          {contactName}
+                        </h3>
+                        {/* Type label badge */}
+                        <span
+                          className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${typeInfo.bg} ${typeInfo.text}`}
+                        >
+                          {typeInfo.label}
+                        </span>
+                      </div>
                       <span
                         className={`whitespace-nowrap pl-2 text-xs ${
                           conversation.unreadCount > 0

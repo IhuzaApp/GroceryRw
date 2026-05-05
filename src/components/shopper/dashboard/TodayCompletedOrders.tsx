@@ -483,7 +483,7 @@ export default function TodayCompletedOrders({
   // Mobile view
   return (
     <div
-      className={`ease-[cubic-bezier(0.32,0.72,0,1)] fixed bottom-16 left-0 right-0 z-[1000] rounded-t-3xl border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-[0_-10px_40px_rgb(0,0,0,0.1)] transition-all duration-500 dark:shadow-[0_-10px_40px_rgb(0,0,0,0.4)] ${
+      className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-3xl border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-[0_-10px_40px_rgb(0,0,0,0.1)] transition-all duration-500 [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] dark:shadow-[0_-10px_40px_rgb(0,0,0,0.4)] ${
         isExpanded ? "h-[calc(100%-16rem)]" : "h-[85px]"
       }`}
     >

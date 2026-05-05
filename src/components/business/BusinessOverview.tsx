@@ -30,6 +30,7 @@ import {
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { RequestWithdrawModal } from "./RequestWithdrawModal";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
 
 // Helper function to format currency with abbreviations
 const formatCurrencyAbbreviated = (
@@ -60,11 +61,13 @@ interface BusinessOverviewProps {
 
 export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [showDetailedStats, setShowDetailedStats] = useState(false);
-  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const {
+    walletBalance,
+    businessWalletId,
+    isLoading: loadingWallet,
+  } = useBusinessWallet();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
-  const [loadingWallet, setLoadingWallet] = useState(false);
-  const [businessWalletId, setBusinessWalletId] = useState<string | null>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -110,7 +113,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   useEffect(() => {
     if (businessAccount?.id) {
       fetchStats();
-      fetchWalletData();
       fetchTransactions();
       fetchMonthlyRevenue();
       fetchRfqResponsesTrend();
@@ -513,30 +515,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       // Error fetching stats
     } finally {
       setLoadingStats(false);
-    }
-  };
-
-  const fetchWalletData = async () => {
-    if (!businessAccount?.id) return;
-
-    setLoadingWallet(true);
-    try {
-      const response = await fetch(
-        `/api/queries/check-business-wallet?business_id=${businessAccount.id}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.wallet) {
-          setWalletBalance(parseFloat(data.wallet.amount || "0"));
-          setBusinessWalletId(data.wallet.id || null);
-        } else {
-          setBusinessWalletId(null);
-        }
-      }
-    } catch (error) {
-      // Error fetching wallet
-    } finally {
-      setLoadingWallet(false);
     }
   };
 
@@ -1101,116 +1079,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       {/* Wallet & Revenue Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Wallet Balance Card - VIP Credit Card Design */}
-        <div
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl"
-          style={{ backgroundColor: "#000000" }}
-        >
-          {/* Decorative background elements */}
-          <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-2xl"></div>
-          <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-xl"></div>
-
-          {/* Card Content */}
-          <div className="relative z-10">
-            {/* Card Header */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-12 rounded bg-gradient-to-br from-yellow-400 to-yellow-600"></div>
-                <span
-                  className="text-xs font-semibold tracking-wider"
-                  style={{ color: "#facc15" }}
-                >
-                  VIP
-                </span>
-              </div>
-              <Wallet className="h-6 w-6" style={{ color: "#facc15" }} />
-            </div>
-
-            {/* Chip */}
-            <div className="mb-6 flex items-center gap-3">
-              <div className="h-10 w-14 rounded-md border border-yellow-400/30 bg-gradient-to-br from-yellow-300/30 to-yellow-500/30 backdrop-blur-sm"></div>
-              <div className="flex-1">
-                <p className="text-xs" style={{ color: "#ffffff" }}>
-                  Available Balance
-                </p>
-                <p className="text-2xl font-bold" style={{ color: "#ffffff" }}>
-                  {loadingWallet ? (
-                    <span style={{ color: "#ffffff" }}>Loading...</span>
-                  ) : (
-                    formatCurrencySync(walletBalance)
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Card Number Pattern */}
-            <div className="mb-4 flex items-center gap-2">
-              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span className="mx-2" style={{ color: "#ffffff" }}>
-                •
-              </span>
-              <span
-                className="ml-auto font-mono text-xs"
-                style={{ color: "#ffffff" }}
-              >
-                BUSINESS
-              </span>
-            </div>
-
-            {/* Card Footer */}
-            <div className="mt-6 flex items-end justify-between">
-              <div>
-                <p className="text-xs" style={{ color: "#ffffff" }}>
-                  Card Holder
-                </p>
-                <p
-                  className="text-sm font-semibold"
-                  style={{ color: "#ffffff" }}
-                >
-                  Business Account
-                </p>
-              </div>
-              <button
-                onClick={handleRequestWithdraw}
-                disabled={walletBalance <= 0 || loadingWallet}
-                className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-2 text-xs font-semibold text-black transition-all hover:from-yellow-400 hover:to-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-yellow-500 disabled:hover:to-yellow-600"
-              >
-                <ArrowUpRight className="mr-1 inline h-3 w-3" />
-                Withdraw
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <RequestWithdrawModal
-          isOpen={showWithdrawModal}
-          onClose={() => setShowWithdrawModal(false)}
-          walletBalance={walletBalance}
-          onSubmit={handleSubmitWithdraw}
-        />
 
         {/* Monthly Revenue Chart */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">

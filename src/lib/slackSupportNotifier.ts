@@ -137,6 +137,101 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
   }
 }
 
+export interface VehicleComplaintPayload {
+  bookingId: string;
+  vehicleName: string;
+  customerName: string;
+  ownerName: string;
+  amount: string;
+  videoUrl: string;
+  description: string;
+  ticketNum?: number;
+}
+
+export async function sendVehicleComplaintToSlack(
+  complaint: VehicleComplaintPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🚨 Vehicle Damage Complaint",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Ticket #*\n\`${complaint.ticketNum ?? "—"}\``,
+        },
+        { type: "mrkdwn", text: `*Booking ID*\n\`${complaint.bookingId}\`` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Vehicle*\n${complaint.vehicleName}` },
+        { type: "mrkdwn", text: `*Claim Amount*\n${complaint.amount}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Owner*\n${complaint.ownerName}` },
+        { type: "mrkdwn", text: `*Customer*\n${complaint.customerName}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Description*\n${complaint.description}`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*🎥 Condition Video*\n<${complaint.videoUrl}|View Evidence Video>`,
+      },
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `🚨 Vehicle Damage Complaint #${
+          complaint.ticketNum ?? complaint.bookingId
+        }`,
+        attachments: [
+          {
+            color: "#FF4444",
+            blocks,
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send vehicle complaint to Slack", error);
+    throw error;
+  }
+}
+
 // --- New shopper registration (waiting for review) ---
 
 export interface NewShopperRegistrationPayload {
@@ -1038,6 +1133,99 @@ export async function sendPaymentRequestToSlack(
     });
   } catch (error) {
     console.error("Failed to send payment request to Slack", error);
+    throw error;
+  }
+}
+
+// --- Large Withdrawal Request (> 200,000 RWF) ---
+
+export interface LargeWithdrawalRequestPayload {
+  amount: string;
+  businessName: string;
+  businessWalletId: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  userId?: string;
+}
+
+/**
+ * Notify Slack when a business requests a withdrawal of 200,000 RWF or more.
+ * This alerts the team that manual disbursement or review is required.
+ */
+export async function sendLargeWithdrawalRequestToSlack(
+  payload: LargeWithdrawalRequestPayload
+) {
+  if (!process.env.SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const userDisplay = payload.contactName
+    ? `${payload.contactName}${payload.email ? ` (${payload.email})` : ""}`
+    : payload.email ?? "—";
+  const phoneDisplay = payload.phone ?? "—";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "💰 Large Withdrawal Request (Requires Manual Action)",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Amount*\n${payload.amount} RWF` },
+        { type: "mrkdwn", text: `*Business Name*\n${payload.businessName}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Business Wallet ID*\n\`${payload.businessWalletId}\``,
+        },
+        { type: "mrkdwn", text: `*Requested By*\n${userDisplay}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*📞 Phone*\n${phoneDisplay}` },
+        { type: "mrkdwn", text: `*User ID*\n\`${payload.userId ?? "—"}\`` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `🕒 ${new Date().toISOString()} · _This amount exceeds the auto-disbursement limit and requires manual processing._`,
+        },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(process.env.SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `Large Withdrawal Request: ${payload.amount} RWF by ${payload.businessName}`,
+        attachments: [
+          {
+            color: "#FFA500", // Orange to indicate manual action needed
+            blocks,
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send large withdrawal request to Slack", error);
     throw error;
   }
 }

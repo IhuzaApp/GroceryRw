@@ -214,7 +214,7 @@ export default function PlasBusinessGuestView({
             <div className="bg-[var(--bg-secondary)]/30 relative flex w-full items-center rounded-2xl border border-[var(--bg-secondary)] p-1 backdrop-blur-md md:w-auto">
               {/* Sliding Highlight */}
               <div
-                className="ease-[cubic-bezier(0.34,1.56,0.64,1)] absolute inset-y-1 left-1 rounded-xl bg-white shadow-xl transition-all duration-500 dark:bg-gray-800"
+                className="absolute inset-y-1 left-1 rounded-xl bg-white shadow-xl transition-all duration-500 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)] dark:bg-gray-800"
                 style={{
                   width: "calc(50% - 4px)",
                   transform:

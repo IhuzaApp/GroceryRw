@@ -19,14 +19,14 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import Image from "next/image";
+import { logger } from "../../../utils/logger";
 import { useQuery } from "@apollo/client";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Autocomplete } from "@react-google-maps/api";
 import { storage } from "../../../lib/firebase";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
 import { usePlans, Plan } from "../../../hooks/usePlans";
-import { useCategories, Category } from "../../../hooks/useCategories";
+import { useCategories } from "../../../hooks/useCategories";
 import { MODULE_DESCRIPTIONS } from "../../../types/moduleDescriptions";
 import { UserPrivileges, DEFAULT_PRIVILEGES } from "../../../types/privileges";
 import AboutTopBar from "../landing/AboutTopBar";
@@ -388,6 +388,11 @@ export default function RegisterPage() {
       return;
     }
     setError(null);
+    logger.info(
+      `POS Registration: Step ${step} completed`,
+      "POS:Registration",
+      { step, business: formData.name }
+    );
     setStep((s) => s + 1);
   };
 
@@ -445,11 +450,18 @@ export default function RegisterPage() {
       return;
     }
 
-    const plan = selectedPlan;
     setIsSubmitting(true);
     setError(null);
     setMutationError(null);
     setLastFailedStep(null);
+
+    const plan = selectedPlan;
+
+    logger.info(
+      `POS Registration: Starting mutation phase (Shell: ${isShell})`,
+      "POS:Registration",
+      { business: formData.name, step: startAt }
+    );
 
     const now = new Date().toISOString();
     const dueDate = new Date();
@@ -599,6 +611,11 @@ export default function RegisterPage() {
       sessionStorage.removeItem("pos_registration_state"); // Clear storage on success
       // Trigger Registration Notifications
       sendRegistrationNotifications(currentInvNum);
+      logger.info(
+        `POS Registration: Completed successfully`,
+        "POS:Registration",
+        { business: formData.name, invoice: currentInvNum }
+      );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       console.error("❌ [POS Registration] Mutation Failure:", err);
@@ -611,6 +628,19 @@ export default function RegisterPage() {
       setLastFailedStep(err._failedStep ?? registrationSubStep);
       setMutationError(errMsg);
       setError(errMsg);
+
+      logger.error(
+        `POS Registration failed at step ${
+          err._failedStep ?? registrationSubStep
+        }`,
+        "POS:Registration",
+        {
+          error: errMsg,
+          business: formData.name,
+          step: err._failedStep ?? registrationSubStep,
+        }
+      );
+
       toast.error(errMsg);
       setIsSuccess(false);
       setProcessingStep("idle");

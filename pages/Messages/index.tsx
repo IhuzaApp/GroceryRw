@@ -36,6 +36,16 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
+function getOrderType(conversation: Conversation): string {
+  if (conversation.collectionPath === "business_conversations") {
+    return "business";
+  }
+  // For chat_conversations, we don't know the exact order type yet without fetching,
+  // but if we have the order object already, we can use it.
+  // However, this helper is used before fetching the order.
+  return "";
+}
+
 function MessagesPage() {
   const { theme } = useTheme();
   const router = useRouter();
@@ -126,6 +136,21 @@ function MessagesPage() {
     }
   }, [router.query, isMobile]);
 
+  // Auto-select conversation matching the orderId if one exists
+  useEffect(() => {
+    if (
+      selectedOrderId &&
+      !selectedConversationId &&
+      conversations.length > 0
+    ) {
+      const conv = conversations.find((c) => c.orderId === selectedOrderId);
+      if (conv) {
+        setSelectedConversationId(conv.id);
+        if (!isMobile) setIsDrawerOpen(true);
+      }
+    }
+  }, [selectedOrderId, selectedConversationId, conversations, isMobile]);
+
   // Fetch user's business account ID
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
@@ -174,9 +199,6 @@ function MessagesPage() {
                 ? doc.data().lastMessageTime.toDate()
                 : doc.data().lastMessageTime,
           })) as Conversation[];
-          console.log(
-            `🔍 [Messages] Received ${list.length} order conversations`
-          );
           setOrderConversations((prev) => {
             const newIds = new Set(list.map((c) => c.id));
             const manualItems = prev.filter((c) => !newIds.has(c.id));
@@ -228,12 +250,6 @@ function MessagesPage() {
                 ? doc.data().lastMessageTime.toDate()
                 : doc.data().lastMessageTime,
           })) as Conversation[];
-          if (list.length > 0) {
-            console.log("🔍 [Messages] Sample Business Chat Data:", list[0]);
-          }
-          console.log(
-            `🔍 [Messages] Received ${list.length} business conversations`
-          );
           setBusinessConversations((prev) => {
             // Merge snapshot with existing items (preserving manually fetched ones not in snapshot yet)
             const newIds = new Set(list.map((c) => c.id));
@@ -403,6 +419,7 @@ function MessagesPage() {
               avatar:
                 userSnap.data().profile_picture ||
                 userSnap.data().profile_photo,
+              phone: userSnap.data().phone,
             };
           }
           return { id: uid, name: "Unknown User" };
@@ -422,6 +439,7 @@ function MessagesPage() {
               ...conv,
               counterpartName: result.name,
               counterpartAvatar: result.avatar,
+              counterpartPhone: result.phone,
             };
           }
           return conv;
@@ -451,13 +469,25 @@ function MessagesPage() {
     let cancelled = false;
     const fetchOrders = async () => {
       const toFetch = orderIds.filter(
-        (id) => !orders[id] || (orders[id] as any)?.error
+        (id) =>
+          !orders[id] ||
+          ((orders[id] as any)?.error && !(orders[id] as any)?.permanent)
       );
       if (toFetch.length === 0) return;
 
       const promises = toFetch.map(async (orderId) => {
         try {
-          const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+          // Find the conversation for this orderId to get a hint of the type
+          const conv = conversations.find((c) => c.orderId === orderId);
+          const typeHint = conv ? getOrderType(conv) : "";
+          const urlType = router.query.type;
+          const finalType = urlType || typeHint;
+
+          const res = await fetch(
+            `/api/queries/orderDetails?id=${orderId}${
+              finalType ? `&type=${finalType}` : ""
+            }`
+          );
           if (!res.ok)
             return { orderId, order: { error: true, status: res.status } };
           const data = await res.json();
@@ -482,7 +512,10 @@ function MessagesPage() {
             next[orderId] = order;
             changed = true;
           } else if (!prev[orderId]) {
-            next[orderId] = order || { error: true };
+            const isPermanent = order?.status === 404 || order?.status === 400;
+            next[orderId] = order
+              ? { ...order, permanent: isPermanent }
+              : { error: true, permanent: true };
             changed = true;
           }
         });
@@ -539,16 +572,26 @@ function MessagesPage() {
       return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
     });
 
-  const handleChatClick = (orderId?: string, conversationId?: string) => {
+  const handleChatClick = (
+    orderId?: string,
+    conversationId?: string,
+    type?: string
+  ) => {
+    const query: any = {
+      ...router.query,
+      chat: conversationId || "true",
+      orderId: orderId || "",
+    };
+
+    if (type) {
+      query.type = type;
+    }
+
     if (isMobile && conversationId) {
       router.push(
         {
           pathname: "/Messages",
-          query: {
-            ...router.query,
-            chat: conversationId,
-            orderId: orderId || "",
-          },
+          query,
         },
         undefined,
         { shallow: true }
@@ -557,6 +600,17 @@ function MessagesPage() {
       setSelectedOrderId(orderId);
       setSelectedConversationId(conversationId);
       setIsDrawerOpen(true);
+      // Also update URL for desktop if possible, or just keep it simple
+      if (orderId || conversationId) {
+        router.push(
+          {
+            pathname: "/Messages",
+            query,
+          },
+          undefined,
+          { shallow: true }
+        );
+      }
     }
   };
 
@@ -662,28 +716,71 @@ function MessagesPage() {
               conversationId={selectedConversation.id!}
               collectionPath={selectedConversation.collectionPath}
               orderId={selectedConversation.orderId}
-              counterpart={{
-                id:
-                  selectedConversation.shopperId ||
-                  selectedConversation.businessId ||
-                  selectedConversation.counterpartId ||
-                  selectedConversation.customerId ||
-                  "",
-                name:
-                  selectedConversation.title ||
-                  selectedConversation.counterpartName ||
-                  "User",
-                avatar:
-                  orders[selectedConversation.orderId!]?.shopper?.avatar ||
-                  selectedConversation.counterpartAvatar ||
-                  "/images/ProfileImage.png",
-                role:
+              counterpart={(() => {
+                const currentUserId = session?.user?.id;
+                const isMeCustomer =
+                  currentUserId === selectedConversation.customerId;
+                const order = selectedConversation.orderId
+                  ? orders[selectedConversation.orderId]
+                  : null;
+
+                if (
                   selectedConversation.collectionPath ===
                   "business_conversations"
-                    ? "business"
-                    : "shopper",
-                phone: "",
-              }}
+                ) {
+                  return {
+                    id:
+                      selectedConversation.counterpartId === currentUserId
+                        ? selectedConversation.businessId || ""
+                        : selectedConversation.counterpartId || "",
+                    name:
+                      selectedConversation.title ||
+                      selectedConversation.counterpartName ||
+                      "Business",
+                    avatar:
+                      selectedConversation.counterpartAvatar ||
+                      "/images/ProfileImage.png",
+                    role: "business",
+                    phone: (selectedConversation as any).counterpartPhone || "",
+                  };
+                }
+
+                if (isMeCustomer) {
+                  return {
+                    id: selectedConversation.shopperId || "",
+                    name:
+                      order?.assignedTo?.shopper?.full_name ||
+                      order?.assignedTo?.name ||
+                      selectedConversation.counterpartName ||
+                      "Shopper",
+                    avatar:
+                      order?.assignedTo?.shopper?.profile_photo ||
+                      order?.assignedTo?.profile_picture ||
+                      selectedConversation.counterpartAvatar ||
+                      "/images/ProfileImage.png",
+                    role: "shopper",
+                    phone: order?.assignedTo?.phone || "",
+                  };
+                }
+
+                // I am the shopper/business, counterpart is the customer
+                return {
+                  id: selectedConversation.customerId || "",
+                  name:
+                    order?.orderedBy?.name ||
+                    selectedConversation.counterpartName ||
+                    "Customer",
+                  avatar:
+                    order?.orderedBy?.profile_picture ||
+                    selectedConversation.counterpartAvatar ||
+                    "/images/ProfileImage.png",
+                  role: "customer",
+                  phone:
+                    order?.orderedBy?.phone ||
+                    (selectedConversation as any).counterpartPhone ||
+                    "",
+                };
+              })()}
               onBack={() => {
                 // Remove chat from query to return to list
                 const newQuery = { ...router.query };

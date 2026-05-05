@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import { momoService } from "../../../src/lib/momoService";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { insertSystemLog } from "../queries/system-logs";
 import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
@@ -132,9 +133,13 @@ const ADD_SUBSCRIPTION_TRANSACTION = gql`
 `;
 
 const CREATE_ORDER_TRANSACTION = gql`
-  mutation CreateOrderTransaction($object: order_transactions_insert_input!) {
-    insert_order_transactions_one(object: $object) {
-      id
+  mutation CreateOrderTransaction(
+    $objects: [order_transactions_insert_input!]!
+  ) {
+    insert_order_transactions(objects: $objects) {
+      returning {
+        id
+      }
     }
   }
 `;
@@ -171,6 +176,7 @@ export default async function handler(
     payeeNote = "Thank you for your order",
     walletId,
     orderId,
+    petAdoptionId,
     packageId,
     businessOrderId,
     restaurantOrderId,
@@ -180,6 +186,8 @@ export default async function handler(
     billingCycle = "monthly",
     businessId, // For POS Registration
     businessType, // For POS Registration
+    orderType, // For payment type
+    vehicleBookingsId,
   } = req.body;
 
   const session = (await getServerSession(
@@ -201,16 +209,19 @@ export default async function handler(
   let isPersonalWallet =
     !!walletId &&
     !orderId &&
+    !petAdoptionId &&
     !businessOrderId &&
     !restaurantOrderId &&
     !reelOrderId &&
     !isSubscription;
   let isOrderPayment = !!(
     orderId ||
+    petAdoptionId ||
     restaurantOrderId ||
     businessOrderId ||
     reelOrderId ||
-    packageId
+    packageId ||
+    vehicleBookingsId
   );
 
   try {
@@ -292,34 +303,72 @@ export default async function handler(
             "📝 [MoMo RequestToPay] PENDING personal wallet transaction created:",
             dbTransactionId
           );
+        } else if (petAdoptionId) {
+          // Use order_transactions for pet adoptions to avoid Wallet_Transactions' wallet_id requirement
+          const dbRes = await hasuraClient.request<{
+            insert_order_transactions: { returning: Array<{ id: string }> };
+          }>(CREATE_ORDER_TRANSACTION, {
+            objects: [
+              {
+                wallet_id: null,
+                order_id: null,
+                business_order_id: null,
+                restaurant_order_id: null,
+                reel_order_id: null,
+                package_id: null,
+                petAdoptionId: petAdoptionId, // Match user's provided mutation field
+                vehicleBookingsId: vehicleBookingsId || null,
+                amount: String(amount).toString(),
+                currency,
+                phone: payerNumber,
+                reference_id: referenceId,
+                type: "pet_adoption",
+                status: "PENDING",
+                user_id: userId || null,
+                mtn_response: JSON.stringify({
+                  status: "INITIATED",
+                  referenceId,
+                }),
+              },
+            ],
+          });
+          dbTransactionId = dbRes.insert_order_transactions.returning[0].id;
+          console.log(
+            "📝 [MoMo RequestToPay] PENDING pet adoption order_transaction created:",
+            dbTransactionId
+          );
         } else if (isOrderPayment) {
           // Use order_transactions table for orders
           const dbRes = await hasuraClient.request<{
-            insert_order_transactions_one: { id: string };
+            insert_order_transactions: { returning: Array<{ id: string }> };
           }>(CREATE_ORDER_TRANSACTION, {
-            object: {
-              wallet_id: walletId || null,
-              order_id: orderId || null,
-              package_id: packageId || null,
-              business_order_id: businessOrderId || businessId || null,
-              restaurant_order_id:
-                restaurantOrderId ||
-                (businessType === "RESTAURANT" ? businessId : null),
-              reel_order_id: reelOrderId || null,
-              amount: String(amount).toString(),
-              currency,
-              phone: payerNumber,
-              reference_id: referenceId,
-              type: "payment",
-              status: "PENDING",
-              mtn_response: JSON.stringify({
-                status: "INITIATED",
-                referenceId,
-              }),
-              user_id: userId || null,
-            },
+            objects: [
+              {
+                wallet_id: walletId || null,
+                order_id: orderId || null,
+                package_id: packageId || null,
+                business_order_id: businessOrderId || businessId || null,
+                restaurant_order_id:
+                  restaurantOrderId ||
+                  (businessType === "RESTAURANT" ? businessId : null),
+                reel_order_id: reelOrderId || null,
+                vehicleBookingsId: vehicleBookingsId || null,
+                petAdoptionId: null, // Explicitly set to null to avoid FK issues
+                amount: String(amount).toString(),
+                currency,
+                phone: payerNumber,
+                reference_id: referenceId,
+                type: orderType || "payment",
+                status: "PENDING",
+                mtn_response: JSON.stringify({
+                  status: "INITIATED",
+                  referenceId,
+                }),
+                user_id: userId || null,
+              },
+            ],
           });
-          dbTransactionId = dbRes.insert_order_transactions_one.id;
+          dbTransactionId = dbRes.insert_order_transactions.returning[0].id;
           console.log(
             "📝 [MoMo RequestToPay] PENDING order transaction created:",
             dbTransactionId
@@ -337,6 +386,7 @@ export default async function handler(
                 restaurantOrderId ||
                 (businessType === "RESTAURANT" ? businessId : null),
               related_reel_orderId: reelOrderId || null,
+              vehicleBookingsId: vehicleBookingsId || null,
               amount: String(amount).toString(),
               currency,
               phone: payerNumber,
@@ -352,10 +402,16 @@ export default async function handler(
             dbTransactionId
           );
         }
-      } catch (dbError) {
+      } catch (dbError: any) {
         console.error(
           "❌ [MoMo RequestToPay] Failed to create pending transaction:",
           dbError
+        );
+        await insertSystemLog(
+          "error",
+          `MoMo RequestToPay DB Init failure: ${dbError.message || "Unknown"}`,
+          "MomoRequestToPayAPI:DBInit",
+          { amount, payerNumber, error: dbError.message || dbError }
         );
         return res
           .status(500)
@@ -529,6 +585,12 @@ export default async function handler(
       }
     }
 
+    await insertSystemLog(
+      "error",
+      `MoMo RequestToPay Exception: ${error.message || "Unknown"}`,
+      "MomoRequestToPayAPI:Main",
+      { amount, payerNumber, error: error.message || error }
+    );
     return res.status(500).json({
       error: "MoMo request failed",
       details: error.message,

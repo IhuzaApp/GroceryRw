@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Search } from "lucide-react";
-import { DUMMY_CARS } from "../../constants/dummyCars";
+import { Search, Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 
@@ -33,6 +32,8 @@ import SearchFilterModal from "./listing/SearchFilterModal";
 import FilterSelect from "./listing/FilterSelect";
 import PlasDriveHeader from "./PlasDriveHeader";
 
+import { formatCurrencySync } from "../../utils/formatCurrency";
+
 const VEHICLE_TYPES = ["All", "Sedan", "SUV", "Truck", "Hatchback", "Luxury"];
 const FUEL_TYPES = ["All", "Fuel", "Electric", "Hybrid", "Diesel"];
 const LOCATIONS = ["All", "Kigali", "Musanze", "Rubavu", "Huye", "Rwamagana"];
@@ -42,14 +43,75 @@ export default function CarListing() {
   const [activeMainTab, setActiveMainTab] = useState<"explore" | "bookings">(
     "explore"
   );
+  const [cars, setCars] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedFuel, setSelectedFuel] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [bookedCars, setBookedCars] = useState<any[]>([]);
+  const [hasAccount, setHasAccount] = useState(false);
 
   // Unified Modal state
   const [showSearchFilter, setShowSearchFilter] = useState(false);
+
+  useEffect(() => {
+    const fetchAllVehicles = async () => {
+      try {
+        const response = await fetch("/api/queries/get-all-vehicles");
+        const data = await response.json();
+        if (data.vehicles) {
+          const mappedCars = data.vehicles.map((v: any) => ({
+            ...v,
+            type: v.category,
+            fuelType: v.fuel_type,
+            image: v.main_photo,
+            passengers: parseInt(v.passenger || "5"),
+            securityDeposit: v.refundable_amount,
+            driverOption: v.drive_provided ? "offered" : "none",
+            owner: {
+              id: v.logisticAccount_id,
+              name:
+                v.logisticsAccounts?.businessName ||
+                v.logisticsAccounts?.fullname ||
+                "Verified Host",
+              image:
+                v.logisticsAccounts?.user?.image ||
+                "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
+              isVerified: true,
+            },
+            images: [{ url: v.main_photo, label: "Main" }],
+            reviews: [],
+            rating: 5.0,
+            description: `Premium ${v.category} vehicle for rent in ${v.location}.`,
+            licenseInfo: "Verified License & Insurance",
+          }));
+          setCars(mappedCars);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllVehicles();
+  }, []);
+
+  useEffect(() => {
+    const checkLogistics = async () => {
+      try {
+        const response = await fetch("/api/queries/check-logistics-account");
+        if (response.ok) {
+          const data = await response.json();
+          setHasAccount(data.hasAccount);
+        }
+      } catch (err) {
+        console.error("Error checking logistics account:", err);
+      }
+    };
+    checkLogistics();
+  }, []);
 
   useEffect(() => {
     if (router.isReady && router.query.tab === "bookings") {
@@ -58,41 +120,32 @@ export default function CarListing() {
   }, [router.isReady, router.query.tab]);
 
   useEffect(() => {
-    const loadBookings = () => {
-      const saved = JSON.parse(localStorage.getItem("car_bookings") || "[]");
-      if (saved.length === 0) {
-        const dummyBookings = [
-          {
-            ...DUMMY_CARS[0],
-            bookingId: "bk-82931",
-            startDate: "2026-04-28",
-            endDate: "2026-04-30",
-            total: DUMMY_CARS[0].price * 3,
-            status: "Confirmed",
-            owner: DUMMY_CARS[0].owner,
-          },
-          {
-            ...DUMMY_CARS[2],
-            bookingId: "bk-99210",
-            startDate: "2026-05-12",
-            endDate: "2026-05-15",
-            total: DUMMY_CARS[2].price * 4,
-            status: "Upcoming",
-            owner: DUMMY_CARS[2].owner,
-          },
-        ];
-        setBookedCars(dummyBookings);
-      } else {
-        setBookedCars(saved);
+    const loadBookings = async () => {
+      try {
+        const response = await fetch("/api/queries/get-user-bookings");
+        if (response.ok) {
+          const data = await response.json();
+          setBookedCars(data.bookings || []);
+        }
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
       }
     };
-    loadBookings();
-    window.addEventListener("storage", loadBookings);
-    return () => window.removeEventListener("storage", loadBookings);
-  }, []);
+
+    if (activeMainTab === "bookings") {
+      loadBookings();
+    }
+
+    // Refresh bookings periodically if on bookings tab
+    const interval = setInterval(() => {
+      if (activeMainTab === "bookings") loadBookings();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [activeMainTab]);
 
   const filteredCars = useMemo(() => {
-    return DUMMY_CARS.filter((car) => {
+    return cars.filter((car) => {
       const matchesSearch = car.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -101,15 +154,9 @@ export default function CarListing() {
         selectedFuel === "All" || car.fuelType === selectedFuel;
       const matchesLocation =
         selectedLocation === "All" || car.location === selectedLocation;
-      return (
-        matchesSearch &&
-        matchesType &&
-        matchesFuel &&
-        matchesLocation &&
-        car.status === "active"
-      );
+      return matchesSearch && matchesType && matchesFuel && matchesLocation;
     });
-  }, [searchQuery, selectedType, selectedFuel, selectedLocation]);
+  }, [searchQuery, selectedType, selectedFuel, selectedLocation, cars]);
 
   return (
     <div className="min-h-screen bg-white pb-24 font-sans text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20">
@@ -124,7 +171,10 @@ export default function CarListing() {
       <PlasDriveHeader
         activeTab={activeMainTab}
         onTabChange={setActiveMainTab}
-        onBecomePartner={() => router.push("/Cars/become-partner")}
+        onBecomePartner={() =>
+          router.push(hasAccount ? "/Cars/dashboard" : "/Cars/become-partner")
+        }
+        isPartner={hasAccount}
       />
 
       <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">
@@ -168,17 +218,23 @@ export default function CarListing() {
             </div>
 
             {/* Main Listing Grid */}
-            <div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-4">
-              {filteredCars.map((car) => (
-                <ListingCard
-                  key={car.id}
-                  car={car}
-                  onClick={() => router.push(`/Cars/${car.id}`)}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex h-64 items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-green-500" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 md:gap-8 lg:grid-cols-4">
+                {filteredCars.map((car) => (
+                  <ListingCard
+                    key={car.id}
+                    car={car}
+                    onClick={() => router.push(`/Cars/${car.id}`)}
+                  />
+                ))}
+              </div>
+            )}
 
-            {filteredCars.length === 0 && (
+            {!isLoading && filteredCars.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <CarIcon className="mb-4 h-12 w-12 text-gray-300" />
                 <h3 className="font-outfit text-lg font-black text-gray-400">

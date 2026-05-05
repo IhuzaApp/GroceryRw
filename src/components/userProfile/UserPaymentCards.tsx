@@ -7,8 +7,17 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 import Barcode from "react-barcode";
 import BarcodeScanner from "../shopper/BarcodeScanner";
-import { Camera, Gift, Scissors, ShoppingCart } from "lucide-react";
+import {
+  Camera,
+  Gift,
+  Scissors,
+  ShoppingCart,
+  ArrowUpRight,
+  Wallet,
+} from "lucide-react";
 import toast from "react-hot-toast";
+import { useBusinessWallet } from "../../context/BusinessWalletContext";
+import { RequestWithdrawModal } from "../business/RequestWithdrawModal";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -159,6 +168,16 @@ export default function UserPaymentCards({
     }
   );
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+  // Business Wallet
+  const {
+    walletBalance: businessWalletBalance,
+    businessWalletId,
+    businessId,
+    isLoading: isLoadingBusinessWallet,
+    fetchWalletBalance: refreshBusinessWallet,
+  } = useBusinessWallet();
 
   // Loyalty and Scanner state
   const [showScanner, setShowScanner] = useState(false);
@@ -303,6 +322,51 @@ export default function UserPaymentCards({
     } catch (error) {
       console.error("Error refreshing wallet balance:", error);
     }
+  };
+
+  const handleRequestWithdraw = () => {
+    if (!businessId) {
+      toast.error("Business account not found");
+      return;
+    }
+    if (!businessWalletId) {
+      toast.error("Business wallet not found");
+      return;
+    }
+    if (businessWalletBalance <= 0) {
+      toast.error("No funds available to withdraw");
+      return;
+    }
+    setShowWithdrawModal(true);
+  };
+
+  const handleSubmitWithdraw = async (payload: {
+    amount: number;
+    verificationImage: string;
+    otp: string;
+    password: string;
+  }) => {
+    if (!businessId || !businessWalletId) {
+      throw new Error("Business or wallet not found");
+    }
+    const response = await fetch("/api/mutations/request-withdraw", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: String(payload.amount),
+        business_id: businessId,
+        businessWallet_id: businessWalletId,
+        phoneNumber: userPhone || "",
+        verification_image: payload.verificationImage,
+        otp: payload.otp,
+        password: payload.password,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || data.error || "Failed to submit request");
+    }
+    refreshBusinessWallet();
   };
 
   // Refresh functions
@@ -459,7 +523,7 @@ export default function UserPaymentCards({
             {/* Action Button */}
             <button
               onClick={() => setShowAddMoneyModal(true)}
-              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all hover:scale-105 hover:from-green-400 hover:to-emerald-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest !text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all hover:scale-105 hover:from-green-400 hover:to-emerald-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] active:scale-95"
             >
               <svg
                 className="h-4 w-4"
@@ -490,6 +554,103 @@ export default function UserPaymentCards({
           currentBalance={walletBalance}
           walletId={balances.wallet?.id}
           initialPhoneNumber={userPhone}
+        />
+
+        {/* Business Wallet Card (Premium Emerald Design) - Show only if exists */}
+        {businessWalletId && (
+          <div className="group relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.3)]">
+            {/* Glassmorphic overlay effects */}
+            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-emerald-500 opacity-10 blur-3xl transition-all duration-500 group-hover:scale-150 group-hover:bg-emerald-400 group-hover:opacity-20"></div>
+            <div className="absolute bottom-0 left-0 -mb-16 -ml-16 h-32 w-32 rounded-full bg-green-500 opacity-10 blur-2xl transition-all duration-500 group-hover:opacity-20"></div>
+
+            {/* Card Content */}
+            <div className="relative z-10">
+              {/* Card Header */}
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-12 rounded bg-gradient-to-br from-green-400 to-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)]"></div>
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-400">
+                    Premium
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <div className="relative z-20 h-6 w-6 rounded-full bg-emerald-400 opacity-90 mix-blend-screen shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                  <div className="relative z-10 -ml-3 h-6 w-6 rounded-full bg-green-500 opacity-90 mix-blend-screen shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                </div>
+              </div>
+
+              {/* Chip */}
+              <div className="mb-6 flex items-center gap-4">
+                <div className="flex h-10 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-inner backdrop-blur-md">
+                  <img
+                    className="h-6 w-6 object-contain opacity-80"
+                    src="/assets/images/chip.png"
+                    alt="Chip"
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    Available Balance
+                  </p>
+                  <p className="font-mono text-3xl font-black tracking-tight text-white drop-shadow-md">
+                    {isLoadingBusinessWallet ? (
+                      <span className="text-xl text-gray-400">Loading...</span>
+                    ) : (
+                      formatCurrencySync(businessWalletBalance)
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Card Number Pattern */}
+              <div className="mb-4 flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)]"></div>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="mx-2 text-emerald-500/50">•</span>
+                <span className="ml-auto font-mono text-xs font-bold tracking-widest text-emerald-400">
+                  BUSINESS
+                </span>
+              </div>
+
+              {/* Card Footer */}
+              <div className="mt-6 flex items-end justify-between">
+                <div>
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    Card Holder
+                  </p>
+                  <p className="text-sm font-bold tracking-wide text-gray-200">
+                    Business Account
+                  </p>
+                </div>
+                <button
+                  onClick={handleRequestWithdraw}
+                  disabled={
+                    businessWalletBalance <= 0 || isLoadingBusinessWallet
+                  }
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-xs font-black uppercase tracking-widest !text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:from-emerald-400 hover:to-green-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                  Withdraw
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <RequestWithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          walletBalance={businessWalletBalance}
+          onSubmit={handleSubmitWithdraw}
         />
       </div>
 

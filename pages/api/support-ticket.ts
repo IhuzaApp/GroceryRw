@@ -4,6 +4,7 @@ import { authOptions } from "./auth/[...nextauth]";
 import {
   sendSupportTicketToSlack,
   sendRequestEnableStoreToSlack,
+  sendRejectedAccountSupportRequestToSlack,
   type SupportTicketPayload,
 } from "../../src/lib/slackSupportNotifier";
 import { logErrorToSlack } from "../../src/lib/slackErrorReporter";
@@ -15,6 +16,7 @@ const ADD_TICKET_REQUEST = gql`
     $priority: String = ""
     $status: String = ""
     $subject: String = ""
+    $user_id: uuid!
     $category: String = ""
     $description: String = ""
   ) {
@@ -51,6 +53,12 @@ type Body =
       storeId: string;
       storeName: string;
       message?: string;
+      businessAccountId?: string;
+    }
+  | {
+      requestType: "rejected_account";
+      message: string;
+      priority: "low" | "medium" | "high";
       businessAccountId?: string;
     }
   | {
@@ -101,6 +109,45 @@ export default async function handler(
         businessAccountId: businessAccountId || undefined,
       });
       return res.status(200).json({ success: true });
+    }
+
+    // Handle rejected account re-evaluation
+    if (body.requestType === "rejected_account") {
+      const { message, priority, businessAccountId } = body;
+      if (!message || typeof message !== "string") {
+        return res
+          .status(400)
+          .json({ error: "Missing required field: message" });
+      }
+
+      let ticketNum: number | undefined;
+      if (hasuraClient) {
+        const result = await hasuraClient.request<{
+          insert_tickets: {
+            affected_rows: number;
+            returning: Array<{ ticket_num: number }>;
+          };
+        }>(ADD_TICKET_REQUEST, {
+          priority: priority || "medium",
+          status: "open",
+          subject: "Rejected Account Re-evaluation Request",
+          user_id: session.user?.id ?? "",
+          category: "Business",
+          description: message.trim(),
+        });
+        ticketNum = result?.insert_tickets?.returning?.[0]?.ticket_num;
+      }
+
+      await sendRejectedAccountSupportRequestToSlack({
+        message: message.trim(),
+        priority: priority || "medium",
+        userEmail: session.user?.email ?? undefined,
+        userName: session.user?.name ?? undefined,
+        userId: session.user?.id,
+        businessAccountId: businessAccountId || undefined,
+      });
+
+      return res.status(200).json({ success: true, code: ticketNum });
     }
 
     // Handle generic requests (account, wallet, etc.)

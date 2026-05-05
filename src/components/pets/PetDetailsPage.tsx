@@ -1,8 +1,7 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import {
   Heart,
   Share2,
@@ -22,20 +21,408 @@ import {
   FileText,
   Scale,
   X,
+  Loader2,
+  Phone,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
-import { Pet } from "../../constants/dummyPets";
+import { Pet } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { toast } from "react-hot-toast";
+import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
+
+// Adoption Modal Component
+const AdoptionModal = ({
+  isOpen,
+  onClose,
+  pet,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  pet: Pet;
+  onSuccess: (isPaid: boolean) => void;
+}) => {
+  const { data: session } = useSession();
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [comment, setComment] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"momo" | "wallet">("momo");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
+  const [processingStep, setProcessingStep] = useState<
+    "initiating_payment" | "awaiting_approval" | "success"
+  >("initiating_payment");
+  const [momoRef, setMomoRef] = useState<string | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen && window.google) {
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        addressInputRef.current!,
+        {
+          types: ["geocode", "establishment"],
+          componentRestrictions: { country: "rw" },
+        }
+      );
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        setAddress(place.name || place.formatted_address || "");
+        if (place.geometry && place.geometry.location) {
+          setLat(place.geometry.location.lat());
+          setLng(place.geometry.location.lng());
+        }
+      });
+      autocompleteRef.current = autocomplete;
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      if (session?.user?.id) {
+        try {
+          const res = await fetch("/api/queries/personal-wallet-balance");
+          const data = await res.json();
+          if (data.wallet) {
+            setWalletBalance(parseFloat(data.wallet.balance));
+          }
+        } catch (err) {
+          console.error("Wallet fetch error:", err);
+        }
+      }
+    };
+    if (isOpen) fetchWallet();
+  }, [isOpen, session]);
+
+  // Polling logic for MoMo status
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (isPolling && momoRef) {
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(
+            `/api/momo/request-to-pay-status?referenceId=${momoRef}`
+          );
+          const data = await res.json();
+
+          if (data.status === "SUCCESSFUL") {
+            setProcessingStep("success");
+            clearInterval(pollInterval);
+
+            // Wait for success animation then close
+            setTimeout(() => {
+              setIsPolling(false);
+              onSuccess(true);
+              onClose();
+              toast.success("Payment confirmed! Pet adopted.");
+            }, 3000);
+          } else if (data.status === "FAILED") {
+            clearInterval(pollInterval);
+            setIsPolling(false);
+            toast.error("Payment failed or was cancelled.");
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+      }, 3000); // Poll every 3 seconds
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [isPolling, momoRef, onClose, onSuccess]);
+
+  const handlePaymentAndAdoption = async () => {
+    if (!address || !phone) {
+      toast.error("Please fill in address and phone number");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      if (paymentMethod === "wallet") {
+        if (walletBalance !== null && walletBalance < pet.price) {
+          toast.error("Insufficient wallet balance");
+          setIsProcessing(false);
+          return;
+        }
+
+        // 1. Deduct from wallet
+        const walletRes = await fetch("/api/user/deduct-from-wallet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: pet.price,
+            description: `Purchase of pet ${pet.name}`,
+          }),
+        });
+        const walletData = await walletRes.json();
+        if (!walletData.success) {
+          throw new Error(walletData.error || "Wallet payment failed");
+        }
+
+        // 2. Create adoption record as PAID
+        const adoptRes = await fetch("/api/mutations/adopt-pet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pet_id: pet.id,
+            amount: pet.price,
+            address,
+            phone,
+            comment,
+            latitude: lat?.toString(),
+            longitude: lng?.toString(),
+            status: "PAID",
+          }),
+        });
+        const adoptData = await adoptRes.json();
+        if (adoptData.success) {
+          toast.success("Successfully adopted!");
+          onSuccess(true);
+          onClose();
+        } else {
+          throw new Error(adoptData.error || "Adoption record creation failed");
+        }
+      } else {
+        // MoMo Payment - Following Checkout Pattern (Create Order First)
+
+        // 1. Create adoption record as PENDING
+        const adoptRes = await fetch("/api/mutations/adopt-pet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pet_id: pet.id,
+            amount: pet.price,
+            address,
+            phone,
+            comment,
+            latitude: lat?.toString(),
+            longitude: lng?.toString(),
+            status: "PENDING",
+          }),
+        });
+        const adoptData = await adoptRes.json();
+        if (!adoptData.success) {
+          throw new Error(adoptData.error || "Failed to initialize adoption");
+        }
+
+        const petAdoptionId = adoptData.id;
+
+        // Show overlay before starting MoMo request
+        setProcessingStep("initiating_payment");
+        setIsPolling(true);
+
+        // 2. Call MoMo request-to-pay with petAdoptionId
+        const momoRes = await fetch("/api/momo/request-to-pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: pet.price,
+            payerNumber: phone,
+            petAdoptionId: petAdoptionId,
+            payerMessage: `Adoption: ${pet.name}`,
+          }),
+        });
+        const momoData = await momoRes.json();
+
+        if (momoData.status === "PENDING") {
+          setMomoRef(momoData.referenceId);
+          setProcessingStep("awaiting_approval");
+          setIsPolling(true);
+        } else {
+          throw new Error(momoData.error || "MoMo payment failed");
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Something went wrong");
+      setIsPolling(false);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      {isPolling && (
+        <PaymentProcessingOverlay processingStep={processingStep} />
+      )}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl dark:bg-[#121212]">
+        <div className="p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="font-outfit text-2xl font-black">
+              Complete Adoption
+            </h2>
+            <button
+              onClick={onClose}
+              className="rounded-full bg-gray-100 p-2 dark:bg-white/10"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">
+                Delivery Address or Place
+              </label>
+              <input
+                ref={addressInputRef}
+                type="text"
+                placeholder="Search address or place name..."
+                className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4 text-sm focus:border-green-500 focus:outline-none dark:border-white/5 dark:bg-white/5"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="250..."
+                    className="w-full rounded-2xl border border-gray-100 bg-gray-50 py-4 pl-12 pr-5 text-sm focus:border-green-500 focus:outline-none dark:border-white/5 dark:bg-white/5"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">
+                  Payment Method
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPaymentMethod("momo")}
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
+                      paymentMethod === "momo"
+                        ? "bg-yellow-400 font-bold text-black shadow-lg"
+                        : "bg-gray-100 text-gray-400 dark:bg-white/5"
+                    }`}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    MoMo
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("wallet")}
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-4 transition-all ${
+                      paymentMethod === "wallet"
+                        ? "bg-green-500 font-bold text-white shadow-lg"
+                        : "bg-gray-100 text-gray-400 dark:bg-white/5"
+                    }`}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Wallet
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {paymentMethod === "wallet" && walletBalance !== null && (
+              <div className="flex items-center justify-between rounded-2xl bg-green-50 p-4 dark:bg-green-500/10">
+                <span className="text-xs font-bold text-green-600">
+                  Wallet Balance
+                </span>
+                <span className="font-outfit font-black text-green-600">
+                  {formatCurrencySync(walletBalance)}
+                </span>
+              </div>
+            )}
+
+            <div>
+              <label className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400">
+                Comment for Seller
+              </label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Any special instructions..."
+                className="h-24 w-full resize-none rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4 text-sm focus:border-green-500 focus:outline-none dark:border-white/5 dark:bg-white/5"
+              />
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <button
+              onClick={handlePaymentAndAdoption}
+              disabled={isProcessing}
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-green-500 py-5 font-outfit text-lg font-black text-white shadow-xl shadow-green-500/30 transition-all hover:bg-green-600 active:scale-95 disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <>
+                  Pay {formatCurrencySync(pet.price)}
+                  <ChevronRight className="h-5 w-5" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function PetDetailsPage({ pet }: { pet: Pet }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { theme } = useTheme();
   const [isLiked, setIsLiked] = useState(false);
   const [activeMedia, setActiveMedia] = useState<"image" | "video">(
     pet.videoUrl ? "video" : "image"
   );
   const [showCert, setShowCert] = useState(false);
+  const [isAdopted, setIsAdopted] = useState(false);
+  const [isCheckingAdoption, setIsCheckingAdoption] = useState(true);
+  const [isAdoptionModalOpen, setIsAdoptionModalOpen] = useState(false);
+
+  useEffect(() => {
+    const checkAdoption = async () => {
+      if (!session || !pet.id) {
+        setIsCheckingAdoption(false);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/queries/check-pet-adoption?pet_id=${pet.id}`
+        );
+        const data = await res.json();
+        setIsAdopted(data.isAdopted);
+      } catch (err) {
+        console.error("Error checking adoption:", err);
+      } finally {
+        setIsCheckingAdoption(false);
+      }
+    };
+    checkAdoption();
+  }, [session, pet.id]);
+
+  const handleBuyNow = async () => {
+    if (!session) {
+      router.push("/Auth/Login");
+      return;
+    }
+
+    setIsAdoptionModalOpen(true);
+  };
 
   const isBaby = pet.ageInMonths < 6;
 
@@ -85,7 +472,7 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
               </span>
               <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-[10px] font-black uppercase !text-white text-white backdrop-blur-md">
                 <MapPin className="h-3.5 w-3.5 !text-white text-white" />
-                {pet.location.split(",")[0]}
+                {pet.location ? pet.location.split(",")[0] : "Kigali"}
               </span>
               {pet.status === "sold" && (
                 <span className="rounded-full bg-red-500 px-3 py-1 text-[10px] font-black uppercase !text-white text-white shadow-lg">
@@ -274,34 +661,79 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 </div>
                 <div className="space-y-6">
                   {pet.reviews.length > 0 ? (
-                    pet.reviews.map((rev, i) => (
-                      <div
-                        key={i}
-                        className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <h4 className="font-outfit font-black">{rev.user}</h4>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, idx) => (
-                              <Star
-                                key={idx}
-                                className={`h-3 w-3 ${
-                                  idx < rev.rating
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-200 dark:text-white/10"
-                                }`}
-                              />
-                            ))}
+                    pet.reviews.map(
+                      (
+                        rev: {
+                          user:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                any,
+                                string | React.JSXElementConstructor<any>
+                              >
+                            | React.ReactFragment
+                            | React.ReactPortal
+                            | null
+                            | undefined;
+                          rating: number;
+                          comment:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                any,
+                                string | React.JSXElementConstructor<any>
+                              >
+                            | React.ReactFragment
+                            | React.ReactPortal
+                            | null
+                            | undefined;
+                          date:
+                            | string
+                            | number
+                            | boolean
+                            | React.ReactElement<
+                                any,
+                                string | React.JSXElementConstructor<any>
+                              >
+                            | React.ReactFragment
+                            | React.ReactPortal
+                            | null
+                            | undefined;
+                        },
+                        i: React.Key | null | undefined
+                      ) => (
+                        <div
+                          key={i}
+                          className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <h4 className="font-outfit font-black">
+                              {rev.user}
+                            </h4>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, idx) => (
+                                <Star
+                                  key={idx}
+                                  className={`h-3 w-3 ${
+                                    idx < rev.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-gray-200 dark:text-white/10"
+                                  }`}
+                                />
+                              ))}
+                            </div>
                           </div>
+                          <p className="font-sans text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            {rev.comment}
+                          </p>
+                          <span className="mt-4 block text-[10px] font-normal uppercase tracking-widest text-gray-400">
+                            {rev.date}
+                          </span>
                         </div>
-                        <p className="font-sans text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                          {rev.comment}
-                        </p>
-                        <span className="mt-4 block text-[10px] font-normal uppercase tracking-widest text-gray-400">
-                          {rev.date}
-                        </span>
-                      </div>
-                    ))
+                      )
+                    )
                   ) : (
                     <p className="py-10 text-center font-normal italic text-gray-400">
                       No reviews yet.
@@ -352,18 +784,30 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                     </div>
                   </div>
 
-                  <button className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-green-500 py-4 font-outfit font-black text-green-500 transition-all hover:bg-green-500 hover:text-white active:scale-95">
-                    <MessageSquare className="h-5 w-5" />
-                    Chat with Seller
-                  </button>
+                  {isAdopted && (
+                    <button
+                      onClick={() => router.push(`/Messages/${pet.owner.id}`)}
+                      className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-green-500 py-4 font-outfit font-black text-green-500 transition-all hover:bg-green-500 hover:text-white active:scale-95"
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                      Chat with Seller
+                    </button>
+                  )}
                 </div>
 
                 <button
+                  onClick={handleBuyNow}
                   disabled={pet.status === "sold"}
                   className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-green-500 py-5 font-outfit text-xl font-black !text-white text-white shadow-2xl shadow-green-500/30 transition-all hover:translate-y-[-2px] hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none md:py-6"
                 >
                   <span className="!text-white">
-                    {pet.isDonation ? "Adopt Now" : "Buy Now"}
+                    {isAdopted
+                      ? pet.isDonation
+                        ? "Adopt Another One"
+                        : "Buy Another One"
+                      : pet.isDonation
+                      ? "Adopt Now"
+                      : "Buy Now"}
                   </span>
                   <ChevronRight className="h-6 w-6 !text-white" />
                 </button>
@@ -409,6 +853,14 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
           </div>
         </div>
       )}
+
+      {/* Adoption Modal */}
+      <AdoptionModal
+        isOpen={isAdoptionModalOpen}
+        onClose={() => setIsAdoptionModalOpen(false)}
+        pet={pet}
+        onSuccess={(isPaid) => setIsAdopted(isPaid)}
+      />
     </RootLayout>
   );
 }

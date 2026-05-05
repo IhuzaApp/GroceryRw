@@ -2,8 +2,6 @@ import type React from "react";
 import SideBar from "./sidebar";
 import HeaderLayout from "./NavBar/headerLayout";
 import BottomBar from "./NavBar/bottomBar";
-import { useSession } from "next-auth/react";
-import { ThemeProvider } from "@context/ThemeContext";
 import { useRouter } from "next/router";
 import AIChatProvider from "../ai-chat/AIChatProvider";
 import {
@@ -50,13 +48,21 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     router.pathname === "/Pets" || router.pathname.startsWith("/Pets/");
 
   return (
-    <div className="min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)]">
+    <div
+      className={`min-h-screen bg-white text-[var(--text-primary)] transition-colors duration-200 dark:bg-[var(--bg-primary)] dark:text-[var(--text-primary)] ${
+        isMessagesList || isMessagesChat
+          ? "flex h-screen flex-col overflow-hidden"
+          : ""
+      }`}
+    >
       {/* Top navbar: hide on order details (mobile), show on desktop */}
       {!isChatPage &&
         !isReelsPage &&
         !isPlasBusinessPage &&
         !isStoresPage &&
         !isBecomeShopperPage &&
+        !isMessagesList &&
+        !isMessagesChat &&
         (isOrderDetailsPage || isPackageDetailsPage || isCarsPage ? (
           <div className="hidden md:block">
             <HeaderLayout />
@@ -78,11 +84,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           isCarsPage ||
           isPetsPage ||
           isStoresPage ||
-          isMessagesChat ||
-          isBecomeShopperPage
+          isBecomeShopperPage ||
+          isMessagesList ||
+          isMessagesChat
             ? ""
-            : isMessagesList
-            ? "pb-[60px] pt-0 md:pb-0"
             : isOrderDetailsPage || isPackageDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
             : "px-4 pb-20 pt-6 md:pb-0"
@@ -92,9 +97,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             ? {
                 margin: 0,
                 padding: 0,
-                height: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
-                minHeight: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
-                maxHeight: isMessagesList ? "calc(100dvh - 60px)" : "100dvh",
                 overflow: "hidden",
               }
             : {}
@@ -105,7 +107,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           <SideBar />
         )}
         <div
-          className="[&_*]:text-inherit"
+          className={`mx-auto flex h-full w-full flex-col [&_*]:text-inherit ${
+            isMessagesList || isMessagesChat ? "flex-1 overflow-hidden" : ""
+          } ${isMessagesList ? "pb-[60px] md:pb-0" : ""}`}
           style={
             isReelsPage ||
             isPlasBusinessPage ||
@@ -132,6 +136,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </main>
       {/* AI Chat - Available on all pages except chat pages and specific marketplaces */}
       {!isChatPage &&
+        !isMessagesList &&
         !isMessagesChat &&
         !isCarsPage &&
         !isPetsPage &&

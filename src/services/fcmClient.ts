@@ -61,6 +61,21 @@ const fcmMessageSubscribers = new Set<FCMMessageCallback>();
 let fcmStartedForUserId: string | null = null;
 let fcmStartPromise: Promise<boolean> | null = null;
 let fcmUnsubscribeCore: (() => void) | null = null;
+let cleanupInterval: NodeJS.Timeout | null = null;
+
+const triggerLogCleanup = async () => {
+  try {
+    const response = await fetch("/api/cleanup/system-logs-cleanup", {
+      method: "POST",
+    });
+    if (response.ok) {
+      const data = await response.json();
+      console.log("🧹 [Maintenance] System logs cleaned up:", data.message);
+    }
+  } catch (error) {
+    // Silent fail for maintenance tasks
+  }
+};
 
 const dispatchToSubscribers = (payload: any) => {
   // Copy into array to avoid mutation issues during iteration
@@ -101,6 +116,13 @@ const ensureFCMCoreStarted = async (userId: string): Promise<boolean> => {
   if (fcmStartPromise) return fcmStartPromise;
 
   fcmStartPromise = (async () => {
+    // Start maintenance cleanup interval (every 2 hours)
+    if (typeof window !== "undefined" && !cleanupInterval) {
+      // Initial trigger after 30 seconds to not block startup
+      setTimeout(triggerLogCleanup, 30000);
+      cleanupInterval = setInterval(triggerLogCleanup, 2 * 60 * 60 * 1000);
+    }
+
     const token = await getFCMToken();
     if (!token) return false;
 

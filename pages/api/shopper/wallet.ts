@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { insertSystemLog } from "../queries/system-logs";
 
 // GraphQL query to get wallet information
 const GET_WALLET_BY_SHOPPER_ID = gql`
@@ -150,7 +151,18 @@ export default async function handler(
         wallet: updateResponse.update_Wallets.returning[0],
       });
     }
-  } catch (error) {
+  } catch (error: any) {
+    await insertSystemLog(
+      "error",
+      `Wallet API failure: ${error.message || "Unknown"}`,
+      "ShopperWalletAPI",
+      {
+        method: req.method,
+        shopperId:
+          req.method === "GET" ? req.query.shopperId : req.body.shopperId,
+        error: error.message || error,
+      }
+    );
     await logErrorToSlack("shopper/wallet", error, {
       method: req.method,
       shopperId:
