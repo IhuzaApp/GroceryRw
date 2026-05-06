@@ -57,22 +57,22 @@ export default function SearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
-      <div className="flex h-full flex-col">
+    <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+      <div className="flex h-full flex-col bg-white dark:bg-[#0A0A0A]">
         {/* Header */}
-        <div className="bg-white px-4 py-4 shadow-sm">
+        <div className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 px-6 py-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#0A0A0A]/80">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-white">
                 Search Results
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 {searchResults.length} results for "{searchQuery}"
               </p>
             </div>
             <button
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 hover:bg-gray-200"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-500 transition-all duration-200 hover:bg-gray-100 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10"
             >
               <svg
                 className="h-5 w-5"
@@ -83,7 +83,7 @@ export default function SearchModal({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
@@ -92,27 +92,26 @@ export default function SearchModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 dark:bg-[#0A0A0A]">
           {isSearching ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-green-500"></div>
-                <p className="mt-4 font-medium text-gray-600">Searching...</p>
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-500 dark:border-emerald-400"></div>
+                <p className="mt-4 font-bold text-gray-500 dark:text-gray-400">Searching...</p>
               </div>
             </div>
           ) : searchResults.length > 0 ? (
-            <div className="space-y-3 px-4 py-2">
+            <div className="space-y-4">
               {searchResults.map((result, index) => (
                 <div
                   key={index}
-                  className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-md"
+                  className="group cursor-pointer overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-xl dark:border-white/5 dark:bg-[#121212] dark:hover:border-emerald-500/30 dark:hover:bg-white/[0.04]"
                   onClick={() => handleResultClick(result)}
                 >
-                  <div className="p-4">
                     <div className="flex items-start space-x-4">
                       {/* Image */}
                       <div className="flex-shrink-0">
-                        <div className="h-16 w-16 overflow-hidden rounded-xl bg-gray-100 shadow-sm">
+                        <div className="h-16 w-16 overflow-hidden rounded-2xl bg-gray-100 shadow-sm dark:bg-white/5">
                           <img
                             src={(() => {
                               // Use image_url if available
@@ -181,26 +180,23 @@ export default function SearchModal({
                       <div className="min-w-0 flex-1">
                         <div className="mb-2 flex items-start justify-between">
                           <div className="min-w-0 flex-1">
-                            <div className="mb-2 flex items-center space-x-2">
-                              <h4 className="truncate text-base font-semibold text-gray-900 transition-colors group-hover:text-green-700">
+                            <div className="mb-1 flex items-center space-x-2">
+                              <h4 className="truncate text-base font-bold text-gray-900 transition-colors group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400">
                                 {result.name}
                               </h4>
                               {/* Type Badge */}
                               <span
-                                className={`inline-flex flex-shrink-0 items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                className={`inline-flex flex-shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
                                   result.type === "product"
-                                    ? "bg-blue-100 text-blue-700"
+                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                                     : result.type === "shop"
-                                    ? "bg-purple-100 text-purple-700"
+                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
                                     : result.type === "restaurant"
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-orange-100 text-orange-700"
+                                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                                 }`}
                               >
-                                {result.type === "product" && "Product"}
-                                {result.type === "shop" && "Shop"}
-                                {result.type === "restaurant" && "Restaurant"}
-                                {result.type === "recipe" && "Recipe"}
+                                {result.type}
                               </span>
                             </div>
 
@@ -208,9 +204,9 @@ export default function SearchModal({
                             {(result.shop_name ||
                               result.address ||
                               result.location) && (
-                              <div className="mb-2 flex items-center text-sm text-gray-600">
+                              <div className="mb-2 flex items-center text-[11px] font-medium text-gray-500 dark:text-gray-400">
                                 <svg
-                                  className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400"
+                                  className="mr-1.5 h-3.5 w-3.5 flex-shrink-0 opacity-70"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -238,7 +234,7 @@ export default function SearchModal({
 
                             {/* Description */}
                             {result.description && (
-                              <p className="mb-3 line-clamp-2 text-sm text-gray-500">
+                              <p className="mb-2 line-clamp-2 text-xs font-medium text-gray-400 dark:text-gray-500">
                                 {result.description}
                               </p>
                             )}
@@ -248,7 +244,7 @@ export default function SearchModal({
                           {result.price && (
                             <div className="ml-4 flex-shrink-0">
                               <div className="text-right">
-                                <span className="text-lg font-bold text-green-600">
+                                <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
                                   {formatCurrencySync(result.price)}
                                 </span>
                               </div>
@@ -257,21 +253,8 @@ export default function SearchModal({
                         </div>
 
                         {/* Action Indicator */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center text-xs text-gray-400">
-                            <svg
-                              className="mr-1 h-3 w-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                        <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/5">
+                          <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                             Tap to{" "}
                             {result.type === "product"
                               ? "view product"
@@ -282,50 +265,47 @@ export default function SearchModal({
                               : "view recipe"}
                           </div>
                           <svg
-                            className="h-5 w-5 text-gray-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-green-500"
+                            className="h-4 w-4 text-gray-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-emerald-500 dark:text-gray-600 dark:group-hover:text-emerald-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
+                            strokeWidth={2.5}
                           >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
                               d="M9 5l7 7-7 7"
                             />
                           </svg>
                         </div>
                       </div>
                     </div>
-                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                  <svg
-                    className="h-8 w-8 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900">
-                  No results found
-                </h3>
-                <p className="text-gray-500">
-                  Try searching with different keywords
-                </p>
+            <div className="flex h-full flex-col items-center justify-center p-8">
+              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gray-100 shadow-inner dark:bg-white/5">
+                <svg
+                  className="h-10 w-10 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </div>
+              <h3 className="mb-2 text-xl font-black tracking-tight text-gray-900 dark:text-white">
+                No results found
+              </h3>
+              <p className="text-center font-medium text-gray-500 dark:text-gray-400">
+                Try searching with different keywords
+              </p>
             </div>
           )}
         </div>
