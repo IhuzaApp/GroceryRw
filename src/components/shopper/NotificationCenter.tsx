@@ -44,7 +44,11 @@ interface NotificationItem {
   combinedOrderId?: string;
 }
 
-export default function NotificationCenter() {
+interface NotificationCenterProps {
+  isGlassMode?: boolean;
+}
+
+export default function NotificationCenter({ isGlassMode = false }: NotificationCenterProps = {}) {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const { data: session } = useSession();
@@ -697,10 +701,12 @@ export default function NotificationCenter() {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 active:scale-90 ${
-          theme === "dark"
-            ? "text-gray-300 hover:bg-green-900/20 hover:text-green-400"
-            : "text-gray-600 hover:bg-green-50 hover:text-green-600"
+        className={`group relative flex items-center justify-center transition-all duration-300 active:scale-90 ${
+          isGlassMode
+            ? "h-10 w-10 rounded-full border border-white/20 bg-black/20 !text-white shadow-xl backdrop-blur-xl hover:bg-black/30"
+            : theme === "dark"
+            ? "h-9 w-9 rounded-xl text-gray-300 hover:bg-green-900/20 hover:text-green-400"
+            : "h-9 w-9 rounded-xl text-gray-600 hover:bg-green-50 hover:text-green-600"
         }`}
         title="Notifications"
       >

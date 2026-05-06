@@ -201,22 +201,12 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
         <div
           ref={bubbleRef}
           onClick={handleDropdownToggle}
-          className={`group relative inline-flex cursor-pointer items-center gap-3 rounded-2xl border px-5 py-3 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] active:scale-95 ${
-            theme === "dark"
-              ? "border-white/10 bg-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-              : "border-black/5 bg-gray-100/50 shadow-lg"
-          }`}
+          className="group relative inline-flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-black/20 px-5 py-2.5 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:bg-black/30 active:scale-95"
         >
-          {/* Glass reflection effect */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/10"></div>
 
           {/* Location Icon with Background */}
           <div
-            className={`relative flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-colors duration-500 ${
-              theme === "dark"
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                : "border-emerald-500/20 bg-emerald-500 text-white"
-            }`}
+            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/20 !text-white shadow-sm backdrop-blur-md transition-colors duration-300 group-hover:bg-white/30"
           >
             <svg
               className="h-4 w-4 drop-shadow-sm"
@@ -242,9 +232,7 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
           {/* Address Text */}
           <div className="relative flex flex-1 flex-col">
             <span
-              className={`text-sm font-black leading-tight tracking-tight transition-colors duration-500 ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+              className="text-sm font-bold leading-tight tracking-tight !text-white"
             >
               {defaultAddress.street}, {defaultAddress.city}
             </span>
@@ -253,11 +241,7 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
           <div
             className={`relative flex h-6 w-6 items-center justify-center rounded-full transition-all duration-300 ${
               isDropdownOpen ? "rotate-180" : ""
-            } ${
-              theme === "dark"
-                ? "text-white/40 group-hover:text-white"
-                : "text-gray-400 group-hover:text-gray-900"
-            }`}
+            } !text-white/70 group-hover:!text-white`}
           >
             <svg
               className="h-4 w-4"
@@ -273,13 +257,6 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
               />
             </svg>
           </div>
-
-          {/* Glass edge highlight */}
-          <div
-            className={`pointer-events-none absolute inset-0 rounded-2xl border transition-colors duration-500 ${
-              theme === "dark" ? "border-white/10" : "border-black/5"
-            }`}
-          ></div>
         </div>
 
         {/* Full Screen Dropdown with Map */}

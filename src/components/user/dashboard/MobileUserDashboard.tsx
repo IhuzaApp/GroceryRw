@@ -308,7 +308,7 @@ export default function MobileUserDashboard({
 
               {/* Notification Bell (FCM-backed) */}
               <div className="shrink-0">
-                <NotificationCenter />
+                <NotificationCenter isGlassMode={true} />
               </div>
             </div>
 
@@ -644,7 +644,7 @@ export default function MobileUserDashboard({
               <div className="flex flex-shrink-0 items-center gap-2">
                 {/* Notification Bell (FCM-backed) */}
                 <div className="flex items-center">
-                  <NotificationCenter />
+                  <NotificationCenter isGlassMode={true} />
                 </div>
 
                 {/* Nearby Button */}
