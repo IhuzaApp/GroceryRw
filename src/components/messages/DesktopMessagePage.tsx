@@ -1428,33 +1428,19 @@ export default function DesktopMessagePage({
                                   }`}
                                 >
                                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
-                                     {isCurrentUser ? (
-                                       shopper?.profile_photo || session?.user?.image ? (
-                                         <img
-                                           src={shopper?.profile_photo || session?.user?.image || ""}
-                                           alt={session?.user?.name || "You"}
-                                           className="h-full w-full object-cover"
-                                         />
-                                       ) : (
-                                         <span className="text-[10px] font-bold uppercase text-white">
-                                           {(session?.user?.name || "Y").charAt(
-                                             0
-                                           )}
-                                         </span>
-                                       )
-                                     ) : isMeShopperSelected ? (
-                                       selectedOrder?.orderedBy?.profile_picture ? (
-                                         <img src={selectedOrder.orderedBy.profile_picture} alt="Customer" className="h-full w-full object-cover" />
-                                       ) : (
-                                         <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.orderedBy?.name || "C").charAt(0)}</span>
-                                       )
-                                     ) : isMeCustomerSelected ? (
-                                       selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
-                                         <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt="Shopper" className="h-full w-full object-cover" />
-                                       ) : (
-                                         <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.assignedTo?.shopper?.full_name || selectedOrder?.assignedTo?.name || "S").charAt(0)}</span>
-                                       )
-                                     ) : isBusinessChat ? (
+                                      {message.senderType === "customer" ? (
+                                        selectedOrder?.orderedBy?.profile_picture ? (
+                                          <img src={selectedOrder.orderedBy.profile_picture} alt={selectedOrder.orderedBy.name || "Customer"} className="h-full w-full object-cover" />
+                                        ) : (
+                                          <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.orderedBy?.name || "C").charAt(0)}</span>
+                                        )
+                                      ) : message.senderType === "shopper" ? (
+                                        selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
+                                          <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt={selectedOrder.assignedTo?.shopper?.full_name || selectedOrder.assignedTo?.name || "Shopper"} className="h-full w-full object-cover" />
+                                        ) : (
+                                          <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.assignedTo?.shopper?.full_name || selectedOrder?.assignedTo?.name || "S").charAt(0)}</span>
+                                        )
+                                      ) : isBusinessChat ? (
                                       <img
                                         src={
                                           selectedConversation.counterpartAvatar ||
@@ -1520,10 +1506,10 @@ export default function DesktopMessagePage({
                                             className="h-14 w-14 rounded-lg object-cover shadow-sm"
                                           />
                                           <div className="ml-3 min-w-0 flex-1">
-                                            <p className="truncate text-sm font-bold opacity-90">
+                                            <p className={`truncate text-sm font-bold opacity-90 ${isCurrentUser ? "!text-white" : ""}`}>
                                               {message.product.name}
                                             </p>
-                                            <p className="text-xs font-semibold opacity-70">
+                                            <p className={`text-xs font-semibold opacity-70 ${isCurrentUser ? "!text-white" : ""}`}>
                                               {formatCurrency(
                                                 message.product.price
                                               )}
@@ -1531,7 +1517,7 @@ export default function DesktopMessagePage({
                                           </div>
                                         </div>
                                       ) : null}
-                                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                      <p className={`whitespace-pre-wrap text-sm leading-relaxed ${isCurrentUser ? "!text-white" : ""}`}>
                                         {sanitizeMessageForDisplay(
                                           message.text || message.message || ""
                                         )}

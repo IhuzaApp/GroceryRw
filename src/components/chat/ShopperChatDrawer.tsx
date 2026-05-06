@@ -103,6 +103,7 @@ interface MessageProps {
   message: Message | PendingMessage;
   isCurrentUser: boolean;
   customerName: string;
+  customerImage?: string;
   shopperImage?: string;
   statusLabel?: "Sending..." | "Sent" | null;
 }
@@ -111,6 +112,7 @@ const ShopperMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
   customerName,
+  customerImage,
   shopperImage,
   statusLabel,
 }) => {
@@ -130,15 +132,15 @@ const ShopperMessage: React.FC<MessageProps> = ({
     >
       <div className="mb-1 flex-shrink-0">
         <Avatar
-          src={isCurrentUser ? shopperImage : "/images/userProfile.png"}
-          alt={isCurrentUser ? "Me" : customerName}
+          src={message.senderType === "customer" ? customerImage : shopperImage}
+          alt={message.senderType === "customer" ? customerName : "Shopper"}
           circle
           size="sm"
           className={`ring-2 ${
-            isCurrentUser ? "ring-emerald-500/20" : "ring-gray-400/20"
+            message.senderType === "customer" ? "ring-emerald-500/20" : "ring-gray-400/20"
           }`}
         >
-          {isCurrentUser ? "ME" : customerName[0].toUpperCase()}
+          {message.senderType === "customer" ? customerName[0].toUpperCase() : "S"}
         </Avatar>
       </div>
 
@@ -165,7 +167,7 @@ const ShopperMessage: React.FC<MessageProps> = ({
               {customerName}
             </div>
           )}
-          <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed">
+          <div className={`whitespace-pre-wrap text-sm font-medium leading-relaxed ${message.senderType === "customer" ? "!text-white" : ""}`}>
             {messageContent}
           </div>
         </div>
@@ -679,6 +681,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
                     message={message}
                     isCurrentUser={isCurrentUser}
                     customerName={customer.name}
+                    customerImage={customer.avatar}
                     shopperImage={
                       shopper?.profile_photo ||
                       databaseProfileImage ||

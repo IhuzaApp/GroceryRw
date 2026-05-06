@@ -80,8 +80,10 @@ const CustomerMessage: React.FC<{
   message: Message | PendingMessage;
   isCurrentUser: boolean;
   counterpartName: string;
+  counterpartImage?: string;
+  customerImage?: string;
   statusLabel?: "Sending..." | "Sent" | null;
-}> = ({ message, isCurrentUser, counterpartName, statusLabel }) => {
+}> = ({ message, isCurrentUser, counterpartName, counterpartImage, customerImage, statusLabel }) => {
   const rawContent =
     "text" in message
       ? message.text
@@ -90,8 +92,23 @@ const CustomerMessage: React.FC<{
 
   return (
     <div
-      className={`mb-3 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+      className={`mb-3 flex items-end gap-2 ${isCurrentUser ? "flex-row-reverse" : "flex-row"}`}
     >
+      <div className="relative flex-shrink-0 mb-1">
+        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 shadow-sm">
+          {message.senderType === "customer" ? (
+            customerImage ? (
+              <img src={customerImage} alt="Customer" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-[10px] font-bold text-gray-500">C</span>
+            )
+          ) : counterpartImage ? (
+            <img src={counterpartImage} alt={counterpartName} className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-[10px] font-bold text-gray-500">{counterpartName.charAt(0)}</span>
+          )}
+        </div>
+      </div>
       <div
         className={`relative max-w-[85%] px-4 py-2 text-[15px] leading-relaxed shadow-sm transition-all ${
           isCurrentUser
@@ -591,6 +608,8 @@ export default function MobileChatPage({
                 message={message}
                 isCurrentUser={message.senderType === "customer"}
                 counterpartName={counterpart.name}
+                counterpartImage={counterpart.avatar}
+                customerImage={session?.user?.image || undefined}
                 statusLabel={"tempId" in message ? "Sending..." : "Sent"}
               />
             ))}

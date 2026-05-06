@@ -84,6 +84,8 @@ interface MessageProps {
   message: Message | PendingMessage;
   isCurrentUser: boolean;
   counterpartName: string;
+  counterpartImage?: string;
+  customerImage?: string;
   statusLabel?: "Sending..." | "Sent" | null;
 }
 
@@ -91,6 +93,8 @@ const CustomerMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
   counterpartName,
+  counterpartImage,
+  customerImage,
   statusLabel,
 }) => {
   const rawContent =
@@ -102,18 +106,28 @@ const CustomerMessage: React.FC<MessageProps> = ({
   return (
     <div
       className={`mb-4 flex gap-3 ${
-        isCurrentUser ? "justify-end" : "justify-start"
+        isCurrentUser ? "flex-row-reverse justify-start" : "flex-row justify-start"
       }`}
     >
-      {!isCurrentUser && (
-        <div className="relative flex-shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
-            <span className="text-sm font-bold uppercase text-white">
-              {counterpartName.charAt(0)}
-            </span>
-          </div>
+      <div className="relative flex-shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
+          {message.senderType === "customer" ? (
+            customerImage ? (
+              <img src={customerImage} alt="Customer" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-sm font-bold uppercase text-white">C</span>
+            )
+          ) : (
+            counterpartImage ? (
+              <img src={counterpartImage} alt={counterpartName} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-sm font-bold uppercase text-white">
+                {counterpartName.charAt(0)}
+              </span>
+            )
+          )}
         </div>
-      )}
+      </div>
       <div
         className={`flex max-w-[75%] flex-col ${
           isCurrentUser ? "items-end" : "items-start"
@@ -131,7 +145,7 @@ const CustomerMessage: React.FC<MessageProps> = ({
               {counterpartName}
             </div>
           )}
-          <div className="whitespace-pre-wrap font-medium">
+          <div className={`whitespace-pre-wrap font-medium ${isCurrentUser ? "!text-white" : ""}`}>
             {messageContent}
           </div>
         </div>
@@ -485,6 +499,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             message={message}
             isCurrentUser={message.senderType === "customer"}
             counterpartName={counterpart.name}
+            counterpartImage={counterpart.avatar}
+            customerImage={session?.user?.image || undefined}
             statusLabel={"tempId" in message ? "Sending..." : "Sent"}
           />
         ))}
