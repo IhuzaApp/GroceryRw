@@ -115,13 +115,13 @@
     color: inherit;
   }
 
-  [class*="bg-gradient-to"] h1,
-  [class*="bg-gradient-to"] h2,
-  [class*="bg-gradient-to"] h3,
-  [class*="bg-gradient-to"] h4,
-  [class*="bg-gradient-to"] p,
-  [class*="bg-gradient-to"] span:not([class*="bg-"]),
-  [class*="bg-gradient-to"] svg {
+  [class*="bg-gradient-to"] h1:not([class*="text-"]),
+  [class*="bg-gradient-to"] h2:not([class*="text-"]),
+  [class*="bg-gradient-to"] h3:not([class*="text-"]),
+  [class*="bg-gradient-to"] h4:not([class*="text-"]),
+  [class*="bg-gradient-to"] p:not([class*="text-"]),
+  [class*="bg-gradient-to"] span:not([class*="bg-"]):not([class*="text-"]),
+  [class*="bg-gradient-to"] svg:not([class*="text-"]) {
     color: white;
   }
 }

@@ -11,7 +11,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
 }) => {
   if (!estimatedDelivery) {
     return (
-      <span className="text-gray-500 dark:text-gray-400">
+      <span className="text-black dark:text-gray-400">
         No delivery time available
       </span>
     );

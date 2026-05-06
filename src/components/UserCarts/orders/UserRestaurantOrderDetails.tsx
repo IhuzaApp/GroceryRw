@@ -562,7 +562,7 @@ export default function UserRestaurantOrderDetails({
 
         {/* Assigned Plaser Details */}
         <Panel className="border border-gray-200 dark:border-gray-700">
-          <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
+          <h3 className="mb-4 text-base font-semibold !text-black dark:!text-white md:text-lg">
             Assigned Plaser
           </h3>
           {order.Plaser_id ? (
@@ -705,7 +705,7 @@ export default function UserRestaurantOrderDetails({
                     />
                   </svg>
                 </div>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-sm !text-black dark:text-gray-400">
                   Waiting for assignment
                 </p>
               </div>

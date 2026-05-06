@@ -148,12 +148,12 @@ export default function ContactSupportModal({
             </div>
             <div>
               <h2
-                className={`text-2xl font-black tracking-tight text-[var(--text-primary)]`}
+                className={`text-2xl font-semibold tracking-tight text-[var(--text-primary)]`}
               >
                 Customer Support
               </h2>
               <p
-                className={`mt-1 text-sm font-medium text-[var(--text-secondary)]`}
+                className={`mt-1 text-sm font-normal text-[var(--text-secondary)]`}
               >
                 We're here to help. Send us a message!
               </p>
@@ -180,21 +180,21 @@ export default function ContactSupportModal({
               </div>
 
               <h3
-                className={`text-3xl font-black italic tracking-tighter text-[var(--text-primary)]`}
+                className={`text-3xl font-bold italic tracking-tighter text-[var(--text-primary)]`}
               >
                 TICKET SENT!
               </h3>
 
               <div className="mt-6 flex flex-col items-center">
                 <p
-                  className={`text-sm font-bold uppercase tracking-widest ${
+                  className={`text-sm font-medium uppercase tracking-widest ${
                     isDark ? "text-emerald-400/60" : "text-emerald-600/60"
                   }`}
                 >
                   Your Tracking Code
                 </p>
                 <div
-                  className={`mt-2 rounded-2xl border-2 border-dashed px-8 py-3 text-4xl font-black tracking-widest ${
+                  className={`mt-2 rounded-2xl border-2 border-dashed px-8 py-3 text-4xl font-bold tracking-widest ${
                     isDark
                       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
                       : "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -219,7 +219,7 @@ export default function ContactSupportModal({
           ) : (
             <div className="space-y-8">
               {error && (
-                <div className="flex items-center gap-3 rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500 ring-1 ring-inset ring-red-500/20">
+                <div className="flex items-center gap-3 rounded-2xl bg-red-500/10 p-4 text-sm font-medium text-red-500 ring-1 ring-inset ring-red-500/20">
                   <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                   {error}
                 </div>
@@ -231,15 +231,15 @@ export default function ContactSupportModal({
               >
                 <div className="mb-4 flex items-center justify-between">
                   <span
-                    className={`text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]`}
+                    className={`text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)]`}
                   >
                     Reference Details
                   </span>
                   <div
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium uppercase ${
                       isDark
-                        ? "bg-white/10 text-white"
-                        : "bg-emerald-500 text-white"
+                        ? "bg-white/10 !text-white"
+                        : "bg-emerald-500 !text-white"
                     }`}
                   >
                     <Activity className="h-3 w-3" />
@@ -255,11 +255,11 @@ export default function ContactSupportModal({
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase opacity-40">
+                      <p className="text-[10px] font-medium uppercase opacity-40">
                         Order ID
                       </p>
                       <p
-                        className={`truncate text-sm font-bold text-[var(--text-primary)]`}
+                        className={`truncate text-sm font-medium text-[var(--text-primary)]`}
                       >
                         #{orderDisplayId}
                       </p>
@@ -272,11 +272,11 @@ export default function ContactSupportModal({
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase opacity-40">
+                      <p className="text-[10px] font-medium uppercase opacity-40">
                         Category
                       </p>
                       <p
-                        className={`truncate text-sm font-bold text-[var(--text-primary)]`}
+                        className={`truncate text-sm font-medium text-[var(--text-primary)]`}
                       >
                         {orderType.charAt(0).toUpperCase() + orderType.slice(1)}
                       </p>
@@ -289,11 +289,11 @@ export default function ContactSupportModal({
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase opacity-40">
+                      <p className="text-[10px] font-medium uppercase opacity-40">
                         Store/Source
                       </p>
                       <p
-                        className={`truncate text-sm font-bold text-[var(--text-primary)]`}
+                        className={`truncate text-sm font-medium text-[var(--text-primary)]`}
                       >
                         {storeName}
                       </p>
@@ -311,7 +311,7 @@ export default function ContactSupportModal({
                     }`}
                   />
                   <label
-                    className={`text-sm font-black uppercase tracking-wider text-[var(--text-primary)]`}
+                    className={`text-sm font-semibold uppercase tracking-wider text-[var(--text-primary)]`}
                   >
                     How can we help?
                   </label>
@@ -325,7 +325,7 @@ export default function ContactSupportModal({
                     disabled={submitting}
                     className={`w-full resize-none rounded-[1.5rem] border-2 border-[var(--bg-secondary)] bg-[var(--bg-secondary)] p-5 text-sm font-medium leading-relaxed text-[var(--text-primary)] placeholder-[var(--text-secondary)] transition-all duration-300 focus:border-emerald-500/50 focus:outline-none`}
                   />
-                  <div className="absolute bottom-4 right-4 text-[10px] font-bold opacity-30">
+                  <div className="absolute bottom-4 right-4 text-[10px] font-medium opacity-30">
                     {message.length} characters
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export default function ContactSupportModal({
           {successCode ? (
             <button
               onClick={handleClose}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:bg-emerald-600 active:scale-95 sm:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-10 py-4 text-base font-semibold !text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:bg-emerald-600 active:scale-95 sm:w-auto"
             >
               GOT IT
             </button>
@@ -350,19 +350,19 @@ export default function ContactSupportModal({
               <button
                 onClick={handleClose}
                 disabled={submitting}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--bg-secondary)] px-8 py-4 text-base font-bold text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] sm:w-auto`}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--bg-secondary)] px-8 py-4 text-base font-medium text-[var(--text-secondary)] transition-all hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] sm:w-auto`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-700 px-10 py-4 text-base font-black text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:from-emerald-600 hover:to-emerald-800 hover:shadow-emerald-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-700 px-10 py-4 text-base font-semibold !text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 hover:from-emerald-600 hover:to-emerald-800 hover:shadow-emerald-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {submitting ? (
                   <div className="flex items-center gap-3">
                     <svg
-                      className="h-5 w-5 animate-spin text-white"
+                      className="h-5 w-5 animate-spin !text-white"
                       viewBox="0 0 24 24"
                     >
                       <circle
@@ -384,8 +384,8 @@ export default function ContactSupportModal({
                   </div>
                 ) : (
                   <>
-                    SUBMIT TICKET
-                    <Send className="h-5 w-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+                    <span className="!text-white">SUBMIT TICKET</span>
+                    <Send className="h-5 w-5 !text-white transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
                   </>
                 )}
               </button>

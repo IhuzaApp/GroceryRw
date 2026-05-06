@@ -543,3 +543,37 @@ export const sendPaymentApprovedNotification = async (
     throw error;
   }
 };
+
+/**
+ * Send delayed order notification
+ */
+export const sendDelayedOrderNotification = async (
+  userId: string,
+  orderId: string,
+  minutesDelayed: number,
+  orderNumber?: string
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping delayed notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: "Order Delayed ⚠️",
+      body: `Your order #${orderNumber || orderId} is taking a bit longer than expected. We're working on it!`,
+      data: {
+        type: "order_delayed",
+        orderId,
+        minutesDelayed: minutesDelayed.toString(),
+        tag: `delay_${orderId}`,
+      },
+    };
+
+    await sendNotificationToUser(userId, payload);
+  } catch (error) {
+    console.error("Error sending delayed order notification:", error);
+  }
+};

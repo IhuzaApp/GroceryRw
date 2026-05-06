@@ -82,23 +82,6 @@ const GET_REEL_ORDER_DETAILS = gql`
         proofOfResidency
         updated_at
         user_id
-        Ratings {
-          created_at
-          customer_id
-          delivery_experience
-          id
-          order_id
-          packaging_quality
-          professionalism
-          rating
-          reel_order_id
-          review
-          reviewed_at
-          shopper_id
-          updated_at
-          businessProduct_id
-          package_id
-        }
       }
     }
   }
@@ -193,22 +176,6 @@ export default async function handler(
           phone: string | null;
           address: string | null;
           Employment_id: string | null;
-          Ratings: Array<{
-            created_at: string;
-            customer_id: string;
-            delivery_experience: string;
-            id: string;
-            order_id: string | null;
-            packaging_quality: string;
-            professionalism: string;
-            rating: string;
-            reel_order_id: string | null;
-            review: string | null;
-            reviewed_at: string | null;
-            shopper_id: string;
-            businessProduct_id: string | null;
-            package_id: string | null;
-          }>;
         } | null;
       } | null;
     }>(GET_REEL_ORDER_DETAILS, { order_id: id });
@@ -378,28 +345,25 @@ export default async function handler(
       orderType: "reel" as const,
       reel: orderData.Reel,
       assignedTo: orderData.shoppers
-        ? {
-          id: orderData.shopper_id || orderData.shoppers.id || "",
-          name:
-            orderData.shoppers.full_name ||
-            "Plasa",
-          phone:
-            orderData.shoppers.phone_number ||
-            orderData.shoppers.phone ||
-            "",
-          email: "",
-          profile_photo:
-            orderData.shoppers.profile_photo ||
-            null,
-          gender: null,
-          rating: shopperStats?.rating || 0,
-          orders_aggregate: shopperStats?.orders_aggregate || {
-            aggregate: {
-              count: 0,
+        ? (() => {
+          const s = Array.isArray(orderData.shoppers) ? orderData.shoppers[0] : orderData.shoppers;
+          if (!s) return null;
+          return {
+            id: orderData.shopper_id || s.id || "",
+            name: s.full_name || "Plasa",
+            phone: s.phone_number || s.phone || "",
+            email: "",
+            profile_photo: s.profile_photo || null,
+            gender: null,
+            rating: shopperStats?.rating || 0,
+            orders_aggregate: shopperStats?.orders_aggregate || {
+              aggregate: {
+                count: 0,
+              },
             },
-          },
-          recentReviews: shopperStats?.recentReviews || [],
-        }
+            recentReviews: shopperStats?.recentReviews || [],
+          };
+        })()
         : null,
     };
 

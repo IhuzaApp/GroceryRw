@@ -358,7 +358,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId)
+    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId || !counterpart?.id)
       return;
 
     const text = newMessage.trim();

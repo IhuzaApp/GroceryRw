@@ -292,10 +292,10 @@ export default function UserBusinessOrderDetails({
         <div className="hidden w-full md:block md:w-1/3">
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div className="rounded-t-xl bg-gradient-to-br from-green-50 to-green-100/50 px-6 py-5 dark:from-green-900/20 dark:to-green-800/10">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-bold !text-black dark:!text-white">
                 Your Plaser
               </h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-sm !text-black dark:text-gray-400">
                 {order?.status === "delivered"
                   ? "Completed your order"
                   : "Assigned to your order"}
@@ -503,10 +503,10 @@ export default function UserBusinessOrderDetails({
                     />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-sm font-medium !text-black dark:text-gray-400">
                   No Plaser assigned yet
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                <p className="mt-1 text-xs !text-black dark:text-gray-500">
                   Waiting for assignment
                 </p>
               </div>

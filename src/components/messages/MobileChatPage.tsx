@@ -365,7 +365,7 @@ export default function MobileChatPage({
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId)
+    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId || !counterpart?.id)
       return;
 
     const text = newMessage.trim();
@@ -381,16 +381,16 @@ export default function MobileChatPage({
     setError(null);
 
     const tempId = `temp-${Date.now()}`;
-    const isShopper =
-      session?.user?.role === "shopper" ||
-      (shopper?.id && (counterpart.role === "customer" || counterpart.id !== shopper.id));
+    const isMeCustomer = session?.user?.id === (selectedConversation as any)?.customerId;
+    const isMeShopper = 
+      session?.user?.id === (selectedConversation as any)?.shopperUserId || 
+      (shopper?.id && (session?.user?.id === (selectedConversation as any)?.shopperId || shopper.id === (selectedConversation as any)?.shopperId));
 
-    const senderType =
-      counterpart.role === "business"
-        ? "business"
-        : isShopper
-        ? "shopper"
-        : "customer";
+    const senderType = isMeCustomer
+      ? "customer"
+      : isMeShopper
+      ? "shopper"
+      : "business";
     const senderId = senderType === "shopper" ? (shopper?.id || session?.user?.id || "") : (session?.user?.id || "");
     const recipientId = counterpart.id;
 
@@ -439,7 +439,7 @@ export default function MobileChatPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientId: (selectedConversation as any)?.shopperUserId || counterpart.id,
+          recipientId: (selectedConversation as any)?.shopperUserId || (selectedConversation as any)?.shopperId || counterpart.id,
           senderName: session.user.name || "User",
           message: text,
           orderId,

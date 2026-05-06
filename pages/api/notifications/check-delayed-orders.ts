@@ -38,7 +38,6 @@ const GET_REEL_ORDER_BY_ID = gql`
         phone
       }
       shoppers {
-        name
         phone
         phone_number
       }
@@ -150,7 +149,7 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
-        o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
+      shopperPhone = o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
       storeName = o.Shop?.name ?? undefined;
     } else if (orderType === "reel") {
       const data = await hasuraClient.request<{
@@ -174,7 +173,7 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.User?.phone ?? undefined;
-        o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
+      shopperPhone = o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
       storeName = o.Reel?.title ?? "Reel order";
     } else if (orderType === "restaurant") {
       const data = await hasuraClient.request<{
@@ -206,6 +205,7 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
+      shopperPhone =
         o.shoppers?.phone_number ??
         o.shoppers?.phone ??
         undefined;

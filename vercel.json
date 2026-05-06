@@ -8,6 +8,10 @@
     {
       "path": "/api/cleanup/system-logs-cleanup",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/notifications/delayed-orders-cron",
+      "schedule": "0 */5 * * *"
     }
   ]
 }

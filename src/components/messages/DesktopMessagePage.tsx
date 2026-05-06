@@ -842,7 +842,9 @@ export default function DesktopMessagePage({
           orderShopperId ||
           (selectedConversation as any).businessId ||
           selectedConversation.counterpartId
-        : selectedConversation.customerId;
+        : isMeShopper
+        ? selectedConversation.customerId || selectedConversation.counterpartId
+        : selectedConversation.customerId || selectedConversation.shopperId || selectedConversation.counterpartId;
 
       const messagePayload = {
         text: newMessage.trim(),
@@ -854,6 +856,9 @@ export default function DesktopMessagePage({
         timestamp: serverTimestamp(),
         read: false,
       };
+      if (!recipientId) {
+        throw new Error("Could not determine message recipient.");
+      }
 
       console.log("🔍 [Chat Hub] Sending message:", messagePayload);
 
@@ -886,7 +891,7 @@ export default function DesktopMessagePage({
             orderShopperId ||
             (selectedConversation as any).businessId ||
             selectedConversation.counterpartId
-          : selectedConversation.customerId;
+          : selectedConversation.customerId || selectedConversation.counterpartId;
 
         await fetch("/api/fcm/send-notification", {
           method: "POST",
@@ -1441,6 +1446,16 @@ export default function DesktopMessagePage({
                                         ) : (
                                           <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.assignedTo?.shopper?.full_name || selectedOrder?.assignedTo?.name || "S").charAt(0)}</span>
                                         )
+                                      ) : message.senderType === "business" ? (
+                                        <img
+                                          src={
+                                            selectedConversation.businessId === session?.user?.id
+                                              ? session?.user?.image || "/images/userProfile.png"
+                                              : selectedConversation.counterpartAvatar || "/images/userProfile.png"
+                                          }
+                                          alt="Business"
+                                          className="h-full w-full object-cover"
+                                        />
                                       ) : isBusinessChat ? (
                                       <img
                                         src={

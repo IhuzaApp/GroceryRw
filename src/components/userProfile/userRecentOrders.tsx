@@ -154,38 +154,9 @@ function EstimatedDelivery({
     return () => clearInterval(interval);
   }, []);
 
-  // Trigger delayed-order Slack notification when countdown hits ≤2 min or is late (once per order)
-  useEffect(() => {
-    if (!deliveryTime || status === "delivered" || !orderId) return;
-    const alreadyNotified = getDelayedNotifiedIds().has(orderId);
-    if (alreadyNotified) {
-      notifiedRef.current = true;
-      return;
-    }
-    const est = new Date(deliveryTime).getTime();
-    const diffMs = est - currentTime;
-    const minutesRemaining = diffMs / 60000;
-    const shouldNotify = minutesRemaining <= 2;
-    if (shouldNotify && !notifiedRef.current) {
-      notifiedRef.current = true;
-      fetch("/api/notifications/check-delayed-orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          orderType,
-          minutesRemaining: Math.round(minutesRemaining * 10) / 10,
-        }),
-      })
-        .then((res) => {
-          if (res.ok) markDelayedNotified(orderId);
-        })
-        .catch((err) => {
-          notifiedRef.current = false;
-          console.error("Delayed order notification failed", err);
-        });
-    }
-  }, [deliveryTime, status, orderId, orderType, currentTime]);
+  // Delayed-order Slack notification is now handled by a server-side cron job.
+  // Client-side triggers removed to avoid redundant API calls and duplicate alerts.
+
 
   if (!deliveryTime) return null;
   if (status === "delivered") {

@@ -584,12 +584,12 @@ export default function UserReelOrderDetails({
         <div className="w-full md:w-1/3">
           <Panel shaded bordered className="overflow-hidden">
             <div className="relative bg-gradient-to-br from-purple-50 to-purple-100/50 px-6 py-5 dark:from-purple-900/20 dark:to-purple-800/10">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-bold !text-black dark:!text-white">
                 {order.status === "shopping" || order.status === "packing"
                   ? "Your Plaser"
                   : "Your Delivery Person"}
               </h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-sm !text-black dark:text-gray-400">
                 {order.status === "shopping"
                   ? "Currently shopping for your items"
                   : order.status === "packing"
@@ -885,10 +885,10 @@ export default function UserReelOrderDetails({
                     />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-sm font-medium !text-black dark:text-gray-400">
                   No assigned person available
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                <p className="mt-1 text-xs !text-black dark:text-gray-500">
                   Waiting for assignment
                 </p>
               </div>

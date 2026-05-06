@@ -650,12 +650,12 @@ export default function UserOrderDetails({
         <div className="hidden w-full md:block md:w-1/3">
           <Panel shaded bordered className="overflow-hidden">
             <div className="relative bg-gradient-to-br from-green-50 to-green-100/50 px-6 py-5 dark:from-green-900/20 dark:to-green-800/10">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-bold !text-black dark:!text-white">
                 {order.status === "shopping" || order.status === "packing"
                   ? "Your Plaser"
                   : "Your Plaser"}
               </h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-sm !text-black dark:text-gray-400">
                 {order.status === "shopping"
                   ? "Currently shopping for your items"
                   : order.status === "packing"
@@ -912,10 +912,10 @@ export default function UserOrderDetails({
                     />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-sm font-medium !text-black dark:text-gray-400">
                   No Plaser assigned yet
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                <p className="mt-1 text-xs !text-black dark:text-gray-500">
                   Waiting for assignment
                 </p>
               </div>
