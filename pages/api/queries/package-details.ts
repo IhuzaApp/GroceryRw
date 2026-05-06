@@ -34,7 +34,7 @@ const GET_PACKAGE_DETAILS = gql`
       payment_method
       shopper_id
       updated_at
-      shoppers {
+      shopper {
         full_name
         phone
         profile_photo

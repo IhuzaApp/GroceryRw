@@ -453,7 +453,7 @@ function CurrentOrdersPage() {
                   }`}
                 >
                   <span className={filter === "packages" ? "!text-white" : ""}>
-                    Deliveries
+                    Packages
                   </span>
                   {packagesCount > 0 && (
                     <span

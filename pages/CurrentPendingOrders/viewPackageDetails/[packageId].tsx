@@ -496,11 +496,11 @@ function PackageDetailsPage() {
               <div className="absolute bottom-10 left-6 right-6 z-10">
                 <div className="flex items-end justify-between gap-4">
                   <div className="min-w-0">
-                    <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-md md:text-5xl md:font-black">
+                    <h1 className="text-2xl font-bold tracking-tight !text-white drop-shadow-md md:text-5xl md:font-black">
                       Plas Package
                     </h1>
-                    <div className="mt-1 flex items-center gap-2 text-xs font-medium text-white/90 drop-shadow-sm md:mt-2 md:text-sm">
-                      <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                    <div className="mt-1 flex items-center gap-2 text-xs font-medium !text-white/90 drop-shadow-sm md:mt-2 md:text-sm">
+                      <Clock className="h-3.5 w-3.5 !text-white md:h-4 md:w-4" />
                       Created {timeAgo(pkg.created_at)}
                     </div>
                   </div>
@@ -786,7 +786,7 @@ function PackageDetailsPage() {
                         setShowCancelModal(true);
                       }}
                       disabled={isCancelling}
-                      className="w-full rounded-xl border-2 border-red-500 py-3 font-black text-red-500 transition-all hover:bg-red-50 active:scale-95 disabled:opacity-50"
+                      className="w-full rounded-xl border-2 border-red-500 bg-red-500 py-3 font-black !text-white transition-all hover:bg-red-600 hover:border-red-600 active:scale-95 disabled:opacity-50"
                     >
                       Cancel Delivery
                     </button>
