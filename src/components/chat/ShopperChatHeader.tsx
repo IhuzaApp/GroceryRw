@@ -7,6 +7,7 @@ import { Avatar } from "rsuite";
 
 interface ShopperChatHeaderProps {
   orderId: string;
+  displayOrderId?: string;
   customerData: {
     name: string;
     avatar: string;
@@ -16,6 +17,7 @@ interface ShopperChatHeaderProps {
 
 export const ShopperChatHeader: React.FC<ShopperChatHeaderProps> = ({
   orderId,
+  displayOrderId,
   customerData,
   isMobile,
 }) => {
@@ -28,8 +30,18 @@ export const ShopperChatHeader: React.FC<ShopperChatHeaderProps> = ({
           onClick={() => router.push("/Plasa/chat")}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/5 transition-all active:scale-90 dark:bg-white/5"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
 
@@ -42,12 +54,15 @@ export const ShopperChatHeader: React.FC<ShopperChatHeaderProps> = ({
           />
           <div>
             <h2 className="text-sm font-black tracking-tight md:text-base">
-              {customerData?.name || "Customer"}
+              {displayOrderId ? `#${displayOrderId}` : `Order #${orderId.slice(0, 4)}`}
             </h2>
             <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
+                {customerData?.name || "Customer"}
+              </p>
+              <span className="h-1 w-1 rounded-full bg-emerald-500" />
               <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
-                Active Now
+                Active
               </p>
             </div>
           </div>

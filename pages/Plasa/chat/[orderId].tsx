@@ -446,6 +446,9 @@ function ChatPage() {
         <div className="flex flex-1 flex-col bg-gray-50 dark:bg-black/40">
           <ShopperChatHeader
             orderId={orderId as string}
+            displayOrderId={
+              order?.OrderID ? formatOrderID(order.OrderID) : undefined
+            }
             customerData={customerData}
             isMobile={isMobile}
           />

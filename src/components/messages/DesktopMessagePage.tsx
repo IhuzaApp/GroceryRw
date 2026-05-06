@@ -496,6 +496,7 @@ interface Conversation {
   orderId?: string;
   customerId?: string;
   shopperId?: string;
+  shopperUserId?: string;
   businessId?: string;
   rfqId?: string;
   counterpartId?: string;

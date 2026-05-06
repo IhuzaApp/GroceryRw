@@ -29,7 +29,9 @@ export const ShopperChatSidebar: React.FC<ShopperChatSidebarProps> = ({
             <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Current Status</span>
             <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase tracking-widest">Active</span>
           </div>
-          <h3 className="text-xl font-black mb-1">#{formatOrderID(orderId)}</h3>
+          <h3 className="text-xl font-black mb-1">
+            #{order?.OrderID ? formatOrderID(order.OrderID) : formatOrderID(orderId)}
+          </h3>
           <p className="text-xs opacity-50 font-bold">{formatCurrency(order?.Total_Amount || 0)} • {order?.Order_Items?.length || 0} items</p>
         </div>
 
