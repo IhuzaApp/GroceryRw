@@ -83,7 +83,7 @@ interface Message {
   text?: string;
   message?: string;
   senderId: string;
-  senderType: "customer" | "shopper";
+  senderType: "customer" | "shopper" | "business";
   recipientId: string;
   timestamp: any;
   read: boolean;
@@ -94,7 +94,7 @@ interface PendingMessage {
   tempId: string;
   text: string;
   senderId: string;
-  senderType: "customer" | "shopper";
+  senderType: "customer" | "shopper" | "business";
   timestamp: Date;
 }
 

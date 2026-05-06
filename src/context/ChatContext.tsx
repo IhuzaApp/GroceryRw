@@ -26,7 +26,7 @@ interface ExtendedFirebaseChatMessage extends FirebaseChatMessage {
 // For backwards compatibility with existing components
 export interface ChatMessage {
   id: string;
-  sender: "customer" | "shopper";
+  sender: "customer" | "shopper" | "business";
   text: string;
   timestamp: string;
   status: "sent" | "delivered" | "read";
@@ -381,17 +381,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Send FCM notification to the recipient
         const conversationData = conversation;
-        const recipientId = conversationData.customerId; // Always notify customer when shopper sends message
+        const recipientId = conversationData.customerId;
+        const orderIdVal = conversationData.orderId;
+        const convId = conversation.id;
 
-        const senderName = "Shopper";
-
-        await sendFCMNotification(
-          recipientId,
-          senderName,
-          text,
-          conversationData.orderId,
-          conversation.id
-        );
+        if (recipientId && orderIdVal && convId) {
+          const senderName = "Shopper";
+          await sendFCMNotification(
+            recipientId,
+            senderName,
+            text,
+            orderIdVal,
+            convId
+          );
+        }
 
         // The message will be added to our state by the listener
       } catch (error) {
