@@ -345,49 +345,31 @@ export default function MobileUserDashboard({
                       handleSearchSubmit();
                     }
                   }}
-                  className={`w-full rounded-full border py-3 pl-11 pr-[88px] text-sm font-bold shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-all duration-300 ${
+                  className={`w-full rounded-full border py-3 pl-11 pr-12 text-sm font-bold shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-all duration-300 ${
                     theme === "dark"
                       ? "border-white/10 bg-black/20 text-white placeholder:text-white/50 focus:border-emerald-500/50 focus:bg-black/40"
                       : "border-white/30 bg-white/80 text-gray-900 placeholder:text-gray-600 focus:border-emerald-500/50 focus:bg-white"
                   }`}
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 gap-1.5">
-                  {searchQuery && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setSearchQuery("");
-                          setSearchResults([]);
-                          setSearchOpen(false);
-                        }}
-                        className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${
-                          theme === "dark"
-                            ? "bg-white/10 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
-                            : "bg-gray-200 text-gray-500 hover:bg-red-100 hover:text-red-500"
-                        }`}
-                      >
-                        <svg
-                          className="h-3 w-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={handleSearchSubmit}
-                        className="flex h-8 items-center justify-center rounded-full bg-emerald-500 px-3 text-[10px] font-black uppercase tracking-widest text-white shadow-md transition-all duration-200 hover:bg-emerald-600 active:scale-95"
-                      >
-                        Go
-                      </button>
-                    </>
-                  )}
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <button
+                    onClick={handleSearchSubmit}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 !text-white shadow-md transition-all duration-200 hover:bg-emerald-600 active:scale-95"
+                  >
+                    <svg
+                      className="h-4 w-4 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth={3}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>

@@ -238,13 +238,8 @@ const MobileOrderDetails = ({
   const { theme } = useTheme();
   const router = useRouter();
 
-  // Get image source - restaurant orders use dedicated asset; then shop, reel, default
+  // Always use the unified welcome hero image for brand consistency on mobile
   const getHeaderImage = () => {
-    if (orderType === "restaurant")
-      return "/assets/images/restaurantImage.webp";
-    if (order?.shop?.image) return order.shop.image;
-    if (order?.reel?.thumbnail) return order.reel.thumbnail;
-    if (order?.restaurant?.image) return order.restaurant.image;
     return "/images/shopper/welcome_hero_v2.png";
   };
 
