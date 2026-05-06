@@ -203,7 +203,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           const conversationId = await createConversation(
             orderId,
             customerId,
-            shopperId
+            shopperId,
+            "order",
+            { shopperUserId: user.id }
           );
 
           // Create a new chat entry in our state first

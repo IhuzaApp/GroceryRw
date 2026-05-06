@@ -38,6 +38,7 @@ export interface ChatConversation {
   title?: string; // Optional title (e.g. RFQ Title)
   customerId?: string;
   shopperId?: string;
+  shopperUserId?: string; // The actual User UUID of the shopper (for FCM)
   createdAt: any;
   lastMessage?: string;
   lastMessageTime?: any;
@@ -97,6 +98,9 @@ export const createConversation = async (
     if (customerId) conversationData.customerId = customerId;
     if (shopperId) conversationData.shopperId = shopperId;
     if (orderId) conversationData.orderId = orderId;
+
+    // Use metadata for additional fields like shopperUserId
+    if (metadata?.shopperUserId) conversationData.shopperUserId = metadata.shopperUserId;
 
     const docRef = await addDoc(
       collection(db!, customCollection),

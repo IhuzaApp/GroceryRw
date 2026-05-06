@@ -168,6 +168,7 @@ export default function MobileChatPage({
   const { shopper } = useShopperProfile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [newMessage, setNewMessage] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(
     providedConversationId || null
@@ -228,7 +229,19 @@ export default function MobileChatPage({
     } else if (providedConversationId) {
       setConversationId(providedConversationId);
     }
-  }, [providedConversationId, orderId, session?.user?.id, counterpart?.id]);
+  }, [providedConversationId, orderId, session?.user?.id, counterpart?.id, shopper?.id]);
+
+  useEffect(() => {
+    if (!db || !conversationId) return;
+    const fetchConv = async () => {
+      const docRef = doc(db!, collectionPath, conversationId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setSelectedConversation({ id: docSnap.id, ...docSnap.data() });
+      }
+    };
+    fetchConv();
+  }, [db, conversationId, collectionPath]);
 
   useEffect(() => {
     if (!db || !conversationId || !session?.user?.id) return;
@@ -392,7 +405,7 @@ export default function MobileChatPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientId: counterpart.id,
+          recipientId: (selectedConversation as any)?.shopperUserId || counterpart.id,
           senderName: session.user.name || "User",
           message: text,
           orderId,
@@ -559,7 +572,10 @@ export default function MobileChatPage({
               <CustomerMessage
                 key={"tempId" in message ? message.tempId : message.id}
                 message={message}
-                isCurrentUser={message.senderId === session?.user?.id}
+                isCurrentUser={
+                  message.senderId === session?.user?.id ||
+                  (shopper?.id && message.senderId === shopper.id)
+                }
                 counterpartName={counterpart.name}
                 statusLabel={"tempId" in message ? "Sending..." : "Sent"}
               />

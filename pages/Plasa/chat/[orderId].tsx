@@ -12,6 +12,7 @@ import {
   formatMessageTime,
 } from "../../../src/lib/formatters";
 import { useAuth } from "../../../src/context/AuthContext";
+import { useShopperProfile } from "../../../src/hooks/useShopperProfile";
 import { useTheme } from "../../../src/context/ThemeContext";
 import { useChat } from "../../../src/context/ChatContext";
 
@@ -79,6 +80,7 @@ function ChatPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const { user } = useAuth();
+  const { shopper } = useShopperProfile();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { closeChat } = useChat();
@@ -159,7 +161,7 @@ function ChatPage() {
     };
 
     fetchOrderAndCustomer();
-  }, [orderId, user?.id]);
+  }, [orderId, user?.id, shopper?.id]);
 
   // Get or create conversation
   const getOrCreateConversation = async (
@@ -180,10 +182,14 @@ function ChatPage() {
         setConversationId(conversationDoc.id);
       } else {
         // Create new conversation
+        // Use shopper.id if available, fallback to user.id
+        const shopperId = shopper?.id || user?.id;
+
         const newConversation = {
           orderId: orderIdStr,
           customerId,
-          shopperId: user?.id,
+          shopperId,
+          shopperUserId: user?.id,
           createdAt: serverTimestamp(),
           lastMessage: "",
           lastMessageTime: serverTimestamp(),
@@ -255,7 +261,7 @@ function ChatPage() {
       const newUnreadCustomerMessages = newMessages.filter(
         (msg) =>
           msg.senderType === "customer" &&
-          msg.senderId !== user?.id &&
+          msg.senderId !== (shopper?.id || user?.id) &&
           !msg.read
       );
 
@@ -346,12 +352,14 @@ function ChatPage() {
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     // Optimistic: add to UI immediately with "Sending..." status
+    const senderId = shopper?.id || user.id!;
+
     setPendingMessages((prev) => [
       ...prev,
       {
         tempId,
         text,
-        senderId: user.id!,
+        senderId,
         senderType: "shopper",
         timestamp: new Date(),
       },
@@ -367,10 +375,12 @@ function ChatPage() {
         conversationId,
         "messages"
       );
+      const senderId = shopper?.id || user.id;
+
       await addDoc(messagesRef, {
         text,
         message: text,
-        senderId: user.id,
+        senderId,
         senderName: user.name || "Shopper",
         senderType: "shopper",
         recipientId: customerData.id,
@@ -444,7 +454,8 @@ function ChatPage() {
           <div className="flex-1 overflow-y-auto scroll-smooth p-6">
             <div className="mx-auto max-w-4xl space-y-8">
               {displayMessages.map((msg, idx) => {
-                const isMe = msg.senderType === "shopper";
+                const isMe =
+                  msg.senderId === (shopper?.id || user?.id);
                 const isPending = "tempId" in msg && (msg as PendingMessage).tempId.startsWith("temp-");
                 const isRead = !isPending && (msg as Message).read;
                 

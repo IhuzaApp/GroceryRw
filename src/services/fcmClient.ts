@@ -436,6 +436,33 @@ export const setupFCMListener = (
         }
       }
 
+      // Persist to history for in-app UI (bell/toasts)
+      try {
+        const notificationTitle =
+          payload.notification?.title ||
+          payload.data?.title ||
+          "New Notification";
+        const notificationBody =
+          payload.notification?.body ||
+          payload.data?.body ||
+          payload.data?.message ||
+          "";
+        const type = payload?.data?.type || "unknown";
+        const entry: StoredNotification = {
+          title: notificationTitle,
+          body: notificationBody,
+          timestamp: Date.now(),
+          type,
+          read: false,
+          ...(payload?.data || {}),
+        };
+        idbAddNotification(entry).then(() => {
+          syncStoredNotificationsToLocalStorage();
+        });
+      } catch (e) {
+        // ignore persistence errors
+      }
+
       onMessageReceived(payload);
     });
 
@@ -476,6 +503,15 @@ export async function syncStoredNotificationsToLocalStorage(): Promise<void> {
       "fcm_notification_history",
       JSON.stringify(merged.slice(0, 50))
     );
+
+    // Dispatch event so UI (NotificationCenter) updates immediately
+    if (merged.length > 0) {
+      window.dispatchEvent(
+        new CustomEvent("fcm-history-updated", {
+          detail: { notification: merged[0] },
+        })
+      );
+    }
 
     // Clear IDB once synced so we don't re-merge forever
     await idbClearNotifications();

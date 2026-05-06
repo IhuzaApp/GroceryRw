@@ -642,7 +642,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           ) : (
             <>
               {displayMessages.map((message) => {
-                const isCurrentUser = message.senderId === session?.user?.id;
+                const isCurrentUser =
+                  message.senderId === (shopper?.id || session?.user?.id);
                 const isPending =
                   "tempId" in message && message.tempId.startsWith("temp-");
                 const statusLabel: "Sending..." | "Sent" | null = isCurrentUser
@@ -652,12 +653,15 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
                   : null;
                 return (
                   <ShopperMessage
-                    key={message.id}
+                    key={"tempId" in message ? message.tempId : message.id}
                     message={message}
                     isCurrentUser={isCurrentUser}
                     customerName={customer.name}
                     shopperImage={
-                      databaseProfileImage || session?.user?.image || undefined
+                      shopper?.profile_photo ||
+                      databaseProfileImage ||
+                      session?.user?.image ||
+                      undefined
                     }
                     statusLabel={statusLabel}
                   />

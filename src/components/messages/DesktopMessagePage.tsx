@@ -828,6 +828,7 @@ export default function DesktopMessagePage({
       // Trigger FCM so recipient gets device + in-app notification (bell)
       try {
         const recipientId =
+          selectedConversation.shopperUserId ||
           selectedConversation.shopperId ||
           selectedConversation.counterpartId ||
           (selectedConversation as any).businessId ||
@@ -1318,8 +1319,9 @@ export default function DesktopMessagePage({
                         {/* Messages for this date */}
                         <div className="flex flex-col gap-6">
                           {group.messages.map((message, index) => {
-                            const isCurrentUser =
-                              message.senderId === session?.user?.id;
+                             const isCurrentUser =
+                               message.senderId === session?.user?.id ||
+                               (shopper?.id && message.senderId === shopper.id);
 
                             return (
                               <React.Fragment key={message.id}>
@@ -1331,24 +1333,22 @@ export default function DesktopMessagePage({
                                   }`}
                                 >
                                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
-                                    {isCurrentUser ? (
-                                      session?.user?.image ? (
-                                        <img
-                                          src={session.user.image}
-                                          alt={session?.user?.name || "You"}
-                                          className="h-full w-full object-cover"
-                                        />
-                                      ) : (
-                                        <span className="text-[10px] font-bold uppercase text-white">
-                                          {(session?.user?.name || "Y").charAt(
-                                            0
-                                          )}
-                                        </span>
-                                      )
-                                    ) : selectedOrder?.assignedTo?.shopper
-                                        ?.profile_photo ||
-                                      selectedOrder?.assignedTo
-                                        ?.profile_picture ? (
+                                     {isCurrentUser ? (
+                                       shopper?.profile_photo || session?.user?.image ? (
+                                         <img
+                                           src={shopper?.profile_photo || session?.user?.image || ""}
+                                           alt={session?.user?.name || "You"}
+                                           className="h-full w-full object-cover"
+                                         />
+                                       ) : (
+                                         <span className="text-[10px] font-bold uppercase text-white">
+                                           {(session?.user?.name || "Y").charAt(
+                                             0
+                                           )}
+                                         </span>
+                                       )
+                                     ) : (selectedOrder?.assignedTo?.shopper?.profile_photo || 
+                                          selectedOrder?.assignedTo?.profile_picture) ? (
                                       <img
                                         src={
                                           selectedOrder.assignedTo?.shopper
@@ -1359,6 +1359,12 @@ export default function DesktopMessagePage({
                                         alt="Shopper"
                                         className="h-full w-full object-cover"
                                       />
+                                     ) : selectedOrder?.orderedBy?.profile_picture ? (
+                                       <img
+                                         src={selectedOrder.orderedBy.profile_picture}
+                                         alt="Customer"
+                                         className="h-full w-full object-cover"
+                                       />
                                     ) : isBusinessChat ? (
                                       <img
                                         src={
