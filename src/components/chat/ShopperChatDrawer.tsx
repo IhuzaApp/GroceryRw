@@ -122,7 +122,7 @@ const ShopperMessage: React.FC<MessageProps> = ({
     "text" in message
       ? message.text
       : (message as Message).text || (message as Message).message || "";
-  const messageContent = sanitizeMessageForDisplay(rawContent);
+  const messageContent = sanitizeMessageForDisplay(rawContent ?? "");
 
   return (
     <div
@@ -237,7 +237,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
   // Get or create conversation
   const getOrCreateConversation = async () => {
-    if (!orderId || !session?.user?.id || !customer?.id) return;
+    if (!db || !orderId || !session?.user?.id || !customer?.id) return;
 
     try {
       // Check if conversation exists
@@ -273,7 +273,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
   // Set up messages listener
   useEffect(() => {
-    if (!conversationId || !session?.user?.id) return;
+    if (!db || !conversationId || !session?.user?.id) return;
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
@@ -341,7 +341,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         messagesList.forEach(async (message) => {
           if (message.senderType === "customer" && !message.read) {
             const messageRef = doc(
-              db,
+              db!,
               "chat_conversations",
               conversationId,
               "messages",
@@ -350,7 +350,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             await updateDoc(messageRef, { read: true });
 
             // Update unread count in conversation
-            const convRef = doc(db, "chat_conversations", conversationId);
+            const convRef = doc(db!, "chat_conversations", conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
@@ -410,6 +410,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     if (e) e.preventDefault();
 
     if (
+      !db ||
       !newMessage.trim() ||
       !session?.user?.id ||
       !conversationId ||

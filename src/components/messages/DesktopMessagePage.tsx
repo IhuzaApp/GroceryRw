@@ -477,6 +477,7 @@ interface Message {
   id: string;
   text?: string;
   message?: string;
+  senderId: string;
   senderType: "customer" | "shopper" | "business";
   recipientId: string;
   timestamp: any;
