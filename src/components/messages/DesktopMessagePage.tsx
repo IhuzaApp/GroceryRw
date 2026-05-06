@@ -552,8 +552,12 @@ export default function DesktopMessagePage({
   const isBusinessChat =
     !!selectedConversation &&
     (!selectedConversation.orderId || selectedConversation.type === "business");
+  const isMeCustomerSelected =
+    !!selectedConversation &&
+    session?.user?.id === selectedConversation.customerId;
   const isMeShopperSelected =
     !!selectedConversation &&
+    !isMeCustomerSelected &&
     (session?.user?.id === (selectedConversation as any)?.shopperUserId ||
       (shopper?.id && shopper.id === selectedConversation?.shopperId));
 
@@ -716,6 +720,18 @@ export default function DesktopMessagePage({
 
         setMessages(messagesList);
 
+        console.log(`🔍 [Chat Hub] Received ${messagesList.length} messages:`, messagesList);
+        if (messagesList.length > 0) {
+          const last = messagesList[messagesList.length - 1];
+          console.log(`🔍 [Chat Hub] Latest message:`, {
+            text: last.text || last.message,
+            senderId: last.senderId,
+            senderType: last.senderType,
+            recipientId: last.recipientId,
+            timestamp: last.timestamp
+          });
+        }
+
         // Mark all unread messages as read
         const unreadMessages = messagesList.filter(
           (message) => message.senderType === "shopper" && !message.read
@@ -793,22 +809,41 @@ export default function DesktopMessagePage({
         conversationId,
         "messages"
       );
-      const recipientId =
-        selectedConversation.shopperId ||
-        (selectedConversation as any).businessId ||
-        selectedConversation.customerId;
+      const isMeCustomer = session.user.id === selectedConversation.customerId;
+      const isMeShopper =
+        session.user.id === selectedConversation.shopperId ||
+        session.user.id === (selectedConversation as any).shopperUserId ||
+        (shopper?.id && shopper.id === selectedConversation.shopperId);
 
-      const senderType =
-        session.user.id === selectedConversation.customerId
-          ? "customer"
-          : session.user.id === selectedConversation.shopperId ||
-            (shopper?.id && shopper.id === selectedConversation.shopperId)
-          ? "shopper"
-          : "business";
+      const senderType = isMeCustomer
+        ? "customer"
+        : isMeShopper
+        ? "shopper"
+        : "business";
 
-      const senderId = senderType === "shopper" ? (shopper?.id || session.user.id) : session.user.id;
+      const senderId =
+        senderType === "shopper"
+          ? shopper?.id || session.user.id
+          : session.user.id;
 
-      await addDoc(messagesRef, {
+      // Fallback for recipientId if shopperId is corrupted (same as customerId)
+      const selectedOrder = selectedConversation.orderId
+        ? orders[selectedConversation.orderId]
+        : null;
+      const orderShopperId =
+        selectedOrder?.assignedTo?.shopper?.id || selectedOrder?.assignedTo?.id;
+
+      const recipientId = isMeCustomer
+        ? (selectedConversation.shopperId &&
+          selectedConversation.shopperId !== session.user.id
+            ? selectedConversation.shopperId
+            : null) ||
+          orderShopperId ||
+          (selectedConversation as any).businessId ||
+          selectedConversation.counterpartId
+        : selectedConversation.customerId;
+
+      const messagePayload = {
         text: newMessage.trim(),
         message: newMessage.trim(),
         senderId,
@@ -817,7 +852,11 @@ export default function DesktopMessagePage({
         recipientId,
         timestamp: serverTimestamp(),
         read: false,
-      });
+      };
+
+      console.log("🔍 [Chat Hub] Sending message:", messagePayload);
+
+      await addDoc(messagesRef, messagePayload);
 
       // Update conversation with last message
       const convRef = doc(
@@ -833,18 +872,26 @@ export default function DesktopMessagePage({
 
       // Trigger FCM so recipient gets device + in-app notification (bell)
       try {
-        const recipientId =
-          selectedConversation.shopperUserId ||
-          selectedConversation.shopperId ||
-          selectedConversation.counterpartId ||
-          (selectedConversation as any).businessId ||
-          selectedConversation.customerId;
+        const fcmRecipientId = isMeCustomer
+          ? (selectedConversation.shopperUserId &&
+            selectedConversation.shopperUserId !== session.user.id
+              ? selectedConversation.shopperUserId
+              : null) ||
+            (selectedConversation.shopperId &&
+            selectedConversation.shopperId !== session.user.id
+              ? selectedConversation.shopperId
+              : null) ||
+            selectedOrder?.assignedTo?.userId ||
+            orderShopperId ||
+            (selectedConversation as any).businessId ||
+            selectedConversation.counterpartId
+          : selectedConversation.customerId;
 
         await fetch("/api/fcm/send-notification", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            recipientId,
+            recipientId: fcmRecipientId,
             senderName: session.user.name || "User",
             message: newMessage.trim(),
             orderId: selectedConversation.orderId || null,
@@ -1006,9 +1053,11 @@ export default function DesktopMessagePage({
                   ? orders[conversation.orderId] || {}
                   : {};
 
+                const isMeCustomer = session?.user?.id === conversation.customerId;
                 const isMeShopper =
-                  session?.user?.id === conversation.shopperUserId ||
-                  (shopper?.id && shopper.id === conversation.shopperId);
+                  !isMeCustomer &&
+                  (session?.user?.id === (conversation as any).shopperUserId ||
+                    (shopper?.id && shopper.id === conversation.shopperId));
 
                 const employeeId = order?.assignedTo?.shopper?.Employment_id;
 
@@ -1022,11 +1071,14 @@ export default function DesktopMessagePage({
                 } else {
                   if (isMeShopper) {
                     fullName = order?.orderedBy?.name || "Customer";
-                  } else {
+                  } else if (isMeCustomer) {
                     fullName =
                       order?.assignedTo?.shopper?.full_name ||
                       order?.assignedTo?.name ||
                       "Shopper";
+                  } else {
+                    // Fallback for when current user is neither (e.g. admin or corrupted data)
+                    fullName = order?.orderedBy?.name || "Customer";
                   }
                 }
 
@@ -1049,8 +1101,11 @@ export default function DesktopMessagePage({
                   : isMeShopper
                   ? order?.orderedBy?.profile_picture ||
                     "/images/ProfileImage.png"
-                  : order?.assignedTo?.shopper?.profile_photo ||
+                  : isMeCustomer
+                  ? order?.assignedTo?.shopper?.profile_photo ||
                     order?.assignedTo?.profile_picture ||
+                    "/images/ProfileImage.png"
+                  : order?.orderedBy?.profile_picture ||
                     "/images/ProfileImage.png";
 
                 const isSelected = selectedConversation?.id === conversation.id;
@@ -1360,9 +1415,8 @@ export default function DesktopMessagePage({
                         {/* Messages for this date */}
                         <div className="flex flex-col gap-6">
                           {group.messages.map((message, index) => {
-                             const isCurrentUser =
-                               message.senderId === session?.user?.id ||
-                               (shopper?.id && message.senderId === shopper.id);
+                            const isCurrentUser =
+                              message.senderType === "customer";
 
                             return (
                               <React.Fragment key={message.id}>
@@ -1388,25 +1442,19 @@ export default function DesktopMessagePage({
                                            )}
                                          </span>
                                        )
-                                     ) : (selectedOrder?.assignedTo?.shopper?.profile_photo || 
-                                          selectedOrder?.assignedTo?.profile_picture) ? (
-                                      <img
-                                        src={
-                                          selectedOrder.assignedTo?.shopper
-                                            ?.profile_photo ||
-                                          selectedOrder.assignedTo
-                                            ?.profile_picture
-                                        }
-                                        alt="Shopper"
-                                        className="h-full w-full object-cover"
-                                      />
-                                     ) : selectedOrder?.orderedBy?.profile_picture ? (
-                                       <img
-                                         src={selectedOrder.orderedBy.profile_picture}
-                                         alt="Customer"
-                                         className="h-full w-full object-cover"
-                                       />
-                                    ) : isBusinessChat ? (
+                                     ) : isMeShopperSelected ? (
+                                       selectedOrder?.orderedBy?.profile_picture ? (
+                                         <img src={selectedOrder.orderedBy.profile_picture} alt="Customer" className="h-full w-full object-cover" />
+                                       ) : (
+                                         <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.orderedBy?.name || "C").charAt(0)}</span>
+                                       )
+                                     ) : isMeCustomerSelected ? (
+                                       selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
+                                         <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt="Shopper" className="h-full w-full object-cover" />
+                                       ) : (
+                                         <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.assignedTo?.shopper?.full_name || selectedOrder?.assignedTo?.name || "S").charAt(0)}</span>
+                                       )
+                                     ) : isBusinessChat ? (
                                       <img
                                         src={
                                           selectedConversation.counterpartAvatar ||
@@ -1460,8 +1508,8 @@ export default function DesktopMessagePage({
                                     <div
                                       className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
                                         isCurrentUser
-                                          ? "rounded-br-none border-2 border-green-500/20 bg-green-500/5 font-medium text-green-700 dark:text-green-400"
-                                          : "rounded-bl-none border-2 border-gray-200/50 bg-[var(--bg-secondary)] text-[var(--text-primary)] backdrop-blur-sm dark:border-white/5"
+                                          ? "rounded-br-none bg-green-600 font-medium text-white shadow-md shadow-green-200/50 dark:bg-green-600 dark:shadow-none"
+                                          : "rounded-bl-none border-2 border-gray-200/50 bg-white text-gray-800 shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-gray-800 dark:text-gray-100"
                                       }`}
                                     >
                                       {message.product ? (

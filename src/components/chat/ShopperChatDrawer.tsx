@@ -295,6 +295,18 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               : doc.data().timestamp,
         })) as Message[];
 
+        console.log(`🔍 [Shopper Drawer] Received ${messagesList.length} messages:`, messagesList);
+        if (messagesList.length > 0) {
+          const last = messagesList[messagesList.length - 1];
+          console.log(`🔍 [Shopper Drawer] Latest message:`, {
+            text: last.text || last.message,
+            senderId: last.senderId,
+            senderType: last.senderType,
+            recipientId: last.recipientId,
+            timestamp: last.timestamp
+          });
+        }
+
         // Remove pending messages that are now confirmed in Firebase (same text + senderId)
         setPendingMessages((prev) =>
           prev.filter(
@@ -442,7 +454,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         conversationId,
         "messages"
       );
-      await addDoc(messagesRef, {
+      const messagePayload = {
         text,
         message: text,
         senderId,
@@ -451,7 +463,11 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         recipientId: customer.id,
         timestamp: serverTimestamp(),
         read: false,
-      });
+      };
+
+      console.log("🔍 [Shopper Drawer] Sending message:", messagePayload);
+
+      await addDoc(messagesRef, messagePayload);
 
       // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
@@ -649,8 +665,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           ) : (
             <>
               {displayMessages.map((message) => {
-                const isCurrentUser =
-                  message.senderId === (shopper?.id || session?.user?.id);
+                const isCurrentUser = message.senderType === "customer";
                 const isPending =
                   "tempId" in message && message.tempId.startsWith("temp-");
                 const statusLabel: "Sending..." | "Sent" | null = isCurrentUser

@@ -763,8 +763,16 @@ function MessagesPage() {
                     order?.assignedTo?.name ||
                     selectedConversation.counterpartName ||
                     "Shopper";
+                  const shopperId =
+                    (selectedConversation.shopperId &&
+                    selectedConversation.shopperId !== currentUserId
+                      ? selectedConversation.shopperId
+                      : null) ||
+                    order?.assignedTo?.shopper?.id ||
+                    order?.assignedTo?.id ||
+                    "";
                   return {
-                    id: selectedConversation.shopperId || "",
+                    id: shopperId,
                     name: orderDisplayID
                       ? `${baseName} (#${orderDisplayID})`
                       : baseName,

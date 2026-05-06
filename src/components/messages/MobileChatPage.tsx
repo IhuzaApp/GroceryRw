@@ -255,19 +255,31 @@ export default function MobileChatPage({
     const q = query(messagesRef, orderBy("timestamp", "asc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
+      const messagesList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
         timestamp:
-          d.data().timestamp instanceof Timestamp
-            ? d.data().timestamp.toDate()
-            : d.data().timestamp,
+          doc.data().timestamp instanceof Timestamp
+            ? doc.data().timestamp.toDate()
+            : doc.data().timestamp,
       })) as Message[];
+
+      console.log(`🔍 [Mobile Chat] Received ${messagesList.length} messages:`, messagesList);
+      if (messagesList.length > 0) {
+        const last = messagesList[messagesList.length - 1];
+        console.log(`🔍 [Mobile Chat] Latest message:`, {
+          text: last.text || last.message,
+          senderId: last.senderId,
+          senderType: last.senderType,
+          recipientId: last.recipientId,
+          timestamp: last.timestamp
+        });
+      }
 
       setPendingMessages((prev) =>
         prev.filter(
           (p) =>
-            !msgs.some(
+            !messagesList.some(
               (m) =>
                 m.senderId === p.senderId &&
                 (m.text === p.text || m.message === p.text)
@@ -276,12 +288,12 @@ export default function MobileChatPage({
       );
 
       const oldLen = messages.length;
-      if (msgs.length > oldLen) {
-        const last = msgs[msgs.length - 1];
+      if (messagesList.length > oldLen) {
+        const last = messagesList[messagesList.length - 1];
         if (last.senderId !== session?.user?.id) soundNotification.play();
       }
 
-      setMessages(msgs);
+      setMessages(messagesList);
 
       snapshot.docs.forEach((d) => {
         const m = d.data();
@@ -363,6 +375,7 @@ export default function MobileChatPage({
         ? "shopper"
         : "customer";
     const senderId = senderType === "shopper" ? (shopper?.id || session?.user?.id || "") : (session?.user?.id || "");
+    const recipientId = counterpart.id;
 
     setPendingMessages((p) => [
       ...p,
@@ -383,16 +396,20 @@ export default function MobileChatPage({
         conversationId,
         "messages"
       );
-      await addDoc(messagesRef, {
+      const messagePayload = {
         text,
         message: text,
         senderId,
         senderName: session.user.name || "User",
         senderType,
-        recipientId: counterpart.id,
+        recipientId,
         timestamp: serverTimestamp(),
         read: false,
-      });
+      };
+
+      console.log("🔍 [Mobile Chat] Sending message:", messagePayload);
+
+      await addDoc(messagesRef, messagePayload);
 
       const convRef = doc(db!, collectionPath, conversationId);
       await updateDoc(convRef, {
@@ -572,10 +589,7 @@ export default function MobileChatPage({
               <CustomerMessage
                 key={"tempId" in message ? message.tempId : message.id}
                 message={message}
-                isCurrentUser={
-                  message.senderId === session?.user?.id ||
-                  (shopper?.id && message.senderId === shopper.id)
-                }
+                isCurrentUser={message.senderType === "customer"}
                 counterpartName={counterpart.name}
                 statusLabel={"tempId" in message ? "Sending..." : "Sent"}
               />

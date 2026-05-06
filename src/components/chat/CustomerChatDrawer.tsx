@@ -483,7 +483,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
           <CustomerMessage
             key={"tempId" in message ? message.tempId : message.id}
             message={message}
-            isCurrentUser={message.senderId === session?.user?.id}
+            isCurrentUser={message.senderType === "customer"}
             counterpartName={counterpart.name}
             statusLabel={"tempId" in message ? "Sending..." : "Sent"}
           />
