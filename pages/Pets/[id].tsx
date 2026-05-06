@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import PetDetailsPage from "../../src/components/pets/PetDetailsPage";
-import { Pet } from "../../src/constants/dummyPets";
 import LoadingScreen from "../../src/components/ui/LoadingScreen";
+import { Pet } from "@/types/models";
 
 export default function PetDetailPage() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function PetDetailPage() {
                 p.pet_vendors?.fullname ||
                 "Verified Vendor",
               image:
-                p.pet_vendors?.user?.image ||
+                p.pet_vendors?.User?.image ||
                 "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
               isVerified: true,
             },

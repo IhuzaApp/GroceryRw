@@ -9,6 +9,8 @@ import {
   Bird,
   Info,
   Loader2,
+  MessageSquare,
+  PackageCheck,
 } from "lucide-react";
 import { Pet } from "../../types/models";
 import { useRouter } from "next/router";
@@ -23,13 +25,17 @@ const PetIcon = ({ className }: { className?: string }) => (
 
 // Sub-components (Inline for now, can be extracted later)
 const PetHero = ({
-  onSearchClick,
-  onFilterClick,
-  activeTab,
-  onTabChange,
-}: any) => {
+  searchQuery,
+  setSearchQuery,
+}: {
+  searchQuery: string;
+  setSearchQuery: (val: string) => void;
+}) => {
+  const [isSearching, setIsSearching] = useState(false);
+  const router = useRouter();
+
   return (
-    <div className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
+    <div className="relative h-[28vh] min-h-[240px] w-full overflow-hidden md:h-[40vh] md:min-h-[300px]">
       <Image
         src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2086&auto=format&fit=crop"
         alt="Pets"
@@ -39,23 +45,63 @@ const PetHero = ({
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
       <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-20">
-        <h1 className="mb-4 font-outfit text-4xl font-black !text-white text-white md:text-6xl">
+        <h1 className="mb-2 font-outfit text-3xl font-black !text-white text-white md:mb-4 md:text-6xl">
           Find Your New
           <br />
           Best Friend
         </h1>
-        <p className="mb-8 max-w-md text-lg font-medium !text-white text-white/80 md:text-xl">
-          Adopt or buy pets from verified owners and shelters in your area.
-        </p>
-        <div className="flex gap-4">
-          <button
-            onClick={onSearchClick}
-            className="flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 font-black !text-white text-white shadow-lg shadow-green-500/20 transition-transform hover:scale-105"
-          >
-            <Search className="h-5 w-5 !text-white text-white" />
-            Find Pets
-          </button>
-        </div>
+
+        {!isSearching && !searchQuery ? (
+          <>
+            <p className="mb-4 max-w-md text-sm font-medium !text-white text-white/80 md:mb-8 md:text-xl">
+              Adopt or buy pets from verified owners and shelters.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsSearching(true)}
+                className="flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-black !text-white text-white shadow-lg shadow-green-500/20 transition-transform hover:scale-105"
+              >
+                <Search className="h-4 w-4 !text-white text-white" />
+                Find Pets
+              </button>
+              <button
+                onClick={() => router.push("/Pets/my-adoptions")}
+                className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-black !text-white text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95"
+              >
+                <Dog className="h-4 w-4" />
+                Adoptions
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="relative flex w-full items-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-md">
+              <Search className="mr-3 h-4 w-4 text-white/60" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search by name or breed..."
+                className="flex-1 bg-transparent text-sm font-bold !text-white text-white outline-none placeholder:text-white/40"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onBlur={() => {
+                  if (!searchQuery) setIsSearching(false);
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setIsSearching(false);
+                  }}
+                  className="ml-2 text-xs font-black !text-white text-white/60 hover:text-white"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -75,8 +121,20 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute right-4 top-4 z-10">
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 !text-white text-white backdrop-blur-md transition-colors hover:bg-green-500">
-            <Dog className="h-5 w-5 !text-white text-white" />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/Messages/${pet.owner.id}`);
+            }}
+            className="group/chat relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white/50 bg-black/20 backdrop-blur-md transition-all hover:scale-110 hover:border-green-500"
+          >
+            <Image
+              src={pet.owner.image}
+              alt={pet.owner.name}
+              fill
+              className="object-cover transition-opacity group-hover/chat:opacity-40"
+            />
+            <MessageSquare className="absolute inset-0 m-auto h-5 w-5 scale-0 !text-white text-white transition-transform group-hover/chat:scale-100" />
           </button>
         </div>
         <div className="absolute bottom-4 left-4 z-10 flex gap-2">
@@ -123,9 +181,6 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
   );
 };
 
-const PET_TYPES = ["All", "Dog", "Cat", "Bird", "Rabbit", "Other"];
-const STATUS_OPTIONS = ["All", "Available", "Sold"];
-
 export default function PetListing() {
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
@@ -133,6 +188,13 @@ export default function PetListing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+
+  const categories = useMemo(() => {
+    const types = Array.from(new Set(pets.map((pet) => pet.type))).filter(
+      Boolean
+    );
+    return ["All", ...types];
+  }, [pets]);
 
   useEffect(() => {
     const fetchAllPets = async () => {
@@ -158,7 +220,7 @@ export default function PetListing() {
                 p.pet_vendors?.fullname ||
                 "Verified Vendor",
               image:
-                p.pet_vendors?.user?.image ||
+                p.pet_vendors?.User?.image ||
                 "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop",
               isVerified: true,
             },
@@ -203,9 +265,7 @@ export default function PetListing() {
   return (
     <div className="min-h-screen bg-white pb-24 font-sans text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20">
       <div className="md:hidden">
-        <PetHero
-          onSearchClick={() => document.getElementById("pet-search")?.focus()}
-        />
+        <PetHero searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </div>
 
       <PetListingHeader onListPet={() => router.push("/Pets/dashboard")} />
@@ -214,7 +274,7 @@ export default function PetListing() {
         {/* Filters */}
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-center">
           <div className="flex flex-wrap gap-3">
-            {PET_TYPES.map((type) => (
+            {categories.map((type) => (
               <button
                 key={type}
                 onClick={() => setSelectedType(type)}
@@ -229,7 +289,7 @@ export default function PetListing() {
             ))}
           </div>
 
-          <div className="relative flex w-full max-w-md items-center rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/20 dark:bg-white">
+          <div className="relative hidden w-full max-w-md items-center rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/20 dark:bg-white md:flex">
             <Search className="mr-3 h-4 w-4 text-gray-400" />
             <input
               id="pet-search"
@@ -276,7 +336,7 @@ export default function PetListing() {
       <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 md:hidden">
         <button
           onClick={() => router.push("/Pets/dashboard")}
-          className="flex items-center gap-3 rounded-full bg-black px-8 py-4 font-black !text-white text-white shadow-2xl transition-all hover:scale-105 active:scale-95 dark:bg-white dark:!text-black dark:text-black"
+          className="flex items-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black !text-white text-white shadow-2xl transition-all hover:scale-105 active:scale-95 shadow-green-500/30"
         >
           <Dog className="h-6 w-6" />
           <span>List Your Pet</span>

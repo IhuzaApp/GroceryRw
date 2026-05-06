@@ -782,17 +782,17 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                         </h4>
                       </div>
                     </div>
+                    {isAdopted && (
+                      <button
+                        onClick={() => router.push(`/Messages/${pet.owner.id}`)}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 !text-white text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+                        title="Chat with Seller"
+                      >
+                        <MessageSquare className="h-6 w-6" />
+                      </button>
+                    )}
                   </div>
 
-                  {isAdopted && (
-                    <button
-                      onClick={() => router.push(`/Messages/${pet.owner.id}`)}
-                      className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-green-500 py-4 font-outfit font-black text-green-500 transition-all hover:bg-green-500 hover:text-white active:scale-95"
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                      Chat with Seller
-                    </button>
-                  )}
                 </div>
 
                 <button
