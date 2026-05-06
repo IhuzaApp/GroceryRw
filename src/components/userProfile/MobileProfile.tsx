@@ -229,7 +229,7 @@ export default function MobileProfile({
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
+              backgroundImage: "url(/images/shopper/welcome_hero_v2.png)",
             }}
           >
             {/* Overlay for better text readability */}

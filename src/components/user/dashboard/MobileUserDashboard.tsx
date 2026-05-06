@@ -285,7 +285,7 @@ export default function MobileUserDashboard({
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform [transition-duration:20s] hover:scale-110"
             style={{
-              backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
+              backgroundImage: "url(/images/shopper/welcome_hero_v2.png)",
             }}
           >
             {/* Dynamic Overlay for contrast */}
@@ -595,7 +595,7 @@ export default function MobileUserDashboard({
         <div
           className="relative overflow-hidden rounded-b-3xl"
           style={{
-            backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
+            backgroundImage: "url(/images/shopper/welcome_hero_v2.png)",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

@@ -447,7 +447,7 @@ function PackageDetailsPage() {
           <div className="md:container md:mx-auto md:px-8 md:pt-4">
             <div className="relative h-52 w-full overflow-hidden shadow-2xl md:h-80 md:rounded-3xl">
               <Image
-                src={pkg.package_image || "/images/package-placeholder.jpg"}
+                src={pkg.package_image || "/images/shopper/welcome_hero_v2.png"}
                 alt="Package"
                 fill
                 className="object-cover"

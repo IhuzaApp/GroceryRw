@@ -245,7 +245,7 @@ const MobileOrderDetails = ({
     if (order?.shop?.image) return order.shop.image;
     if (order?.reel?.thumbnail) return order.reel.thumbnail;
     if (order?.restaurant?.image) return order.restaurant.image;
-    return "/images/shop-placeholder.jpg";
+    return "/images/shopper/welcome_hero_v2.png";
   };
 
   return (
