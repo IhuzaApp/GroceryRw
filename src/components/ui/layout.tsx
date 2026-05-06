@@ -40,6 +40,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isPackageDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewPackageDetails/"
   );
+  const isCurrentPendingOrdersPage = router.pathname.startsWith("/CurrentPendingOrders");
   const isRecipesPage = router.pathname.startsWith("/Recipes");
   const isBecomeShopperPage = router.pathname === "/Myprofile/become-shopper";
   const isCarsPage =
@@ -140,6 +141,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isMessagesChat &&
         !isCarsPage &&
         !isPetsPage &&
+        !isCurrentPendingOrdersPage &&
         !isPlasBusinessPage && <AIChatProvider />}
     </div>
   );

@@ -467,27 +467,35 @@ function PackageDetailsPage() {
 
               {/* Shopper Header Pill (if assigned) */}
               {pkg.shopper && (
-                <div className="absolute left-1/2 top-6 z-20 -translate-x-1/2">
-                  <div className="flex items-center gap-3 rounded-full bg-black/40 px-3 py-1.5 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg">
-                      <User className="h-4 w-4" />
+                <div className="absolute left-1/2 top-6 z-20 -translate-x-1/2 w-max max-w-full px-4">
+                  <div className="flex items-center gap-3 md:gap-4 rounded-full bg-black/40 px-4 py-2 md:px-6 md:py-2.5 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl">
+                    <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg">
+                      <User className="h-5 w-5 md:h-6 md:w-6" />
                     </div>
-                    <div className="min-w-0 pr-1">
-                      <p className="text-[9px] font-bold uppercase leading-none tracking-widest !text-white/60">
+                    <div className="min-w-0 pr-2">
+                      <p className="text-[10px] md:text-xs font-bold uppercase leading-none tracking-widest !text-white/60">
                         Plasa
                       </p>
-                      <p className="mt-0.5 truncate text-[11px] font-black !text-white">
+                      <p className="mt-1 truncate text-sm md:text-base font-black !text-white">
                         {pkg.shopper.full_name}
                       </p>
                     </div>
-                    <a
-                      href={`tel:${
-                        pkg.shopper.phone_number || pkg.shopper.phone
-                      }`}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`tel:${
+                          pkg.shopper.phone_number || pkg.shopper.phone
+                        }`}
+                        className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90"
+                      >
+                        <Phone className="h-4 w-4 md:h-5 md:w-5" />
+                      </a>
+                      <Link
+                        href={`/Messages?orderId=${pkg.id}`}
+                        className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-blue-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90"
+                      >
+                        <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )}
