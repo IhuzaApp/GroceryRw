@@ -4078,6 +4078,7 @@ export default function BatchDetails({
               order={order}
               getStatusTag={getStatusTag}
               onBack={() => router.back()}
+              onChatClick={handleChatClick}
             />
 
             {/* Content */}

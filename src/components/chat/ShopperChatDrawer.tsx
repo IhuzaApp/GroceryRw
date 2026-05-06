@@ -205,7 +205,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   onClose,
 }) => {
   const { data: session } = useSession();
-  const { profileImage: databaseProfileImage } = useShopperProfile();
+  const { shopper, profileImage: databaseProfileImage } = useShopperProfile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -251,7 +251,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         const newConversation = {
           orderId,
           customerId: customer.id,
-          shopperId: session.user.id,
+          shopperId: shopper?.id || session.user.id,
           createdAt: serverTimestamp(),
           lastMessage: "",
           lastMessageTime: serverTimestamp(),
@@ -416,13 +416,15 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+    const senderId = shopper?.id || session.user.id;
+
     // Optimistic: add to UI immediately with "Sending..." status
     setPendingMessages((prev) => [
       ...prev,
       {
         tempId,
         text,
-        senderId: session.user.id,
+        senderId,
         senderType: "shopper",
         timestamp: new Date(),
       },
@@ -441,7 +443,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       await addDoc(messagesRef, {
         text,
         message: text,
-        senderId: session.user.id,
+        senderId,
         senderName: session.user.name || "Shopper",
         senderType: "shopper",
         recipientId: customer.id,

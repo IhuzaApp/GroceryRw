@@ -9,12 +9,14 @@ interface HeaderSectionProps {
   order: OrderDetailsType;
   getStatusTag: (status: string) => React.ReactNode;
   onBack: () => void;
+  onChatClick?: () => void;
 }
 
 export default function HeaderSection({
   order,
   getStatusTag,
   onBack,
+  onChatClick,
 }: HeaderSectionProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -79,7 +81,34 @@ export default function HeaderSection({
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 items-center">
+        <div className="flex flex-shrink-0 items-center gap-2">
+          {order.status === "shopping" && (
+            <button
+              onClick={onChatClick}
+              className={`flex h-9 items-center gap-2 rounded-full px-4 transition-all active:scale-95 sm:h-10 ${
+                isDark
+                  ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
+                  : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+              }`}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="sm:h-5 sm:w-5"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              <span className="text-[10px] font-black uppercase tracking-widest sm:text-xs">
+                Message
+              </span>
+            </button>
+          )}
           <div className="scale-90 sm:scale-100">
             {getStatusTag(order.status)}
           </div>

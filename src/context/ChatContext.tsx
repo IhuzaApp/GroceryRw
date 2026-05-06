@@ -15,6 +15,7 @@ import {
   ChatMessage as FirebaseChatMessage,
 } from "../services/chatService";
 import { useAuth } from "./AuthContext";
+import { useShopperProfile } from "../hooks/useShopperProfile";
 import { initializeFCM, cleanupFCM } from "../services/fcmClient";
 
 // Extend the FirebaseChatMessage interface to include both text and message fields
@@ -93,6 +94,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
+  const { shopper } = useShopperProfile();
   const [activeChats, setActiveChats] = useState<ChatData[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -190,7 +192,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (existingChatIndex === -1) {
           // Get or create the conversation in Firebase
-          const shopperId = user.id;
+          // Use shopper.id if available, fallback to user.id
+          const shopperId = shopper?.id || user.id;
           console.log("🔍 [ChatContext] Creating conversation with:", {
             orderId,
             customerId,
@@ -232,7 +235,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
                 // Check for new unread messages and show notifications
                 const newUnreadMessages = fbMessages.filter(
-                  (msg) => !msg.isRead && msg.senderId !== user.id
+                  (msg) => !msg.isRead && msg.senderId !== (shopper?.id || user.id)
                 );
 
                 if (newUnreadMessages.length > 0) {
@@ -256,7 +259,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
                       ...updatedChats[chatIndex],
                       messages,
                       unreadCount: fbMessages.filter(
-                        (msg) => !msg.isRead && msg.senderId !== user.id
+                        (msg) => !msg.isRead && msg.senderId !== (shopper?.id || user.id)
                       ).length,
                       lastMessage: messages[messages.length - 1],
                     };
@@ -286,14 +289,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         if (user.id) {
           const conversation = await getConversationByOrderId(orderId);
           if (conversation?.id) {
-            markFirebaseMessagesRead(conversation.id, user.id);
+            markFirebaseMessagesRead(conversation.id, shopper?.id || user.id);
           }
         }
       } catch (error) {
         console.error("Error opening chat:", error);
       }
     },
-    [activeChats, isMobile, messageListeners, user]
+    [activeChats, isMobile, messageListeners, user, shopper]
   );
 
   const closeChat = useCallback(() => {
@@ -354,10 +357,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           throw new Error("Conversation not found");
         }
 
+        const senderId = shopper?.id || user.id;
+
         console.log("🔍 [ChatContext] Sending message:", {
           conversationId: conversation.id,
           text,
-          senderId: user.id,
+          senderId,
           senderType: "shopper",
         });
 
@@ -365,7 +370,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         await addFirebaseMessage(
           conversation.id,
           text,
-          user.id,
+          senderId,
           "shopper", // Assuming this context is for shoppers only
           image
         );
@@ -426,7 +431,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         // Mark messages as read in Firebase
-        await markFirebaseMessagesRead(conversation.id, user.id);
+        await markFirebaseMessagesRead(conversation.id, shopper?.id || user.id);
 
         // Update our local state
         setActiveChats((prev) => {

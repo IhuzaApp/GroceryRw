@@ -93,11 +93,11 @@ export default function QuantityConfirmationModal({
       setMeasurementUnit(unit);
 
       // Calculate price per unit weight
-      if (isWeight && currentItem.product.final_price) {
-        const price = parseFloat(currentItem.product.final_price);
-        const quantity = currentItem.quantity;
-        setPricePerUnit(price / quantity);
-        setCustomerBudget(price);
+      if (isWeight && currentItem.price) {
+        const unitPrice = currentItem.price;
+        const requestedQuantity = currentItem.quantity;
+        setPricePerUnit(unitPrice);
+        setCustomerBudget(unitPrice * requestedQuantity);
       }
 
       // Reset barcode validation for new item

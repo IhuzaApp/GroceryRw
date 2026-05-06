@@ -1185,7 +1185,7 @@ export default async function handler(
     // ========================================================================
     const isSuspended = await isShopperSuspended(shopperId);
     if (isSuspended) {
-      console.log(`🚫 Shopper ${shopperId} is suspended - cannot receive new offers`);
+      // console.log(`🚫 Shopper ${shopperId} is suspended - cannot receive new offers`);
       return res.status(200).json({
         success: false,
         message: "Your account is temporarily suspended from receiving new offers due to multiple missed or declined orders. Please try again later.",

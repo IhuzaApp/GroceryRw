@@ -27,6 +27,7 @@ import {
 import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 import { useTheme } from "../../context/ThemeContext";
 import { ChatCollection } from "../../services/chatService";
+import { useShopperProfile } from "../../hooks/useShopperProfile";
 
 // Helper to format time for messages
 function formatMessageTime(timestamp: any) {
@@ -164,6 +165,7 @@ export default function MobileChatPage({
   onBack: () => void;
 }) {
   const { data: session } = useSession();
+  const { shopper } = useShopperProfile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -205,10 +207,11 @@ export default function MobileChatPage({
           if (!querySnapshot.empty) {
             setConversationId(querySnapshot.docs[0].id);
           } else {
+            const isShopper = shopper?.id && (shopper.id === counterpart.id || session.user.role === "shopper");
             const newConversation = {
               orderId,
-              customerId: session.user.id,
-              shopperId: counterpart.id,
+              customerId: isShopper ? counterpart.id : session.user.id,
+              shopperId: isShopper ? (shopper.id || session.user.id) : counterpart.id,
               createdAt: serverTimestamp(),
               lastMessage: "",
               lastMessageTime: serverTimestamp(),
@@ -336,13 +339,25 @@ export default function MobileChatPage({
     setError(null);
 
     const tempId = `temp-${Date.now()}`;
+    const isShopper =
+      session?.user?.role === "shopper" ||
+      (shopper?.id && (counterpart.role === "customer" || counterpart.id !== shopper.id));
+
+    const senderType =
+      counterpart.role === "business"
+        ? "business"
+        : isShopper
+        ? "shopper"
+        : "customer";
+    const senderId = senderType === "shopper" ? (shopper?.id || session?.user?.id || "") : (session?.user?.id || "");
+
     setPendingMessages((p) => [
       ...p,
       {
         tempId,
         text,
-        senderId: session.user.id,
-        senderType: counterpart.role === "business" ? "business" : "customer",
+        senderId,
+        senderType,
         timestamp: new Date(),
       },
     ]);
@@ -358,9 +373,9 @@ export default function MobileChatPage({
       await addDoc(messagesRef, {
         text,
         message: text,
-        senderId: session.user.id,
+        senderId,
         senderName: session.user.name || "User",
-        senderType: counterpart.role === "business" ? "business" : "customer",
+        senderType,
         recipientId: counterpart.id,
         timestamp: serverTimestamp(),
         read: false,

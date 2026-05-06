@@ -24,6 +24,7 @@ import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage
 import MobileMessagePage from "../../src/components/messages/MobileMessagePage";
 import MobileChatPage from "../../src/components/messages/MobileChatPage";
 import { useTheme } from "../../src/context/ThemeContext";
+import { useShopperProfile } from "../../src/hooks/useShopperProfile";
 import {
   ChatCollection,
   ChatConversation as Conversation,
@@ -50,6 +51,7 @@ function MessagesPage() {
   const { theme } = useTheme();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { shopper } = useShopperProfile();
 
   const [orderConversations, setOrderConversations] = useState<Conversation[]>(
     []
@@ -183,7 +185,11 @@ function MessagesPage() {
 
       const q = query(
         collection(db!, "chat_conversations"),
-        or(where("customerId", "==", userId), where("shopperId", "==", userId)),
+        or(
+          where("customerId", "==", userId),
+          where("shopperId", "==", userId),
+          ...(shopper?.id ? [where("shopperId", "==", shopper.id)] : [])
+        ),
         orderBy("lastMessageTime", "desc")
       );
 
@@ -214,7 +220,7 @@ function MessagesPage() {
 
       return () => unsubscribe();
     }
-  }, [status, session?.user?.id]);
+  }, [status, session?.user?.id, shopper?.id]);
 
   // Real-time listener for Business Conversations
   useEffect(() => {

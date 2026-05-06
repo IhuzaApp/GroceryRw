@@ -26,6 +26,7 @@ import {
 import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 import { useTheme } from "../../context/ThemeContext";
 import HeaderLayout from "../ui/NavBar/headerLayout";
+import { useShopperProfile } from "../../hooks/useShopperProfile";
 
 // Helper to format time (e.g., "01:09 am", "08:24PM")
 function formatTime(timestamp: any): string {
@@ -531,6 +532,7 @@ export default function DesktopMessagePage({
 }: DesktopMessagePageProps) {
   const { theme } = useTheme();
   const { data: session } = useSession();
+  const { shopper } = useShopperProfile();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
@@ -790,17 +792,22 @@ export default function DesktopMessagePage({
         (selectedConversation as any).businessId ||
         selectedConversation.customerId;
 
+      const senderType =
+        session.user.id === selectedConversation.customerId
+          ? "customer"
+          : session.user.id === selectedConversation.shopperId ||
+            (shopper?.id && shopper.id === selectedConversation.shopperId)
+          ? "shopper"
+          : "business";
+
+      const senderId = senderType === "shopper" ? (shopper?.id || session.user.id) : session.user.id;
+
       await addDoc(messagesRef, {
         text: newMessage.trim(),
         message: newMessage.trim(),
-        senderId: session.user.id,
+        senderId,
         senderName: session.user.name || "User",
-        senderType:
-          session.user.id === selectedConversation.customerId
-            ? "customer"
-            : session.user.id === selectedConversation.shopperId
-            ? "shopper"
-            : "business",
+        senderType,
         recipientId,
         timestamp: serverTimestamp(),
         read: false,
