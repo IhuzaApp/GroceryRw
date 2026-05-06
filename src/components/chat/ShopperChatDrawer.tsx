@@ -188,6 +188,7 @@ const ShopperMessage: React.FC<MessageProps> = ({
 // Shopper Chat Drawer Props
 interface ShopperChatDrawerProps {
   orderId: string;
+  orderDisplayId?: string;
   customer: {
     id: string;
     name: string;
@@ -200,6 +201,7 @@ interface ShopperChatDrawerProps {
 
 const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   orderId,
+  orderDisplayId,
   customer,
   isOpen,
   onClose,
@@ -555,6 +557,11 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-base font-black uppercase tracking-tight tracking-widest text-[var(--text-primary)]">
               {customer.name}
+              {orderDisplayId && (
+                <span className="ml-2 text-xs font-bold opacity-60">
+                  (#{orderDisplayId})
+                </span>
+              )}
             </h3>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 opacity-80">
               Customer

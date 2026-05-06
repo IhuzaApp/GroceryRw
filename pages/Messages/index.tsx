@@ -751,14 +751,23 @@ function MessagesPage() {
                   };
                 }
 
+                const orderDisplayID = order?.OrderID
+                  ? String(order.OrderID).length >= 4
+                    ? String(order.OrderID)
+                    : String(order.OrderID).padStart(4, "0")
+                  : "";
+
                 if (isMeCustomer) {
+                  const baseName =
+                    order?.assignedTo?.shopper?.full_name ||
+                    order?.assignedTo?.name ||
+                    selectedConversation.counterpartName ||
+                    "Shopper";
                   return {
                     id: selectedConversation.shopperId || "",
-                    name:
-                      order?.assignedTo?.shopper?.full_name ||
-                      order?.assignedTo?.name ||
-                      selectedConversation.counterpartName ||
-                      "Shopper",
+                    name: orderDisplayID
+                      ? `${baseName} (#${orderDisplayID})`
+                      : baseName,
                     avatar:
                       order?.assignedTo?.shopper?.profile_photo ||
                       order?.assignedTo?.profile_picture ||
@@ -770,12 +779,15 @@ function MessagesPage() {
                 }
 
                 // I am the shopper/business, counterpart is the customer
+                const baseName =
+                  order?.orderedBy?.name ||
+                  selectedConversation.counterpartName ||
+                  "Customer";
                 return {
                   id: selectedConversation.customerId || "",
-                  name:
-                    order?.orderedBy?.name ||
-                    selectedConversation.counterpartName ||
-                    "Customer",
+                  name: orderDisplayID
+                    ? `${baseName} (#${orderDisplayID})`
+                    : baseName,
                   avatar:
                     order?.orderedBy?.profile_picture ||
                     selectedConversation.counterpartAvatar ||

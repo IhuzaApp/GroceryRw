@@ -551,6 +551,11 @@ export default function DesktopMessagePage({
   const isBusinessChat =
     !!selectedConversation &&
     (!selectedConversation.orderId || selectedConversation.type === "business");
+  const isMeShopperSelected =
+    !!selectedConversation &&
+    (session?.user?.id === (selectedConversation as any)?.shopperUserId ||
+      (shopper?.id && shopper.id === selectedConversation?.shopperId));
+
   const selectedOrder =
     selectedConversation && selectedConversation.orderId
       ? orders[selectedConversation.orderId as string]
@@ -1000,6 +1005,10 @@ export default function DesktopMessagePage({
                   ? orders[conversation.orderId] || {}
                   : {};
 
+                const isMeShopper =
+                  session?.user?.id === conversation.shopperUserId ||
+                  (shopper?.id && shopper.id === conversation.shopperId);
+
                 const employeeId = order?.assignedTo?.shopper?.Employment_id;
 
                 // Handle name display for business chats
@@ -1010,14 +1019,24 @@ export default function DesktopMessagePage({
                     conversation.counterpartName ||
                     "Business Chat";
                 } else {
-                  fullName =
-                    order?.assignedTo?.shopper?.full_name ||
-                    order?.assignedTo?.name ||
-                    "Shopper";
+                  if (isMeShopper) {
+                    fullName = order?.orderedBy?.name || "Customer";
+                  } else {
+                    fullName =
+                      order?.assignedTo?.shopper?.full_name ||
+                      order?.assignedTo?.name ||
+                      "Shopper";
+                  }
                 }
 
+                const orderDisplayID = order?.OrderID
+                  ? formatOrderID(order.OrderID)
+                  : "";
+
                 const contactName =
-                  employeeId && !isBusinessChat
+                  orderDisplayID && !isBusinessChat
+                    ? `${fullName} (#${orderDisplayID})`
+                    : employeeId && !isBusinessChat
                     ? `00${employeeId} ${fullName}`
                     : fullName;
 
@@ -1026,9 +1045,13 @@ export default function DesktopMessagePage({
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       fullName
                     )}&background=10b981&color=fff`
+                  : isMeShopper
+                  ? order?.orderedBy?.profile_picture ||
+                    "/images/ProfileImage.png"
                   : order?.assignedTo?.shopper?.profile_photo ||
                     order?.assignedTo?.profile_picture ||
                     "/images/ProfileImage.png";
+
                 const isSelected = selectedConversation?.id === conversation.id;
                 const typeInfo = getConvType(conversation, orders);
 
@@ -1150,6 +1173,15 @@ export default function DesktopMessagePage({
                           alt={selectedConversation.title || "Business"}
                           className="h-full w-full object-cover"
                         />
+                      ) : isMeShopperSelected ? (
+                        <img
+                          src={
+                            selectedOrder?.orderedBy?.profile_picture ||
+                            "/images/ProfileImage.png"
+                          }
+                          alt={selectedOrder?.orderedBy?.name || "Customer"}
+                          className="h-full w-full object-cover"
+                        />
                       ) : selectedOrder?.assignedTo?.shopper?.profile_photo ||
                         selectedOrder?.assignedTo?.profile_picture ? (
                         <img
@@ -1190,16 +1222,24 @@ export default function DesktopMessagePage({
                         "Business Chat"
                       ) : (
                         <>
-                          {selectedOrder?.assignedTo?.shopper?.full_name ||
-                            selectedOrder?.assignedTo?.name ||
-                            "Shopper"}
-                          {selectedOrder?.assignedTo?.shopper
-                            ?.Employment_id && (
+                          {isMeShopperSelected
+                            ? selectedOrder?.orderedBy?.name || "Customer"
+                            : selectedOrder?.assignedTo?.shopper?.full_name ||
+                              selectedOrder?.assignedTo?.name ||
+                              "Shopper"}
+                          {selectedOrder?.OrderID && (
                             <span className="ml-2 text-xs font-semibold text-gray-400 dark:text-gray-500">
-                              #00
-                              {selectedOrder.assignedTo.shopper.Employment_id}
+                              (#{formatOrderID(selectedOrder.OrderID)})
                             </span>
                           )}
+                          {!isMeShopperSelected &&
+                            selectedOrder?.assignedTo?.shopper
+                              ?.Employment_id && (
+                              <span className="ml-2 text-xs font-semibold text-gray-400 dark:text-gray-500">
+                                #00
+                                {selectedOrder.assignedTo.shopper.Employment_id}
+                              </span>
+                            )}
                         </>
                       )}
                     </h2>

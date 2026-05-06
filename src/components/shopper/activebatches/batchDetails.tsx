@@ -4056,6 +4056,13 @@ export default function BatchDetails({
           order.status !== "delivered" && (
             <ShopperChatDrawer
               orderId={order.id}
+              orderDisplayId={
+                order.OrderID
+                  ? String(order.OrderID).length >= 4
+                    ? String(order.OrderID)
+                    : String(order.OrderID).padStart(4, "0")
+                  : ""
+              }
               customer={{
                 id: order.orderedBy?.id || order.customerId || "",
                 name: order.orderedBy?.name || order.user?.name || "Customer",
