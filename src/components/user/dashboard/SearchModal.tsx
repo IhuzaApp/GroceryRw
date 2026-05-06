@@ -57,7 +57,7 @@ export default function SearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+    <div className="fixed inset-0 z-[39] bg-black/60 backdrop-blur-sm transition-opacity duration-300">
       <div className="flex h-full flex-col bg-white dark:bg-[#0A0A0A]">
         {/* Header */}
         <div className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 px-6 py-5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#0A0A0A]/80">
@@ -92,7 +92,7 @@ export default function SearchModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 dark:bg-[#0A0A0A]">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4 pb-28 dark:bg-[#0A0A0A]">
           {isSearching ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
