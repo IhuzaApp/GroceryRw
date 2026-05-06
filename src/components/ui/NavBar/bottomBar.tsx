@@ -891,7 +891,7 @@ export default function BottomBar() {
                     onClick={() => setMoreOpen(false)}
                   />
                   <div
-                    className={`fixed bottom-[5.5rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-b-[1.5rem] rounded-t-[2.5rem] border p-3 shadow-2xl backdrop-blur-2xl duration-300 animate-in slide-in-from-bottom ${theme === "dark"
+                    className={`fixed bottom-[10rem] left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-b-[2.5rem] rounded-t-[2.5rem] border p-3 shadow-2xl backdrop-blur-2xl duration-300 animate-in slide-in-from-bottom ${theme === "dark"
                       ? "border-white/10 bg-[#0A0A0A]/95 text-white shadow-[0_30px_60px_-10px_rgba(0,0,0,1)]"
                       : "border-black/5 bg-white/95 text-gray-900 shadow-black/10"
                       }`}
