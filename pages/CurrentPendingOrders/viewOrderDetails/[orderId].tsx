@@ -279,7 +279,7 @@ const MobileOrderDetails = ({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="h-5 w-5 text-white"
+            className="h-5 w-5 !text-white"
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
