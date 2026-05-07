@@ -530,7 +530,26 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
   const [isAdoptionModalOpen, setIsAdoptionModalOpen] = useState(false);
   const [isPriceCardExpanded, setIsPriceCardExpanded] = useState(false);
   const [showMissingModal, setShowMissingModal] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
   const { setHideBottomBar } = useHideBottomBar();
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(`/api/queries/get-pet-reviews?pet_id=${pet.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setReviews(data.reviews);
+        }
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+      }
+    };
+
+    if (pet.id) {
+      fetchReviews();
+    }
+  }, [pet.id]);
 
   useEffect(() => {
     setHideBottomBar(true);
@@ -926,7 +945,7 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
               <div className="mb-12">
                 <div className="mb-8 flex items-center justify-between">
                   <SectionTitle
-                    title={`Reviews (${pet.reviews.length})`}
+                    title={`Reviews (${reviews.length})`}
                     noMargin
                   />
                   <div className="flex items-center gap-2 rounded-2xl bg-yellow-400/10 px-4 py-2 text-sm font-black text-yellow-600">
@@ -935,84 +954,46 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                   </div>
                 </div>
                 <div className="space-y-6">
-                  {pet.reviews.length > 0 ? (
-                    pet.reviews.map(
-                      (
-                        rev: {
-                          user:
-                            | string
-                            | number
-                            | boolean
-                            | React.ReactElement<
-                                any,
-                                string | React.JSXElementConstructor<any>
-                              >
-                            | React.ReactFragment
-                            | React.ReactPortal
-                            | null
-                            | undefined;
-                          rating: number;
-                          comment:
-                            | string
-                            | number
-                            | boolean
-                            | React.ReactElement<
-                                any,
-                                string | React.JSXElementConstructor<any>
-                              >
-                            | React.ReactFragment
-                            | React.ReactPortal
-                            | null
-                            | undefined;
-                          date:
-                            | string
-                            | number
-                            | boolean
-                            | React.ReactElement<
-                                any,
-                                string | React.JSXElementConstructor<any>
-                              >
-                            | React.ReactFragment
-                            | React.ReactPortal
-                            | null
-                            | undefined;
-                        },
-                        i: React.Key | null | undefined
-                      ) => (
-                        <div
-                          key={i}
-                          className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
-                        >
-                          <div className="mb-3 flex items-center justify-between">
-                            <h4 className="font-outfit font-black">
-                              {rev.user}
-                            </h4>
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, idx) => (
-                                <Star
-                                  key={idx}
-                                  className={`h-3 w-3 ${
-                                    idx < rev.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-200 dark:text-white/10"
-                                  }`}
-                                />
-                              ))}
-                            </div>
+                  {reviews.length > 0 ? (
+                    reviews.map((rev: any, i: number) => (
+                      <div
+                        key={i}
+                        className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <h4 className="font-outfit font-black">
+                            Customer Review
+                          </h4>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, idx) => (
+                              <Star
+                                key={idx}
+                                className={`h-3 w-3 ${
+                                  idx < rev.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-200 dark:text-white/10"
+                                }`}
+                              />
+                            ))}
                           </div>
-                          <p className="font-sans text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                            {rev.comment}
-                          </p>
-                          <span className="mt-4 block text-[10px] font-normal uppercase tracking-widest text-gray-400">
-                            {rev.date}
-                          </span>
                         </div>
-                      )
-                    )
+                        <p className="font-sans text-sm leading-relaxed text-gray-500">
+                          {rev.review}
+                        </p>
+                        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-300">
+                          {new Date(rev.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
                   ) : (
-                    <p className="py-10 text-center font-normal italic text-gray-400">
-                      No reviews yet.
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-gray-50 dark:bg-white/5">
+                        <Star className="h-8 w-8 text-gray-200 dark:text-white/10" />
+                      </div>
+                      <p className="text-sm font-bold text-gray-400">
+                        No reviews yet for {pet.name}.
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>

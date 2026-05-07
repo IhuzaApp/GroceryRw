@@ -38,6 +38,10 @@ export default async function handler(
       return res.status(400).json({ error: "Missing vendor_id" });
     }
 
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const result = await hasuraClient.request<{ Ratings: any[] }>(
       GET_VENDOR_RATINGS,
       {
