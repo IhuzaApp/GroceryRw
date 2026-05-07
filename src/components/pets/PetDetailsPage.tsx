@@ -35,7 +35,7 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 import { toast } from "react-hot-toast";
 import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
-import vaccinationsData from "@/data/vaccinations.json";
+import vaccinationsData from "../../../data/vaccinations.json";
 
 const VACCINATIONS: Record<string, { id: string; name: string; isCore: boolean }[]> = vaccinationsData;
 

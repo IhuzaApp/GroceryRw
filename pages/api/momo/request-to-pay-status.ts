@@ -273,7 +273,7 @@ const GET_PET_ADOPTION_DETAILS = gql`
         name
         quantity_sold
         pet_vendors {
-          Users {
+          User {
             id
             phone
           }
@@ -677,28 +677,11 @@ export default async function handler(
 
                     const adoption = adoptionDetails.petAdoption_by_pk;
 
-                    if (adoption && adoption.pets?.id) {
-                      try {
-                        const currentSold = parseInt(
-                          adoption.pets.quantity_sold || "0",
-                          10
-                        );
-                        const newSold = (currentSold + 1).toString();
-                        await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
-                          id: adoption.pets.id,
-                          quantity_sold: newSold,
-                        });
-                      } catch (incErr) {
-                        console.error(
-                          "Failed to increment pet quantity_sold:",
-                          incErr
-                        );
-                      }
-                    }
+                    // Note: quantity_sold increment and wallet credit now happen at delivery confirmation (Car flow)
 
-                    if (adoption && adoption.pets?.pet_vendors?.Users?.phone) {
-                      const vendorPhone = adoption.pets.pet_vendors.Users.phone;
-                      const vendorUserId = adoption.pets.pet_vendors.Users.id;
+                    if (adoption && adoption.pets?.pet_vendors?.User?.phone) {
+                      const vendorPhone = adoption.pets.pet_vendors.User.phone;
+                      const vendorUserId = adoption.pets.pet_vendors.User.id;
                       const petName = adoption.pets.name;
                       const customerPhone = adoption.phone;
                       const customerAddress = adoption.address;
@@ -910,28 +893,9 @@ export default async function handler(
 
                   const adoption = adoptionDetails.petAdoption_by_pk;
 
-                  if (adoption && adoption.pets?.id) {
-                    try {
-                      const currentSold = parseInt(
-                        adoption.pets.quantity_sold || "0",
-                        10
-                      );
-                      const newSold = (currentSold + 1).toString();
-                      await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
-                        id: adoption.pets.id,
-                        quantity_sold: newSold,
-                      });
-                    } catch (incErr) {
-                      console.error(
-                        "Failed to increment pet quantity_sold:",
-                        incErr
-                      );
-                    }
-                  }
-
-                  if (adoption && adoption.pets?.pet_vendors?.Users?.phone) {
-                    const vendorPhone = adoption.pets.pet_vendors.Users.phone;
-                    const vendorUserId = adoption.pets.pet_vendors.Users.id;
+                  if (adoption && adoption.pets?.pet_vendors?.User?.phone) {
+                    const vendorPhone = adoption.pets.pet_vendors.User.phone;
+                    const vendorUserId = adoption.pets.pet_vendors.User.id;
                     const petName = adoption.pets.name;
                     const customerPhone = adoption.phone;
                     const customerAddress = adoption.address;

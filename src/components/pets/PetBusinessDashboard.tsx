@@ -59,6 +59,9 @@ export default function PetBusinessDashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [petToEdit, setPetToEdit] = useState<any>(null);
+  const [adoptions, setAdoptions] = useState<any[]>([]);
+  const [isLoadingAdoptions, setIsLoadingAdoptions] = useState(false);
+  const [isConfirmingDelivery, setIsConfirmingDelivery] = useState(false);
 
   const [vendorData, setVendorData] = useState<any>(null);
   const [isLoadingAccount, setIsLoadingAccount] = useState(true);
@@ -71,10 +74,10 @@ export default function PetBusinessDashboard() {
       ? (ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length).toFixed(1)
       : "0.0";
     const liveAds = pets.length;
-    const interests = ratings.length; // Using reviews as proxy for engagement
+    const activeAdoptions = adoptions.filter(a => a.status === "PAID").length;
 
-    return { revenue, avgRating, liveAds, interests };
-  }, [pets, ratings]);
+    return { revenue, avgRating, liveAds, activeAdoptions };
+  }, [pets, ratings, adoptions]);
 
   const fetchStats = async (vendorId: string) => {
     try {
@@ -85,6 +88,21 @@ export default function PetBusinessDashboard() {
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchAdoptions = async (vendorId: string) => {
+    setIsLoadingAdoptions(true);
+    try {
+      const response = await fetch(`/api/queries/get-vendor-adoptions?vendor_id=${vendorId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAdoptions(data.adoptions);
+      }
+    } catch (error) {
+      console.error("Error fetching adoptions:", error);
+    } finally {
+      setIsLoadingAdoptions(false);
     }
   };
 
@@ -166,6 +184,7 @@ export default function PetBusinessDashboard() {
     if (vendorData?.id) {
       fetchPets(vendorData.id);
       fetchStats(vendorData.id);
+      fetchAdoptions(vendorData.id);
     }
   }, [vendorData?.id]);
 
@@ -221,6 +240,37 @@ export default function PetBusinessDashboard() {
     } catch (error) {
       console.error("Error updating pet status:", error);
       toast.error("Failed to update status", { id: toastId });
+    }
+  };
+
+  const handleConfirmDelivery = async (adoption: any) => {
+    if (!window.confirm(`Confirm that ${adoption.pet.name} has been delivered to ${adoption.customer.name}?`)) return;
+    
+    setIsConfirmingDelivery(true);
+    const toastId = toast.loading("Processing delivery and payout...");
+    try {
+      const response = await fetch("/api/mutations/confirm-pet-delivery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adoptionId: adoption.id }),
+      });
+
+      if (response.ok) {
+        toast.success("Delivery confirmed! Funds credited to your wallet.", { id: toastId });
+        if (vendorData?.id) {
+          fetchAdoptions(vendorData.id);
+          fetchPets(vendorData.id); // Refresh quantity_sold
+          refreshWallet();
+        }
+      } else {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to confirm delivery");
+      }
+    } catch (error: any) {
+      console.error("Error confirming delivery:", error);
+      toast.error(error.message || "Failed to confirm delivery", { id: toastId });
+    } finally {
+      setIsConfirmingDelivery(false);
     }
   };
 
@@ -304,8 +354,8 @@ export default function PetBusinessDashboard() {
               theme={theme}
             />
             <StatsCard
-              label="Interests"
-              value={stats.interests.toString()}
+              label="Active Adoptions"
+              value={stats.activeAdoptions.toString()}
               icon={<Heart />}
               color="purple"
               theme={theme}
@@ -340,7 +390,7 @@ export default function PetBusinessDashboard() {
                 : "text-gray-500 hover:text-gray-400"
             }`}
           >
-            Adoption Interests
+            Adoptions
           </button>
         </div>
 
@@ -387,22 +437,40 @@ export default function PetBusinessDashboard() {
               ))}
             </div>
           </div>
+        ) : activeTab === "interests" ? (
+          <div className="space-y-4">
+            {adoptions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32 text-center">
+                <div
+                  className={`mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
+                    theme === "dark" ? "bg-white/5" : "bg-white shadow-xl"
+                  }`}
+                >
+                  <Heart className="h-10 w-10 text-pink-500" />
+                </div>
+                <h3 className="mb-2 font-outfit text-2xl font-black">
+                  No adoptions yet
+                </h3>
+                <p className="mx-auto max-w-xs text-gray-500">
+                  Paid adoptions will appear here once customers use the "Buy Now" feature.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {adoptions.map((adoption) => (
+                  <AdoptionItem
+                    key={adoption.id}
+                    adoption={adoption}
+                    theme={theme}
+                    onConfirm={() => handleConfirmDelivery(adoption)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div
-              className={`mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] ${
-                theme === "dark" ? "bg-white/5" : "bg-white shadow-xl"
-              }`}
-            >
-              <Heart className="h-10 w-10 text-pink-500" />
-            </div>
-            <h3 className="mb-2 font-outfit text-2xl font-black">
-              No active interests
-            </h3>
-            <p className="mx-auto max-w-xs text-gray-500">
-              Interests from potential adopters will appear here. Make sure your
-              listings are high quality!
-            </p>
+            {/* Empty state for other tabs if any */}
           </div>
         )}
       </div>
@@ -606,6 +674,71 @@ function PetManagementItem({
             <option value="delete">Delete Pet</option>
           </select>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AdoptionItem({ adoption, theme, onConfirm }: any) {
+  return (
+    <div
+      className={`flex flex-col items-start justify-between rounded-[2.5rem] border p-6 transition-all hover:shadow-xl md:flex-row md:items-center ${
+        theme === "dark"
+          ? "border-white/5 bg-[#121212] hover:bg-white/[0.08]"
+          : "border-gray-100 bg-white shadow-sm hover:bg-gray-50"
+      }`}
+    >
+      <div className="flex flex-1 items-center gap-5">
+        <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-[1.5rem] border border-white/5">
+          <Image
+            src={adoption.pet.image}
+            alt={adoption.pet.name}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+             <h4
+              className={`font-outfit text-xl font-black ${
+                theme === "dark"
+                  ? "!text-white text-white"
+                  : "!text-gray-900 text-gray-900"
+              }`}
+            >
+              {adoption.pet.name}
+            </h4>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${
+              adoption.status === "PAID" ? "bg-green-500/10 text-green-500" : "bg-gray-500/10 text-gray-400"
+            }`}>
+              {adoption.status}
+            </span>
+          </div>
+          <p className="text-xs font-black uppercase tracking-widest !text-gray-500 text-gray-500">
+            Adopter: {adoption.customer?.name} • {adoption.customer?.phone}
+          </p>
+          <p className="mt-1 line-clamp-1 text-xs text-gray-400">
+            {adoption.address}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex w-full items-center justify-between gap-4 border-t border-white/5 pt-4 md:mt-0 md:w-auto md:border-none md:pt-0">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Amount</span>
+          <span className="font-outfit text-lg font-black text-green-500">
+            {formatCurrencySync(adoption.amount)}
+          </span>
+        </div>
+        
+        {adoption.status === "PAID" && (
+          <button
+            onClick={onConfirm}
+            className="flex items-center gap-2 rounded-2xl bg-green-500 px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:scale-105 hover:bg-green-600 active:scale-95"
+          >
+            Confirm Delivery
+          </button>
+        )}
       </div>
     </div>
   );

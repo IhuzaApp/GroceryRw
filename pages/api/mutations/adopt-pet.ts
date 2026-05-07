@@ -124,16 +124,7 @@ export default async function handler(
         );
         const petInfo = infoResult.pets_by_pk;
         if (petInfo) {
-          try {
-            const currentSold = parseInt(petInfo.quantity_sold || "0", 10);
-            const newSold = (currentSold + 1).toString();
-            await hasuraClient.request(UPDATE_PET_QUANTITY_SOLD, {
-              id: pet_id,
-              quantity_sold: newSold,
-            });
-          } catch (incErr) {
-            console.error("Failed to increment pet quantity_sold:", incErr);
-          }
+          // Note: quantity_sold increment and wallet credit now happen at delivery confirmation (Car flow)
 
           const petName = petInfo.name;
           const vendorPhone = petInfo.pet_vendors?.User?.phone;
@@ -143,7 +134,7 @@ export default async function handler(
             petInfo.pet_vendors?.fullname ||
             "Vendor";
 
-          const message = `Hello ${vendorName}, your pet "${petName}" has been ordered and paid for! Customer Address: ${address}. Phone: ${phone}.`;
+          const message = `Hello ${vendorName}, your pet "${petName}" has been ordered and paid for! Customer Address: ${address}. Phone: ${phone}. Please prepare for delivery.`;
 
           if (vendorPhone) {
             await sendSMS(vendorPhone, message);
@@ -166,7 +157,6 @@ export default async function handler(
         }
       } catch (smsError) {
         console.error("Failed to process post-adoption tasks:", smsError);
-        // Don't fail the whole request if SMS/Update fails
       }
     }
 

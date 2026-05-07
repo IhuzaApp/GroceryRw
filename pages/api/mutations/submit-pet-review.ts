@@ -54,7 +54,7 @@ export default async function handler(
     }
 
     // Manual check for existing review
-    const existing = await hasuraClient.request<{ Ratings: any[] }>(
+    const existing = await hasuraClient.request<{ Ratings: any[] }, { pet_id: string; customer_id: string }>(
       CHECK_EXISTING_REVIEW,
       { pet_id, customer_id: (session as any).user.id }
     );
@@ -63,7 +63,7 @@ export default async function handler(
       return res.status(400).json({ error: "You have already rated this pet" });
     }
 
-    const result = await hasuraClient.request(
+    const result = await hasuraClient.request<{ insert_Ratings_one: { id: string } }, { pet_id: string; customer_id: string; rating: number; review: string }>(
       SUBMIT_PET_REVIEW,
       {
         pet_id,
