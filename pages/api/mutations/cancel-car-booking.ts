@@ -2,8 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
-import { gql } from "graphql-request";
 import { sendSMS } from "../../../src/lib/pindo";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const GET_BOOKING_DETAILS = gql`
   query GetBookingDetails($id: uuid!) {
@@ -21,6 +21,7 @@ const GET_BOOKING_DETAILS = gql`
         logisticsAccounts {
           businessName
           fullname
+          user_id
           User {
             phone
           }
@@ -195,6 +196,21 @@ export default async function handler(
         id: wallet.id,
         balance: newBalance.toFixed(2),
       });
+
+      // Notify Customer about refund
+      try {
+        await sendNotificationToUser(booking.customer_id, {
+          title: "Refund Processed! 💰",
+          body: `Your refund of ${refundAmount.toLocaleString()} RWF for the cancellation of "${booking.RentalVehicles?.name}" has been added to your personal wallet.`,
+          data: {
+            type: "wallet_update",
+            amount: refundAmount.toString(),
+            walletType: "personal",
+          },
+        });
+      } catch (notifErr) {
+        console.error("Failed to notify customer of refund:", notifErr);
+      }
     }
 
     // 4. Update business wallet (If accepted)
@@ -234,6 +250,24 @@ export default async function handler(
       }
     } catch (smsErr) {
       console.error("SMS notification failed:", smsErr);
+    }
+
+    // Notify Owner via Push
+    const ownerUserId = booking.RentalVehicles?.logisticsAccounts?.user_id;
+    if (ownerUserId) {
+      try {
+        await sendNotificationToUser(ownerUserId, {
+          title: "Booking Cancelled ❌",
+          body: `The booking for your vehicle "${booking.RentalVehicles?.name}" has been cancelled by the customer.`,
+          data: {
+            type: "vehicle_booking",
+            status: "CANCELLED",
+            bookingId: booking.id,
+          },
+        });
+      } catch (notifErr) {
+        console.error("Failed to notify owner of cancellation:", notifErr);
+      }
     }
 
     return res.status(200).json({

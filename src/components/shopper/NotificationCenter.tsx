@@ -8,7 +8,18 @@ import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
-import { requestNotificationPermission } from "../../services/fcmClient";
+import { requestNotificationPermission, db } from "../../services/fcmClient";
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  orderBy, 
+  writeBatch, 
+  doc, 
+  Timestamp,
+  deleteDoc
+} from "firebase/firestore";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -25,6 +36,7 @@ const useIsMobile = () => {
 };
 
 interface NotificationItem {
+  id: string; // Firestore document ID
   title: string;
   body: string;
   timestamp: number;
@@ -39,9 +51,10 @@ interface NotificationItem {
   orderCount?: number;
   totalEarnings?: number;
   storeNames?: string;
-  orderIds?: string | string[]; // For combined orders - can be string (JSON) or array
-  orderType?: string; // regular | reel | restaurant - for deduplication
+  orderIds?: string | string[];
+  orderType?: string;
   combinedOrderId?: string;
+  expiresAt?: any;
 }
 
 interface NotificationCenterProps {
@@ -68,9 +81,11 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
   const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
   const [now, setNow] = useState(Date.now());
 
-  // Real-time ticker for countdowns
+  // Real-time ticker for countdowns & maintenance
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
+    // Trigger maintenance cleanup
+    fetch("/api/cron/cleanup-notifications").catch(() => {});
     return () => clearInterval(timer);
   }, []);
 
@@ -113,28 +128,92 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
     return () => clearInterval(interval);
   }, [session?.user?.id]);
 
+  // Firestore real-time listener for notifications
   useEffect(() => {
-    loadNotifications();
+    if (!session?.user?.id || !db) return;
 
-    // Refresh notifications every 5 seconds
-    const interval = setInterval(loadNotifications, 5000);
-    const onHistoryUpdated = () => loadNotifications();
-    window.addEventListener(
-      "fcm-history-updated",
-      onHistoryUpdated as EventListener
+    const userId = session.user.id;
+    const notificationsRef = collection(db, "notifications");
+    const q = query(
+      notificationsRef,
+      where("recipientId", "==", userId)
     );
-    // Also refresh when another tab updates localStorage
-    window.addEventListener("storage", onHistoryUpdated as EventListener);
 
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener(
-        "fcm-history-updated",
-        onHistoryUpdated as EventListener
-      );
-      window.removeEventListener("storage", onHistoryUpdated as EventListener);
-    };
-  }, [assignedOrderIds]); // Reload when assigned orders change
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const nowTs = Date.now();
+      const role = (session.user as any)?.role;
+      const isShopper = role === "shopper";
+
+      const fetchedNotifications: NotificationItem[] = [];
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        
+        // Check for 24h expiry on read notifications
+        if (data.isRead && data.expiresAt) {
+          const expiresAt = data.expiresAt instanceof Timestamp ? data.expiresAt.toMillis() : data.expiresAt;
+          if (expiresAt < nowTs) {
+            // Document has expired, skip it (it will be cleaned up by the next 'Clear All' or a background job)
+            return;
+          }
+        }
+
+        const n: NotificationItem = {
+          id: doc.id,
+          title: data.title || "Notification",
+          body: data.body || "",
+          timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
+          type: data.type || "general",
+          read: data.isRead || false,
+          expiresAt: data.expiresAt,
+          ...(data.data || {}),
+        };
+
+        // Filter out assigned orders for shoppers
+        if (isShopper && n.orderId && assignedOrderIds.has(String(n.orderId))) {
+          return;
+        }
+
+        fetchedNotifications.push(n);
+      });
+
+      // Deduplicate order notifications for shoppers
+      let filtered = fetchedNotifications;
+      if (isShopper) {
+        const seenOrderKeys = new Set<string>();
+        const deduped: NotificationItem[] = [];
+        for (const n of filtered) {
+          if (n.type !== "new_order" && n.type !== "batch_orders") {
+            deduped.push(n);
+            continue;
+          }
+          const orderId = n.orderId != null ? String(n.orderId) : "";
+          const orderType = n.orderType || "regular";
+          const combinedId = n.combinedOrderId || "";
+          const key = combinedId ? `combined:${combinedId}` : `${orderType}:${orderId}`;
+          
+          if (!key || !orderId) {
+            deduped.push(n);
+            continue;
+          }
+          if (seenOrderKeys.has(key)) continue;
+          seenOrderKeys.add(key);
+          deduped.push(n);
+        }
+        filtered = deduped;
+      }
+
+      // Sort Newest First
+      filtered.sort((a, b) => b.timestamp - a.timestamp);
+
+      setNotifications(filtered);
+      setUnreadCount(filtered.filter((n) => !n.read).length);
+    }, (error) => {
+      console.error("Firestore Notification Listener Error:", error);
+    });
+
+    return () => unsubscribe();
+  }, [session?.user?.id, assignedOrderIds, db]);
 
   // Detect new notifications and show a small toast if we are on the active-batches page
   useEffect(() => {
@@ -284,10 +363,6 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
     };
   }, [isOpen]);
 
-  // When opening the dropdown, refresh immediately (latest history)
-  useEffect(() => {
-    if (isOpen) loadNotifications();
-  }, [isOpen, assignedOrderIds]);
 
   // Hide bottom elements when modal is open on mobile
   useEffect(() => {
@@ -303,146 +378,52 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
     };
   }, [isOpen, isMobile, setHideFloatingUI]);
 
-  const loadNotifications = async () => {
+  // loadNotifications removed in favor of real-time Firestore listener
+
+  const markAllAsRead = async () => {
+    if (!session?.user?.id || !db || notifications.length === 0) return;
+
     try {
-      const history = JSON.parse(
-        localStorage.getItem("fcm_notification_history") || "[]"
-      );
+      const batch = writeBatch(db);
+      const unread = notifications.filter(n => !n.read);
+      
+      if (unread.length === 0) return;
 
-      // Also fetch from DB if session exists
-      let dbNotifications: NotificationItem[] = [];
-      if (session?.user?.id) {
-        try {
-          const resp = await fetch("/api/queries/notifications");
-          if (resp.ok) {
-            const data = await resp.json();
-            dbNotifications = (data.notifications || []).map((n: any) => ({
-              title: n.type?.replace(/_/g, " ").toUpperCase() || "Notification",
-              body: n.message,
-              timestamp: new Date(n.created_at).getTime(),
-              type: n.type,
-              read: n.is_read,
-              id: n.id,
-            }));
-          }
-        } catch (e) {
-          console.error("Error fetching DB notifications:", e);
-        }
-      }
+      const expiry = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
 
-      // Merge and sort by timestamp desc
-      const combinedHistory = [...history, ...dbNotifications].sort(
-        (a, b) => b.timestamp - a.timestamp
-      );
-
-      // Deduplicate by ID if both sources have same notification
-      const seenIds = new Set();
-      const uniqueHistory = combinedHistory.filter((n) => {
-        if (!n.id) return true;
-        if (seenIds.has(n.id)) return false;
-        seenIds.add(n.id);
-        return true;
+      unread.forEach((n) => {
+        const docRef = doc(db, "notifications", n.id);
+        batch.update(docRef, { 
+          isRead: true,
+          expiresAt: expiry
+        });
       });
 
-      // Check user role to filter notifications
-      const role = (session?.user as any)?.role;
-      const isShopper = role === "shopper";
-
-      // Filter notifications based on user role
-      // Filter notifications based on user role
-      let filteredHistory = uniqueHistory.filter((n: NotificationItem) => {
-        // Regular users (non-shoppers): ONLY show chat_message and partner notifications
-        if (!isShopper) {
-          return (
-            n.type === "chat_message" ||
-            n.type === "vehicle_booking" ||
-            n.type === "pet_adoption" ||
-            n.type === "system"
-          );
-        }
-
-        // Shoppers: show all notification types, but filter out already-assigned orders
-        if (n.orderId && assignedOrderIds.size > 0) {
-          if (n.orderIds) {
-            try {
-              const orderIdsArray =
-                typeof n.orderIds === "string"
-                  ? JSON.parse(n.orderIds)
-                  : Array.isArray(n.orderIds)
-                  ? n.orderIds
-                  : [];
-              const hasAssignedOrder = orderIdsArray.some((id: string) =>
-                assignedOrderIds.has(String(id))
-              );
-              if (hasAssignedOrder) return false;
-            } catch {}
-          }
-          if (assignedOrderIds.has(String(n.orderId))) return false;
-        }
-        return true;
-      });
-
-      // Deduplicate order notifications: show at most one per order (avoid same reel/order twice)
-      // Especially important for reel orders that must not re-notify after shopper declined
-      if (isShopper) {
-        const seenOrderKeys = new Set<string>();
-        const deduped: NotificationItem[] = [];
-        for (const n of filteredHistory) {
-          if (n.type !== "new_order" && n.type !== "batch_orders") {
-            deduped.push(n);
-            continue;
-          }
-          const orderId = n.orderId != null ? String(n.orderId) : "";
-          const orderType = n.orderType || "regular";
-          const combinedId = n.combinedOrderId || "";
-          const key = combinedId
-            ? `combined:${combinedId}`
-            : `${orderType}:${orderId}`;
-          if (!key || !orderId) {
-            deduped.push(n);
-            continue;
-          }
-          if (seenOrderKeys.has(key)) continue; // skip duplicate for same order
-          seenOrderKeys.add(key);
-          deduped.push(n);
-        }
-        filteredHistory = deduped;
-      }
-
-      // Sort by timestamp (newest first)
-      const sortedNotifications = filteredHistory.sort(
-        (a: NotificationItem, b: NotificationItem) => b.timestamp - a.timestamp
-      );
-      setNotifications(sortedNotifications);
-      setUnreadCount(
-        sortedNotifications.filter((n: NotificationItem) => !n.read).length
-      );
+      await batch.commit();
+      toast.success("Marked all as read");
     } catch (error) {
-      console.error(
-        "❌ NotificationCenter: Error loading notification history:",
-        error
-      );
+      console.error("Error marking all as read:", error);
+      toast.error("Failed to update notifications");
     }
   };
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map((n) => ({
-      ...n,
-      read: true,
-    }));
-    localStorage.setItem(
-      "fcm_notification_history",
-      JSON.stringify(updatedNotifications)
-    );
-    setNotifications(updatedNotifications);
-    setUnreadCount(0);
-  };
+  const clearAll = async () => {
+    if (!session?.user?.id || !db || notifications.length === 0) return;
 
-  const clearAll = () => {
-    // Clear all notifications
-    localStorage.setItem("fcm_notification_history", JSON.stringify([]));
-    setNotifications([]);
-    setUnreadCount(0);
+    if (!confirm("Clear all notifications?")) return;
+
+    try {
+      const batch = writeBatch(db);
+      notifications.forEach((n) => {
+        const docRef = doc(db, "notifications", n.id);
+        batch.delete(docRef);
+      });
+      await batch.commit();
+      toast.success("Notifications cleared");
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      toast.error("Failed to clear notifications");
+    }
   };
 
   const getNotificationIcon = (type: string, isCombined?: boolean) => {
@@ -976,26 +957,18 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
                             : "bg-emerald-50/50"
                           : ""
                       }`}
-                      onClick={() => {
+                      onClick={async () => {
                         // Mark as read when clicked
-                        if (!notification.read) {
-                          const updatedNotifications = [...notifications];
-                          updatedNotifications[index].read = true;
-                          const allHistory = JSON.parse(
-                            localStorage.getItem("fcm_notification_history") ||
-                              "[]"
-                          );
-                          const updatedHistory = allHistory.map(
-                            (n: NotificationItem) =>
-                              n.timestamp === notification.timestamp
-                                ? { ...n, read: true }
-                                : n
-                          );
-                          localStorage.setItem(
-                            "fcm_notification_history",
-                            JSON.stringify(updatedHistory)
-                          );
-                          loadNotifications();
+                        if (!notification.read && db) {
+                          try {
+                            const docRef = doc(db, "notifications", notification.id);
+                            await updateDoc(docRef, { 
+                              isRead: true,
+                              expiresAt: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000)
+                            });
+                          } catch (e) {
+                            console.error("Error marking notification as read:", e);
+                          }
                         }
 
                         // Navigate to relevant page
@@ -1013,6 +986,13 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
                         } else if (notification.type === "batch_orders") {
                           // Batch orders without specific orderId
                           window.location.href = `/Plasa/active-batches`;
+                        } else if (
+                          notification.type === "pet_adoption" ||
+                          notification.type === "pet_delivery"
+                        ) {
+                          window.location.href = `/Pets/dashboard?tab=interests`;
+                        } else if (notification.type === "pet_adoption_status") {
+                          window.location.href = `/Pets/my-adoptions`;
                         }
                       }}
                     >

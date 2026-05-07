@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { sendNewReferralRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 // GraphQL mutation to insert referral registration
 const INSERT_REFERRAL_WINDOW = gql`
@@ -283,11 +284,24 @@ export default async function handler(
         referralCode,
       });
     } catch (slackError) {
-      // Don't fail the registration if Slack fails, just log it
       console.error(
         "Slack notification failed for referral registration:",
         slackError
       );
+    }
+
+    // Send Push Notification
+    try {
+      await sendNotificationToUser(session.user.id, {
+        title: "Welcome to Referral Program! 🎁",
+        body: `Congratulations ${name}! You've joined our referral program. Your unique code is ${referralCode}. Share it to earn rewards!`,
+        data: {
+          type: "referral_registration",
+          referralCode,
+        },
+      });
+    } catch (notifErr) {
+      console.error("Failed to send referral push notification:", notifErr);
     }
 
     return res.status(200).json({

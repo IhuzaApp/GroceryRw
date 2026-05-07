@@ -45,7 +45,6 @@ export default function HeaderLayout({
     altitude?: string;
   } | null>(null);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
-  const [unreadMessages, setUnreadMessages] = useState<number>(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
 
@@ -176,33 +175,6 @@ export default function HeaderLayout({
     return () => window.removeEventListener("addressChanged", handleAddrChange);
   }, [session?.user?.id]);
 
-  useEffect(() => {
-    // Listen for unread messages if user is logged in
-    if (session?.user?.id && db) {
-      const userId = session.user.id;
-
-      // Create a query for messages where the user is the recipient and messages are unread
-      const messagesRef = collection(db, "messages");
-      const q = query(
-        messagesRef,
-        where("recipientId", "==", userId),
-        where("read", "==", false)
-      );
-
-      // Set up real-time listener for unread messages
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          setUnreadMessages(snapshot.docs.length);
-        },
-        (error) => {
-          console.error("Error fetching unread messages:", error);
-        }
-      );
-
-      return () => unsubscribe();
-    }
-  }, [session]);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";

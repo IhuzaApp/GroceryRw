@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const UPDATE_BUSINESS_PRODUCT_ORDER_STATUS = gql`
   mutation UpdateBusinessProductOrderStatus($id: uuid!, $status: String!) {
@@ -12,6 +13,7 @@ const UPDATE_BUSINESS_PRODUCT_ORDER_STATUS = gql`
     ) {
       id
       status
+      user_id
     }
   }
 `;
@@ -75,9 +77,28 @@ export default async function handler(
       return res.status(500).json({ error: "Failed to update order status" });
     }
 
+    const updatedOrder = result.update_businessProductOrders_by_pk;
+
+    // Notify Customer about status change
+    if (updatedOrder.user_id) {
+      try {
+        await sendNotificationToUser(updatedOrder.user_id, {
+          title: "Order Status Updated 📦",
+          body: `Your business order status has been updated to "${status}".`,
+          data: {
+            type: "business_order_status",
+            status: status,
+            orderId: updatedOrder.id,
+          },
+        });
+      } catch (notifErr) {
+        console.error("Failed to notify customer of order status change:", notifErr);
+      }
+    }
+
     return res.status(200).json({
       success: true,
-      order: result.update_businessProductOrders_by_pk,
+      order: updatedOrder,
     });
   } catch (error: any) {
     return res.status(500).json({

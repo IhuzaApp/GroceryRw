@@ -50,7 +50,7 @@ export default async function handler(
       return res.status(400).json({ error: "Missing adoptionId or action" });
     }
 
-    const newStatus = action === "ACCEPT" ? "ACCEPTED" : "CANCELLED";
+    const newStatus = (action === "ACCEPT") ? "ACCEPTED" : "CANCELLED";
 
     const result = await hasuraClient.request<any>(UPDATE_ADOPTION_STATUS, {
       id: adoptionId,

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { sendSMS } from "../../../src/lib/pindo";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const UPDATE_BOOKING_STATUS = gql`
   mutation UpdateBookingStatus($id: uuid!, $status: String!) {
@@ -54,9 +55,10 @@ export default async function handler(
       return res.status(404).json({ error: "Booking not found" });
     }
 
-    // Send SMS Notification to Customer
+    // Send SMS & Push Notification to Customer
     try {
       const customerPhone = booking.User?.phone;
+      const customerId = booking.User?.id;
       const vehicleName = booking.RentalVehicles?.name;
       const pickupDate = booking.pickup_date
         ? new Date(booking.pickup_date).toLocaleDateString()
@@ -64,19 +66,35 @@ export default async function handler(
 
       if (customerPhone) {
         let message = "";
+        let title = "";
         if (status === "approved") {
           const platNum = booking.RentalVehicles?.platNumber
             ? `(${booking.RentalVehicles.platNumber})`
             : "";
+          title = "Booking Confirmed! 🚗";
           message = `Hello ${booking.User.name}, your booking for "${vehicleName}" ${platNum} on ${pickupDate} has been CONFIRMED! Please pickup your car on the scheduled date.`;
         } else if (status === "CANCELLED") {
+          title = "Booking Declined ❌";
           message = `Hello ${booking.User.name}, unfortunately your booking for "${vehicleName}" on ${pickupDate} was declined by the owner. Any payments made will be refunded to your wallet.`;
         }
 
-        if (message) await sendSMS(customerPhone, message);
+        if (message) {
+          await sendSMS(customerPhone, message);
+          if (customerId) {
+            await sendNotificationToUser(customerId, {
+              title: title,
+              body: message,
+              data: {
+                type: "vehicle_booking",
+                bookingId: booking.id,
+                status: status,
+              },
+            });
+          }
+        }
       }
-    } catch (smsErr) {
-      console.error("SMS notification failed:", smsErr);
+    } catch (notifyErr) {
+      console.error("Customer notification failed:", notifyErr);
     }
 
     return res.status(200).json({

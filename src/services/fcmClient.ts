@@ -40,7 +40,7 @@ try {
 } catch (error) {
   app = null;
 }
-const db = app ? getFirestore(app) : null;
+export const db = app ? getFirestore(app) : null;
 
 // Initialize messaging only in browser environment
 let messaging: any = null;

@@ -181,6 +181,12 @@ export default function PetBusinessDashboard() {
   }, [session, router]);
 
   useEffect(() => {
+    if (router.query.tab === "interests") {
+      setActiveTab("interests");
+    }
+  }, [router.query.tab]);
+
+  useEffect(() => {
     if (vendorData?.id) {
       fetchPets(vendorData.id);
       fetchStats(vendorData.id);

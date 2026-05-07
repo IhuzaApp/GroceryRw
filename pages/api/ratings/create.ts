@@ -4,6 +4,7 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { notifyNewReviewToSlack } from "../../../src/lib/slackSystemNotifier";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const CREATE_RATING = gql`
   mutation CreateRating($rating: Ratings_insert_input!) {
@@ -30,6 +31,7 @@ const GET_ORDER_FOR_REVIEW = gql`
       }
       shoppers {
         full_name
+        user_id
       }
     }
   }
@@ -44,6 +46,7 @@ const GET_REEL_ORDER_FOR_REVIEW = gql`
       }
       shoppers {
         full_name
+        user_id
       }
     }
   }
@@ -120,6 +123,7 @@ export default async function handler(
       let orderNumber = "—";
       let storeName: string | undefined;
       let shopperName: string | undefined;
+      let shopperUserId: string | undefined;
 
       if (order_id && hasuraClient) {
         try {
@@ -138,6 +142,7 @@ export default async function handler(
               o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
             storeName = o.Shop?.name;
             shopperName = o.shoppers?.full_name ?? "Shopper";
+            shopperUserId = o.shoppers?.user_id;
           }
         } catch (e) {
           console.error("Failed to fetch order for review notification", e);
@@ -157,6 +162,7 @@ export default async function handler(
               r.OrderID != null ? String(r.OrderID).padStart(4, "0") : "—";
             storeName = r.Reel?.title ?? "Reel order";
             shopperName = r.shoppers?.full_name ?? "Shopper";
+            shopperUserId = r.shoppers?.user_id;
           }
         } catch (e) {
           console.error(
@@ -173,6 +179,23 @@ export default async function handler(
         storeName,
         comment: review || undefined,
       });
+
+      // Notify Shopper about the review via Push
+      if (shopperUserId) {
+        try {
+          await sendNotificationToUser(shopperUserId, {
+            title: "New Review Received! ⭐",
+            body: `A customer left you a ${rating}-star review for order #${orderNumber}. "Feedback: ${review || 'No comment'}"`,
+            data: {
+              type: "shopper_rating",
+              rating: String(rating),
+              orderId: order_id || reel_order_id,
+            },
+          });
+        } catch (notifErr) {
+          console.error("Failed to notify shopper of review:", notifErr);
+        }
+      }
 
       return res.status(201).json(data.insert_Ratings_one);
     }

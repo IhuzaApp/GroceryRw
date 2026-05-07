@@ -170,6 +170,44 @@ export const removeFCMToken = async (token: string): Promise<void> => {
 };
 
 /**
+ * Add a notification record to Firestore for history
+ */
+export const addNotificationToFirestore = async (
+  recipientId: string,
+  payload: NotificationPayload,
+  isRead: boolean = false
+): Promise<string | null> => {
+  try {
+    if (!db) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping Firestore save."
+      );
+      return null;
+    }
+
+    const notificationData = {
+      recipientId,
+      title: payload.title,
+      body: payload.body,
+      type: payload.data?.type || "general",
+      data: payload.data || {},
+      isRead,
+      createdAt: new Date(),
+      expiresAt: null,
+    };
+
+    const docRef = await db.collection("notifications").add(notificationData);
+    return docRef.id;
+  } catch (error) {
+    console.error(
+      "❌ [FCM Service] Error adding notification to Firestore:",
+      error
+    );
+    return null;
+  }
+};
+
+/**
  * Send notification to a specific user
  */
 export const sendNotificationToUser = async (
@@ -177,9 +215,12 @@ export const sendNotificationToUser = async (
   payload: NotificationPayload
 ): Promise<void> => {
   try {
+    // 1. Persist to Firestore for unified history (CRITICAL)
+    await addNotificationToFirestore(userId, payload);
+
     if (!messaging) {
       console.warn(
-        "⚠️ [FCM Service] Firebase not initialized. Skipping notification."
+        "⚠️ [FCM Service] Firebase not initialized. Skipping push notification."
       );
       return;
     }
@@ -206,8 +247,6 @@ export const sendNotificationToUser = async (
           sound: "default",
           priority: "high",
           channelId: "high_importance",
-          // Use a timestamp-based tag for re-triggered notifications if requested
-          // or fallback to a general type-based tag to avoid duplicates
           tag: payload.data?.tag || payload.data?.type || "general",
         },
       },
@@ -222,7 +261,6 @@ export const sendNotificationToUser = async (
       },
     };
 
-    // Use sendEachForMulticast for better performance and reliability
     const response = await messaging.sendEachForMulticast(message);
 
     const invalidTokens: string[] = [];
@@ -239,14 +277,12 @@ export const sendNotificationToUser = async (
       }
     });
 
-    // Remove invalid tokens
     if (invalidTokens.length > 0) {
       for (const token of invalidTokens) {
         await removeFCMToken(token);
       }
     }
   } catch (error) {
-    // Silent fail - don't propagate so callers aren't disrupted by FCM issues
     console.error("❌ [FCM Service] Error sending notification:", error);
   }
 };
@@ -259,9 +295,14 @@ export const sendNotificationToUsers = async (
   payload: NotificationPayload
 ): Promise<void> => {
   try {
+    // 1. Persist to Firestore for each user (unified history)
+    await Promise.all(
+      userIds.map((userId) => addNotificationToFirestore(userId, payload))
+    );
+
     if (!messaging) {
       console.warn(
-        "⚠️ [FCM Service] Firebase not initialized. Skipping notification."
+        "⚠️ [FCM Service] Firebase not initialized. Skipping push notification."
       );
       return;
     }
@@ -575,5 +616,35 @@ export const sendDelayedOrderNotification = async (
     await sendNotificationToUser(userId, payload);
   } catch (error) {
     console.error("Error sending delayed order notification:", error);
+  }
+};
+
+/**
+ * Purge read notifications that have expired (older than 24h since marked read)
+ */
+export const cleanupExpiredNotifications = async (): Promise<number> => {
+  try {
+    if (!db) return 0;
+
+    const now = new Date();
+    const snapshot = await db
+      .collection("notifications")
+      .where("expiresAt", "<", now)
+      .get();
+
+    if (snapshot.empty) {
+      return 0;
+    }
+
+    const batch = db.batch();
+    snapshot.forEach((doc: any) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    return snapshot.size;
+  } catch (error) {
+    console.error("❌ [FCM Service] Error cleaning up expired notifications:", error);
+    return 0;
   }
 };

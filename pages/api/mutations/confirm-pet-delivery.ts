@@ -23,6 +23,7 @@ const GET_ADOPTION_FOR_CONFIRMATION = gql`
           id
           fullname
           organisationName
+          user_id
         }
       }
       User {
@@ -139,8 +140,26 @@ export default async function handler(
           id: wallet.id,
           new_amount: newBalance.toFixed(0).toString(),
         });
+
+        // Notify Vendor about wallet credit
+        const vendorUserId = adoption.pets?.pet_vendors?.user_id;
+        if (vendorUserId) {
+          try {
+            await sendNotificationToUser(vendorUserId, {
+              title: "Money Added to Wallet! 💰",
+              body: `Your business wallet has been credited with ${amountToCredit.toLocaleString()} for the delivery of "${adoption.pets?.name}".`,
+              data: {
+                type: "wallet_update",
+                amount: amountToCredit.toString(),
+                walletType: "business",
+              },
+            });
+          } catch (vendorNotifErr) {
+            console.error("Failed to notify vendor of wallet credit:", vendorNotifErr);
+          }
+        }
       } else {
-         console.warn(`No wallet found for vendor ${vendorId}, skipping credit.`);
+        console.warn(`No wallet found for vendor ${vendorId}, skipping credit.`);
       }
     }
 

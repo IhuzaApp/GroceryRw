@@ -11,6 +11,7 @@ import { sendWithdrawalInvoice } from "../../../src/lib/resend";
 import { insertSystemLog } from "../queries/system-logs";
 import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import { sendLargeWithdrawalRequestToSlack } from "../../../src/lib/slackSupportNotifier";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const WITHDRAW_OTP_KEY_PREFIX = "withdraw-";
 
@@ -267,6 +268,22 @@ export default async function handler(
           console.error("Failed to send withdrawal SMS", smsErr);
         }
 
+        // Send Push Notification
+        try {
+          await sendNotificationToUser(userId, {
+            title: "Withdrawal Successful! ✅",
+            body: `Your withdrawal of ${numericAmount.toLocaleString()} RWF has been processed. New balance: ${newBalance.toLocaleString()} RWF.`,
+            data: {
+              type: "wallet_update",
+              amount: numericAmount.toString(),
+              walletType: "business",
+              status: "completed",
+            },
+          });
+        } catch (notifErr) {
+          console.error("Failed to send withdrawal push notification", notifErr);
+        }
+
         // Send Email Invoice
         try {
           const emailToSend = user.email || session.user.email;
@@ -327,6 +344,22 @@ export default async function handler(
         });
       } catch (slackErr) {
         console.error("Failed to notify Slack for large withdrawal", slackErr);
+      }
+
+      // Send Push Notification for Pending Large Withdrawal
+      try {
+        await sendNotificationToUser(userId, {
+          title: "Withdrawal Pending ⏳",
+          body: `Your withdrawal of ${numericAmount.toLocaleString()} RWF is under review. You'll be notified once approved.`,
+          data: {
+            type: "wallet_update",
+            amount: numericAmount.toString(),
+            walletType: "business",
+            status: "pending",
+          },
+        });
+      } catch (notifErr) {
+        console.error("Failed to send pending withdrawal push notification", notifErr);
       }
     }
 

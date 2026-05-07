@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { sendSMS } from "../../../src/lib/pindo";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const GET_BOOKING = gql`
   query GetBookingForPickup($id: uuid!) {
@@ -22,6 +23,7 @@ const GET_BOOKING = gql`
           id
           fullname
           businessName
+          user_id
           Users {
             phone
           }
@@ -162,6 +164,24 @@ export default async function handler(
           id: wallet.id,
           new_amount: newBalance.toFixed(0).toString(),
         });
+
+        // Notify Partner about wallet credit
+        const partnerUserId = booking.RentalVehicles?.logisticsAccounts?.user_id;
+        if (partnerUserId) {
+          try {
+            await sendNotificationToUser(partnerUserId, {
+              title: "Money Added to Wallet! 💰",
+              body: `Your business wallet has been credited with ${amountToCredit.toLocaleString()} RWF for the pickup of "${booking.RentalVehicles?.name}".`,
+              data: {
+                type: "wallet_update",
+                amount: amountToCredit.toString(),
+                walletType: "business",
+              },
+            });
+          } catch (notifErr) {
+            console.error("Failed to notify partner of wallet credit:", notifErr);
+          }
+        }
       }
     }
 
@@ -188,6 +208,23 @@ export default async function handler(
       }
     } catch (smsErr) {
       console.error("SMS notification failed:", smsErr);
+    }
+
+    // Notify Customer about successful pickup
+    if (booking.customer_id) {
+      try {
+        await sendNotificationToUser(booking.customer_id, {
+          title: "Pickup Confirmed! 🚗",
+          body: `Your pickup of "${booking.RentalVehicles?.name}" has been successfully confirmed. Drive safely!`,
+          data: {
+            type: "vehicle_booking",
+            status: "picked_up",
+            bookingId: booking.id,
+          },
+        });
+      } catch (custNotifErr) {
+        console.error("Failed to notify customer of pickup:", custNotifErr);
+      }
     }
 
     return res.status(200).json({
