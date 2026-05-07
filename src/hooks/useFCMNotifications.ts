@@ -330,6 +330,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   detail: {
                     orderId: data.orderId,
                     conversationId: data.conversationId,
+                    collectionPath: data.collectionPath,
                     senderName: data.senderName,
                     message: notification?.body,
                   },

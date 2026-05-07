@@ -40,6 +40,7 @@ export interface ChatConversation {
   customerId?: string;
   shopperId?: string;
   shopperUserId?: string; // The actual User UUID of the shopper (for FCM)
+  vendorUserId?: string; // The User ID of the vendor/business owner (for notifications)
   petId?: string;
   petName?: string;
   petImage?: string;

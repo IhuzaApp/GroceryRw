@@ -462,10 +462,11 @@ export default function MobileChatPage({
       : selectedConversation.customerId || selectedConversation.counterpartId;
 
     const recipientUserId = isMeCustomer
-      ? selectedConversation.shopperId ||
-        (selectedConversation as any).vendorUserId ||
+      ? (selectedConversation as any).vendorUserId ||
+        (selectedConversation as any).shopperUserId ||
+        selectedConversation.shopperId ||
         selectedConversation.counterpartId
-      : selectedConversation.customerId;
+      : selectedConversation.customerId || selectedConversation.counterpartId;
 
     setPendingMessages((p) => [
       ...p,

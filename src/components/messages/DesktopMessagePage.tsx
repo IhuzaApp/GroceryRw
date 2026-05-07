@@ -998,7 +998,8 @@ export default function DesktopMessagePage({
       // Trigger FCM so recipient gets device + in-app notification (bell)
       try {
         const fcmRecipientId = isMeCustomer
-          ? (selectedConversation.shopperUserId &&
+          ? (selectedConversation as any).vendorUserId ||
+            (selectedConversation.shopperUserId &&
             selectedConversation.shopperUserId !== session.user.id
               ? selectedConversation.shopperUserId
               : null) ||

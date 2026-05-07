@@ -18,7 +18,8 @@ import {
   writeBatch, 
   doc, 
   Timestamp,
-  deleteDoc
+  deleteDoc,
+  updateDoc
 } from "firebase/firestore";
 
 // Check if mobile
@@ -968,11 +969,13 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
                         }
 
                         // Navigate to relevant page
-                        if (
-                          notification.type === "chat_message" &&
-                          notification.orderId
-                        ) {
-                          window.location.href = `/Messages/${notification.orderId}`;
+                        if (notification.type === "chat_message") {
+                          if (notification.conversationId) {
+                            const colPath = (notification as any).collectionPath || "chat_conversations";
+                            window.location.href = `/Messages?conversationId=${notification.conversationId}&collection=${colPath}`;
+                          } else if (notification.orderId) {
+                            window.location.href = `/Messages/${notification.orderId}`;
+                          }
                         } else if (
                           (notification.type === "new_order" ||
                             notification.type === "batch_orders") &&
@@ -980,11 +983,11 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
                         ) {
                           window.location.href = `/Plasa/active-batches`;
                         } else if (notification.type === "batch_orders") {
-                          // Batch orders without specific orderId
                           window.location.href = `/Plasa/active-batches`;
                         } else if (
                           notification.type === "pet_adoption" ||
-                          notification.type === "pet_delivery"
+                          notification.type === "pet_delivery" ||
+                          notification.type === "petBusiness"
                         ) {
                           window.location.href = `/Pets/dashboard?tab=interests`;
                         } else if (notification.type === "pet_adoption_status") {
