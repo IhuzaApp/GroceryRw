@@ -47,6 +47,33 @@ export default function MyAdoptions() {
     fetchAdoptions();
   }, [status]);
 
+  const handleConfirmReceipt = async (adoptionId: string, petName: string) => {
+    if (!window.confirm(`Confirm that you have received ${petName}? This will finalize the adoption.`)) return;
+
+    const toastId = (await import("react-hot-toast")).toast.loading("Confirming receipt...");
+    try {
+      const response = await fetch("/api/mutations/confirm-pet-delivery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adoptionId }),
+      });
+
+      if (response.ok) {
+        (await import("react-hot-toast")).toast.success("Adoption finalized! Enjoy your new friend. 🐾", { id: toastId });
+        // Refresh adoptions
+        const refreshResponse = await fetch("/api/queries/get-user-adoptions");
+        const refreshData = await refreshResponse.json();
+        setAdoptions(refreshData.adoptions || []);
+      } else {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to confirm receipt");
+      }
+    } catch (error: any) {
+      console.error("Error confirming receipt:", error);
+      (await import("react-hot-toast")).toast.error(error.message || "Failed to confirm receipt", { id: toastId });
+    }
+  };
+
   if (status === "loading" || isLoading) return <LoadingScreen />;
 
   const filteredAdoptions = adoptions.filter((adoption) => {
@@ -179,14 +206,19 @@ export default function MyAdoptions() {
                             {adoption.pets.name}
                           </h3>
                           <span
-                            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[9px] font-black uppercase md:px-3 md:text-[10px] ${adoption.status === "PAID"
+                            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[9px] font-black uppercase md:px-3 md:text-[10px] ${
+                              adoption.status === "PAID"
+                                ? "bg-blue-500 !text-white text-white"
+                                : adoption.status === "ACCEPTED"
                                 ? "bg-green-500 !text-white text-white"
                                 : adoption.status === "DELIVERED"
-                                  ? "bg-green-600 !text-white text-white"
-                                  : "bg-yellow-500 !text-white text-white"
-                              }`}
+                                ? "bg-gray-500 !text-white text-white"
+                                : "bg-red-500 !text-white text-white"
+                            }`}
                           >
-                            {adoption.status}
+                            {adoption.status === "ACCEPTED"
+                              ? "Vendor Accepted"
+                              : adoption.status}
                           </span>
                         </div>
                         <p className="text-xs font-medium text-gray-500 md:text-sm">
@@ -227,6 +259,22 @@ export default function MyAdoptions() {
                           <MessageSquare className="h-4 w-4" />
                           Chat Seller
                         </button>
+
+                        {adoption.status === "ACCEPTED" && (
+                          <button
+                            onClick={() => handleConfirmReceipt(adoption.id, adoption.pets.name)}
+                            className="flex items-center gap-2 rounded-xl bg-green-500 px-6 py-3 text-sm font-black !text-white text-white shadow-lg shadow-green-500/20 transition-all hover:scale-105 active:scale-95"
+                          >
+                            Confirm Receipt
+                          </button>
+                        )}
+
+                        {adoption.status === "PAID" && (
+                           <div className="flex items-center gap-2 rounded-xl bg-blue-500/10 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-blue-500">
+                              <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+                              Waiting for Vendor
+                           </div>
+                        )}
                       </div>
                     </div>
 
@@ -260,6 +308,14 @@ export default function MyAdoptions() {
                       >
                         <MessageSquare className="h-5 w-5" />
                       </button>
+                      {adoption.status === "ACCEPTED" && (
+                        <button
+                          onClick={() => handleConfirmReceipt(adoption.id, adoption.pets.name)}
+                          className="flex h-10 items-center gap-2 rounded-xl bg-green-500 px-4 text-[10px] font-black uppercase tracking-widest !text-white text-white shadow-lg shadow-green-500/20"
+                        >
+                          Confirm Receipt
+                        </button>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">

@@ -563,6 +563,47 @@ export default function NotificationSystem({
       }
     };
 
+    const handlePetAdoptionStatus = (event: CustomEvent) => {
+      const { title, body, status } = event.detail;
+      
+      // Play sound
+      playNotificationSound({ enabled: true, volume: 0.8 });
+
+      // Show a nice toast using react-hot-toast (batchToast is just toast)
+      batchToast.success(
+        (t) => (
+          <div className="flex items-start gap-4">
+            <div className={`mt-1 rounded-full p-2 ${status === 'ACCEPTED' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+              {status === 'ACCEPTED' ? "🐾" : "❌"}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-black text-gray-900 dark:text-white">{title}</p>
+              <p className="text-xs text-gray-500">{body}</p>
+            </div>
+            <button 
+              onClick={() => batchToast.dismiss(t.id)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ),
+        { 
+          duration: 10000,
+          position: isMobile ? "top-center" : "bottom-right",
+          style: {
+            borderRadius: '24px',
+            background: theme === 'dark' ? '#1A1A1A' : '#FFFFFF',
+            color: theme === 'dark' ? '#FFFFFF' : '#111111',
+            border: theme === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            maxWidth: '400px',
+            padding: '16px'
+          }
+        }
+      );
+    };
+
     // Add event listeners for FCM notifications
     window.addEventListener(
       "fcm-new-order",
@@ -575,6 +616,10 @@ export default function NotificationSystem({
     window.addEventListener(
       "fcm-order-expired",
       handleFCMOrderExpired as EventListener
+    );
+    window.addEventListener(
+      "fcm-pet-adoption-status",
+      handlePetAdoptionStatus as EventListener
     );
 
     // Cleanup
@@ -590,6 +635,10 @@ export default function NotificationSystem({
       window.removeEventListener(
         "fcm-order-expired",
         handleFCMOrderExpired as EventListener
+      );
+      window.removeEventListener(
+        "fcm-pet-adoption-status",
+        handlePetAdoptionStatus as EventListener
       );
     };
   }, []);

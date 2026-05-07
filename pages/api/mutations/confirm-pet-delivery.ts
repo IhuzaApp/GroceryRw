@@ -113,6 +113,10 @@ export default async function handler(
       return res.status(404).json({ error: "Adoption record not found" });
     }
 
+    if (adoption.status !== "ACCEPTED") {
+      return res.status(400).json({ error: "Adoption must be accepted by the vendor first" });
+    }
+
     // Authorization check
     const vendorId = adoption.pets?.vendor_id;
     if (!vendorId) {
@@ -174,7 +178,8 @@ export default async function handler(
             title: "Pet Delivered! 🐾",
             body: `Your adoption of "${petName}" has been confirmed as delivered.`,
             data: {
-              type: "pet_delivered",
+              type: "pet_adoption_status",
+              status: "DELIVERED",
               adoptionId,
             }
          });

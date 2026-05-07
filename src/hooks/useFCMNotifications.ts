@@ -102,7 +102,8 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           if (
             !isShopper &&
             type !== "chat_message" &&
-            type !== "marketplace_update"
+            type !== "marketplace_update" &&
+            type !== "pet_adoption_status"
           ) {
             // Regular users should not receive batch/order notifications
             return;
@@ -304,6 +305,19 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                     incompleteOrdersCount: data.incompleteOrdersCount
                       ? parseInt(data.incompleteOrdersCount, 10)
                       : 0,
+                  },
+                })
+              );
+              break;
+
+            case "pet_adoption_status":
+              window.dispatchEvent(
+                new CustomEvent("fcm-pet-adoption-status", {
+                  detail: {
+                    adoptionId: data.adoptionId,
+                    status: data.status,
+                    title: notification?.title || data.title,
+                    body: notification?.body || data.body || data.message,
                   },
                 })
               );

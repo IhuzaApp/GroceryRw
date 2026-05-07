@@ -278,13 +278,22 @@ export default async function handler(
     // For other errors, return 500
     const statusCode = isServerError ? 200 : 500;
 
-    return res.status(statusCode).json({
+    if (statusCode === 500) {
+      console.error("❌ [API] Marketplace notifications fetch failed:", {
+        message: error.message,
+        stack: error.stack,
+        response: error.response,
+      });
+    }
+
+    return res.status(statusCode).json({ 
       error: isServerError
         ? "service_unavailable"
         : "Failed to fetch notifications",
       message: isServerError
         ? "Service temporarily unavailable"
         : error.message,
+      details: error.message,
       rfqResponsesCount: 0,
       incompleteOrdersCount: 0,
       newRFQsCount: 0,

@@ -8,6 +8,7 @@ import {
   HideBottomBarProvider,
   useHideBottomBar,
 } from "@context/HideBottomBarContext";
+import NotificationSystem from "@components/shopper/NotificationSystem";
 
 export default function RootLayout({
   children,
@@ -143,6 +144,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isPetsPage &&
         !isCurrentPendingOrdersPage &&
         !isPlasBusinessPage && <AIChatProvider />}
+      
+      <NotificationSystem currentLocation={null} />
     </div>
   );
 }

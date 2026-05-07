@@ -700,7 +700,8 @@ export default async function handler(
                             title: "New Pet Adoption! 🐾",
                             body: `Your pet "${petName}" has been adopted and paid for!`,
                             data: {
-                              type: "pet_adoption",
+                              type: "pet_adoption_status",
+                              status: "PAID",
                               petId: adoption.pets.id,
                             },
                           });
@@ -914,7 +915,8 @@ export default async function handler(
                           title: "New Pet Adoption! 🐾",
                           body: `Your pet "${petName}" has been adopted and paid for!`,
                           data: {
-                            type: "pet_adoption",
+                            type: "pet_adoption_status",
+                            status: "PAID",
                             petId: adoption.pets.id,
                           },
                         });

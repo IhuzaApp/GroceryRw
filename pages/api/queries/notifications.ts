@@ -38,8 +38,15 @@ export default async function handler(
       GET_NOTIFICATIONS
     );
     res.status(200).json({ notifications: data.Notifications });
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    res.status(500).json({ error: "Failed to fetch notifications" });
+  } catch (error: any) {
+    console.error("❌ [API] Notifications fetch failed:", {
+      message: error.message,
+      stack: error.stack,
+      response: error.response,
+    });
+    res.status(500).json({ 
+      error: "Failed to fetch notifications",
+      details: error.message 
+    });
   }
 }

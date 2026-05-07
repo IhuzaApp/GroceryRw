@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
-import NotificationSystem from "@components/shopper/NotificationSystem";
 import FCMStatusIndicator from "@components/shopper/FCMStatusIndicator";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
@@ -309,23 +308,9 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
       {isMobile && <ShopperBottomNav />}
 
       {/* 
-        NotificationSystem - Single instance for all Plasa pages
-        This component handles:
-        - FCM push notifications
-        - API polling for new orders
-        - Smart order matching
-        - Notification display modal
-        
-        Only renders when shopper is online (has location cookies)
+        NotificationSystem is now globally rendered in RootLayout 
+        to support notifications across all user roles (Shoppers, Vendors, Customers).
       */}
-      <NotificationSystem
-        currentLocation={isOnline ? currentLocation : null}
-        onNewOrder={handleNewOrder}
-        onAcceptBatch={handleAcceptBatch}
-      />
-
-      {/* FCM Status Indicator (only shows in development) */}
-      <FCMStatusIndicator />
     </div>
   );
 }
