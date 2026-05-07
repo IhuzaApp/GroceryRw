@@ -564,21 +564,23 @@ function MessagesPage() {
     };
   }, [conversations]);
 
-  // Fetch order details for order-type conversations
-  useEffect(() => {
-    const orderIds = conversations
+  const orderIdsToFetch = useMemo(() => {
+    return conversations
       .filter((c) => c.orderId)
       .map((c) => c.orderId!)
       .filter((id) =>
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || // uuid
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
       );
+  }, [conversations.length, conversations.map(c => c.id).join(",")]);
 
-    if (orderIds.length === 0) return;
+  // Fetch order details for order-type conversations
+  useEffect(() => {
+    if (orderIdsToFetch.length === 0) return;
 
     let cancelled = false;
     const fetchOrders = async () => {
-      const toFetch = orderIds.filter(
+      const toFetch = orderIdsToFetch.filter(
         (id) =>
           !orders[id] ||
           ((orders[id] as any)?.error && !(orders[id] as any)?.permanent)

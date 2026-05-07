@@ -325,9 +325,7 @@ export default async function handler(
     return res.status(400).json({ error: "Invalid order ID format" });
   }
 
-  console.log(
-    `[OrderDetails] Fetching details for ID: ${orderId}, Type: ${type || "all"}`
-  );
+
 
   try {
     if (!hasuraClient) {

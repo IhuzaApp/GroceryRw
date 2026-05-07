@@ -134,7 +134,7 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
     if (!session?.user?.id || !db) return;
 
     const userId = session.user.id;
-    const notificationsRef = collection(db, "notifications");
+    const notificationsRef = collection(db!, "notifications");
     const q = query(
       notificationsRef,
       where("recipientId", "==", userId)
@@ -391,7 +391,7 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
       const expiry = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
 
       unread.forEach((n) => {
-        const docRef = doc(db, "notifications", n.id);
+        const docRef = doc(db!, "notifications", n.id);
         batch.update(docRef, { 
           isRead: true,
           expiresAt: expiry
@@ -412,7 +412,7 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
     try {
       const batch = writeBatch(db);
       notifications.forEach((n) => {
-        const docRef = doc(db, "notifications", n.id);
+        const docRef = doc(db!, "notifications", n.id);
         batch.delete(docRef);
       });
       await batch.commit();
@@ -958,7 +958,7 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
                         // Mark as read when clicked
                         if (!notification.read && db) {
                           try {
-                            const docRef = doc(db, "notifications", notification.id);
+                            const docRef = doc(db!, "notifications", notification.id);
                             await updateDoc(docRef, { 
                               isRead: true,
                               expiresAt: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000)
