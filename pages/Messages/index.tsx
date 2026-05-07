@@ -108,6 +108,23 @@ function MessagesPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | undefined
   >(undefined);
+  const [userAdoptions, setUserAdoptions] = useState<any[]>([]);
+
+  // Fetch adoptions to backfill missing pet info on legacy chats
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.id) {
+      let cancelled = false;
+      fetch("/api/queries/get-user-adoptions")
+        .then((res) => res.json())
+        .then((data) => {
+          if (!cancelled) setUserAdoptions(data.adoptions || []);
+        })
+        .catch((err) => console.error("Error fetching adoptions:", err));
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [status, session?.user?.id]);
 
   // Check if mobile device
   useEffect(() => {
@@ -536,6 +553,27 @@ function MessagesPage() {
   }, [conversations, orders]);
 
   const filteredConversations = conversations
+    .map((conversation) => {
+      const isPetChat = conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
+      if (isPetChat && (!conversation.petImage || !conversation.petId)) {
+        const petName = conversation.petName || conversation.title?.replace("Adoption: ", "").trim();
+        const match = userAdoptions.find(
+          (a) =>
+            a.pets?.name?.toLowerCase() === petName?.toLowerCase() &&
+            (a.pets?.pet_vendors?.user_id === conversation.counterpartId ||
+              a.pets?.pet_vendors?.user_id === conversation.businessId)
+        );
+        if (match) {
+          return {
+            ...conversation,
+            petId: match.pets.id,
+            petImage: match.pets.image,
+            petName: match.pets.name,
+          };
+        }
+      }
+      return conversation;
+    })
     .filter((conversation) => {
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
@@ -744,8 +782,10 @@ function MessagesPage() {
                       selectedConversation.counterpartName ||
                       "Business",
                     avatar:
-                      selectedConversation.counterpartAvatar ||
-                      "/images/ProfileImage.png",
+                      selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: ")
+                        ? selectedConversation.petImage || "/images/placeholder.png"
+                        : selectedConversation.counterpartAvatar ||
+                          "/images/ProfileImage.png",
                     role: "business",
                     phone: (selectedConversation as any).counterpartPhone || "",
                   };

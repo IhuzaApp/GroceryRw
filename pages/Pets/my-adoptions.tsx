@@ -15,6 +15,8 @@ import {
 import RootLayout from "../../src/components/ui/layout";
 import LoadingScreen from "../../src/components/ui/LoadingScreen";
 import { formatCurrencySync } from "../../src/utils/formatCurrency";
+import { getOrCreatePetConversation } from "../../src/services/chatService";
+import { toast } from "react-hot-toast";
 
 export default function MyAdoptions() {
   const router = useRouter();
@@ -71,6 +73,30 @@ export default function MyAdoptions() {
     } catch (error: any) {
       console.error("Error confirming receipt:", error);
       (await import("react-hot-toast")).toast.error(error.message || "Failed to confirm receipt", { id: toastId });
+    }
+  };
+
+  const handleChatWithOwner = async (vendorUserId: string, petId: string, petName: string, petImage: string) => {
+    if (!session?.user?.id) {
+      router.push("/Auth/Login");
+      return;
+    }
+
+    const toastId = toast.loading("Opening chat...");
+    try {
+      const conversationId = await getOrCreatePetConversation(
+        session.user.id,
+        vendorUserId,
+        petId,
+        petName,
+        petImage
+      );
+      toast.dismiss(toastId);
+      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Redirecting...", { id: toastId });
+      router.push(`/Messages/${vendorUserId}`);
     }
   };
 
@@ -250,14 +276,17 @@ export default function MyAdoptions() {
                         </button>
                         <button
                           onClick={() =>
-                            router.push(
-                              `/Messages/${adoption.pets.pet_vendors.user_id}`
+                            handleChatWithOwner(
+                              adoption.pets.pet_vendors.user_id,
+                              adoption.pets.id,
+                              adoption.pets.name,
+                              adoption.pets.image
                             )
                           }
                           className="flex items-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-black transition-all hover:border-green-500 hover:text-green-500 dark:border-white/10"
                         >
                           <MessageSquare className="h-4 w-4" />
-                          Chat Seller
+                          Chat Owner
                         </button>
 
                         {adoption.status === "ACCEPTED" && (
@@ -300,8 +329,11 @@ export default function MyAdoptions() {
                       </button>
                       <button
                         onClick={() =>
-                          router.push(
-                            `/Messages/${adoption.pets.pet_vendors.user_id}`
+                          handleChatWithOwner(
+                            adoption.pets.pet_vendors.user_id,
+                            adoption.pets.id,
+                            adoption.pets.name,
+                            adoption.pets.image
                           )
                         }
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 !text-white text-white shadow-lg shadow-green-500/20"

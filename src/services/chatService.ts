@@ -91,8 +91,17 @@ export const createConversation = async (
       lastMessage: "",
       lastMessageTime: serverTimestamp(),
       unreadCount: 0,
-      ...metadata,
     };
+
+    // Only add non-undefined metadata fields
+    if (metadata) {
+      Object.keys(metadata).forEach((key) => {
+        const value = (metadata as any)[key];
+        if (value !== undefined) {
+          conversationData[key] = value;
+        }
+      });
+    }
 
     // Only populate customer/shopper IDs if they are explicitly provided or relevant
     if (customerId) conversationData.customerId = customerId;
@@ -173,6 +182,55 @@ export const getOrCreateBusinessConversation = async (
     throw error;
   }
 };
+
+export const getOrCreatePetConversation = async (
+  customerId: string,
+  vendorUserId: string,
+  petId: string,
+  petName: string,
+  petImage?: string
+): Promise<string> => {
+  try {
+    const customCollection: ChatCollection = "business_conversations";
+
+    const conversationsRef = collection(db!, customCollection);
+    const q = query(
+      conversationsRef,
+      where("customerId", "==", customerId),
+      where("counterpartId", "==", vendorUserId),
+      where("petId", "==", petId)
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].id;
+    }
+
+    return await createConversation(
+      customerId,
+      "",
+      "",
+      "pet",
+      {
+        customerId,
+        counterpartId: vendorUserId,
+        petId,
+        petName,
+        petImage,
+        title: `Adoption: ${petName}`,
+      },
+      customCollection
+    );
+  } catch (error) {
+    console.error(
+      "❌ [Chat Service] Error in getOrCreatePetConversation:",
+      error
+    );
+    throw error;
+  }
+};
+
 
 /**
  * Get a conversation by order ID (exclusively from chat_conversations)

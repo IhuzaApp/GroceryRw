@@ -501,10 +501,13 @@ interface Conversation {
   businessId?: string;
   rfqId?: string;
   counterpartId?: string;
-  type?: "order" | "business";
+  type?: "order" | "business" | "pet";
   title?: string;
   counterpartName?: string;
   counterpartAvatar?: string;
+  petId?: string;
+  petName?: string;
+  petImage?: string;
   lastMessage: string;
   lastMessageTime: any;
   unreadCount: number;
@@ -550,9 +553,10 @@ export default function DesktopMessagePage({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
+  const isPetChat = !!selectedConversation && (selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: "));
   const isBusinessChat =
     !!selectedConversation &&
-    (!selectedConversation.orderId || selectedConversation.type === "business");
+    (!selectedConversation.orderId && !isPetChat);
   const isMeCustomerSelected =
     !!selectedConversation &&
     session?.user?.id === selectedConversation.customerId;
@@ -1053,8 +1057,9 @@ export default function DesktopMessagePage({
               </div>
             ) : (
               filteredConversations.map((conversation, index) => {
+                const isPetChat = conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
                 const isBusinessChat =
-                  conversation.type === "business" || !conversation.orderId;
+                  (conversation.type === "business" || !conversation.orderId) && !isPetChat;
                 const order = conversation.orderId
                   ? orders[conversation.orderId] || {}
                   : {};
@@ -1069,7 +1074,9 @@ export default function DesktopMessagePage({
 
                 // Handle name display for business chats
                 let fullName = "Business Chat";
-                if (isBusinessChat) {
+                if (isPetChat) {
+                  fullName = conversation.title || `Adoption: ${conversation.petName || "Pet"}`;
+                } else if (isBusinessChat) {
                   fullName =
                     conversation.title ||
                     conversation.counterpartName ||
@@ -1099,7 +1106,9 @@ export default function DesktopMessagePage({
                     ? `00${employeeId} ${fullName}`
                     : fullName;
 
-                const contactAvatar = isBusinessChat
+                const contactAvatar = isPetChat
+                  ? conversation.petImage || "/images/placeholder.png"
+                  : isBusinessChat
                   ? conversation.counterpartAvatar ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       fullName
@@ -1222,7 +1231,13 @@ export default function DesktopMessagePage({
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg ring-2 ring-white dark:ring-gray-700">
-                      {isBusinessChat ? (
+                      {isPetChat ? (
+                        <img
+                          src={selectedConversation.petImage || "/images/placeholder.png"}
+                          alt={selectedConversation.petName || selectedConversation.title?.replace("Adoption: ", "").trim() || "Pet"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : isBusinessChat ? (
                         <img
                           src={
                             selectedConversation.counterpartAvatar ||
@@ -1278,7 +1293,9 @@ export default function DesktopMessagePage({
                   </div>
                   <div>
                     <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
-                      {isBusinessChat ? (
+                      {isPetChat ? (
+                        selectedConversation.title || `Adoption: ${selectedConversation.petName || "Pet"}`
+                      ) : isBusinessChat ? (
                         selectedConversation.title ||
                         selectedConversation.counterpartName ||
                         "Business Chat"
@@ -1954,6 +1971,38 @@ export default function DesktopMessagePage({
                         </div>
                       )}
                   </>
+                ) : isPetChat ? (
+                  <div className="space-y-6">
+                    {/* Pet Details Card */}
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <div className="flex flex-col items-center text-center">
+                        <div className="relative mb-4 h-32 w-32 overflow-hidden rounded-[2rem] shadow-lg">
+                          <img
+                            src={selectedConversation.petImage || "/images/placeholder.png"}
+                            alt={selectedConversation.petName || selectedConversation.title?.replace("Adoption: ", "").trim() || "Pet"}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          {selectedConversation.petName || selectedConversation.title?.replace("Adoption: ", "").trim() || "Adoption"}
+                        </h3>
+                        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                          Pet Adoption
+                        </p>
+                      </div>
+                      {selectedConversation.petId && (
+                        <>
+                          <div className="my-6 h-px bg-gray-100 dark:bg-gray-700/50"></div>
+                          <button
+                            onClick={() => window.open(`/Pets/${selectedConversation.petId}`, "_blank")}
+                            className="w-full rounded-2xl bg-amber-500 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-white shadow-md transition-all hover:bg-amber-600 active:scale-[0.98]"
+                          >
+                            View Pet Profile
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 ) : selectedRfq ? (
                   <div className="space-y-6">
                     {/* Quote Header Card */}
