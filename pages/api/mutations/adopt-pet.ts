@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { sendSMS } from "../../../src/lib/pindo.ts";
 import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const UPDATE_PET_QUANTITY_SOLD = gql`
@@ -127,18 +126,7 @@ export default async function handler(
           // Note: quantity_sold increment and wallet credit now happen at delivery confirmation (Car flow)
 
           const petName = petInfo.name;
-          const vendorPhone = petInfo.pet_vendors?.User?.phone;
           const vendorUserId = petInfo.pet_vendors?.User?.id;
-          const vendorName =
-            petInfo.pet_vendors?.organisationName ||
-            petInfo.pet_vendors?.fullname ||
-            "Vendor";
-
-          const message = `Hello ${vendorName}, your pet "${petName}" has been ordered and paid for! Customer Address: ${address}. Phone: ${phone}. Please prepare for delivery.`;
-
-          if (vendorPhone) {
-            await sendSMS(vendorPhone, message);
-          }
 
           if (vendorUserId) {
             try {

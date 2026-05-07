@@ -25,6 +25,7 @@ import {
   Scale,
   ShieldCheck,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { Pet } from "../../types/models";
@@ -248,13 +249,12 @@ export default function PetBusinessDashboard() {
   };
 
   const handleProcessRequest = async (adoption: any, action: 'ACCEPT' | 'REJECT') => {
-    const confirmMsg = action === 'ACCEPT'
-      ? `Accept adoption of ${adoption.pet.name} by ${adoption.customer.name}?`
-      : `Reject adoption of ${adoption.pet.name}? This will notify the customer.`;
+    if (action === 'REJECT') {
+      const confirmMsg = `Reject adoption of ${adoption.pet.name}? This will notify the customer.`;
+      if (!window.confirm(confirmMsg)) return;
+    }
 
-    if (!window.confirm(confirmMsg)) return;
-
-    setIsConfirmingDelivery(true);
+    setIsConfirmingDelivery(adoption.id);
     const toastId = toast.loading(`${action === 'ACCEPT' ? 'Accepting' : 'Cancelling'} adoption...`);
     try {
       const response = await fetch("/api/mutations/process-adoption-request", {
@@ -458,10 +458,11 @@ export default function PetBusinessDashboard() {
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {adoptions.map((adoption) => (
-                  <AdoptionItem
+                   <AdoptionItem
                     key={adoption.id}
                     adoption={adoption}
                     theme={theme}
+                    isProcessing={isConfirmingDelivery === adoption.id}
                     onAccept={() => handleProcessRequest(adoption, 'ACCEPT')}
                     onCancel={() => handleProcessRequest(adoption, 'REJECT')}
                   />
@@ -671,7 +672,7 @@ function PetManagementItem({
   );
 }
 
-function AdoptionItem({ adoption, theme, onAccept, onCancel }: any) {
+function AdoptionItem({ adoption, theme, onAccept, onCancel, isProcessing }: any) {
   return (
     <div
       className={`flex flex-col items-start justify-between rounded-[2.5rem] border p-6 transition-all hover:shadow-xl md:flex-row md:items-center ${theme === "dark"
@@ -727,15 +728,17 @@ function AdoptionItem({ adoption, theme, onAccept, onCancel }: any) {
           <div className="flex gap-2">
             <button
               onClick={onCancel}
-              className="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-3 text-xs font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500 hover:text-white"
+              disabled={isProcessing}
+              className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-3 text-xs font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500 hover:text-white disabled:opacity-50"
             >
-              REJECT
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : "REJECT"}
             </button>
             <button
               onClick={onAccept}
-              className="rounded-2xl bg-green-500 px-6 py-3 text-xs font-black uppercase tracking-widest !text-white text-white transition-all hover:scale-105 hover:bg-green-600"
+              disabled={isProcessing}
+              className="flex items-center gap-2 rounded-2xl bg-green-500 px-6 py-3 text-xs font-black uppercase tracking-widest !text-white text-white transition-all hover:scale-105 hover:bg-green-600 disabled:opacity-50"
             >
-              Accept
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept"}
             </button>
           </div>
         )}

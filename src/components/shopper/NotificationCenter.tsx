@@ -408,8 +408,6 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
   const clearAll = async () => {
     if (!session?.user?.id || !db || notifications.length === 0) return;
 
-    if (!confirm("Clear all notifications?")) return;
-
     try {
       const batch = writeBatch(db);
       notifications.forEach((n) => {

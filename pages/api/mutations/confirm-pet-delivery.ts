@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { sendSMS } from "../../../src/lib/pindo";
 import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const GET_ADOPTION_FOR_CONFIRMATION = gql`
@@ -183,14 +182,7 @@ export default async function handler(
 
     // 5. Notify Customer
     try {
-      const customerPhone = adoption.User?.phone;
       const petName = adoption.pets?.name || "Pet";
-      const vendorName = adoption.pets?.pet_vendors?.organisationName || adoption.pets?.pet_vendors?.fullname || "Vendor";
-
-      if (customerPhone) {
-        const message = `Hello ${adoption.User.name}, your adoption of "${petName}" from ${vendorName} has been CONFIRMED as delivered! Thank you for using our platform. 🐾`;
-        await sendSMS(customerPhone, message);
-      }
 
       if (adoption.User?.id) {
          await sendNotificationToUser(adoption.User.id, {
