@@ -331,7 +331,8 @@ export default function MobileChatPage({
             !messagesList.some(
               (m) =>
                 m.senderId === p.senderId &&
-                (m.text === p.text || m.message === p.text)
+                ((p.text && (m.text === p.text || m.message === p.text)) ||
+                  (p.image && m.image === p.image))
             )
         )
       );
@@ -368,19 +369,13 @@ export default function MobileChatPage({
     );
     const combined = [...messages, ...pendingsAsMsg];
     combined.sort((a, b) => {
-      const tA =
-        a.timestamp instanceof Date
-          ? a.timestamp.getTime()
-          : a.timestamp?.seconds
-          ? a.timestamp.seconds * 1000
-          : 0;
-      const tB =
-        b.timestamp instanceof Date
-          ? b.timestamp.getTime()
-          : b.timestamp?.seconds
-          ? b.timestamp.seconds * 1000
-          : 0;
-      return tA - tB;
+      const getVal = (ts: any) => {
+        if (ts instanceof Date) return ts.getTime();
+        if (ts?.seconds) return ts.seconds * 1000;
+        if (ts?.toDate) return ts.toDate().getTime();
+        return Date.now(); // Treat as new if timestamp is missing/null
+      };
+      return getVal(a.timestamp) - getVal(b.timestamp);
     });
     return combined;
   }, [messages, pendingMessages]);
@@ -626,7 +621,24 @@ export default function MobileChatPage({
 
           const toastId = toast.loading("Uploading attachment...");
           setIsUploading(true);
+          const tempId = `temp-img-${Date.now()}`;
+          const localUrl = URL.createObjectURL(file);
+
           try {
+            // Optimistic update
+            setPendingMessages((p) => [
+              ...p,
+              {
+                tempId,
+                text: `Attachment: ${file.name}`,
+                senderId: session.user.id,
+                senderType:
+                  counterpart.role === "business" ? "business" : "customer",
+                timestamp: new Date(),
+                image: localUrl,
+              },
+            ]);
+
             const path = `chats/${conversationId}/${Date.now()}_${file.name}`;
             const url = await uploadToFirebase(file, path);
 
@@ -661,9 +673,11 @@ export default function MobileChatPage({
           } catch (err) {
             console.error("Upload error:", err);
             toast.error("Failed to upload attachment", { id: toastId });
+            setPendingMessages((p) => p.filter((item) => item.tempId !== tempId));
           } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
+            URL.revokeObjectURL(localUrl);
           }
         }}
       />

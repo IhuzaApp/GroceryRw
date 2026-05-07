@@ -598,6 +598,7 @@ export default function DesktopMessagePage({
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -813,6 +814,18 @@ export default function DesktopMessagePage({
 
         setMessages(messagesList);
 
+        // Filter out pending messages that have been confirmed
+        setPendingMessages((prev) =>
+          prev.filter(
+            (p) =>
+              !messagesList.some(
+                (m) =>
+                  m.senderId === p.senderId &&
+                  (m.text === p.text || m.message === p.text)
+              )
+          )
+        );
+
         console.log(`🔍 [Chat Hub] Received ${messagesList.length} messages:`, messagesList);
         if (messagesList.length > 0) {
           const last = messagesList[messagesList.length - 1];
@@ -868,6 +881,21 @@ export default function DesktopMessagePage({
 
     return () => unsubscribe();
   }, [conversationId, session?.user?.id]);
+
+  const displayMessages = React.useMemo(() => {
+    const combined = [...messages, ...pendingMessages];
+    combined.sort((a, b) => {
+      const getVal = (ts: any) => {
+        if (!ts) return Date.now();
+        if (ts instanceof Date) return ts.getTime();
+        if (ts?.seconds) return ts.seconds * 1000;
+        if (ts?.toDate) return ts.toDate().getTime();
+        return Date.now();
+      };
+      return getVal(a.timestamp) - getVal(b.timestamp);
+    });
+    return combined;
+  }, [messages, pendingMessages]);
 
   // Handle sending a new message
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -1032,6 +1060,20 @@ export default function DesktopMessagePage({
         console.warn("FCM send (non-blocking):", fcmErr);
       }
 
+      const tempId = `temp-${Date.now()}`;
+      setPendingMessages((p) => [
+        ...p,
+        {
+          id: tempId,
+          text: newMessage.trim(),
+          message: newMessage.trim(),
+          senderId,
+          senderName,
+          senderType,
+          timestamp: new Date(),
+          read: false,
+        },
+      ]);
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -1543,7 +1585,7 @@ export default function DesktopMessagePage({
                         </div>
                       </div>
                     )}
-                    {groupMessagesByDate(messages).map((group, groupIndex) => (
+                    {groupMessagesByDate(displayMessages).map((group, groupIndex) => (
                       <div key={groupIndex} className="space-y-4">
                         {/* Date Separator */}
                         <div className="flex items-center gap-4 py-2">
@@ -1689,19 +1731,23 @@ export default function DesktopMessagePage({
                                         {formatTime(message.timestamp)}
                                       </span>
                                       {isCurrentUser && (
-                                        <svg
-                                          className="h-3.5 w-3.5 text-green-500"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={3}
-                                            d="M5 13l4 4L19 7"
-                                          />
-                                        </svg>
+                                        message.id.toString().startsWith("temp-") ? (
+                                          <span className="text-[10px] font-bold text-gray-400">...</span>
+                                        ) : (
+                                          <svg
+                                            className="h-3.5 w-3.5 text-green-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={3}
+                                              d="M5 13l4 4L19 7"
+                                            />
+                                          </svg>
+                                        )
                                       )}
                                     </div>
                                   </div>
