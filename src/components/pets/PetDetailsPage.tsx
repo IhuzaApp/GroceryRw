@@ -531,25 +531,75 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
   const [isPriceCardExpanded, setIsPriceCardExpanded] = useState(false);
   const [showMissingModal, setShowMissingModal] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [newRating, setNewRating] = useState(0);
+  const [newReview, setNewReview] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const { setHideBottomBar } = useHideBottomBar();
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await fetch(`/api/queries/get-pet-reviews?pet_id=${pet.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setReviews(data.reviews);
-        }
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-      }
-    };
+  const hasRated = useMemo(() => {
+    if (!session?.user?.id) return false;
+    return reviews.some(r => r.customer_id === (session as any).user.id);
+  }, [reviews, session]);
 
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+    return (sum / reviews.length).toFixed(1);
+  }, [reviews]);
+
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch(`/api/queries/get-pet-reviews?pet_id=${pet.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(data.reviews);
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+    }
+  };
+
+  useEffect(() => {
     if (pet.id) {
       fetchReviews();
     }
   }, [pet.id]);
+
+  const handleReviewSubmit = async () => {
+    if (newRating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+
+    try {
+      const response = await fetch("/api/mutations/submit-pet-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pet_id: pet.id,
+          rating: newRating,
+          review: newReview,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Review submitted! Thank you.");
+        setNewRating(0);
+        setNewReview("");
+        fetchReviews();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit review");
+      }
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      toast.error((err as Error).message);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   useEffect(() => {
     setHideBottomBar(true);
@@ -950,10 +1000,68 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                   />
                   <div className="flex items-center gap-2 rounded-2xl bg-yellow-400/10 px-4 py-2 text-sm font-black text-yellow-600">
                     <Star className="h-4 w-4 fill-yellow-400" />
-                    {pet.rating}
+                    {averageRating}
                   </div>
                 </div>
                 <div className="space-y-6">
+                  {/* Write a Review Section or Success Message */}
+                  {!hasRated ? (
+                    <div className="mb-10 rounded-[2.5rem] border border-green-500/10 bg-green-500/5 p-8 dark:border-white/5 dark:bg-white/5">
+                      <h4 className="mb-4 font-outfit text-lg font-black">
+                        Write a Review
+                      </h4>
+                      <div className="mb-6 flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setNewRating(star)}
+                            className="transition-all active:scale-90"
+                          >
+                            <Star
+                              className={`h-8 w-8 ${
+                                star <= newRating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-200 dark:text-white/10"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={newReview}
+                        onChange={(e) => setNewReview(e.target.value)}
+                        placeholder="Share your experience adopting this pet..."
+                        className="mb-4 w-full rounded-3xl border border-gray-100 bg-white p-6 text-sm font-medium outline-none transition-all focus:border-green-500 dark:border-white/10 dark:bg-black/20 dark:focus:border-green-500"
+                        rows={4}
+                      />
+                      <button
+                        onClick={handleReviewSubmit}
+                        disabled={isSubmittingReview}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 py-4 font-black text-white shadow-xl shadow-green-500/20 transition-all hover:bg-green-600 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {isSubmittingReview ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          "Submit Review"
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mb-10 flex items-center gap-4 rounded-[2.5rem] border border-blue-500/10 bg-blue-500/5 p-8 dark:border-white/5 dark:bg-white/5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500">
+                        <CheckCircle2 className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-outfit font-black text-blue-600 dark:text-blue-400">
+                          Review Submitted
+                        </h4>
+                        <p className="text-xs font-medium text-blue-600/70 dark:text-blue-400/70">
+                          Thank you for sharing your feedback! You have already rated this pet.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {reviews.length > 0 ? (
                     reviews.map((rev: any, i: number) => (
                       <div
