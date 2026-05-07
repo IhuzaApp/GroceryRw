@@ -60,9 +60,13 @@ interface NotificationItem {
 
 interface NotificationCenterProps {
   isGlassMode?: boolean;
+  renderTrigger?: (isOpen: boolean, unreadCount: number) => React.ReactNode;
 }
 
-export default function NotificationCenter({ isGlassMode = false }: NotificationCenterProps = {}) {
+export default function NotificationCenter({ 
+  isGlassMode = false,
+  renderTrigger
+}: NotificationCenterProps = {}) {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const { data: session } = useSession();
@@ -81,6 +85,11 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
   const isShopping = router.pathname.includes("/Plasa/active-batches");
   const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
   const [now, setNow] = useState(Date.now());
+
+  // ... (rest of useEffects same)
+  
+  // I need to make sure I don't break the existing code.
+  // I'll check the lines before and after.
 
   // Real-time ticker for countdowns & maintenance
   useEffect(() => {
@@ -676,38 +685,44 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
   return (
     <div className="relative">
       {/* Notification Bell Button */}
-      <button
-        ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex items-center justify-center transition-all duration-300 active:scale-90 ${
-          isGlassMode
-            ? "h-10 w-10 rounded-full border border-white/20 bg-black/20 !text-white shadow-xl backdrop-blur-xl hover:bg-black/30"
-            : theme === "dark"
-            ? "h-9 w-9 rounded-xl text-gray-300 hover:bg-green-900/20 hover:text-green-400"
-            : "h-9 w-9 rounded-xl text-gray-600 hover:bg-green-50 hover:text-green-600"
-        }`}
-        title="Notifications"
-      >
-        <svg
-          className="h-5 w-5 drop-shadow-sm transition-transform group-hover:rotate-12"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {renderTrigger ? (
+        <div ref={buttonRef as any} onClick={() => setIsOpen(!isOpen)}>
+          {renderTrigger(isOpen, unreadCount)}
+        </div>
+      ) : (
+        <button
+          ref={buttonRef}
+          onClick={() => setIsOpen(!isOpen)}
+          className={`group relative flex items-center justify-center transition-all duration-300 active:scale-90 ${
+            isGlassMode
+              ? "h-10 w-10 rounded-full border border-white/20 bg-black/20 !text-white shadow-xl backdrop-blur-xl hover:bg-black/30"
+              : theme === "dark"
+              ? "h-9 w-9 rounded-xl text-gray-300 hover:bg-green-900/20 hover:text-green-400"
+              : "h-9 w-9 rounded-xl text-gray-600 hover:bg-green-50 hover:text-green-600"
+          }`}
+          title="Notifications"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2.5}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
+          <svg
+            className="h-5 w-5 drop-shadow-sm transition-transform group-hover:rotate-12"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
 
-        {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-[10px] font-black text-white shadow-lg ring-2 ring-white duration-300 animate-in zoom-in dark:ring-[#0A0A0A]">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-[10px] font-black text-white shadow-lg ring-2 ring-white duration-300 animate-in zoom-in dark:ring-[#0A0A0A]">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Notification Dropdown/Modal */}
       {isOpen &&

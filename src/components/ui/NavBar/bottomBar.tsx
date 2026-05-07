@@ -16,6 +16,7 @@ import { db } from "../../../lib/firebase";
 import { useHideBottomBar } from "../../../context/HideBottomBarContext";
 import { useAnyModalOpen } from "../../../hooks/useAnyModalOpen";
 import { Briefcase, Car } from "lucide-react";
+import NotificationCenter from "../../shopper/NotificationCenter";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -180,6 +181,7 @@ export default function BottomBar() {
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
     useState(0);
   const [messageUnreadCount, setMessageUnreadCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [showHomeActions, setShowHomeActions] = useState(false);
@@ -346,6 +348,27 @@ export default function BottomBar() {
     return () => unsubscribe();
   }, [session?.user?.id, (session?.user as any)?.role]);
 
+  // Listen for unread notification count
+  useEffect(() => {
+    if (!session?.user?.id || !db) {
+      setNotificationCount(0);
+      return;
+    }
+
+    const notificationsRef = collection(db, "notifications");
+    const q = query(
+      notificationsRef,
+      where("userId", "==", session.user.id),
+      where("isRead", "==", false)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setNotificationCount(snapshot.size);
+    });
+
+    return () => unsubscribe();
+  }, [session?.user?.id]);
+
   return (
     <>
       {/* Floating Buttons (Ask, Help) */}
@@ -361,6 +384,7 @@ export default function BottomBar() {
         router.pathname !== "/stores/[id]/checkout" &&
         router.pathname !== "/plasBusiness/store/[storeId]" &&
         router.pathname !== "/plasBusiness/portal" &&
+        !moreOpen &&
         !router.pathname.startsWith("/Cars") &&
         !router.pathname.startsWith("/Pets") && (
           <div className="notranslate fixed bottom-24 right-4 z-50 md:hidden">
@@ -1239,6 +1263,40 @@ export default function BottomBar() {
                         href="/Messages"
                         onClick={() => setMoreOpen(false)}
                         badgeCount={messageUnreadCount}
+                      />
+                    )}
+
+                    {/* Notifications - Added */}
+                    {session?.user && !isGuest && (
+                      <NotificationCenter
+                        renderTrigger={(isOpen, count) => (
+                          <MoreMenuItem
+                            icon={
+                              <div className="relative inline-block text-gray-600 dark:text-gray-300">
+                                <svg
+                                  width="20px"
+                                  height="20px"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                {count > 0 && (
+                                  <span className="absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg">
+                                    {count > 9 ? "9+" : count}
+                                  </span>
+                                )}
+                              </div>
+                            }
+                            label="Notifications"
+                            href="#"
+                            onClick={() => setMoreOpen(false)}
+                          />
+                        )}
                       />
                     )}
 
