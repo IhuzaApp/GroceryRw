@@ -792,15 +792,10 @@ export default function MobileMessagePage({
                   : fullName;
 
               const contactAvatar = isPetChat
-                ? (conversation as any).petImage || "/images/placeholder.png"
+                ? (conversation as any).petImage || (conversation as any).counterpartAvatar || (conversation as any).customerAvatar || "/images/placeholder.png"
                 : isBusinessChat
-                  ? conversation.counterpartAvatar ||
-                  "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
-                  : order?.assignedTo?.shoppers?.profile_photo ||
-                  order?.assignedTo?.profile_picture ||
-                  order?.shoppers?.profile_photo ||
-                  order?.shoppers?.avatar ||
-                  "/images/ProfileImage.png";
+                  ? conversation.counterpartAvatar || (conversation as any).customerAvatar || "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
+                  : (conversation as any).counterpartAvatar || (conversation as any).customerAvatar || order?.assignedTo?.profile_picture || order?.orderedBy?.profile_picture || "/images/ProfileImage.png";
 
               const typeInfo = getConvType(conversation, orders);
 

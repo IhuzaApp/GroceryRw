@@ -871,9 +871,10 @@ function MessagesPage() {
                       "Business",
                     avatar:
                       selectedConversation.type === "petBusiness" || selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: ")
-                        ? selectedConversation.petImage || "/images/placeholder.png"
-                        : selectedConversation.counterpartAvatar ||
-                        "/images/ProfileImage.png",
+                        ? selectedConversation.petImage || (selectedConversation as any).counterpartAvatar || (selectedConversation as any).customerAvatar || "/images/placeholder.png"
+                        : (selectedConversation as any).counterpartAvatar ||
+                          (selectedConversation as any).customerAvatar ||
+                          "/images/ProfileImage.png",
                     role: "business",
                     phone: (selectedConversation as any).counterpartPhone || "",
                   };
@@ -905,9 +906,9 @@ function MessagesPage() {
                       ? `${baseName} (#${orderDisplayID})`
                       : baseName,
                     avatar:
-                      order?.assignedTo?.shopper?.profile_photo ||
+                      (selectedConversation as any).counterpartAvatar ||
+                      (selectedConversation as any).customerAvatar ||
                       order?.assignedTo?.profile_picture ||
-                      selectedConversation.counterpartAvatar ||
                       "/images/ProfileImage.png",
                     role: "shopper",
                     phone: order?.assignedTo?.phone || "",
@@ -925,8 +926,9 @@ function MessagesPage() {
                     ? `${baseName} (#${orderDisplayID})`
                     : baseName,
                   avatar:
+                    (selectedConversation as any).customerAvatar ||
+                    (selectedConversation as any).counterpartAvatar ||
                     order?.orderedBy?.profile_picture ||
-                    selectedConversation.counterpartAvatar ||
                     "/images/ProfileImage.png",
                   role: "customer",
                   phone:
@@ -934,6 +936,14 @@ function MessagesPage() {
                     (selectedConversation as any).counterpartPhone ||
                     "",
                 };
+              })()}
+              currentUserImage={(() => {
+                const currentUserId = session?.user?.id;
+                const order = selectedConversation.orderId ? orders[selectedConversation.orderId] : null;
+                if (currentUserId === selectedConversation.customerId) {
+                  return (selectedConversation as any).customerAvatar || order?.orderedBy?.profile_picture || session?.user?.image || "/images/userProfile.png";
+                }
+                return (selectedConversation as any).counterpartAvatar || (selectedConversation as any).customerAvatar || order?.assignedTo?.profile_picture || session?.user?.image || "/images/userProfile.png";
               })()}
               onBack={() => {
                 // Remove chat from query to return to list

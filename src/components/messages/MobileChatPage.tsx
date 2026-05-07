@@ -96,17 +96,15 @@ const CustomerMessage: React.FC<{
     >
       <div className="relative flex-shrink-0 mb-1">
         <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 shadow-sm">
-          {message.senderType === "customer" ? (
-            customerImage ? (
-              <img src={customerImage} alt="Customer" className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-[10px] font-bold text-gray-500">C</span>
-            )
-          ) : counterpartImage ? (
-            <img src={counterpartImage} alt={counterpartName} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-[10px] font-bold text-gray-500">{counterpartName.charAt(0)}</span>
-          )}
+          {(() => {
+            const avatarUrl = isCurrentUser ? customerImage : counterpartImage;
+            const fallbackLetter = isCurrentUser ? "M" : (counterpartName?.charAt(0) || "C");
+            
+            if (avatarUrl && avatarUrl !== "/images/ProfileImage.png") {
+              return <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />;
+            }
+            return <span className="text-[10px] font-bold text-gray-500 uppercase">{fallbackLetter}</span>;
+          })()}
         </div>
       </div>
       <div
@@ -167,6 +165,7 @@ export default function MobileChatPage({
   conversationId: providedConversationId,
   collectionPath = "chat_conversations",
   counterpart,
+  currentUserImage,
   onBack,
 }: {
   orderId?: string;
@@ -179,6 +178,7 @@ export default function MobileChatPage({
     role?: "shopper" | "business" | "customer";
     phone?: string;
   };
+  currentUserImage?: string;
   onBack: () => void;
 }) {
   const { data: session } = useSession();
@@ -688,7 +688,7 @@ export default function MobileChatPage({
                 ].includes(message.senderId)}
                 counterpartName={counterpart.name}
                 counterpartImage={counterpart.avatar}
-                customerImage={session?.user?.image || undefined}
+                customerImage={currentUserImage || session?.user?.image || undefined}
                 statusLabel={"tempId" in message ? "Sending..." : "Sent"}
               />
             ))}
