@@ -251,7 +251,7 @@ export default function MobileChatPage({
   useEffect(() => {
     if (!db || !conversationId) return;
     const fetchConv = async () => {
-      const docRef = doc(db!, collectionPath, conversationId);
+      const docRef = doc(db!, collectionPath, conversationId!);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setSelectedConversation({ id: docSnap.id, ...docSnap.data() });
@@ -318,7 +318,7 @@ export default function MobileChatPage({
           updateDoc(d.ref, { read: true });
       });
 
-      const convRef = doc(db!, collectionPath, conversationId);
+      const convRef = doc(db!, collectionPath, conversationId!);
       getDoc(convRef).then((snap) => {
         if (snap.exists() && snap.data().unreadCount > 0)
           updateDoc(convRef, { unreadCount: 0 });
@@ -372,7 +372,7 @@ export default function MobileChatPage({
     const piiCheck = containsBlockedPii(text, {
       senderId: session.user.id,
       senderName: session.user.name || "User",
-      conversationId: conversationId,
+      conversationId: conversationId!,
     });
     if (piiCheck.blocked && piiCheck.reason) {
       setError(getBlockedMessage(piiCheck.reason));
@@ -410,7 +410,7 @@ export default function MobileChatPage({
       const messagesRef = collection(
         db!,
         collectionPath,
-        conversationId,
+        conversationId!,
         "messages"
       );
       const messagePayload = {
@@ -428,7 +428,7 @@ export default function MobileChatPage({
 
       await addDoc(messagesRef, messagePayload);
 
-      const convRef = doc(db!, collectionPath, conversationId);
+      const convRef = doc(db!, collectionPath, conversationId!);
       await updateDoc(convRef, {
         lastMessage: text,
         lastMessageTime: serverTimestamp(),
@@ -443,7 +443,7 @@ export default function MobileChatPage({
           senderName: session.user.name || "User",
           message: text,
           orderId,
-          conversationId,
+          conversationId!,
           collectionPath,
         }),
       });
@@ -559,7 +559,7 @@ export default function MobileChatPage({
             const messagesRef = collection(
               db,
               collectionPath,
-              conversationId,
+              conversationId!,
               "messages"
             );
 
@@ -576,7 +576,7 @@ export default function MobileChatPage({
               read: false,
             });
 
-            const convRef = doc(db!, collectionPath, conversationId);
+            const convRef = doc(db!, collectionPath, conversationId!);
             await updateDoc(convRef, {
               lastMessage: "Attachment",
               lastMessageTime: serverTimestamp(),

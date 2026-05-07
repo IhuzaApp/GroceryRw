@@ -65,6 +65,62 @@ function getConvType(
   orders: Record<string, any>
 ): ConvTypeInfo {
   if (conversation.collectionPath === "business_conversations") {
+    const isPet =
+      conversation.type === "petBusiness" ||
+      conversation.type === "pet" ||
+      conversation.title?.startsWith("Adoption: ");
+    const isCar =
+      conversation.type === "carBusiness" ||
+      conversation.title?.startsWith("Car Inquiry:");
+
+    if (isPet) {
+      return {
+        key: "pet",
+        label: "Pet",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        ),
+        bg: "bg-amber-100 dark:bg-amber-900/40",
+        text: "text-amber-700 dark:text-amber-300",
+      };
+    }
+
+    if (isCar) {
+      return {
+        key: "car",
+        label: "Car",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+        ),
+        bg: "bg-blue-100 dark:bg-blue-900/40",
+        text: "text-blue-700 dark:text-blue-300",
+      };
+    }
+
     return {
       key: "business",
       label: "Business",
@@ -229,175 +285,178 @@ const FILTER_TABS: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  {
-    key: "all",
-    label: "All",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "order",
-    label: "Orders",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "business",
-    label: "Business",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "restaurant",
-    label: "Restaurant",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "reel",
-    label: "Reels",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "car",
-    label: "Cars",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "pet",
-    label: "Pets",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-        />
-      </svg>
-    ),
-  },
-  {
-    key: "package",
-    label: "Packages",
-    icon: (
-      <svg
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-        />
-      </svg>
-    ),
-  },
-];
+    {
+      key: "all",
+      label: "All",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "order",
+      label: "Orders",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "business",
+      label: "Business",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "restaurant",
+      label: "Restaurant",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "reel",
+      label: "Reels",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "car",
+      label: "Cars",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "pet",
+      label: "Pets",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: "package",
+      label: "Packages",
+      icon: (
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+          />
+        </svg>
+      ),
+    },
+  ];
 
 // Define conversation interface
 interface Conversation {
-  id: string;
+  id?: string;
   collectionPath: "chat_conversations" | "business_conversations";
-  orderId?: string;
+  orderId?: string | null;
   customerId?: string;
   shopperId?: string;
   businessId?: string;
   rfqId?: string;
-  type?: "order" | "business";
+  type?: "order" | "business" | "pet" | "petBusiness" | "carBusiness";
   title?: string;
   counterpartName?: string;
   counterpartAvatar?: string;
-  lastMessage: string;
-  lastMessageTime: any;
+  petId?: string;
+  petName?: string;
+  petImage?: string;
+  lastMessage?: string;
+  lastMessageTime?: any;
   unreadCount: number;
   order?: any;
 }
@@ -465,8 +524,13 @@ export default function MobileMessagePage({
 
       // Apply search filter
       if (searchQuery) {
+        const isPetChat =
+          conversation.type === "petBusiness" ||
+          conversation.type === "pet" ||
+          conversation.title?.startsWith("Adoption: ");
         const isBusinessChat =
-          !conversation.orderId || conversation.type === "business";
+          (!conversation.orderId || conversation.type === "business") &&
+          !isPetChat;
         const order = conversation.orderId
           ? orders[conversation.orderId]
           : null;
@@ -560,9 +624,8 @@ export default function MobileMessagePage({
           <div className="flex items-center gap-4">
             <button
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${
-                showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
-              }`}
+              className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
+                }`}
               aria-label="Filter Unread"
             >
               <svg
@@ -624,21 +687,19 @@ export default function MobileMessagePage({
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key)}
-                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 ${
-                    isActive
+                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 ${isActive
                       ? "bg-green-500 text-white shadow-md"
                       : "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
-                  }`}
+                    }`}
                 >
                   <span>{tab.icon}</span>
                   <span>{tab.label}</span>
                   {count > 0 && (
                     <span
-                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                        isActive
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive
                           ? "bg-white/30 text-white"
                           : "bg-black/10 text-[var(--text-secondary)] dark:bg-white/10"
-                      }`}
+                        }`}
                     >
                       {count}
                     </span>
@@ -682,9 +743,8 @@ export default function MobileMessagePage({
               <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
                 {activeFilter === "all"
                   ? "No conversations yet"
-                  : `No ${
-                      FILTER_TABS.find((t) => t.key === activeFilter)?.label
-                    } chats`}
+                  : `No ${FILTER_TABS.find((t) => t.key === activeFilter)?.label
+                  } chats`}
               </h3>
               <p className="text-sm text-[var(--text-secondary)]">
                 {activeFilter === "all"
@@ -696,15 +756,24 @@ export default function MobileMessagePage({
         ) : (
           <div className="flex flex-col">
             {filteredConversations.map((conversation) => {
+              const isPetChat =
+                conversation.type === "petBusiness" ||
+                conversation.type === "pet" ||
+                conversation.title?.startsWith("Adoption: ");
               const isBusinessChat =
-                conversation.type === "business" || !conversation.orderId;
+                (conversation.type === "business" || !conversation.orderId) &&
+                !isPetChat;
               const order = conversation.orderId
                 ? orders[conversation.orderId] || {}
                 : {};
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
 
               let fullName = "Business Chat";
-              if (isBusinessChat) {
+              if (isPetChat) {
+                fullName =
+                  conversation.title ||
+                  `Adoption: ${conversation.petName || "Pet"}`;
+              } else if (isBusinessChat) {
                 fullName =
                   conversation.title ||
                   conversation.counterpartName ||
@@ -722,10 +791,12 @@ export default function MobileMessagePage({
                   ? `00${employeeId} ${fullName}`
                   : fullName;
 
-              const contactAvatar = isBusinessChat
-                ? conversation.counterpartAvatar ||
+              const contactAvatar = isPetChat
+                ? (conversation as any).petImage || "/images/placeholder.png"
+                : isBusinessChat
+                  ? conversation.counterpartAvatar ||
                   "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
-                : order?.assignedTo?.shoppers?.profile_photo ||
+                  : order?.assignedTo?.shoppers?.profile_photo ||
                   order?.assignedTo?.profile_picture ||
                   order?.shoppers?.profile_photo ||
                   order?.shoppers?.avatar ||
@@ -739,7 +810,7 @@ export default function MobileMessagePage({
                   onClick={() => {
                     const typeInfo = getConvType(conversation, orders);
                     onConversationClick(
-                      conversation.orderId,
+                      conversation.orderId || undefined,
                       conversation.id!,
                       typeInfo.key
                     );
@@ -750,7 +821,7 @@ export default function MobileMessagePage({
                   <div className="relative flex-shrink-0 py-3 pl-4 pr-3">
                     <div className="flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600">
                       {contactAvatar &&
-                      contactAvatar !== "/images/ProfileImage.png" ? (
+                        contactAvatar !== "/images/ProfileImage.png" ? (
                         <img
                           src={contactAvatar}
                           alt={contactName}
@@ -783,22 +854,20 @@ export default function MobileMessagePage({
                         </span>
                       </div>
                       <span
-                        className={`whitespace-nowrap pl-2 text-xs ${
-                          conversation.unreadCount > 0
+                        className={`whitespace-nowrap pl-2 text-xs ${conversation.unreadCount > 0
                             ? "font-medium text-green-500"
                             : "font-normal text-[var(--text-secondary)]"
-                        }`}
+                          }`}
                       >
                         {formatMessageTime(conversation.lastMessageTime)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <p
-                        className={`line-clamp-1 pr-2 text-[15px] leading-tight ${
-                          conversation.unreadCount > 0
+                        className={`line-clamp-1 pr-2 text-[15px] leading-tight ${conversation.unreadCount > 0
                             ? "font-medium text-[var(--text-primary)]"
                             : "font-normal text-[var(--text-secondary)]"
-                        }`}
+                          }`}
                       >
                         {conversation.lastMessage || "No messages yet"}
                       </p>

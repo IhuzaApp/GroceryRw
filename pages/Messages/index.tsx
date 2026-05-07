@@ -422,7 +422,7 @@ function MessagesPage() {
         (c) =>
           c.collectionPath === "business_conversations" &&
           c.counterpartId &&
-          !c.counterpartName
+          !c.counterpartId
       )
       .map((c) => c.counterpartId!);
 
@@ -457,7 +457,7 @@ function MessagesPage() {
       setBusinessConversations((prev) =>
         prev.map((conv) => {
           const result = results.find((r) => r.id === conv.counterpartId);
-          if (result && !conv.counterpartName) {
+          if (result && !conv.counterpartId) {
             return {
               ...conv,
               counterpartName: result.name,
@@ -507,8 +507,7 @@ function MessagesPage() {
           const finalType = urlType || typeHint;
 
           const res = await fetch(
-            `/api/queries/orderDetails?id=${orderId}${
-              finalType ? `&type=${finalType}` : ""
+            `/api/queries/orderDetails?id=${orderId}${finalType ? `&type=${finalType}` : ""
             }`
           );
           if (!res.ok)
@@ -554,7 +553,7 @@ function MessagesPage() {
 
   const filteredConversations = conversations
     .map((conversation) => {
-      const isPetChat = conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
+      const isPetChat = conversation.type === "petBusiness" || conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
       if (isPetChat && (!conversation.petImage || !conversation.petId)) {
         const petName = conversation.petName || conversation.title?.replace("Adoption: ", "").trim();
         const match = userAdoptions.find(
@@ -585,7 +584,7 @@ function MessagesPage() {
         // Match by title (for business chats)
         if (conversation.title?.toLowerCase().includes(searchLower))
           return true;
-        if (conversation.counterpartName?.toLowerCase().includes(searchLower))
+        if (conversation.counterpartId?.toLowerCase().includes(searchLower))
           return true;
         if (conversation.counterpartId?.toLowerCase().includes(searchLower))
           return true;
@@ -759,7 +758,7 @@ function MessagesPage() {
             <MobileChatPage
               conversationId={selectedConversation.id!}
               collectionPath={selectedConversation.collectionPath}
-              orderId={selectedConversation.orderId}
+              orderId={selectedConversation.orderId || undefined}
               counterpart={(() => {
                 const currentUserId = session?.user?.id;
                 const isMeCustomer =
@@ -779,13 +778,13 @@ function MessagesPage() {
                         : selectedConversation.counterpartId || "",
                     name:
                       selectedConversation.title ||
-                      selectedConversation.counterpartName ||
+                      selectedConversation.counterpartId ||
                       "Business",
                     avatar:
-                      selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: ")
+                      selectedConversation.type === "petBusiness" || selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: ")
                         ? selectedConversation.petImage || "/images/placeholder.png"
                         : selectedConversation.counterpartAvatar ||
-                          "/images/ProfileImage.png",
+                        "/images/ProfileImage.png",
                     role: "business",
                     phone: (selectedConversation as any).counterpartPhone || "",
                   };
@@ -801,11 +800,11 @@ function MessagesPage() {
                   const baseName =
                     order?.assignedTo?.shopper?.full_name ||
                     order?.assignedTo?.name ||
-                    selectedConversation.counterpartName ||
+                    selectedConversation.counterpartId ||
                     "Shopper";
                   const shopperId =
                     (selectedConversation.shopperId &&
-                    selectedConversation.shopperId !== currentUserId
+                      selectedConversation.shopperId !== currentUserId
                       ? selectedConversation.shopperId
                       : null) ||
                     order?.assignedTo?.shopper?.id ||
@@ -829,7 +828,7 @@ function MessagesPage() {
                 // I am the shopper/business, counterpart is the customer
                 const baseName =
                   order?.orderedBy?.name ||
-                  selectedConversation.counterpartName ||
+                  selectedConversation.counterpartId ||
                   "Customer";
                 return {
                   id: selectedConversation.customerId || "",
@@ -882,7 +881,7 @@ function MessagesPage() {
             onConversationClick={handleChatClick}
             selectedOrder={selectedOrder}
             isDrawerOpen={false}
-            onCloseDrawer={() => {}}
+            onCloseDrawer={() => { }}
           />
         </div>
       </RootLayout>

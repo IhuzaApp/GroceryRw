@@ -154,6 +154,62 @@ function getConvType(
   orders: Record<string, any>
 ): ConvTypeInfo {
   if (conversation.collectionPath === "business_conversations") {
+    const isPet =
+      conversation.type === "petBusiness" ||
+      conversation.type === "pet" ||
+      conversation.title?.startsWith("Adoption: ");
+    const isCar =
+      conversation.type === "carBusiness" ||
+      conversation.title?.startsWith("Car Inquiry:");
+
+    if (isPet) {
+      return {
+        key: "pet",
+        label: "Pet",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        ),
+        bg: "bg-amber-100 dark:bg-amber-900/40",
+        text: "text-amber-700 dark:text-amber-300",
+      };
+    }
+
+    if (isCar) {
+      return {
+        key: "car",
+        label: "Car",
+        icon: (
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+        ),
+        bg: "bg-blue-100 dark:bg-blue-900/40",
+        text: "text-blue-700 dark:text-blue-300",
+      };
+    }
+
     return {
       key: "business",
       label: "Business",
@@ -492,24 +548,24 @@ interface Message {
 
 // Define conversation interface
 interface Conversation {
-  id: string;
+  id?: string;
   collectionPath: "chat_conversations" | "business_conversations";
-  orderId?: string;
+  orderId?: string | null;
   customerId?: string;
   shopperId?: string;
   shopperUserId?: string;
   businessId?: string;
   rfqId?: string;
   counterpartId?: string;
-  type?: "order" | "business" | "pet";
+  type?: "order" | "business" | "pet" | "petBusiness" | "carBusiness";
   title?: string;
   counterpartName?: string;
   counterpartAvatar?: string;
   petId?: string;
   petName?: string;
   petImage?: string;
-  lastMessage: string;
-  lastMessageTime: any;
+  lastMessage?: string;
+  lastMessageTime?: any;
   unreadCount: number;
   order?: any;
 }
@@ -553,7 +609,7 @@ export default function DesktopMessagePage({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
-  const isPetChat = !!selectedConversation && (selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: "));
+  const isPetChat = !!selectedConversation && (selectedConversation.type === "petBusiness" || selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: "));
   const isBusinessChat =
     !!selectedConversation &&
     (!selectedConversation.orderId && !isPetChat);
@@ -647,17 +703,17 @@ export default function DesktopMessagePage({
 
   // Get conversation ID and shopper data when conversation is selected
   useEffect(() => {
-    if (selectedConversation) {
+    if (selectedConversation && selectedConversation.id) {
       // Get conversation ID and shopper data
       const getConversationData = async () => {
         try {
-          setConversationId(selectedConversation.id);
+          setConversationId(selectedConversation.id!);
 
           // Mark as read logic preserved...
           const convRef = doc(
             db!,
             selectedConversation.collectionPath,
-            selectedConversation.id
+            selectedConversation.id!
           );
           const convSnap = await getDoc(convRef);
 
@@ -925,7 +981,7 @@ export default function DesktopMessagePage({
   const handleConversationClick = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     const typeInfo = getConvType(conversation, orders);
-    onConversationSelect(conversation.orderId, conversation.id, typeInfo.key);
+    onConversationSelect(conversation.orderId || undefined, conversation.id, typeInfo.key);
   };
 
   return (
@@ -1057,7 +1113,7 @@ export default function DesktopMessagePage({
               </div>
             ) : (
               filteredConversations.map((conversation, index) => {
-                const isPetChat = conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
+                const isPetChat = conversation.type === "petBusiness" || conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
                 const isBusinessChat =
                   (conversation.type === "business" || !conversation.orderId) && !isPetChat;
                 const order = conversation.orderId

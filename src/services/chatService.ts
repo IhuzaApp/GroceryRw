@@ -28,9 +28,10 @@ export interface ChatMessage {
 }
 
 export interface ChatConversation {
+  counterpartAvatar: string;
   id?: string;
   collectionPath: ChatCollection;
-  type?: "order" | "business";
+  type?: "order" | "business" | "pet" | "petBusiness" | "carBusiness";
   orderId?: string | null;
   businessId?: string; // The business that initiated the chat (e.g. RFQ creator)
   counterpartId?: string; // The person being talked to (e.g. Supplier)
@@ -39,6 +40,9 @@ export interface ChatConversation {
   customerId?: string;
   shopperId?: string;
   shopperUserId?: string; // The actual User UUID of the shopper (for FCM)
+  petId?: string;
+  petName?: string;
+  petImage?: string;
   createdAt: any;
   lastMessage?: string;
   lastMessageTime?: any;
@@ -52,7 +56,7 @@ export const createConversation = async (
   orderId: string | null,
   customerId: string,
   shopperId: string,
-  type: "order" | "business" = "order",
+  type: "order" | "business" | "petBusiness" | "carBusiness" = "order",
   metadata?: Partial<ChatConversation>,
   customCollection: ChatCollection = "chat_conversations"
 ): Promise<string> => {
@@ -211,7 +215,7 @@ export const getOrCreatePetConversation = async (
       customerId,
       "",
       "",
-      "pet",
+      "petBusiness",
       {
         customerId,
         counterpartId: vendorUserId,

@@ -12,17 +12,25 @@ import NotificationSystem from "@components/shopper/NotificationSystem";
 
 export default function RootLayout({
   children,
+  hideNavigation = false,
 }: {
   children: React.ReactNode;
+  hideNavigation?: boolean;
 }) {
   return (
     <HideBottomBarProvider>
-      <LayoutContent>{children}</LayoutContent>
+      <LayoutContent hideNavigation={hideNavigation}>{children}</LayoutContent>
     </HideBottomBarProvider>
   );
 }
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
+function LayoutContent({
+  children,
+  hideNavigation,
+}: {
+  children: React.ReactNode;
+  hideNavigation?: boolean;
+}) {
   const router = useRouter();
   const { hideBottomBar } = useHideBottomBar();
 
@@ -58,7 +66,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       }`}
     >
       {/* Top navbar: hide on order details (mobile), show on desktop */}
-      {!isChatPage &&
+      {!hideNavigation &&
+        !isChatPage &&
         !isReelsPage &&
         !isPlasBusinessPage &&
         !isStoresPage &&
@@ -105,7 +114,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         }
       >
         {/* Sidebar: hide on order details (mobile), show on desktop (SideBar has hidden md:block) */}
-        {!isChatPage && !isReelsPage && !isMessagesList && !isMessagesChat && (
+        {!hideNavigation && !isChatPage && !isReelsPage && !isMessagesList && !isMessagesChat && (
           <SideBar />
         )}
         <div
@@ -129,7 +138,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {!isChatPage &&
+        {!hideNavigation &&
+          !isChatPage &&
           !isReelsPage &&
           !isMessagesChat &&
           !isStoresCheckoutPage &&
@@ -137,7 +147,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           !hideBottomBar && <BottomBar />}
       </main>
       {/* AI Chat - Available on all pages except chat pages and specific marketplaces */}
-      {!isChatPage &&
+      {!hideNavigation &&
+        !isChatPage &&
         !isMessagesList &&
         !isMessagesChat &&
         !isCarsPage &&
