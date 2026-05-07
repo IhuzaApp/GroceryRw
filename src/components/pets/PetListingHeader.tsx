@@ -2,13 +2,14 @@
 
 import React from "react";
 import Image from "next/image";
-import { Dog, Plus } from "lucide-react";
+import { Dog, Plus, Heart } from "lucide-react";
 
 interface PetListingHeaderProps {
   onListPet: () => void;
+  onViewAdoptions: () => void;
 }
 
-export default function PetListingHeader({ onListPet }: PetListingHeaderProps) {
+export default function PetListingHeader({ onListPet, onViewAdoptions }: PetListingHeaderProps) {
   return (
     <div className="relative mx-4 mt-4 hidden h-[280px] w-[calc(100%-2rem)] w-full overflow-hidden rounded-[3rem] md:block">
       {/* Background Image with Overlay */}
@@ -37,6 +38,13 @@ export default function PetListingHeader({ onListPet }: PetListingHeaderProps) {
         </div>
 
         <div className="flex items-center gap-6">
+          <button
+            onClick={onViewAdoptions}
+            className="flex items-center gap-3 rounded-[1.5rem] border border-white/20 bg-white/10 px-8 py-5 text-lg font-black !text-white text-white shadow-2xl backdrop-blur-md transition-all hover:bg-white/20 active:scale-[0.98]"
+          >
+            <Heart className="h-6 w-6" />
+            <span>My Adoptions</span>
+          </button>
           <button
             onClick={onListPet}
             className="flex items-center gap-3 rounded-[1.5rem] bg-green-500 px-10 py-5 text-lg font-black !text-white text-white shadow-2xl shadow-green-500/40 transition-all hover:scale-[1.05] active:scale-[0.98]"

@@ -268,7 +268,10 @@ export default function PetListing() {
         <PetHero searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </div>
 
-      <PetListingHeader onListPet={() => router.push("/Pets/dashboard")} />
+      <PetListingHeader 
+        onListPet={() => router.push("/Pets/dashboard")} 
+        onViewAdoptions={() => router.push("/Pets/my-adoptions")}
+      />
 
       <div className="mx-auto max-w-[1600px] px-4 pt-8 md:px-8">
         {/* Filters */}
