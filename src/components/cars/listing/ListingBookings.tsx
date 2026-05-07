@@ -235,16 +235,18 @@ function BookingCard({
     setIsMessaging(true);
     try {
       const conversationId = await createConversation(
-        booking.bookingId,
+        null,
         session.user.id,
-        booking.ownerId,
-        "order",
+        "",
+        "carBusiness",
         {
-          title: `Vehicle: ${booking.name}`,
-        }
+          counterpartId: booking.ownerId,
+          title: `Car Inquiry: ${booking.name}`,
+        },
+        "business_conversations"
       );
 
-      router.push(`/Messages/${booking.bookingId}?chat=${conversationId}`);
+      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to start conversation");

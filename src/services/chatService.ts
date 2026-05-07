@@ -138,9 +138,10 @@ export const createConversation = async (
  * Get or create a business conversation (B2B / RFQ)
  */
 export const getOrCreateBusinessConversation = async (
-  businessId: string,
-  counterpartId: string,
-  rfqId?: string,
+  initiatorId: string,
+  vendorId: string,
+  vendorUserId: string,
+  rfqId: string,
   title?: string
 ): Promise<string> => {
   try {
@@ -150,8 +151,8 @@ export const getOrCreateBusinessConversation = async (
     const conversationsRef = collection(db!, customCollection);
     let q = query(
       conversationsRef,
-      where("businessId", "==", businessId),
-      where("counterpartId", "==", counterpartId)
+      where("customerId", "==", initiatorId),
+      where("counterpartId", "==", vendorId)
     );
 
     if (rfqId) {
@@ -167,12 +168,12 @@ export const getOrCreateBusinessConversation = async (
     // Create new business conversation in business_conversations collection
     return await createConversation(
       null,
-      "",
+      initiatorId, // Use initiator as customerId
       "",
       "business",
       {
-        businessId,
-        counterpartId,
+        counterpartId: vendorId, // Use vendor record ID as counterpartId
+        vendorUserId, // Use vendor user ID for notifications
         rfqId,
         title: title || "Business Chat",
       },
@@ -189,6 +190,7 @@ export const getOrCreateBusinessConversation = async (
 
 export const getOrCreatePetConversation = async (
   customerId: string,
+  vendorId: string,
   vendorUserId: string,
   petId: string,
   petName: string,
@@ -201,7 +203,7 @@ export const getOrCreatePetConversation = async (
     const q = query(
       conversationsRef,
       where("customerId", "==", customerId),
-      where("counterpartId", "==", vendorUserId),
+      where("counterpartId", "==", vendorId),
       where("petId", "==", petId)
     );
 
@@ -212,13 +214,13 @@ export const getOrCreatePetConversation = async (
     }
 
     return await createConversation(
+      null, // orderId must be null for business_conversations
       customerId,
-      "",
-      "",
+      "", // shopperId
       "petBusiness",
       {
-        customerId,
-        counterpartId: vendorUserId,
+        counterpartId: vendorId,
+        vendorUserId,
         petId,
         petName,
         petImage,

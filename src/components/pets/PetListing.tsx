@@ -18,6 +18,8 @@ import Image from "next/image";
 import PetListingHeader from "./PetListingHeader";
 
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { getOrCreatePetConversation } from "../../services/chatService";
+import { toast } from "react-hot-toast";
 
 const PetIcon = ({ className }: { className?: string }) => (
   <Dog className={className} />
@@ -107,7 +109,15 @@ const PetHero = ({
   );
 };
 
-const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
+const PetCard = ({
+  pet,
+  onClick,
+  onChat,
+}: {
+  pet: Pet;
+  onClick: () => void;
+  onChat: () => void;
+}) => {
   return (
     <div
       onClick={onClick}
@@ -124,7 +134,7 @@ const PetCard = ({ pet, onClick }: { pet: Pet; onClick: () => void }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/Messages/${pet.owner.id}`);
+              onChat();
             }}
             className="group/chat relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white/50 bg-black/20 backdrop-blur-md transition-all hover:scale-110 hover:border-green-500"
           >
@@ -214,7 +224,8 @@ export default function PetListing() {
             videoUrl: p.video,
             vaccinationCertificateUrl: p.vaccination_cert,
             owner: {
-              id: p.vendor_id,
+              id: p.pet_vendors?.id || p.vendor_id,
+              userId: p.vendor_id,
               name:
                 p.pet_vendors?.organisationName ||
                 p.pet_vendors?.fullname ||
@@ -241,6 +252,33 @@ export default function PetListing() {
 
     fetchAllPets();
   }, []);
+
+  const handleChat = async (pet: Pet) => {
+    if (!session?.user?.id) {
+      router.push("/Auth/Login");
+      return;
+    }
+
+    const toastId = toast.loading("Opening chat...");
+    try {
+      const conversationId = await getOrCreatePetConversation(
+        session.user.id,
+        pet.owner.id,
+        pet.owner.userId!,
+        pet.id,
+        pet.name,
+        pet.images[0]?.url
+      );
+      toast.dismiss(toastId);
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Redirecting...", { id: toastId });
+      router.push(`/Messages/${pet.owner.userId}`);
+    }
+  };
 
   const filteredPets = useMemo(() => {
     return pets
@@ -317,6 +355,7 @@ export default function PetListing() {
                 key={pet.id}
                 pet={pet}
                 onClick={() => router.push(`/Pets/${pet.id}`)}
+                onChat={() => handleChat(pet)}
               />
             ))}
           </div>

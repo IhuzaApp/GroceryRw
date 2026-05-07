@@ -192,6 +192,9 @@ export default function MobileChatPage({
   );
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [businessAccount, setBusinessAccount] = useState<any>(null);
+  const [petVendor, setPetVendor] = useState<any>(null);
+  const [logisticsAccount, setLogisticsAccount] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -208,6 +211,35 @@ export default function MobileChatPage({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Fetch business accounts
+  useEffect(() => {
+    if (session?.user?.id) {
+      // 1. Business Account
+      fetch("/api/queries/check-business-account")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.hasAccount) setBusinessAccount(data.account);
+        })
+        .catch((err) => console.error("Error fetching business account:", err));
+
+      // 2. Pet Vendor
+      fetch("/api/queries/check-pet-vendor")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.hasAccount) setPetVendor(data.account);
+        })
+        .catch((err) => console.error("Error fetching pet vendor:", err));
+
+      // 3. Logistics Account
+      fetch("/api/queries/check-logistics-account")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.hasAccount) setLogisticsAccount(data.account);
+        })
+        .catch((err) => console.error("Error fetching logistics account:", err));
+    }
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (
@@ -381,18 +413,59 @@ export default function MobileChatPage({
     setError(null);
 
     const tempId = `temp-${Date.now()}`;
-    const isMeCustomer = session?.user?.id === (selectedConversation as any)?.customerId;
-    const isMeShopper = 
-      session?.user?.id === (selectedConversation as any)?.shopperUserId || 
-      (shopper?.id && (session?.user?.id === (selectedConversation as any)?.shopperId || shopper.id === (selectedConversation as any)?.shopperId));
+    const isMeCustomer = session.user.id === selectedConversation?.customerId;
+    const isMeShopper =
+      session.user.id === selectedConversation?.shopperId ||
+      session.user.id === (selectedConversation as any)?.shopperUserId ||
+      (shopper?.id && shopper.id === selectedConversation?.shopperId);
+
+    const isMePetVendor =
+      petVendor?.id && petVendor.id === selectedConversation?.counterpartId;
+    const isMeCarVendor =
+      logisticsAccount?.id &&
+      logisticsAccount.id === selectedConversation?.counterpartId;
+    const isMeBusinessVendor =
+      businessAccount?.id &&
+      businessAccount.id === selectedConversation?.counterpartId;
 
     const senderType = isMeCustomer
       ? "customer"
       : isMeShopper
       ? "shopper"
       : "business";
-    const senderId = senderType === "shopper" ? (shopper?.id || session?.user?.id || "") : (session?.user?.id || "");
-    const recipientId = counterpart.id;
+
+    let senderId = session.user.id;
+    let senderName = session.user.name || "User";
+
+    if (senderType === "shopper") {
+      senderId = shopper?.id || session.user.id;
+    } else if (senderType === "business") {
+      if (isMePetVendor) {
+        senderId = petVendor.id;
+        senderName = petVendor.organisationName || petVendor.fullname;
+      } else if (isMeCarVendor) {
+        senderId = logisticsAccount.id;
+        senderName = logisticsAccount.businessName || logisticsAccount.fullname;
+      } else if (isMeBusinessVendor) {
+        senderId = businessAccount.id;
+        senderName = businessAccount.businessName;
+      } else if (businessAccount?.id) {
+        senderId = businessAccount.id;
+        senderName = businessAccount.businessName;
+      }
+    }
+
+    const recipientId = isMeCustomer
+      ? selectedConversation.shopperId ||
+        (selectedConversation as any).businessId ||
+        selectedConversation.counterpartId
+      : selectedConversation.customerId || selectedConversation.counterpartId;
+
+    const recipientUserId = isMeCustomer
+      ? selectedConversation.shopperId ||
+        (selectedConversation as any).vendorUserId ||
+        selectedConversation.counterpartId
+      : selectedConversation.customerId;
 
     setPendingMessages((p) => [
       ...p,
@@ -417,7 +490,7 @@ export default function MobileChatPage({
         text,
         message: text,
         senderId,
-        senderName: session.user.name || "User",
+        senderName,
         senderType,
         recipientId,
         timestamp: serverTimestamp(),
@@ -439,8 +512,8 @@ export default function MobileChatPage({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientId: (selectedConversation as any)?.shopperUserId || (selectedConversation as any)?.shopperId || counterpart.id,
-          senderName: session.user.name || "User",
+          recipientId: recipientUserId,
+          senderName,
           message: text,
           orderId,
           conversationId: conversationId!,
@@ -606,7 +679,12 @@ export default function MobileChatPage({
               <CustomerMessage
                 key={"tempId" in message ? message.tempId : message.id}
                 message={message}
-                isCurrentUser={message.senderType === "customer"}
+                isCurrentUser={[
+                  session?.user?.id,
+                  businessAccount?.id,
+                  petVendor?.id,
+                  logisticsAccount?.id,
+                ].includes(message.senderId)}
                 counterpartName={counterpart.name}
                 counterpartImage={counterpart.avatar}
                 customerImage={session?.user?.image || undefined}

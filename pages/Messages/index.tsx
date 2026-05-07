@@ -65,7 +65,9 @@ function MessagesPage() {
 
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingBusiness, setLoadingBusiness] = useState(true);
-  const [businessAccountId, setBusinessAccountId] = useState<string | null>(
+  const [businessAccountId, setBusinessAccountId] = useState<string | null>(null);
+  const [petVendorId, setPetVendorId] = useState<string | null>(null);
+  const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(
     null
   );
   const [loadingBusinessAccount, setLoadingBusinessAccount] = useState(true);
@@ -173,22 +175,41 @@ function MessagesPage() {
   // Fetch user's business account ID
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
-      const fetchBusinessAccount = async () => {
+      const fetchAllAccounts = async () => {
         try {
-          const res = await fetch("/api/queries/check-business-account");
-          if (res.ok) {
-            const data = await res.json();
+          // 1. Business Account
+          const busRes = await fetch("/api/queries/check-business-account");
+          if (busRes.ok) {
+            const data = await busRes.json();
             if (data.hasAccount && data.account?.id) {
               setBusinessAccountId(data.account.id);
             }
           }
+
+          // 2. Pet Vendor
+          const petRes = await fetch("/api/queries/check-pet-vendor");
+          if (petRes.ok) {
+            const data = await petRes.json();
+            if (data.hasAccount && data.account?.id) {
+              setPetVendorId(data.account.id);
+            }
+          }
+
+          // 3. Logistics Account
+          const logRes = await fetch("/api/queries/check-logistics-account");
+          if (logRes.ok) {
+            const data = await logRes.json();
+            if (data.hasAccount && data.account?.id) {
+              setLogisticsAccountId(data.account.id);
+            }
+          }
         } catch (err) {
-          console.error("Error fetching business account:", err);
+          console.error("Error fetching business accounts:", err);
         } finally {
           setLoadingBusinessAccount(false);
         }
       };
-      fetchBusinessAccount();
+      fetchAllAccounts();
     } else if (status !== "loading") {
       setLoadingBusinessAccount(false);
     }
@@ -244,15 +265,23 @@ function MessagesPage() {
     if (status === "authenticated" && session?.user?.id) {
       const userId = session.user.id;
       if (!db) return;
-
       const constraints = [
-        where("businessId", "==", userId),
         where("counterpartId", "==", userId),
+        where("customerId", "==", userId),
       ];
 
       if (businessAccountId) {
         constraints.push(where("businessId", "==", businessAccountId));
         constraints.push(where("counterpartId", "==", businessAccountId));
+        constraints.push(where("customerId", "==", businessAccountId));
+      }
+      if (petVendorId) {
+        constraints.push(where("counterpartId", "==", petVendorId));
+        constraints.push(where("customerId", "==", petVendorId));
+      }
+      if (logisticsAccountId) {
+        constraints.push(where("counterpartId", "==", logisticsAccountId));
+        constraints.push(where("customerId", "==", logisticsAccountId));
       }
 
       const q = query(
@@ -289,7 +318,7 @@ function MessagesPage() {
 
       return () => unsubscribe();
     }
-  }, [status, session?.user?.id, businessAccountId]);
+  }, [status, session?.user?.id, businessAccountId, petVendorId, logisticsAccountId]);
 
   // Fetch specific conversation from query params if not in list
   useEffect(() => {

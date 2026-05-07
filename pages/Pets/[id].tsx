@@ -33,7 +33,8 @@ export default function PetDetailPage() {
             videoUrl: p.video,
             vaccinationCertificateUrl: p.vaccination_cert,
             owner: {
-              id: p.vendor_id,
+              id: p.pet_vendors?.id || p.vendor_id,
+              userId: p.vendor_id,
               name:
                 p.pet_vendors?.organisationName ||
                 p.pet_vendors?.fullname ||

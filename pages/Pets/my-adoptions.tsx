@@ -76,7 +76,13 @@ export default function MyAdoptions() {
     }
   };
 
-  const handleChatWithOwner = async (vendorUserId: string, petId: string, petName: string, petImage: string) => {
+  const handleChatWithOwner = async (
+    vendorId: string,
+    vendorUserId: string,
+    petId: string,
+    petName: string,
+    petImage: string
+  ) => {
     if (!session?.user?.id) {
       router.push("/Auth/Login");
       return;
@@ -86,13 +92,16 @@ export default function MyAdoptions() {
     try {
       const conversationId = await getOrCreatePetConversation(
         session.user.id,
+        vendorId,
         vendorUserId,
         petId,
         petName,
         petImage
       );
       toast.dismiss(toastId);
-      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
     } catch (error) {
       console.error("Error starting chat:", error);
       toast.error("Failed to start chat. Redirecting...", { id: toastId });
@@ -277,6 +286,7 @@ export default function MyAdoptions() {
                         <button
                           onClick={() =>
                             handleChatWithOwner(
+                              adoption.pets.pet_vendors.id,
                               adoption.pets.pet_vendors.user_id,
                               adoption.pets.id,
                               adoption.pets.name,

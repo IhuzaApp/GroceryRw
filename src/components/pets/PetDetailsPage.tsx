@@ -27,11 +27,13 @@ import {
   CreditCard,
   Clock,
   Utensils,
+  Search,
 } from "lucide-react";
 import { Pet } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
 import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { getOrCreatePetConversation } from "../../services/chatService";
 import { toast } from "react-hot-toast";
 import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
@@ -601,6 +603,33 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
     }
   };
 
+  const handleChat = async () => {
+    if (!session?.user?.id) {
+      router.push("/Auth/Login");
+      return;
+    }
+
+    const toastId = toast.loading("Opening chat...");
+    try {
+      const conversationId = await getOrCreatePetConversation(
+        session.user.id,
+        pet.owner.id,
+        pet.owner.userId,
+        pet.id,
+        pet.name,
+        pet.images[0]?.url
+      );
+      toast.dismiss(toastId);
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat. Redirecting...", { id: toastId });
+      router.push(`/Messages/${pet.owner.userId}`);
+    }
+  };
+
   useEffect(() => {
     setHideBottomBar(true);
     return () => setHideBottomBar(false);
@@ -1165,6 +1194,13 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                           </h4>
                         </div>
                       </div>
+                      <button
+                        onClick={handleChat}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white py-4 text-sm font-black transition-all hover:border-green-500 hover:text-green-500 dark:border-white/10 dark:bg-white/5"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Chat Owner
+                      </button>
                     </div>
                   </div>
 

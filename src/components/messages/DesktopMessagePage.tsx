@@ -605,6 +605,9 @@ export default function DesktopMessagePage({
   const [selectedRfq, setSelectedRfq] = useState<any>(null);
   const [loadingRfq, setLoadingRfq] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [businessAccount, setBusinessAccount] = useState<any>(null);
+  const [petVendor, setPetVendor] = useState<any>(null);
+  const [logisticsAccount, setLogisticsAccount] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -672,6 +675,35 @@ export default function DesktopMessagePage({
     });
     return map;
   }, [conversations, orders]);
+
+  // Fetch business accounts
+  useEffect(() => {
+    if (session?.user?.id) {
+      // 1. Business Account
+      fetch("/api/queries/check-business-account")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.hasAccount) setBusinessAccount(data.account);
+        })
+        .catch((err) => console.error("Error fetching business account:", err));
+
+      // 2. Pet Vendor
+      fetch("/api/queries/check-pet-vendor")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.hasAccount) setPetVendor(data.account);
+        })
+        .catch((err) => console.error("Error fetching pet vendor:", err));
+
+      // 3. Logistics Account
+      fetch("/api/queries/check-logistics-account")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.hasAccount) setLogisticsAccount(data.account);
+        })
+        .catch((err) => console.error("Error fetching logistics account:", err));
+    }
+  }, [session?.user?.id]);
 
   // Set selected conversation when selectedOrderId or selectedConversationId changes
   useEffect(() => {
@@ -876,16 +908,43 @@ export default function DesktopMessagePage({
         session.user.id === (selectedConversation as any).shopperUserId ||
         (shopper?.id && shopper.id === selectedConversation.shopperId);
 
+      const isMePetVendor =
+        petVendor?.id && petVendor.id === selectedConversation.counterpartId;
+      const isMeCarVendor =
+        logisticsAccount?.id &&
+        logisticsAccount.id === selectedConversation.counterpartId;
+      const isMeBusinessVendor =
+        businessAccount?.id &&
+        businessAccount.id === selectedConversation.counterpartId;
+
       const senderType = isMeCustomer
         ? "customer"
         : isMeShopper
         ? "shopper"
         : "business";
 
-      const senderId =
-        senderType === "shopper"
-          ? shopper?.id || session.user.id
-          : session.user.id;
+      let senderId = session.user.id;
+      let senderName = session.user.name || "User";
+
+      if (senderType === "shopper") {
+        senderId = shopper?.id || session.user.id;
+      } else if (senderType === "business") {
+        if (isMePetVendor) {
+          senderId = petVendor.id;
+          senderName = petVendor.organisationName || petVendor.fullname;
+        } else if (isMeCarVendor) {
+          senderId = logisticsAccount.id;
+          senderName =
+            logisticsAccount.businessName || logisticsAccount.fullname;
+        } else if (isMeBusinessVendor) {
+          senderId = businessAccount.id;
+          senderName = businessAccount.businessName;
+        } else if (businessAccount?.id) {
+          // Fallback to general business account if it exists
+          senderId = businessAccount.id;
+          senderName = businessAccount.businessName;
+        }
+      }
 
       // Fallback for recipientId if shopperId is corrupted (same as customerId)
       const selectedOrder = selectedConversation.orderId
@@ -910,7 +969,7 @@ export default function DesktopMessagePage({
         text: newMessage.trim(),
         message: newMessage.trim(),
         senderId,
-        senderName: session.user.name || "User",
+        senderName,
         senderType,
         recipientId,
         timestamp: serverTimestamp(),
@@ -958,7 +1017,10 @@ export default function DesktopMessagePage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             recipientId: fcmRecipientId,
-            senderName: session.user.name || "User",
+            senderName:
+              senderType === "business" && businessAccount?.businessName
+                ? businessAccount.businessName
+                : session.user.name || "User",
             message: newMessage.trim(),
             orderId: selectedConversation.orderId || null,
             conversationId,
@@ -1494,8 +1556,12 @@ export default function DesktopMessagePage({
                         {/* Messages for this date */}
                         <div className="flex flex-col gap-6">
                           {group.messages.map((message, index) => {
-                            const isCurrentUser =
-                              message.senderType === "customer";
+                            const isCurrentUser = [
+                              session?.user?.id,
+                              businessAccount?.id,
+                              petVendor?.id,
+                              logisticsAccount?.id,
+                            ].includes(message.senderId);
 
                             return (
                               <React.Fragment key={message.id}>
@@ -1731,12 +1797,20 @@ export default function DesktopMessagePage({
         </div>
 
         <div className="flex h-full w-96 flex-shrink-0 flex-col overflow-hidden border-l border-gray-200 bg-[var(--bg-primary)] dark:border-white/10">
-          {selectedConversation && (selectedOrder || selectedRfq) ? (
+          {selectedConversation &&
+          (selectedOrder ||
+            selectedRfq ||
+            selectedConversation.type === "petBusiness" ||
+            selectedConversation.type === "carBusiness") ? (
             <>
               {/* Header */}
               <div className="flex-shrink-0 bg-white px-8 py-6 shadow-sm dark:bg-gray-800/50">
                 <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
-                  {selectedOrder ? "Order Details" : "Quote Details"}
+                  {selectedOrder
+                    ? "Order Details"
+                    : selectedRfq
+                    ? "Quote Details"
+                    : "Context Details"}
                 </h2>
               </div>
 
@@ -2140,6 +2214,73 @@ export default function DesktopMessagePage({
                           {selectedRfq.requirements ||
                             "No specific requirements provided."}
                         </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedConversation.type === "petBusiness" ? (
+                  <div className="flex-1 space-y-6 overflow-y-auto p-6">
+                    {/* Pet Info Card */}
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20">
+                          {selectedConversation.petImage ? (
+                            <img
+                              src={selectedConversation.petImage}
+                              alt={selectedConversation.petName}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-3xl">🐾</span>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                            {selectedConversation.petName || "Pet Adoption"}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+                              Pet Adoption
+                            </span>
+                            {selectedConversation.petId && (
+                              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                                ID: {selectedConversation.petId.slice(0, 8)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 space-y-4">
+                         <button 
+                           onClick={() => window.open(`/Pets/${selectedConversation.petId}`, '_blank')}
+                           className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all shadow-lg shadow-amber-500/20"
+                         >
+                           View Pet Profile
+                         </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedConversation.type === "carBusiness" ? (
+                  <div className="flex-1 space-y-6 overflow-y-auto p-6">
+                    {/* Car Info Card */}
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+                          <span className="text-3xl">🚗</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                            {selectedConversation.title?.replace(
+                              "Car Inquiry: ",
+                              ""
+                            ) || "Vehicle Inquiry"}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
+                              Vehicle Rental
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
