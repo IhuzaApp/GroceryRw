@@ -83,7 +83,14 @@ const CustomerMessage: React.FC<{
   counterpartImage?: string;
   customerImage?: string;
   statusLabel?: "Sending..." | "Sent" | null;
-}> = ({ message, isCurrentUser, counterpartName, counterpartImage, customerImage, statusLabel }) => {
+}> = ({
+  message,
+  isCurrentUser,
+  counterpartName,
+  counterpartImage,
+  customerImage,
+  statusLabel,
+}) => {
   const rawContent =
     "text" in message
       ? message.text
@@ -92,60 +99,74 @@ const CustomerMessage: React.FC<{
 
   return (
     <div
-      className={`mb-3 flex items-end gap-2 ${isCurrentUser ? "flex-row-reverse" : "flex-row"}`}
+      className={`mb-4 flex items-end gap-2.5 ${
+        isCurrentUser ? "flex-row-reverse" : "flex-row"
+      }`}
     >
-      <div className="relative flex-shrink-0 mb-1">
-        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 shadow-sm">
+      <div className="relative mb-1 flex-shrink-0">
+        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gray-200 shadow-sm ring-1 ring-white/10 dark:bg-gray-800">
           {(() => {
             const avatarUrl = isCurrentUser ? customerImage : counterpartImage;
-            const fallbackLetter = isCurrentUser ? "M" : (counterpartName?.charAt(0) || "C");
-            
+            const fallbackLetter = isCurrentUser
+              ? "M"
+              : counterpartName?.charAt(0) || "C";
+
             if (avatarUrl && avatarUrl !== "/images/ProfileImage.png") {
-              return <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />;
+              return (
+                <img
+                  src={avatarUrl}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
+              );
             }
-            return <span className="text-[10px] font-bold text-gray-500 uppercase">{fallbackLetter}</span>;
+            return (
+              <span className="text-xs font-bold text-gray-500 uppercase">
+                {fallbackLetter}
+              </span>
+            );
           })()}
         </div>
       </div>
       <div
-        className={`relative max-w-[85%] px-4 py-2 text-[15px] leading-relaxed shadow-sm transition-all ${
+        className={`relative max-w-[80%] px-4 py-3 shadow-md transition-all duration-300 ${
           isCurrentUser
-            ? "rounded-2xl rounded-tr-sm bg-green-600 !text-white"
-            : "rounded-2xl rounded-tl-sm bg-gray-700 !text-white"
+            ? "rounded-2xl rounded-br-none bg-gradient-to-br from-green-600 to-emerald-700 !text-white"
+            : "rounded-2xl rounded-bl-none border-0 bg-slate-800 !text-white shadow-slate-200/20 dark:bg-slate-800"
         }`}
       >
         {"image" in message && message.image && (
-          <div className="mb-2 overflow-hidden rounded-lg">
+          <div className="mb-2.5 overflow-hidden rounded-xl">
             <img
               src={message.image}
               alt="Attachment"
-              className="h-auto w-full max-w-[200px]"
+              className="h-auto w-full max-w-[240px] cursor-pointer transition-transform hover:scale-[1.02]"
               onClick={() => window.open(message.image, "_blank")}
             />
           </div>
         )}
-        <div className="whitespace-pre-wrap break-words font-normal !text-white">
+        <div
+          className={`whitespace-pre-wrap break-words text-[15px] leading-relaxed font-normal !text-white`}
+        >
           {messageContent}
         </div>
-        <div className="mt-0.5 flex items-center justify-end gap-1">
-          <span
-            className={`select-none text-[11px] ${
-              isCurrentUser ? "text-green-100" : "!text-white/70"
-            }`}
-          >
+        <div
+          className={`mt-1.5 flex items-center justify-end gap-1.5 text-white/70`}
+        >
+          <span className="select-none text-[10px] font-medium uppercase tracking-wider">
             {formatMessageTime(message.timestamp)}
           </span>
-          {isCurrentUser && statusLabel && (
-            <span className="select-none text-[11px] font-bold tracking-wide text-green-100">
+          {isCurrentUser && (
+            <span className="flex items-center">
               {statusLabel === "Sending..." ? (
-                "..."
+                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/60"></div>
               ) : (
                 <svg
-                  className="h-3 w-3"
+                  className="h-3.5 w-3.5 text-white/80"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="4"
+                  strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
@@ -532,12 +553,12 @@ export default function MobileChatPage({
   return (
     <div className="fixed inset-0 z-[1000] flex flex-col bg-[var(--bg-primary)]">
       {/* WhatsApp Style Header */}
-      <div className="z-20 flex flex-shrink-0 items-center justify-between bg-[var(--bg-secondary)] px-2 py-2 shadow-sm transition-colors">
+      <div className="z-20 flex flex-shrink-0 items-center justify-between border-b border-gray-200/50 bg-white/80 px-2 py-3 shadow-sm backdrop-blur-md transition-colors dark:border-white/5 dark:bg-gray-900/80">
         <div
           className="flex flex-1 cursor-pointer items-center"
           onClick={onBack}
         >
-          <button className="mr-1 rounded-full p-2 text-[var(--text-secondary)] transition-colors hover:bg-black/5 active:bg-black/10 dark:hover:bg-white/5 dark:active:bg-white/10">
+          <button className="mr-1 rounded-full p-2 text-gray-500 transition-all hover:bg-black/5 active:scale-90 dark:text-gray-400 dark:hover:bg-white/5">
             <svg
               width="24"
               height="24"
@@ -555,7 +576,7 @@ export default function MobileChatPage({
           </button>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600">
+              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md ring-2 ring-white dark:ring-gray-800">
                 {counterpart.avatar &&
                 counterpart.avatar !== "/images/ProfileImage.png" ? (
                   <img
@@ -564,22 +585,23 @@ export default function MobileChatPage({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <span className="text-lg font-bold uppercase text-gray-500 dark:text-gray-300">
+                  <span className="text-xl font-bold uppercase text-white">
                     {counterpart.name.charAt(0)}
                   </span>
                 )}
               </div>
+              <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500 shadow-sm dark:border-gray-900"></div>
             </div>
             <div className="flex flex-1 flex-col pl-1">
-              <h3 className="truncate text-base font-medium text-[var(--text-primary)]">
+              <h3 className="truncate text-base font-bold tracking-tight text-gray-900 dark:text-white">
                 {counterpart.name}
               </h3>
-              <span className="truncate text-xs text-[var(--text-secondary)]">
+              <span className="truncate text-xs font-semibold text-green-600 dark:text-green-500">
                 {otherTypingName
                   ? "typing..."
                   : counterpart.role === "business"
                   ? "Business Account"
-                  : "Online"}
+                  : "Online Now"}
               </span>
             </div>
           </div>
@@ -588,11 +610,11 @@ export default function MobileChatPage({
           {counterpart.phone && (
             <button
               onClick={() => window.open(`tel:${counterpart.phone}`, "_self")}
-              className="rounded-full p-2.5 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+              className="rounded-full bg-gray-100 p-2.5 text-gray-600 transition-all hover:text-gray-900 active:scale-95 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-white"
             >
               <svg
-                width="20"
-                height="20"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
@@ -717,39 +739,44 @@ export default function MobileChatPage({
       </div>
 
       {/* Input Box */}
-      <div className="z-10 flex flex-shrink-0 items-end gap-2 bg-[var(--bg-secondary)] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] transition-colors">
-        <div className="flex flex-1 items-end rounded-[24px] bg-[var(--bg-primary)]">
-          <textarea
-            value={newMessage}
-            onChange={(e) => {
-              setNewMessage(e.target.value);
-              reportTyping();
-            }}
-            onBlur={clearTyping}
-            onKeyDown={handleKeyPress}
-            placeholder="Message"
-            className="w-full resize-none bg-transparent px-4 py-[14px] text-[15px] font-normal text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none"
-            rows={1}
-            style={{ maxHeight: "100px" }}
-          />
-        </div>
+      <div className="z-10 border-t border-gray-200/50 bg-white/80 px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md dark:border-white/5 dark:bg-gray-900/80">
+        <div className="mx-auto flex max-w-4xl items-end gap-2.5">
+          <div className="relative flex flex-1 items-end rounded-2xl border border-gray-200/50 bg-gray-50/50 px-2 dark:border-white/5 dark:bg-gray-800/50">
+            <textarea
+              value={newMessage}
+              onChange={(e) => {
+                setNewMessage(e.target.value);
+                reportTyping();
+              }}
+              onBlur={clearTyping}
+              onKeyDown={handleKeyPress}
+              placeholder="Message..."
+              className="w-full resize-none bg-transparent px-3 py-3.5 text-[16px] font-medium leading-tight text-gray-900 placeholder-gray-500 focus:outline-none dark:text-white"
+              rows={1}
+              style={{ maxHeight: "120px" }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+              }}
+            />
+          </div>
 
-        {newMessage.trim() ? (
           <button
             onClick={handleSendMessage}
-            className="ml-1 flex items-center justify-center rounded-full bg-green-500 p-3 shadow-sm transition-transform active:scale-95"
+            disabled={!newMessage.trim()}
+            className={`flex h-[48px] w-[48px] flex-shrink-0 items-center justify-center rounded-2xl shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
+              newMessage.trim()
+                ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/20"
+                : "bg-gray-100 text-gray-400 dark:bg-gray-800"
+            }`}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
           </button>
-        ) : (
-          <button className="ml-1 flex items-center justify-center rounded-full p-3 text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M11.999 14.942c2.001 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.53-3.531-3.531-3.531S8.468 2.349 8.468 4.35v7.061c0 2.001 1.53 3.531 3.531 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.001z" />
-            </svg>
-          </button>
-        )}
+        </div>
       </div>
     </div>
   );

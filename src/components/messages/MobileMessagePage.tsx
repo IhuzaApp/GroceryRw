@@ -595,20 +595,20 @@ export default function MobileMessagePage({
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--bg-primary)]">
       {/* Header */}
-      <div className="z-20 flex-shrink-0 px-4 pb-2 pt-1">
-        <div className="flex items-center justify-between py-2.5">
-          <div className="flex items-center gap-1.5 focus:outline-none">
+      <div className="z-20 flex-shrink-0 bg-white/80 px-4 pb-2 pt-2 backdrop-blur-md dark:bg-gray-900/80">
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => router.back()}
-              className="flex items-center justify-center text-green-500 transition-opacity active:opacity-50"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-all active:scale-90 dark:bg-gray-800 dark:text-gray-400"
               aria-label="Back"
             >
               <svg
-                className="h-[28px] w-[28px]"
+                className="h-6 w-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                strokeWidth={2}
+                strokeWidth={2.5}
               >
                 <path
                   strokeLinecap="round"
@@ -617,15 +617,18 @@ export default function MobileMessagePage({
                 />
               </svg>
             </button>
-            <h1 className="mb-1 text-[28px] font-bold leading-none tracking-tight text-[var(--text-primary)]">
-              Chats
+            <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+              Messages
             </h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full transition-all active:scale-95 ${showUnreadOnly ? "bg-green-500 text-white" : "text-green-500"
-                }`}
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-95 ${
+                showUnreadOnly
+                  ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
+                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              }`}
               aria-label="Filter Unread"
             >
               <svg
@@ -646,15 +649,15 @@ export default function MobileMessagePage({
         </div>
 
         {/* Search */}
-        <div className="mt-1 flex items-center gap-2">
-          <div className="relative flex-1">
-            <div className="absolute bottom-0 left-3.5 top-0 flex items-center justify-center">
+        <div className="mt-2">
+          <div className="relative group">
+            <div className="absolute left-4 top-1/2 flex -translate-y-1/2 items-center justify-center text-gray-400 group-focus-within:text-green-500 transition-colors">
               <svg
-                className="h-[18px] w-[18px] text-gray-500"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                strokeWidth={2}
+                strokeWidth={2.5}
               >
                 <path
                   strokeLinecap="round"
@@ -665,19 +668,18 @@ export default function MobileMessagePage({
             </div>
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-[10px] bg-[var(--bg-secondary)] py-2.5 pl-10 pr-4 text-[16px] text-[var(--text-primary)] placeholder-gray-500 transition-colors focus:outline-none"
+              className="w-full rounded-2xl border-none bg-gray-100 py-3.5 pl-11 pr-4 text-[16px] font-medium text-gray-900 placeholder-gray-500 transition-all focus:bg-gray-200/50 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-700/50"
             />
           </div>
         </div>
 
         {/* Type Filter Tabs */}
-        <div className="scrollbar-hide -mx-4 mt-3 overflow-x-auto">
-          <div className="flex gap-2 px-4 pb-1">
+        <div className="scrollbar-hide -mx-4 mt-4 overflow-x-auto">
+          <div className="flex gap-2.5 px-4 pb-2">
             {FILTER_TABS.filter((tab) => {
-              // Only show tabs that have conversations (or "all")
               if (tab.key === "all") return true;
               return (countByType[tab.key] || 0) > 0;
             }).map((tab) => {
@@ -687,19 +689,23 @@ export default function MobileMessagePage({
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key)}
-                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 ${isActive
-                      ? "bg-green-500 text-white shadow-md"
-                      : "bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
-                    }`}
+                  className={`flex flex-shrink-0 items-center gap-2 rounded-2xl px-4 py-2.5 text-[14px] font-bold transition-all active:scale-95 ${
+                    isActive
+                      ? "bg-green-600 text-white shadow-lg shadow-green-600/20"
+                      : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
                 >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="flex items-center gap-2">
+                    {tab.icon}
+                    {tab.label}
+                  </span>
                   {count > 0 && (
                     <span
-                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive
-                          ? "bg-white/30 text-white"
-                          : "bg-black/10 text-[var(--text-secondary)] dark:bg-white/10"
-                        }`}
+                      className={`rounded-lg px-1.5 py-0.5 text-[10px] font-black ${
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-black/5 text-gray-500 dark:bg-white/5 dark:text-gray-400"
+                      }`}
                     >
                       {count}
                     </span>
@@ -810,70 +816,58 @@ export default function MobileMessagePage({
                       typeInfo.key
                     );
                   }}
-                  className="flex cursor-pointer items-center transition-colors hover:bg-black/5 active:bg-black/10 dark:hover:bg-white/5 dark:active:bg-white/10"
+                  className="group relative flex cursor-pointer items-center px-4 py-4 transition-all active:bg-gray-100/80 dark:active:bg-gray-800/80"
                 >
                   {/* Left Side: Avatar */}
-                  <div className="relative flex-shrink-0 py-3 pl-4 pr-3">
-                    <div className="flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600">
+                  <div className="relative flex-shrink-0 mr-4">
+                    <div className="flex h-[60px] w-[60px] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md ring-2 ring-white dark:ring-gray-800">
                       {contactAvatar &&
-                        contactAvatar !== "/images/ProfileImage.png" ? (
+                      contactAvatar !== "/images/ProfileImage.png" ? (
                         <img
                           src={contactAvatar}
                           alt={contactName}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover transition-transform group-active:scale-110"
                         />
                       ) : (
-                        <span className="text-[22px] font-medium uppercase text-[var(--text-secondary)]">
+                        <span className="text-2xl font-black uppercase text-white">
                           {contactName.charAt(0)}
                         </span>
                       )}
                     </div>
-                    {/* Type emoji badge on avatar */}
-                    <div className="absolute bottom-2.5 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white p-0.5 text-gray-500 shadow-md dark:bg-gray-800">
+                    {/* Type icon badge on avatar */}
+                    <div className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-xl bg-white p-1 text-gray-600 shadow-lg dark:bg-gray-800 dark:text-gray-300 ring-1 ring-black/5">
                       {typeInfo.icon}
                     </div>
                   </div>
 
                   {/* Right Side */}
-                  <div className="flex h-full min-w-0 flex-1 flex-col justify-center border-b border-gray-100 py-3 pr-4 dark:border-white/5">
-                    <div className="flex items-center justify-between pb-[1px]">
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <h3 className="truncate text-[17px] font-medium text-[var(--text-primary)]">
+                  <div className="flex h-full min-w-0 flex-1 flex-col justify-center">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <h3 className={`truncate text-[16px] font-bold tracking-tight ${conversation.unreadCount > 0 ? "text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
                           {contactName}
                         </h3>
-                        {/* Type label badge */}
-                        <span
-                          className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${typeInfo.bg} ${typeInfo.text}`}
-                        >
-                          {typeInfo.label}
-                        </span>
+                        {conversation.unreadCount > 0 && (
+                          <div className="h-2 w-2 flex-shrink-0 rounded-full bg-green-500 shadow-sm animate-pulse"></div>
+                        )}
                       </div>
-                      <span
-                        className={`whitespace-nowrap pl-2 text-xs ${conversation.unreadCount > 0
-                            ? "font-medium text-green-500"
-                            : "font-normal text-[var(--text-secondary)]"
-                          }`}
-                      >
+                      <span className={`whitespace-nowrap text-[11px] font-black uppercase tracking-wider ${conversation.unreadCount > 0 ? "text-green-600 dark:text-green-500" : "text-gray-400"}`}>
                         {formatMessageTime(conversation.lastMessageTime)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p
-                        className={`line-clamp-1 pr-2 text-[15px] leading-tight ${conversation.unreadCount > 0
-                            ? "font-medium text-[var(--text-primary)]"
-                            : "font-normal text-[var(--text-secondary)]"
-                          }`}
-                      >
-                        {conversation.lastMessage || "No messages yet"}
+                    
+                    <div className="flex items-center justify-between gap-3">
+                      <p className={`line-clamp-1 flex-1 text-[14px] leading-snug ${conversation.unreadCount > 0 ? "font-bold text-gray-900 dark:text-gray-100" : "font-medium text-gray-500 dark:text-gray-400"}`}>
+                        {conversation.lastMessage || "Start a conversation"}
                       </p>
                       {conversation.unreadCount > 0 && (
-                        <div className="flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded-full bg-green-500 px-[5px] text-[11px] font-bold text-white shadow-sm">
-                          {conversation.unreadCount > 9
-                            ? "9+"
-                            : conversation.unreadCount}
+                        <div className="flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded-lg bg-green-600 px-1.5 text-[10px] font-black text-white shadow-sm shadow-green-500/20">
+                          {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
                         </div>
                       )}
                     </div>
+                    
+                    <div className="mt-2 h-px w-full bg-gray-100 dark:bg-white/5"></div>
                   </div>
                 </div>
               );
