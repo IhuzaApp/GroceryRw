@@ -169,7 +169,7 @@ export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const router = useRouter();
-  const { hideFloatingUI } = useHideBottomBar();
+  const { hideFloatingUI, setHideFloatingUI } = useHideBottomBar();
   const { logout } = useAuth();
   const { isGuest } = useAuthHook();
   const { count } = useCart();
@@ -241,6 +241,10 @@ export default function BottomBar() {
       console.error("Error adding to cart:", error);
     }
   };
+
+  useEffect(() => {
+    setHideFloatingUI(moreOpen);
+  }, [moreOpen, setHideFloatingUI]);
 
   // Close more dropdown when clicking outside
   useEffect(() => {

@@ -149,7 +149,6 @@ function LayoutContent({
       {/* AI Chat - Available on all pages except chat pages and specific marketplaces */}
       {!hideNavigation &&
         !isChatPage &&
-        !isMessagesList &&
         !isMessagesChat &&
         !isCarsPage &&
         !isPetsPage &&
