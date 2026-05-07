@@ -443,7 +443,7 @@ export default function MobileChatPage({
           senderName: session.user.name || "User",
           message: text,
           orderId,
-          conversationId!,
+          conversationId: conversationId!,
           collectionPath,
         }),
       });
