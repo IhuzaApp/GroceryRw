@@ -1,0 +1,42 @@
+{
+  "Dog": [
+    { "id": "rabies", "name": "Rabies", "isCore": true, "recommendedAgeWeeks": [12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "distemper", "name": "Canine Distemper", "isCore": true, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "parvovirus", "name": "Canine Parvovirus", "isCore": true, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "adenovirus", "name": "Canine Adenovirus (Hepatitis)", "isCore": true, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "parainfluenza", "name": "Canine Parainfluenza", "isCore": false, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual" },
+    { "id": "leptospirosis", "name": "Leptospirosis", "isCore": false, "recommendedAgeWeeks": [12, 16], "boosterRequired": true, "frequency": "annual" },
+    { "id": "bordetella", "name": "Bordetella (Kennel Cough)", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual/6-month" },
+    { "id": "lyme", "name": "Lyme Disease", "isCore": false, "recommendedAgeWeeks": [12, 16], "boosterRequired": true, "frequency": "annual" },
+    { "id": "canine_influenza", "name": "Canine Influenza", "isCore": false, "recommendedAgeWeeks": [12, 16], "boosterRequired": true, "frequency": "annual" },
+    { "id": "coronavirus_dog", "name": "Canine Coronavirus", "isCore": false, "recommendedAgeWeeks": [6, 8, 12], "boosterRequired": true, "frequency": "annual" }
+  ],
+  "Cat": [
+    { "id": "rabies", "name": "Rabies", "isCore": true, "recommendedAgeWeeks": [12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "panleukopenia", "name": "Feline Panleukopenia (FPV)", "isCore": true, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "herpesvirus", "name": "Feline Herpesvirus (FHV-1)", "isCore": true, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "calicivirus", "name": "Feline Calicivirus (FCV)", "isCore": true, "recommendedAgeWeeks": [6, 8, 12, 16], "boosterRequired": true, "frequency": "annual/3-year" },
+    { "id": "felv", "name": "Feline Leukemia (FeLV)", "isCore": true, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual" },
+    { "id": "chlamydia", "name": "Chlamydia felis", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual" },
+    { "id": "bordetella_cat", "name": "Bordetella", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual" },
+    { "id": "fiv", "name": "Feline Immunodeficiency Virus (FIV)", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual" }
+  ],
+  "Bird": [
+    { "id": "polyomavirus", "name": "Avian Polyomavirus", "isCore": true, "recommendedAgeWeeks": [4, 8], "boosterRequired": true, "frequency": "annual" },
+    { "id": "pachecos", "name": "Pacheco's Disease", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual" },
+    { "id": "psittacosis", "name": "Psittacosis (Chlamydiosis)", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": false, "frequency": "N/A" },
+    { "id": "pbfd", "name": "Psittacine Beak and Feather Disease (PBFD)", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": false, "frequency": "N/A" },
+    { "id": "newcastle", "name": "Newcastle Disease", "isCore": false, "recommendedAgeWeeks": [8, 12], "boosterRequired": true, "frequency": "annual" }
+  ],
+  "Rabbit": [
+    { "id": "myxomatosis", "name": "Myxomatosis", "isCore": true, "recommendedAgeWeeks": [5, 10], "boosterRequired": true, "frequency": "annual/6-month" },
+    { "id": "rhdv1", "name": "Rabbit Hemorrhagic Disease (RHDV1)", "isCore": true, "recommendedAgeWeeks": [5, 10], "boosterRequired": true, "frequency": "annual" },
+    { "id": "rhdv2", "name": "Rabbit Hemorrhagic Disease (RHDV2)", "isCore": true, "recommendedAgeWeeks": [5, 10], "boosterRequired": true, "frequency": "annual" }
+  ],
+  "Other": [
+    { "id": "general_checkup", "name": "General Health Check", "isCore": true, "recommendedAgeWeeks": [8], "boosterRequired": true, "frequency": "annual" },
+    { "id": "deworming", "name": "Deworming", "isCore": true, "recommendedAgeWeeks": [2, 4, 6, 8, 12], "boosterRequired": true, "frequency": "every 3-6 months" },
+    { "id": "flea_tick", "name": "Flea & Tick Prevention", "isCore": false, "recommendedAgeWeeks": [8], "boosterRequired": true, "frequency": "monthly" },
+    { "id": "parasite_treatment", "name": "Parasite Treatment", "isCore": true, "recommendedAgeWeeks": [8], "boosterRequired": true, "frequency": "every 6 months" }
+  ]
+}

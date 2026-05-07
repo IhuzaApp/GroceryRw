@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { uploadToFirebase } from "@/lib/firebase";
+import vaccinationsData from "@/data/vaccinations.json";
+
+const VACCINATIONS: Record<string, { id: string; name: string; isCore: boolean }[]> = vaccinationsData;
 
 export interface PetFormData {
   name: string;
@@ -332,35 +335,89 @@ export default function PetForm({
 
               {formData.isVaccinated && (
                 <div className="space-y-6">
+                <div className="space-y-8">
+                  {/* Core Vaccinations */}
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      Add Vaccinations
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-green-500">
+                        Core Vaccinations (Required)
+                      </label>
+                      <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[8px] font-black uppercase text-green-500">
+                        Level 1
+                      </span>
+                    </div>
                     <div className="flex flex-wrap gap-2">
-                      {["Rabies", "Distemper", "Parvovirus", "Bordetella"].map(
-                        (v) => (
+                      {(VACCINATIONS[formData.type] || VACCINATIONS["Other"])
+                        .filter((v) => v.isCore)
+                        .map((v) => (
                           <button
-                            key={v}
+                            key={v.id}
                             type="button"
                             onClick={() => {
-                              const exists = formData.vaccinations.includes(v);
+                              const exists = formData.vaccinations.includes(v.name);
+                              const newVaccinations = exists
+                                ? formData.vaccinations.filter((x) => x !== v.name)
+                                : [...formData.vaccinations, v.name];
+                              
+                              // Auto-update isVaccinated if all core are selected
+                              const coreVaccs = (VACCINATIONS[formData.type] || VACCINATIONS["Other"])
+                                .filter(cv => cv.isCore)
+                                .map(cv => cv.name);
+                              const hasAllCore = coreVaccs.every(cv => newVaccinations.includes(cv));
+
                               setFormData({
                                 ...formData,
-                                vaccinations: exists
-                                  ? formData.vaccinations.filter((x) => x !== v)
-                                  : [...formData.vaccinations, v],
+                                vaccinations: newVaccinations,
+                                isVaccinated: hasAllCore
                               });
                             }}
                             className={`rounded-full px-4 py-2 text-[11px] font-black transition-all ${
-                              formData.vaccinations.includes(v)
+                              formData.vaccinations.includes(v.name)
                                 ? "bg-green-500 text-white shadow-md shadow-green-500/20"
                                 : "bg-gray-100 text-gray-500 dark:bg-white/5"
                             }`}
                           >
-                            {v}
+                            {v.name}
                           </button>
-                        )
-                      )}
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Non-Core Vaccinations */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Additional Vaccinations (Optional)
+                      </label>
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[8px] font-black uppercase text-gray-400 dark:bg-white/5">
+                        Level 2
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(VACCINATIONS[formData.type] || VACCINATIONS["Other"])
+                        .filter((v) => !v.isCore)
+                        .map((v) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => {
+                              const exists = formData.vaccinations.includes(v.name);
+                              setFormData({
+                                ...formData,
+                                vaccinations: exists
+                                  ? formData.vaccinations.filter((x) => x !== v.name)
+                                  : [...formData.vaccinations, v.name],
+                              });
+                            }}
+                            className={`rounded-full px-4 py-2 text-[11px] font-black transition-all ${
+                              formData.vaccinations.includes(v.name)
+                                ? "bg-green-500 text-white shadow-md shadow-green-500/20"
+                                : "bg-gray-100 text-gray-500 dark:bg-white/5"
+                            }`}
+                          >
+                            {v.name}
+                          </button>
+                        ))}
                     </div>
                   </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -25,6 +25,7 @@ import {
   Phone,
   Wallet,
   CreditCard,
+  Clock,
 } from "lucide-react";
 import { Pet } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
@@ -32,6 +33,139 @@ import RootLayout from "../ui/layout";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { toast } from "react-hot-toast";
 import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOverlay";
+import { useHideBottomBar } from "../../context/HideBottomBarContext";
+import vaccinationsData from "@/data/vaccinations.json";
+
+const VACCINATIONS: Record<string, { id: string; name: string; isCore: boolean }[]> = vaccinationsData;
+
+const MissingVaccinationsModal = ({
+  isOpen,
+  onClose,
+  pet,
+  vaccinationStatus,
+  theme,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  pet: Pet;
+  vaccinationStatus: any;
+  theme: string;
+}) => {
+  if (!isOpen) return null;
+
+  const currentAgeWeeks = pet.ageInMonths * 4.345; // Convert months to weeks
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-end justify-center sm:items-center sm:p-6">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in"
+        onClick={onClose}
+      />
+      <div
+        className={`relative flex h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[3rem] border shadow-2xl animate-in slide-in-from-bottom-10 sm:h-auto sm:max-h-[85vh] sm:rounded-[3rem] ${
+          theme === "dark"
+            ? "border-white/10 bg-[#121212] text-white"
+            : "border-gray-100 bg-white text-gray-900"
+        }`}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-8 pb-6 dark:border-white/5">
+          <div>
+            <h2 className="font-outfit text-2xl font-black tracking-tight">
+              Health Roadmap
+            </h2>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+              Missing Protection for {pet.name}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className={`rounded-full p-2 transition-colors ${
+              theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-100"
+            }`}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="custom-scrollbar overflow-y-auto p-8">
+          {/* Pet Context Summary */}
+          <div className="mb-8 flex items-center gap-4 rounded-3xl bg-blue-500/5 p-4 ring-1 ring-blue-500/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <Info className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-500">
+                Current Stats
+              </p>
+              <p className="text-xs font-bold opacity-70">
+                {pet.age} ({Math.round(currentAgeWeeks)} weeks) • {pet.weight}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {vaccinationStatus.missingVaccs.map((v: any, i: number) => {
+              const firstAge = v.recommendedAgeWeeks[0];
+              const lastAge = v.recommendedAgeWeeks[v.recommendedAgeWeeks.length - 1];
+              
+              let status = "Upcoming";
+              let statusColor = "text-blue-500 bg-blue-500/10";
+              
+              if (currentAgeWeeks > lastAge) {
+                status = "Overdue";
+                statusColor = "text-red-500 bg-red-500/10";
+              } else if (currentAgeWeeks >= firstAge && currentAgeWeeks <= lastAge) {
+                status = "Due Now";
+                statusColor = "text-yellow-600 bg-yellow-500/10";
+              }
+
+              return (
+                <div key={i} className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h4 className="font-outfit font-black">{v.name}</h4>
+                    <span className={`rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-wider ${statusColor}`}>
+                      {status}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4 text-[11px] sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <p className="font-black uppercase tracking-widest text-gray-400">Recommended Age</p>
+                      <p className="font-bold">{v.recommendedAgeWeeks.join(", ")} weeks</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-black uppercase tracking-widest text-gray-400">Booster Schedule</p>
+                      <p className="font-bold">{v.frequency}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-gray-50 p-4 dark:bg-white/5">
+                    <p className="text-[10px] font-bold leading-relaxed opacity-60">
+                      {status === "Overdue" 
+                        ? `Caution: ${pet.name} is past the ideal age for this shot. Consult a vet immediately.`
+                        : status === "Due Now"
+                        ? `Action Required: At ${pet.weight}, ${pet.name} is in the perfect window for this protection.`
+                        : `${pet.name} will be ready for this vaccination in about ${Math.max(0, Math.round(firstAge - currentAgeWeeks))} weeks.`}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 p-8 dark:border-white/5">
+          <button
+            onClick={onClose}
+            className="w-full rounded-2xl bg-green-500 py-4 font-black text-white shadow-xl shadow-green-500/20"
+          >
+            Got it, thanks!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Adoption Modal Component
 const AdoptionModal = ({
@@ -393,6 +527,14 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
   const [isAdopted, setIsAdopted] = useState(false);
   const [isCheckingAdoption, setIsCheckingAdoption] = useState(true);
   const [isAdoptionModalOpen, setIsAdoptionModalOpen] = useState(false);
+  const [isPriceCardExpanded, setIsPriceCardExpanded] = useState(false);
+  const [showMissingModal, setShowMissingModal] = useState(false);
+  const { setHideBottomBar } = useHideBottomBar();
+
+  useEffect(() => {
+    setHideBottomBar(true);
+    return () => setHideBottomBar(false);
+  }, [setHideBottomBar]);
 
   useEffect(() => {
     const checkAdoption = async () => {
@@ -426,9 +568,39 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
 
   const isBaby = pet.ageInMonths < 6;
 
+  const vaccinationStatus = useMemo(() => {
+    const typeVaccs = VACCINATIONS[pet.type] || VACCINATIONS["Other"];
+    const coreVaccs = typeVaccs.filter((v) => v.isCore).map((v) => v.name);
+    const nonCoreVaccs = typeVaccs.filter((v) => !v.isCore).map((v) => v.name);
+
+    const coreCount = pet.vaccinations.filter((v) => coreVaccs.includes(v)).length;
+    const nonCoreCount = pet.vaccinations.filter((v) =>
+      nonCoreVaccs.includes(v)
+    ).length;
+    const hasAllCore = coreVaccs.every((v) => pet.vaccinations.includes(v));
+    const missingCoreCount = coreVaccs.filter((v) => !pet.vaccinations.includes(v)).length;
+    const missingVaccs = typeVaccs.filter((v) => !pet.vaccinations.includes(v));
+
+    let level = 0;
+    if (coreCount > 0) level = 1;
+    if (hasAllCore) level = 2;
+    if (hasAllCore && nonCoreCount > 0) level = 3;
+
+    return {
+      hasAllCore,
+      level,
+      coreCount,
+      totalCore: coreVaccs.length,
+      missingCoreCount,
+      missingVaccs,
+      nonCoreCount,
+      typeVaccs,
+    };
+  }, [pet]);
+
   return (
     <RootLayout>
-      <div className="min-h-screen bg-white pb-24 text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20">
+      <div className="min-h-screen bg-white pb-[400px] text-gray-900 transition-colors duration-200 dark:bg-[#0A0A0A] dark:text-white md:ml-20 lg:pb-24">
         {/* Mobile Header Gallery - Reduced Height */}
         <div className="relative h-64 w-full md:h-[40vh]">
           <Image
@@ -530,37 +702,73 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 <SectionTitle title="Health & Vaccination" />
                 <div className="rounded-[2.5rem] border border-green-100 bg-green-50/30 p-8 dark:border-white/5 dark:bg-white/5">
                   <div className="mb-6 flex items-center gap-5 md:gap-8">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] bg-green-500 text-white shadow-xl shadow-green-500/20">
+                    <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] shadow-xl transition-colors ${
+                      vaccinationStatus.hasAllCore 
+                        ? "bg-green-500 text-white shadow-green-500/20" 
+                        : "bg-yellow-500 text-white shadow-yellow-500/20"
+                    }`}>
                       <ShieldCheck className="h-8 w-8 !text-white" />
                     </div>
-                    <div>
-                      <h4 className="font-outfit text-lg font-black text-green-600 dark:text-green-400">
-                        Wellness Status
-                      </h4>
-                      <p className="font-sans font-black text-gray-500 dark:text-gray-400">
-                        {pet.isVaccinated
-                          ? "Fully Vaccinated"
-                          : "Partially Vaccinated"}{" "}
-                        • {pet.healthInfo}
-                      </p>
+                    <div className="flex-1">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h4 className={`font-outfit text-lg font-black ${
+                          vaccinationStatus.hasAllCore ? "text-green-600 dark:text-green-400" : "text-yellow-600 dark:text-yellow-400"
+                        }`}>
+                          {vaccinationStatus.hasAllCore ? "Fully Protected" : "Partial Protection"}
+                        </h4>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          Level {vaccinationStatus.level} of 3
+                        </span>
+                      </div>
+                      
+                      <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
+                        <div 
+                          className={`h-full transition-all duration-1000 ${
+                            vaccinationStatus.hasAllCore ? "bg-green-500" : "bg-yellow-500"
+                          }`}
+                          style={{ width: `${(vaccinationStatus.coreCount / vaccinationStatus.totalCore) * 100}%` }}
+                        />
+                      </div>
+
+                      <button 
+                        onClick={() => !vaccinationStatus.hasAllCore && setShowMissingModal(true)}
+                        className={`font-sans text-xs font-black transition-all hover:underline ${
+                          vaccinationStatus.hasAllCore ? "text-gray-500" : "text-red-500"
+                        }`}
+                      >
+                        {vaccinationStatus.coreCount} of {vaccinationStatus.totalCore} Core Vaccinations Completed
+                        {!vaccinationStatus.hasAllCore && (
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px]">
+                            Missing {vaccinationStatus.missingCoreCount} Core Shots • View Roadmap →
+                          </span>
+                        )}
+                      </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                     <div>
-                      <h5 className="mb-3 text-xs font-black uppercase tracking-widest text-gray-400">
-                        Vaccinations
+                      <h5 className="mb-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Completed Vaccinations
                       </h5>
                       <div className="flex flex-wrap gap-2">
-                        {pet.vaccinations.map((v, i) => (
-                          <span
-                            key={i}
-                            className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1.5 text-[11px] font-black text-green-600 dark:text-green-400"
-                          >
-                            <CheckCircle2 className="h-3 w-3" />
-                            {v}
-                          </span>
-                        ))}
+                        {pet.vaccinations.length > 0 ? (
+                          pet.vaccinations.map((vName, i) => {
+                            const vData = vaccinationStatus.typeVaccs.find((x: any) => x.name === vName);
+                            return (
+                              <div
+                                key={i}
+                                className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-3 py-1.5 text-[10px] font-black text-green-600 dark:text-green-400"
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                {vName}
+                                {vData?.isCore && <span className="ml-1 text-[8px] opacity-60">(Core)</span>}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-xs font-bold text-gray-400 italic">No recorded vaccinations</p>
+                        )}
                       </div>
                     </div>
                     {pet.vaccinationCertificateUrl && (
@@ -742,78 +950,93 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 </div>
               </div>
             </div>
-
-            {/* Sidebar Sticky Card */}
+            {/* Sidebar Sticky Card - Now Fixed at bottom on mobile with Expand/Minimize */}
             <div className="lg:col-span-2">
-              <div className="sticky top-24 rounded-[3rem] border border-gray-100 bg-white p-8 shadow-2xl dark:border-white/5 dark:bg-[#121212] md:p-10">
-                <div className="mb-8 border-b border-gray-100 pb-8 dark:border-white/5">
-                  <p className="mb-2 font-outfit text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                    {pet.isDonation ? "Adoption Fee" : "Asking Price"}
-                  </p>
-                  <div className="flex items-end gap-2">
-                    <span className="font-outfit text-4xl font-black md:text-5xl">
-                      {pet.isDonation ? "FREE" : formatCurrencySync(pet.price)}
+              <div
+                className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[2.5rem] border-t border-gray-100 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] transition-all duration-500 dark:border-white/5 dark:bg-[#121212] lg:sticky lg:top-24 lg:rounded-[3rem] lg:border lg:p-8 lg:shadow-2xl ${
+                  isPriceCardExpanded ? "p-6" : "p-4"
+                } lg:p-8 md:p-10`}
+              >
+                {/* Simplified Mobile Toggle Handle - Moved further up */}
+                <button
+                  onClick={() => setIsPriceCardExpanded(!isPriceCardExpanded)}
+                  className="absolute -top-10 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-white px-10 py-3.5 shadow-2xl ring-2 ring-gray-100 dark:bg-[#121212] dark:ring-white/10 lg:hidden"
+                >
+                  {!isPriceCardExpanded ? (
+                    <span className="font-outfit text-sm font-black uppercase tracking-[0.1em] text-gray-900 dark:text-white">
+                      {pet.isDonation ? "Free" : formatCurrencySync(pet.price)}
                     </span>
-                  </div>
-                </div>
+                  ) : (
+                    <div className="h-1.5 w-16 rounded-full bg-gray-200 dark:bg-white/10" />
+                  )}
+                </button>
 
-                <div className="mb-8">
-                  <div className="mb-4 flex items-center justify-between rounded-3xl bg-gray-50 p-4 dark:bg-white/5 md:p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-full ring-4 ring-green-500/10">
-                        <Image
-                          src={pet.owner.image}
-                          alt={pet.owner.name}
-                          fill
-                          className="object-cover"
-                        />
-                        {pet.owner.isVerified && (
-                          <div className="absolute -bottom-1 -right-1 rounded-full bg-blue-500 p-0.5">
-                            <UserCheck className="h-3 w-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-outfit text-[10px] font-normal uppercase tracking-widest text-gray-400">
-                          Listed by
-                        </p>
-                        <h4 className="font-outfit font-black">
-                          {pet.owner.name}
-                        </h4>
+                <div className="flex flex-col">
+                  {/* Expanded Content (Big Price + Owner Info) */}
+                  <div className={`${isPriceCardExpanded ? "block animate-in fade-in slide-in-from-bottom-3 duration-500" : "hidden"} lg:block`}>
+                    <div className="mb-6 border-b border-gray-100 pb-6 dark:border-white/5 lg:mb-8 lg:pb-8">
+                      <p className="mb-2 font-outfit text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                        {pet.isDonation ? "Adoption Fee" : "Asking Price"}
+                      </p>
+                      <div className="flex items-end gap-2">
+                        <span className="font-outfit text-3xl font-black md:text-5xl lg:text-4xl">
+                          {pet.isDonation ? "FREE" : formatCurrencySync(pet.price)}
+                        </span>
                       </div>
                     </div>
-                    {isAdopted && (
-                      <button
-                        onClick={() => router.push(`/Messages/${pet.owner.id}`)}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 !text-white text-white shadow-lg transition-all hover:scale-110 active:scale-95"
-                        title="Chat with Seller"
-                      >
-                        <MessageSquare className="h-6 w-6" />
-                      </button>
-                    )}
+
+                    <div className="mb-6 lg:mb-8">
+                      <div className="mb-4 flex items-center gap-4 rounded-3xl bg-gray-50 p-4 dark:bg-white/5 md:p-5">
+                        <div className="relative h-12 w-12 overflow-hidden rounded-full ring-4 ring-green-500/10">
+                          <Image
+                            src={pet.owner.image}
+                            alt={pet.owner.name}
+                            fill
+                            className="object-cover"
+                          />
+                          {pet.owner.isVerified && (
+                            <div className="absolute -bottom-1 -right-1 rounded-full bg-blue-500 p-0.5">
+                              <UserCheck className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-outfit text-[10px] font-normal uppercase tracking-widest text-gray-400">
+                            Listed by Vendor
+                          </p>
+                          <h4 className="font-outfit text-sm font-black md:text-base">
+                            {pet.owner.name}
+                          </h4>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                </div>
+                  {/* Main Action Button - Always large and full-width */}
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={pet.status === "sold"}
+                    className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-green-500 py-4 font-outfit text-lg font-black !text-white text-white shadow-2xl shadow-green-500/30 transition-all hover:translate-y-[-2px] hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none md:py-6"
+                  >
+                    <span className="!text-white">
+                      {isAdopted
+                        ? pet.isDonation
+                          ? "Adopt Another"
+                          : "Buy Another"
+                        : pet.isDonation
+                        ? "Adopt Now"
+                        : "Buy Now"}
+                    </span>
+                    <ChevronRight className="h-5 w-5 !text-white" />
+                  </button>
 
-                <button
-                  onClick={handleBuyNow}
-                  disabled={pet.status === "sold"}
-                  className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-green-500 py-5 font-outfit text-xl font-black !text-white text-white shadow-2xl shadow-green-500/30 transition-all hover:translate-y-[-2px] hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none md:py-6"
-                >
-                  <span className="!text-white">
-                    {isAdopted
-                      ? pet.isDonation
-                        ? "Adopt Another One"
-                        : "Buy Another One"
-                      : pet.isDonation
-                      ? "Adopt Now"
-                      : "Buy Now"}
-                  </span>
-                  <ChevronRight className="h-6 w-6 !text-white" />
-                </button>
-                <div className="mt-5 flex items-center justify-center gap-2 text-center font-sans text-[11px] font-normal text-gray-400">
-                  <Info className="h-3.5 w-3.5" />
-                  All transactions are protected and pets are health-checked.
+                  {/* Transaction Security Info (Only in expanded or desktop) */}
+                  <div className={`${isPriceCardExpanded ? "block" : "hidden"} mt-4 flex items-center justify-center gap-2 text-center font-sans text-[10px] font-normal text-gray-400 lg:mt-5 lg:block lg:text-[11px]`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <Info className="h-3 w-3" />
+                      <span>Transactions are protected & pets health-checked.</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -854,12 +1077,18 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
         </div>
       )}
 
-      {/* Adoption Modal */}
       <AdoptionModal
         isOpen={isAdoptionModalOpen}
         onClose={() => setIsAdoptionModalOpen(false)}
         pet={pet}
         onSuccess={(isPaid) => setIsAdopted(isPaid)}
+      />
+      <MissingVaccinationsModal
+        isOpen={showMissingModal}
+        onClose={() => setShowMissingModal(false)}
+        pet={pet}
+        vaccinationStatus={vaccinationStatus}
+        theme={theme}
       />
     </RootLayout>
   );
