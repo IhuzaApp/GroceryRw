@@ -26,6 +26,7 @@ import {
   Wallet,
   CreditCard,
   Clock,
+  Utensils,
 } from "lucide-react";
 import { Pet } from "../../types/models";
 import { useTheme } from "../../context/ThemeContext";
@@ -579,7 +580,7 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
     ).length;
     const hasAllCore = coreVaccs.every((v) => pet.vaccinations.includes(v));
     const missingCoreCount = coreVaccs.filter((v) => !pet.vaccinations.includes(v)).length;
-    const missingVaccs = typeVaccs.filter((v) => !pet.vaccinations.includes(v));
+    const missingVaccs = typeVaccs.filter((v) => !pet.vaccinations.includes(v.name));
 
     let level = 0;
     if (coreCount > 0) level = 1;
@@ -597,6 +598,29 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
       typeVaccs,
     };
   }, [pet]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Adopt ${pet.name} - ${pet.breed}`,
+      text: `Check out this beautiful ${pet.type} available for adoption!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    } catch (err) {
+      // Don't show error if user cancelled
+      if ((err as Error).name !== "AbortError") {
+        console.error("Error sharing:", err);
+        toast.error("Could not share profile");
+      }
+    }
+  };
 
   return (
     <RootLayout>
@@ -620,7 +644,10 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
               <ArrowLeft className="h-6 w-6 !text-white" />
             </button>
             <div className="flex gap-2">
-              <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-md transition-all active:scale-90">
+              <button
+                onClick={handleShare}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 backdrop-blur-md transition-all active:scale-90"
+              >
                 <Share2 className="h-5 w-5 !text-white text-white" />
               </button>
               <button
@@ -790,6 +817,46 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                   </div>
                 </div>
               </div>
+
+                {/* Dietary Preferences */}
+                {pet.favourite_food && (
+                  <div className="mb-12">
+                    <SectionTitle title="Dietary Preferences" />
+                    <div className="rounded-[2.5rem] border border-orange-100 bg-orange-50/30 p-8 dark:border-white/5 dark:bg-white/5">
+                      <div className="mb-6 flex items-center gap-5 md:gap-8">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] bg-orange-500 text-white shadow-xl shadow-orange-500/20">
+                          <Utensils className="h-8 w-8 !text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-outfit text-lg font-black text-orange-600 dark:text-orange-400">
+                            Favourite Foods
+                          </h4>
+                          <p className="font-sans font-black text-gray-500 dark:text-gray-400">
+                            What {pet.name} loves to eat most
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        {Array.isArray(pet.favourite_food) ? (
+                          pet.favourite_food.map((food: string, i: number) => (
+                            <span
+                              key={i}
+                              className="flex items-center gap-2 rounded-2xl bg-orange-500/10 px-4 py-2 text-sm font-black text-orange-700 dark:text-orange-300"
+                            >
+                              <Star className="h-3 w-3 fill-orange-500 text-orange-500" />
+                              {food}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm font-bold text-gray-600 dark:text-gray-400">
+                            {pet.favourite_food}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Conditional: Parent Photos for Baby Pets */}
               {isBaby && pet.parentImages && pet.parentImages.length > 0 && (

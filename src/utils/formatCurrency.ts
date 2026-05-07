@@ -76,3 +76,22 @@ export const refreshCurrencyCache = () => {
   systemConfigCache = null;
   cacheTimestamp = 0;
 };
+
+/**
+ * Formats a number with suffixes like K, M, B (compact notation)
+ */
+export const formatCompactNumber = (num: number) => {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(num);
+};
+
+/**
+ * Formats a currency amount with suffixes like K, M, B
+ */
+export const formatCompactCurrency = (amount: number) => {
+  const config = systemConfigCache || { currency: "RWF" };
+  const formatted = formatCompactNumber(amount);
+  return `${config.currency} ${formatted}`;
+};

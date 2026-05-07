@@ -29,7 +29,8 @@ import {
 import { useTheme } from "../../context/ThemeContext";
 import { Pet } from "../../types/models";
 import toast from "react-hot-toast";
-import { formatCurrencySync } from "../../utils/formatCurrency";
+import { deleteFromFirebase } from "../../lib/firebase";
+import { formatCurrencySync, formatCompactCurrency } from "../../utils/formatCurrency";
 import PetDashboardHeader from "./PetDashboardHeader";
 import Image from "next/image";
 import AddPetModal from "./modals/AddPetModal";
@@ -62,6 +63,30 @@ export default function PetBusinessDashboard() {
   const [vendorData, setVendorData] = useState<any>(null);
   const [isLoadingAccount, setIsLoadingAccount] = useState(true);
   const [isLoadingPets, setIsLoadingPets] = useState(false);
+  const [ratings, setRatings] = useState<any[]>([]);
+
+  const stats = React.useMemo(() => {
+    const revenue = pets.reduce((acc, pet) => acc + (pet.price * (parseInt(pet.quantity_sold as any) || 0)), 0);
+    const avgRating = ratings.length > 0 
+      ? (ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length).toFixed(1)
+      : "0.0";
+    const liveAds = pets.length;
+    const interests = ratings.length; // Using reviews as proxy for engagement
+
+    return { revenue, avgRating, liveAds, interests };
+  }, [pets, ratings]);
+
+  const fetchStats = async (vendorId: string) => {
+    try {
+      const response = await fetch(`/api/queries/get-vendor-ratings?vendor_id=${vendorId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setRatings(data.ratings);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
 
   const fetchPets = async (vendorId: string) => {
     setIsLoadingPets(true);
@@ -140,6 +165,7 @@ export default function PetBusinessDashboard() {
   useEffect(() => {
     if (vendorData?.id) {
       fetchPets(vendorData.id);
+      fetchStats(vendorData.id);
     }
   }, [vendorData?.id]);
 
@@ -208,6 +234,40 @@ export default function PetBusinessDashboard() {
     setIsEditModalOpen(true);
   };
 
+  const handleDeletePet = async (pet: Pet) => {
+    if (!window.confirm(`Are you sure you want to delete ${pet.name}?`)) return;
+
+    const toastId = toast.loading("Deleting pet and cleaning up images...");
+    try {
+      // 1. Delete all images from Firebase
+      const allImages = [
+        ...(Array.isArray(pet.images) ? pet.images.map((img: any) => img.url) : []),
+        pet.image,
+        pet.vaccinationCertificateUrl,
+        pet.videoUrl,
+      ].filter(Boolean);
+
+      await Promise.all(allImages.map((url) => deleteFromFirebase(url)));
+
+      // 2. Delete pet from database
+      const response = await fetch("/api/mutations/delete-pet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pet.id }),
+      });
+
+      if (response.ok) {
+        toast.success("Pet deleted successfully", { id: toastId });
+        if (vendorData?.id) fetchPets(vendorData.id);
+      } else {
+        throw new Error("Failed to delete pet");
+      }
+    } catch (error) {
+      console.error("Error deleting pet:", error);
+      toast.error("Failed to delete pet", { id: toastId });
+    }
+  };
+
   return (
     <div
       className={`min-h-screen pb-24 md:ml-20 ${
@@ -231,28 +291,28 @@ export default function PetBusinessDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <StatsCard
               label="Revenue"
-              value="RWF 1.2M"
+              value={formatCompactCurrency(stats.revenue)}
               icon={<TrendingUp />}
               color="green"
               theme={theme}
             />
             <StatsCard
               label="Live Ads"
-              value={pets.length.toString()}
+              value={stats.liveAds.toString()}
               icon={<Dog />}
               color="blue"
               theme={theme}
             />
             <StatsCard
-              label="Interested"
-              value="48"
+              label="Interests"
+              value={stats.interests.toString()}
               icon={<Heart />}
               color="purple"
               theme={theme}
             />
             <StatsCard
               label="Avg Rating"
-              value="4.9"
+              value={stats.avgRating}
               icon={<Star />}
               color="orange"
               theme={theme}
@@ -322,6 +382,7 @@ export default function PetBusinessDashboard() {
                   onToggleStatus={() => handleToggleStatus(pet)}
                   onView={() => handleViewDetails(pet)}
                   onEdit={() => handleEditPet(pet)}
+                  onDelete={() => handleDeletePet(pet)}
                 />
               ))}
             </div>
@@ -422,6 +483,7 @@ function PetManagementItem({
   onToggleStatus,
   onView,
   onEdit,
+  onDelete,
 }: any) {
   return (
     <div
@@ -504,6 +566,13 @@ function PetManagementItem({
         >
           <Eye className="h-5 w-5" />
         </button>
+        <button
+          onClick={onDelete}
+          className="rounded-xl p-3 text-red-400 transition-colors hover:bg-red-500/10"
+          title="Delete Pet"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Mobile Actions Dropdown */}
@@ -522,6 +591,7 @@ function PetManagementItem({
               if (val === "toggle") onToggleStatus();
               else if (val === "view") onView();
               else if (val === "edit") onEdit();
+              else if (val === "delete") onDelete();
               e.target.value = "";
             }}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
@@ -533,6 +603,7 @@ function PetManagementItem({
             <option value="view">View Details</option>
             <option value="edit">Edit Pet</option>
             <option value="toggle">Toggle Availability</option>
+            <option value="delete">Delete Pet</option>
           </select>
         </div>
       </div>

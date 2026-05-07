@@ -69,7 +69,7 @@ export const authenticateWithFirebase = async (customToken: string) => {
   }
 };
 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 /**
  * Uploads a file to Firebase Storage and returns the download URL.
@@ -93,6 +93,27 @@ export const uploadToFirebase = async (
   } catch (error) {
     console.error("Error uploading to Firebase:", error);
     throw error;
+  }
+};
+
+/**
+ * Deletes a file from Firebase Storage.
+ * @param urlOrPath The download URL or full path of the file to delete
+ */
+export const deleteFromFirebase = async (urlOrPath: string): Promise<void> => {
+  if (!storage) {
+    throw new Error("Firebase Storage not initialized");
+  }
+
+  try {
+    // If it's a URL, we need to extract the path or use refFromURL if available
+    // But ref(storage, url) often works for download URLs in many Firebase versions
+    const fileRef = ref(storage, urlOrPath);
+    await deleteObject(fileRef);
+    console.log("Successfully deleted file from Firebase Storage");
+  } catch (error) {
+    console.error("Error deleting from Firebase:", error);
+    // We don't necessarily want to throw here if the file already doesn't exist
   }
 };
 

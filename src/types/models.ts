@@ -55,5 +55,6 @@ export interface Pet {
   parentImages?: { url: string; label: string }[];
   parent_images?: { url: string; label: string }[];
   status: "available" | "sold";
+  favourite_food?: any;
   vendor: { name: string; id: string; image: string };
 }

@@ -20,7 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Image from "next/image";
-import { uploadToFirebase } from "@/lib/firebase";
+import { uploadToFirebase, deleteFromFirebase } from "@/lib/firebase";
 import vaccinationsData from "@/data/vaccinations.json";
 
 const VACCINATIONS: Record<string, { id: string; name: string; isCore: boolean }[]> = vaccinationsData;
@@ -76,25 +76,27 @@ export default function PetForm({
       const path = `pets/${Date.now()}-${type}-${file.name}`;
       const url = await uploadToFirebase(file, path);
 
+      const newImages = [...formData.images];
       if (type === "main") {
-        const newImages = [...formData.images];
+        if (newImages[0]?.url) await deleteFromFirebase(newImages[0].url);
         newImages[0] = { url, label: "Main Photo" };
         setFormData({ ...formData, images: newImages });
       } else if (type === "father") {
-        const newImages = [...formData.images];
-        // Find or add father photo
         const index = newImages.findIndex((img) => img.label === "Father");
-        if (index > -1) newImages[index].url = url;
-        else newImages.push({ url, label: "Father" });
+        if (index > -1) {
+          await deleteFromFirebase(newImages[index].url);
+          newImages[index].url = url;
+        } else newImages.push({ url, label: "Father" });
         setFormData({ ...formData, images: newImages });
       } else if (type === "mother") {
-        const newImages = [...formData.images];
-        // Find or add mother photo
         const index = newImages.findIndex((img) => img.label === "Mother");
-        if (index > -1) newImages[index].url = url;
-        else newImages.push({ url, label: "Mother" });
+        if (index > -1) {
+          await deleteFromFirebase(newImages[index].url);
+          newImages[index].url = url;
+        } else newImages.push({ url, label: "Mother" });
         setFormData({ ...formData, images: newImages });
       } else if (type === "certificate") {
+        if (formData.vaccinationCertificateUrl) await deleteFromFirebase(formData.vaccinationCertificateUrl);
         setFormData({ ...formData, vaccinationCertificateUrl: url });
       }
     } catch (error) {
@@ -334,7 +336,6 @@ export default function PetForm({
               </div>
 
               {formData.isVaccinated && (
-                <div className="space-y-6">
                 <div className="space-y-8">
                   {/* Core Vaccinations */}
                   <div className="space-y-4">
@@ -457,8 +458,11 @@ export default function PetForm({
                           />
                           <button
                             type="button"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
+                              if (formData.vaccinationCertificateUrl) {
+                                await deleteFromFirebase(formData.vaccinationCertificateUrl);
+                              }
                               setFormData({
                                 ...formData,
                                 vaccinationCertificateUrl: "",
@@ -516,8 +520,11 @@ export default function PetForm({
                       />
                       <button
                         type="button"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
+                          if (formData.images[0]?.url) {
+                            await deleteFromFirebase(formData.images[0].url);
+                          }
                           const newImages = [...formData.images];
                           newImages.shift();
                           setFormData({ ...formData, images: newImages });
