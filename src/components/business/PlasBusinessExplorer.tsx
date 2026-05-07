@@ -184,7 +184,7 @@ export default function PlasBusinessExplorer({
               <div className="flex space-x-2">
                 <button
                   onClick={() => setActiveTab("services")}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-xl sm:px-6 sm:py-3 sm:text-base ${
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm ${
                     activeTab === "services"
                       ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                       : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
@@ -194,7 +194,7 @@ export default function PlasBusinessExplorer({
                   }
                 >
                   <Package
-                    className="h-4 w-4 sm:h-5 sm:w-5"
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                     style={
                       activeTab === "services"
                         ? { color: "#ffffff" }
@@ -205,7 +205,7 @@ export default function PlasBusinessExplorer({
                 </button>
                 <button
                   onClick={() => setActiveTab("rfqs")}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-xl sm:px-6 sm:py-3 sm:text-base ${
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm ${
                     activeTab === "rfqs"
                       ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                       : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
@@ -215,7 +215,7 @@ export default function PlasBusinessExplorer({
                   }
                 >
                   <FileText
-                    className="h-4 w-4 sm:h-5 sm:w-5"
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                     style={
                       activeTab === "rfqs" ? { color: "#ffffff" } : undefined
                     }

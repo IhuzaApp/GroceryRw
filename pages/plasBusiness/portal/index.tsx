@@ -13,6 +13,7 @@ import QuoteDetailsModal from "../quote-details-modal";
 import { CreateRFQForm } from "../../../src/components/business/CreateRFQForm";
 import { ContractDetailDrawer } from "../../../src/components/business/ContractDetailDrawer";
 import { getOrCreateBusinessConversation } from "../../../src/services/chatService";
+import { PortalCacheProvider } from "../../../src/context/PortalCacheContext";
 import toast from "react-hot-toast";
 
 export default function PlasBusinessPage() {
@@ -145,11 +146,39 @@ export default function PlasBusinessPage() {
 
   return (
     <RootLayout>
-      <div className="min-h-screen bg-[var(--bg-primary)]">
-        {/* Desktop View */}
-        <div className="hidden md:ml-16 md:block">
-          <div className="max-w-8xl container mx-auto px-4 py-8">
-            <DesktopPortal
+      <PortalCacheProvider>
+        <div className="min-h-screen bg-[var(--bg-primary)]">
+          {/* Desktop View */}
+          <div className="hidden md:ml-16 md:block">
+            <div className="max-w-8xl container mx-auto px-4 py-8">
+              <DesktopPortal
+                selectedQuote={selectedQuote}
+                setSelectedQuote={setSelectedQuote}
+                isQuoteModalOpen={isQuoteModalOpen}
+                setIsQuoteModalOpen={setIsQuoteModalOpen}
+                isCreateRFQOpen={isCreateRFQOpen}
+                setIsCreateRFQOpen={setIsCreateRFQOpen}
+                router={router}
+                businessAccount={businessAccount}
+                rfqCreated={rfqCreated}
+                setRfqCreated={setRfqCreated}
+                setSelectedContractId={setSelectedContractId}
+                setIsContractDrawerOpen={setIsContractDrawerOpen}
+              />
+            </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="relative min-h-screen overflow-hidden pb-24 md:hidden">
+            <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]">
+              <img
+                src="/assets/images/auth/login_bg.png"
+                className="h-full w-full object-cover"
+                alt=""
+              />
+            </div>
+
+            <MobilePortal
               selectedQuote={selectedQuote}
               setSelectedQuote={setSelectedQuote}
               isQuoteModalOpen={isQuoteModalOpen}
@@ -160,65 +189,39 @@ export default function PlasBusinessPage() {
               businessAccount={businessAccount}
               rfqCreated={rfqCreated}
               setRfqCreated={setRfqCreated}
+              theme={theme}
               setSelectedContractId={setSelectedContractId}
               setIsContractDrawerOpen={setIsContractDrawerOpen}
             />
           </div>
         </div>
 
-        {/* Mobile View */}
-        <div className="relative min-h-screen overflow-hidden pb-24 md:hidden">
-          <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]">
-            <img
-              src="/assets/images/auth/login_bg.png"
-              className="h-full w-full object-cover"
-              alt=""
-            />
-          </div>
+        <QuoteDetailsModal
+          quote={selectedQuote}
+          isOpen={isQuoteModalOpen}
+          onClose={() => setIsQuoteModalOpen(false)}
+          onAccept={handleAcceptQuote}
+          onReject={handleRejectQuote}
+          onMessage={handleMessageSupplier}
+        />
 
-          <MobilePortal
-            selectedQuote={selectedQuote}
-            setSelectedQuote={setSelectedQuote}
-            isQuoteModalOpen={isQuoteModalOpen}
-            setIsQuoteModalOpen={setIsQuoteModalOpen}
-            isCreateRFQOpen={isCreateRFQOpen}
-            setIsCreateRFQOpen={setIsCreateRFQOpen}
-            router={router}
-            businessAccount={businessAccount}
-            rfqCreated={rfqCreated}
-            setRfqCreated={setRfqCreated}
-            theme={theme}
-            setSelectedContractId={setSelectedContractId}
-            setIsContractDrawerOpen={setIsContractDrawerOpen}
-          />
-        </div>
-      </div>
+        <CreateRFQForm
+          isOpen={isCreateRFQOpen}
+          onClose={() => setIsCreateRFQOpen(false)}
+          onSubmit={handleRFQSubmit}
+          businessAccount={businessAccount}
+        />
 
-      <QuoteDetailsModal
-        quote={selectedQuote}
-        isOpen={isQuoteModalOpen}
-        onClose={() => setIsQuoteModalOpen(false)}
-        onAccept={handleAcceptQuote}
-        onReject={handleRejectQuote}
-        onMessage={handleMessageSupplier}
-      />
-
-      <CreateRFQForm
-        isOpen={isCreateRFQOpen}
-        onClose={() => setIsCreateRFQOpen(false)}
-        onSubmit={handleRFQSubmit}
-        businessAccount={businessAccount}
-      />
-
-      <ContractDetailDrawer
-        isOpen={isContractDrawerOpen}
-        onClose={() => {
-          setIsContractDrawerOpen(false);
-          setSelectedContractId(null);
-        }}
-        contractId={selectedContractId}
-        businessAccount={businessAccount}
-      />
+        <ContractDetailDrawer
+          isOpen={isContractDrawerOpen}
+          onClose={() => {
+            setIsContractDrawerOpen(false);
+            setSelectedContractId(null);
+          }}
+          contractId={selectedContractId}
+          businessAccount={businessAccount}
+        />
+      </PortalCacheProvider>
     </RootLayout>
   );
 }

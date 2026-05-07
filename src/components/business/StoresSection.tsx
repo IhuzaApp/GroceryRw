@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import { Store, Plus, ExternalLink, MapPin, Eye, Clock } from "lucide-react";
 import { formatOperatingDays } from "../../lib/formatters";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { CreateStoreForm } from "./CreateStoreForm";
+import { usePortalCache } from "../../context/PortalCacheContext";
 
 interface StoresSectionProps {
   businessAccount?: any;
@@ -18,46 +19,20 @@ export function StoresSection({
   className = "",
 }: StoresSectionProps) {
   const router = useRouter();
-  const [userStores, setUserStores] = useState<any[]>([]);
-  const [loadingStores, setLoadingStores] = useState(false);
   const [isCreateStoreModalOpen, setIsCreateStoreModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (businessAccount?.id) {
-      fetchUserStores();
-    }
-  }, [businessAccount]);
-
-  const fetchUserStores = async () => {
-    if (!businessAccount?.id) {
-      setUserStores([]);
-      return;
-    }
-
-    setLoadingStores(true);
-    try {
-      const response = await fetch("/api/queries/business-stores");
-      if (response.ok) {
-        const data = await response.json();
-        setUserStores(data.stores || []);
-      } else {
-        setUserStores([]);
-      }
-    } catch (error) {
-      toast.error("Failed to load stores");
-      setUserStores([]);
-    } finally {
-      setLoadingStores(false);
-    }
-  };
+  // ── Use shared portal cache instead of fetching independently ─────────────
+  const { stores: storesCache, invalidate } = usePortalCache();
+  const userStores = storesCache.data ?? [];
+  const loadingStores = storesCache.isLoading;
 
   const handleCreateStore = () => {
     setIsCreateStoreModalOpen(true);
   };
 
-  const handleStoreCreated = (storeData: any) => {
-    // Refresh the stores list
-    fetchUserStores();
+  const handleStoreCreated = (_storeData: any) => {
+    // Bust the cached slice so the new store appears immediately
+    invalidate("stores");
     setIsCreateStoreModalOpen(false);
   };
 

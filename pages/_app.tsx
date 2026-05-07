@@ -73,6 +73,8 @@ import { LanguageProvider } from "../src/context/LanguageContext";
 import LoadingScreen from "../src/components/ui/LoadingScreen";
 import Head from "next/head";
 
+import { HideBottomBarProvider } from "../src/context/HideBottomBarContext";
+
 // Configure NProgress
 NProgress.configure({ showSpinner: false });
 
@@ -536,20 +538,22 @@ export default function App({ Component, pageProps }: AppProps) {
         >
           <ApolloProvider client={apolloClient}>
             <AuthProvider>
-              <BusinessWalletProvider>
-                <CartProvider>
-                  <FoodCartProvider>
-                    <ChatProvider>
-                      <GoogleMapProvider>
-                        <SessionRefreshHandler>
-                          <Toaster />
-                          <Component {...pageProps} />
-                        </SessionRefreshHandler>
-                      </GoogleMapProvider>
-                    </ChatProvider>
-                  </FoodCartProvider>
-                </CartProvider>
-              </BusinessWalletProvider>
+              <HideBottomBarProvider>
+                <BusinessWalletProvider>
+                  <CartProvider>
+                    <FoodCartProvider>
+                      <ChatProvider>
+                        <GoogleMapProvider>
+                          <SessionRefreshHandler>
+                            <Toaster />
+                            <Component {...pageProps} />
+                          </SessionRefreshHandler>
+                        </GoogleMapProvider>
+                      </ChatProvider>
+                    </FoodCartProvider>
+                  </CartProvider>
+                </BusinessWalletProvider>
+              </HideBottomBarProvider>
             </AuthProvider>
           </ApolloProvider>
         </SessionProvider>

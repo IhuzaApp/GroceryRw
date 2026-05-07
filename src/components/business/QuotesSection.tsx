@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Truck,
   Clock,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import toast from "react-hot-toast";
+import { usePortalCache } from "../../context/PortalCacheContext";
 
 interface QuotesSectionProps {
   className?: string;
@@ -21,31 +22,10 @@ export function QuotesSection({
   className = "",
   onViewQuoteDetails,
 }: QuotesSectionProps) {
-  const [quotes, setQuotes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSubmittedQuotes();
-  }, []);
-
-  const fetchSubmittedQuotes = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/queries/business-submitted-quotes");
-      if (response.ok) {
-        const data = await response.json();
-        setQuotes(data.quotes || []);
-      } else {
-        const errorData = await response.json();
-        toast.error("Failed to load submitted quotes");
-      }
-    } catch (error) {
-      console.error("Error fetching submitted quotes:", error);
-      toast.error("Failed to load submitted quotes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ── Use shared portal cache instead of fetching independently ─────────────
+  const { quotes: quotesCache } = usePortalCache();
+  const quotes = quotesCache.data ?? [];
+  const loading = quotesCache.isLoading;
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "Not specified";

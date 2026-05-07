@@ -249,7 +249,7 @@ export function MobilePlasBusinessExplorer({
           <div className="flex space-x-2">
             <button
               onClick={() => setActiveTab("services")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
                 activeTab === "services"
                   ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
                   : "border border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600"
@@ -259,7 +259,7 @@ export function MobilePlasBusinessExplorer({
               }
             >
               <Package
-                className="h-4 w-4"
+                className="h-3.5 w-3.5"
                 style={
                   activeTab === "services" ? { color: "#ffffff" } : undefined
                 }
@@ -268,7 +268,7 @@ export function MobilePlasBusinessExplorer({
             </button>
             <button
               onClick={() => setActiveTab("rfqs")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
                 activeTab === "rfqs"
                   ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
                   : "border border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600"
@@ -276,7 +276,7 @@ export function MobilePlasBusinessExplorer({
               style={activeTab === "rfqs" ? { color: "#ffffff" } : undefined}
             >
               <FileText
-                className="h-4 w-4"
+                className="h-3.5 w-3.5"
                 style={activeTab === "rfqs" ? { color: "#ffffff" } : undefined}
               />
               <span>RFQ Opportunities</span>

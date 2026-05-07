@@ -5,6 +5,7 @@ import { Plus, DollarSign, FileText, Clock } from "lucide-react";
 import { RFQResponsesView } from "./RFQResponsesView";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import toast from "react-hot-toast";
+import { usePortalCache } from "../../context/PortalCacheContext";
 
 interface MyRFQsSectionProps {
   className?: string;
@@ -26,37 +27,18 @@ export function MyRFQsSection({
   onRFQCreated,
 }: MyRFQsSectionProps) {
   const [viewingResponses, setViewingResponses] = useState<string | null>(null);
-  const [rfqs, setRfqs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchRFQs();
-  }, []);
+  // ── Use shared portal cache instead of fetching independently ───────────
+  const { rfqs: rfqsCache, invalidate } = usePortalCache();
+  const rfqs = rfqsCache.data ?? [];
+  const loading = rfqsCache.isLoading;
 
-  // Refresh RFQs when a new one is created
+  // When parent signals a new RFQ was created, refresh the cached slice
   useEffect(() => {
     if (onRFQCreated !== undefined) {
-      fetchRFQs();
+      invalidate("rfqs");
     }
-  }, [onRFQCreated]);
-
-  const fetchRFQs = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/queries/business-rfqs");
-      if (response.ok) {
-        const data = await response.json();
-        setRfqs(data.rfqs || []);
-      } else {
-        toast.error("Failed to load RFQs");
-      }
-    } catch (error) {
-      console.error("Error fetching RFQs:", error);
-      toast.error("Failed to load RFQs");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [onRFQCreated, invalidate]);
 
   const handleCreateRFQ = () => {
     if (onCreateRFQ) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   FileText,
   Calendar,
@@ -23,6 +23,7 @@ import {
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { downloadContractAsPdf } from "../../lib/contractUtils";
 import toast from "react-hot-toast";
+import { usePortalCache } from "../../context/PortalCacheContext";
 
 interface Contract {
   id: string;
@@ -101,8 +102,6 @@ export function ContractsManagement({
   onEditContract,
   onMessageSupplier,
 }: ContractsManagementProps) {
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<
     "date" | "value" | "status" | "progress"
   >("date");
@@ -119,64 +118,46 @@ export function ContractsManagement({
   >("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchContracts();
-  }, []);
+  // ── Use shared portal cache instead of fetching independently ─────────────
+  const { contracts: contractsCache } = usePortalCache();
+  const loading = contractsCache.isLoading;
 
-  const fetchContracts = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/queries/business-contracts");
-      if (response.ok) {
-        const data = await response.json();
-        // Transform API data to match Contract interface
-        const transformedContracts: Contract[] = (data.contracts || []).map(
-          (contract: any) => ({
-            id: contract.id,
-            contractId: contract.contractId,
-            title: contract.title,
-            supplierName: contract.supplierName,
-            supplierCompany: contract.supplierCompany,
-            supplierId: contract.supplierId || "",
-            contractType: contract.contractType,
-            status: contract.status,
-            startDate: contract.startDate,
-            endDate: contract.endDate,
-            totalValue: contract.totalValue,
-            currency: contract.currency,
-            paymentSchedule: contract.paymentSchedule,
-            progress: contract.progress || 0,
-            deliverables: Array.isArray(contract.deliverables)
-              ? contract.deliverables.map((del: any, idx: number) => ({
-                  id: del.id || `del-${idx}`,
-                  description: del.description || "",
-                  dueDate: del.dueDate || "",
-                  value: del.value || 0,
-                  status: (del.status || "pending") as
-                    | "pending"
-                    | "in-progress"
-                    | "completed"
-                    | "overdue",
-                }))
-              : [],
-            lastActivity: contract.updated_at || contract.created_at || "",
-            created: contract.created_at || "",
-            signedByClient: !!contract.clientSignature,
-            signedBySupplier: !!contract.supplierSignature,
-          })
-        );
-        setContracts(transformedContracts);
-      } else {
-        console.error("Failed to fetch contracts");
-        setContracts([]);
-      }
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
-      setContracts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Transform the raw API data to the Contract interface
+  const contracts: Contract[] = useMemo(() => {
+    return (contractsCache.data ?? []).map((contract: any) => ({
+      id: contract.id,
+      contractId: contract.contractId,
+      title: contract.title,
+      supplierName: contract.supplierName,
+      supplierCompany: contract.supplierCompany,
+      supplierId: contract.supplierId || "",
+      contractType: contract.contractType,
+      status: contract.status,
+      startDate: contract.startDate,
+      endDate: contract.endDate,
+      totalValue: contract.totalValue,
+      currency: contract.currency,
+      paymentSchedule: contract.paymentSchedule,
+      progress: contract.progress || 0,
+      deliverables: Array.isArray(contract.deliverables)
+        ? contract.deliverables.map((del: any, idx: number) => ({
+            id: del.id || `del-${idx}`,
+            description: del.description || "",
+            dueDate: del.dueDate || "",
+            value: del.value || 0,
+            status: (del.status || "pending") as
+              | "pending"
+              | "in-progress"
+              | "completed"
+              | "overdue",
+          }))
+        : [],
+      lastActivity: contract.updated_at || contract.created_at || "",
+      created: contract.created_at || "",
+      signedByClient: !!contract.clientSignature,
+      signedBySupplier: !!contract.supplierSignature,
+    }));
+  }, [contractsCache.data]);
 
   const filteredContracts = contracts
     .filter((contract) => {

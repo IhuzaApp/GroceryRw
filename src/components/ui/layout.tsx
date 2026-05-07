@@ -18,9 +18,7 @@ export default function RootLayout({
   hideNavigation?: boolean;
 }) {
   return (
-    <HideBottomBarProvider>
-      <LayoutContent hideNavigation={hideNavigation}>{children}</LayoutContent>
-    </HideBottomBarProvider>
+    <LayoutContent hideNavigation={hideNavigation}>{children}</LayoutContent>
   );
 }
 

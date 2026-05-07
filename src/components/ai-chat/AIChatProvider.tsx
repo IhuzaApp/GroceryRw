@@ -9,8 +9,8 @@ import { useHideBottomBar } from "../../context/HideBottomBarContext";
 export default function AIChatProvider() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-  const { data: session } = useSession();
-  const { isGuest } = useAuth();
+  const { data: session, status } = useSession();
+  const { isGuest, isLoading } = useAuth();
   const { hideFloatingUI } = useHideBottomBar();
 
   const isStoreOrCheckout =
@@ -37,8 +37,8 @@ export default function AIChatProvider() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
-  // Don't show AI chat for logged-out users or guests (after all hooks)
-  if (!session?.user || isGuest) {
+  // Don't show AI chat during loading, for logged-out users, guests, or when floating UI is hidden
+  if (status === "loading" || isLoading || !session?.user || isGuest || hideFloatingUI) {
     return null;
   }
 

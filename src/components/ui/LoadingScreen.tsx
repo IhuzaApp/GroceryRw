@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@context/ThemeContext";
+import { useHideBottomBar } from "@context/HideBottomBarContext";
 
 interface LoadingScreenProps {
   loadingProgress?: number;
@@ -27,8 +28,15 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   isOverlay = false,
 }) => {
   const { theme } = useTheme();
+  const { setHideFloatingUI } = useHideBottomBar();
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState(customMessages[0]);
+
+  useEffect(() => {
+    // Hide AI chat button and other floating UI when loading screen is visible
+    setHideFloatingUI(true);
+    return () => setHideFloatingUI(false);
+  }, [setHideFloatingUI]);
 
   useEffect(() => {
     if (externalProgress !== undefined) {

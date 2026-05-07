@@ -225,16 +225,17 @@ export function DesktopPortal({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-300 ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                   activeTab === tab.id
                     ? "scale-105 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20"
                     : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                 }`}
               >
                 <tab.icon
-                  className={`h-4 w-4 ${
+                  className={`h-3.5 w-3.5 ${
                     activeTab === tab.id ? "text-white" : ""
                   }`}
+                  style={activeTab === tab.id ? { color: "#ffffff" } : undefined}
                 />
                 <span>{tab.label}</span>
               </button>
