@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import RootLayout from "@components/ui/layout";
 import {
@@ -572,7 +572,7 @@ function MessagesPage() {
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || // uuid
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
       );
-  }, [conversations.length, conversations.map(c => c.id).join(",")]);
+  }, [conversations.length, conversations.map(c => `${c.id}-${c.orderId || ''}`).join(",")]);
 
   // Fetch order details for order-type conversations
   useEffect(() => {
@@ -638,7 +638,7 @@ function MessagesPage() {
     return () => {
       cancelled = true;
     };
-  }, [conversations, orders]);
+  }, [orderIdsToFetch]);
 
   const filteredConversations = conversations
     .map((conversation) => {

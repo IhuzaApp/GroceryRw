@@ -130,6 +130,15 @@ const GET_REEL_ORDER_DETAILS = gql`
           logo
         }
       }
+      shoppers {
+        id
+        full_name
+        phone
+        profile_photo
+        User {
+          email
+        }
+      }
       orderedBy: User {
         id
         name
@@ -156,6 +165,15 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         name
         location
         logo
+      }
+      shoppers {
+        id
+        full_name
+        phone
+        profile_photo
+        User {
+          email
+        }
       }
       orderedBy {
         id
@@ -514,6 +532,13 @@ export default async function handler(
           orderType: "reel",
           placedAt: new Date(reelOrder.created_at).toLocaleString(),
           shop: reelOrder.reel?.Shops,
+          shoppers: reelOrder.shoppers,
+          assignedTo: reelOrder.shoppers?.[0] ? {
+            ...reelOrder.shoppers[0],
+            name: reelOrder.shoppers[0].full_name,
+            profile_picture: reelOrder.shoppers[0].profile_photo,
+            email: reelOrder.shoppers[0].User?.email,
+          } : null,
           orderedBy: reelOrder.orderedBy || null,
           Order_Items: [
             {
@@ -537,6 +562,13 @@ export default async function handler(
           ...restOrder,
           orderType: "restaurant",
           placedAt: new Date(restOrder.created_at).toLocaleString(),
+          shoppers: restOrder.shoppers,
+          assignedTo: restOrder.shoppers?.[0] ? {
+            ...restOrder.shoppers[0],
+            name: restOrder.shoppers[0].full_name,
+            profile_picture: restOrder.shoppers[0].profile_photo,
+            email: restOrder.shoppers[0].User?.email,
+          } : null,
           orderedBy: restOrder.orderedBy || null,
           shop: restOrder.Restaurant
             ? {
@@ -750,7 +782,7 @@ export default async function handler(
 
     return res.status(404).json({ error: "Order or Booking not found" });
   } catch (error: any) {
-    console.error("Order Details Error:", error);
+    console.error(`❌ [OrderDetails] Error fetching details for ${orderId}:`, error);
     return res
       .status(500)
       .json({ error: error.message || "Internal server error" });

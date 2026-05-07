@@ -1584,11 +1584,21 @@ export default function DesktopMessagePage({
 
                                           // Match by ID against conversation participants (even if it's Me)
                                           if (resolvedAvatar === "/images/userProfile.png" || isCurrentUser) {
-                                            const dbAvatar = (message.senderId === selectedConversation?.customerId)
-                                              ? (selectedConversation as any).customerAvatar || selectedOrder?.orderedBy?.profile_picture
-                                              : (message.senderId === selectedConversation?.counterpartId)
-                                                ? (selectedConversation as any).counterpartAvatar || selectedOrder?.shop?.image || selectedRfq?.business_account?.face_image
-                                                : null;
+                                            let dbAvatar = null;
+                                            
+                                            if (message.senderId === selectedConversation?.customerId) {
+                                              dbAvatar = (selectedConversation as any).customerAvatar || selectedOrder?.orderedBy?.profile_picture;
+                                            } else if (
+                                              message.senderId === selectedConversation?.counterpartId || 
+                                              message.senderId === (selectedConversation as any).vendorUserId ||
+                                              message.senderId === selectedConversation?.shopperId ||
+                                              message.senderId === (selectedConversation as any).shopperUserId
+                                            ) {
+                                              dbAvatar = (selectedConversation as any).counterpartAvatar || 
+                                                         selectedOrder?.shop?.image || 
+                                                         selectedOrder?.assignedTo?.profile_picture || 
+                                                         selectedRfq?.business_account?.face_image;
+                                            }
                                             
                                             if (dbAvatar) resolvedAvatar = dbAvatar;
                                           }
