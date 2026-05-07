@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { sendSMS } from "../../../src/lib/pindo";
 import { sendNotificationToUser } from "../../../src/services/fcmService";
 
 const UPDATE_ADOPTION_STATUS = gql`
@@ -64,19 +63,7 @@ export default async function handler(
 
     // Notify Customer
     try {
-      const customerPhone = adoption.User?.phone;
       const petName = adoption.pets?.name || "Pet";
-      const customerName = adoption.User?.name || "Customer";
-
-      if (customerPhone) {
-        let message = "";
-        if (action === "ACCEPT") {
-          message = `Hello ${customerName}, your adoption of "${petName}" has been ACCEPTED by the vendor! Please confirm receipt once you have the pet. 🐾`;
-        } else {
-          message = `Hello ${customerName}, unfortunately your adoption of "${petName}" has been CANCELLED as it is no longer available. Please contact support for a refund.`;
-        }
-        await sendSMS(customerPhone, message);
-      }
 
       if (adoption.customer_id) {
         await sendNotificationToUser(adoption.customer_id, {

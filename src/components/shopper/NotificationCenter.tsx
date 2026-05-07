@@ -378,8 +378,6 @@ export default function NotificationCenter({ isGlassMode = false }: Notification
     };
   }, [isOpen, isMobile, setHideFloatingUI]);
 
-  // loadNotifications removed in favor of real-time Firestore listener
-
   const markAllAsRead = async () => {
     if (!session?.user?.id || !db || notifications.length === 0) return;
 
