@@ -61,16 +61,34 @@ interface NotificationItem {
 interface NotificationCenterProps {
   isGlassMode?: boolean;
   renderTrigger?: (isOpen: boolean, unreadCount: number) => React.ReactNode;
+  disableToasts?: boolean;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+  onCountChange?: (count: number) => void;
 }
 
 export default function NotificationCenter({ 
   isGlassMode = false,
-  renderTrigger
+  renderTrigger,
+  disableToasts = false,
+  externalOpen,
+  onExternalOpenChange,
+  onCountChange
 }: NotificationCenterProps = {}) {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = (open: boolean) => {
+    if (onExternalOpenChange) {
+      onExternalOpenChange(open);
+    } else {
+      setInternalOpen(open);
+    }
+  };
+
   const { setHideFloatingUI } = useHideBottomBar();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -83,7 +101,7 @@ export default function NotificationCenter({
 
   const router = useRouter();
   const isShopping = router.pathname.includes("/Plasa/active-batches");
-  const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(0);
+  const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(Date.now());
   const [now, setNow] = useState(Date.now());
 
   // ... (rest of useEffects same)
@@ -217,7 +235,11 @@ export default function NotificationCenter({
       filtered.sort((a, b) => b.timestamp - a.timestamp);
 
       setNotifications(filtered);
-      setUnreadCount(filtered.filter((n) => !n.read).length);
+      const newUnreadCount = filtered.filter((n) => !n.read).length;
+      setUnreadCount(newUnreadCount);
+      if (onCountChange) {
+        onCountChange(newUnreadCount);
+      }
     }, (error) => {
       console.error("Firestore Notification Listener Error:", error);
     });
@@ -227,7 +249,7 @@ export default function NotificationCenter({
 
   // Detect new notifications and show a small toast if we are on the active-batches page
   useEffect(() => {
-    if (notifications.length > 0) {
+    if (notifications.length > 0 && !disableToasts) {
       const latest = notifications[0]; // notifications are sorted newest first
       if (latest.timestamp > lastSeenTimestamp && !latest.read) {
         setLastSeenTimestamp(latest.timestamp);

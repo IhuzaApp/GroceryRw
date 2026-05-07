@@ -185,6 +185,7 @@ export default function BottomBar() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [showHomeActions, setShowHomeActions] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const isModalOpen = useAnyModalOpen();
 
   const homePressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -375,6 +376,16 @@ export default function BottomBar() {
 
   return (
     <>
+      {/* Global Notification Center for Mobile - Controlled by state */}
+      {session?.user && !isGuest && (
+        <NotificationCenter
+          externalOpen={isNotificationsOpen}
+          onExternalOpenChange={setIsNotificationsOpen}
+          onCountChange={setNotificationCount}
+          disableToasts={true}
+          renderTrigger={() => null}
+        />
+      )}
       {/* Floating Buttons (Ask, Help) */}
 
       {/* Floating Cart Button (Lifted) - hidden on store & checkout pages */}
@@ -1272,35 +1283,34 @@ export default function BottomBar() {
 
                     {/* Notifications - Added */}
                     {session?.user && !isGuest && (
-                      <NotificationCenter
-                        renderTrigger={(isOpen, count) => (
-                          <MoreMenuItem
-                            icon={
-                              <div className="relative inline-block text-gray-600 dark:text-gray-300">
-                                <svg
-                                  width="20px"
-                                  height="20px"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                </svg>
-                                {count > 0 && (
-                                  <span className="absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg">
-                                    {count > 9 ? "9+" : count}
-                                  </span>
-                                )}
-                              </div>
-                            }
-                            label="Notifications"
-                            href="#"
-                            onClick={() => setMoreOpen(false)}
-                          />
-                        )}
+                      <MoreMenuItem
+                        icon={
+                          <div className="relative inline-block text-gray-600 dark:text-gray-300">
+                            <svg
+                              width="20px"
+                              height="20px"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            {notificationCount > 0 && (
+                              <span className="absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg">
+                                {notificationCount > 9 ? "9+" : notificationCount}
+                              </span>
+                            )}
+                          </div>
+                        }
+                        label="Notifications"
+                        href="#"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          setIsNotificationsOpen(true);
+                        }}
                       />
                     )}
 
