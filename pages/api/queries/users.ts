@@ -3,32 +3,16 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_USERS = gql`
-  query GetUsers {
-    Users {
+  query GetUsers($ids: [uuid!]) {
+    Users(where: { id: { _in: $ids } }) {
       id
       name
       email
-      created_at
-      updated_at
-      gender
-      is_active
-      password_hash
-      phone
       profile_picture
-      role
+      phone
     }
   }
 `;
-
-interface UsersResponse {
-  Users: Array<{
-    id: string;
-    name: string;
-    email: string;
-    created_at: string;
-    updated_at: string;
-  }>;
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -39,7 +23,14 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<UsersResponse>(GET_USERS);
+    const { ids } = req.query;
+    let variables = {};
+    if (ids) {
+      const idArray = Array.isArray(ids) ? ids : (ids as string).split(",");
+      variables = { ids: idArray };
+    }
+
+    const data = await hasuraClient.request<any>(GET_USERS, variables);
     res.status(200).json({ users: data.Users });
   } catch (error) {
     console.error("Error fetching users:", error);

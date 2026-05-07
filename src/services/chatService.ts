@@ -48,6 +48,13 @@ export interface ChatConversation {
   lastMessage?: string;
   lastMessageTime?: any;
   unreadCount: number;
+  counterpartName?: string;
+  counterpartAvatar?: string;
+  counterpartPhone?: string;
+  customerName?: string;
+  customerAvatar?: string;
+  customerPhone?: string;
+  businessAvatar?: string;
 }
 
 /**

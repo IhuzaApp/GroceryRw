@@ -38,12 +38,15 @@ function formatOrderID(id?: string | number): string {
 }
 
 function getOrderType(conversation: Conversation): string {
+  if (conversation.type === "petBusiness" || conversation.type === "pet" || conversation.title?.startsWith("Adoption: ")) {
+    return "pet";
+  }
+  if (conversation.type === "carBusiness") {
+    return "vehicle";
+  }
   if (conversation.collectionPath === "business_conversations") {
     return "business";
   }
-  // For chat_conversations, we don't know the exact order type yet without fetching,
-  // but if we have the order object already, we can use it.
-  // However, this helper is used before fetching the order.
   return "";
 }
 
@@ -446,57 +449,113 @@ function MessagesPage() {
 
   // Fetch counterpart details for business conversations
   useEffect(() => {
-    const businessConversationsToFetch = conversations
-      .filter(
-        (c) =>
-          c.collectionPath === "business_conversations" &&
-          c.counterpartId &&
-          !c.counterpartId
-      )
-      .map((c) => c.counterpartId!);
+    const idsToFetch = new Set<string>();
+
+    // Always include current user if they don't have an image in session
+    if (session?.user?.id && !session.user.image) {
+      idsToFetch.add(session.user.id);
+    }
+
+    conversations.forEach((c) => {
+      if (c.collectionPath === "business_conversations") {
+        if (c.counterpartId && c.counterpartId !== session?.user?.id && !c.counterpartId) {
+          idsToFetch.add(c.counterpartId);
+        }
+        if (c.customerId && c.customerId !== session?.user?.id && !(c as any).customerName) {
+          idsToFetch.add(c.customerId);
+        }
+        if ((c as any).vendorUserId && (c as any).vendorUserId !== session?.user?.id && !c.counterpartAvatar) {
+          idsToFetch.add((c as any).vendorUserId);
+        }
+      }
+      if (c.collectionPath === "chat_conversations") {
+        if (c.shopperId && c.shopperId !== session?.user?.id && !c.counterpartId) {
+          idsToFetch.add(c.shopperId);
+        }
+        if (c.customerId && c.customerId !== session?.user?.id && !(c as any).customerName) {
+          idsToFetch.add(c.customerId);
+        }
+        if ((c as any).shopperUserId && (c as any).shopperUserId !== session?.user?.id && !c.counterpartAvatar) {
+          idsToFetch.add((c as any).shopperUserId);
+        }
+      }
+    });
+
+    if (idsToFetch.size === 0) return;
+
+    // Clean IDs to ensure they are valid UUIDs before sending to Hasura
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const businessConversationsToFetch = Array.from(idsToFetch)
+      .map(id => {
+        const match = id.match(uuidRegex);
+        return match ? match[0] : null;
+      })
+      .filter((id): id is string => !!id);
 
     if (businessConversationsToFetch.length === 0) return;
 
     let cancelled = false;
     const fetchCounterparts = async () => {
       const uniqueIds = Array.from(new Set(businessConversationsToFetch));
-      const promises = uniqueIds.map(async (uid) => {
-        try {
-          const userRef = doc(db!, "users", uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            return {
-              id: uid,
-              name: userSnap.data().name || userSnap.data().full_name,
-              avatar:
-                userSnap.data().profile_picture ||
-                userSnap.data().profile_photo,
-              phone: userSnap.data().phone,
-            };
-          }
-          return { id: uid, name: "Unknown User" };
-        } catch (error) {
-          return { id: uid, name: "Error Loading" };
-        }
-      });
+      try {
+        const response = await fetch(`/api/queries/users?ids=${uniqueIds.join(",")}`);
+        const data = await response.json();
+        const results = (data.users || []).map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          avatar: u.profile_picture,
+          phone: u.phone
+        }));
 
-      const results = await Promise.all(promises);
-      if (cancelled) return;
+        if (cancelled) return;
 
-      setBusinessConversations((prev) =>
-        prev.map((conv) => {
-          const result = results.find((r) => r.id === conv.counterpartId);
-          if (result && !conv.counterpartId) {
-            return {
-              ...conv,
-              counterpartName: result.name,
-              counterpartAvatar: result.avatar,
-              counterpartPhone: result.phone,
-            };
-          }
-          return conv;
-        })
-      );
+        setBusinessConversations((prev) =>
+          prev.map((conv) => {
+            const counterpart = results.find((r: { id: string; }) =>
+              (conv.counterpartId && conv.counterpartId.includes(r.id)) ||
+              ((conv as any).vendorUserId && (conv as any).vendorUserId.includes(r.id)) ||
+              (conv.shopperId && conv.shopperId.includes(r.id)) ||
+              ((conv as any).shopperUserId && (conv as any).shopperUserId.includes(r.id))
+            );
+            const customer = results.find((r: { id: string; }) => conv.customerId && conv.customerId.includes(r.id));
+            const currentUserProfile = results.find((r: { id: string | undefined; }) => r.id === session?.user?.id);
+
+            let updated = { ...conv };
+
+            // Handle current user avatar fallback
+            if (currentUserProfile && !session?.user?.image) {
+              if (conv.customerId === session?.user?.id) {
+                updated.customerAvatar = currentUserProfile.avatar;
+                updated.customerName = currentUserProfile.name;
+              }
+              if (conv.counterpartId === session?.user?.id || (conv as any).vendorUserId === session?.user?.id) {
+                updated.counterpartAvatar = currentUserProfile.avatar;
+                updated.counterpartName = currentUserProfile.name;
+              }
+            }
+
+            if (counterpart && !conv.counterpartName) {
+              updated = {
+                ...updated,
+                counterpartName: counterpart.name,
+                counterpartAvatar: counterpart.avatar,
+                counterpartPhone: counterpart.phone,
+              };
+            }
+            if (customer && !updated.customerName) {
+              updated = {
+                ...updated,
+                customerName: customer.name,
+                customerAvatar: customer.avatar,
+                customerPhone: customer.phone,
+              };
+            }
+            return updated;
+          })
+        );
+      } catch (error) {
+        console.error("Error fetching counterparts:", error);
+      }
     };
 
     fetchCounterparts();
@@ -508,12 +567,11 @@ function MessagesPage() {
   // Fetch order details for order-type conversations
   useEffect(() => {
     const orderIds = conversations
-      .filter((c) => c.collectionPath === "chat_conversations" && c.orderId)
+      .filter((c) => c.orderId)
       .map((c) => c.orderId!)
       .filter((id) =>
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          id
-        )
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || // uuid
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
       );
 
     if (orderIds.length === 0) return;

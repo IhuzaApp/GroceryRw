@@ -1574,56 +1574,45 @@ export default function DesktopMessagePage({
                                   }`}
                                 >
                                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
-                                      {message.senderType === "customer" ? (
-                                        selectedOrder?.orderedBy?.profile_picture ? (
-                                          <img src={selectedOrder.orderedBy.profile_picture} alt={selectedOrder.orderedBy.name || "Customer"} className="h-full w-full object-cover" />
-                                        ) : (
-                                          <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.orderedBy?.name || "C").charAt(0)}</span>
-                                        )
-                                      ) : message.senderType === "shopper" ? (
-                                        selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture ? (
-                                          <img src={selectedOrder.assignedTo?.shopper?.profile_photo || selectedOrder.assignedTo?.profile_picture} alt={selectedOrder.assignedTo?.shopper?.full_name || selectedOrder.assignedTo?.name || "Shopper"} className="h-full w-full object-cover" />
-                                        ) : (
-                                          <span className="text-[10px] font-bold uppercase text-white">{(selectedOrder?.assignedTo?.shopper?.full_name || selectedOrder?.assignedTo?.name || "S").charAt(0)}</span>
-                                        )
-                                      ) : message.senderType === "business" ? (
-                                        <img
-                                          src={
-                                            selectedConversation.businessId === session?.user?.id
-                                              ? session?.user?.image || "/images/userProfile.png"
-                                              : selectedConversation.counterpartAvatar || "/images/userProfile.png"
+                                    <img
+                                      src={
+                                        (() => {
+                                          let resolvedAvatar = "/images/userProfile.png";
+                                          if (isCurrentUser && session?.user?.image) {
+                                            resolvedAvatar = session.user.image;
                                           }
-                                          alt="Business"
-                                          className="h-full w-full object-cover"
-                                        />
-                                      ) : isBusinessChat ? (
-                                      <img
-                                        src={
-                                          selectedConversation.counterpartAvatar ||
-                                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                            selectedConversation.title ||
-                                              selectedConversation.counterpartName ||
-                                              "Business"
-                                          )}&background=10b981&color=fff`
-                                        }
-                                        alt="Business"
-                                        className="h-full w-full object-cover"
-                                      />
-                                    ) : (
-                                      <svg
-                                        className="h-5 w-5 text-white"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                        />
-                                      </svg>
-                                    )}
+
+                                          // Match by ID against conversation participants (even if it's Me)
+                                          if (resolvedAvatar === "/images/userProfile.png" || isCurrentUser) {
+                                            const dbAvatar = (message.senderId === selectedConversation?.customerId)
+                                              ? (selectedConversation as any).customerAvatar || selectedOrder?.orderedBy?.profile_picture
+                                              : (message.senderId === selectedConversation?.counterpartId)
+                                                ? (selectedConversation as any).counterpartAvatar || selectedOrder?.shop?.image || selectedRfq?.business_account?.face_image
+                                                : null;
+                                            
+                                            if (dbAvatar) resolvedAvatar = dbAvatar;
+                                          }
+
+                                          // Fallback by type if still placeholder and not Me
+                                          if (resolvedAvatar === "/images/userProfile.png" && !isCurrentUser) {
+                                            if (message.senderType === "customer") {
+                                              resolvedAvatar = selectedOrder?.orderedBy?.profile_picture || (selectedConversation as any).customerAvatar || (selectedConversation as any).counterpartAvatar || "/images/userProfile.png";
+                                            } else if (message.senderType === "shopper") {
+                                              resolvedAvatar = selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture || "/images/userProfile.png";
+                                            } else if (message.senderType === "business") {
+                                              resolvedAvatar = (selectedConversation as any).counterpartAvatar || (selectedConversation as any).businessAvatar || selectedOrder?.shop?.image || selectedRfq?.business_account?.face_image || "/images/userProfile.png";
+                                            }
+                                          }
+
+                                          return resolvedAvatar;
+                                        })()
+                                      }
+                                      alt="Profile"
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(message.senderName || "U")}&background=10b981&color=fff`;
+                                      }}
+                                    />
                                   </div>
                                   <div
                                     className={`flex max-w-[70%] flex-col ${
@@ -1751,7 +1740,7 @@ export default function DesktopMessagePage({
                     aria-label="Send message"
                   >
                     <svg
-                      className="h-6 w-6 text-white"
+                      className="h-6 w-6 !text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
