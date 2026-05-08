@@ -203,11 +203,8 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
           onClick={handleDropdownToggle}
           className="group relative inline-flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-black/20 px-5 py-2.5 shadow-xl backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:bg-black/30 active:scale-95"
         >
-
           {/* Location Icon with Background */}
-          <div
-            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/20 !text-white shadow-sm backdrop-blur-md transition-colors duration-300 group-hover:bg-white/30"
-          >
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/20 !text-white shadow-sm backdrop-blur-md transition-colors duration-300 group-hover:bg-white/30">
             <svg
               className="h-4 w-4 drop-shadow-sm"
               fill="none"
@@ -231,9 +228,7 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
 
           {/* Address Text */}
           <div className="relative flex flex-1 flex-col">
-            <span
-              className="text-sm font-bold leading-tight tracking-tight !text-white"
-            >
+            <span className="text-sm font-bold leading-tight tracking-tight !text-white">
               {defaultAddress.street}, {defaultAddress.city}
             </span>
           </div>

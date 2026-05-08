@@ -138,6 +138,10 @@ export async function logErrorToSlack(
     });
   } catch (sendError) {
     // Last resort: log locally; don't throw
-    logger.error("Failed to send error to Slack", "SlackErrorReporter", { error: sendError, originalError: err.message, where });
+    logger.error("Failed to send error to Slack", "SlackErrorReporter", {
+      error: sendError,
+      originalError: err.message,
+      where,
+    });
   }
 }

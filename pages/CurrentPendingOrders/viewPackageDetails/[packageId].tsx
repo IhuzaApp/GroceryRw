@@ -467,16 +467,16 @@ function PackageDetailsPage() {
 
               {/* Shopper Header Pill (if assigned) */}
               {pkg.shopper && (
-                <div className="absolute left-1/2 top-6 z-20 -translate-x-1/2 w-max max-w-full px-4">
-                  <div className="flex items-center gap-3 md:gap-4 rounded-full bg-black/40 px-4 py-2 md:px-6 md:py-2.5 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl">
-                    <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg">
+                <div className="absolute left-1/2 top-6 z-20 w-max max-w-full -translate-x-1/2 px-4">
+                  <div className="flex items-center gap-3 rounded-full bg-black/40 px-4 py-2 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl md:gap-4 md:px-6 md:py-2.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg md:h-12 md:w-12">
                       <User className="h-5 w-5 md:h-6 md:w-6" />
                     </div>
                     <div className="min-w-0 pr-2">
-                      <p className="text-[10px] md:text-xs font-bold uppercase leading-none tracking-widest !text-white/60">
+                      <p className="text-[10px] font-bold uppercase leading-none tracking-widest !text-white/60 md:text-xs">
                         Plasa
                       </p>
-                      <p className="mt-1 truncate text-sm md:text-base font-black !text-white">
+                      <p className="mt-1 truncate text-sm font-black !text-white md:text-base">
                         {pkg.shopper.full_name}
                       </p>
                     </div>
@@ -485,13 +485,13 @@ function PackageDetailsPage() {
                         href={`tel:${
                           pkg.shopper.phone_number || pkg.shopper.phone
                         }`}
-                        className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90 md:h-12 md:w-12"
                       >
                         <Phone className="h-4 w-4 md:h-5 md:w-5" />
                       </a>
                       <Link
                         href={`/Messages?orderId=${pkg.id}`}
-                        className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-blue-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 !text-white shadow-lg transition-transform hover:scale-110 active:scale-90 md:h-12 md:w-12"
                       >
                         <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
                       </Link>
@@ -794,7 +794,7 @@ function PackageDetailsPage() {
                         setShowCancelModal(true);
                       }}
                       disabled={isCancelling}
-                      className="w-full rounded-xl border-2 border-red-500 bg-red-500 py-3 font-black !text-white transition-all hover:bg-red-600 hover:border-red-600 active:scale-95 disabled:opacity-50"
+                      className="w-full rounded-xl border-2 border-red-500 bg-red-500 py-3 font-black !text-white transition-all hover:border-red-600 hover:bg-red-600 active:scale-95 disabled:opacity-50"
                     >
                       Cancel Delivery
                     </button>

@@ -36,7 +36,7 @@ export const ShopperChatInput: React.FC<ShopperChatInputProps> = ({
               }}
               onBlur={clearTyping}
               placeholder="Type a message..."
-              className="w-full rounded-[2rem] bg-white px-6 py-4 text-sm font-medium outline-none shadow-sm transition-all focus:shadow-md dark:bg-white/5 dark:focus:bg-white/10"
+              className="w-full rounded-[2rem] bg-white px-6 py-4 text-sm font-medium shadow-sm outline-none transition-all focus:shadow-md dark:bg-white/5 dark:focus:bg-white/10"
             />
           </div>
           <button
@@ -51,7 +51,11 @@ export const ShopperChatInput: React.FC<ShopperChatInputProps> = ({
               viewBox="0 0 24 24"
               strokeWidth={3}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
             </svg>
           </button>
         </form>

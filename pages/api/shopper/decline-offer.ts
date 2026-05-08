@@ -359,10 +359,16 @@ export default async function handler(
       })) as any;
 
       const history = historyData.order_offers || [];
-      const declinedCount = history.filter((o: any) => o.status === "DECLINED").length;
-      const delayedCount = history.filter((o: any) => o.status === "DELAYED").length;
+      const declinedCount = history.filter(
+        (o: any) => o.status === "DECLINED"
+      ).length;
+      const delayedCount = history.filter(
+        (o: any) => o.status === "DELAYED"
+      ).length;
 
-      console.log(`📊 Shopper ${shopperId} history today: DECLINED=${declinedCount}, DELAYED=${delayedCount}`);
+      console.log(
+        `📊 Shopper ${shopperId} history today: DECLINED=${declinedCount}, DELAYED=${delayedCount}`
+      );
 
       if (declinedCount >= 3 || delayedCount >= 2) {
         await suspendShopper(shopperId);

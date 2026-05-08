@@ -875,9 +875,9 @@ function calculateDistanceKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -899,14 +899,14 @@ function formatOrderForResponse(
     order.orderType === "business"
       ? parseFloat(order.latitude || order.business_store?.latitude || "0")
       : order.orderType === "package"
-        ? parseFloat(order.dropoff_latitude || "0")
-        : parseFloat(order.Address?.latitude || order.address?.latitude || "0");
+      ? parseFloat(order.dropoff_latitude || "0")
+      : parseFloat(order.Address?.latitude || order.address?.latitude || "0");
   const deliveryLng =
     order.orderType === "business"
       ? parseFloat(order.longitude || order.business_store?.longitude || "0")
       : order.orderType === "package"
-        ? parseFloat(order.dropoff_longitude || "0")
-        : parseFloat(order.Address?.longitude || order.address?.longitude || "0");
+      ? parseFloat(order.dropoff_longitude || "0")
+      : parseFloat(order.Address?.longitude || order.address?.longitude || "0");
   const distance = calculateDistanceKm(
     shopperLocation.lat,
     shopperLocation.lng,
@@ -931,8 +931,8 @@ function formatOrderForResponse(
       typeof u === "number"
         ? u
         : typeof u === "string"
-          ? parseInt(u, 10) || 1
-          : 1;
+        ? parseInt(u, 10) || 1
+        : 1;
   } else if (order.orderType === "package") {
     itemsCount = 1;
   }
@@ -942,12 +942,13 @@ function formatOrderForResponse(
       ? typeof order.deliveryAddress === "string"
         ? order.deliveryAddress
         : order.deliveryAddress
-          ? JSON.stringify(order.deliveryAddress)
-          : "—"
+        ? JSON.stringify(order.deliveryAddress)
+        : "—"
       : order.orderType === "package"
-        ? order.dropoffLocation || "—"
-        : `${order.Address?.street || order.address?.street || ""}, ${order.Address?.city || order.address?.city || ""
-          }`.trim() || "—";
+      ? order.dropoffLocation || "—"
+      : `${order.Address?.street || order.address?.street || ""}, ${
+          order.Address?.city || order.address?.city || ""
+        }`.trim() || "—";
 
   return {
     id: order.id,
@@ -959,10 +960,10 @@ function formatOrderForResponse(
           ? `Package from ${order.User.name}`
           : "Package Delivery"
         : order.Shop?.name ||
-        order.Reel?.title ||
-        order.Restaurant?.name ||
-        order.business_store?.name ||
-        "Unknown Shop",
+          order.Reel?.title ||
+          order.Restaurant?.name ||
+          order.business_store?.name ||
+          "Unknown Shop",
     distance: distance,
     travelTimeMinutes: calculateTravelTime(distance),
     createdAt: order.created_at,
@@ -972,12 +973,12 @@ function formatOrderForResponse(
       order.orderType === "restaurant"
         ? parseFloat(order.delivery_fee || "0")
         : order.orderType === "business"
-          ? parseFloat(order.transportation_fee || "0") +
+        ? parseFloat(order.transportation_fee || "0") +
           parseFloat(order.service_fee || "0")
-          : order.orderType === "package"
-            ? parseFloat(order.delivery_fee || "0")
-            : parseFloat(order.service_fee || "0") +
-            parseFloat(order.delivery_fee || "0"),
+        : order.orderType === "package"
+        ? parseFloat(order.delivery_fee || "0")
+        : parseFloat(order.service_fee || "0") +
+          parseFloat(order.delivery_fee || "0"),
     orderType: order.orderType,
     priority: order.priority,
     expiresIn: expiresInMs ?? null,
@@ -986,21 +987,21 @@ function formatOrderForResponse(
       order.orderType === "package"
         ? order.pickup_latitude || "0"
         : order.Shop?.latitude ||
-        order.Restaurant?.lat ||
-        order.business_store?.latitude ||
-        order.Reel?.Restaurant?.lat ||
-        order.Reel?.Shops?.latitude ||
-        "0"
+            order.Restaurant?.lat ||
+            order.business_store?.latitude ||
+            order.Reel?.Restaurant?.lat ||
+            order.Reel?.Shops?.latitude ||
+            "0"
     ),
     shopLongitude: parseFloat(
       order.orderType === "package"
         ? order.pickup_longitude || "0"
         : order.Shop?.longitude ||
-        order.Restaurant?.long ||
-        order.business_store?.longitude ||
-        order.Reel?.Restaurant?.long ||
-        order.Reel?.Shops?.longitude ||
-        "0"
+            order.Restaurant?.long ||
+            order.business_store?.longitude ||
+            order.Reel?.Restaurant?.long ||
+            order.Reel?.Shops?.longitude ||
+            "0"
     ),
     customerLatitude: deliveryLat,
     customerLongitude: deliveryLng,
@@ -1046,21 +1047,21 @@ function calculateShopperPriority(
   const orderLocation =
     order.orderType === "package"
       ? {
-        lat: parseFloat(
-          order.pickup_latitude || order.dropoff_latitude || "0"
-        ),
-        lng: parseFloat(
-          order.pickup_longitude || order.dropoff_longitude || "0"
-        ),
-      }
+          lat: parseFloat(
+            order.pickup_latitude || order.dropoff_latitude || "0"
+          ),
+          lng: parseFloat(
+            order.pickup_longitude || order.dropoff_longitude || "0"
+          ),
+        }
       : {
-        lat: parseFloat(
-          order.Address?.latitude || order.address?.latitude || "0"
-        ),
-        lng: parseFloat(
-          order.Address?.longitude || order.address?.longitude || "0"
-        ),
-      };
+          lat: parseFloat(
+            order.Address?.latitude || order.address?.latitude || "0"
+          ),
+          lng: parseFloat(
+            order.Address?.longitude || order.address?.longitude || "0"
+          ),
+        };
 
   // Calculate distance
   const distance = calculateDistanceKm(
@@ -1079,8 +1080,8 @@ function calculateShopperPriority(
   // Calculate order age in minutes
   const orderTimestamp =
     (order.orderType === "restaurant" && order.updated_at) ||
-      (order.orderType === "business" && order.updated_at) ||
-      (order.orderType === "package" && order.updated_at)
+    (order.orderType === "business" && order.updated_at) ||
+    (order.orderType === "package" && order.updated_at)
       ? new Date(order.updated_at).getTime()
       : new Date(order.created_at).getTime();
   const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
@@ -1140,7 +1141,10 @@ export default async function handler(
     }
 
     if (!current_location || !current_location.lat || !current_location.lng) {
-      logger.warn("Missing or invalid current_location in request", "SmartAssignAPI");
+      logger.warn(
+        "Missing or invalid current_location in request",
+        "SmartAssignAPI"
+      );
       return res.status(400).json({
         error: "Current location is required",
       });
@@ -1170,10 +1174,14 @@ export default async function handler(
 
     const shopperRecord = shopperLookupData.shoppers?.[0];
     if (!shopperRecord) {
-      logger.warn(`No shopper record found for user_id ${user_id}`, "SmartAssignAPI");
+      logger.warn(
+        `No shopper record found for user_id ${user_id}`,
+        "SmartAssignAPI"
+      );
       return res.status(400).json({
         success: false,
-        message: "Shopper profile not found. Please complete your registration.",
+        message:
+          "Shopper profile not found. Please complete your registration.",
         reason: "SHOPPER_NOT_FOUND",
       });
     }
@@ -1188,7 +1196,8 @@ export default async function handler(
       // console.log(`🚫 Shopper ${shopperId} is suspended - cannot receive new offers`);
       return res.status(200).json({
         success: false,
-        message: "Your account is temporarily suspended from receiving new offers due to multiple missed or declined orders. Please try again later.",
+        message:
+          "Your account is temporarily suspended from receiving new offers due to multiple missed or declined orders. Please try again later.",
         reason: "SHOPPER_SUSPENDED",
       });
     }
@@ -1525,8 +1534,8 @@ export default async function handler(
           rawOrder.orderType = orderType;
           const shopperLocation =
             currentLocation &&
-              typeof currentLocation.lat === "number" &&
-              typeof currentLocation.lng === "number"
+            typeof currentLocation.lat === "number" &&
+            typeof currentLocation.lng === "number"
               ? { lat: currentLocation.lat, lng: currentLocation.lng }
               : { lat: 0, lng: 0 };
           const formattedOrder = formatOrderForResponse(
@@ -1535,7 +1544,7 @@ export default async function handler(
             null
           );
           // Action-based system: Shopper has already been notified of this pending offer.
-          // We return the offer details so the client can restore the UI card, 
+          // We return the offer details so the client can restore the UI card,
           // but we DO NOT re-trigger the FCM notification to avoid spamming alerts.
 
           return res.status(200).json({
@@ -1707,15 +1716,15 @@ export default async function handler(
       const orderLocation =
         order.orderType === "business"
           ? {
-            lat: parseFloat(
-              order.latitude || order.business_store?.latitude || "0"
-            ),
-            lng: parseFloat(
-              order.longitude || order.business_store?.longitude || "0"
-            ),
-          }
+              lat: parseFloat(
+                order.latitude || order.business_store?.latitude || "0"
+              ),
+              lng: parseFloat(
+                order.longitude || order.business_store?.longitude || "0"
+              ),
+            }
           : order.orderType === "package"
-            ? {
+          ? {
               lat: parseFloat(
                 order.pickup_latitude || order.dropoff_latitude || "0"
               ),
@@ -1723,7 +1732,7 @@ export default async function handler(
                 order.pickup_longitude || order.dropoff_longitude || "0"
               ),
             }
-            : {
+          : {
               lat: parseFloat(
                 order.Address?.latitude || order.address?.latitude || "0"
               ),
@@ -1742,7 +1751,7 @@ export default async function handler(
       // Calculate order age
       const orderTimestamp =
         (order.orderType === "restaurant" && order.updated_at) ||
-          (order.orderType === "package" && order.updated_at)
+        (order.orderType === "package" && order.updated_at)
           ? new Date(order.updated_at).getTime()
           : new Date(order.created_at).getTime();
       const orderAgeMinutes = (Date.now() - orderTimestamp) / 60000;
@@ -2108,13 +2117,13 @@ export default async function handler(
           });
           */
         }
-        } catch (error: any) {
-          // Handle potential unique constraint violation
-          if (
-            error.message?.includes("duplicate") ||
-            error.message?.includes("unique constraint")
-          ) {
-            /*
+      } catch (error: any) {
+        // Handle potential unique constraint violation
+        if (
+          error.message?.includes("duplicate") ||
+          error.message?.includes("unique constraint")
+        ) {
+          /*
             console.warn(
               "⚠️ Duplicate offer detected during creation, checking for existing offer:",
               {
@@ -2123,78 +2132,78 @@ export default async function handler(
               }
             );
             */
-            await insertSystemLog(
-              "warn",
-              `Duplicate offer detected: ${bestOrder.id}`,
-              "SmartAssignOrderAPI:OfferCreation",
-              { orderId: bestOrder.id, shopperId: user_id }
+          await insertSystemLog(
+            "warn",
+            `Duplicate offer detected: ${bestOrder.id}`,
+            "SmartAssignOrderAPI:OfferCreation",
+            { orderId: bestOrder.id, shopperId: user_id }
+          );
+
+          // One final check - maybe another request created it
+          let recoveryCheckData: any;
+          if (bestOrder.orderType === "regular") {
+            recoveryCheckData = await hasuraClient.request(
+              CHECK_SHOPPER_EXISTING_OFFER_REGULAR,
+              {
+                shopper_id: shopperId,
+                order_type: bestOrder.orderType,
+                order_id: bestOrder.id,
+              }
             );
+          } else if (bestOrder.orderType === "reel") {
+            recoveryCheckData = await hasuraClient.request(
+              CHECK_SHOPPER_EXISTING_OFFER_REEL,
+              {
+                shopper_id: shopperId,
+                order_type: bestOrder.orderType,
+                reel_order_id: bestOrder.id,
+              }
+            );
+          } else if (bestOrder.orderType === "restaurant") {
+            recoveryCheckData = await hasuraClient.request(
+              CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT,
+              {
+                shopper_id: shopperId,
+                order_type: bestOrder.orderType,
+                restaurant_order_id: bestOrder.id,
+              }
+            );
+          } else if (bestOrder.orderType === "business") {
+            recoveryCheckData = await hasuraClient.request(
+              CHECK_SHOPPER_EXISTING_OFFER_BUSINESS,
+              {
+                shopper_id: shopperId,
+                order_type: bestOrder.orderType,
+                business_order_id: bestOrder.id,
+              }
+            );
+          } else if (bestOrder.orderType === "package") {
+            recoveryCheckData = await hasuraClient.request(
+              CHECK_SHOPPER_EXISTING_OFFER_PACKAGE,
+              {
+                shopper_id: shopperId,
+                order_type: bestOrder.orderType,
+                package_order_id: bestOrder.id,
+              }
+            );
+          }
 
-            // One final check - maybe another request created it
-            let recoveryCheckData: any;
-            if (bestOrder.orderType === "regular") {
-              recoveryCheckData = await hasuraClient.request(
-                CHECK_SHOPPER_EXISTING_OFFER_REGULAR,
-                {
-                  shopper_id: shopperId,
-                  order_type: bestOrder.orderType,
-                  order_id: bestOrder.id,
-                }
-              );
-            } else if (bestOrder.orderType === "reel") {
-              recoveryCheckData = await hasuraClient.request(
-                CHECK_SHOPPER_EXISTING_OFFER_REEL,
-                {
-                  shopper_id: shopperId,
-                  order_type: bestOrder.orderType,
-                  reel_order_id: bestOrder.id,
-                }
-              );
-            } else if (bestOrder.orderType === "restaurant") {
-              recoveryCheckData = await hasuraClient.request(
-                CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT,
-                {
-                  shopper_id: shopperId,
-                  order_type: bestOrder.orderType,
-                  restaurant_order_id: bestOrder.id,
-                }
-              );
-            } else if (bestOrder.orderType === "business") {
-              recoveryCheckData = await hasuraClient.request(
-                CHECK_SHOPPER_EXISTING_OFFER_BUSINESS,
-                {
-                  shopper_id: shopperId,
-                  order_type: bestOrder.orderType,
-                  business_order_id: bestOrder.id,
-                }
-              );
-            } else if (bestOrder.orderType === "package") {
-              recoveryCheckData = await hasuraClient.request(
-                CHECK_SHOPPER_EXISTING_OFFER_PACKAGE,
-                {
-                  shopper_id: shopperId,
-                  order_type: bestOrder.orderType,
-                  package_order_id: bestOrder.id,
-                }
-              );
-            }
+          const recoveryOffer = recoveryCheckData.order_offers?.[0];
+          if (recoveryOffer) {
+            // Found it - extend instead
+            const updateResult = (await hasuraClient.request(
+              UPDATE_OFFER_EXPIRY,
+              {
+                offer_id: recoveryOffer.id,
+                expires_at: expiresAt,
+              }
+            )) as any;
 
-            const recoveryOffer = recoveryCheckData.order_offers?.[0];
-            if (recoveryOffer) {
-              // Found it - extend instead
-              const updateResult = (await hasuraClient.request(
-                UPDATE_OFFER_EXPIRY,
-                {
-                  offer_id: recoveryOffer.id,
-                  expires_at: expiresAt,
-                }
-              )) as any;
+            offerId = recoveryOffer.id;
+            offerRound = recoveryOffer.round_number;
+            isExtendingOffer = true; // Mark that we're extending, not creating
 
-              offerId = recoveryOffer.id;
-              offerRound = recoveryOffer.round_number;
-              isExtendingOffer = true; // Mark that we're extending, not creating
-
-              /*
+            /*
               console.log(
                 "✅ Recovered from duplicate - extended existing offer:",
                 {
@@ -2203,12 +2212,12 @@ export default async function handler(
                 }
               );
               */
-            } else {
-              throw error; // Re-throw if we can't recover
-            }
+          } else {
+            throw error; // Re-throw if we can't recover
           }
         }
       }
+    }
 
     // ========================================================================
     // STEP 5: Send FCM Notification (Aligned with Offer)
@@ -2272,9 +2281,9 @@ export default async function handler(
         // Use first store coords for directions (shopper goes to first store first)
         ...(firstShop?.latitude != null &&
           firstShop?.longitude != null && {
-          shopLatitude: parseFloat(firstShop.latitude),
-          shopLongitude: parseFloat(firstShop.longitude),
-        }),
+            shopLatitude: parseFloat(firstShop.latitude),
+            shopLongitude: parseFloat(firstShop.longitude),
+          }),
       };
     }
 

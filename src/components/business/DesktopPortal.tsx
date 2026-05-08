@@ -169,7 +169,6 @@ export function DesktopPortal({
             shortLabel: "RFQ",
             icon: Search,
           },
-          { id: "orders", label: "Orders", shortLabel: "Orders", icon: Truck },
           { id: "stores", label: "Stores", shortLabel: "Stores", icon: Store },
         ]
       : []),
@@ -192,6 +191,7 @@ export function DesktopPortal({
       : []),
     { id: "rfqs", label: "My RFQs", shortLabel: "RFQs", icon: FileText },
     { id: "quotes", label: "Quotes", shortLabel: "Quotes", icon: ShoppingCart },
+    { id: "orders", label: "Orders", shortLabel: "Orders", icon: Truck },
     {
       id: "contracts",
       label: "Contracts",
@@ -235,7 +235,9 @@ export function DesktopPortal({
                   className={`h-3.5 w-3.5 ${
                     activeTab === tab.id ? "text-white" : ""
                   }`}
-                  style={activeTab === tab.id ? { color: "#ffffff" } : undefined}
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
                 />
                 <span>{tab.label}</span>
               </button>

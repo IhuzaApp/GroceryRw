@@ -68,7 +68,8 @@ export default function UserBusinessOrderDetails({
   // Shopper details (same shape as regular orders for "Your Plaser" panel)
   const shopper = order?.shoppers?.shopper;
   const shopperPhone = shopper?.phone_number || order?.shoppers?.phone_number;
-  const shopperName = shopper?.full_name || order?.shoppers?.full_name || "Plasa";
+  const shopperName =
+    shopper?.full_name || order?.shoppers?.full_name || "Plasa";
   const shopperProfilePhoto =
     shopper?.profile_photo || order?.shoppers?.profile_photo;
   const hasShopper = order?.shoppers && (shopper || order?.shopper_id);

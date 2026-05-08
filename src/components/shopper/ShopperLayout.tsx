@@ -272,10 +272,10 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   };
 
   // Check if we're on a chat page or batch details page (hide header on mobile)
-  const isChatPage = 
-    typeof window !== "undefined" && 
+  const isChatPage =
+    typeof window !== "undefined" &&
     window.location.pathname.startsWith("/Plasa/chat");
-    
+
   const isBatchDetailsPage =
     typeof window !== "undefined" &&
     window.location.pathname.includes("/Plasa/active-batches/batch/");
@@ -288,7 +288,11 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     >
       {/* Hide header on mobile for batch details or chat hub */}
       {!(isMobile && (isBatchDetailsPage || isChatPage)) && <ShopperHeader />}
-      <div className={`flex ${isChatPage && isMobile ? 'h-screen' : 'h-[calc(100vh-4rem)]'}`}>
+      <div
+        className={`flex ${
+          isChatPage && isMobile ? "h-screen" : "h-[calc(100vh-4rem)]"
+        }`}
+      >
         <ShopperSidebar
           isCollapsed={isSidebarCollapsed}
           onToggle={toggleSidebar}
@@ -296,11 +300,13 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         <main
           className={`relative flex-1 overflow-y-auto transition-all duration-300 ${
             isMobile
-              ? `${(isBatchDetailsPage || isChatPage) ? "p-0" : "p-4"} pb-28`
-              : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} ${isChatPage ? "p-0" : "p-6"}`
+              ? `${isBatchDetailsPage || isChatPage ? "p-0" : "p-4"} pb-28`
+              : `${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"} ${
+                  isChatPage ? "p-0" : "p-6"
+                }`
           }`}
         >
-          <div className="relative z-0 w-full h-full">{children}</div>
+          <div className="relative z-0 h-full w-full">{children}</div>
         </main>
       </div>
 

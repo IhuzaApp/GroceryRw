@@ -32,8 +32,14 @@ export default function WorkScheduleSkeleton() {
 
   return (
     <div className="p-0">
-      <div className={`p-6 md:p-8 border-b ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-black/5 bg-black/[0.01]'}`}>
-        <Skeleton className="h-8 w-48 mb-2" />
+      <div
+        className={`border-b p-6 md:p-8 ${
+          isDark
+            ? "border-white/5 bg-white/[0.02]"
+            : "border-black/5 bg-black/[0.01]"
+        }`}
+      >
+        <Skeleton className="mb-2 h-8 w-48" />
         <Skeleton className="h-4 w-64" />
       </div>
 
@@ -41,34 +47,32 @@ export default function WorkScheduleSkeleton() {
         {[...Array(7)].map((_, index) => (
           <div
             key={index}
-            className={`px-6 md:px-8 py-5 md:py-6 ${
+            className={`px-6 py-5 md:px-8 md:py-6 ${
               index < 6
-                ? `border-b ${
-                    isDark ? "border-white/5" : "border-black/5"
-                  }`
+                ? `border-b ${isDark ? "border-white/5" : "border-black/5"}`
                 : ""
             }`}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center md:gap-6">
               <div className="flex items-center gap-3 md:gap-4">
-                <Skeleton className="h-9 w-9 md:h-10 md:w-10 rounded-xl" />
+                <Skeleton className="h-9 w-9 rounded-xl md:h-10 md:w-10" />
                 <div>
-                  <Skeleton className="h-5 w-24 md:h-6 mb-1" />
+                  <Skeleton className="mb-1 h-5 w-24 md:h-6" />
                   <Skeleton className="h-3 w-32 md:h-4" />
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4 md:gap-8">
+              <div className="flex flex-wrap items-center justify-between gap-4 sm:justify-end md:gap-8">
                 <div className="flex items-center gap-2 md:gap-3">
-                  <div className="flex flex-col min-w-[80px] md:min-w-[128px]">
-                    <Skeleton className="h-3 w-8 mb-1 ml-1" />
+                  <div className="flex min-w-[80px] flex-col md:min-w-[128px]">
+                    <Skeleton className="mb-1 ml-1 h-3 w-8" />
                     <Skeleton className="h-10 w-full rounded-xl" />
                   </div>
                   <div className="mt-4">
                     <Skeleton className="h-4 w-4" />
                   </div>
-                  <div className="flex flex-col min-w-[80px] md:min-w-[128px]">
-                    <Skeleton className="h-3 w-8 mb-1 ml-1" />
+                  <div className="flex min-w-[80px] flex-col md:min-w-[128px]">
+                    <Skeleton className="mb-1 ml-1 h-3 w-8" />
                     <Skeleton className="h-10 w-full rounded-xl" />
                   </div>
                 </div>
@@ -79,9 +83,13 @@ export default function WorkScheduleSkeleton() {
         ))}
       </div>
 
-      <div className={`p-6 md:p-8 mt-4 flex flex-col sm:flex-row gap-4 justify-between items-center ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
+      <div
+        className={`mt-4 flex flex-col items-center justify-between gap-4 p-6 sm:flex-row md:p-8 ${
+          isDark ? "bg-white/[0.02]" : "bg-black/[0.01]"
+        }`}
+      >
         <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-12 w-full sm:w-40 rounded-2xl" />
+        <Skeleton className="h-12 w-full rounded-2xl sm:w-40" />
       </div>
     </div>
   );

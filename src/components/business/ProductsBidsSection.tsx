@@ -511,19 +511,19 @@ export function ProductsBidsSection({
               {services.map((service) => (
                 <div
                   key={service.id}
-                  className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                  className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
                 >
                   <div className="mb-4 flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-blue-500" />
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <div className="mb-1 flex items-center gap-1.5">
+                        <Briefcase className="h-3.5 w-3.5 text-blue-500" />
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                           {service.name}
                         </h4>
                       </div>
-                      <div className="mb-3 flex items-center gap-2">
+                      <div className="mb-2 flex items-center gap-2">
                         <span
-                          className={`rounded-full px-2 py-1 text-xs ${
+                          className={`rounded-full px-2 py-0.5 text-[10px] ${
                             service.status === "active"
                               ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
                               : "bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300"
@@ -532,7 +532,7 @@ export function ProductsBidsSection({
                           {service.status === "active" ? "Active" : "Inactive"}
                         </span>
                         {service.query_id && (
-                          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                             ID: {service.query_id}
                           </span>
                         )}
@@ -540,21 +540,21 @@ export function ProductsBidsSection({
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
                         {formatCurrencySync(parseFloat(service.price || "0"))}
                       </span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-xs font-medium text-gray-900 dark:text-gray-400">
                         / {service.unit || "unit"}
                       </span>
                     </div>
 
                     {/* Service Details */}
-                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="space-y-1.5 text-xs font-medium text-gray-900 dark:text-gray-400">
                       {service.minimumOrders && (
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4" />
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5" />
                           <span>
                             Min: {service.minimumOrders} {service.unit || ""}
                             {service.maxOrders &&
@@ -565,8 +565,8 @@ export function ProductsBidsSection({
                         </div>
                       )}
                       {service.delveryArea && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5" />
                           <span>{service.delveryArea}</span>
                         </div>
                       )}
@@ -577,7 +577,7 @@ export function ProductsBidsSection({
                             .map((specialty: string, index: number) => (
                               <span
                                 key={index}
-                                className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                                className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] text-blue-600 dark:bg-blue-900 dark:text-blue-300"
                               >
                                 {specialty}
                               </span>
@@ -586,29 +586,29 @@ export function ProductsBidsSection({
                       )}
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 pt-1.5">
                       <button
                         onClick={() => {
                           setSelectedService(service);
                           setIsServiceDetailsOpen(true);
                         }}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-sm text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800"
+                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-green-100 px-2 py-1.5 text-xs text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5" />
                         View Details
                       </button>
                       <button
                         onClick={() => handleEditService(service)}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-blue-100 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-blue-100 px-2 py-1.5 text-xs text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3.5 w-3.5" />
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(service.id)}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-100 px-2 py-1.5 text-xs text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                         Delete
                       </button>
                     </div>

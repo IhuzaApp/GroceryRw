@@ -86,9 +86,12 @@ export default async function handler(
     }
     const shopperId = shopperRecord.id;
 
-    const data = await hasuraClient!.request<OrdersResponse>(GET_ACTIVE_ORDERS, {
-      shopperId: shopperId,
-    });
+    const data = await hasuraClient!.request<OrdersResponse>(
+      GET_ACTIVE_ORDERS,
+      {
+        shopperId: shopperId,
+      }
+    );
 
     const allOrders = [
       ...(data.Orders || []),

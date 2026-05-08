@@ -72,7 +72,7 @@ class MomoService {
     if (
       cachedToken &&
       cachedToken.generated_at + cachedToken.expires_in >
-      now + this.TOKEN_EXPIRY_BUFFER
+        now + this.TOKEN_EXPIRY_BUFFER
     ) {
       return cachedToken.access_token;
     }
@@ -253,42 +253,51 @@ class MomoService {
     const finalCurrency = environment === "sandbox" ? "EUR" : params.currency;
 
     // For MoMo codes (ALIAS), we use the ID directly without formatting as a phone number
-      const partyId =
-        params.partyIdType === "ALIAS"
-          ? params.payeeId
-          : params.partyIdType === "MSISDN" || !params.partyIdType
-            ? this.formatPhoneNumber(params.payeeId)
-            : params.payeeId;
-  
-      const body = {
-        amount: String(environment === "sandbox" ? "100" : params.amount),
-        currency: finalCurrency,
-        externalId: params.externalId,
-        payee: {
-          partyIdType: params.partyIdType || "MSISDN",
-          partyId: partyId,
-        },
-        payerMessage: params.payerMessage || "Disbursement Request",
-        payeeNote: params.payeeNote || "Payment Confirmed",
-      };
+    const partyId =
+      params.partyIdType === "ALIAS"
+        ? params.payeeId
+        : params.partyIdType === "MSISDN" || !params.partyIdType
+        ? this.formatPhoneNumber(params.payeeId)
+        : params.payeeId;
+
+    const body = {
+      amount: String(environment === "sandbox" ? "100" : params.amount),
+      currency: finalCurrency,
+      externalId: params.externalId,
+      payee: {
+        partyIdType: params.partyIdType || "MSISDN",
+        partyId: partyId,
+      },
+      payerMessage: params.payerMessage || "Disbursement Request",
+      payeeNote: params.payeeNote || "Payment Confirmed",
+    };
 
     const callApi = async (retry = true): Promise<Response> => {
       const token = await this.getAccessToken("disbursement");
       const url = `${baseUrl}/disbursement/v1_0/transfer`;
 
-      const sanitizedPayerMessage = (params.payerMessage || "Payment").replace(/[^\w\s]/gi, '').slice(0, 40);
-      const sanitizedPayeeNote = (params.payeeNote || "Transfer").replace(/[^\w\s]/gi, '').slice(0, 40);
-      const sanitizedExternalId = params.externalId.replace(/\D/g, '').slice(0, 10);
+      const sanitizedPayerMessage = (params.payerMessage || "Payment")
+        .replace(/[^\w\s]/gi, "")
+        .slice(0, 40);
+      const sanitizedPayeeNote = (params.payeeNote || "Transfer")
+        .replace(/[^\w\s]/gi, "")
+        .slice(0, 40);
+      const sanitizedExternalId = params.externalId
+        .replace(/\D/g, "")
+        .slice(0, 10);
 
       const sanitizedBody = {
         ...body,
         externalId: sanitizedExternalId,
         payerMessage: sanitizedPayerMessage,
-        payeeNote: sanitizedPayeeNote
+        payeeNote: sanitizedPayeeNote,
       };
 
       console.log(`📡 [MoMo Service] POST ${url}`);
-      console.log(`📦 [MoMo Service] Body:`, JSON.stringify(sanitizedBody, null, 2));
+      console.log(
+        `📦 [MoMo Service] Body:`,
+        JSON.stringify(sanitizedBody, null, 2)
+      );
       console.log(`🔑 [MoMo Service] X-Reference-Id: ${referenceId}`);
 
       const response = await fetch(url, {
@@ -299,7 +308,8 @@ class MomoService {
           "X-Reference-Id": referenceId,
           "X-Target-Environment": environment,
           "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
         },
         body: JSON.stringify(sanitizedBody),
       });

@@ -261,7 +261,11 @@ export const getServerSideProps: GetServerSideProps<
   }
 
   // Check authentication
-  const session = (await getServerSession(context.req, context.res, authOptions)) as any;
+  const session = (await getServerSession(
+    context.req,
+    context.res,
+    authOptions
+  )) as any;
   if (!session || !session.user) {
     return {
       redirect: {
@@ -773,8 +777,7 @@ export const getServerSideProps: GetServerSideProps<
 
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
-    const isAssignedShopper =
-      order.shopper?.id === session.user.id;
+    const isAssignedShopper = order.shopper?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
 
     // For reel orders, also check if user is the customer via user field
@@ -827,7 +830,9 @@ export const getServerSideProps: GetServerSideProps<
       actualShopperId,
     });
 
-    const rawShopper = Array.isArray(order.shopper) ? order.shopper[0] : order.shopper;
+    const rawShopper = Array.isArray(order.shopper)
+      ? order.shopper[0]
+      : order.shopper;
     const orderShopperId = rawShopper?.id;
 
     if (
@@ -870,12 +875,15 @@ export const getServerSideProps: GetServerSideProps<
             timeStyle: "short",
           })
         : null,
-      shopper: rawShopper ? {
-        ...rawShopper,
-        email: rawShopper.User?.email || rawShopper.email || null,
-        name: rawShopper.name || rawShopper.full_name || "Shopper",
-        profile_picture: rawShopper.profile_picture || rawShopper.profile_photo || null
-      } : null,
+      shopper: rawShopper
+        ? {
+            ...rawShopper,
+            email: rawShopper.User?.email || rawShopper.email || null,
+            name: rawShopper.name || rawShopper.full_name || "Shopper",
+            profile_picture:
+              rawShopper.profile_picture || rawShopper.profile_photo || null,
+          }
+        : null,
     };
 
     // For restaurant orders, set shop from Restaurant so ShopInfo/ShopInfoCard display name, location, phone

@@ -504,9 +504,13 @@ export async function handleDeliveredOperation(
 
         const shopperPhone = shopperData.shoppers?.[0]?.User?.phone;
         if (shopperPhone) {
-          const message = `Plas Agent: You earned RWF ${remainingEarnings.toLocaleString()}. (Total Fee: ${totalEarnings.toLocaleString()}, Deducted: ${platformFee.toLocaleString()}). New Wallet Balance: RWF ${parseFloat(newAvailableBalance).toLocaleString()}.`;
+          const message = `Plas Agent: You earned RWF ${remainingEarnings.toLocaleString()}. (Total Fee: ${totalEarnings.toLocaleString()}, Deducted: ${platformFee.toLocaleString()}). New Wallet Balance: RWF ${parseFloat(
+            newAvailableBalance
+          ).toLocaleString()}.`;
           await sendSMS(shopperPhone, message);
-          console.log(`✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}: ${message}`);
+          console.log(
+            `✅ [WalletOperations] Earnings SMS sent to ${shopperPhone}: ${message}`
+          );
         }
       }
     } catch (smsError) {
@@ -588,17 +592,22 @@ export async function handleCancelledOperation(
     const customerPhone = customerData.Users_by_pk?.phone;
 
     if (customerPhone) {
-      const message = `Plas Pay: Your order #${order.OrderID || orderId} has been cancelled. A refund of RWF ${orderTotal.toLocaleString()} has been credited to your wallet.`;
-      
+      const message = `Plas Pay: Your order #${
+        order.OrderID || orderId
+      } has been cancelled. A refund of RWF ${orderTotal.toLocaleString()} has been credited to your wallet.`;
+
       await sendSMS(customerPhone, message);
       console.log(`[Customer Cancel SMS] Sent to ${customerPhone}: ${message}`);
     }
   } catch (smsError) {
-    console.error("[Customer Cancel SMS] Error sending notification:", smsError);
+    console.error(
+      "[Customer Cancel SMS] Error sending notification:",
+      smsError
+    );
     await logger.warn(
-      `Failed to send customer cancellation SMS for order ${order.OrderID || orderId}: ${
-        smsError instanceof Error ? smsError.message : String(smsError)
-      }`,
+      `Failed to send customer cancellation SMS for order ${
+        order.OrderID || orderId
+      }: ${smsError instanceof Error ? smsError.message : String(smsError)}`,
       "CustomerNotification"
     );
   }
@@ -829,7 +838,8 @@ export async function processWalletOperation(
     { user_id: userId }
   );
 
-  const resolvedShopperId = shopperRecord.shoppers?.[0]?.id || order.shopper_id || userId;
+  const resolvedShopperId =
+    shopperRecord.shoppers?.[0]?.id || order.shopper_id || userId;
 
   // Get shopper wallet
   const walletData = await hasuraClient!.request<{

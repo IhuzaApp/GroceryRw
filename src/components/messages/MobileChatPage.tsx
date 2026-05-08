@@ -121,7 +121,7 @@ const CustomerMessage: React.FC<{
               );
             }
             return (
-              <span className="text-xs font-bold text-gray-500 uppercase">
+              <span className="text-xs font-bold uppercase text-gray-500">
                 {fallbackLetter}
               </span>
             );
@@ -146,7 +146,7 @@ const CustomerMessage: React.FC<{
           </div>
         )}
         <div
-          className={`whitespace-pre-wrap break-words text-[15px] leading-relaxed font-normal !text-white`}
+          className={`whitespace-pre-wrap break-words text-[15px] font-normal leading-relaxed !text-white`}
         >
           {messageContent}
         </div>
@@ -258,7 +258,9 @@ export default function MobileChatPage({
         .then((data) => {
           if (data.hasAccount) setLogisticsAccount(data.account);
         })
-        .catch((err) => console.error("Error fetching logistics account:", err));
+        .catch((err) =>
+          console.error("Error fetching logistics account:", err)
+        );
     }
   }, [session?.user?.id]);
 
@@ -278,11 +280,16 @@ export default function MobileChatPage({
           if (!querySnapshot.empty) {
             setConversationId(querySnapshot.docs[0].id);
           } else {
-            const isShopper = shopper?.id && (shopper.id === counterpart.id || session.user.role === "shopper");
+            const isShopper =
+              shopper?.id &&
+              (shopper.id === counterpart.id ||
+                session.user.role === "shopper");
             const newConversation = {
               orderId,
               customerId: isShopper ? counterpart.id : session.user.id,
-              shopperId: isShopper ? (shopper.id || session.user.id) : counterpart.id,
+              shopperId: isShopper
+                ? shopper.id || session.user.id
+                : counterpart.id,
               createdAt: serverTimestamp(),
               lastMessage: "",
               lastMessageTime: serverTimestamp(),
@@ -299,7 +306,13 @@ export default function MobileChatPage({
     } else if (providedConversationId) {
       setConversationId(providedConversationId);
     }
-  }, [providedConversationId, orderId, session?.user?.id, counterpart?.id, shopper?.id]);
+  }, [
+    providedConversationId,
+    orderId,
+    session?.user?.id,
+    counterpart?.id,
+    shopper?.id,
+  ]);
 
   useEffect(() => {
     if (!db || !conversationId) return;
@@ -334,7 +347,10 @@ export default function MobileChatPage({
             : doc.data().timestamp,
       })) as Message[];
 
-      console.log(`🔍 [Mobile Chat] Received ${messagesList.length} messages:`, messagesList);
+      console.log(
+        `🔍 [Mobile Chat] Received ${messagesList.length} messages:`,
+        messagesList
+      );
       if (messagesList.length > 0) {
         const last = messagesList[messagesList.length - 1];
         console.log(`🔍 [Mobile Chat] Latest message:`, {
@@ -342,7 +358,7 @@ export default function MobileChatPage({
           senderId: last.senderId,
           senderType: last.senderType,
           recipientId: last.recipientId,
-          timestamp: last.timestamp
+          timestamp: last.timestamp,
         });
       }
 
@@ -413,7 +429,13 @@ export default function MobileChatPage({
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId || !counterpart?.id)
+    if (
+      !db ||
+      !newMessage.trim() ||
+      !session?.user?.id ||
+      !conversationId ||
+      !counterpart?.id
+    )
       return;
 
     const text = newMessage.trim();
@@ -695,7 +717,9 @@ export default function MobileChatPage({
           } catch (err) {
             console.error("Upload error:", err);
             toast.error("Failed to upload attachment", { id: toastId });
-            setPendingMessages((p) => p.filter((item) => item.tempId !== tempId));
+            setPendingMessages((p) =>
+              p.filter((item) => item.tempId !== tempId)
+            );
           } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -724,7 +748,9 @@ export default function MobileChatPage({
                 ].includes(message.senderId)}
                 counterpartName={counterpart.name}
                 counterpartImage={counterpart.avatar}
-                customerImage={currentUserImage || session?.user?.image || undefined}
+                customerImage={
+                  currentUserImage || session?.user?.image || undefined
+                }
                 statusLabel={"tempId" in message ? "Sending..." : "Sent"}
               />
             ))}
@@ -771,7 +797,16 @@ export default function MobileChatPage({
                 : "bg-gray-100 text-gray-400 dark:bg-gray-800"
             }`}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>

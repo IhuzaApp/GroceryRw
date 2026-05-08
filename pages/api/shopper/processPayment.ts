@@ -398,7 +398,7 @@ export default async function handler(
           );
 
           if (isSameShopCombined) {
-            batchTotal = formattedOrderAmount; 
+            batchTotal = formattedOrderAmount;
           } else {
             batchTotal = storedTotalSum;
           }
@@ -440,18 +440,24 @@ export default async function handler(
     let totalRefundAmount = 0;
 
     // Logic: Calculate refund based on missing items' final_price
-    const calculateOrderRefund = async (order: any, paidAmount: number, origTotal?: number) => {
+    const calculateOrderRefund = async (
+      order: any,
+      paidAmount: number,
+      origTotal?: number
+    ) => {
       let refund = 0;
       const originalTotal = origTotal || parseFloat(order.total);
-      
+
       // Calculate missing items' final_price
       order.Order_Items?.forEach((item: any) => {
         const quantity = item.quantity || 0;
-        const foundQuantity = item.found ? (item.foundQuantity ?? quantity) : 0;
+        const foundQuantity = item.found ? item.foundQuantity ?? quantity : 0;
         const missingQuantity = Math.max(0, quantity - foundQuantity);
-        
+
         if (missingQuantity > 0) {
-          const finalPrice = parseFloat(item.Product?.final_price || item.price || "0");
+          const finalPrice = parseFloat(
+            item.Product?.final_price || item.price || "0"
+          );
           refund += missingQuantity * finalPrice;
         }
       });
@@ -465,20 +471,27 @@ export default async function handler(
           const customerData = await hasuraClient!.request<{
             Users_by_pk: { phone: string } | null;
           }>(GET_USER_PHONE, { id: order.user_id });
-          
+
           const customerPhone = customerData.Users_by_pk?.phone;
-          
+
           // 2. Get shop name
           const shopName = order.Shop?.name || "Merchant";
 
           if (customerPhone) {
-            const message = `Plas Pay: Your order #${order.OrderID} from ${shopName} has been processed. Total used: RWF ${amountUsed.toLocaleString()}. Refund of RWF ${refund.toLocaleString()} has been credited to your wallet for items not found.`;
-            
+            const message = `Plas Pay: Your order #${
+              order.OrderID
+            } from ${shopName} has been processed. Total used: RWF ${amountUsed.toLocaleString()}. Refund of RWF ${refund.toLocaleString()} has been credited to your wallet for items not found.`;
+
             await sendSMS(customerPhone, message);
-            console.log(`[Customer Refund SMS] Sent to ${customerPhone}: ${message}`);
+            console.log(
+              `[Customer Refund SMS] Sent to ${customerPhone}: ${message}`
+            );
           }
         } catch (smsError) {
-          console.error("[Customer Refund SMS] Error sending notification:", smsError);
+          console.error(
+            "[Customer Refund SMS] Error sending notification:",
+            smsError
+          );
           await logger.warn(
             `Failed to send customer refund SMS for order ${order.OrderID}: ${
               smsError instanceof Error ? smsError.message : String(smsError)
@@ -489,17 +502,20 @@ export default async function handler(
 
         // Record the refund transaction via internal API
         try {
-          await fetch(`${process.env.NEXTAUTH_URL}/api/shopper/recordTransaction`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              shopperId: order.shopper_id,
-              orderId: order.id,
-              orderAmount: paidAmount, // What shopper actually paid
-              originalOrderTotal: originalTotal, // What customer originally paid
-              type: "refund",
-            }),
-          });
+          await fetch(
+            `${process.env.NEXTAUTH_URL}/api/shopper/recordTransaction`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                shopperId: order.shopper_id,
+                orderId: order.id,
+                orderAmount: paidAmount, // What shopper actually paid
+                originalOrderTotal: originalTotal, // What customer originally paid
+                type: "refund",
+              }),
+            }
+          );
         } catch (recordError) {
           console.error("Error calling recordTransaction:", recordError);
         }
@@ -508,7 +524,9 @@ export default async function handler(
       return {
         refundAmount: refund,
         amountUsed,
-        refundReason: `Refund of RWF ${refund.toLocaleString()} for items not found in order #${order.OrderID}.`
+        refundReason: `Refund of RWF ${refund.toLocaleString()} for items not found in order #${
+          order.OrderID
+        }.`,
       };
     };
 
@@ -518,9 +536,13 @@ export default async function handler(
           (order) => order.id === orderId
         );
         if (currentOrder) {
-          const result = await calculateOrderRefund(currentOrder, formattedOrderAmount, originalOrderTotal);
+          const result = await calculateOrderRefund(
+            currentOrder,
+            formattedOrderAmount,
+            originalOrderTotal
+          );
           totalRefundAmount = result.refundAmount;
-          
+
           if (totalRefundAmount > 0) {
             refundsData.push({
               order_id: currentOrder.id,
@@ -536,7 +558,11 @@ export default async function handler(
       }
     } else {
       // Single order or Reel order
-      const result = await calculateOrderRefund(orderData, formattedOrderAmount, originalOrderTotal);
+      const result = await calculateOrderRefund(
+        orderData,
+        formattedOrderAmount,
+        originalOrderTotal
+      );
       totalRefundAmount = result.refundAmount;
 
       if (totalRefundAmount > 0) {

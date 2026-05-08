@@ -153,7 +153,7 @@ export default async function handler(
             reel_orders_by_pk: {
               OrderID: number;
               Reel: { title: string } | null;
-              shoppers: { full_name: string | null; } | null;
+              shoppers: { full_name: string | null } | null;
             } | null;
           }>(GET_REEL_ORDER_FOR_REVIEW, { reel_order_id: reel_order_id });
           const r = reelRes?.reel_orders_by_pk;
@@ -185,7 +185,9 @@ export default async function handler(
         try {
           await sendNotificationToUser(shopperUserId, {
             title: "New Review Received! ⭐",
-            body: `A customer left you a ${rating}-star review for order #${orderNumber}. "Feedback: ${review || 'No comment'}"`,
+            body: `A customer left you a ${rating}-star review for order #${orderNumber}. "Feedback: ${
+              review || "No comment"
+            }"`,
             data: {
               type: "shopper_rating",
               rating: String(rating),

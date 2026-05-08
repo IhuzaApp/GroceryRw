@@ -1,17 +1,71 @@
-mutation addOrderedDishes($quantity: String = "", $price: String = "", $order_id: uuid = "", $id: uuid = "", $dish_id: uuid = "") {
-  insert_restaurant_order_items(objects: {quantity: $quantity, price: $price, order_id: $order_id, dish_id: $dish_id}) {
+mutation addOrderedDishes(
+  $quantity: String = ""
+  $price: String = ""
+  $order_id: uuid = ""
+  $id: uuid = ""
+  $dish_id: uuid = ""
+) {
+  insert_restaurant_order_items(
+    objects: {
+      quantity: $quantity
+      price: $price
+      order_id: $order_id
+      dish_id: $dish_id
+    }
+  ) {
     affected_rows
   }
 }
 
-mutation addRestaurantOrders($delivery_address_id: uuid = "", $delivery_fee: String = "", $delivery_notes: String = "", $delivery_time: String = "", $discount: String = "", $status: String = "", $total: String = "", $user_id: uuid = "", $voucher_code: String = "", $shopper_id: uuid = "", $restaurant_id: uuid = "", $pin: String = "", $delivery_photo_url: String = "", $assigned_at: timestamptz = "", $combined_order_id: uuid = "", $OrderID: Int = 10, $updated_at: timestamptz = "") {
-  insert_restaurant_orders(objects: {delivery_address_id: $delivery_address_id, delivery_fee: $delivery_fee, delivery_notes: $delivery_notes, delivery_time: $delivery_time, discount: $discount, status: $status, total: $total, user_id: $user_id, voucher_code: $voucher_code, shopper_id: $shopper_id, restaurant_id: $restaurant_id, pin: $pin, delivery_photo_url: $delivery_photo_url, combined_order_id: $combined_order_id, assigned_at: $assigned_at, OrderID: $OrderID, updated_at: $updated_at}) {
+mutation addRestaurantOrders(
+  $delivery_address_id: uuid = ""
+  $delivery_fee: String = ""
+  $delivery_notes: String = ""
+  $delivery_time: String = ""
+  $discount: String = ""
+  $status: String = ""
+  $total: String = ""
+  $user_id: uuid = ""
+  $voucher_code: String = ""
+  $shopper_id: uuid = ""
+  $restaurant_id: uuid = ""
+  $pin: String = ""
+  $delivery_photo_url: String = ""
+  $assigned_at: timestamptz = ""
+  $combined_order_id: uuid = ""
+  $OrderID: Int = 10
+  $updated_at: timestamptz = ""
+) {
+  insert_restaurant_orders(
+    objects: {
+      delivery_address_id: $delivery_address_id
+      delivery_fee: $delivery_fee
+      delivery_notes: $delivery_notes
+      delivery_time: $delivery_time
+      discount: $discount
+      status: $status
+      total: $total
+      user_id: $user_id
+      voucher_code: $voucher_code
+      shopper_id: $shopper_id
+      restaurant_id: $restaurant_id
+      pin: $pin
+      delivery_photo_url: $delivery_photo_url
+      combined_order_id: $combined_order_id
+      assigned_at: $assigned_at
+      OrderID: $OrderID
+      updated_at: $updated_at
+    }
+  ) {
     affected_rows
   }
 }
 
 query GetRestaurantOrders($user_id: uuid!) {
-  restaurant_orders(where: {user_id: {_eq: $user_id}}, order_by: {created_at: desc}) {
+  restaurant_orders(
+    where: { user_id: { _eq: $user_id } }
+    order_by: { created_at: desc }
+  ) {
     id
     OrderID
     user_id

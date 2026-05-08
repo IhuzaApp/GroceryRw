@@ -5,7 +5,10 @@ import { logger } from "../utils/logger";
 const resendApiKey = process.env.RESEND_API_KEY;
 
 if (!resendApiKey) {
-  logger.warn("RESEND_API_KEY is not set in environment variables. Email sending will be mocked.", "ResendLib");
+  logger.warn(
+    "RESEND_API_KEY is not set in environment variables. Email sending will be mocked.",
+    "ResendLib"
+  );
 }
 
 // Fallback mock to prevent top-level crashes and API route failures
@@ -14,7 +17,10 @@ export const resend = resendApiKey
   : ({
       emails: {
         send: async (payload: any) => {
-          logger.warn("[MOCK] Email sending disabled", "ResendLib", { subject: payload.subject, to: payload.to });
+          logger.warn("[MOCK] Email sending disabled", "ResendLib", {
+            subject: payload.subject,
+            to: payload.to,
+          });
           return { id: "mock_email_id" };
         },
       },
@@ -106,7 +112,11 @@ export async function sendRentalInvoice({
 
     return result;
   } catch (error) {
-    logger.error("Failed to send rental invoice email", "ResendLib:sendRentalInvoice", { error, to });
+    logger.error(
+      "Failed to send rental invoice email",
+      "ResendLib:sendRentalInvoice",
+      { error, to }
+    );
     await insertSystemLog(
       "error",
       "Failed to send rental invoice email",
@@ -191,7 +201,11 @@ export async function sendWithdrawalInvoice({
 
     return result;
   } catch (error) {
-    logger.error("Failed to send withdrawal invoice email", "ResendLib:sendWithdrawalInvoice", { error, to });
+    logger.error(
+      "Failed to send withdrawal invoice email",
+      "ResendLib:sendWithdrawalInvoice",
+      { error, to }
+    );
     await insertSystemLog(
       "error",
       "Failed to send withdrawal invoice email",

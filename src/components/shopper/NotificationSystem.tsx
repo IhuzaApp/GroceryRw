@@ -565,7 +565,7 @@ export default function NotificationSystem({
 
     const handlePetAdoptionStatus = (event: CustomEvent) => {
       const { title, body, status } = event.detail;
-      
+
       // Play sound
       playNotificationSound({ enabled: true, volume: 0.8 });
 
@@ -573,14 +573,22 @@ export default function NotificationSystem({
       batchToast.success(
         (t) => (
           <div className="flex items-start gap-4">
-            <div className={`mt-1 rounded-full p-2 ${status === 'ACCEPTED' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-              {status === 'ACCEPTED' ? "🐾" : "❌"}
+            <div
+              className={`mt-1 rounded-full p-2 ${
+                status === "ACCEPTED"
+                  ? "bg-green-500/20 text-green-500"
+                  : "bg-red-500/20 text-red-500"
+              }`}
+            >
+              {status === "ACCEPTED" ? "🐾" : "❌"}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-black text-gray-900 dark:text-white">{title}</p>
+              <p className="text-sm font-black text-gray-900 dark:text-white">
+                {title}
+              </p>
               <p className="text-xs text-gray-500">{body}</p>
             </div>
-            <button 
+            <button
               onClick={() => batchToast.dismiss(t.id)}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
@@ -588,18 +596,22 @@ export default function NotificationSystem({
             </button>
           </div>
         ),
-        { 
+        {
           duration: 10000,
           position: isMobile ? "top-center" : "bottom-right",
           style: {
-            borderRadius: '24px',
-            background: theme === 'dark' ? '#1A1A1A' : '#FFFFFF',
-            color: theme === 'dark' ? '#FFFFFF' : '#111111',
-            border: theme === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            maxWidth: '400px',
-            padding: '16px'
-          }
+            borderRadius: "24px",
+            background: theme === "dark" ? "#1A1A1A" : "#FFFFFF",
+            color: theme === "dark" ? "#FFFFFF" : "#111111",
+            border:
+              theme === "dark"
+                ? "1px solid rgba(255,255,255,0.1)"
+                : "1px solid rgba(0,0,0,0.05)",
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            maxWidth: "400px",
+            padding: "16px",
+          },
         }
       );
     };
@@ -1041,7 +1053,7 @@ export default function NotificationSystem({
 
     // Show premium toast notification instead of full-screen modal
     setSelectedOrder(order);
-    
+
     // Notify parent component about the order being shown
     onNotificationShow?.(order);
 
@@ -1055,17 +1067,25 @@ export default function NotificationSystem({
     // Start 90s countdown
     setTimeLeft(90);
     if (timerRef.current) clearInterval(timerRef.current);
-    
+
     const toastId = batchToast.custom(
       (t) => (
         <div
           className={`${
-            t.visible 
-              ? (isMobile ? "animate-in fade-in slide-in-from-top-4" : "animate-enter") 
-              : (isMobile ? "animate-out fade-out slide-out-to-top-4" : "animate-leave")
-          } pointer-events-auto flex w-full ${isMobile ? "max-w-[92vw]" : "max-w-md"} flex-col overflow-hidden rounded-3xl border-4 ${
-            theme === "dark" ? "border-emerald-500/50 bg-[#1A1A1A]" : "border-emerald-500 bg-white"
-          } shadow-2xl backdrop-blur-xl ring-1 ring-black/5`}
+            t.visible
+              ? isMobile
+                ? "animate-in fade-in slide-in-from-top-4"
+                : "animate-enter"
+              : isMobile
+              ? "animate-out fade-out slide-out-to-top-4"
+              : "animate-leave"
+          } pointer-events-auto flex w-full ${
+            isMobile ? "max-w-[92vw]" : "max-w-md"
+          } flex-col overflow-hidden rounded-3xl border-4 ${
+            theme === "dark"
+              ? "border-emerald-500/50 bg-[#1A1A1A]"
+              : "border-emerald-500 bg-white"
+          } shadow-2xl ring-1 ring-black/5 backdrop-blur-xl`}
         >
           {/* Header with Countdown */}
           <div className="flex items-center justify-between bg-emerald-500 px-5 py-3">
@@ -1089,10 +1109,18 @@ export default function NotificationSystem({
             {/* Store & Earnings */}
             <div className="mb-4 flex items-start justify-between">
               <div className="flex-1 pr-4">
-                <p className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p
+                  className={`text-[10px] font-bold uppercase tracking-widest ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Merchant
                 </p>
-                <p className={`line-clamp-1 text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <p
+                  className={`line-clamp-1 text-lg font-black ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   {formatStoreList(order.shopName)}
                 </p>
               </div>
@@ -1107,21 +1135,35 @@ export default function NotificationSystem({
             </div>
 
             {/* Route Info */}
-            <div className={`mb-5 flex items-center justify-between rounded-2xl p-3 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-100'}`}>
+            <div
+              className={`mb-5 flex items-center justify-between rounded-2xl p-3 ${
+                theme === "dark" ? "bg-white/5" : "bg-gray-100"
+              }`}
+            >
               <div className="flex items-center space-x-3">
                 <div className="flex flex-col items-center">
                   <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
                   <div className="h-4 w-px border-l border-dashed border-emerald-500/30"></div>
                   <div className="h-2 w-2 rounded-full bg-blue-500"></div>
                 </div>
-                <div className={`flex flex-col text-[10px] font-bold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                <div
+                  className={`flex flex-col text-[10px] font-bold ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   <span className="line-clamp-1">{order.shopName}</span>
-                  <span className="mt-1 line-clamp-1">{order.customerAddress}</span>
+                  <span className="mt-1 line-clamp-1">
+                    {order.customerAddress}
+                  </span>
                 </div>
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-[10px] font-black text-emerald-500">{order.distance?.toFixed(1)}km</span>
-                <span className="text-[10px] font-black text-blue-500">{order.travelTimeMinutes || 15}m</span>
+                <span className="text-[10px] font-black text-emerald-500">
+                  {order.distance?.toFixed(1)}km
+                </span>
+                <span className="text-[10px] font-black text-blue-500">
+                  {order.travelTimeMinutes || 15}m
+                </span>
               </div>
             </div>
 
@@ -1143,20 +1185,24 @@ export default function NotificationSystem({
                 }}
                 disabled={decliningOrders.has(order.id)}
                 className={`rounded-xl px-6 py-3 text-sm font-black transition-all active:scale-95 ${
-                  decliningOrders.has(order.id) ? 'opacity-50 cursor-not-allowed' : ''
+                  decliningOrders.has(order.id)
+                    ? "cursor-not-allowed opacity-50"
+                    : ""
                 } ${
-                  theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  theme === "dark"
+                    ? "bg-white/10 text-white hover:bg-white/20"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
-                {decliningOrders.has(order.id) ? 'Skipping...' : 'Skip'}
+                {decliningOrders.has(order.id) ? "Skipping..." : "Skip"}
               </button>
             </div>
           </div>
         </div>
       ),
-      { 
-        duration: 90000, 
-        position: isMobile ? "top-center" : "bottom-center" 
+      {
+        duration: 90000,
+        position: isMobile ? "top-center" : "bottom-center",
       }
     );
 
@@ -1181,21 +1227,22 @@ export default function NotificationSystem({
     return "map-modal";
   };
 
-
-
-  const handleDeclineOffer = async (orderId: string, status: "DECLINED" | "DELAYED" = "DECLINED") => {
+  const handleDeclineOffer = async (
+    orderId: string,
+    status: "DECLINED" | "DELAYED" = "DECLINED"
+  ) => {
     if (!session?.user?.id) return;
-    
+
     try {
-      setDecliningOrders(prev => new Set(prev).add(orderId));
-      
+      setDecliningOrders((prev) => new Set(prev).add(orderId));
+
       const response = await fetch("/api/shopper/decline-offer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId,
           shopperId: session.user.id,
-          status
+          status,
         }),
       });
 
@@ -1209,10 +1256,10 @@ export default function NotificationSystem({
         lastDeclineTime.current = Date.now();
         declinedOrders.current.set(orderId, Date.now() + 300000); // Block locally for 5 mins
         removeToastForOrder(orderId);
-        
+
         if (status === "DELAYED") {
           toast.error("Offer timed out and has been rotated.", {
-            style: { fontWeight: "bold", borderRadius: "1rem" }
+            style: { fontWeight: "bold", borderRadius: "1rem" },
           });
         }
       }
@@ -1220,7 +1267,7 @@ export default function NotificationSystem({
       console.error("Error declining offer:", error);
       toast.error("Failed to update offer status.");
     } finally {
-      setDecliningOrders(prev => {
+      setDecliningOrders((prev) => {
         const next = new Set(prev);
         next.delete(orderId);
         return next;
@@ -1563,7 +1610,7 @@ export default function NotificationSystem({
         // Smart order finder returned an EXISTING pending offer (e.g. after refresh)
         // This is critical for restoring UI state in the action-based system
         const order = data.existingOffer.order;
-        
+
         // Skip if already showing to prevent flicker
         if (!activeToasts.current.has(order.id)) {
           console.log("Restoring existing pending offer card:", order.id);
@@ -1683,11 +1730,15 @@ export default function NotificationSystem({
 
         lastNotificationTime.current = currentTime;
       } else if (data.reason === "SHOPPER_SUSPENDED") {
-        toast.error(data.message || "Your account is temporarily suspended from receiving new offers.", {
-          duration: 10000,
-          id: "shopper-suspended-alert",
-          style: { fontWeight: "bold", borderRadius: "1rem" }
-        });
+        toast.error(
+          data.message ||
+            "Your account is temporarily suspended from receiving new offers.",
+          {
+            duration: 10000,
+            id: "shopper-suspended-alert",
+            style: { fontWeight: "bold", borderRadius: "1rem" },
+          }
+        );
         lastNotificationTime.current = currentTime;
       } else {
         // Update lastNotificationTime even when no orders found to prevent rapid polling
@@ -1963,7 +2014,6 @@ export default function NotificationSystem({
           },
         }}
       />
-
     </>
   );
 }

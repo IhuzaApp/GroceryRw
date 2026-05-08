@@ -18,11 +18,14 @@ import {
   Image as LucideImageIcon,
   Download,
   ChevronDown,
+  ArrowLeft,
 } from "lucide-react";
+import { OrderDetailsView } from "./OrderDetailsView";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
+import { usePortalCache } from "../../context/PortalCacheContext";
 
 interface Product {
   id: string;
@@ -78,10 +81,7 @@ interface OrdersSectionProps {
 }
 
 export function OrdersSection({ className = "" }: OrdersSectionProps) {
-  const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -92,10 +92,18 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  // ── Use shared portal cache instead of fetching independently ────────────
+  const { orders: ordersCache } = usePortalCache();
+  const orders = (ordersCache.data ?? []) as Order[];
+  const loading = ordersCache.isLoading;
+  const error = ordersCache.error ? "Failed to fetch orders" : null;
 
+  // Sync filteredOrders whenever the cache updates
+  useEffect(() => {
+    setFilteredOrders(orders);
+  }, [ordersCache.data]);
+
+  // Close export menu on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -109,27 +117,6 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showExportMenu]);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch("/api/queries/business-product-orders");
-      const data = await response.json();
-
-      if (response.ok) {
-        const fetchedOrders = data.orders || [];
-        setOrders(fetchedOrders);
-        setFilteredOrders(fetchedOrders);
-      } else {
-        setError(data.error || "Failed to fetch orders");
-      }
-    } catch (err) {
-      setError("Failed to fetch orders");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const isPendingOrder = (order: Order) => {
     const s = (order.status || "").toLowerCase();
@@ -341,16 +328,10 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
 
       if (response.ok) {
         const data = await response.json();
-        // Update the order in the local state
-        setOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order.id === orderId
-              ? { ...order, status: "Ready for Pickup" }
-              : order
-          )
-        );
         // Update selected order
-        setSelectedOrder({ ...selectedOrder, status: "Ready for Pickup" });
+        setSelectedOrder((prev) =>
+          prev ? { ...prev, status: "Ready for Pickup" } : null
+        );
         toast.success("Order confirmed as ready for pickup!");
       } else {
         const error = await response.json();
@@ -369,30 +350,30 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
       normalizedStatus.includes("delivered") ||
       normalizedStatus === "completed"
     ) {
-      return "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200";
+      return "bg-green-100 !text-green-900 dark:bg-green-900/40 dark:!text-green-300";
     } else if (
       normalizedStatus.includes("ready for pickup") ||
       normalizedStatus.includes("ready")
     ) {
-      return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200";
+      return "bg-blue-100 !text-blue-900 dark:bg-blue-900/40 dark:!text-blue-300";
     } else if (
       normalizedStatus.includes("transit") ||
       normalizedStatus.includes("on the way") ||
       normalizedStatus === "in_progress"
     ) {
-      return "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 dark:from-purple-900 dark:to-indigo-900 dark:text-purple-200";
+      return "bg-purple-100 !text-purple-900 dark:bg-purple-900/40 dark:!text-purple-300";
     } else if (
       normalizedStatus === "pending" ||
       normalizedStatus === "processing"
     ) {
-      return "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 dark:from-yellow-900 dark:to-orange-900 dark:text-yellow-200";
+      return "bg-yellow-100 !text-yellow-900 dark:bg-yellow-900/40 dark:!text-yellow-300";
     } else if (
       normalizedStatus === "cancelled" ||
       normalizedStatus === "rejected"
     ) {
-      return "bg-gradient-to-r from-red-100 to-pink-100 text-red-800 dark:from-red-900 dark:to-pink-900 dark:text-red-200";
+      return "bg-red-100 !text-red-900 dark:bg-red-900/40 dark:!text-red-300";
     }
-    return "bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 dark:from-gray-900 dark:to-slate-900 dark:text-gray-200";
+    return "bg-gray-100 !text-gray-900 dark:bg-gray-800 dark:!text-gray-300";
   };
 
   const getStatusIcon = (status: string) => {
@@ -472,6 +453,19 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
     );
   }
 
+  if (selectedOrder) {
+    return (
+      <OrderDetailsView
+        order={selectedOrder}
+        onBack={() => setSelectedOrder(null)}
+        onConfirmAvailability={handleConfirmAvailability}
+        updatingStatus={updatingStatus}
+        getStatusBadgeStyles={getStatusBadgeStyles}
+        getStatusIcon={getStatusIcon}
+      />
+    );
+  }
+
   return (
     <div className={`space-y-4 md:space-y-8 ${className}`}>
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 md:rounded-2xl">
@@ -547,16 +541,16 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                 {paginatedOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-3 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 md:rounded-2xl md:p-6"
+                    className="group rounded-xl border border-gray-200 bg-white p-2 transition-all duration-300 hover:border-green-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 md:rounded-2xl md:p-4"
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div className="flex-1 space-y-2 md:space-y-4">
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                          <span className="text-sm font-bold text-gray-900 dark:text-white md:text-lg">
+                          <span className="text-xs font-bold text-gray-900 dark:text-white md:text-base">
                             {order.orderId}
                           </span>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold md:px-3 md:py-1 md:text-xs ${getStatusBadgeStyles(
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold md:px-2.5 md:py-1 md:text-[10px] ${getStatusBadgeStyles(
                               order.status
                             )}`}
                           >
@@ -569,57 +563,70 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                             </span>
                           </span>
                         </div>
-                        <p className="line-clamp-2 text-xs font-semibold text-gray-900 dark:text-white md:line-clamp-none md:text-base">
+                        <p className="line-clamp-2 text-[11px] font-semibold text-gray-900 dark:text-white md:line-clamp-none md:text-sm">
                           {order.items}
                         </p>
-                        <p className="text-[10px] text-gray-600 dark:text-gray-400 md:text-sm">
-                          Store:{" "}
-                          <span className="font-semibold">{order.store}</span>{" "}
-                          <span className="hidden md:inline">•</span>
-                          <span className="md:hidden"> </span>
-                          <span className="hidden md:inline">Tracking: </span>
-                          <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[9px] dark:bg-gray-700 md:px-2 md:py-1 md:text-xs">
+                        {/* Store / Service badge */}
+                        <div className="flex items-center gap-1.5">
+                          {order.store_image ? (
+                            <img
+                              src={order.store_image}
+                              alt={order.store}
+                              className="h-5 w-5 flex-shrink-0 rounded-full object-cover ring-1 ring-green-400/40"
+                            />
+                          ) : (
+                            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
+                              <Package className="h-3 w-3 text-green-600 dark:text-green-400" />
+                            </span>
+                          )}
+                          <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-semibold text-green-700 dark:border-green-800/40 dark:bg-green-900/30 dark:text-green-300 md:text-[11px]">
+                            {order.store}
+                          </span>
+                          <span className="hidden text-[9px] text-gray-400 md:inline">
+                            •
+                          </span>
+                          <span className="hidden rounded bg-gray-100 px-2 py-0.5 font-mono text-[9px] dark:bg-gray-700 md:inline">
                             {order.tracking}
                           </span>
-                        </p>
+                        </div>
                         <div className="md:hidden">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                          <p className="text-[11px] font-semibold text-gray-900 dark:text-white">
                             {formatCurrencySync(
                               order.value -
                                 order.transportation_fee -
                                 order.service_fee
                             )}
                           </p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                          <p className="text-[9px] font-bold !text-black dark:!text-gray-300">
                             Delivery: {order.deliveryDate}
                           </p>
                         </div>
                       </div>
-                      <div className="hidden space-y-4 text-right md:block">
+                      <div className="hidden space-y-3 text-right md:block">
                         <div>
-                          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                          <p className="text-xl font-bold text-gray-900 dark:text-white">
                             {formatCurrencySync(
                               order.value -
                                 order.transportation_fee -
                                 order.service_fee
                             )}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-xs font-bold !text-black dark:!text-gray-300">
                             Order Value
                           </p>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-xs font-black !text-black dark:!text-gray-300">
                             Delivery:{" "}
-                            <span className="font-semibold">
+                            <span className="font-bold">
                               {order.deliveryDate}
                             </span>
                           </p>
                           <button
                             onClick={() => handleViewOrder(order)}
-                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium !text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+                            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1.5 text-xs font-medium !text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
                           >
-                            <Eye className="h-4 w-4 !text-white" />
+                            <Eye className="h-3.5 w-3.5 !text-white" />
                             View
                           </button>
                         </div>
@@ -674,377 +681,6 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
         </div>
       </div>
 
-      {/* Order Details Modal */}
-      {showOrderDetails && selectedOrder && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center md:px-4 md:pb-4"
-          onClick={() => setShowOrderDetails(false)}
-        >
-          <div
-            className="h-full max-h-screen w-full max-w-2xl animate-slide-up overflow-y-auto rounded-t-3xl border-l border-r border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 md:h-auto md:max-h-[90vh] md:animate-none md:rounded-2xl md:border"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white md:text-2xl">
-                Order Details - {selectedOrder.orderId}
-              </h2>
-              <button
-                onClick={() => setShowOrderDetails(false)}
-                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="space-y-6 p-6">
-              {/* Shopper Information Section */}
-              {selectedOrder.shopper_id && selectedOrder.shoppers && (
-                <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 dark:border-blue-800 dark:from-blue-900/20 dark:to-cyan-900/20">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-blue-500 bg-blue-100 dark:bg-blue-900/30">
-                      {selectedOrder.shoppers.profile_photo ? (
-                        <Image
-                          src={selectedOrder.shoppers.profile_photo}
-                          alt={selectedOrder.shoppers.full_name || "Shopper"}
-                          width={64}
-                          height={64}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <Truck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Assigned Shopper
-                        </h3>
-                      </div>
-                      <p className="text-base font-semibold text-gray-900 dark:text-white">
-                        {selectedOrder.shoppers.full_name || "Unknown Shopper"}
-                      </p>
-                      {selectedOrder.shoppers.phone_number && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {selectedOrder.shoppers.phone_number}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Status Badge */}
-              <div className="flex items-center gap-3">
-                <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${getStatusBadgeStyles(
-                    selectedOrder.status
-                  )}`}
-                >
-                  {getStatusIcon(selectedOrder.status)}
-                  {selectedOrder.status}
-                </span>
-              </div>
-
-              {/* Products Section */}
-              <div>
-                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                  Products Ordered
-                </h3>
-                <div className="space-y-3">
-                  {Array.isArray(selectedOrder.allProducts) &&
-                  selectedOrder.allProducts.length > 0 ? (
-                    selectedOrder.allProducts.map(
-                      (product: Product, index: number) => (
-                        <div
-                          key={product.id || index}
-                          className="rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50"
-                        >
-                          <div className="flex items-start gap-4">
-                            {/* Product Image */}
-                            {product.image ? (
-                              <div className="flex-shrink-0">
-                                <div
-                                  className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 hover:border-green-500 hover:shadow-lg dark:border-gray-600 md:h-24 md:w-24"
-                                  onClick={() =>
-                                    setExpandedImage(product.image!)
-                                  }
-                                >
-                                  <Image
-                                    src={product.image}
-                                    alt={product.name}
-                                    fill
-                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                                  />
-                                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/20">
-                                    <ZoomIn className="h-6 w-6 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 md:h-24 md:w-24">
-                                <LucideImageIcon className="h-8 w-8 text-gray-400" />
-                              </div>
-                            )}
-                            <div className="flex flex-1 items-center justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-white">
-                                  {product.name}
-                                </h4>
-                                {product.selectedDetails &&
-                                  typeof product.selectedDetails === "object" &&
-                                  Object.keys(product.selectedDetails).length >
-                                    0 && (
-                                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                                      {Object.entries(product.selectedDetails)
-                                        .map(([k, v]) => `${k}: ${v}`)
-                                        .join(" · ")}
-                                    </p>
-                                  )}
-                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                  Quantity: {product.quantity}{" "}
-                                  {product.unit ||
-                                    product.measurement_type ||
-                                    ""}
-                                </p>
-                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                  Price per item:{" "}
-                                  {formatCurrencySync(product.price_per_item)}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                                  {formatCurrencySync(
-                                    product.price_per_item * product.quantity
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )
-                  ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      No product details available
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Order Summary */}
-              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-                <div className="space-y-2">
-                  <div className="flex justify-between pt-2 ">
-                    <span className="text-base font-bold text-gray-900 dark:text-white">
-                      Total:
-                    </span>
-                    <span className="text-base font-bold text-green-600 dark:text-green-400">
-                      {formatCurrencySync(
-                        selectedOrder.value -
-                          selectedOrder.transportation_fee -
-                          selectedOrder.service_fee
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Information */}
-              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                  Delivery Information
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Delivery Address:
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedOrder.deliveryAddress}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Delivery Date:
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedOrder.deliveryDate}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Delivery Time:
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedOrder.deliveryTime}
-                    </p>
-                  </div>
-                  {selectedOrder.deliveryAddress && (
-                    <button
-                      onClick={() =>
-                        handleViewLocation(selectedOrder.deliveryAddress)
-                      }
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium !text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
-                    >
-                      <MapPin className="h-4 w-4" />
-                      View Location on Map
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Comment Section */}
-              {selectedOrder.comment && (
-                <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-                  <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                    Order Comment
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedOrder.comment}
-                  </p>
-                </div>
-              )}
-
-              {/* Availability Confirmation Section */}
-              {(selectedOrder.status === "Pending" ||
-                selectedOrder.status === "Processing") && (
-                <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:border-orange-800 dark:from-orange-900/20 dark:to-yellow-900/20">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
-                      <Package className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Confirm Availability
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Confirm that all items in this order are available and
-                        ready for pickup
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleConfirmAvailability(selectedOrder.id)}
-                    disabled={updatingStatus}
-                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-yellow-500 px-6 py-3 text-base font-semibold !text-white shadow-md transition-all duration-300 hover:from-orange-600 hover:to-yellow-600 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {updatingStatus ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Confirming...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        <CheckCircle className="h-5 w-5" />
-                        Confirm Items Available for Pickup
-                      </span>
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Availability Status (if already confirmed) */}
-              {(selectedOrder.status === "Ready for Pickup" ||
-                selectedOrder.status === "In Transit" ||
-                selectedOrder.status === "Delivered") && (
-                <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Availability Confirmed
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Items have been confirmed as available for pickup
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Additional Info */}
-              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                  Additional Information
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="font-semibold text-gray-700 dark:text-gray-300">
-                      Store:
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {selectedOrder.store}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-700 dark:text-gray-300">
-                      Total Units:
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {selectedOrder.units}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-700 dark:text-gray-300">
-                      Tracking ID:
-                    </p>
-                    <p className="font-mono text-gray-600 dark:text-gray-400">
-                      {selectedOrder.tracking}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-700 dark:text-gray-300">
-                      Order Date:
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {new Date(selectedOrder.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-              <button
-                onClick={() => setShowOrderDetails(false)}
-                className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-semibold !text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Expanded Image Modal */}
-      {expandedImage && (
-        <div
-          className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/90 backdrop-blur-sm"
-          onClick={() => setExpandedImage(null)}
-        >
-          <div className="relative max-h-[90vh] max-w-[90vw] p-4">
-            <button
-              onClick={() => setExpandedImage(null)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div className="relative h-full w-full">
-              <Image
-                src={expandedImage}
-                alt="Expanded product image"
-                width={1200}
-                height={1200}
-                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

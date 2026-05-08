@@ -6,9 +6,19 @@ interface ShopperChatSkeletonProps {
   isDark: boolean;
 }
 
-export const ShopperChatSkeleton: React.FC<ShopperChatSkeletonProps> = ({ isDark }) => (
-  <div className={`flex h-screen w-screen flex-col ${isDark ? "bg-[#0A0A0A]" : "bg-gray-50"}`}>
-    <div className={`flex items-center gap-4 border-b px-6 py-4 ${isDark ? "border-white/10" : "border-black/5"}`}>
+export const ShopperChatSkeleton: React.FC<ShopperChatSkeletonProps> = ({
+  isDark,
+}) => (
+  <div
+    className={`flex h-screen w-screen flex-col ${
+      isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
+    }`}
+  >
+    <div
+      className={`flex items-center gap-4 border-b px-6 py-4 ${
+        isDark ? "border-white/10" : "border-black/5"
+      }`}
+    >
       <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800" />
       <div className="flex-1 space-y-2">
         <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />

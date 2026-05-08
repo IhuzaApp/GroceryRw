@@ -401,16 +401,16 @@ export function RFQOpportunitiesSection({
           filteredRFQs.map((rfq) => (
             <div
               key={rfq.id}
-              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+              className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-5"
             >
               <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
                       {rfq.title}
                     </h4>
                     <span
-                      className={`flex-shrink-0 rounded-full px-2 py-1 text-[10px] font-medium sm:text-xs ${
+                      className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-medium sm:text-[10px] ${
                         rfq.status === "Urgent"
                           ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
                           : "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
@@ -419,43 +419,43 @@ export function RFQOpportunitiesSection({
                       {rfq.status}
                     </span>
                   </div>
-                  <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400 sm:line-clamp-none">
+                  <p className="mb-2.5 line-clamp-2 text-xs font-medium text-gray-900 dark:text-gray-400 sm:line-clamp-none">
                     {rfq.description}
                   </p>
 
-                  <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-2 sm:gap-4 sm:text-sm lg:grid-cols-4">
-                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                      <DollarSign className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                      <span className="truncate font-medium">{rfq.budget}</span>
+                  <div className="grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-2 sm:gap-3 sm:text-xs lg:grid-cols-4">
+                    <div className="flex items-center gap-1 font-medium text-gray-900 dark:text-gray-400">
+                      <DollarSign className="h-3 w-3 flex-shrink-0 sm:h-3.5 sm:w-3.5" />
+                      <span className="truncate font-bold">{rfq.budget}</span>
                     </div>
                     {rfq.estimated_quantity && (
-                      <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                        <Package className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                        <span className="truncate font-medium">
+                      <div className="flex items-center gap-1 font-medium text-gray-900 dark:text-gray-400">
+                        <Package className="h-3 w-3 flex-shrink-0 sm:h-3.5 sm:w-3.5" />
+                        <span className="truncate font-bold">
                           Qty: {rfq.estimated_quantity}
                         </span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                      <MapPin className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                      <span className="truncate">{rfq.location}</span>
+                    <div className="flex items-center gap-1 font-medium text-gray-900 dark:text-gray-400">
+                      <MapPin className="h-3 w-3 flex-shrink-0 sm:h-3.5 sm:w-3.5" />
+                      <span className="truncate font-bold">{rfq.location}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                      <User className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                      <span className="truncate">{rfq.postedBy}</span>
+                    <div className="flex items-center gap-1 font-medium text-gray-900 dark:text-gray-400">
+                      <User className="h-3 w-3 flex-shrink-0 sm:h-3.5 sm:w-3.5" />
+                      <span className="truncate font-bold">{rfq.postedBy}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:flex-col sm:items-end sm:justify-start sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-2.5 dark:bg-gray-700/50 sm:flex-col sm:items-end sm:justify-start sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
                   <div className="text-left sm:text-right">
-                    <div className="text-lg font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-2xl">
+                    <div className="text-base font-black text-gray-900 dark:text-white sm:mb-0.5 sm:text-lg">
                       {rfq.budget}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
+                    <div className="text-[10px] font-bold text-gray-900 dark:text-gray-400 sm:mb-1 sm:text-xs">
                       {rfq.responses} responses
                     </div>
-                    <div className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                    <div className="text-[9px] font-medium text-gray-900 dark:text-gray-500 sm:text-[10px]">
                       Posted {rfq.postedAt}
                     </div>
                   </div>
@@ -463,14 +463,14 @@ export function RFQOpportunitiesSection({
               </div>
 
               <div className="mb-4 flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-0">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 sm:gap-4 sm:text-sm">
+                <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-900 dark:text-gray-400 sm:gap-3 sm:text-xs">
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                    <span className="whitespace-nowrap">
+                    <Calendar className="h-3 w-3 flex-shrink-0 sm:h-3.5 sm:w-3.5" />
+                    <span className="whitespace-nowrap font-bold">
                       Deadline: {rfq.deadline}
                     </span>
                   </div>
-                  <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] dark:bg-gray-700 sm:text-xs">
+                  <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] dark:bg-gray-700 sm:text-[10px]">
                     {rfq.category}
                   </span>
                 </div>
@@ -497,11 +497,11 @@ export function RFQOpportunitiesSection({
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
                 <button
                   onClick={() => handleViewRFQ(rfq)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-800 to-green-900 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-green-900/40 transition-all duration-200 hover:from-green-900 hover:to-green-950 hover:shadow-lg hover:shadow-green-900/50 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-green-800 to-green-900 px-3 py-2 text-[11px] font-semibold text-white shadow-md shadow-green-900/40 transition-all duration-200 hover:from-green-900 hover:to-green-950 hover:shadow-lg hover:shadow-green-900/50 active:scale-95 sm:px-3.5 sm:py-2 sm:text-xs"
                   style={{ color: "#ffffff" }}
                 >
                   <Eye
-                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                     style={{ color: "#ffffff" }}
                   />
                   <span
@@ -518,7 +518,7 @@ export function RFQOpportunitiesSection({
                   onClick={() =>
                     guestMode ? onGuestAction?.() : handleShareQuote(rfq)
                   }
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-95 sm:px-3.5 sm:py-2 sm:text-xs ${
                     submittedQuotes[rfq.id]
                       ? "bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40"
                       : "bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/30 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40"
@@ -526,7 +526,7 @@ export function RFQOpportunitiesSection({
                   style={{ color: "#ffffff" }}
                 >
                   <CheckCircle
-                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                     style={{ color: "#ffffff" }}
                   />
                   <span style={{ color: "#ffffff" }}>
@@ -551,11 +551,11 @@ export function RFQOpportunitiesSection({
                       ? onGuestAction?.()
                       : handleMessageCustomer(rfq.id)
                   }
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-purple-500/30 transition-all duration-200 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-3 py-2 text-[11px] font-semibold text-white shadow-md shadow-purple-500/30 transition-all duration-200 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 sm:px-3.5 sm:py-2 sm:text-xs"
                   style={{ color: "#ffffff" }}
                 >
                   <MessageSquare
-                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                     style={{ color: "#ffffff" }}
                   />
                   <span style={{ color: "#ffffff" }}>

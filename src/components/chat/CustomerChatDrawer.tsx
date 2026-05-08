@@ -106,25 +106,33 @@ const CustomerMessage: React.FC<MessageProps> = ({
   return (
     <div
       className={`mb-4 flex gap-3 ${
-        isCurrentUser ? "flex-row-reverse justify-start" : "flex-row justify-start"
+        isCurrentUser
+          ? "flex-row-reverse justify-start"
+          : "flex-row justify-start"
       }`}
     >
       <div className="relative flex-shrink-0">
         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm ring-2 ring-emerald-500/20 dark:ring-emerald-400/10">
           {message.senderType === "customer" ? (
             customerImage ? (
-              <img src={customerImage} alt="Customer" className="h-full w-full object-cover" />
+              <img
+                src={customerImage}
+                alt="Customer"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <span className="text-sm font-bold uppercase text-white">C</span>
             )
+          ) : counterpartImage ? (
+            <img
+              src={counterpartImage}
+              alt={counterpartName}
+              className="h-full w-full object-cover"
+            />
           ) : (
-            counterpartImage ? (
-              <img src={counterpartImage} alt={counterpartName} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-sm font-bold uppercase text-white">
-                {counterpartName.charAt(0)}
-              </span>
-            )
+            <span className="text-sm font-bold uppercase text-white">
+              {counterpartName.charAt(0)}
+            </span>
           )}
         </div>
       </div>
@@ -145,7 +153,11 @@ const CustomerMessage: React.FC<MessageProps> = ({
               {counterpartName}
             </div>
           )}
-          <div className={`whitespace-pre-wrap font-medium ${isCurrentUser ? "!text-white" : ""}`}>
+          <div
+            className={`whitespace-pre-wrap font-medium ${
+              isCurrentUser ? "!text-white" : ""
+            }`}
+          >
             {messageContent}
           </div>
         </div>
@@ -358,7 +370,13 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!db || !newMessage.trim() || !session?.user?.id || !conversationId || !counterpart?.id)
+    if (
+      !db ||
+      !newMessage.trim() ||
+      !session?.user?.id ||
+      !conversationId ||
+      !counterpart?.id
+    )
       return;
 
     const text = newMessage.trim();

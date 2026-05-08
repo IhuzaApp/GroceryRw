@@ -47,7 +47,9 @@ function LayoutContent({
   const isPackageDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewPackageDetails/"
   );
-  const isCurrentPendingOrdersPage = router.pathname.startsWith("/CurrentPendingOrders");
+  const isCurrentPendingOrdersPage = router.pathname.startsWith(
+    "/CurrentPendingOrders"
+  );
   const isRecipesPage = router.pathname.startsWith("/Recipes");
   const isBecomeShopperPage = router.pathname === "/Myprofile/become-shopper";
   const isCarsPage =
@@ -112,9 +114,11 @@ function LayoutContent({
         }
       >
         {/* Sidebar: hide on order details (mobile), show on desktop (SideBar has hidden md:block) */}
-        {!hideNavigation && !isChatPage && !isReelsPage && !isMessagesList && !isMessagesChat && (
-          <SideBar />
-        )}
+        {!hideNavigation &&
+          !isChatPage &&
+          !isReelsPage &&
+          !isMessagesList &&
+          !isMessagesChat && <SideBar />}
         <div
           className={`mx-auto flex h-full w-full flex-col [&_*]:text-inherit ${
             isMessagesList || isMessagesChat ? "flex-1 overflow-hidden" : ""
@@ -152,7 +156,7 @@ function LayoutContent({
         !isPetsPage &&
         !isCurrentPendingOrdersPage &&
         !isPlasBusinessPage && <AIChatProvider />}
-      
+
       <NotificationSystem currentLocation={null} />
     </div>
   );

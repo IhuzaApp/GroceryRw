@@ -157,7 +157,6 @@ function EstimatedDelivery({
   // Delayed-order Slack notification is now handled by a server-side cron job.
   // Client-side triggers removed to avoid redundant API calls and duplicate alerts.
 
-
   if (!deliveryTime) return null;
   if (status === "delivered") {
     return <span className="font-medium text-green-600">Delivered</span>;

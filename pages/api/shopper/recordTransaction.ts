@@ -252,11 +252,13 @@ export default async function handler(
         let calculatedRefund = 0;
         orderData.Order_Items.forEach((item: any) => {
           const quantity = item.quantity || 0;
-          const foundQuantity = item.found ? (item.foundQuantity ?? quantity) : 0;
+          const foundQuantity = item.found ? item.foundQuantity ?? quantity : 0;
           const missingQuantity = Math.max(0, quantity - foundQuantity);
-          
+
           if (missingQuantity > 0) {
-            const finalPrice = parseFloat(item.Product?.final_price || item.price || "0");
+            const finalPrice = parseFloat(
+              item.Product?.final_price || item.price || "0"
+            );
             calculatedRefund += missingQuantity * finalPrice;
           }
         });
@@ -270,13 +272,19 @@ export default async function handler(
 
           // Create detailed reason
           refundReason = `Refund of RWF ${refundAmount.toLocaleString()} for items not found during shopping at ${shopName}.`;
-          
-          const notFoundItems = orderData.Order_Items.filter(item => !item.found || (item.foundQuantity ?? 0) < item.quantity);
+
+          const notFoundItems = orderData.Order_Items.filter(
+            (item) => !item.found || (item.foundQuantity ?? 0) < item.quantity
+          );
           if (notFoundItems.length > 0) {
-            const itemList = notFoundItems.map(item => {
-              const missing = item.quantity - (item.found ? (item.foundQuantity ?? item.quantity) : 0);
-              return `${item.Product.name} (${missing} missing)`;
-            }).join(", ");
+            const itemList = notFoundItems
+              .map((item) => {
+                const missing =
+                  item.quantity -
+                  (item.found ? item.foundQuantity ?? item.quantity : 0);
+                return `${item.Product.name} (${missing} missing)`;
+              })
+              .join(", ");
             refundReason += ` Missing items: ${itemList}.`;
           }
         }

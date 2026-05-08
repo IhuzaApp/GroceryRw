@@ -9,7 +9,10 @@ interface PetListingHeaderProps {
   onViewAdoptions: () => void;
 }
 
-export default function PetListingHeader({ onListPet, onViewAdoptions }: PetListingHeaderProps) {
+export default function PetListingHeader({
+  onListPet,
+  onViewAdoptions,
+}: PetListingHeaderProps) {
   return (
     <div className="relative mx-4 mt-4 hidden h-[280px] w-[calc(100%-2rem)] w-full overflow-hidden rounded-[3rem] md:block">
       {/* Background Image with Overlay */}

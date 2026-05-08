@@ -49,7 +49,9 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
     }).length;
     const rfqsChange =
       prevMonthRfqs > 0
-        ? `${thisMonthRfqs - prevMonthRfqs >= 0 ? "+" : ""}${thisMonthRfqs - prevMonthRfqs}`
+        ? `${thisMonthRfqs - prevMonthRfqs >= 0 ? "+" : ""}${
+            thisMonthRfqs - prevMonthRfqs
+          }`
         : thisMonthRfqs > 0
         ? `+${thisMonthRfqs}`
         : "0";
@@ -87,7 +89,9 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
     }).length;
     const ordersChange =
       prevMonthPending > 0
-        ? `${thisMonthPending - prevMonthPending >= 0 ? "+" : ""}${thisMonthPending - prevMonthPending}`
+        ? `${thisMonthPending - prevMonthPending >= 0 ? "+" : ""}${
+            thisMonthPending - prevMonthPending
+          }`
         : thisMonthPending > 0
         ? `+${thisMonthPending}`
         : "0";
@@ -105,7 +109,9 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
     }).length;
     const storesChange =
       prevMonthStores > 0
-        ? `${thisMonthStores - prevMonthStores >= 0 ? "+" : ""}${thisMonthStores - prevMonthStores}`
+        ? `${thisMonthStores - prevMonthStores >= 0 ? "+" : ""}${
+            thisMonthStores - prevMonthStores
+          }`
         : thisMonthStores > 0
         ? `+${thisMonthStores}`
         : "0";
@@ -123,16 +129,42 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
     }).length;
     const servicesChange =
       prevMonthServices > 0
-        ? `${thisMonthServices - prevMonthServices >= 0 ? "+" : ""}${thisMonthServices - prevMonthServices}`
+        ? `${thisMonthServices - prevMonthServices >= 0 ? "+" : ""}${
+            thisMonthServices - prevMonthServices
+          }`
         : thisMonthServices > 0
         ? `+${thisMonthServices}`
         : "0";
 
     return [
-      { title: "Active RFQs",     value: activeRFQs,    change: rfqsChange,    icon: FileText,     color: "text-blue-600" },
-      { title: "Pending Orders",   value: pendingOrders, change: ordersChange,  icon: ShoppingCart, color: "text-orange-600" },
-      { title: "Total Stores",     value: totalStores,   change: storesChange,  icon: Store,        color: "text-green-600" },
-      { title: "Services",         value: servicesCount, change: servicesChange, icon: Package,     color: "text-purple-600" },
+      {
+        title: "Active RFQs",
+        value: activeRFQs,
+        change: rfqsChange,
+        icon: FileText,
+        color: "text-blue-600",
+      },
+      {
+        title: "Pending Orders",
+        value: pendingOrders,
+        change: ordersChange,
+        icon: ShoppingCart,
+        color: "text-orange-600",
+      },
+      {
+        title: "Total Stores",
+        value: totalStores,
+        change: storesChange,
+        icon: Store,
+        color: "text-green-600",
+      },
+      {
+        title: "Services",
+        value: servicesCount,
+        change: servicesChange,
+        icon: Package,
+        color: "text-purple-600",
+      },
     ];
   }, [rfqs.data, orders.data, stores.data, services.data]);
 

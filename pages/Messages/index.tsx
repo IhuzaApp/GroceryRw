@@ -38,7 +38,11 @@ function formatOrderID(id?: string | number): string {
 }
 
 function getOrderType(conversation: Conversation): string {
-  if (conversation.type === "petBusiness" || conversation.type === "pet" || conversation.title?.startsWith("Adoption: ")) {
+  if (
+    conversation.type === "petBusiness" ||
+    conversation.type === "pet" ||
+    conversation.title?.startsWith("Adoption: ")
+  ) {
     return "pet";
   }
   if (conversation.type === "carBusiness") {
@@ -68,7 +72,9 @@ function MessagesPage() {
 
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingBusiness, setLoadingBusiness] = useState(true);
-  const [businessAccountId, setBusinessAccountId] = useState<string | null>(null);
+  const [businessAccountId, setBusinessAccountId] = useState<string | null>(
+    null
+  );
   const [petVendorId, setPetVendorId] = useState<string | null>(null);
   const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(
     null
@@ -321,7 +327,13 @@ function MessagesPage() {
 
       return () => unsubscribe();
     }
-  }, [status, session?.user?.id, businessAccountId, petVendorId, logisticsAccountId]);
+  }, [
+    status,
+    session?.user?.id,
+    businessAccountId,
+    petVendorId,
+    logisticsAccountId,
+  ]);
 
   // Fetch specific conversation from query params if not in list
   useEffect(() => {
@@ -458,24 +470,48 @@ function MessagesPage() {
 
     conversations.forEach((c) => {
       if (c.collectionPath === "business_conversations") {
-        if (c.counterpartId && c.counterpartId !== session?.user?.id && !c.counterpartId) {
+        if (
+          c.counterpartId &&
+          c.counterpartId !== session?.user?.id &&
+          !c.counterpartId
+        ) {
           idsToFetch.add(c.counterpartId);
         }
-        if (c.customerId && c.customerId !== session?.user?.id && !(c as any).customerName) {
+        if (
+          c.customerId &&
+          c.customerId !== session?.user?.id &&
+          !(c as any).customerName
+        ) {
           idsToFetch.add(c.customerId);
         }
-        if ((c as any).vendorUserId && (c as any).vendorUserId !== session?.user?.id && !c.counterpartAvatar) {
+        if (
+          (c as any).vendorUserId &&
+          (c as any).vendorUserId !== session?.user?.id &&
+          !c.counterpartAvatar
+        ) {
           idsToFetch.add((c as any).vendorUserId);
         }
       }
       if (c.collectionPath === "chat_conversations") {
-        if (c.shopperId && c.shopperId !== session?.user?.id && !c.counterpartId) {
+        if (
+          c.shopperId &&
+          c.shopperId !== session?.user?.id &&
+          !c.counterpartId
+        ) {
           idsToFetch.add(c.shopperId);
         }
-        if (c.customerId && c.customerId !== session?.user?.id && !(c as any).customerName) {
+        if (
+          c.customerId &&
+          c.customerId !== session?.user?.id &&
+          !(c as any).customerName
+        ) {
           idsToFetch.add(c.customerId);
         }
-        if ((c as any).shopperUserId && (c as any).shopperUserId !== session?.user?.id && !c.counterpartAvatar) {
+        if (
+          (c as any).shopperUserId &&
+          (c as any).shopperUserId !== session?.user?.id &&
+          !c.counterpartAvatar
+        ) {
           idsToFetch.add((c as any).shopperUserId);
         }
       }
@@ -484,9 +520,10 @@ function MessagesPage() {
     if (idsToFetch.size === 0) return;
 
     // Clean IDs to ensure they are valid UUIDs before sending to Hasura
-    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const uuidRegex =
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
     const businessConversationsToFetch = Array.from(idsToFetch)
-      .map(id => {
+      .map((id) => {
         const match = id.match(uuidRegex);
         return match ? match[0] : null;
       })
@@ -498,27 +535,37 @@ function MessagesPage() {
     const fetchCounterparts = async () => {
       const uniqueIds = Array.from(new Set(businessConversationsToFetch));
       try {
-        const response = await fetch(`/api/queries/users?ids=${uniqueIds.join(",")}`);
+        const response = await fetch(
+          `/api/queries/users?ids=${uniqueIds.join(",")}`
+        );
         const data = await response.json();
         const results = (data.users || []).map((u: any) => ({
           id: u.id,
           name: u.name,
           avatar: u.profile_picture,
-          phone: u.phone
+          phone: u.phone,
         }));
 
         if (cancelled) return;
 
         setBusinessConversations((prev) =>
           prev.map((conv) => {
-            const counterpart = results.find((r: { id: string; }) =>
-              (conv.counterpartId && conv.counterpartId.includes(r.id)) ||
-              ((conv as any).vendorUserId && (conv as any).vendorUserId.includes(r.id)) ||
-              (conv.shopperId && conv.shopperId.includes(r.id)) ||
-              ((conv as any).shopperUserId && (conv as any).shopperUserId.includes(r.id))
+            const counterpart = results.find(
+              (r: { id: string }) =>
+                (conv.counterpartId && conv.counterpartId.includes(r.id)) ||
+                ((conv as any).vendorUserId &&
+                  (conv as any).vendorUserId.includes(r.id)) ||
+                (conv.shopperId && conv.shopperId.includes(r.id)) ||
+                ((conv as any).shopperUserId &&
+                  (conv as any).shopperUserId.includes(r.id))
             );
-            const customer = results.find((r: { id: string; }) => conv.customerId && conv.customerId.includes(r.id));
-            const currentUserProfile = results.find((r: { id: string | undefined; }) => r.id === session?.user?.id);
+            const customer = results.find(
+              (r: { id: string }) =>
+                conv.customerId && conv.customerId.includes(r.id)
+            );
+            const currentUserProfile = results.find(
+              (r: { id: string | undefined }) => r.id === session?.user?.id
+            );
 
             let updated = { ...conv };
 
@@ -528,7 +575,10 @@ function MessagesPage() {
                 updated.customerAvatar = currentUserProfile.avatar;
                 updated.customerName = currentUserProfile.name;
               }
-              if (conv.counterpartId === session?.user?.id || (conv as any).vendorUserId === session?.user?.id) {
+              if (
+                conv.counterpartId === session?.user?.id ||
+                (conv as any).vendorUserId === session?.user?.id
+              ) {
                 updated.counterpartAvatar = currentUserProfile.avatar;
                 updated.counterpartName = currentUserProfile.name;
               }
@@ -568,11 +618,17 @@ function MessagesPage() {
     return conversations
       .filter((c) => c.orderId)
       .map((c) => c.orderId!)
-      .filter((id) =>
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || // uuid
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      .filter(
+        (id) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || // uuid
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            id
+          )
       );
-  }, [conversations.length, conversations.map(c => `${c.id}-${c.orderId || ''}`).join(",")]);
+  }, [
+    conversations.length,
+    conversations.map((c) => `${c.id}-${c.orderId || ""}`).join(","),
+  ]);
 
   // Fetch order details for order-type conversations
   useEffect(() => {
@@ -596,7 +652,8 @@ function MessagesPage() {
           const finalType = urlType || typeHint;
 
           const res = await fetch(
-            `/api/queries/orderDetails?id=${orderId}${finalType ? `&type=${finalType}` : ""
+            `/api/queries/orderDetails?id=${orderId}${
+              finalType ? `&type=${finalType}` : ""
             }`
           );
           if (!res.ok)
@@ -642,9 +699,14 @@ function MessagesPage() {
 
   const filteredConversations = conversations
     .map((conversation) => {
-      const isPetChat = conversation.type === "petBusiness" || conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
+      const isPetChat =
+        conversation.type === "petBusiness" ||
+        conversation.type === "pet" ||
+        conversation.title?.startsWith("Adoption: ");
       if (isPetChat && (!conversation.petImage || !conversation.petId)) {
-        const petName = conversation.petName || conversation.title?.replace("Adoption: ", "").trim();
+        const petName =
+          conversation.petName ||
+          conversation.title?.replace("Adoption: ", "").trim();
         const match = userAdoptions.find(
           (a) =>
             a.pets?.name?.toLowerCase() === petName?.toLowerCase() &&
@@ -870,8 +932,13 @@ function MessagesPage() {
                       selectedConversation.counterpartId ||
                       "Business",
                     avatar:
-                      selectedConversation.type === "petBusiness" || selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: ")
-                        ? selectedConversation.petImage || (selectedConversation as any).counterpartAvatar || (selectedConversation as any).customerAvatar || "/images/placeholder.png"
+                      selectedConversation.type === "petBusiness" ||
+                      selectedConversation.type === "pet" ||
+                      selectedConversation.title?.startsWith("Adoption: ")
+                        ? selectedConversation.petImage ||
+                          (selectedConversation as any).counterpartAvatar ||
+                          (selectedConversation as any).customerAvatar ||
+                          "/images/placeholder.png"
                         : (selectedConversation as any).counterpartAvatar ||
                           (selectedConversation as any).customerAvatar ||
                           "/images/ProfileImage.png",
@@ -894,7 +961,7 @@ function MessagesPage() {
                     "Shopper";
                   const shopperId =
                     (selectedConversation.shopperId &&
-                      selectedConversation.shopperId !== currentUserId
+                    selectedConversation.shopperId !== currentUserId
                       ? selectedConversation.shopperId
                       : null) ||
                     order?.assignedTo?.shopper?.id ||
@@ -939,11 +1006,24 @@ function MessagesPage() {
               })()}
               currentUserImage={(() => {
                 const currentUserId = session?.user?.id;
-                const order = selectedConversation.orderId ? orders[selectedConversation.orderId] : null;
+                const order = selectedConversation.orderId
+                  ? orders[selectedConversation.orderId]
+                  : null;
                 if (currentUserId === selectedConversation.customerId) {
-                  return (selectedConversation as any).customerAvatar || order?.orderedBy?.profile_picture || session?.user?.image || "/images/userProfile.png";
+                  return (
+                    (selectedConversation as any).customerAvatar ||
+                    order?.orderedBy?.profile_picture ||
+                    session?.user?.image ||
+                    "/images/userProfile.png"
+                  );
                 }
-                return (selectedConversation as any).counterpartAvatar || (selectedConversation as any).customerAvatar || order?.assignedTo?.profile_picture || session?.user?.image || "/images/userProfile.png";
+                return (
+                  (selectedConversation as any).counterpartAvatar ||
+                  (selectedConversation as any).customerAvatar ||
+                  order?.assignedTo?.profile_picture ||
+                  session?.user?.image ||
+                  "/images/userProfile.png"
+                );
               })()}
               onBack={() => {
                 // Remove chat from query to return to list
@@ -980,7 +1060,7 @@ function MessagesPage() {
             onConversationClick={handleChatClick}
             selectedOrder={selectedOrder}
             isDrawerOpen={false}
-            onCloseDrawer={() => { }}
+            onCloseDrawer={() => {}}
           />
         </div>
       </RootLayout>

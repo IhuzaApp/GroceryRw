@@ -166,12 +166,15 @@ export default async function handler(
         });
 
         // Notify Partner about wallet credit
-        const partnerUserId = booking.RentalVehicles?.logisticsAccounts?.user_id;
+        const partnerUserId =
+          booking.RentalVehicles?.logisticsAccounts?.user_id;
         if (partnerUserId) {
           try {
             await sendNotificationToUser(partnerUserId, {
               title: "Money Added to Wallet! 💰",
-              body: `Your business wallet has been credited with ${amountToCredit.toLocaleString()} RWF for the pickup of "${booking.RentalVehicles?.name}".`,
+              body: `Your business wallet has been credited with ${amountToCredit.toLocaleString()} RWF for the pickup of "${
+                booking.RentalVehicles?.name
+              }".`,
               data: {
                 type: "wallet_update",
                 amount: amountToCredit.toString(),
@@ -179,7 +182,10 @@ export default async function handler(
               },
             });
           } catch (notifErr) {
-            console.error("Failed to notify partner of wallet credit:", notifErr);
+            console.error(
+              "Failed to notify partner of wallet credit:",
+              notifErr
+            );
           }
         }
       }

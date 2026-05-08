@@ -76,7 +76,7 @@ const PetHero = ({
             </div>
           </>
         ) : (
-          <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="w-full max-w-md duration-300 animate-in fade-in slide-in-from-bottom-2">
             <div className="relative flex w-full items-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-md">
               <Search className="mr-3 h-4 w-4 text-white/60" />
               <input
@@ -306,8 +306,8 @@ export default function PetListing() {
         <PetHero searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </div>
 
-      <PetListingHeader 
-        onListPet={() => router.push("/Pets/dashboard")} 
+      <PetListingHeader
+        onListPet={() => router.push("/Pets/dashboard")}
         onViewAdoptions={() => router.push("/Pets/my-adoptions")}
       />
 
@@ -378,7 +378,7 @@ export default function PetListing() {
       <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 md:hidden">
         <button
           onClick={() => router.push("/Pets/dashboard")}
-          className="flex items-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black !text-white text-white shadow-2xl transition-all hover:scale-105 active:scale-95 shadow-green-500/30"
+          className="flex items-center gap-3 rounded-full bg-green-500 px-8 py-4 font-black !text-white text-white shadow-2xl shadow-green-500/30 transition-all hover:scale-105 active:scale-95"
         >
           <Dog className="h-6 w-6" />
           <span>List Your Pet</span>

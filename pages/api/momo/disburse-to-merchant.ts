@@ -50,8 +50,14 @@ export default async function handler(
     payeeNote = "Payment via Plas Grocery",
     walletId,
   } = req.body;
-  
-  console.log("📝 [MoMo Disbursement] Payload received", { amount, momoCode, orderId, orderType, walletId });
+
+  console.log("📝 [MoMo Disbursement] Payload received", {
+    amount,
+    momoCode,
+    orderId,
+    orderType,
+    walletId,
+  });
 
   const session = (await getServerSession(req, res, authOptions as any)) as any;
   const userId = session?.user?.id;
@@ -105,7 +111,11 @@ export default async function handler(
         });
         dbTransactionId = dbRes.insert_order_transactions_one.id;
       } catch (dbError: any) {
-        logger.error("❌ [MoMo Disbursement] DB Init Error", "MomoDisburseToMerchantAPI:DBInit", { error: dbError, orderId, momoCode });
+        logger.error(
+          "❌ [MoMo Disbursement] DB Init Error",
+          "MomoDisburseToMerchantAPI:DBInit",
+          { error: dbError, orderId, momoCode }
+        );
         await insertSystemLog(
           "error",
           `MoMo Disburse DB Init Error: ${dbError.message || "Unknown"}`,
@@ -135,7 +145,11 @@ export default async function handler(
           mtn_response: JSON.stringify(momoResult),
         });
       } catch (updateError: any) {
-        logger.error("❌ [MoMo Disbursement] DB Update Error", "MomoDisburseToMerchantAPI:DBUpdate", { error: updateError, dbTransactionId });
+        logger.error(
+          "❌ [MoMo Disbursement] DB Update Error",
+          "MomoDisburseToMerchantAPI:DBUpdate",
+          { error: updateError, dbTransactionId }
+        );
         await insertSystemLog(
           "error",
           `MoMo Disburse DB Update Error: ${updateError.message || "Unknown"}`,
@@ -151,7 +165,11 @@ export default async function handler(
       status: "PENDING",
     });
   } catch (error: any) {
-    logger.error("💥 [MoMo Disbursement] Exception", "MomoDisburseToMerchantAPI:Main", { error, orderId, momoCode });
+    logger.error(
+      "💥 [MoMo Disbursement] Exception",
+      "MomoDisburseToMerchantAPI:Main",
+      { error, orderId, momoCode }
+    );
 
     if (hasuraClient && dbTransactionId) {
       try {

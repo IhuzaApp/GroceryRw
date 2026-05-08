@@ -613,10 +613,13 @@ export default function DesktopMessagePage({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
-  const isPetChat = !!selectedConversation && (selectedConversation.type === "petBusiness" || selectedConversation.type === "pet" || selectedConversation.title?.startsWith("Adoption: "));
-  const isBusinessChat =
+  const isPetChat =
     !!selectedConversation &&
-    (!selectedConversation.orderId && !isPetChat);
+    (selectedConversation.type === "petBusiness" ||
+      selectedConversation.type === "pet" ||
+      selectedConversation.title?.startsWith("Adoption: "));
+  const isBusinessChat =
+    !!selectedConversation && !selectedConversation.orderId && !isPetChat;
   const isMeCustomerSelected =
     !!selectedConversation &&
     session?.user?.id === selectedConversation.customerId;
@@ -702,7 +705,9 @@ export default function DesktopMessagePage({
         .then((data) => {
           if (data.hasAccount) setLogisticsAccount(data.account);
         })
-        .catch((err) => console.error("Error fetching logistics account:", err));
+        .catch((err) =>
+          console.error("Error fetching logistics account:", err)
+        );
     }
   }, [session?.user?.id]);
 
@@ -826,7 +831,10 @@ export default function DesktopMessagePage({
           )
         );
 
-        console.log(`🔍 [Chat Hub] Received ${messagesList.length} messages:`, messagesList);
+        console.log(
+          `🔍 [Chat Hub] Received ${messagesList.length} messages:`,
+          messagesList
+        );
         if (messagesList.length > 0) {
           const last = messagesList[messagesList.length - 1];
           console.log(`🔍 [Chat Hub] Latest message:`, {
@@ -834,7 +842,7 @@ export default function DesktopMessagePage({
             senderId: last.senderId,
             senderType: last.senderType,
             recipientId: last.recipientId,
-            timestamp: last.timestamp
+            timestamp: last.timestamp,
           });
         }
 
@@ -991,7 +999,9 @@ export default function DesktopMessagePage({
           selectedConversation.counterpartId
         : isMeShopper
         ? selectedConversation.customerId || selectedConversation.counterpartId
-        : selectedConversation.customerId || selectedConversation.shopperId || selectedConversation.counterpartId;
+        : selectedConversation.customerId ||
+          selectedConversation.shopperId ||
+          selectedConversation.counterpartId;
 
       const messagePayload = {
         text: newMessage.trim(),
@@ -1039,7 +1049,8 @@ export default function DesktopMessagePage({
             orderShopperId ||
             (selectedConversation as any).businessId ||
             selectedConversation.counterpartId
-          : selectedConversation.customerId || selectedConversation.counterpartId;
+          : selectedConversation.customerId ||
+            selectedConversation.counterpartId;
 
         await fetch("/api/fcm/send-notification", {
           method: "POST",
@@ -1086,7 +1097,11 @@ export default function DesktopMessagePage({
   const handleConversationClick = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     const typeInfo = getConvType(conversation, orders);
-    onConversationSelect(conversation.orderId || undefined, conversation.id, typeInfo.key);
+    onConversationSelect(
+      conversation.orderId || undefined,
+      conversation.id,
+      typeInfo.key
+    );
   };
 
   return (
@@ -1218,14 +1233,19 @@ export default function DesktopMessagePage({
               </div>
             ) : (
               filteredConversations.map((conversation, index) => {
-                const isPetChat = conversation.type === "petBusiness" || conversation.type === "pet" || conversation.title?.startsWith("Adoption: ");
+                const isPetChat =
+                  conversation.type === "petBusiness" ||
+                  conversation.type === "pet" ||
+                  conversation.title?.startsWith("Adoption: ");
                 const isBusinessChat =
-                  (conversation.type === "business" || !conversation.orderId) && !isPetChat;
+                  (conversation.type === "business" || !conversation.orderId) &&
+                  !isPetChat;
                 const order = conversation.orderId
                   ? orders[conversation.orderId] || {}
                   : {};
 
-                const isMeCustomer = session?.user?.id === conversation.customerId;
+                const isMeCustomer =
+                  session?.user?.id === conversation.customerId;
                 const isMeShopper =
                   !isMeCustomer &&
                   (session?.user?.id === (conversation as any).shopperUserId ||
@@ -1236,7 +1256,9 @@ export default function DesktopMessagePage({
                 // Handle name display for business chats
                 let fullName = "Business Chat";
                 if (isPetChat) {
-                  fullName = conversation.title || `Adoption: ${conversation.petName || "Pet"}`;
+                  fullName =
+                    conversation.title ||
+                    `Adoption: ${conversation.petName || "Pet"}`;
                 } else if (isBusinessChat) {
                   fullName =
                     conversation.title ||
@@ -1394,8 +1416,17 @@ export default function DesktopMessagePage({
                     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg ring-2 ring-white dark:ring-gray-700">
                       {isPetChat ? (
                         <img
-                          src={selectedConversation.petImage || "/images/placeholder.png"}
-                          alt={selectedConversation.petName || selectedConversation.title?.replace("Adoption: ", "").trim() || "Pet"}
+                          src={
+                            selectedConversation.petImage ||
+                            "/images/placeholder.png"
+                          }
+                          alt={
+                            selectedConversation.petName ||
+                            selectedConversation.title
+                              ?.replace("Adoption: ", "")
+                              .trim() ||
+                            "Pet"
+                          }
                           className="h-full w-full object-cover"
                         />
                       ) : isBusinessChat ? (
@@ -1455,7 +1486,8 @@ export default function DesktopMessagePage({
                   <div>
                     <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
                       {isPetChat ? (
-                        selectedConversation.title || `Adoption: ${selectedConversation.petName || "Pet"}`
+                        selectedConversation.title ||
+                        `Adoption: ${selectedConversation.petName || "Pet"}`
                       ) : isBusinessChat ? (
                         selectedConversation.title ||
                         selectedConversation.counterpartName ||
@@ -1585,179 +1617,260 @@ export default function DesktopMessagePage({
                         </div>
                       </div>
                     )}
-                    {groupMessagesByDate(displayMessages).map((group, groupIndex) => (
-                      <div key={groupIndex} className="space-y-4">
-                        {/* Date Separator */}
-                        <div className="flex items-center gap-4 py-2">
-                          <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
-                          <span className="rounded-full bg-[var(--bg-secondary)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)]">
-                            {group.date}
-                          </span>
-                          <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
-                        </div>
+                    {groupMessagesByDate(displayMessages).map(
+                      (group, groupIndex) => (
+                        <div key={groupIndex} className="space-y-4">
+                          {/* Date Separator */}
+                          <div className="flex items-center gap-4 py-2">
+                            <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
+                            <span className="rounded-full bg-[var(--bg-secondary)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)]">
+                              {group.date}
+                            </span>
+                            <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
+                          </div>
 
-                        {/* Messages for this date */}
-                        <div className="flex flex-col gap-6">
-                          {group.messages.map((message, index) => {
-                            const isCurrentUser = [
-                              session?.user?.id,
-                              businessAccount?.id,
-                              petVendor?.id,
-                              logisticsAccount?.id,
-                            ].includes(message.senderId);
+                          {/* Messages for this date */}
+                          <div className="flex flex-col gap-6">
+                            {group.messages.map((message, index) => {
+                              const isCurrentUser = [
+                                session?.user?.id,
+                                businessAccount?.id,
+                                petVendor?.id,
+                                logisticsAccount?.id,
+                              ].includes(message.senderId);
 
-                            return (
-                              <React.Fragment key={message.id}>
-                                <div
-                                  className={`flex items-end gap-3 ${
-                                    isCurrentUser
-                                      ? "flex-row-reverse"
-                                      : "flex-row"
-                                  }`}
-                                >
-                                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
-                                    <img
-                                      src={
-                                        (() => {
-                                          let resolvedAvatar = "/images/userProfile.png";
-                                          if (isCurrentUser && session?.user?.image) {
+                              return (
+                                <React.Fragment key={message.id}>
+                                  <div
+                                    className={`flex items-end gap-3 ${
+                                      isCurrentUser
+                                        ? "flex-row-reverse"
+                                        : "flex-row"
+                                    }`}
+                                  >
+                                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md ring-2 ring-white dark:ring-gray-700">
+                                      <img
+                                        src={(() => {
+                                          let resolvedAvatar =
+                                            "/images/userProfile.png";
+                                          if (
+                                            isCurrentUser &&
+                                            session?.user?.image
+                                          ) {
                                             resolvedAvatar = session.user.image;
                                           }
 
                                           // Match by ID against conversation participants (even if it's Me)
-                                          if (resolvedAvatar === "/images/userProfile.png" || isCurrentUser) {
+                                          if (
+                                            resolvedAvatar ===
+                                              "/images/userProfile.png" ||
+                                            isCurrentUser
+                                          ) {
                                             let dbAvatar = null;
-                                            
-                                            if (message.senderId === selectedConversation?.customerId) {
-                                              dbAvatar = (selectedConversation as any).customerAvatar || selectedOrder?.orderedBy?.profile_picture;
-                                            } else if (
-                                              message.senderId === selectedConversation?.counterpartId || 
-                                              message.senderId === (selectedConversation as any).vendorUserId ||
-                                              message.senderId === selectedConversation?.shopperId ||
-                                              message.senderId === (selectedConversation as any).shopperUserId
+
+                                            if (
+                                              message.senderId ===
+                                              selectedConversation?.customerId
                                             ) {
-                                              dbAvatar = (selectedConversation as any).counterpartAvatar || 
-                                                         selectedOrder?.shop?.image || 
-                                                         selectedOrder?.assignedTo?.profile_picture || 
-                                                         selectedRfq?.business_account?.face_image;
+                                              dbAvatar =
+                                                (selectedConversation as any)
+                                                  .customerAvatar ||
+                                                selectedOrder?.orderedBy
+                                                  ?.profile_picture;
+                                            } else if (
+                                              message.senderId ===
+                                                selectedConversation?.counterpartId ||
+                                              message.senderId ===
+                                                (selectedConversation as any)
+                                                  .vendorUserId ||
+                                              message.senderId ===
+                                                selectedConversation?.shopperId ||
+                                              message.senderId ===
+                                                (selectedConversation as any)
+                                                  .shopperUserId
+                                            ) {
+                                              dbAvatar =
+                                                (selectedConversation as any)
+                                                  .counterpartAvatar ||
+                                                selectedOrder?.shop?.image ||
+                                                selectedOrder?.assignedTo
+                                                  ?.profile_picture ||
+                                                selectedRfq?.business_account
+                                                  ?.face_image;
                                             }
-                                            
-                                            if (dbAvatar) resolvedAvatar = dbAvatar;
+
+                                            if (dbAvatar)
+                                              resolvedAvatar = dbAvatar;
                                           }
 
                                           // Fallback by type if still placeholder and not Me
-                                          if (resolvedAvatar === "/images/userProfile.png" && !isCurrentUser) {
-                                            if (message.senderType === "customer") {
-                                              resolvedAvatar = selectedOrder?.orderedBy?.profile_picture || (selectedConversation as any).customerAvatar || (selectedConversation as any).counterpartAvatar || "/images/userProfile.png";
-                                            } else if (message.senderType === "shopper") {
-                                              resolvedAvatar = selectedOrder?.assignedTo?.shopper?.profile_photo || selectedOrder?.assignedTo?.profile_picture || "/images/userProfile.png";
-                                            } else if (message.senderType === "business") {
-                                              resolvedAvatar = (selectedConversation as any).counterpartAvatar || (selectedConversation as any).businessAvatar || selectedOrder?.shop?.image || selectedRfq?.business_account?.face_image || "/images/userProfile.png";
+                                          if (
+                                            resolvedAvatar ===
+                                              "/images/userProfile.png" &&
+                                            !isCurrentUser
+                                          ) {
+                                            if (
+                                              message.senderType === "customer"
+                                            ) {
+                                              resolvedAvatar =
+                                                selectedOrder?.orderedBy
+                                                  ?.profile_picture ||
+                                                (selectedConversation as any)
+                                                  .customerAvatar ||
+                                                (selectedConversation as any)
+                                                  .counterpartAvatar ||
+                                                "/images/userProfile.png";
+                                            } else if (
+                                              message.senderType === "shopper"
+                                            ) {
+                                              resolvedAvatar =
+                                                selectedOrder?.assignedTo
+                                                  ?.shopper?.profile_photo ||
+                                                selectedOrder?.assignedTo
+                                                  ?.profile_picture ||
+                                                "/images/userProfile.png";
+                                            } else if (
+                                              message.senderType === "business"
+                                            ) {
+                                              resolvedAvatar =
+                                                (selectedConversation as any)
+                                                  .counterpartAvatar ||
+                                                (selectedConversation as any)
+                                                  .businessAvatar ||
+                                                selectedOrder?.shop?.image ||
+                                                selectedRfq?.business_account
+                                                  ?.face_image ||
+                                                "/images/userProfile.png";
                                             }
                                           }
 
                                           return resolvedAvatar;
-                                        })()
-                                      }
-                                      alt="Profile"
-                                      className="h-full w-full object-cover"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(message.senderName || "U")}&background=10b981&color=fff`;
-                                      }}
-                                    />
-                                  </div>
-                                  <div
-                                    className={`flex max-w-[70%] flex-col ${
-                                      isCurrentUser
-                                        ? "items-end"
-                                        : "items-start"
-                                    }`}
-                                  >
-                                    {(message as any).image && (
-                                      <div className="mb-2 max-w-sm overflow-hidden rounded-xl border border-gray-100 shadow-sm dark:border-white/5">
-                                        <img
-                                          src={(message as any).image}
-                                          alt="Attachment"
-                                          className="h-auto w-full cursor-pointer transition-transform hover:scale-105"
-                                          onClick={() =>
-                                            window.open(
-                                              (message as any).image,
-                                              "_blank"
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    )}
+                                        })()}
+                                        alt="Profile"
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                          (
+                                            e.target as HTMLImageElement
+                                          ).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                            message.senderName || "U"
+                                          )}&background=10b981&color=fff`;
+                                        }}
+                                      />
+                                    </div>
                                     <div
-                                      className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
+                                      className={`flex max-w-[70%] flex-col ${
                                         isCurrentUser
-                                          ? "rounded-br-none bg-green-600 font-medium text-white shadow-md shadow-green-200/50 dark:bg-green-600 dark:shadow-none"
-                                          : "rounded-bl-none border-2 border-gray-200/50 bg-white text-gray-800 shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-gray-800 dark:text-gray-100"
+                                          ? "items-end"
+                                          : "items-start"
                                       }`}
                                     >
-                                      {message.product ? (
-                                        <div className="mb-3 flex overflow-hidden rounded-xl bg-black/5 p-2 dark:bg-white/5">
+                                      {(message as any).image && (
+                                        <div className="mb-2 max-w-sm overflow-hidden rounded-xl border border-gray-100 shadow-sm dark:border-white/5">
                                           <img
-                                            src={message.product.image}
-                                            alt={message.product.name}
-                                            className="h-14 w-14 rounded-lg object-cover shadow-sm"
+                                            src={(message as any).image}
+                                            alt="Attachment"
+                                            className="h-auto w-full cursor-pointer transition-transform hover:scale-105"
+                                            onClick={() =>
+                                              window.open(
+                                                (message as any).image,
+                                                "_blank"
+                                              )
+                                            }
                                           />
-                                          <div className="ml-3 min-w-0 flex-1">
-                                            <p className={`truncate text-sm font-bold opacity-90 ${isCurrentUser ? "!text-white" : ""}`}>
-                                              {message.product.name}
-                                            </p>
-                                            <p className={`text-xs font-semibold opacity-70 ${isCurrentUser ? "!text-white" : ""}`}>
-                                              {formatCurrency(
-                                                message.product.price
-                                              )}
-                                            </p>
-                                          </div>
                                         </div>
-                                      ) : null}
-                                      <p className={`whitespace-pre-wrap text-sm leading-relaxed ${isCurrentUser ? "!text-white" : ""}`}>
-                                        {sanitizeMessageForDisplay(
-                                          message.text || message.message || ""
-                                        )}
-                                      </p>
-                                    </div>
-                                    <div
-                                      className={`mt-1.5 flex items-center gap-1.5 px-1 ${
-                                        isCurrentUser
-                                          ? "flex-row-reverse"
-                                          : "flex-row"
-                                      }`}
-                                    >
-                                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                                        {formatTime(message.timestamp)}
-                                      </span>
-                                      {isCurrentUser && (
-                                        message.id.toString().startsWith("temp-") ? (
-                                          <span className="text-[10px] font-bold text-gray-400">...</span>
-                                        ) : (
-                                          <svg
-                                            className="h-3.5 w-3.5 text-green-500"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={3}
-                                              d="M5 13l4 4L19 7"
-                                            />
-                                          </svg>
-                                        )
                                       )}
+                                      <div
+                                        className={`group relative rounded-[20px] px-5 py-3.5 transition-all duration-200 hover:shadow-sm ${
+                                          isCurrentUser
+                                            ? "rounded-br-none bg-green-600 font-medium text-white shadow-md shadow-green-200/50 dark:bg-green-600 dark:shadow-none"
+                                            : "rounded-bl-none border-2 border-gray-200/50 bg-white text-gray-800 shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-gray-800 dark:text-gray-100"
+                                        }`}
+                                      >
+                                        {message.product ? (
+                                          <div className="mb-3 flex overflow-hidden rounded-xl bg-black/5 p-2 dark:bg-white/5">
+                                            <img
+                                              src={message.product.image}
+                                              alt={message.product.name}
+                                              className="h-14 w-14 rounded-lg object-cover shadow-sm"
+                                            />
+                                            <div className="ml-3 min-w-0 flex-1">
+                                              <p
+                                                className={`truncate text-sm font-bold opacity-90 ${
+                                                  isCurrentUser
+                                                    ? "!text-white"
+                                                    : ""
+                                                }`}
+                                              >
+                                                {message.product.name}
+                                              </p>
+                                              <p
+                                                className={`text-xs font-semibold opacity-70 ${
+                                                  isCurrentUser
+                                                    ? "!text-white"
+                                                    : ""
+                                                }`}
+                                              >
+                                                {formatCurrency(
+                                                  message.product.price
+                                                )}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        <p
+                                          className={`whitespace-pre-wrap text-sm leading-relaxed ${
+                                            isCurrentUser ? "!text-white" : ""
+                                          }`}
+                                        >
+                                          {sanitizeMessageForDisplay(
+                                            message.text ||
+                                              message.message ||
+                                              ""
+                                          )}
+                                        </p>
+                                      </div>
+                                      <div
+                                        className={`mt-1.5 flex items-center gap-1.5 px-1 ${
+                                          isCurrentUser
+                                            ? "flex-row-reverse"
+                                            : "flex-row"
+                                        }`}
+                                      >
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                          {formatTime(message.timestamp)}
+                                        </span>
+                                        {isCurrentUser &&
+                                          (message.id
+                                            .toString()
+                                            .startsWith("temp-") ? (
+                                            <span className="text-[10px] font-bold text-gray-400">
+                                              ...
+                                            </span>
+                                          ) : (
+                                            <svg
+                                              className="h-3.5 w-3.5 text-green-500"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={3}
+                                                d="M5 13l4 4L19 7"
+                                              />
+                                            </svg>
+                                          ))}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </React.Fragment>
-                            );
-                          })}
+                                </React.Fragment>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                     <div ref={messagesEndRef} />
                   </div>
                 )}
@@ -2154,13 +2267,26 @@ export default function DesktopMessagePage({
                       <div className="flex flex-col items-center text-center">
                         <div className="relative mb-4 h-32 w-32 overflow-hidden rounded-[2rem] shadow-lg">
                           <img
-                            src={selectedConversation.petImage || "/images/placeholder.png"}
-                            alt={selectedConversation.petName || selectedConversation.title?.replace("Adoption: ", "").trim() || "Pet"}
+                            src={
+                              selectedConversation.petImage ||
+                              "/images/placeholder.png"
+                            }
+                            alt={
+                              selectedConversation.petName ||
+                              selectedConversation.title
+                                ?.replace("Adoption: ", "")
+                                .trim() ||
+                              "Pet"
+                            }
                             className="h-full w-full object-cover"
                           />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                          {selectedConversation.petName || selectedConversation.title?.replace("Adoption: ", "").trim() || "Adoption"}
+                          {selectedConversation.petName ||
+                            selectedConversation.title
+                              ?.replace("Adoption: ", "")
+                              .trim() ||
+                            "Adoption"}
                         </h3>
                         <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                           Pet Adoption
@@ -2170,7 +2296,12 @@ export default function DesktopMessagePage({
                         <>
                           <div className="my-6 h-px bg-gray-100 dark:bg-gray-700/50"></div>
                           <button
-                            onClick={() => window.open(`/Pets/${selectedConversation.petId}`, "_blank")}
+                            onClick={() =>
+                              window.open(
+                                `/Pets/${selectedConversation.petId}`,
+                                "_blank"
+                              )
+                            }
                             className="w-full rounded-2xl bg-amber-500 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-white shadow-md transition-all hover:bg-amber-600 active:scale-[0.98]"
                           >
                             View Pet Profile
@@ -2283,26 +2414,31 @@ export default function DesktopMessagePage({
                           <h3 className="text-lg font-black text-gray-900 dark:text-white">
                             {selectedConversation.petName || "Pet Adoption"}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
                               Pet Adoption
                             </span>
                             {selectedConversation.petId && (
-                              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                              <span className="text-[10px] font-medium uppercase tracking-widest text-gray-400">
                                 ID: {selectedConversation.petId.slice(0, 8)}
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6 space-y-4">
-                         <button 
-                           onClick={() => window.open(`/Pets/${selectedConversation.petId}`, '_blank')}
-                           className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all shadow-lg shadow-amber-500/20"
-                         >
-                           View Pet Profile
-                         </button>
+                        <button
+                          onClick={() =>
+                            window.open(
+                              `/Pets/${selectedConversation.petId}`,
+                              "_blank"
+                            )
+                          }
+                          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-500 py-3 font-bold text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-600"
+                        >
+                          View Pet Profile
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2321,7 +2457,7 @@ export default function DesktopMessagePage({
                               ""
                             ) || "Vehicle Inquiry"}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
                               Vehicle Rental
                             </span>

@@ -38,7 +38,13 @@ export default function AIChatProvider() {
   }, [isOpen]);
 
   // Don't show AI chat during loading, for logged-out users, guests, or when floating UI is hidden
-  if (status === "loading" || isLoading || !session?.user || isGuest || hideFloatingUI) {
+  if (
+    status === "loading" ||
+    isLoading ||
+    !session?.user ||
+    isGuest ||
+    hideFloatingUI
+  ) {
     return null;
   }
 

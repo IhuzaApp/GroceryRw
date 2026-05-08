@@ -246,7 +246,9 @@ function BookingCard({
         "business_conversations"
       );
 
-      router.push(`/Messages?conversationId=${conversationId}&collection=business_conversations`);
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to start conversation");

@@ -39,7 +39,10 @@ import PaymentProcessingOverlay from "../ui/pos/registration/PaymentProcessingOv
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import vaccinationsData from "../../../data/vaccinations.json";
 
-const VACCINATIONS: Record<string, { id: string; name: string; isCore: boolean }[]> = vaccinationsData;
+const VACCINATIONS: Record<
+  string,
+  { id: string; name: string; isCore: boolean }[]
+> = vaccinationsData;
 
 const MissingVaccinationsModal = ({
   isOpen,
@@ -109,46 +112,66 @@ const MissingVaccinationsModal = ({
           <div className="space-y-6">
             {vaccinationStatus.missingVaccs.map((v: any, i: number) => {
               const firstAge = v.recommendedAgeWeeks[0];
-              const lastAge = v.recommendedAgeWeeks[v.recommendedAgeWeeks.length - 1];
-              
+              const lastAge =
+                v.recommendedAgeWeeks[v.recommendedAgeWeeks.length - 1];
+
               let status = "Upcoming";
               let statusColor = "text-blue-500 bg-blue-500/10";
-              
+
               if (currentAgeWeeks > lastAge) {
                 status = "Overdue";
                 statusColor = "text-red-500 bg-red-500/10";
-              } else if (currentAgeWeeks >= firstAge && currentAgeWeeks <= lastAge) {
+              } else if (
+                currentAgeWeeks >= firstAge &&
+                currentAgeWeeks <= lastAge
+              ) {
                 status = "Due Now";
                 statusColor = "text-yellow-600 bg-yellow-500/10";
               }
 
               return (
-                <div key={i} className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5">
+                <div
+                  key={i}
+                  className="rounded-[2rem] border border-gray-100 p-6 dark:border-white/5"
+                >
                   <div className="mb-4 flex items-center justify-between">
                     <h4 className="font-outfit font-black">{v.name}</h4>
-                    <span className={`rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-wider ${statusColor}`}>
+                    <span
+                      className={`rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-wider ${statusColor}`}
+                    >
                       {status}
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 gap-4 text-[11px] sm:grid-cols-2">
                     <div className="space-y-1">
-                      <p className="font-black uppercase tracking-widest text-gray-400">Recommended Age</p>
-                      <p className="font-bold">{v.recommendedAgeWeeks.join(", ")} weeks</p>
+                      <p className="font-black uppercase tracking-widest text-gray-400">
+                        Recommended Age
+                      </p>
+                      <p className="font-bold">
+                        {v.recommendedAgeWeeks.join(", ")} weeks
+                      </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="font-black uppercase tracking-widest text-gray-400">Booster Schedule</p>
+                      <p className="font-black uppercase tracking-widest text-gray-400">
+                        Booster Schedule
+                      </p>
                       <p className="font-bold">{v.frequency}</p>
                     </div>
                   </div>
 
                   <div className="mt-4 rounded-2xl bg-gray-50 p-4 dark:bg-white/5">
                     <p className="text-[10px] font-bold leading-relaxed opacity-60">
-                      {status === "Overdue" 
+                      {status === "Overdue"
                         ? `Caution: ${pet.name} is past the ideal age for this shot. Consult a vet immediately.`
                         : status === "Due Now"
                         ? `Action Required: At ${pet.weight}, ${pet.name} is in the perfect window for this protection.`
-                        : `${pet.name} will be ready for this vaccination in about ${Math.max(0, Math.round(firstAge - currentAgeWeeks))} weeks.`}
+                        : `${
+                            pet.name
+                          } will be ready for this vaccination in about ${Math.max(
+                            0,
+                            Math.round(firstAge - currentAgeWeeks)
+                          )} weeks.`}
                     </p>
                   </div>
                 </div>
@@ -540,7 +563,7 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
 
   const hasRated = useMemo(() => {
     if (!session?.user?.id) return false;
-    return reviews.some(r => r.customer_id === (session as any).user.id);
+    return reviews.some((r) => r.customer_id === (session as any).user.id);
   }, [reviews, session]);
 
   const averageRating = useMemo(() => {
@@ -551,7 +574,9 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`/api/queries/get-pet-reviews?pet_id=${pet.id}`);
+      const response = await fetch(
+        `/api/queries/get-pet-reviews?pet_id=${pet.id}`
+      );
       if (response.ok) {
         const data = await response.json();
         setReviews(data.reviews);
@@ -672,13 +697,19 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
     const coreVaccs = typeVaccs.filter((v) => v.isCore).map((v) => v.name);
     const nonCoreVaccs = typeVaccs.filter((v) => !v.isCore).map((v) => v.name);
 
-    const coreCount = pet.vaccinations.filter((v) => coreVaccs.includes(v)).length;
+    const coreCount = pet.vaccinations.filter((v) =>
+      coreVaccs.includes(v)
+    ).length;
     const nonCoreCount = pet.vaccinations.filter((v) =>
       nonCoreVaccs.includes(v)
     ).length;
     const hasAllCore = coreVaccs.every((v) => pet.vaccinations.includes(v));
-    const missingCoreCount = coreVaccs.filter((v) => !pet.vaccinations.includes(v)).length;
-    const missingVaccs = typeVaccs.filter((v) => !pet.vaccinations.includes(v.name));
+    const missingCoreCount = coreVaccs.filter(
+      (v) => !pet.vaccinations.includes(v)
+    ).length;
+    const missingVaccs = typeVaccs.filter(
+      (v) => !pet.vaccinations.includes(v.name)
+    );
 
     let level = 0;
     if (coreCount > 0) level = 1;
@@ -827,44 +858,68 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 <SectionTitle title="Health & Vaccination" />
                 <div className="rounded-[2.5rem] border border-green-100 bg-green-50/30 p-8 dark:border-white/5 dark:bg-white/5">
                   <div className="mb-6 flex items-center gap-5 md:gap-8">
-                    <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] shadow-xl transition-colors ${
-                      vaccinationStatus.hasAllCore 
-                        ? "bg-green-500 text-white shadow-green-500/20" 
-                        : "bg-yellow-500 text-white shadow-yellow-500/20"
-                    }`}>
+                    <div
+                      className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] shadow-xl transition-colors ${
+                        vaccinationStatus.hasAllCore
+                          ? "bg-green-500 text-white shadow-green-500/20"
+                          : "bg-yellow-500 text-white shadow-yellow-500/20"
+                      }`}
+                    >
                       <ShieldCheck className="h-8 w-8 !text-white" />
                     </div>
                     <div className="flex-1">
                       <div className="mb-1 flex items-center justify-between">
-                        <h4 className={`font-outfit text-lg font-black ${
-                          vaccinationStatus.hasAllCore ? "text-green-600 dark:text-green-400" : "text-yellow-600 dark:text-yellow-400"
-                        }`}>
-                          {vaccinationStatus.hasAllCore ? "Fully Protected" : "Partial Protection"}
+                        <h4
+                          className={`font-outfit text-lg font-black ${
+                            vaccinationStatus.hasAllCore
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-yellow-600 dark:text-yellow-400"
+                          }`}
+                        >
+                          {vaccinationStatus.hasAllCore
+                            ? "Fully Protected"
+                            : "Partial Protection"}
                         </h4>
                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                           Level {vaccinationStatus.level} of 3
                         </span>
                       </div>
-                      
+
                       <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
-                        <div 
+                        <div
                           className={`h-full transition-all duration-1000 ${
-                            vaccinationStatus.hasAllCore ? "bg-green-500" : "bg-yellow-500"
+                            vaccinationStatus.hasAllCore
+                              ? "bg-green-500"
+                              : "bg-yellow-500"
                           }`}
-                          style={{ width: `${(vaccinationStatus.coreCount / vaccinationStatus.totalCore) * 100}%` }}
+                          style={{
+                            width: `${
+                              (vaccinationStatus.coreCount /
+                                vaccinationStatus.totalCore) *
+                              100
+                            }%`,
+                          }}
                         />
                       </div>
 
-                      <button 
-                        onClick={() => !vaccinationStatus.hasAllCore && setShowMissingModal(true)}
+                      <button
+                        onClick={() =>
+                          !vaccinationStatus.hasAllCore &&
+                          setShowMissingModal(true)
+                        }
                         className={`font-sans text-xs font-black transition-all hover:underline ${
-                          vaccinationStatus.hasAllCore ? "text-gray-500" : "text-red-500"
+                          vaccinationStatus.hasAllCore
+                            ? "text-gray-500"
+                            : "text-red-500"
                         }`}
                       >
-                        {vaccinationStatus.coreCount} of {vaccinationStatus.totalCore} Core Vaccinations Completed
+                        {vaccinationStatus.coreCount} of{" "}
+                        {vaccinationStatus.totalCore} Core Vaccinations
+                        Completed
                         {!vaccinationStatus.hasAllCore && (
                           <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px]">
-                            Missing {vaccinationStatus.missingCoreCount} Core Shots • View Roadmap →
+                            Missing {vaccinationStatus.missingCoreCount} Core
+                            Shots • View Roadmap →
                           </span>
                         )}
                       </button>
@@ -879,7 +934,9 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                       <div className="flex flex-wrap gap-2">
                         {pet.vaccinations.length > 0 ? (
                           pet.vaccinations.map((vName, i) => {
-                            const vData = vaccinationStatus.typeVaccs.find((x: any) => x.name === vName);
+                            const vData = vaccinationStatus.typeVaccs.find(
+                              (x: any) => x.name === vName
+                            );
                             return (
                               <div
                                 key={i}
@@ -887,12 +944,18 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                               >
                                 <CheckCircle2 className="h-3 w-3" />
                                 {vName}
-                                {vData?.isCore && <span className="ml-1 text-[8px] opacity-60">(Core)</span>}
+                                {vData?.isCore && (
+                                  <span className="ml-1 text-[8px] opacity-60">
+                                    (Core)
+                                  </span>
+                                )}
                               </div>
                             );
                           })
                         ) : (
-                          <p className="text-xs font-bold text-gray-400 italic">No recorded vaccinations</p>
+                          <p className="text-xs font-bold italic text-gray-400">
+                            No recorded vaccinations
+                          </p>
                         )}
                       </div>
                     </div>
@@ -916,45 +979,45 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                 </div>
               </div>
 
-                {/* Dietary Preferences */}
-                {pet.favourite_food && (
-                  <div className="mb-12">
-                    <SectionTitle title="Dietary Preferences" />
-                    <div className="rounded-[2.5rem] border border-orange-100 bg-orange-50/30 p-8 dark:border-white/5 dark:bg-white/5">
-                      <div className="mb-6 flex items-center gap-5 md:gap-8">
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] bg-orange-500 text-white shadow-xl shadow-orange-500/20">
-                          <Utensils className="h-8 w-8 !text-white" />
-                        </div>
-                        <div>
-                          <h4 className="font-outfit text-lg font-black text-orange-600 dark:text-orange-400">
-                            Favourite Foods
-                          </h4>
-                          <p className="font-sans font-black text-gray-500 dark:text-gray-400">
-                            What {pet.name} loves to eat most
-                          </p>
-                        </div>
+              {/* Dietary Preferences */}
+              {pet.favourite_food && (
+                <div className="mb-12">
+                  <SectionTitle title="Dietary Preferences" />
+                  <div className="rounded-[2.5rem] border border-orange-100 bg-orange-50/30 p-8 dark:border-white/5 dark:bg-white/5">
+                    <div className="mb-6 flex items-center gap-5 md:gap-8">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] bg-orange-500 text-white shadow-xl shadow-orange-500/20">
+                        <Utensils className="h-8 w-8 !text-white" />
                       </div>
-
-                      <div className="flex flex-wrap gap-3">
-                        {Array.isArray(pet.favourite_food) ? (
-                          pet.favourite_food.map((food: string, i: number) => (
-                            <span
-                              key={i}
-                              className="flex items-center gap-2 rounded-2xl bg-orange-500/10 px-4 py-2 text-sm font-black text-orange-700 dark:text-orange-300"
-                            >
-                              <Star className="h-3 w-3 fill-orange-500 text-orange-500" />
-                              {food}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-sm font-bold text-gray-600 dark:text-gray-400">
-                            {pet.favourite_food}
-                          </span>
-                        )}
+                      <div>
+                        <h4 className="font-outfit text-lg font-black text-orange-600 dark:text-orange-400">
+                          Favourite Foods
+                        </h4>
+                        <p className="font-sans font-black text-gray-500 dark:text-gray-400">
+                          What {pet.name} loves to eat most
+                        </p>
                       </div>
                     </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      {Array.isArray(pet.favourite_food) ? (
+                        pet.favourite_food.map((food: string, i: number) => (
+                          <span
+                            key={i}
+                            className="flex items-center gap-2 rounded-2xl bg-orange-500/10 px-4 py-2 text-sm font-black text-orange-700 dark:text-orange-300"
+                          >
+                            <Star className="h-3 w-3 fill-orange-500 text-orange-500" />
+                            {food}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm font-bold text-gray-600 dark:text-gray-400">
+                          {pet.favourite_food}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
               {/* Conditional: Parent Photos for Baby Pets */}
               {isBaby && pet.parentImages && pet.parentImages.length > 0 && (
@@ -1085,7 +1148,8 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                           Review Submitted
                         </h4>
                         <p className="text-xs font-medium text-blue-600/70 dark:text-blue-400/70">
-                          Thank you for sharing your feedback! You have already rated this pet.
+                          Thank you for sharing your feedback! You have already
+                          rated this pet.
                         </p>
                       </div>
                     </div>
@@ -1140,7 +1204,7 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
               <div
                 className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[2.5rem] border-t border-gray-100 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] transition-all duration-500 dark:border-white/5 dark:bg-[#121212] lg:sticky lg:top-24 lg:rounded-[3rem] lg:border lg:p-8 lg:shadow-2xl ${
                   isPriceCardExpanded ? "p-6" : "p-4"
-                } lg:p-8 md:p-10`}
+                } md:p-10 lg:p-8`}
               >
                 {/* Simplified Mobile Toggle Handle - Moved further up */}
                 <button
@@ -1158,14 +1222,22 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
 
                 <div className="flex flex-col">
                   {/* Expanded Content (Big Price + Owner Info) */}
-                  <div className={`${isPriceCardExpanded ? "block animate-in fade-in slide-in-from-bottom-3 duration-500" : "hidden"} lg:block`}>
+                  <div
+                    className={`${
+                      isPriceCardExpanded
+                        ? "block duration-500 animate-in fade-in slide-in-from-bottom-3"
+                        : "hidden"
+                    } lg:block`}
+                  >
                     <div className="mb-6 border-b border-gray-100 pb-6 dark:border-white/5 lg:mb-8 lg:pb-8">
                       <p className="mb-2 font-outfit text-[10px] font-bold uppercase tracking-widest text-gray-500">
                         {pet.isDonation ? "Adoption Fee" : "Asking Price"}
                       </p>
                       <div className="flex items-end gap-2">
                         <span className="font-outfit text-3xl font-black md:text-5xl lg:text-4xl">
-                          {pet.isDonation ? "FREE" : formatCurrencySync(pet.price)}
+                          {pet.isDonation
+                            ? "FREE"
+                            : formatCurrencySync(pet.price)}
                         </span>
                       </div>
                     </div>
@@ -1223,10 +1295,16 @@ export default function PetDetailsPage({ pet }: { pet: Pet }) {
                   </button>
 
                   {/* Transaction Security Info (Only in expanded or desktop) */}
-                  <div className={`${isPriceCardExpanded ? "block" : "hidden"} mt-4 flex items-center justify-center gap-2 text-center font-sans text-[10px] font-normal text-gray-400 lg:mt-5 lg:block lg:text-[11px]`}>
+                  <div
+                    className={`${
+                      isPriceCardExpanded ? "block" : "hidden"
+                    } mt-4 flex items-center justify-center gap-2 text-center font-sans text-[10px] font-normal text-gray-400 lg:mt-5 lg:block lg:text-[11px]`}
+                  >
                     <div className="flex items-center justify-center gap-2">
                       <Info className="h-3 w-3" />
-                      <span>Transactions are protected & pets health-checked.</span>
+                      <span>
+                        Transactions are protected & pets health-checked.
+                      </span>
                     </div>
                   </div>
                 </div>

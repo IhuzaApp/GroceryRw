@@ -713,7 +713,7 @@ export default function StoreDetailsPage() {
           {/* Top bar: Back button left, Status + Edit right */}
           <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-4 pb-2 pl-[max(1.25rem,env(safe-area-inset-left,1.25rem))] pr-[max(1.25rem,env(safe-area-inset-right,1.25rem))] pt-[max(3rem,env(safe-area-inset-top,3rem))]">
             <button
-              onClick={() => router.push("/plasBusiness")}
+              onClick={() => router.push("/plasBusiness/portal")}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
             >
               <ArrowLeft className="h-4 w-4 !text-white" />
@@ -794,7 +794,7 @@ export default function StoreDetailsPage() {
 
             {/* Back Button */}
             <button
-              onClick={() => router.push("/plasBusiness")}
+              onClick={() => router.push("/plasBusiness/portal")}
               className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
             >
               <ArrowLeft className="h-5 w-5" />

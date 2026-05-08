@@ -5,7 +5,10 @@ import { logger } from "../utils/logger";
 const pindoToken = process.env.PINDO_API_TOKEN;
 
 if (!pindoToken) {
-  logger.warn("PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked.", "PindoLib");
+  logger.warn(
+    "PINDO_API_TOKEN is not set in environment variables. SMS sending will be mocked.",
+    "PindoLib"
+  );
 }
 
 // Ensure constructor doesn't throw if token is missing
@@ -27,7 +30,11 @@ const formatPhoneForPindo = (phone: string) => {
 
 export const sendSMS = async (to: string, text: string) => {
   if (!pindoToken || !pindo) {
-    logger.warn("[MOCK] SMS sending disabled due to missing PINDO_API_TOKEN", "PindoLib", { to, text });
+    logger.warn(
+      "[MOCK] SMS sending disabled due to missing PINDO_API_TOKEN",
+      "PindoLib",
+      { to, text }
+    );
     return { status: "mocked" };
   }
 

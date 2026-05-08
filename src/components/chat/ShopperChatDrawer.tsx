@@ -137,10 +137,14 @@ const ShopperMessage: React.FC<MessageProps> = ({
           circle
           size="sm"
           className={`ring-2 ${
-            message.senderType === "customer" ? "ring-emerald-500/20" : "ring-gray-400/20"
+            message.senderType === "customer"
+              ? "ring-emerald-500/20"
+              : "ring-gray-400/20"
           }`}
         >
-          {message.senderType === "customer" ? customerName[0].toUpperCase() : "S"}
+          {message.senderType === "customer"
+            ? customerName[0].toUpperCase()
+            : "S"}
         </Avatar>
       </div>
 
@@ -167,7 +171,11 @@ const ShopperMessage: React.FC<MessageProps> = ({
               {customerName}
             </div>
           )}
-          <div className={`whitespace-pre-wrap text-sm font-medium leading-relaxed ${message.senderType === "customer" ? "!text-white" : ""}`}>
+          <div
+            className={`whitespace-pre-wrap text-sm font-medium leading-relaxed ${
+              message.senderType === "customer" ? "!text-white" : ""
+            }`}
+          >
             {messageContent}
           </div>
         </div>
@@ -297,7 +305,10 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log(`🔍 [Shopper Drawer] Received ${messagesList.length} messages:`, messagesList);
+        console.log(
+          `🔍 [Shopper Drawer] Received ${messagesList.length} messages:`,
+          messagesList
+        );
         if (messagesList.length > 0) {
           const last = messagesList[messagesList.length - 1];
           console.log(`🔍 [Shopper Drawer] Latest message:`, {
@@ -305,7 +316,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             senderId: last.senderId,
             senderType: last.senderType,
             recipientId: last.recipientId,
-            timestamp: last.timestamp
+            timestamp: last.timestamp,
           });
         }
 

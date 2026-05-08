@@ -6,9 +6,7 @@ import { gql } from "graphql-request";
 
 const GET_VENDOR_RATINGS = gql`
   query GetVendorRatings($vendor_id: uuid!) {
-    Ratings(
-      where: { pets: { vendor_id: { _eq: $vendor_id } } }
-    ) {
+    Ratings(where: { pets: { vendor_id: { _eq: $vendor_id } } }) {
       id
       rating
       review

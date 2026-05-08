@@ -223,7 +223,8 @@ export default function QuantityConfirmationModal({
             theme === "dark" ? "border-white/10" : "border-gray-200"
           }`}
           style={{
-            backgroundColor: theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "#ffffff",
+            backgroundColor:
+              theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "#ffffff",
             color: "var(--text-primary)",
           }}
           onClick={(e) => e.stopPropagation()}
@@ -260,7 +261,9 @@ export default function QuantityConfirmationModal({
                 </h2>
                 <p
                   className={`text-[10px] font-bold uppercase tracking-wider ${
-                    theme === "dark" ? "text-emerald-400/80" : "text-emerald-600/80"
+                    theme === "dark"
+                      ? "text-emerald-400/80"
+                      : "text-emerald-600/80"
                   }`}
                 >
                   {currentItem.product.ProductName?.name || "Premium Item"}
@@ -297,8 +300,14 @@ export default function QuantityConfirmationModal({
               <div
                 className={`flex items-center gap-3 rounded-2xl border p-3`}
                 style={{
-                  backgroundColor: theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                  borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                  backgroundColor:
+                    theme === "dark"
+                      ? "rgba(255,255,255,0.03)"
+                      : "rgba(0,0,0,0.02)",
+                  borderColor:
+                    theme === "dark"
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(0,0,0,0.05)",
                 }}
               >
                 <div className="h-14 w-14 overflow-hidden rounded-xl border border-white/10 bg-white p-1.5 shadow-sm">
@@ -312,7 +321,11 @@ export default function QuantityConfirmationModal({
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-gray-300">
-                      <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="h-6 w-6"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
                       </svg>
                     </div>
@@ -331,7 +344,8 @@ export default function QuantityConfirmationModal({
                       theme === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
-                    {currentItem.quantity} {isWeightBased ? measurementUnit : "units"} requested
+                    {currentItem.quantity}{" "}
+                    {isWeightBased ? measurementUnit : "units"} requested
                   </p>
                 </div>
               </div>
@@ -351,15 +365,37 @@ export default function QuantityConfirmationModal({
                       >
                         <div
                           className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${
-                            theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
+                            theme === "dark"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-emerald-100 text-emerald-600"
                           }`}
                         >
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
                           </svg>
                         </div>
-                        <span className={`text-[10px] font-black tracking-widest ${theme === "dark" ? "text-white" : "text-gray-900"}`}>SCANNER</span>
+                        <span
+                          className={`text-[10px] font-black tracking-widest ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          SCANNER
+                        </span>
                       </button>
 
                       {/* Manual Entry Card */}
@@ -373,14 +409,32 @@ export default function QuantityConfirmationModal({
                       >
                         <div
                           className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 ${
-                            theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-600"
+                            theme === "dark"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-emerald-100 text-emerald-600"
                           }`}
                         >
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
                           </svg>
                         </div>
-                        <span className={`text-[10px] font-black tracking-widest ${theme === "dark" ? "text-white" : "text-gray-900"}`}>MANUAL</span>
+                        <span
+                          className={`text-[10px] font-black tracking-widest ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          MANUAL
+                        </span>
                       </button>
                     </div>
                   )}
@@ -390,14 +444,29 @@ export default function QuantityConfirmationModal({
                       <div
                         className={`space-y-4 rounded-2xl border p-4`}
                         style={{
-                          backgroundColor: theme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                          borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                          backgroundColor:
+                            theme === "dark"
+                              ? "rgba(255,255,255,0.03)"
+                              : "rgba(0,0,0,0.02)",
+                          borderColor:
+                            theme === "dark"
+                              ? "rgba(255,255,255,0.05)"
+                              : "rgba(0,0,0,0.05)",
                         }}
                       >
                         <div className="flex items-center justify-between">
-                          <h3 className={`text-xs font-black tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>ENTER CODE</h3>
+                          <h3
+                            className={`text-xs font-black tracking-tight ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            ENTER CODE
+                          </h3>
                           <button
-                            onClick={() => { setShowManualInput(false); setManualSku(""); }}
+                            onClick={() => {
+                              setShowManualInput(false);
+                              setManualSku("");
+                            }}
                             className="text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-emerald-500"
                           >
                             BACK
@@ -407,21 +476,34 @@ export default function QuantityConfirmationModal({
                           type="text"
                           value={manualSku}
                           onChange={(e) => setManualSku(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" &&
+                            manualSku.trim() &&
+                            handleBarcodeScanned(manualSku.trim())
+                          }
                           placeholder="Type Barcode or SKU..."
                           className={`w-full rounded-xl border-2 px-4 py-3 text-center text-sm font-bold tracking-tight transition-all focus:border-emerald-500`}
                           style={{
-                            backgroundColor: theme === "dark" ? "rgba(0,0,0,0.2)" : "#ffffff",
+                            backgroundColor:
+                              theme === "dark" ? "rgba(0,0,0,0.2)" : "#ffffff",
                             color: "var(--text-primary)",
-                            borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                            borderColor:
+                              theme === "dark"
+                                ? "rgba(255,255,255,0.05)"
+                                : "rgba(0,0,0,0.05)",
                           }}
                           autoFocus
                         />
                         <button
-                          onClick={() => manualSku.trim() && handleBarcodeScanned(manualSku.trim())}
+                          onClick={() =>
+                            manualSku.trim() &&
+                            handleBarcodeScanned(manualSku.trim())
+                          }
                           disabled={!manualSku.trim()}
                           className={`w-full rounded-xl py-3 text-[10px] font-black tracking-widest text-white shadow-lg transition-all ${
-                            manualSku.trim() ? "bg-gradient-to-r from-emerald-600 to-teal-700 active:scale-95" : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
+                            manualSku.trim()
+                              ? "bg-gradient-to-r from-emerald-600 to-teal-700 active:scale-95"
+                              : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
                           }`}
                         >
                           VALIDATE
@@ -431,21 +513,61 @@ export default function QuantityConfirmationModal({
                   )}
 
                   {barcodeValidation.message && (
-                    <div className={`flex items-center gap-3 rounded-xl border p-3 animate-in zoom-in-95 ${barcodeValidation.isValid ? "border-emerald-500/20 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}>
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white ${barcodeValidation.isValid ? "bg-emerald-500" : "bg-red-500"}`}>
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <div
+                      className={`flex items-center gap-3 rounded-xl border p-3 animate-in zoom-in-95 ${
+                        barcodeValidation.isValid
+                          ? "border-emerald-500/20 bg-emerald-500/5"
+                          : "border-red-500/20 bg-red-500/5"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white ${
+                          barcodeValidation.isValid
+                            ? "bg-emerald-500"
+                            : "bg-red-500"
+                        }`}
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
                           {barcodeValidation.isValid ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
                           ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           )}
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className={`text-[10px] font-black tracking-tight ${barcodeValidation.isValid ? "text-emerald-500" : "text-red-500"}`}>
-                          {barcodeValidation.isValid ? "MATCH FOUND!" : "NO MATCH"}
+                        <p
+                          className={`text-[10px] font-black tracking-tight ${
+                            barcodeValidation.isValid
+                              ? "text-emerald-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {barcodeValidation.isValid
+                            ? "MATCH FOUND!"
+                            : "NO MATCH"}
                         </p>
-                        <p className={`text-[9px] font-bold opacity-80 ${barcodeValidation.isValid ? "text-emerald-400" : "text-red-400"}`}>
+                        <p
+                          className={`text-[9px] font-bold opacity-80 ${
+                            barcodeValidation.isValid
+                              ? "text-emerald-400"
+                              : "text-red-400"
+                          }`}
+                        >
                           {barcodeValidation.message}
                         </p>
                       </div>
@@ -457,14 +579,30 @@ export default function QuantityConfirmationModal({
               {(barcodeValidation.isValid || isWeightBased) && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                   <div className="group relative">
-                    <div className={`pointer-events-none absolute inset-y-0 left-4 flex items-center transition-colors ${theme === "dark" ? "text-gray-600" : "text-gray-300"}`}>
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                    <div
+                      className={`pointer-events-none absolute inset-y-0 left-4 flex items-center transition-colors ${
+                        theme === "dark" ? "text-gray-600" : "text-gray-300"
+                      }`}
+                    >
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                        />
                       </svg>
                     </div>
                     <input
                       type="number"
-                      value={isWeightBased ? foundWeight || "" : foundQuantity || ""}
+                      value={
+                        isWeightBased ? foundWeight || "" : foundQuantity || ""
+                      }
                       onChange={(e) => {
                         const val = e.target.value;
                         const numValue = val === "" ? 0 : parseFloat(val);
@@ -479,9 +617,15 @@ export default function QuantityConfirmationModal({
                       }}
                       className={`w-full rounded-2xl border-2 py-4 pl-12 pr-6 text-center text-3xl font-black tracking-tighter transition-all focus:border-emerald-500`}
                       style={{
-                        backgroundColor: theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.02)",
+                        backgroundColor:
+                          theme === "dark"
+                            ? "rgba(0,0,0,0.2)"
+                            : "rgba(0,0,0,0.02)",
                         color: "var(--text-primary)",
-                        borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+                        borderColor:
+                          theme === "dark"
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(0,0,0,0.05)",
                       }}
                       placeholder="0"
                       autoFocus
@@ -493,14 +637,23 @@ export default function QuantityConfirmationModal({
                       <button
                         key={mult}
                         onClick={() => {
-                          const val = isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult);
+                          const val = isWeightBased
+                            ? (currentItem.quantity * mult).toFixed(2)
+                            : Math.floor(currentItem.quantity * mult);
                           if (isWeightBased) setFoundWeight(Number(val));
                           setFoundQuantity(Number(val));
                         }}
                         className={`rounded-full px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all ${
-                          (isWeightBased ? foundWeight : foundQuantity) === Number(isWeightBased ? (currentItem.quantity * mult).toFixed(2) : Math.floor(currentItem.quantity * mult))
+                          (isWeightBased ? foundWeight : foundQuantity) ===
+                          Number(
+                            isWeightBased
+                              ? (currentItem.quantity * mult).toFixed(2)
+                              : Math.floor(currentItem.quantity * mult)
+                          )
                             ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
-                            : theme === "dark" ? "bg-white/5 text-gray-400" : "bg-gray-100 text-gray-500"
+                            : theme === "dark"
+                            ? "bg-white/5 text-gray-400"
+                            : "bg-gray-100 text-gray-500"
                         }`}
                       >
                         {mult === 1 ? "FULL" : "HALF"}
@@ -509,15 +662,39 @@ export default function QuantityConfirmationModal({
                   </div>
 
                   {isWeightBased && (
-                    <div className={`rounded-2xl border-2 p-4 ${exceedsBudget ? "border-red-500/10 bg-red-500/5" : "border-emerald-500/10 bg-emerald-500/5"}`}>
+                    <div
+                      className={`rounded-2xl border-2 p-4 ${
+                        exceedsBudget
+                          ? "border-red-500/10 bg-red-500/5"
+                          : "border-emerald-500/10 bg-emerald-500/5"
+                      }`}
+                    >
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-0.5">
-                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">BUDGET</p>
-                          <p className={`text-xs font-black ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{customerBudget.toLocaleString()} RWF</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">
+                            BUDGET
+                          </p>
+                          <p
+                            className={`text-xs font-black ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {customerBudget.toLocaleString()} RWF
+                          </p>
                         </div>
                         <div className="space-y-0.5 text-right">
-                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">EST. COST</p>
-                          <p className={`text-xs font-black ${exceedsBudget ? "text-red-500" : "text-emerald-500"}`}>{(foundWeight * pricePerUnit).toLocaleString()} RWF</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-500">
+                            EST. COST
+                          </p>
+                          <p
+                            className={`text-xs font-black ${
+                              exceedsBudget
+                                ? "text-red-500"
+                                : "text-emerald-500"
+                            }`}
+                          >
+                            {(foundWeight * pricePerUnit).toLocaleString()} RWF
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -530,32 +707,48 @@ export default function QuantityConfirmationModal({
           <div
             className={`flex gap-3 border-t p-5 sm:p-8`}
             style={{
-              backgroundColor: theme === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-              borderTopColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+              backgroundColor:
+                theme === "dark"
+                  ? "rgba(255,255,255,0.02)"
+                  : "rgba(0,0,0,0.01)",
+              borderTopColor:
+                theme === "dark"
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(0,0,0,0.05)",
             }}
           >
             <button
               onClick={onClose}
               className={`flex-1 rounded-xl border py-3 text-[10px] font-black tracking-widest transition-all active:scale-95`}
               style={{
-                backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "#ffffff",
+                backgroundColor:
+                  theme === "dark" ? "rgba(255,255,255,0.05)" : "#ffffff",
                 color: "var(--text-secondary)",
-                borderColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.1)",
+                borderColor:
+                  theme === "dark"
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.1)",
               }}
             >
               CANCEL
             </button>
             <button
               onClick={onConfirm}
-              disabled={(!isWeightBased && !barcodeValidation.isValid) || (isWeightBased ? foundWeight : foundQuantity) <= 0}
+              disabled={
+                (!isWeightBased && !barcodeValidation.isValid) ||
+                (isWeightBased ? foundWeight : foundQuantity) <= 0
+              }
               className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black tracking-widest shadow-lg transition-all active:scale-95 ${
-                (barcodeValidation.isValid || isWeightBased) && (isWeightBased ? foundWeight : foundQuantity) > 0
+                (barcodeValidation.isValid || isWeightBased) &&
+                (isWeightBased ? foundWeight : foundQuantity) > 0
                   ? "bg-gradient-to-r from-emerald-600 to-teal-700 shadow-emerald-600/30"
                   : "cursor-not-allowed bg-gray-200 text-gray-400 dark:bg-gray-800"
               }`}
               style={{ color: "white" }}
             >
-              {!isWeightBased && !barcodeValidation.isValid ? "VERIFY FIRST" : "CONFIRM FOUND"}
+              {!isWeightBased && !barcodeValidation.isValid
+                ? "VERIFY FIRST"
+                : "CONFIRM FOUND"}
             </button>
           </div>
         </div>

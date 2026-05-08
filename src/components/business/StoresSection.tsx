@@ -115,7 +115,7 @@ export function StoresSection({
                 {/* Status Badge */}
                 <div className="absolute right-2 top-2 z-10 sm:right-3 sm:top-3">
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold shadow-lg backdrop-blur-sm sm:px-3 sm:py-1 sm:text-xs ${
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold shadow-lg backdrop-blur-sm sm:px-2.5 sm:py-1 sm:text-[10px] ${
                       store.is_active
                         ? "bg-green-500/90 text-white dark:bg-green-600/90"
                         : "bg-gray-500/90 text-white dark:bg-gray-600/90"
@@ -132,10 +132,10 @@ export function StoresSection({
 
                 {/* View Button - appears on hover */}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/30">
-                  <div className="translate-y-4 rounded-full bg-white/90 px-3 py-1.5 opacity-0 shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 dark:bg-gray-800/90 sm:px-4 sm:py-2">
+                  <div className="translate-y-4 rounded-full bg-white/90 px-2.5 py-1 opacity-0 shadow-xl backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 dark:bg-gray-800/90 sm:px-3 sm:py-1.5">
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                      <Eye className="h-3.5 w-3.5 text-green-600 dark:text-green-400 sm:h-4 sm:w-4" />
-                      <span className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
+                      <Eye className="h-3 w-3 text-green-600 dark:text-green-400 sm:h-3.5 sm:w-3.5" />
+                      <span className="text-[10px] font-semibold text-gray-900 dark:text-white sm:text-xs">
                         View Store
                       </span>
                     </div>
@@ -144,20 +144,20 @@ export function StoresSection({
               </div>
 
               {/* Store Info Section */}
-              <div className="p-3 sm:p-4 md:p-5">
-                <h5 className="mb-1.5 line-clamp-1 text-base font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white dark:group-hover:text-green-400 sm:mb-2 sm:text-lg">
+              <div className="p-2.5 sm:p-3.5 md:p-4">
+                <h5 className="mb-1 line-clamp-1 text-sm font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white dark:group-hover:text-green-400 sm:mb-1.5 sm:text-base">
                   {store.name}
                 </h5>
 
                 {store.description && (
-                  <p className="mb-2 line-clamp-2 text-xs text-gray-600 dark:text-gray-400 sm:mb-3 sm:text-sm">
+                  <p className="mb-1.5 line-clamp-2 text-[11px] text-gray-600 dark:text-gray-400 sm:mb-2 sm:text-xs">
                     {store.description}
                   </p>
                 )}
 
                 {/* Location Info - prefer address over coordinates */}
                 {(store.address || (store.latitude && store.longitude)) && (
-                  <div className="mb-2 flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-500 sm:mb-3 sm:gap-2 sm:text-xs">
+                  <div className="mb-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-500 sm:mb-2 sm:gap-1.5 sm:text-[11px]">
                     <MapPin className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
                     <span className="line-clamp-1">
                       {store.address ||
@@ -171,7 +171,7 @@ export function StoresSection({
 
                 {/* Operating Days - only show open days */}
                 {formatOperatingDays(store.operating_hours) && (
-                  <div className="mb-2 flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-500 sm:mb-3 sm:gap-2 sm:text-xs">
+                  <div className="mb-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-500 sm:mb-2 sm:gap-1.5 sm:text-[11px]">
                     <Clock className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
                     <span className="line-clamp-1">
                       {formatOperatingDays(store.operating_hours)}
@@ -180,8 +180,8 @@ export function StoresSection({
                 )}
 
                 {/* Action Footer */}
-                <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2 dark:border-gray-700 sm:mt-4 sm:pt-3">
-                  <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-xs">
+                <div className="mt-1.5 flex items-center justify-between border-t border-gray-200 pt-1.5 dark:border-gray-700 sm:mt-3 sm:pt-2">
+                  <div className="flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-400 sm:gap-1.5 sm:text-[11px]">
                     <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span className="hidden sm:inline">View Details</span>
                     <span className="sm:hidden">View</span>

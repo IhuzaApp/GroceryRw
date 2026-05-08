@@ -1094,7 +1094,11 @@ export default function BatchDetails({
         } else if (data.status === "AUTOMATED_PAYMENT_SUCCESSFUL") {
           // Path 2: MoMo Transfer successful
           toaster.push(
-            <Notification type="success" header="MoMo Transfer Successful" closable>
+            <Notification
+              type="success"
+              header="MoMo Transfer Successful"
+              closable
+            >
               {data.message}
             </Notification>,
             { placement: "topEnd" }
@@ -3956,7 +3960,9 @@ export default function BatchDetails({
           }
           hasWallet={(() => {
             const target = paymentTargetOrderId
-              ? order?.combinedOrders?.find((co) => co.id === paymentTargetOrderId) || order
+              ? order?.combinedOrders?.find(
+                  (co) => co.id === paymentTargetOrderId
+                ) || order
               : order;
             const shop = target?.shop || target?.Shop;
             const amount = getPaymentOrderAmount();

@@ -604,7 +604,9 @@ export const sendDelayedOrderNotification = async (
 
     const payload: NotificationPayload = {
       title: "Order Delayed ⚠️",
-      body: `Your order #${orderNumber || orderId} is taking a bit longer than expected. We're working on it!`,
+      body: `Your order #${
+        orderNumber || orderId
+      } is taking a bit longer than expected. We're working on it!`,
       data: {
         type: "order_delayed",
         orderId,
@@ -644,7 +646,10 @@ export const cleanupExpiredNotifications = async (): Promise<number> => {
     await batch.commit();
     return snapshot.size;
   } catch (error) {
-    console.error("❌ [FCM Service] Error cleaning up expired notifications:", error);
+    console.error(
+      "❌ [FCM Service] Error cleaning up expired notifications:",
+      error
+    );
     return 0;
   }
 };

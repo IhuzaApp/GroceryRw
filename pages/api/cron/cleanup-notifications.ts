@@ -7,7 +7,7 @@ export default async function handler(
 ) {
   // Simple protection: only allow GET with a specific key or just allow it for now
   // In production, this should be called by a secure CRON job
-  
+
   try {
     const deletedCount = await cleanupExpiredNotifications();
     return res.status(200).json({

@@ -286,7 +286,7 @@ export default async function handler(
       });
     }
 
-    return res.status(statusCode).json({ 
+    return res.status(statusCode).json({
       error: isServerError
         ? "service_unavailable"
         : "Failed to fetch notifications",

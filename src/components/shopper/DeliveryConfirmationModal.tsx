@@ -770,7 +770,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
                 <svg
-                  className="h-5 w-5 text-white animate-pulse"
+                  className="h-5 w-5 animate-pulse text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -805,7 +805,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   }`}
                 >
                   {orderType === "combined_customer"
-                    ? `${invoiceData.combinedOrderNumbers?.length || 1} Orders • Batch`
+                    ? `${
+                        invoiceData.combinedOrderNumbers?.length || 1
+                      } Orders • Batch`
                     : `Order ID: ${invoiceData.orderNumber}`}
                 </p>
               </div>
@@ -845,8 +847,21 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {/* Animated Progress Dots */}
               {!deliveryConfirmed && (
                 <div className="flex justify-center gap-3">
-                  <div className={`h-2 w-8 rounded-full transition-all duration-500 ${currentVerificationStep === 'pin' && !photoUploaded ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40 w-12' : 'bg-gray-300 dark:bg-gray-700'}`} />
-                  <div className={`h-2 w-8 rounded-full transition-all duration-500 ${(currentVerificationStep === 'photo' && !photoUploaded) || (photoUploaded && !deliveryConfirmed) ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40 w-12' : 'bg-gray-300 dark:bg-gray-700'}`} />
+                  <div
+                    className={`h-2 w-8 rounded-full transition-all duration-500 ${
+                      currentVerificationStep === "pin" && !photoUploaded
+                        ? "w-12 bg-emerald-500 shadow-lg shadow-emerald-500/40"
+                        : "bg-gray-300 dark:bg-gray-700"
+                    }`}
+                  />
+                  <div
+                    className={`h-2 w-8 rounded-full transition-all duration-500 ${
+                      (currentVerificationStep === "photo" && !photoUploaded) ||
+                      (photoUploaded && !deliveryConfirmed)
+                        ? "w-12 bg-emerald-500 shadow-lg shadow-emerald-500/40"
+                        : "bg-gray-300 dark:bg-gray-700"
+                    }`}
+                  />
                 </div>
               )}
 
@@ -859,21 +874,57 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-500 group-hover:scale-110 ${
-                    theme === "dark" ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-100 text-emerald-600"
-                  }`}>
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-500 group-hover:scale-110 ${
+                      theme === "dark"
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-emerald-100 text-emerald-600"
+                    }`}
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className={`text-base font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Delivery To</h4>
-                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                    <h4
+                      className={`text-base font-black ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Delivery To
+                    </h4>
+                    <p
+                      className={`text-sm font-bold ${
+                        theme === "dark"
+                          ? "text-emerald-400"
+                          : "text-emerald-600"
+                      }`}
+                    >
                       {invoiceData.customer}
                     </p>
-                    <p className={`mt-0.5 text-xs font-medium leading-relaxed opacity-60 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {invoiceData?.deliveryStreet || invoiceData?.deliveryAddress}
+                    <p
+                      className={`mt-0.5 text-xs font-medium leading-relaxed opacity-60 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {invoiceData?.deliveryStreet ||
+                        invoiceData?.deliveryAddress}
                     </p>
                   </div>
                 </div>
@@ -881,21 +932,33 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
               {/* PIN Verification Section */}
               {currentVerificationStep === "pin" && !photoUploaded && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  <div className="text-center space-y-1">
-                    <h3 className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Security PIN</h3>
-                    <p className={`text-[10px] font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                <div className="duration-700 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="space-y-1 text-center">
+                    <h3
+                      className={`text-lg font-black tracking-tight ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Security PIN
+                    </h3>
+                    <p
+                      className={`text-[10px] font-medium opacity-60 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Ask customer for their verification code
                     </p>
                   </div>
 
-                  <div className="mt-6 group relative">
+                  <div className="group relative mt-6">
                     <input
                       type="text"
                       inputMode="numeric"
                       placeholder="Enter Code"
                       value={pinInput}
-                      onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) =>
+                        setPinInput(e.target.value.replace(/\D/g, ""))
+                      }
                       className={`h-12 w-full rounded-xl border bg-transparent text-center text-2xl font-black tracking-[0.4em] transition-all duration-300 focus:outline-none focus:ring-2 ${
                         theme === "dark"
                           ? "border-white/10 text-white placeholder-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/10"
@@ -903,14 +966,24 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       }`}
                     />
                     <div className="pointer-events-none absolute -right-1.5 -top-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-md shadow-emerald-500/40">
-                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      <svg
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
                       </svg>
                     </div>
                   </div>
 
                   {pinError && (
-                    <div className="mt-6 animate-in shake duration-500 rounded-2xl bg-red-500/10 p-5 text-center text-sm font-black text-red-500 ring-2 ring-red-500/20">
+                    <div className="shake mt-6 rounded-2xl bg-red-500/10 p-5 text-center text-sm font-black text-red-500 ring-2 ring-red-500/20 duration-500 animate-in">
                       {pinError}
                     </div>
                   )}
@@ -918,15 +991,25 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   <button
                     onClick={handleVerifyPin}
                     disabled={verifyingPin || pinInput.length < 2}
-                    className={`mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-md transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-30 disabled:grayscale disabled:scale-100`}
+                    className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 px-4 py-3 text-sm font-black text-white shadow-md transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:scale-100 disabled:opacity-30 disabled:grayscale`}
                   >
                     {verifyingPin ? (
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     ) : (
                       <>
                         <span>VERIFY PIN</span>
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"
+                          />
                         </svg>
                       </>
                     )}
@@ -936,10 +1019,20 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
               {/* Photo Proof Section */}
               {currentVerificationStep === "photo" && !photoUploaded && (
-                <div className="animate-in fade-in zoom-in-95 duration-700 text-center space-y-4">
+                <div className="space-y-4 text-center duration-700 animate-in fade-in zoom-in-95">
                   <div className="space-y-1">
-                    <h3 className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Visual Proof</h3>
-                    <p className={`text-[10px] font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <h3
+                      className={`text-lg font-black tracking-tight ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Visual Proof
+                    </h3>
+                    <p
+                      className={`text-[10px] font-medium opacity-60 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Take a photo of the delivery
                     </p>
                   </div>
@@ -949,12 +1042,24 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       onClick={() => setShowCameraCapture(true)}
                       className="group relative flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 transition-all duration-500 hover:border-amber-500 hover:bg-amber-500/10"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white shadow-md transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white shadow-md transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                          />
                         </svg>
                       </div>
-                      <span className="text-sm font-black text-amber-600">OPEN CAMERA</span>
+                      <span className="text-sm font-black text-amber-600">
+                        OPEN CAMERA
+                      </span>
                     </button>
                   ) : (
                     <div className="space-y-3">
@@ -968,12 +1073,24 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       </div>
                       <button
                         onClick={() => setCapturedImage(null)}
-                        className={`flex mx-auto items-center gap-2 rounded-2xl px-6 py-3 text-sm font-black transition-all ${
-                          theme === 'dark' ? 'bg-white/5 text-amber-400 hover:bg-white/10' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                        className={`mx-auto flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-black transition-all ${
+                          theme === "dark"
+                            ? "bg-white/5 text-amber-400 hover:bg-white/10"
+                            : "bg-amber-50 text-amber-600 hover:bg-amber-100"
                         }`}
                       >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
                         </svg>
                         RETAKE PHOTO
                       </button>
@@ -984,19 +1101,39 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
               {/* Success Finalize Section */}
               {photoUploaded && !deliveryConfirmed && (
-                <div className="animate-in zoom-in-50 duration-1000 text-center space-y-4">
+                <div className="space-y-4 text-center duration-1000 animate-in zoom-in-50">
                   <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
                     <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
                     <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-500/50">
-                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={4}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1">
-                    <h3 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Verified!</h3>
-                    <p className={`text-[10px] font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <h3
+                      className={`text-lg font-black ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Verified!
+                    </h3>
+                    <p
+                      className={`text-[10px] font-medium opacity-60 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Ready to complete delivery
                     </p>
                   </div>
@@ -1013,8 +1150,18 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       ) : (
                         <>
                           <span>COMPLETE ORDER</span>
-                          <svg className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          <svg
+                            className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M13 7l5 5m0 0l-5 5m5-5H6"
+                            />
                           </svg>
                         </>
                       )}
@@ -1025,15 +1172,35 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
               {/* Already Confirmed State */}
               {deliveryConfirmed && (
-                <div className="text-center py-4 space-y-4 animate-in fade-in duration-1000">
+                <div className="space-y-4 py-4 text-center duration-1000 animate-in fade-in">
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20">
-                    <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-10 w-10"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <div className="space-y-1">
-                    <h2 className={`text-xl font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Done!</h2>
-                    <p className={`text-xs font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <h2
+                      className={`text-xl font-black ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Done!
+                    </h2>
+                    <p
+                      className={`text-xs font-medium opacity-60 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Delivery confirmed.
                     </p>
                   </div>
@@ -1041,7 +1208,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               )}
             </div>
           </div>
-
         </div>
       </div>
     );

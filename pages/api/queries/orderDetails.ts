@@ -343,8 +343,6 @@ export default async function handler(
     return res.status(400).json({ error: "Invalid order ID format" });
   }
 
-
-
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
@@ -352,7 +350,9 @@ export default async function handler(
 
     const handleRegularOrder = async (order: any) => {
       let shopperStats = null;
-      const rawShopper = Array.isArray(order.shoppers) ? order.shoppers[0] : order.shoppers;
+      const rawShopper = Array.isArray(order.shoppers)
+        ? order.shoppers[0]
+        : order.shoppers;
       if (rawShopper) {
         const shopperId = rawShopper.id;
         const GET_SHOPPER_STATS = gql`
@@ -533,12 +533,14 @@ export default async function handler(
           placedAt: new Date(reelOrder.created_at).toLocaleString(),
           shop: reelOrder.reel?.Shops,
           shoppers: reelOrder.shoppers,
-          assignedTo: reelOrder.shoppers?.[0] ? {
-            ...reelOrder.shoppers[0],
-            name: reelOrder.shoppers[0].full_name,
-            profile_picture: reelOrder.shoppers[0].profile_photo,
-            email: reelOrder.shoppers[0].User?.email,
-          } : null,
+          assignedTo: reelOrder.shoppers?.[0]
+            ? {
+                ...reelOrder.shoppers[0],
+                name: reelOrder.shoppers[0].full_name,
+                profile_picture: reelOrder.shoppers[0].profile_photo,
+                email: reelOrder.shoppers[0].User?.email,
+              }
+            : null,
           orderedBy: reelOrder.orderedBy || null,
           Order_Items: [
             {
@@ -563,12 +565,14 @@ export default async function handler(
           orderType: "restaurant",
           placedAt: new Date(restOrder.created_at).toLocaleString(),
           shoppers: restOrder.shoppers,
-          assignedTo: restOrder.shoppers?.[0] ? {
-            ...restOrder.shoppers[0],
-            name: restOrder.shoppers[0].full_name,
-            profile_picture: restOrder.shoppers[0].profile_photo,
-            email: restOrder.shoppers[0].User?.email,
-          } : null,
+          assignedTo: restOrder.shoppers?.[0]
+            ? {
+                ...restOrder.shoppers[0],
+                name: restOrder.shoppers[0].full_name,
+                profile_picture: restOrder.shoppers[0].profile_photo,
+                email: restOrder.shoppers[0].User?.email,
+              }
+            : null,
           orderedBy: restOrder.orderedBy || null,
           shop: restOrder.Restaurant
             ? {
@@ -782,7 +786,10 @@ export default async function handler(
 
     return res.status(404).json({ error: "Order or Booking not found" });
   } catch (error: any) {
-    console.error(`❌ [OrderDetails] Error fetching details for ${orderId}:`, error);
+    console.error(
+      `❌ [OrderDetails] Error fetching details for ${orderId}:`,
+      error
+    );
     return res
       .status(500)
       .json({ error: error.message || "Internal server error" });

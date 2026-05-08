@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useCallback, ReactNode } from "react";
 import useSWR, { mutate as globalMutate } from "swr";
 
 // ─── SWR fetcher ──────────────────────────────────────────────────────────────
@@ -60,12 +55,36 @@ export function PortalCacheProvider({ children }: { children: ReactNode }) {
   // because SWR returns the same cached response.
 
   const rfqsSWR = useSWR(PORTAL_CACHE_KEYS.rfqs, fetcher, PORTAL_SWR_CONFIG);
-  const ordersSWR = useSWR(PORTAL_CACHE_KEYS.orders, fetcher, PORTAL_SWR_CONFIG);
-  const storesSWR = useSWR(PORTAL_CACHE_KEYS.stores, fetcher, PORTAL_SWR_CONFIG);
-  const servicesSWR = useSWR(PORTAL_CACHE_KEYS.services, fetcher, PORTAL_SWR_CONFIG);
-  const quotesSWR = useSWR(PORTAL_CACHE_KEYS.quotes, fetcher, PORTAL_SWR_CONFIG);
-  const rfqOpportunitiesSWR = useSWR(PORTAL_CACHE_KEYS.rfqOpportunities, fetcher, PORTAL_SWR_CONFIG);
-  const contractsSWR = useSWR(PORTAL_CACHE_KEYS.contracts, fetcher, PORTAL_SWR_CONFIG);
+  const ordersSWR = useSWR(
+    PORTAL_CACHE_KEYS.orders,
+    fetcher,
+    PORTAL_SWR_CONFIG
+  );
+  const storesSWR = useSWR(
+    PORTAL_CACHE_KEYS.stores,
+    fetcher,
+    PORTAL_SWR_CONFIG
+  );
+  const servicesSWR = useSWR(
+    PORTAL_CACHE_KEYS.services,
+    fetcher,
+    PORTAL_SWR_CONFIG
+  );
+  const quotesSWR = useSWR(
+    PORTAL_CACHE_KEYS.quotes,
+    fetcher,
+    PORTAL_SWR_CONFIG
+  );
+  const rfqOpportunitiesSWR = useSWR(
+    PORTAL_CACHE_KEYS.rfqOpportunities,
+    fetcher,
+    PORTAL_SWR_CONFIG
+  );
+  const contractsSWR = useSWR(
+    PORTAL_CACHE_KEYS.contracts,
+    fetcher,
+    PORTAL_SWR_CONFIG
+  );
 
   // Expose each slice in a normalised shape
   const rfqs = {

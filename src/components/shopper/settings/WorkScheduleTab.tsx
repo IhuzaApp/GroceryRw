@@ -307,9 +307,15 @@ export default function WorkScheduleTab() {
 
   return (
     <div className="p-0">
-      <div className={`p-6 md:p-8 border-b ${theme === 'dark' ? 'border-white/5 bg-white/[0.02]' : 'border-black/5 bg-black/[0.01]'}`}>
+      <div
+        className={`border-b p-6 md:p-8 ${
+          theme === "dark"
+            ? "border-white/5 bg-white/[0.02]"
+            : "border-black/5 bg-black/[0.01]"
+        }`}
+      >
         <h3
-          className={`mb-1 md:mb-2 text-xl md:text-2xl font-black ${
+          className={`mb-1 text-xl font-black md:mb-2 md:text-2xl ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
@@ -327,10 +333,10 @@ export default function WorkScheduleTab() {
           <div className="mt-4 md:mt-6">
             <Message
               type={saveMessage.type}
-              className={`text-xs md:text-sm rounded-xl border ${
-                saveMessage.type === 'success' 
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' 
-                  : 'bg-red-500/10 border-red-500/20 text-red-500'
+              className={`rounded-xl border text-xs md:text-sm ${
+                saveMessage.type === "success"
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+                  : "border-red-500/20 bg-red-500/10 text-red-500"
               }`}
               closable
               onClose={() => setSaveMessage(null)}
@@ -345,10 +351,12 @@ export default function WorkScheduleTab() {
         {schedule.map((slot, index) => (
           <div
             key={slot.day}
-            className={`group px-6 md:px-8 py-5 md:py-6 transition-all duration-300 ${
-              slot.available 
-                ? theme === 'dark' ? 'bg-white/[0.01]' : 'bg-black/[0.01]'
-                : ''
+            className={`group px-6 py-5 transition-all duration-300 md:px-8 md:py-6 ${
+              slot.available
+                ? theme === "dark"
+                  ? "bg-white/[0.01]"
+                  : "bg-black/[0.01]"
+                : ""
             } ${
               index < schedule.length - 1
                 ? `border-b ${
@@ -357,38 +365,54 @@ export default function WorkScheduleTab() {
                 : ""
             }`}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center md:gap-6">
               <div className="flex items-center gap-3 md:gap-4">
-                <div className={`flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl font-bold text-[10px] md:text-xs transition-colors duration-300 ${
-                  slot.available 
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' 
-                    : theme === 'dark' ? 'bg-white/5 text-gray-500' : 'bg-black/5 text-gray-400'
-                }`}>
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-[10px] font-bold transition-colors duration-300 md:h-10 md:w-10 md:text-xs ${
+                    slot.available
+                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                      : theme === "dark"
+                      ? "bg-white/5 text-gray-500"
+                      : "bg-black/5 text-gray-400"
+                  }`}
+                >
                   {slot.day.substring(0, 3).toUpperCase()}
                 </div>
                 <div>
                   <span
-                    className={`text-base md:text-lg font-bold tracking-tight ${
+                    className={`text-base font-bold tracking-tight md:text-lg ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
                     {slot.day}
                   </span>
-                  <div className={`text-[10px] md:text-xs mt-0.5 ${slot.available ? 'text-emerald-500' : 'text-gray-500'}`}>
-                    {slot.available ? 'Actively receiving batches' : 'Not available for orders'}
+                  <div
+                    className={`mt-0.5 text-[10px] md:text-xs ${
+                      slot.available ? "text-emerald-500" : "text-gray-500"
+                    }`}
+                  >
+                    {slot.available
+                      ? "Actively receiving batches"
+                      : "Not available for orders"}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4 md:gap-8">
+              <div className="flex flex-wrap items-center justify-between gap-4 sm:justify-end md:gap-8">
                 {slot.available && (
-                  <div className="flex items-center gap-2 md:gap-3 bg-transparent p-0 rounded-2xl">
+                  <div className="flex items-center gap-2 rounded-2xl bg-transparent p-0 md:gap-3">
                     <div className="flex items-center gap-1.5 md:gap-2">
-                      <div className="flex flex-col min-w-[80px] md:min-w-[128px]">
-                        <span className="text-[9px] md:text-[10px] uppercase font-black tracking-widest text-gray-500 ml-1 mb-1">Start</span>
-                        <div className={`relative transition-all duration-300 rounded-xl overflow-hidden border ${
-                          theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'
-                        } hover:border-emerald-500/50`}>
+                      <div className="flex min-w-[80px] flex-col md:min-w-[128px]">
+                        <span className="mb-1 ml-1 text-[9px] font-black uppercase tracking-widest text-gray-500 md:text-[10px]">
+                          Start
+                        </span>
+                        <div
+                          className={`relative overflow-hidden rounded-xl border transition-all duration-300 ${
+                            theme === "dark"
+                              ? "border-white/10 bg-white/5"
+                              : "border-black/10 bg-black/5"
+                          } hover:border-emerald-500/50`}
+                        >
                           <SelectPicker
                             data={timeSlots}
                             value={formatTimeForDisplay(slot.startTime)}
@@ -402,27 +426,39 @@ export default function WorkScheduleTab() {
                             cleanable={false}
                             searchable={false}
                             appearance="subtle"
-                            className="w-full border-none ring-0 shadow-none hover:bg-transparent"
+                            className="w-full border-none shadow-none ring-0 hover:bg-transparent"
                             menuStyle={{ zIndex: 1060 }}
                           />
                         </div>
                       </div>
-                      <div className="mt-4 text-gray-500 font-light px-0.5 md:px-1">→</div>
-                      <div className="flex flex-col min-w-[80px] md:min-w-[128px]">
-                        <span className="text-[9px] md:text-[10px] uppercase font-black tracking-widest text-gray-500 ml-1 mb-1">End</span>
-                        <div className={`relative transition-all duration-300 rounded-xl overflow-hidden border ${
-                          theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'
-                        } hover:border-emerald-500/50`}>
+                      <div className="mt-4 px-0.5 font-light text-gray-500 md:px-1">
+                        →
+                      </div>
+                      <div className="flex min-w-[80px] flex-col md:min-w-[128px]">
+                        <span className="mb-1 ml-1 text-[9px] font-black uppercase tracking-widest text-gray-500 md:text-[10px]">
+                          End
+                        </span>
+                        <div
+                          className={`relative overflow-hidden rounded-xl border transition-all duration-300 ${
+                            theme === "dark"
+                              ? "border-white/10 bg-white/5"
+                              : "border-black/10 bg-black/5"
+                          } hover:border-emerald-500/50`}
+                        >
                           <SelectPicker
                             data={timeSlots}
                             value={formatTimeForDisplay(slot.endTime)}
                             onChange={(value) =>
-                              handleTimeChange(slot.day, "endTime", value || "17:00:00")
+                              handleTimeChange(
+                                slot.day,
+                                "endTime",
+                                value || "17:00:00"
+                              )
                             }
                             cleanable={false}
                             searchable={false}
                             appearance="subtle"
-                            className="w-full border-none ring-0 shadow-none hover:bg-transparent"
+                            className="w-full border-none shadow-none ring-0 hover:bg-transparent"
                             menuStyle={{ zIndex: 1060 }}
                           />
                         </div>
@@ -430,7 +466,7 @@ export default function WorkScheduleTab() {
                     </div>
                   </div>
                 )}
-                
+
                 <Toggle
                   checked={slot.available}
                   onChange={(checked) =>
@@ -445,47 +481,61 @@ export default function WorkScheduleTab() {
         ))}
       </div>
 
-      <div className={`p-6 md:p-8 mt-4 flex flex-col sm:flex-row gap-4 justify-between items-center ${theme === 'dark' ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
-        <p className={`text-[10px] md:text-xs font-medium text-center sm:text-left ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+      <div
+        className={`mt-4 flex flex-col items-center justify-between gap-4 p-6 sm:flex-row md:p-8 ${
+          theme === "dark" ? "bg-white/[0.02]" : "bg-black/[0.01]"
+        }`}
+      >
+        <p
+          className={`text-center text-[10px] font-medium sm:text-left md:text-xs ${
+            theme === "dark" ? "text-gray-500" : "text-gray-400"
+          }`}
+        >
           * Changes take effect immediately after saving.
         </p>
         <button
           onClick={saveScheduleUpdates}
           disabled={scheduleLoading}
-          className={`group relative w-full sm:w-auto px-10 py-4 font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-500 rounded-2xl overflow-hidden shadow-2xl active:scale-95 disabled:opacity-70 ${
-            theme === 'dark' 
-              ? 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-emerald-500/30' 
-              : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white shadow-emerald-600/30'
+          className={`group relative w-full overflow-hidden rounded-2xl px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all duration-500 active:scale-95 disabled:opacity-70 sm:w-auto ${
+            theme === "dark"
+              ? "bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-emerald-500/30"
+              : "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white shadow-emerald-600/30"
           }`}
         >
           {/* Shimmer effect */}
-          <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
-          
+          <div className="pointer-events-none absolute inset-0 h-full w-[200%] -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-shimmer" />
+
           <div className="relative z-10 flex items-center justify-center gap-3">
             {scheduleLoading ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : (
-              <svg 
-                className="h-4 w-4 transition-transform duration-500 group-hover:rotate-12" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
+              <svg
+                className="h-4 w-4 transition-transform duration-500 group-hover:rotate-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
                 strokeWidth={3}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             )}
             <span>{scheduleLoading ? "Saving..." : "Update Schedule"}</span>
           </div>
 
           {/* Hover glow */}
-          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         </button>
       </div>
-      
+
       <style jsx global>{`
         @keyframes shimmer {
-          100% { transform: translateX(100%); }
+          100% {
+            transform: translateX(100%);
+          }
         }
         .animate-shimmer {
           animation: shimmer 1.5s infinite;
@@ -513,7 +563,8 @@ export default function WorkScheduleTab() {
           border-radius: 16px !important;
           overflow: hidden !important;
           border: 1px solid rgba(16, 185, 129, 0.1) !important;
-          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+            0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
         }
         .rs-picker-select-menu-item {
           font-size: 13px !important;

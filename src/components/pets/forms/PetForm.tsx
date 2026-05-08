@@ -23,7 +23,10 @@ import Image from "next/image";
 import { uploadToFirebase, deleteFromFirebase } from "@/lib/firebase";
 import vaccinationsData from "@/data/vaccinations.json";
 
-const VACCINATIONS: Record<string, { id: string; name: string; isCore: boolean }[]> = vaccinationsData;
+const VACCINATIONS: Record<
+  string,
+  { id: string; name: string; isCore: boolean }[]
+> = vaccinationsData;
 
 export interface PetFormData {
   name: string;
@@ -96,7 +99,8 @@ export default function PetForm({
         } else newImages.push({ url, label: "Mother" });
         setFormData({ ...formData, images: newImages });
       } else if (type === "certificate") {
-        if (formData.vaccinationCertificateUrl) await deleteFromFirebase(formData.vaccinationCertificateUrl);
+        if (formData.vaccinationCertificateUrl)
+          await deleteFromFirebase(formData.vaccinationCertificateUrl);
         setFormData({ ...formData, vaccinationCertificateUrl: url });
       }
     } catch (error) {
@@ -355,21 +359,30 @@ export default function PetForm({
                             key={v.id}
                             type="button"
                             onClick={() => {
-                              const exists = formData.vaccinations.includes(v.name);
+                              const exists = formData.vaccinations.includes(
+                                v.name
+                              );
                               const newVaccinations = exists
-                                ? formData.vaccinations.filter((x) => x !== v.name)
+                                ? formData.vaccinations.filter(
+                                    (x) => x !== v.name
+                                  )
                                 : [...formData.vaccinations, v.name];
-                              
+
                               // Auto-update isVaccinated if all core are selected
-                              const coreVaccs = (VACCINATIONS[formData.type] || VACCINATIONS["Other"])
-                                .filter(cv => cv.isCore)
-                                .map(cv => cv.name);
-                              const hasAllCore = coreVaccs.every(cv => newVaccinations.includes(cv));
+                              const coreVaccs = (
+                                VACCINATIONS[formData.type] ||
+                                VACCINATIONS["Other"]
+                              )
+                                .filter((cv) => cv.isCore)
+                                .map((cv) => cv.name);
+                              const hasAllCore = coreVaccs.every((cv) =>
+                                newVaccinations.includes(cv)
+                              );
 
                               setFormData({
                                 ...formData,
                                 vaccinations: newVaccinations,
-                                isVaccinated: hasAllCore
+                                isVaccinated: hasAllCore,
                               });
                             }}
                             className={`rounded-full px-4 py-2 text-[11px] font-black transition-all ${
@@ -402,11 +415,15 @@ export default function PetForm({
                             key={v.id}
                             type="button"
                             onClick={() => {
-                              const exists = formData.vaccinations.includes(v.name);
+                              const exists = formData.vaccinations.includes(
+                                v.name
+                              );
                               setFormData({
                                 ...formData,
                                 vaccinations: exists
-                                  ? formData.vaccinations.filter((x) => x !== v.name)
+                                  ? formData.vaccinations.filter(
+                                      (x) => x !== v.name
+                                    )
                                   : [...formData.vaccinations, v.name],
                               });
                             }}
@@ -461,7 +478,9 @@ export default function PetForm({
                             onClick={async (e) => {
                               e.stopPropagation();
                               if (formData.vaccinationCertificateUrl) {
-                                await deleteFromFirebase(formData.vaccinationCertificateUrl);
+                                await deleteFromFirebase(
+                                  formData.vaccinationCertificateUrl
+                                );
                               }
                               setFormData({
                                 ...formData,

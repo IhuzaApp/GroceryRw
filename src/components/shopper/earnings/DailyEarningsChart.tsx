@@ -127,7 +127,7 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
 
   return (
     <div
-      className="relative w-full h-full"
+      className="relative h-full w-full"
       style={{ minHeight: "220px", height: "100%" }}
     >
       <ResponsiveContainer width="100%" height="100%" minHeight={220}>

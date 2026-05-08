@@ -37,7 +37,11 @@ export default async function handler(
       status: "PENDING",
     });
   } catch (error: any) {
-    logger.error("💥 [MoMo Transfer API] Error", "MomoTransferAPI", { error, amount, payerNumber });
+    logger.error("💥 [MoMo Transfer API] Error", "MomoTransferAPI", {
+      error,
+      amount,
+      payerNumber,
+    });
     await insertSystemLog(
       "error",
       `MoMo Transfer API failure: ${error.message || "Unknown"}`,

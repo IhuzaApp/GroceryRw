@@ -275,9 +275,9 @@ export default async function handler(
       const averageRating =
         statsData.Ratings.length > 0
           ? statsData.Ratings.reduce(
-            (sum, rating) => sum + parseFloat(rating.rating || "0"),
-            0
-          ) / statsData.Ratings.length
+              (sum, rating) => sum + parseFloat(rating.rating || "0"),
+              0
+            ) / statsData.Ratings.length
           : 0;
 
       // Count total delivered orders (regular + reel + restaurant)
@@ -338,32 +338,34 @@ export default async function handler(
         orderData.pin != null && String(orderData.pin).trim() !== ""
           ? String(orderData.pin)
           : orderData.OrderID != null
-            ? String(orderData.OrderID).padStart(4, "0").slice(-4)
-            : orderData.id
-              ? orderData.id.slice(0, 4).toUpperCase()
-              : "",
+          ? String(orderData.OrderID).padStart(4, "0").slice(-4)
+          : orderData.id
+          ? orderData.id.slice(0, 4).toUpperCase()
+          : "",
       orderType: "reel" as const,
       reel: orderData.Reel,
       assignedTo: orderData.shoppers
         ? (() => {
-          const s = Array.isArray(orderData.shoppers) ? orderData.shoppers[0] : orderData.shoppers;
-          if (!s) return null;
-          return {
-            id: orderData.shopper_id || s.id || "",
-            name: s.full_name || "Plasa",
-            phone: s.phone_number || s.phone || "",
-            email: "",
-            profile_photo: s.profile_photo || null,
-            gender: null,
-            rating: shopperStats?.rating || 0,
-            orders_aggregate: shopperStats?.orders_aggregate || {
-              aggregate: {
-                count: 0,
+            const s = Array.isArray(orderData.shoppers)
+              ? orderData.shoppers[0]
+              : orderData.shoppers;
+            if (!s) return null;
+            return {
+              id: orderData.shopper_id || s.id || "",
+              name: s.full_name || "Plasa",
+              phone: s.phone_number || s.phone || "",
+              email: "",
+              profile_photo: s.profile_photo || null,
+              gender: null,
+              rating: shopperStats?.rating || 0,
+              orders_aggregate: shopperStats?.orders_aggregate || {
+                aggregate: {
+                  count: 0,
+                },
               },
-            },
-            recentReviews: shopperStats?.recentReviews || [],
-          };
-        })()
+              recentReviews: shopperStats?.recentReviews || [],
+            };
+          })()
         : null,
     };
 

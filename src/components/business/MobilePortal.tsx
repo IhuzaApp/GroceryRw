@@ -105,7 +105,6 @@ export function MobilePortal({
             icon: Search,
             desc: "RFQ Market",
           },
-          { id: "orders", label: "Orders", icon: Truck, desc: "Sales orders" },
         ]
       : []),
     // Personal Account Specific
@@ -124,6 +123,7 @@ export function MobilePortal({
     { id: "second-hand", label: "Pre-owned", icon: Package, desc: "Inventory" },
     { id: "rfqs", label: "My RFQs", icon: FileText, desc: "Your requests" },
     { id: "quotes", label: "Quotes", icon: Star, desc: "Offers" },
+    { id: "orders", label: "Orders", icon: Truck, desc: "Sales orders" },
     { id: "wallet", label: "Wallet", icon: Wallet, desc: "Transactions" },
   ];
 

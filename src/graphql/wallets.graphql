@@ -1,7 +1,7 @@
 query getAllwallets {
   Wallets {
     shopper_id
-    shoppers{
+    shoppers {
       Employment_id
       id
       email

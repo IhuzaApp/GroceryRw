@@ -49,7 +49,7 @@ export default async function handler(
       return res.status(400).json({ error: "Missing adoptionId or action" });
     }
 
-    const newStatus = (action === "ACCEPT") ? "ACCEPTED" : "CANCELLED";
+    const newStatus = action === "ACCEPT" ? "ACCEPTED" : "CANCELLED";
 
     const result = await hasuraClient.request<any>(UPDATE_ADOPTION_STATUS, {
       id: adoptionId,
@@ -58,7 +58,7 @@ export default async function handler(
 
     const adoption = result.update_petAdoption_by_pk;
     if (!adoption) {
-       return res.status(404).json({ error: "Adoption not found" });
+      return res.status(404).json({ error: "Adoption not found" });
     }
 
     // Notify Customer
@@ -67,15 +67,19 @@ export default async function handler(
 
       if (adoption.customer_id) {
         await sendNotificationToUser(adoption.customer_id, {
-          title: action === "ACCEPT" ? "Adoption Accepted! 🐾" : "Adoption Cancelled",
-          body: action === "ACCEPT" 
-            ? `Your adoption of "${petName}" was accepted. Confirm receipt once you get it!`
-            : `Your adoption of "${petName}" was cancelled.`,
+          title:
+            action === "ACCEPT"
+              ? "Adoption Accepted! 🐾"
+              : "Adoption Cancelled",
+          body:
+            action === "ACCEPT"
+              ? `Your adoption of "${petName}" was accepted. Confirm receipt once you get it!`
+              : `Your adoption of "${petName}" was cancelled.`,
           data: {
             type: "pet_adoption_status",
             status: newStatus,
             adoptionId,
-          }
+          },
         });
       }
     } catch (notifErr) {
@@ -85,6 +89,8 @@ export default async function handler(
     return res.status(200).json({ success: true, status: newStatus });
   } catch (error: any) {
     console.error("Error processing adoption request:", error);
-    return res.status(500).json({ error: error.message || "Failed to process request" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to process request" });
   }
 }

@@ -121,7 +121,8 @@ export const createConversation = async (
     if (orderId) conversationData.orderId = orderId;
 
     // Use metadata for additional fields like shopperUserId
-    if (metadata?.shopperUserId) conversationData.shopperUserId = metadata.shopperUserId;
+    if (metadata?.shopperUserId)
+      conversationData.shopperUserId = metadata.shopperUserId;
 
     const docRef = await addDoc(
       collection(db!, customCollection),
@@ -244,7 +245,6 @@ export const getOrCreatePetConversation = async (
     throw error;
   }
 };
-
 
 /**
  * Get a conversation by order ID (exclusively from chat_conversations)

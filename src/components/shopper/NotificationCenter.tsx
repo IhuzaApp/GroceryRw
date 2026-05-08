@@ -9,17 +9,17 @@ import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
 import { requestNotificationPermission, db } from "../../services/fcmClient";
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  orderBy, 
-  writeBatch, 
-  doc, 
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+  writeBatch,
+  doc,
   Timestamp,
   deleteDoc,
-  updateDoc
+  updateDoc,
 } from "firebase/firestore";
 
 // Check if mobile
@@ -67,19 +67,19 @@ interface NotificationCenterProps {
   onCountChange?: (count: number) => void;
 }
 
-export default function NotificationCenter({ 
+export default function NotificationCenter({
   isGlassMode = false,
   renderTrigger,
   disableToasts = false,
   externalOpen,
   onExternalOpenChange,
-  onCountChange
+  onCountChange,
 }: NotificationCenterProps = {}) {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const { data: session } = useSession();
   const [internalOpen, setInternalOpen] = useState(false);
-  
+
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
   const setIsOpen = (open: boolean) => {
     if (onExternalOpenChange) {
@@ -101,11 +101,13 @@ export default function NotificationCenter({
 
   const router = useRouter();
   const isShopping = router.pathname.includes("/Plasa/active-batches");
-  const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(Date.now());
+  const [lastSeenTimestamp, setLastSeenTimestamp] = useState<number>(
+    Date.now()
+  );
   const [now, setNow] = useState(Date.now());
 
   // ... (rest of useEffects same)
-  
+
   // I need to make sure I don't break the existing code.
   // I'll check the lines before and after.
 
@@ -162,87 +164,100 @@ export default function NotificationCenter({
 
     const userId = session.user.id;
     const notificationsRef = collection(db!, "notifications");
-    const q = query(
-      notificationsRef,
-      where("recipientId", "==", userId)
-    );
+    const q = query(notificationsRef, where("recipientId", "==", userId));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const nowTs = Date.now();
-      const role = (session.user as any)?.role;
-      const isShopper = role === "shopper";
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const nowTs = Date.now();
+        const role = (session.user as any)?.role;
+        const isShopper = role === "shopper";
 
-      const fetchedNotifications: NotificationItem[] = [];
-      
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        
-        // Check for 24h expiry on read notifications
-        if (data.isRead && data.expiresAt) {
-          const expiresAt = data.expiresAt instanceof Timestamp ? data.expiresAt.toMillis() : data.expiresAt;
-          if (expiresAt < nowTs) {
-            // Document has expired, skip it (it will be cleaned up by the next 'Clear All' or a background job)
+        const fetchedNotifications: NotificationItem[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+
+          // Check for 24h expiry on read notifications
+          if (data.isRead && data.expiresAt) {
+            const expiresAt =
+              data.expiresAt instanceof Timestamp
+                ? data.expiresAt.toMillis()
+                : data.expiresAt;
+            if (expiresAt < nowTs) {
+              // Document has expired, skip it (it will be cleaned up by the next 'Clear All' or a background job)
+              return;
+            }
+          }
+
+          const n: NotificationItem = {
+            id: doc.id,
+            title: data.title || "Notification",
+            body: data.body || "",
+            timestamp:
+              data.createdAt instanceof Timestamp
+                ? data.createdAt.toMillis()
+                : Date.now(),
+            type: data.type || "general",
+            read: data.isRead || false,
+            expiresAt: data.expiresAt,
+            ...(data.data || {}),
+          };
+
+          // Filter out assigned orders for shoppers
+          if (
+            isShopper &&
+            n.orderId &&
+            assignedOrderIds.has(String(n.orderId))
+          ) {
             return;
           }
-        }
 
-        const n: NotificationItem = {
-          id: doc.id,
-          title: data.title || "Notification",
-          body: data.body || "",
-          timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
-          type: data.type || "general",
-          read: data.isRead || false,
-          expiresAt: data.expiresAt,
-          ...(data.data || {}),
-        };
+          fetchedNotifications.push(n);
+        });
 
-        // Filter out assigned orders for shoppers
-        if (isShopper && n.orderId && assignedOrderIds.has(String(n.orderId))) {
-          return;
-        }
+        // Deduplicate order notifications for shoppers
+        let filtered = fetchedNotifications;
+        if (isShopper) {
+          const seenOrderKeys = new Set<string>();
+          const deduped: NotificationItem[] = [];
+          for (const n of filtered) {
+            if (n.type !== "new_order" && n.type !== "batch_orders") {
+              deduped.push(n);
+              continue;
+            }
+            const orderId = n.orderId != null ? String(n.orderId) : "";
+            const orderType = n.orderType || "regular";
+            const combinedId = n.combinedOrderId || "";
+            const key = combinedId
+              ? `combined:${combinedId}`
+              : `${orderType}:${orderId}`;
 
-        fetchedNotifications.push(n);
-      });
-
-      // Deduplicate order notifications for shoppers
-      let filtered = fetchedNotifications;
-      if (isShopper) {
-        const seenOrderKeys = new Set<string>();
-        const deduped: NotificationItem[] = [];
-        for (const n of filtered) {
-          if (n.type !== "new_order" && n.type !== "batch_orders") {
+            if (!key || !orderId) {
+              deduped.push(n);
+              continue;
+            }
+            if (seenOrderKeys.has(key)) continue;
+            seenOrderKeys.add(key);
             deduped.push(n);
-            continue;
           }
-          const orderId = n.orderId != null ? String(n.orderId) : "";
-          const orderType = n.orderType || "regular";
-          const combinedId = n.combinedOrderId || "";
-          const key = combinedId ? `combined:${combinedId}` : `${orderType}:${orderId}`;
-          
-          if (!key || !orderId) {
-            deduped.push(n);
-            continue;
-          }
-          if (seenOrderKeys.has(key)) continue;
-          seenOrderKeys.add(key);
-          deduped.push(n);
+          filtered = deduped;
         }
-        filtered = deduped;
-      }
 
-      // Sort Newest First
-      filtered.sort((a, b) => b.timestamp - a.timestamp);
+        // Sort Newest First
+        filtered.sort((a, b) => b.timestamp - a.timestamp);
 
-      setNotifications(filtered);
-      const newUnreadCount = filtered.filter((n) => !n.read).length;
-      setUnreadCount(newUnreadCount);
-      if (onCountChange) {
-        onCountChange(newUnreadCount);
+        setNotifications(filtered);
+        const newUnreadCount = filtered.filter((n) => !n.read).length;
+        setUnreadCount(newUnreadCount);
+        if (onCountChange) {
+          onCountChange(newUnreadCount);
+        }
+      },
+      (error) => {
+        console.error("Firestore Notification Listener Error:", error);
       }
-    }, (error) => {
-      console.error("Firestore Notification Listener Error:", error);
-    });
+    );
 
     return () => unsubscribe();
   }, [session?.user?.id, assignedOrderIds, db]);
@@ -267,75 +282,75 @@ export default function NotificationCenter({
 
         // Show small toast for new notifications
         toast.custom(
-            (t) => (
-              <div
-                className={`${
-                  t.visible
-                    ? "duration-300 animate-in fade-in slide-in-from-top-2"
-                    : "duration-300 animate-out fade-out slide-out-to-top-2"
-                } pointer-events-auto flex w-full max-w-sm overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A1A]/90`}
-              >
-                <div className="w-0 flex-1 p-4">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 pt-0.5">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                          theme === "dark"
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "bg-emerald-100 text-emerald-600"
-                        }`}
+          (t) => (
+            <div
+              className={`${
+                t.visible
+                  ? "duration-300 animate-in fade-in slide-in-from-top-2"
+                  : "duration-300 animate-out fade-out slide-out-to-top-2"
+              } pointer-events-auto flex w-full max-w-sm overflow-hidden rounded-2xl border border-black/5 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1A1A]/90`}
+            >
+              <div className="w-0 flex-1 p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 pt-0.5">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                        theme === "dark"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-emerald-100 text-emerald-600"
+                      }`}
+                    >
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <p
-                        className={`text-sm font-bold ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        {latest.title}
-                      </p>
-                      <p
-                        className={`mt-1 line-clamp-2 text-xs ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        {latest.body}
-                      </p>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                        />
+                      </svg>
                     </div>
                   </div>
-                </div>
-                <div
-                  className={`flex border-l ${
-                    theme === "dark" ? "border-white/10" : "border-gray-200"
-                  }`}
-                >
-                  <button
-                    onClick={() => toast.dismiss(t.id)}
-                    className={`flex w-full items-center justify-center rounded-none border border-transparent p-4 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
-                      theme === "dark" ? "text-emerald-400" : "text-emerald-600"
-                    }`}
-                  >
-                    Close
-                  </button>
+                  <div className="ml-3 flex-1">
+                    <p
+                      className={`text-sm font-bold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {latest.title}
+                    </p>
+                    <p
+                      className={`mt-1 line-clamp-2 text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      {latest.body}
+                    </p>
+                  </div>
                 </div>
               </div>
-            ),
-            { duration: 5000, position: "top-center" }
-          );
+              <div
+                className={`flex border-l ${
+                  theme === "dark" ? "border-white/10" : "border-gray-200"
+                }`}
+              >
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className={`flex w-full items-center justify-center rounded-none border border-transparent p-4 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
+                    theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                  }`}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: 5000, position: "top-center" }
+        );
       } else if (lastSeenTimestamp === 0) {
         // Initialize on first load
         setLastSeenTimestamp(latest.timestamp);
@@ -395,7 +410,6 @@ export default function NotificationCenter({
     };
   }, [isOpen]);
 
-
   // Hide bottom elements when modal is open on mobile
   useEffect(() => {
     if (isMobile) {
@@ -415,17 +429,17 @@ export default function NotificationCenter({
 
     try {
       const batch = writeBatch(db);
-      const unread = notifications.filter(n => !n.read);
-      
+      const unread = notifications.filter((n) => !n.read);
+
       if (unread.length === 0) return;
 
       const expiry = Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
 
       unread.forEach((n) => {
         const docRef = doc(db!, "notifications", n.id);
-        batch.update(docRef, { 
+        batch.update(docRef, {
           isRead: true,
-          expiresAt: expiry
+          expiresAt: expiry,
         });
       });
 
@@ -995,20 +1009,31 @@ export default function NotificationCenter({
                         // Mark as read when clicked
                         if (!notification.read && db) {
                           try {
-                            const docRef = doc(db!, "notifications", notification.id);
-                            await updateDoc(docRef, { 
+                            const docRef = doc(
+                              db!,
+                              "notifications",
+                              notification.id
+                            );
+                            await updateDoc(docRef, {
                               isRead: true,
-                              expiresAt: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000)
+                              expiresAt: Timestamp.fromMillis(
+                                Date.now() + 24 * 60 * 60 * 1000
+                              ),
                             });
                           } catch (e) {
-                            console.error("Error marking notification as read:", e);
+                            console.error(
+                              "Error marking notification as read:",
+                              e
+                            );
                           }
                         }
 
                         // Navigate to relevant page
                         if (notification.type === "chat_message") {
                           if (notification.conversationId) {
-                            const colPath = (notification as any).collectionPath || "chat_conversations";
+                            const colPath =
+                              (notification as any).collectionPath ||
+                              "chat_conversations";
                             window.location.href = `/Messages?conversationId=${notification.conversationId}&collection=${colPath}`;
                           } else if (notification.orderId) {
                             window.location.href = `/Messages/${notification.orderId}`;
@@ -1027,7 +1052,9 @@ export default function NotificationCenter({
                           notification.type === "petBusiness"
                         ) {
                           window.location.href = `/Pets/dashboard?tab=interests`;
-                        } else if (notification.type === "pet_adoption_status") {
+                        } else if (
+                          notification.type === "pet_adoption_status"
+                        ) {
                           window.location.href = `/Pets/my-adoptions`;
                         }
                       }}

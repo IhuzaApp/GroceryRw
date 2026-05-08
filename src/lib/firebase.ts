@@ -69,7 +69,12 @@ export const authenticateWithFirebase = async (customToken: string) => {
   }
 };
 
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 
 /**
  * Uploads a file to Firebase Storage and returns the download URL.

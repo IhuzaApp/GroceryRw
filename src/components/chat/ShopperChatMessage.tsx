@@ -1,10 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  formatMessageDate,
-  formatMessageTime,
-} from "../../lib/formatters";
+import { formatMessageDate, formatMessageTime } from "../../lib/formatters";
 import { sanitizeMessageForDisplay } from "../../lib/chatPiiBlock";
 
 interface MessageProps {

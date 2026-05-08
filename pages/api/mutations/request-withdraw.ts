@@ -281,7 +281,10 @@ export default async function handler(
             },
           });
         } catch (notifErr) {
-          console.error("Failed to send withdrawal push notification", notifErr);
+          console.error(
+            "Failed to send withdrawal push notification",
+            notifErr
+          );
         }
 
         // Send Email Invoice
@@ -359,7 +362,10 @@ export default async function handler(
           },
         });
       } catch (notifErr) {
-        console.error("Failed to send pending withdrawal push notification", notifErr);
+        console.error(
+          "Failed to send pending withdrawal push notification",
+          notifErr
+        );
       }
     }
 

@@ -97,7 +97,9 @@ export default function SearchModal({
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-500 dark:border-emerald-400"></div>
-                <p className="mt-4 font-bold text-gray-500 dark:text-gray-400">Searching...</p>
+                <p className="mt-4 font-bold text-gray-500 dark:text-gray-400">
+                  Searching...
+                </p>
               </div>
             </div>
           ) : searchResults.length > 0 ? (
@@ -108,178 +110,176 @@ export default function SearchModal({
                   className="group cursor-pointer overflow-hidden rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-xl dark:border-white/5 dark:bg-[#121212] dark:hover:border-emerald-500/30 dark:hover:bg-white/[0.04]"
                   onClick={() => handleResultClick(result)}
                 >
-                    <div className="flex items-start space-x-4">
-                      {/* Image */}
-                      <div className="flex-shrink-0">
-                        <div className="h-16 w-16 overflow-hidden rounded-2xl bg-gray-100 shadow-sm dark:bg-white/5">
-                          <img
-                            src={(() => {
-                              // Use image_url if available
-                              if (result.image_url) return result.image_url;
+                  <div className="flex items-start space-x-4">
+                    {/* Image */}
+                    <div className="flex-shrink-0">
+                      <div className="h-16 w-16 overflow-hidden rounded-2xl bg-gray-100 shadow-sm dark:bg-white/5">
+                        <img
+                          src={(() => {
+                            // Use image_url if available
+                            if (result.image_url) return result.image_url;
 
-                              // Handle restaurant profile field
-                              if (result.profile) {
-                                // If it's a full URL, use it
-                                if (result.profile.startsWith("http"))
-                                  return result.profile;
-                                // If it's a relative path, try to construct a proper path
-                                if (result.profile.startsWith("/"))
-                                  return result.profile;
-                                // If it's just a filename, assume it's in a restaurant images folder
-                                return `/images/restaurants/${result.profile}`;
-                              }
+                            // Handle restaurant profile field
+                            if (result.profile) {
+                              // If it's a full URL, use it
+                              if (result.profile.startsWith("http"))
+                                return result.profile;
+                              // If it's a relative path, try to construct a proper path
+                              if (result.profile.startsWith("/"))
+                                return result.profile;
+                              // If it's just a filename, assume it's in a restaurant images folder
+                              return `/images/restaurants/${result.profile}`;
+                            }
 
-                              // Fallback based on type
-                              if (result.type === "restaurant") {
-                                return "/images/restaurantDish.png";
-                              } else if (
-                                result.type === "product" ||
-                                result.shop_id
-                              ) {
-                                return "/images/groceryPlaceholder.png";
-                              } else {
-                                return "/images/groceryPlaceholder.png";
-                              }
-                            })()}
-                            alt={result.name}
-                            referrerPolicy="no-referrer"
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            onError={(e) => {
-                              // Prevent infinite loop if placeholder also fails
-                              if (
-                                e.currentTarget.src.includes(
-                                  "groceryPlaceholder.png"
-                                ) ||
-                                e.currentTarget.src.includes(
-                                  "restaurantDish.png"
-                                )
-                              ) {
-                                return;
-                              }
+                            // Fallback based on type
+                            if (result.type === "restaurant") {
+                              return "/images/restaurantDish.png";
+                            } else if (
+                              result.type === "product" ||
+                              result.shop_id
+                            ) {
+                              return "/images/groceryPlaceholder.png";
+                            } else {
+                              return "/images/groceryPlaceholder.png";
+                            }
+                          })()}
+                          alt={result.name}
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            // Prevent infinite loop if placeholder also fails
+                            if (
+                              e.currentTarget.src.includes(
+                                "groceryPlaceholder.png"
+                              ) ||
+                              e.currentTarget.src.includes("restaurantDish.png")
+                            ) {
+                              return;
+                            }
 
-                              // Set appropriate placeholder based on result type
-                              if (result.type === "restaurant") {
-                                e.currentTarget.src =
-                                  "/images/restaurantDish.png";
-                              } else if (
-                                result.type === "product" ||
-                                result.shop_id
-                              ) {
-                                e.currentTarget.src =
-                                  "/images/groceryPlaceholder.png";
-                              } else {
-                                e.currentTarget.src =
-                                  "/images/groceryPlaceholder.png";
-                              }
-                            }}
-                          />
-                        </div>
+                            // Set appropriate placeholder based on result type
+                            if (result.type === "restaurant") {
+                              e.currentTarget.src =
+                                "/images/restaurantDish.png";
+                            } else if (
+                              result.type === "product" ||
+                              result.shop_id
+                            ) {
+                              e.currentTarget.src =
+                                "/images/groceryPlaceholder.png";
+                            } else {
+                              e.currentTarget.src =
+                                "/images/groceryPlaceholder.png";
+                            }
+                          }}
+                        />
                       </div>
+                    </div>
 
-                      {/* Content */}
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-2 flex items-start justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-1 flex items-center space-x-2">
-                              <h4 className="truncate text-base font-bold text-gray-900 transition-colors group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400">
-                                {result.name}
-                              </h4>
-                              {/* Type Badge */}
-                              <span
-                                className={`inline-flex flex-shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                                  result.type === "product"
-                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                    : result.type === "shop"
-                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                                    : result.type === "restaurant"
-                                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                                }`}
-                              >
-                                {result.type}
-                              </span>
-                            </div>
-
-                            {/* Location Info */}
-                            {(result.shop_name ||
-                              result.address ||
-                              result.location) && (
-                              <div className="mb-2 flex items-center text-[11px] font-medium text-gray-500 dark:text-gray-400">
-                                <svg
-                                  className="mr-1.5 h-3.5 w-3.5 flex-shrink-0 opacity-70"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                </svg>
-                                <span className="truncate">
-                                  {result.shop_name ||
-                                    result.address ||
-                                    result.location}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Description */}
-                            {result.description && (
-                              <p className="mb-2 line-clamp-2 text-xs font-medium text-gray-400 dark:text-gray-500">
-                                {result.description}
-                              </p>
-                            )}
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center space-x-2">
+                            <h4 className="truncate text-base font-bold text-gray-900 transition-colors group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400">
+                              {result.name}
+                            </h4>
+                            {/* Type Badge */}
+                            <span
+                              className={`inline-flex flex-shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                                result.type === "product"
+                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                  : result.type === "shop"
+                                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                                  : result.type === "restaurant"
+                                  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                  : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                              }`}
+                            >
+                              {result.type}
+                            </span>
                           </div>
 
-                          {/* Price */}
-                          {result.price && (
-                            <div className="ml-4 flex-shrink-0">
-                              <div className="text-right">
-                                <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
-                                  {formatCurrencySync(result.price)}
-                                </span>
-                              </div>
+                          {/* Location Info */}
+                          {(result.shop_name ||
+                            result.address ||
+                            result.location) && (
+                            <div className="mb-2 flex items-center text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                              <svg
+                                className="mr-1.5 h-3.5 w-3.5 flex-shrink-0 opacity-70"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              <span className="truncate">
+                                {result.shop_name ||
+                                  result.address ||
+                                  result.location}
+                              </span>
                             </div>
+                          )}
+
+                          {/* Description */}
+                          {result.description && (
+                            <p className="mb-2 line-clamp-2 text-xs font-medium text-gray-400 dark:text-gray-500">
+                              {result.description}
+                            </p>
                           )}
                         </div>
 
-                        {/* Action Indicator */}
-                        <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/5">
-                          <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                            Tap to{" "}
-                            {result.type === "product"
-                              ? "view product"
-                              : result.type === "shop"
-                              ? "visit shop"
-                              : result.type === "restaurant"
-                              ? "visit restaurant"
-                              : "view recipe"}
+                        {/* Price */}
+                        {result.price && (
+                          <div className="ml-4 flex-shrink-0">
+                            <div className="text-right">
+                              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                                {formatCurrencySync(result.price)}
+                              </span>
+                            </div>
                           </div>
-                          <svg
-                            className="h-4 w-4 text-gray-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-emerald-500 dark:text-gray-600 dark:group-hover:text-emerald-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2.5}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
+                        )}
+                      </div>
+
+                      {/* Action Indicator */}
+                      <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/5">
+                        <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                          Tap to{" "}
+                          {result.type === "product"
+                            ? "view product"
+                            : result.type === "shop"
+                            ? "visit shop"
+                            : result.type === "restaurant"
+                            ? "visit restaurant"
+                            : "view recipe"}
                         </div>
+                        <svg
+                          className="h-4 w-4 text-gray-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-emerald-500 dark:text-gray-600 dark:group-hover:text-emerald-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
                       </div>
                     </div>
+                  </div>
                 </div>
               ))}
             </div>

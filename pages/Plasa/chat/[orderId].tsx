@@ -312,13 +312,11 @@ function ChatPage() {
 
   // Combined list for display: server messages + pending (optimistic), sorted by time
   const displayMessages = React.useMemo(() => {
-    const pendingAsDisplay = pendingMessages.map(
-      (p) => ({
-        ...p,
-        id: p.tempId,
-        timestamp: p.timestamp,
-      })
-    );
+    const pendingAsDisplay = pendingMessages.map((p) => ({
+      ...p,
+      id: p.tempId,
+      timestamp: p.timestamp,
+    }));
     const combined = [...messages, ...pendingAsDisplay] as any[];
     combined.sort((a, b) => {
       const tA =
@@ -424,12 +422,29 @@ function ChatPage() {
       <ShopperLayout>
         <div className="flex h-[calc(100vh-64px)] flex-col items-center justify-center p-6 text-center">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-red-500/10 text-red-500">
-             <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <svg
+              className="h-10 w-10"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
           </div>
-          <h1 className="text-xl font-black uppercase tracking-widest">Conversation not found</h1>
-          <p className="mt-2 text-sm text-gray-500 max-w-xs">We couldn't find the order details for this conversation. It may have been archived or deleted.</p>
-          <button 
-            onClick={() => router.replace('/Plasa/chat')}
+          <h1 className="text-xl font-black uppercase tracking-widest">
+            Conversation not found
+          </h1>
+          <p className="mt-2 max-w-xs text-sm text-gray-500">
+            We couldn't find the order details for this conversation. It may
+            have been archived or deleted.
+          </p>
+          <button
+            onClick={() => router.replace("/Plasa/chat")}
             className="mt-8 rounded-full bg-black px-8 py-3 text-sm font-bold text-white transition-transform active:scale-95 dark:bg-white dark:text-black"
           >
             Back to Chats
@@ -457,12 +472,16 @@ function ChatPage() {
           <div className="flex-1 overflow-y-auto scroll-smooth p-6">
             <div className="mx-auto max-w-4xl space-y-8">
               {displayMessages.map((msg, idx) => {
-                const isMe =
-                  msg.senderId === (shopper?.id || user?.id);
-                const isPending = "tempId" in msg && (msg as PendingMessage).tempId.startsWith("temp-");
+                const isMe = msg.senderId === (shopper?.id || user?.id);
+                const isPending =
+                  "tempId" in msg &&
+                  (msg as PendingMessage).tempId.startsWith("temp-");
                 const isRead = !isPending && (msg as Message).read;
-                
-                const showDate = idx === 0 || formatMessageDate(msg.timestamp) !== formatMessageDate(displayMessages[idx-1].timestamp);
+
+                const showDate =
+                  idx === 0 ||
+                  formatMessageDate(msg.timestamp) !==
+                    formatMessageDate(displayMessages[idx - 1].timestamp);
 
                 return (
                   <ShopperChatMessage
@@ -478,10 +497,16 @@ function ChatPage() {
               })}
               {otherTypingName && (
                 <div className="flex justify-start">
-                   <div className="flex items-center gap-2 rounded-full bg-black/5 px-4 py-2 dark:bg-white/5">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{otherTypingName} is typing</span>
-                      <span className="flex gap-0.5"><span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500" /><span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:150ms]" /><span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:300ms]" /></span>
-                   </div>
+                  <div className="flex items-center gap-2 rounded-full bg-black/5 px-4 py-2 dark:bg-white/5">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
+                      {otherTypingName} is typing
+                    </span>
+                    <span className="flex gap-0.5">
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:150ms]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-500 [animation-delay:300ms]" />
+                    </span>
+                  </div>
                 </div>
               )}
               <div ref={messagesEndRef} />

@@ -68,8 +68,18 @@ export default function ActionButtons({
                   ? "Start Delivery"
                   : "Start Shopping"}
               </span>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
               </svg>
             </>
           )}
@@ -92,10 +102,22 @@ export default function ActionButtons({
               ) : (
                 <>
                   <span>
-                    {isRestaurantUserReel ? "Complete Delivery" : "Make Payment"}
+                    {isRestaurantUserReel
+                      ? "Complete Delivery"
+                      : "Make Payment"}
                   </span>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
                   </svg>
                 </>
               )}
@@ -137,19 +159,31 @@ export default function ActionButtons({
           onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
           disabled={loading || !hasFoundItems}
           className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all duration-300 ${
-            hasFoundItems 
-              ? "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.99]" 
-              : "bg-gray-400 cursor-not-allowed opacity-50"
+            hasFoundItems
+              ? "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.99]"
+              : "cursor-not-allowed bg-gray-400 opacity-50"
           }`}
         >
           {loading ? (
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
           ) : (
             <>
-              <span>{hasFoundItems ? "Make Payment" : "Mark Items as Found"}</span>
+              <span>
+                {hasFoundItems ? "Make Payment" : "Mark Items as Found"}
+              </span>
               {hasFoundItems && (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
                 </svg>
               )}
             </>
@@ -168,17 +202,46 @@ export default function ActionButtons({
                 : "border-amber-200 bg-amber-50"
             }`}
           >
-            <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${
-              theme === "dark" ? "bg-amber-500/20 text-amber-500" : "bg-amber-100 text-amber-600"
-            }`}>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            <div
+              className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${
+                theme === "dark"
+                  ? "bg-amber-500/20 text-amber-500"
+                  : "bg-amber-100 text-amber-600"
+              }`}
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
             </div>
-            
-            <h4 className={`text-sm font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Proof Required</h4>
-            <p className={`mt-1 text-xs font-medium opacity-60 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+
+            <h4
+              className={`text-sm font-black uppercase tracking-tight ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Proof Required
+            </h4>
+            <p
+              className={`mt-1 text-xs font-medium opacity-60 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               Please upload the invoice photo
             </p>
 
@@ -202,8 +265,18 @@ export default function ActionButtons({
           ) : (
             <>
               <span>Confirm Delivery</span>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </>
           )}

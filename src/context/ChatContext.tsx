@@ -237,7 +237,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
                 // Check for new unread messages and show notifications
                 const newUnreadMessages = fbMessages.filter(
-                  (msg) => !msg.isRead && msg.senderId !== (shopper?.id || user.id)
+                  (msg) =>
+                    !msg.isRead && msg.senderId !== (shopper?.id || user.id)
                 );
 
                 if (newUnreadMessages.length > 0) {
@@ -261,7 +262,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
                       ...updatedChats[chatIndex],
                       messages,
                       unreadCount: fbMessages.filter(
-                        (msg) => !msg.isRead && msg.senderId !== (shopper?.id || user.id)
+                        (msg) =>
+                          !msg.isRead &&
+                          msg.senderId !== (shopper?.id || user.id)
                       ).length,
                       lastMessage: messages[messages.length - 1],
                     };

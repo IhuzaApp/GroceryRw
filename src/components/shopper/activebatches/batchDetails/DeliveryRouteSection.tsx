@@ -256,7 +256,9 @@ export default function DeliveryRouteSection({
 
                       {address?.placeDetails && (
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {Object.entries(address.placeDetails as Record<string, any>).map(
+                          {Object.entries(
+                            address.placeDetails as Record<string, any>
+                          ).map(
                             ([key, val]) =>
                               val && (
                                 <span
@@ -333,8 +335,9 @@ export default function DeliveryRouteSection({
                         // Hide individual action buttons on mobile if it's a single order for a single customer
                         // (because BottomActionButton will already show the confirm delivery button)
                         // But keep them for combined orders (orders.length > 1) as requested
-                        const isSingleOrderBatch = ordersByCustomer.size === 1 && orders.length === 1;
-                        
+                        const isSingleOrderBatch =
+                          ordersByCustomer.size === 1 && orders.length === 1;
+
                         return orders.map((o) => (
                           <div
                             key={o.id}
@@ -369,8 +372,10 @@ function ActionButton({
 }) {
   const colors = {
     blue: "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/30",
-    purple: "bg-gradient-to-br from-purple-500 to-indigo-600 shadow-purple-500/30",
-    emerald: "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/30",
+    purple:
+      "bg-gradient-to-br from-purple-500 to-indigo-600 shadow-purple-500/30",
+    emerald:
+      "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/30",
   };
   return (
     <button

@@ -45,7 +45,7 @@ export const getRedisClient = (): Redis | null => {
                 message:
                   "Running in degraded mode (no location tracking) failed after 3 attempts",
               }
-            ).catch(() => { });
+            ).catch(() => {});
           }
           return null; // Stop retrying
         }
@@ -75,7 +75,7 @@ export const getRedisClient = (): Redis | null => {
           title: "✅ Redis connected successfully",
           message: "Redis is available. Location tracking is active.",
           context: { env: process.env.NODE_ENV },
-        }).catch(() => { });
+        }).catch(() => {});
       }
     });
 
@@ -124,7 +124,7 @@ export const getRedisClient = (): Redis | null => {
         logErrorToSlack("redisClient", err, {
           degradedMode: true,
           message: `Will retry on next operation ${err.message} Will retry on next operation`,
-        }).catch(() => { });
+        }).catch(() => {});
       }
     });
 
@@ -132,9 +132,10 @@ export const getRedisClient = (): Redis | null => {
   } catch (error) {
     logErrorToSlack("redisClient", error, {
       degradedMode: true,
-      message: `Failed to initialize Redis ${error instanceof Error ? error.message : "Unknown error"
-        }`,
-    }).catch(() => { });
+      message: `Failed to initialize Redis ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    }).catch(() => {});
   }
   return null;
 };
@@ -401,8 +402,9 @@ export const logOfferSkip = async (log: OfferSkipLog): Promise<void> => {
       return;
     }
 
-    const key = `${SKIP_LOG_PREFIX}${log.orderId}:${log.shopperId
-      }:${Date.now()}`;
+    const key = `${SKIP_LOG_PREFIX}${log.orderId}:${
+      log.shopperId
+    }:${Date.now()}`;
     const value = JSON.stringify({
       ...log,
       timestamp: Date.now(),

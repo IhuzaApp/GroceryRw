@@ -259,24 +259,24 @@ export function QuotesSection({
                 return (
                   <div
                     key={quote.id}
-                    className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-4 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 sm:rounded-2xl sm:p-6"
+                    className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-3.5 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 sm:rounded-2xl sm:p-5"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 space-y-3 sm:space-y-4">
                         {/* Title and Badges - Stack on mobile */}
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                          <h3 className="text-base font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white sm:text-lg">
+                          <h3 className="text-sm font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white sm:text-base">
                             {quote.bussines_RFQ?.title || "RFQ Quote"}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2">
                             <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium sm:px-3 sm:text-xs ${statusBadge.className}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium sm:px-2.5 sm:text-[10px] ${statusBadge.className}`}
                             >
                               <StatusIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               {statusBadge.text}
                             </span>
                             {attachments.length > 0 && (
-                              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 px-2.5 py-1 text-[10px] font-bold text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200 sm:px-3 sm:text-xs">
+                              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 px-2 py-0.5 text-[9px] font-bold text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200 sm:px-2.5 sm:text-[10px]">
                                 {attachments.length} attachment
                                 {attachments.length > 1 ? "s" : ""}
                               </span>
@@ -285,9 +285,9 @@ export function QuotesSection({
                         </div>
 
                         {/* RFQ Info - Show on mobile but simplified */}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
+                        <p className="text-xs font-medium text-gray-900 dark:text-gray-400 sm:text-sm">
                           <span className="hidden sm:inline">RFQ from: </span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
+                          <span className="font-bold text-gray-900 dark:text-white">
                             {quote.bussines_RFQ?.business_account
                               ?.business_name || "Unknown Business"}
                           </span>
@@ -332,19 +332,19 @@ export function QuotesSection({
                       </div>
 
                       {/* Price and Button - Stack on mobile */}
-                      <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700 sm:ml-6 sm:flex-col sm:items-end sm:justify-start sm:space-y-4 sm:border-0 sm:pt-0">
+                      <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700 sm:ml-6 sm:flex-col sm:items-end sm:justify-start sm:space-y-3 sm:border-0 sm:pt-0">
                         <div className="text-left sm:text-right">
-                          <p className="text-xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+                          <p className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
                             {formatCurrency(quote.qouteAmount, quote.currency)}
                           </p>
                           {/* Quote Amount label - Hidden on mobile */}
-                          <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block sm:text-sm">
+                          <p className="hidden text-[10px] font-medium text-gray-900 dark:text-gray-400 sm:block sm:text-xs">
                             Quote Amount
                           </p>
                         </div>
                         <button
                           onClick={() => handleViewDetails(quote)}
-                          className="flex items-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:rounded-xl sm:px-4 sm:text-sm"
+                          className="flex items-center gap-1.5 rounded-lg border-2 border-green-200 bg-green-50 px-2.5 py-1.5 text-[11px] font-bold text-green-700 shadow-sm transition-all duration-300 hover:border-green-500 hover:bg-green-100 active:scale-95 dark:border-green-800/40 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 sm:rounded-xl sm:px-3.5 sm:text-xs"
                         >
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="hidden sm:inline">View Details</span>

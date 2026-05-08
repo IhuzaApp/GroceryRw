@@ -205,10 +205,7 @@ export default async function handler(
         o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
-      shopperPhone =
-        o.shoppers?.phone_number ??
-        o.shoppers?.phone ??
-        undefined;
+      shopperPhone = o.shoppers?.phone_number ?? o.shoppers?.phone ?? undefined;
       storeName = o.Restaurant?.name ?? undefined;
     } else if (orderType === "business") {
       const data = await hasuraClient.request<{

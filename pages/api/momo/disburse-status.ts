@@ -59,7 +59,10 @@ export default async function handler(
 
   try {
     const data = await momoService.getTransferStatus(referenceId);
-    console.log("✅ [MoMo Disbursement Status] Real status received:", data.status);
+    console.log(
+      "✅ [MoMo Disbursement Status] Real status received:",
+      data.status
+    );
 
     const newStatus =
       data.status === "SUCCESSFUL"
@@ -86,11 +89,17 @@ export default async function handler(
               mtn_response: JSON.stringify(data),
               updated_at: new Date().toISOString(),
             });
-            console.log(`📝 [MoMo Disbursement Status] Order Transaction ${orderTransaction.id} updated to ${newStatus}`);
+            console.log(
+              `📝 [MoMo Disbursement Status] Order Transaction ${orderTransaction.id} updated to ${newStatus}`
+            );
           }
         }
       } catch (dbError: any) {
-        logger.error("❌ [MoMo Disbursement Status] DB Update Error", "MomoDisburseStatusAPI:DB", { error: dbError, referenceId });
+        logger.error(
+          "❌ [MoMo Disbursement Status] DB Update Error",
+          "MomoDisburseStatusAPI:DB",
+          { error: dbError, referenceId }
+        );
         await insertSystemLog(
           "error",
           `MoMo Disbursement DB Update Error: ${dbError.message || "Unknown"}`,
@@ -102,7 +111,11 @@ export default async function handler(
 
     return res.status(200).json(data);
   } catch (error: any) {
-    logger.error("💥 [MoMo Disbursement Status] Exception", "MomoDisburseStatusAPI:Main", { error, referenceId });
+    logger.error(
+      "💥 [MoMo Disbursement Status] Exception",
+      "MomoDisburseStatusAPI:Main",
+      { error, referenceId }
+    );
     await insertSystemLog(
       "error",
       `MoMo Disbursement Status Exception: ${error.message || "Unknown"}`,

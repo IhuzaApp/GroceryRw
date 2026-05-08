@@ -48,9 +48,7 @@ const UPDATE_BUSINESS_WALLET = gql`
 
 const GET_VENDOR_WALLET = gql`
   query GetVendorWallet($vendor_id: uuid!) {
-    business_wallet(
-      where: { pet_vendor: { id: { _eq: $vendor_id } } }
-    ) {
+    business_wallet(where: { pet_vendor: { id: { _eq: $vendor_id } } }) {
       id
       amount
     }
@@ -104,9 +102,12 @@ export default async function handler(
     }
 
     // 1. Get adoption details
-    const adoptionData = await hasuraClient.request<any>(GET_ADOPTION_FOR_CONFIRMATION, {
-      id: adoptionId,
-    });
+    const adoptionData = await hasuraClient.request<any>(
+      GET_ADOPTION_FOR_CONFIRMATION,
+      {
+        id: adoptionId,
+      }
+    );
     const adoption = adoptionData.petAdoption_by_pk;
 
     if (!adoption) {
@@ -114,13 +115,17 @@ export default async function handler(
     }
 
     if (adoption.status !== "ACCEPTED") {
-      return res.status(400).json({ error: "Adoption must be accepted by the vendor first" });
+      return res
+        .status(400)
+        .json({ error: "Adoption must be accepted by the vendor first" });
     }
 
     // Authorization check
     const vendorId = adoption.pets?.vendor_id;
     if (!vendorId) {
-       return res.status(400).json({ error: "Adoption record is missing vendor info" });
+      return res
+        .status(400)
+        .json({ error: "Adoption record is missing vendor info" });
     }
 
     // 2. Credit the Vendor's Wallet
@@ -146,7 +151,9 @@ export default async function handler(
           try {
             await sendNotificationToUser(vendorUserId, {
               title: "Money Added to Wallet! 💰",
-              body: `Your business wallet has been credited with ${amountToCredit.toLocaleString()} for the delivery of "${adoption.pets?.name}".`,
+              body: `Your business wallet has been credited with ${amountToCredit.toLocaleString()} for the delivery of "${
+                adoption.pets?.name
+              }".`,
               data: {
                 type: "wallet_update",
                 amount: amountToCredit.toString(),
@@ -154,11 +161,16 @@ export default async function handler(
               },
             });
           } catch (vendorNotifErr) {
-            console.error("Failed to notify vendor of wallet credit:", vendorNotifErr);
+            console.error(
+              "Failed to notify vendor of wallet credit:",
+              vendorNotifErr
+            );
           }
         }
       } else {
-        console.warn(`No wallet found for vendor ${vendorId}, skipping credit.`);
+        console.warn(
+          `No wallet found for vendor ${vendorId}, skipping credit.`
+        );
       }
     }
 
@@ -185,15 +197,15 @@ export default async function handler(
       const petName = adoption.pets?.name || "Pet";
 
       if (adoption.User?.id) {
-         await sendNotificationToUser(adoption.User.id, {
-            title: "Pet Delivered! 🐾",
-            body: `Your adoption of "${petName}" has been confirmed as delivered.`,
-            data: {
-              type: "pet_adoption_status",
-              status: "DELIVERED",
-              adoptionId,
-            }
-         });
+        await sendNotificationToUser(adoption.User.id, {
+          title: "Pet Delivered! 🐾",
+          body: `Your adoption of "${petName}" has been confirmed as delivered.`,
+          data: {
+            type: "pet_adoption_status",
+            status: "DELIVERED",
+            adoptionId,
+          },
+        });
       }
     } catch (notifErr) {
       console.error("Failed to send customer notification:", notifErr);
@@ -206,6 +218,8 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error confirming pet delivery:", error);
-    return res.status(500).json({ error: error.message || "Failed to confirm delivery" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to confirm delivery" });
   }
 }

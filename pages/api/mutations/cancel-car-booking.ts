@@ -201,7 +201,9 @@ export default async function handler(
       try {
         await sendNotificationToUser(booking.customer_id, {
           title: "Refund Processed! 💰",
-          body: `Your refund of ${refundAmount.toLocaleString()} RWF for the cancellation of "${booking.RentalVehicles?.name}" has been added to your personal wallet.`,
+          body: `Your refund of ${refundAmount.toLocaleString()} RWF for the cancellation of "${
+            booking.RentalVehicles?.name
+          }" has been added to your personal wallet.`,
           data: {
             type: "wallet_update",
             amount: refundAmount.toString(),

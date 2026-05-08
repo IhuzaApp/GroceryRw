@@ -175,7 +175,6 @@ export default function HeaderLayout({
     return () => window.removeEventListener("addressChanged", handleAddrChange);
   }, [session?.user?.id]);
 
-
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);

@@ -910,7 +910,9 @@ export default async function handler(
         total: subTotal + serviceFee + deliveryFee,
         estimatedEarnings: totalEarnings,
         orderedBy: orderData.orderedBy, // Include orderedBy data (actual customer)
-        assignedTo: Array.isArray(orderData.shoppers) ? orderData.shoppers[0] : orderData.shoppers, // Include assignedTo data (shopper)
+        assignedTo: Array.isArray(orderData.shoppers)
+          ? orderData.shoppers[0]
+          : orderData.shoppers, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
         shop: orderData.shop, // Include shop data
         combinedOrderId: orderData.combined_order_id,
@@ -973,7 +975,9 @@ export default async function handler(
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
         orderedBy: orderData.user, // Add orderedBy for compatibility
-        assignedTo: Array.isArray(orderData.shoppers) ? orderData.shoppers[0] : orderData.shoppers, // Include assignedTo data (shopper)
+        assignedTo: Array.isArray(orderData.shoppers)
+          ? orderData.shoppers[0]
+          : orderData.shoppers, // Include assignedTo data (shopper)
         customerId: orderData.user?.id, // Add customerId for compatibility
         discount: orderData.discount || 0, // Add discount field
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL

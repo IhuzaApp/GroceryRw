@@ -92,7 +92,10 @@ export default async function handler(
           },
         });
       } catch (notifErr) {
-        console.error("Failed to notify customer of order status change:", notifErr);
+        console.error(
+          "Failed to notify customer of order status change:",
+          notifErr
+        );
       }
     }
 
