@@ -618,13 +618,7 @@ function MessagesPage() {
     return conversations
       .filter((c) => c.orderId)
       .map((c) => c.orderId!)
-      .filter(
-        (id) =>
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || // uuid
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-            id
-          )
-      );
+      .filter((id) => id.length > 3); // Allow UUIDs and human-readable IDs (usually 8 chars)
   }, [
     conversations.length,
     conversations.map((c) => `${c.id}-${c.orderId || ""}`).join(","),
@@ -699,6 +693,12 @@ function MessagesPage() {
 
   const filteredConversations = conversations
     .map((conversation) => {
+      const isBusinessChat =
+        (conversation.type === "business" ||
+          conversation.type === "businessOrder" ||
+          !conversation.orderId) &&
+        conversation.type !== "petBusiness" &&
+        conversation.type !== "pet";
       const isPetChat =
         conversation.type === "petBusiness" ||
         conversation.type === "pet" ||
@@ -922,15 +922,18 @@ function MessagesPage() {
                   selectedConversation.collectionPath ===
                   "business_conversations"
                 ) {
+                  // If I am the business owner, the counterpart is the customer
+                  const isMeBusiness = businessAccountId && selectedConversation.counterpartId === businessAccountId;
+                  
                   return {
-                    id:
-                      selectedConversation.counterpartId === currentUserId
-                        ? selectedConversation.businessId || ""
-                        : selectedConversation.counterpartId || "",
-                    name:
-                      selectedConversation.title ||
-                      selectedConversation.counterpartId ||
-                      "Business",
+                    id: isMeBusiness
+                      ? selectedConversation.customerId || ""
+                      : selectedConversation.counterpartId || "",
+                    name: isMeBusiness
+                      ? (selectedConversation as any).customerName || selectedConversation.title || "Customer"
+                      : selectedConversation.title ||
+                        selectedConversation.counterpartName ||
+                        "Business",
                     avatar:
                       selectedConversation.type === "petBusiness" ||
                       selectedConversation.type === "pet" ||
@@ -939,11 +942,15 @@ function MessagesPage() {
                           (selectedConversation as any).counterpartAvatar ||
                           (selectedConversation as any).customerAvatar ||
                           "/images/placeholder.png"
+                        : isMeBusiness
+                        ? (selectedConversation as any).customerAvatar || "/images/ProfileImage.png"
                         : (selectedConversation as any).counterpartAvatar ||
                           (selectedConversation as any).customerAvatar ||
                           "/images/ProfileImage.png",
-                    role: "business",
-                    phone: (selectedConversation as any).counterpartPhone || "",
+                    role: isMeBusiness ? "customer" : "business",
+                    phone: isMeBusiness 
+                      ? (selectedConversation as any).customerPhone || ""
+                      : (selectedConversation as any).counterpartPhone || "",
                   };
                 }
 
@@ -1009,6 +1016,16 @@ function MessagesPage() {
                 const order = selectedConversation.orderId
                   ? orders[selectedConversation.orderId]
                   : null;
+                
+                // If acting as business owner, use business logo
+                if (businessAccountId && businessAccountId === selectedConversation.counterpartId) {
+                  return (
+                    (selectedConversation as any).counterpartAvatar ||
+                    session?.user?.image ||
+                    "/images/userProfile.png"
+                  );
+                }
+
                 if (currentUserId === selectedConversation.customerId) {
                   return (
                     (selectedConversation as any).customerAvatar ||
@@ -1061,6 +1078,7 @@ function MessagesPage() {
             selectedOrder={selectedOrder}
             isDrawerOpen={false}
             onCloseDrawer={() => {}}
+            businessAccountId={businessAccountId}
           />
         </div>
       </RootLayout>

@@ -466,11 +466,14 @@ export default function MobileChatPage({
       businessAccount?.id &&
       businessAccount.id === selectedConversation?.counterpartId;
 
-    const senderType = isMeCustomer
-      ? "customer"
-      : isMeShopper
-      ? "shopper"
-      : "business";
+    const senderType =
+      isMeBusinessVendor || isMePetVendor || isMeCarVendor
+        ? "business"
+        : isMeCustomer
+        ? "customer"
+        : isMeShopper
+        ? "shopper"
+        : "business";
 
     let senderId = session.user.id;
     let senderName = session.user.name || "User";
@@ -493,13 +496,13 @@ export default function MobileChatPage({
       }
     }
 
-    const recipientId = isMeCustomer
+    const recipientId = senderType === "customer"
       ? selectedConversation.shopperId ||
         (selectedConversation as any).businessId ||
         selectedConversation.counterpartId
       : selectedConversation.customerId || selectedConversation.counterpartId;
 
-    const recipientUserId = isMeCustomer
+    const recipientUserId = senderType === "customer"
       ? (selectedConversation as any).vendorUserId ||
         (selectedConversation as any).shopperUserId ||
         selectedConversation.shopperId ||
@@ -547,18 +550,20 @@ export default function MobileChatPage({
         unreadCount: 1,
       });
 
-      await fetch("/api/fcm/send-notification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientId: recipientUserId,
-          senderName,
-          message: text,
-          orderId,
-          conversationId: conversationId!,
-          collectionPath,
-        }),
-      });
+      if (recipientUserId && recipientUserId !== session.user.id) {
+        await fetch("/api/fcm/send-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: recipientUserId,
+            senderName,
+            message: text,
+            orderId,
+            conversationId: conversationId!,
+            collectionPath,
+          }),
+        });
+      }
     } catch (err) {
       setError("Error sending message. Please try again.");
       setPendingMessages((p) => p.filter((item) => item.tempId !== tempId));

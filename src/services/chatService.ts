@@ -147,25 +147,30 @@ export const createConversation = async (
  * Get or create a business conversation (B2B / RFQ)
  */
 export const getOrCreateBusinessConversation = async (
-  initiatorId: string,
+  initiatorUserId: string,
+  initiatorBusinessId: string,
   vendorId: string,
   vendorUserId: string,
-  rfqId: string,
-  title?: string
+  rfqId: string | null,
+  title?: string,
+  orderId?: string | null
 ): Promise<string> => {
   try {
     const customCollection: ChatCollection = "business_conversations";
 
-    // Check if a conversation between these two for this RFQ already exists
     const conversationsRef = collection(db!, customCollection);
     let q = query(
       conversationsRef,
-      where("customerId", "==", initiatorId),
+      where("customerId", "==", initiatorUserId),
+      where("businessId", "==", initiatorBusinessId),
       where("counterpartId", "==", vendorId)
     );
 
     if (rfqId) {
       q = query(q, where("rfqId", "==", rfqId));
+    } else if (orderId) {
+      // If no RFQ ID, check if there's a conversation for this specific order
+      q = query(q, where("orderId", "==", orderId));
     }
 
     const querySnapshot = await getDocs(q);
@@ -177,13 +182,15 @@ export const getOrCreateBusinessConversation = async (
     // Create new business conversation in business_conversations collection
     return await createConversation(
       null,
-      initiatorId, // Use initiator as customerId
+      initiatorUserId, // Use User UUID as customerId
       "",
       "business",
       {
+        businessId: initiatorBusinessId, // Store Business ID separately
         counterpartId: vendorId, // Use vendor record ID as counterpartId
         vendorUserId, // Use vendor user ID for notifications
-        rfqId,
+        rfqId: rfqId || "",
+        orderId: orderId || "",
         title: title || "Business Chat",
       },
       customCollection
@@ -191,6 +198,64 @@ export const getOrCreateBusinessConversation = async (
   } catch (error) {
     console.error(
       "❌ [Chat Service] Error in getOrCreateBusinessConversation:",
+      error
+    );
+    throw error;
+  }
+};
+
+/**
+ * Specifically for Business-to-Customer Order Messaging
+ * Business is the "counterpart" (sender/host role)
+ * Customer is the "customerId" (recipient role)
+ */
+export const getOrCreateOrderBusinessConversation = async (
+  orderDbId: string, // UUID
+  orderDisplayId: string, // Human-readable (e.g. 9805DA4F)
+  customerId: string,
+  customerName: string,
+  businessId: string,
+  vendorUserId: string
+): Promise<string> => {
+  try {
+    const title = `Order #${orderDisplayId}: ${customerName}`;
+    const customCollection: ChatCollection = "business_conversations";
+    const conversationsRef = collection(db!, customCollection);
+
+    // Search for existing conversation for this order where business is counterpart
+    const q = query(
+      conversationsRef,
+      where("orderId", "==", orderDbId),
+      where("counterpartId", "==", businessId),
+      where("customerId", "==", customerId)
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].id;
+    }
+
+    // Create new business conversation
+    // Business ID is stored as counterpartId so the hub recognizes the business as the sender
+    return await createConversation(
+      null, // orderId in createConversation signature is for chat_conversations
+      customerId, // Recipient
+      "", // shopperId
+      "businessOrder",
+      {
+        businessId: businessId, // Primary business ID
+        counterpartId: businessId, // Business role
+        vendorUserId: vendorUserId, // Business owner for notifications
+        orderId: orderDbId,
+        displayOrderId: orderDisplayId,
+        title: title,
+      },
+      customCollection
+    );
+  } catch (error) {
+    console.error(
+      "❌ [Chat Service] Error in getOrCreateOrderBusinessConversation:",
       error
     );
     throw error;

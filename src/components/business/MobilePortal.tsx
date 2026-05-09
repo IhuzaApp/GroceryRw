@@ -19,6 +19,9 @@ import {
   Search,
   Truck,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { getOrCreateBusinessConversation } from "../../services/chatService";
+import { useAuth } from "../../context/AuthContext";
 import { ProductsBidsSection } from "./ProductsBidsSection";
 import { RFQOpportunitiesSection } from "./RFQOpportunitiesSection";
 import { StoresSection } from "./StoresSection";
@@ -54,6 +57,7 @@ export function MobilePortal({
   setSelectedContractId,
   setIsContractDrawerOpen,
 }: MobilePortalProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   const stats = [
@@ -126,6 +130,64 @@ export function MobilePortal({
     { id: "orders", label: "Orders", icon: Truck, desc: "Sales orders" },
     { id: "wallet", label: "Wallet", icon: Wallet, desc: "Transactions" },
   ];
+
+  const handleMessageShopper = async (
+    shopperId: string,
+    orderId: string,
+    name: string
+  ) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateBusinessConversation(
+        user?.id || "",
+        businessAccount.id,
+        shopperId,
+        "",
+        null, // rfqId
+        `Order #${orderId}: ${name}`,
+        orderId // orderId
+      );
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting shopper conversation:", error);
+      toast.error("Failed to start conversation.");
+    }
+  };
+
+  const handleMessageCustomer = async (
+    customerId: string,
+    orderId: string,
+    name: string
+  ) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateBusinessConversation(
+        user?.id || "",
+        businessAccount.id,
+        customerId,
+        customerId,
+        null, // rfqId
+        `Order #${orderId}: ${name}`,
+        orderId // orderId
+      );
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting customer conversation:", error);
+      toast.error("Failed to start conversation.");
+    }
+  };
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -256,7 +318,12 @@ export function MobilePortal({
               <ServicesSection onRequestQuotation={() => {}} />
             )}
 
-            {activeTab === "orders" && <OrdersSection />}
+            {activeTab === "orders" && (
+            <OrdersSection
+              onMessageShopper={handleMessageShopper}
+              onMessageCustomer={handleMessageCustomer}
+            />
+          )}
 
             {activeTab === "quotes" && (
               <QuotesSection

@@ -28,7 +28,7 @@ import { QuoteSubmissionForm } from "./QuoteSubmissionForm";
 import { SubmittedQuoteDetails } from "./SubmittedQuoteDetails";
 
 interface RFQOpportunitiesSectionProps {
-  onMessageCustomer?: (customerId: string) => void;
+  onMessageCustomer?: (customerId: string, rfqId?: string, title?: string) => void;
   businessAccount?: any;
   guestMode?: boolean;
   onGuestAction?: () => void;
@@ -305,9 +305,9 @@ export function RFQOpportunitiesSection({
     fetchRFQOpportunities();
   };
 
-  const handleMessageCustomer = (customerId: string) => {
+  const handleMessageCustomer = (customerId: string, rfqId?: string, title?: string) => {
     if (onMessageCustomer) {
-      onMessageCustomer(customerId);
+      onMessageCustomer(customerId, rfqId, title);
     } else {
       console.log("Messaging customer:", customerId);
     }
@@ -549,7 +549,7 @@ export function RFQOpportunitiesSection({
                   onClick={() =>
                     guestMode
                       ? onGuestAction?.()
-                      : handleMessageCustomer(rfq.id)
+                      : handleMessageCustomer(rfq.user_id, rfq.id, rfq.title)
                   }
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-3 py-2 text-[11px] font-semibold text-white shadow-md shadow-purple-500/30 transition-all duration-200 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 sm:px-3.5 sm:py-2 sm:text-xs"
                   style={{ color: "#ffffff" }}

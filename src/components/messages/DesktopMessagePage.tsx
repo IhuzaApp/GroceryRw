@@ -605,6 +605,8 @@ export default function DesktopMessagePage({
   const [piiError, setPiiError] = useState<string | null>(null);
   const [selectedRfq, setSelectedRfq] = useState<any>(null);
   const [loadingRfq, setLoadingRfq] = useState(false);
+  const [selectedBusinessOrder, setSelectedBusinessOrder] = useState<any>(null);
+  const [loadingBusinessOrder, setLoadingBusinessOrder] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [petVendor, setPetVendor] = useState<any>(null);
@@ -619,7 +621,11 @@ export default function DesktopMessagePage({
       selectedConversation.type === "pet" ||
       selectedConversation.title?.startsWith("Adoption: "));
   const isBusinessChat =
-    !!selectedConversation && !selectedConversation.orderId && !isPetChat;
+    !!selectedConversation &&
+    (selectedConversation.type === "business" ||
+      selectedConversation.type === "businessOrder" ||
+      !selectedConversation.orderId) &&
+    !isPetChat;
   const isMeCustomerSelected =
     !!selectedConversation &&
     session?.user?.id === selectedConversation.customerId;
@@ -759,27 +765,58 @@ export default function DesktopMessagePage({
             await updateDoc(convRef, { unreadCount: 0 });
           }
 
-          // Fetch RFQ details if it's a business chat
+          // Fetch RFQ or Order details if it's a business chat
           if (
             selectedConversation.collectionPath === "business_conversations" &&
-            selectedConversation.rfqId
+            (selectedConversation.rfqId || (selectedConversation as any).orderId)
           ) {
-            setLoadingRfq(true);
-            try {
-              const res = await fetch(
-                `/api/queries/rfq-details-and-responses?rfq_id=${selectedConversation.rfqId}`
-              );
-              if (res.ok) {
-                const data = await res.json();
-                setSelectedRfq(data.rfq);
+            const rfqId = selectedConversation.rfqId;
+            const orderId = (selectedConversation as any).orderId;
+
+            setSelectedRfq(null);
+            setSelectedBusinessOrder(null);
+
+            if (rfqId) {
+              setLoadingRfq(true);
+              try {
+                const res = await fetch(
+                  `/api/queries/rfq-details-and-responses?rfq_id=${rfqId}`
+                );
+                if (res.ok) {
+                  const data = await res.json();
+                  setSelectedRfq(data.rfq);
+                } else if (res.status === 400) {
+                  // If RFQ fetch fails because of format, it might be an Order ID stored in rfqId field (Legacy)
+                  setLoadingBusinessOrder(true);
+                  const orderRes = await fetch(`/api/queries/orderDetails?id=${rfqId}`);
+                  if (orderRes.ok) {
+                    const orderData = await orderRes.json();
+                    setSelectedBusinessOrder(orderData.order);
+                  }
+                  setLoadingBusinessOrder(false);
+                }
+              } catch (err) {
+                console.error("Error fetching RFQ details:", err);
+              } finally {
+                setLoadingRfq(false);
               }
-            } catch (err) {
-              console.error("Error fetching RFQ details:", err);
-            } finally {
-              setLoadingRfq(false);
+            } else if (orderId) {
+              setLoadingBusinessOrder(true);
+              try {
+                const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+                if (res.ok) {
+                  const data = await res.json();
+                  setSelectedBusinessOrder(data.order);
+                }
+              } catch (err) {
+                console.error("Error fetching Business Order details:", err);
+              } finally {
+                setLoadingBusinessOrder(false);
+              }
             }
           } else {
             setSelectedRfq(null);
+            setSelectedBusinessOrder(null);
           }
         } catch (error) {
           console.error("Error getting conversation data:", error);
@@ -953,11 +990,14 @@ export default function DesktopMessagePage({
         businessAccount?.id &&
         businessAccount.id === selectedConversation.counterpartId;
 
-      const senderType = isMeCustomer
-        ? "customer"
-        : isMeShopper
-        ? "shopper"
-        : "business";
+      const senderType =
+        isMeBusinessVendor || isMePetVendor || isMeCarVendor
+          ? "business"
+          : isMeCustomer
+          ? "customer"
+          : isMeShopper
+          ? "shopper"
+          : "business";
 
       let senderId = session.user.id;
       let senderName = session.user.name || "User";
@@ -989,7 +1029,7 @@ export default function DesktopMessagePage({
       const orderShopperId =
         selectedOrder?.assignedTo?.shopper?.id || selectedOrder?.assignedTo?.id;
 
-      const recipientId = isMeCustomer
+      const recipientId = senderType === "customer"
         ? (selectedConversation.shopperId &&
           selectedConversation.shopperId !== session.user.id
             ? selectedConversation.shopperId
@@ -997,7 +1037,7 @@ export default function DesktopMessagePage({
           orderShopperId ||
           (selectedConversation as any).businessId ||
           selectedConversation.counterpartId
-        : isMeShopper
+        : senderType === "shopper"
         ? selectedConversation.customerId || selectedConversation.counterpartId
         : selectedConversation.customerId ||
           selectedConversation.shopperId ||
@@ -1013,29 +1053,48 @@ export default function DesktopMessagePage({
         timestamp: serverTimestamp(),
         read: false,
       };
+
       if (!recipientId) {
         throw new Error("Could not determine message recipient.");
       }
 
-      console.log("🔍 [Chat Hub] Sending message:", messagePayload);
+      // 1. Optimistic Update
+      const tempId = `temp-${Date.now()}`;
+      setPendingMessages((p) => [
+        ...p,
+        {
+          id: tempId,
+          text: newMessage.trim(),
+          message: newMessage.trim(),
+          senderId,
+          senderName,
+          senderType,
+          timestamp: new Date(),
+          read: false,
+        },
+      ]);
+      const messageText = newMessage.trim();
+      setNewMessage("");
 
+      // 2. Firestore Write
+      console.log("🔍 [Chat Hub] Sending message:", messagePayload);
       await addDoc(messagesRef, messagePayload);
 
-      // Update conversation with last message
+      // 3. Update Conversation
       const convRef = doc(
         db!,
         selectedConversation.collectionPath,
         conversationId
       );
       await updateDoc(convRef, {
-        lastMessage: newMessage.trim(),
+        lastMessage: messageText,
         lastMessageTime: serverTimestamp(),
         unreadCount: 1,
       });
 
-      // Trigger FCM so recipient gets device + in-app notification (bell)
+      // 4. Trigger FCM Notification
       try {
-        const fcmRecipientId = isMeCustomer
+        const fcmRecipientId = senderType === "customer"
           ? (selectedConversation as any).vendorUserId ||
             (selectedConversation.shopperUserId &&
             selectedConversation.shopperUserId !== session.user.id
@@ -1052,7 +1111,8 @@ export default function DesktopMessagePage({
           : selectedConversation.customerId ||
             selectedConversation.counterpartId;
 
-        await fetch("/api/fcm/send-notification", {
+        if (fcmRecipientId && fcmRecipientId !== session.user.id) {
+          await fetch("/api/fcm/send-notification", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1061,31 +1121,16 @@ export default function DesktopMessagePage({
               senderType === "business" && businessAccount?.businessName
                 ? businessAccount.businessName
                 : session.user.name || "User",
-            message: newMessage.trim(),
+            message: messageText,
             orderId: selectedConversation.orderId || null,
             conversationId,
             collectionPath: selectedConversation.collectionPath,
           }),
         });
+      }
       } catch (fcmErr) {
         console.warn("FCM send (non-blocking):", fcmErr);
       }
-
-      const tempId = `temp-${Date.now()}`;
-      setPendingMessages((p) => [
-        ...p,
-        {
-          id: tempId,
-          text: newMessage.trim(),
-          message: newMessage.trim(),
-          senderId,
-          senderName,
-          senderType,
-          timestamp: new Date(),
-          read: false,
-        },
-      ]);
-      setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -1238,7 +1283,9 @@ export default function DesktopMessagePage({
                   conversation.type === "pet" ||
                   conversation.title?.startsWith("Adoption: ");
                 const isBusinessChat =
-                  (conversation.type === "business" || !conversation.orderId) &&
+                  (conversation.type === "business" ||
+                    conversation.type === "businessOrder" ||
+                    !conversation.orderId) &&
                   !isPetChat;
                 const order = conversation.orderId
                   ? orders[conversation.orderId] || {}
@@ -1260,10 +1307,15 @@ export default function DesktopMessagePage({
                     conversation.title ||
                     `Adoption: ${conversation.petName || "Pet"}`;
                 } else if (isBusinessChat) {
-                  fullName =
-                    conversation.title ||
-                    conversation.counterpartName ||
-                    "Business Chat";
+                  // If I am the business owner (counterpart), I want to see the customer's name
+                  if (businessAccount?.id && businessAccount.id === conversation.counterpartId) {
+                    fullName = (conversation as any).customerName || conversation.title || "Customer";
+                  } else {
+                    fullName =
+                      conversation.title ||
+                      conversation.counterpartName ||
+                      "Business Chat";
+                  }
                 } else {
                   if (isMeShopper) {
                     fullName = order?.orderedBy?.name || "Customer";
@@ -1292,7 +1344,9 @@ export default function DesktopMessagePage({
                 const contactAvatar = isPetChat
                   ? conversation.petImage || "/images/placeholder.png"
                   : isBusinessChat
-                  ? conversation.counterpartAvatar ||
+                  ? (businessAccount?.id && businessAccount.id === conversation.counterpartId 
+                      ? (conversation as any).customerAvatar 
+                      : conversation.counterpartAvatar) ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       fullName
                     )}&background=10b981&color=fff`
@@ -1432,7 +1486,9 @@ export default function DesktopMessagePage({
                       ) : isBusinessChat ? (
                         <img
                           src={
-                            selectedConversation.counterpartAvatar ||
+                            (businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
+                              ? (selectedConversation as any).customerAvatar 
+                              : selectedConversation.counterpartAvatar) ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
                               selectedConversation.title ||
                                 selectedConversation.counterpartName ||
@@ -1489,9 +1545,11 @@ export default function DesktopMessagePage({
                         selectedConversation.title ||
                         `Adoption: ${selectedConversation.petName || "Pet"}`
                       ) : isBusinessChat ? (
-                        selectedConversation.title ||
-                        selectedConversation.counterpartName ||
-                        "Business Chat"
+                        businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
+                          ? (selectedConversation as any).customerName || selectedConversation.title || "Customer"
+                          : selectedConversation.title ||
+                            selectedConversation.counterpartName ||
+                            "Business Chat"
                       ) : (
                         <>
                           {isMeShopperSelected
@@ -1530,7 +1588,9 @@ export default function DesktopMessagePage({
                       </span>
                       <span className="text-sm font-bold text-gray-900 dark:text-white">
                         {selectedOrder?.orderedBy?.phone ||
-                          (selectedConversation as any).counterpartPhone ||
+                          (businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
+                            ? (selectedConversation as any).customerPhone 
+                            : (selectedConversation as any).counterpartPhone) ||
                           "N/A"}
                       </span>
                     </div>
@@ -1654,7 +1714,7 @@ export default function DesktopMessagePage({
                                           let resolvedAvatar =
                                             "/images/userProfile.png";
                                           if (
-                                            isCurrentUser &&
+                                            message.senderId === session?.user?.id &&
                                             session?.user?.image
                                           ) {
                                             resolvedAvatar = session.user.image;
@@ -2391,6 +2451,86 @@ export default function DesktopMessagePage({
                           {selectedRfq.requirements ||
                             "No specific requirements provided."}
                         </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedBusinessOrder ? (
+                  <div className="space-y-6">
+                    {/* Order Header Card */}
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20">
+                          <svg
+                            className="h-8 w-8"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-base font-bold text-gray-900 dark:text-white">
+                            {selectedBusinessOrder.OrderID}
+                          </h3>
+                          <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                            Business Order
+                          </p>
+                        </div>
+                      </div>
+                      <div className="my-5 h-px bg-gray-100 dark:bg-gray-700/50"></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                            Status
+                          </p>
+                          <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
+                            {selectedBusinessOrder.status}
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                            Total
+                          </p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">
+                            {selectedBusinessOrder.total}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order Details Card */}
+                    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md dark:bg-gray-800 dark:ring-white/5">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                          Items
+                        </h4>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedBusinessOrder.Order_Items?.map((item: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-3 rounded-2xl bg-gray-50 p-3 dark:bg-gray-900/50">
+                            <div className="h-10 w-10 overflow-hidden rounded-lg">
+                              <img 
+                                src={item.product?.image || item.product?.ProductName?.image} 
+                                alt={item.product?.ProductName?.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
+                                {item.product?.ProductName?.name}
+                              </p>
+                              <p className="text-[10px] text-gray-500">
+                                Qty: {item.quantity} × {item.price}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>

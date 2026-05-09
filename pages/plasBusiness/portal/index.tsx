@@ -15,9 +15,10 @@ import { ContractDetailDrawer } from "../../../src/components/business/ContractD
 import { getOrCreateBusinessConversation } from "../../../src/services/chatService";
 import { PortalCacheProvider } from "../../../src/context/PortalCacheContext";
 import toast from "react-hot-toast";
+import HeaderLayout from "../../../src/components/ui/NavBar/headerLayout";
 
 export default function PlasBusinessPage() {
-  const { role, isLoggedIn, authReady } = useAuth();
+  const { role, isLoggedIn, authReady, user } = useAuth();
   const { theme } = useTheme();
   const router = useRouter();
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
@@ -84,9 +85,11 @@ export default function PlasBusinessPage() {
 
     try {
       const conversationId = await getOrCreateBusinessConversation(
+        user?.id || "",
         businessAccount.id,
         supplierId,
-        rfqId,
+        "", // vendorUserId placeholder
+        rfqId || "",
         title
       );
       router.push(
@@ -139,6 +142,7 @@ export default function PlasBusinessPage() {
   if (!hasBusinessAccount) {
     return (
       <RootLayout>
+        <HeaderLayout />
         <PlasBusinessGuestView onAccountCreated={handleAccountCreated} />
       </RootLayout>
     );
@@ -147,6 +151,7 @@ export default function PlasBusinessPage() {
   return (
     <RootLayout>
       <PortalCacheProvider>
+        <HeaderLayout />
         <div className="min-h-screen bg-[var(--bg-primary)]">
           {/* Desktop View */}
           <div className="hidden md:ml-16 md:block">

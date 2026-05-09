@@ -479,6 +479,7 @@ interface MobileMessagePageProps {
   selectedOrder?: any;
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
+  businessAccountId?: string | null;
 }
 
 export default function MobileMessagePage({
@@ -495,6 +496,7 @@ export default function MobileMessagePage({
   selectedOrder,
   isDrawerOpen,
   onCloseDrawer,
+  businessAccountId,
 }: MobileMessagePageProps) {
   const { theme } = useTheme();
   const router = useRouter();
@@ -529,7 +531,9 @@ export default function MobileMessagePage({
           conversation.type === "pet" ||
           conversation.title?.startsWith("Adoption: ");
         const isBusinessChat =
-          (!conversation.orderId || conversation.type === "business") &&
+          (!conversation.orderId ||
+            conversation.type === "business" ||
+            conversation.type === "businessOrder") &&
           !isPetChat;
         const order = conversation.orderId
           ? orders[conversation.orderId]
@@ -768,7 +772,9 @@ export default function MobileMessagePage({
                 conversation.type === "pet" ||
                 conversation.title?.startsWith("Adoption: ");
               const isBusinessChat =
-                (conversation.type === "business" || !conversation.orderId) &&
+                (conversation.type === "business" ||
+                  conversation.type === "businessOrder" ||
+                  !conversation.orderId) &&
                 !isPetChat;
               const order = conversation.orderId
                 ? orders[conversation.orderId] || {}
@@ -781,10 +787,14 @@ export default function MobileMessagePage({
                   conversation.title ||
                   `Adoption: ${conversation.petName || "Pet"}`;
               } else if (isBusinessChat) {
-                fullName =
-                  conversation.title ||
-                  conversation.counterpartName ||
-                  "Business Chat";
+                if (businessAccountId && businessAccountId === conversation.counterpartId) {
+                  fullName = (conversation as any).customerName || conversation.title || "Customer";
+                } else {
+                  fullName =
+                    conversation.title ||
+                    conversation.counterpartName ||
+                    "Business Chat";
+                }
               } else {
                 fullName =
                   order?.assignedTo?.shoppers?.full_name ||
@@ -804,7 +814,9 @@ export default function MobileMessagePage({
                   (conversation as any).customerAvatar ||
                   "/images/placeholder.png"
                 : isBusinessChat
-                ? conversation.counterpartAvatar ||
+                ? (businessAccountId && businessAccountId === conversation.counterpartId 
+                    ? (conversation as any).customerAvatar 
+                    : conversation.counterpartAvatar) ||
                   (conversation as any).customerAvatar ||
                   "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"
                 : (conversation as any).counterpartAvatar ||

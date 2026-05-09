@@ -78,9 +78,15 @@ interface Order {
 
 interface OrdersSectionProps {
   className?: string;
+  onMessageShopper: (shopperId: string, orderId: string, name: string) => void;
+  onMessageCustomer: (customerId: string, orderDbId: string, orderDisplayId: string, name: string) => void;
 }
 
-export function OrdersSection({ className = "" }: OrdersSectionProps) {
+export function OrdersSection({
+  className = "",
+  onMessageShopper,
+  onMessageCustomer,
+}: OrdersSectionProps) {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
@@ -462,6 +468,8 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
         updatingStatus={updatingStatus}
         getStatusBadgeStyles={getStatusBadgeStyles}
         getStatusIcon={getStatusIcon}
+        onMessageShopper={onMessageShopper}
+        onMessageCustomer={onMessageCustomer}
       />
     );
   }

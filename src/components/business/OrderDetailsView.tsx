@@ -62,6 +62,7 @@ interface Order {
     profile_photo: string | null;
     phone_number: string | null;
     email: string | null;
+    userId?: string | null;
   } | null;
   shopper_id?: string | null;
   orderedBy?: {
@@ -80,6 +81,13 @@ interface OrderDetailsViewProps {
   updatingStatus: boolean;
   getStatusBadgeStyles: (status: string) => string;
   getStatusIcon: (status: string) => JSX.Element;
+  onMessageShopper: (
+    shopperId: string,
+    orderId: string,
+    name: string,
+    shopperUserId?: string
+  ) => void;
+  onMessageCustomer: (customerId: string, orderDbId: string, orderDisplayId: string, name: string) => void;
 }
 
 export function OrderDetailsView({
@@ -89,6 +97,8 @@ export function OrderDetailsView({
   updatingStatus,
   getStatusBadgeStyles,
   getStatusIcon,
+  onMessageShopper,
+  onMessageCustomer,
 }: OrderDetailsViewProps) {
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -306,7 +316,14 @@ export function OrderDetailsView({
                   </div>
                   {order.shoppers && (
                     <button
-                      onClick={() => toast.success("Opening chat with shopper...")}
+                      onClick={() =>
+                        onMessageShopper(
+                          order.shopper_id!,
+                          order.orderId,
+                          order.shoppers?.full_name || "Shopper",
+                          order.shoppers?.userId || ""
+                        )
+                      }
                       className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-green-700 active:scale-95"
                     >
                       <MessageSquare className="h-4 w-4" />
@@ -432,7 +449,14 @@ export function OrderDetailsView({
                   </div>
                 </div>
                 <button
-                  onClick={() => toast.success(`Opening chat with ${order.orderedBy?.name || "customer"}...`)}
+                  onClick={() =>
+                    onMessageCustomer(
+                      order.orderedBy?.id || "",
+                      order.id,
+                      order.orderId,
+                      order.orderedBy?.name || "Customer"
+                    )
+                  }
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 py-3 text-xs font-bold uppercase tracking-wider text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/30"
                 >
                   <MessageSquare className="h-4 w-4" />

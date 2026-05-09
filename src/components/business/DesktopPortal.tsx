@@ -25,8 +25,12 @@ import { OrdersSection } from "./OrdersSection";
 import { ContractsManagement } from "./ContractsManagement";
 import { SecondHandManagement } from "./SecondHandManagement";
 import toast from "react-hot-toast";
-import { getOrCreateBusinessConversation } from "../../services/chatService";
+import {
+  getOrCreateBusinessConversation,
+  getOrCreateOrderBusinessConversation,
+} from "../../services/chatService";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 
 interface DesktopPortalProps {
   selectedQuote: any;
@@ -58,6 +62,7 @@ export function DesktopPortal({
   router,
 }: DesktopPortalProps) {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const isPersonalAccount = businessAccount?.accountType === "personal";
   const isBusinessAccount = businessAccount?.accountType === "business";
@@ -93,9 +98,11 @@ export function DesktopPortal({
 
     try {
       const conversationId = await getOrCreateBusinessConversation(
+        user?.id || "",
         businessAccount.id,
         supplierId,
-        rfqId,
+        "", // vendorUserId
+        rfqId || "",
         title
       );
       router.push(
@@ -115,8 +122,11 @@ export function DesktopPortal({
 
     try {
       const conversationId = await getOrCreateBusinessConversation(
+        user?.id || "",
         businessAccount.id,
-        supplierId
+        supplierId,
+        "", // vendorUserId
+        "" // No RFQ ID
       );
       router.push(
         `/Messages?conversationId=${conversationId}&collection=business_conversations`
@@ -124,6 +134,67 @@ export function DesktopPortal({
     } catch (error) {
       console.error("Error starting business conversation:", error);
       toast.error("Failed to start conversation. Please try again.");
+    }
+  };
+
+  const handleMessageShopper = async (
+    shopperId: string,
+    orderId: string,
+    name: string
+  ) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      // Shoppers use chat_conversations for order-related chat, 
+      // but if we are in the Business Portal, we want to use business_conversations 
+      // but ensure customerId is the USER's ID, not the business's ID.
+      const conversationId = await getOrCreateBusinessConversation(
+        user?.id || "",
+        businessAccount.id,
+        shopperId,
+        "", // vendorUserId - could be fetched if needed
+        null, // rfqId
+        `Order #${orderId}: ${name}`,
+        orderId // orderId
+      );
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting shopper conversation:", error);
+      toast.error("Failed to start conversation.");
+    }
+  };
+
+  const handleMessageCustomer = async (
+    customerId: string,
+    orderDbId: string,
+    orderDisplayId: string,
+    name: string
+  ) => {
+    if (!businessAccount?.id) {
+      toast.error("Please ensure your business account is fully set up");
+      return;
+    }
+
+    try {
+      const conversationId = await getOrCreateOrderBusinessConversation(
+        orderDbId,
+        orderDisplayId,
+        customerId,
+        name,
+        businessAccount.id,
+        user?.id || ""
+      );
+      router.push(
+        `/Messages?conversationId=${conversationId}&collection=business_conversations`
+      );
+    } catch (error) {
+      console.error("Error starting customer conversation:", error);
+      toast.error("Failed to start conversation.");
     }
   };
 
@@ -279,7 +350,12 @@ export function DesktopPortal({
           {activeTab === "quotes" && (
             <QuotesSection onViewQuoteDetails={handleViewQuoteDetails} />
           )}
-          {activeTab === "orders" && <OrdersSection />}
+          {activeTab === "orders" && (
+            <OrdersSection
+              onMessageShopper={handleMessageShopper}
+              onMessageCustomer={handleMessageCustomer}
+            />
+          )}
           {activeTab === "contracts" && (
             <ContractsManagement
               onViewContract={handleViewContract}

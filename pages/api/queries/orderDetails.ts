@@ -105,6 +105,33 @@ const GET_ORDER_DETAILS = gql`
   }
 `;
 
+const GET_ORDER_BY_ORDERID = gql`
+  query GetOrderByOrderID($orderID: String!) {
+    Orders(where: { OrderID: { _eq: $orderID } }, limit: 1) {
+      id
+      OrderID
+      placedAt: created_at
+      total
+      status
+      shoppers {
+        id
+        full_name
+        profile_photo
+        User {
+          id
+          email
+        }
+      }
+      orderedBy {
+        id
+        name
+        profile_picture
+        phone
+      }
+    }
+  }
+`;
+
 const GET_REEL_ORDER_DETAILS = gql`
   query GetReelOrderDetails($id: uuid!) {
     reel_orders_by_pk(id: $id) {
@@ -339,13 +366,48 @@ export default async function handler(
 
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(orderId)) {
-    return res.status(400).json({ error: "Invalid order ID format" });
-  }
+  const isUUID = uuidRegex.test(orderId);
 
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
+    }
+
+    // If it's not a UUID, it might be a human-readable OrderID
+    if (!isUUID) {
+      const result = await hasuraClient.request<any>(GET_ORDER_BY_ORDERID, {
+        orderID: orderId,
+      });
+
+      if (result.Orders && result.Orders.length > 0) {
+        // We found it by OrderID! Now proceed with the regular formatting.
+        // We need to re-run the statistics fetch if needed, or just handle it here.
+        const order = result.Orders[0];
+        
+        // Formatting logic similar to handleRegularOrder but self-contained
+        const rawShopper = Array.isArray(order.shoppers) ? order.shoppers[0] : order.shoppers;
+        
+        const formattedOrder = {
+          ...order,
+          orderType: "order",
+          placedAt: new Date(order.placedAt).toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }),
+          assignedTo: rawShopper ? {
+            ...rawShopper,
+            name: rawShopper.full_name,
+            profile_picture: rawShopper.profile_photo,
+            email: rawShopper.User?.email,
+            userId: rawShopper.User?.id
+          } : null
+        };
+        
+        return res.status(200).json({ order: formattedOrder });
+      }
+      
+      // If still not found, return 400
+      return res.status(400).json({ error: "Invalid order ID format or order not found" });
     }
 
     const handleRegularOrder = async (order: any) => {
@@ -707,6 +769,7 @@ export default async function handler(
             return handleRestaurantOrder(data.restaurant_orders_by_pk);
           break;
         }
+        case "businessOrder":
         case "business": {
           const data = await hasuraClient.request<any>(
             GET_BUSINESS_ORDER_DETAILS,
