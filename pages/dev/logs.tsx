@@ -4,7 +4,7 @@ import LogsTable from "@components/logs/LogsTable";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import "./logs.css";
+import styles from "./logs.module.css";
 
 interface SystemLog {
   id: string;

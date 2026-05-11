@@ -7,7 +7,7 @@ import Image from "next/image";
 import { GraphQLClient, gql } from "graphql-request";
 import ArrowLeftIcon from "@rsuite/icons/ArrowLeft";
 import CopyIcon from "@rsuite/icons/Copy";
-import "../logs.css";
+import styles from "../logs.module.css";
 
 const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;
 const HASURA_SECRET = process.env.HASURA_GRAPHQL_ADMIN_SECRET!;
