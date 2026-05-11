@@ -149,35 +149,11 @@ export default function MobileUserDashboard({
   const handleSearch = async (query: string) => {
     setIsSearching(true);
     try {
-      // Search both shops and restaurants
-      const [shopsResponse, restaurantsResponse] = await Promise.all([
-        fetch(`/api/search?q=${encodeURIComponent(query)}`),
-        fetch(`/api/queries/restaurants`),
-      ]);
+      // Unified search for shops, products, restaurants, pets, vehicles, reels, and business items
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
 
-      const shopsData = await shopsResponse.json();
-      const restaurantsData = await restaurantsResponse.json();
-
-      // Filter restaurants based on search query
-      const filteredRestaurants =
-        restaurantsData.restaurants
-          ?.filter(
-            (restaurant: any) =>
-              restaurant.name?.toLowerCase().includes(query.toLowerCase()) ||
-              restaurant.location?.toLowerCase().includes(query.toLowerCase())
-          )
-          .map((restaurant: any) => ({
-            ...restaurant,
-            type: "restaurant",
-            category: "Restaurant",
-          })) || [];
-
-      // Combine and format results
-      // Note: Don't override the 'type' field - the API already sets it correctly
-      // (products have type: "product", shops have type: "shop")
-      const allResults = [...(shopsData.results || []), ...filteredRestaurants];
-
-      setSearchResults(allResults);
+      setSearchResults(data.results || []);
     } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);

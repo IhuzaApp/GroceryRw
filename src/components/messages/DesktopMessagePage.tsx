@@ -1061,13 +1061,6 @@ export default function DesktopMessagePage({
         read: false,
       };
 
-      console.log("🔍 [Chat Hub] Sending message:", {
-        senderId,
-        senderName,
-        senderType,
-        recipientId,
-        payload: messagePayload
-      });
 
       if (!recipientId) {
         throw new Error("Could not determine message recipient.");
@@ -1716,14 +1709,6 @@ export default function DesktopMessagePage({
                                 ...storeIds,
                               ].includes(message.senderId);
 
-                               console.log("🔍 [Chat Hub] Identity Check:", {
-                                 text: message.text || message.message,
-                                 senderId: message.senderId,
-                                 senderType: message.senderType,
-                                 isCurrentUser,
-                                 counterpartAvatar: (selectedConversation as any)?.counterpartAvatar,
-                                 storeIds
-                               });
 
                               return (
                                 <React.Fragment key={message.id}>
@@ -1804,14 +1789,6 @@ export default function DesktopMessagePage({
                                             if (dbAvatar)
                                               resolvedAvatar = dbAvatar;
 
-                                            console.log("🔍 [Chat Hub] Avatar Resolution:", {
-                                              text: message.text || message.message,
-                                              senderId: message.senderId,
-                                              senderType: message.senderType,
-                                              isCurrentUser,
-                                              dbAvatar,
-                                              resolvedAvatar
-                                            });
                                           }
 
                                           // Fallback by type if still placeholder and not Me

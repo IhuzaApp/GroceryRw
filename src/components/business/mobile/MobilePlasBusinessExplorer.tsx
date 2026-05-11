@@ -6,6 +6,7 @@ import { useAuth } from "../../../context/AuthContext";
 import CreateBusinessAccountModal from "../CreateBusinessAccountModal";
 import { MobileServiceList } from "./MobileServiceList";
 import { ExpandedSectionModal } from "./ExpandedSectionModal";
+import { useRouter } from "next/router";
 
 interface MobilePlasBusinessExplorerProps {
   onAccountCreated?: () => void;
@@ -14,6 +15,8 @@ interface MobilePlasBusinessExplorerProps {
 export function MobilePlasBusinessExplorer({
   onAccountCreated,
 }: MobilePlasBusinessExplorerProps) {
+  const router = useRouter();
+  const { type, id } = router.query;
   const { user, isLoggedIn } = useAuth();
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +27,15 @@ export function MobilePlasBusinessExplorer({
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [loadingRFQs, setLoadingRFQs] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Handle deep linking from query params
+  useEffect(() => {
+    if (type === "rfq") {
+      setActiveTab("rfqs");
+    } else if (type === "service" || type === "product") {
+      setActiveTab("services");
+    }
+  }, [type]);
 
   useEffect(() => {
     if (isLoggedIn && user?.id) {
@@ -39,6 +51,22 @@ export function MobilePlasBusinessExplorer({
       fetchRFQs();
     }
   }, [activeTab]);
+
+  // Handle auto-opening specific RFQ if id is provided
+  useEffect(() => {
+    if (id && activeTab === "rfqs" && rfqs.length > 0) {
+      const targetRFQ = rfqs.find(r => r.id === id);
+      if (targetRFQ) {
+        setSelectedRFQ(targetRFQ);
+        setExpandedSection("rfq-opportunities");
+      }
+    } else if (id && activeTab === "services") {
+      // For services in explorer, we might just want to trigger the modal
+      // But since we don't have the full service object here, 
+      // we'll just show the modal to create an account
+      setIsModalOpen(true);
+    }
+  }, [id, activeTab, rfqs]);
 
   const checkBusinessAccount = async () => {
     try {

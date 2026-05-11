@@ -256,6 +256,7 @@ export function MobileBusinessDashboard({
   userProfilePicture,
 }: MobileBusinessDashboardProps) {
   const router = useRouter();
+  const { type, id } = router.query;
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
@@ -369,6 +370,29 @@ export function MobileBusinessDashboard({
       fetchStats();
     }
   }, [businessAccount]);
+
+  // Handle deep linking from query params
+  useEffect(() => {
+    if (id && type === "rfq") {
+      // Fetch the specific RFQ to open it
+      const fetchAndOpenRFQ = async () => {
+        try {
+          const response = await fetch("/api/queries/rfq-opportunities");
+          if (response.ok) {
+            const data = await response.json();
+            const targetRFQ = data.rfqs?.find((r: any) => r.id === id);
+            if (targetRFQ) {
+              setSelectedRFQ(targetRFQ);
+              setExpandedSection("rfq-opportunities");
+            }
+          }
+        } catch (error) {
+          console.error("Error auto-opening RFQ:", error);
+        }
+      };
+      fetchAndOpenRFQ();
+    }
+  }, [id, type]);
 
   const checkExistingQuote = async (rfqId: string) => {
     try {
@@ -852,7 +876,7 @@ export function MobileBusinessDashboard({
         onSubmit={(storeData) => {
           setIsCreateStoreModalOpen(false);
           if (expandedSection === "stores") {
-            loadSectionData("stores");
+            fetchSectionData("stores");
           }
           setStores((prev) => (storeData?.id ? [storeData, ...prev] : prev));
         }}

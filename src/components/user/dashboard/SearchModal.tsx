@@ -4,7 +4,17 @@ import { useRouter } from "next/router";
 interface SearchResult {
   id: string;
   name: string;
-  type: "product" | "shop" | "recipe" | "restaurant";
+  type:
+    | "product"
+    | "shop"
+    | "recipe"
+    | "restaurant"
+    | "pet"
+    | "vehicle"
+    | "reel"
+    | "service"
+    | "rfq"
+    | "business_product";
   price?: string;
   image_url?: string;
   shop_name?: string;
@@ -38,7 +48,7 @@ export default function SearchModal({
 
   const handleResultClick = (result: SearchResult) => {
     // If the result has a shop_id, it's a product - redirect to the shop
-    if (result.shop_id) {
+    if (result.shop_id && result.type === "product") {
       router.push(`/shops/${result.shop_id}`);
     } else if (result.type === "product") {
       router.push(`/shops/${result.shop_id}`);
@@ -48,6 +58,18 @@ export default function SearchModal({
       router.push(`/Recipes/${result.id}`);
     } else if (result.type === "restaurant") {
       router.push(`/restaurant/${result.id}`);
+    } else if (result.type === "pet") {
+      router.push(`/Pets/${result.id}`);
+    } else if (result.type === "vehicle") {
+      router.push(`/Cars/${result.id}`);
+    } else if (result.type === "reel") {
+      router.push(`/reels?id=${result.id}`);
+    } else if (result.type === "service") {
+      router.push(`/plasBusiness/explorer?type=service&id=${result.id}`);
+    } else if (result.type === "rfq") {
+      router.push(`/plasBusiness/explorer?type=rfq&id=${result.id}`);
+    } else if (result.type === "business_product") {
+      router.push(`/plasBusiness/explorer?type=product&id=${result.id}`);
     }
 
     // Close the modal after navigation
@@ -121,21 +143,25 @@ export default function SearchModal({
 
                             // Handle restaurant profile field
                             if (result.profile) {
-                              // If it's a full URL, use it
                               if (result.profile.startsWith("http"))
                                 return result.profile;
-                              // If it's a relative path, try to construct a proper path
                               if (result.profile.startsWith("/"))
                                 return result.profile;
-                              // If it's just a filename, assume it's in a restaurant images folder
                               return `/images/restaurants/${result.profile}`;
                             }
 
                             // Fallback based on type
                             if (result.type === "restaurant") {
                               return "/images/restaurantDish.png";
+                            } else if (result.type === "pet") {
+                              return "/images/petPlaceholder.png";
+                            } else if (result.type === "vehicle") {
+                              return "/images/carPlaceholder.png";
+                            } else if (result.type === "reel") {
+                              return "/images/videoPlaceholder.png";
                             } else if (
                               result.type === "product" ||
+                              result.type === "business_product" ||
                               result.shop_id
                             ) {
                               return "/images/groceryPlaceholder.png";
@@ -147,7 +173,6 @@ export default function SearchModal({
                           referrerPolicy="no-referrer"
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           onError={(e) => {
-                            // Prevent infinite loop if placeholder also fails
                             if (
                               e.currentTarget.src.includes(
                                 "groceryPlaceholder.png"
@@ -157,16 +182,15 @@ export default function SearchModal({
                               return;
                             }
 
-                            // Set appropriate placeholder based on result type
                             if (result.type === "restaurant") {
                               e.currentTarget.src =
                                 "/images/restaurantDish.png";
-                            } else if (
-                              result.type === "product" ||
-                              result.shop_id
-                            ) {
+                            } else if (result.type === "pet") {
                               e.currentTarget.src =
-                                "/images/groceryPlaceholder.png";
+                                "/images/petPlaceholder.png";
+                            } else if (result.type === "vehicle") {
+                              e.currentTarget.src =
+                                "/images/carPlaceholder.png";
                             } else {
                               e.currentTarget.src =
                                 "/images/groceryPlaceholder.png";
@@ -187,16 +211,26 @@ export default function SearchModal({
                             {/* Type Badge */}
                             <span
                               className={`inline-flex flex-shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                                result.type === "product"
+                                result.type === "product" || result.type === "business_product"
                                   ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                                   : result.type === "shop"
                                   ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
                                   : result.type === "restaurant"
                                   ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                  : result.type === "pet"
+                                  ? "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400"
+                                  : result.type === "vehicle"
+                                  ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                                  : result.type === "rfq"
+                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                  : result.type === "service"
+                                  ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400"
+                                  : result.type === "reel"
+                                  ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
                                   : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                               }`}
                             >
-                              {result.type}
+                              {result.type.replace("_", " ")}
                             </span>
                           </div>
 
@@ -256,12 +290,22 @@ export default function SearchModal({
                       <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/5">
                         <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                           Tap to{" "}
-                          {result.type === "product"
+                          {result.type === "product" || result.type === "business_product"
                             ? "view product"
                             : result.type === "shop"
                             ? "visit shop"
                             : result.type === "restaurant"
                             ? "visit restaurant"
+                            : result.type === "pet"
+                            ? "view pet"
+                            : result.type === "vehicle"
+                            ? "rent vehicle"
+                            : result.type === "rfq"
+                            ? "apply to rfq"
+                            : result.type === "service"
+                            ? "view service"
+                            : result.type === "reel"
+                            ? "watch reel"
                             : "view recipe"}
                         </div>
                         <svg

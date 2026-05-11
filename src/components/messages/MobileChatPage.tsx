@@ -108,15 +108,6 @@ const CustomerMessage: React.FC<{
           {(() => {
             let avatarUrl = isCurrentUser ? customerImage : counterpartImage;
             
-            console.log("🔍 [Mobile Chat Hub] Avatar Selection:", {
-              text: (message as any).text || (message as any).message,
-              senderId: message.senderId,
-              senderType: message.senderType,
-              isCurrentUser,
-              avatarUrl,
-              customerImage,
-              counterpartImage
-            });
 
             const fallbackLetter = isCurrentUser
               ? "M"
