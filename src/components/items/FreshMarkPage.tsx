@@ -335,10 +335,10 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
             </h1>
 
             {/* Shop Details */}
-            <div className="flex flex-wrap justify-center gap-2 text-xs !text-white/90">
+            <div className="flex flex-wrap justify-center gap-2 text-xs !text-white">
               {/* Distance */}
               {isMounted && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 !text-white">
                   <svg
                     className="h-3 w-3"
                     fill="none"
@@ -364,7 +364,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
 
               {/* Delivery Time */}
               {isMounted && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 !text-white">
                   <svg
                     className="h-3 w-3"
                     fill="none"
@@ -384,7 +384,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
 
               {/* Rating */}
               {shopData.rating > 0 && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 !text-white">
                   <svg
                     className="h-3 w-3 text-yellow-400"
                     fill="currentColor"
@@ -446,11 +446,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                   </div>
 
                   {/* Shop Details */}
-                  <div className="flex-1 text-white">
-                    <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">
+                  <div className="flex-1 !text-white">
+                    <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl !text-white">
                       {shopData.name}
                     </h1>
-                    <p className="mt-2 text-sm opacity-90 sm:text-base">
+                    <p className="mt-2 text-sm opacity-90 sm:text-base !text-white">
                       {shopData?.description}
                     </p>
 
@@ -458,7 +458,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                     <div className="mt-4 flex flex-wrap gap-3">
                       {/* Rating */}
                       {shopData.rating > 0 && (
-                        <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20">
+                        <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20 !text-white">
                           <svg
                             className="mr-1.5 h-4 w-4 text-yellow-300"
                             viewBox="0 0 24 24"
@@ -473,7 +473,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       )}
 
                       {/* Delivery Time */}
-                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20">
+                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20 !text-white">
                         <svg
                           className="mr-1.5 h-4 w-4"
                           fill="none"
@@ -493,7 +493,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       </div>
 
                       {/* Distance */}
-                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20">
+                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20 !text-white">
                         <svg
                           className="mr-1.5 h-4 w-4"
                           fill="none"
@@ -519,7 +519,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       </div>
 
                       {/* Delivery Fee */}
-                      <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+                      <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm !text-white">
                         <svg
                           className="mr-1.5 h-4 w-4"
                           viewBox="0 0 20 20"
@@ -582,7 +582,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       onClick={() => setActiveCategory(category)}
                       className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                         activeCategory === category
-                          ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       }`}
                     >
@@ -593,7 +593,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                     onClick={() => setActiveCategory("all")}
                     className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       activeCategory === "all"
-                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
@@ -673,7 +673,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                 onClick={() => setActiveCategory("all")}
                 className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   activeCategory === "all"
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 }`}
               >
@@ -687,7 +687,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                   onClick={() => setActiveCategory(category)}
                   className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     activeCategory === category
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
