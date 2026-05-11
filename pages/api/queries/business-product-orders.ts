@@ -278,7 +278,9 @@ export default async function handler(
         deliveryAddress: order.deliveryAddress,
         comment: order.comment,
         created_at: order.created_at,
+        store: order.business_store?.name || null,
         store_image: order.business_store?.image || null,
+        store_id: order.store_id,
         latitude: order.latitude,
         longitude: order.longitude,
         allProducts: enrichedProducts, // Use enriched products with images

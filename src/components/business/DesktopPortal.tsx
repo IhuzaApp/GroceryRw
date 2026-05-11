@@ -173,33 +173,34 @@ export function DesktopPortal({
     customerId: string,
     orderDbId: string,
     orderDisplayId: string,
-    name: string,
+    customerName: string,
     itemName?: string,
-    customerAvatar?: string
+    customerAvatar?: string,
+    storeId?: string,
+    storeName?: string,
+    storeLogo?: string
   ) => {
-    if (!businessAccount?.id) {
-      toast.error("Please ensure your business account is fully set up");
-      return;
-    }
+    if (!user?.id) return;
 
     try {
       const conversationId = await getOrCreateOrderBusinessConversation(
         orderDbId,
         orderDisplayId,
         customerId,
-        name,
-        businessAccount.id,
+        customerName,
+        storeId || businessAccount.id, // Use storeId if available
         user?.id || "",
         itemName,
         customerAvatar,
-        businessAccount.faceImage || businessAccount.logo || businessAccount.image
+        storeLogo || businessAccount.faceImage || businessAccount.logo || businessAccount.image,
+        storeName
       );
       router.push(
         `/Messages?conversationId=${conversationId}&collection=business_conversations`
       );
     } catch (error) {
-      console.error("Error starting customer conversation:", error);
-      toast.error("Failed to start conversation.");
+      console.error("Error messaging customer:", error);
+      toast.error("Failed to open conversation");
     }
   };
 

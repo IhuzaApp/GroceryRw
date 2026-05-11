@@ -108,13 +108,9 @@ const CustomerMessage: React.FC<{
           {(() => {
             let avatarUrl = isCurrentUser ? customerImage : counterpartImage;
             
-            // In self-messaging/role-based chats, ensure we use the business logo if sending as business
-            if (isCurrentUser && message.senderType === "business") {
-              avatarUrl = counterpartImage;
-            }
-
-            console.log("🔍 [Chat Hub Mobile] Avatar selection:", {
+            console.log("🔍 [Mobile Chat Hub] Avatar Selection:", {
               text: (message as any).text || (message as any).message,
+              senderId: message.senderId,
               senderType: message.senderType,
               isCurrentUser,
               avatarUrl,
@@ -215,6 +211,7 @@ export default function MobileChatPage({
     phone?: string;
   };
   currentUserImage?: string;
+  storeIds?: string[];
   onBack: () => void;
 }) {
   const { data: session } = useSession();
@@ -233,8 +230,6 @@ export default function MobileChatPage({
   const [logisticsAccount, setLogisticsAccount] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-
   const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
     {
       conversationId,
@@ -362,19 +357,8 @@ export default function MobileChatPage({
             : doc.data().timestamp,
       })) as Message[];
 
-      console.log(
-        `🔍 [Mobile Chat] Received ${messagesList.length} messages:`,
-        messagesList
-      );
       if (messagesList.length > 0) {
         const last = messagesList[messagesList.length - 1];
-        console.log(`🔍 [Mobile Chat] Latest message:`, {
-          text: last.text || last.message,
-          senderId: last.senderId,
-          senderType: last.senderType,
-          recipientId: last.recipientId,
-          timestamp: last.timestamp,
-        });
       }
 
       setPendingMessages((prev) =>
@@ -478,8 +462,9 @@ export default function MobileChatPage({
       logisticsAccount?.id &&
       logisticsAccount.id === selectedConversation?.counterpartId;
     const isMeBusinessVendor =
-      businessAccount?.id &&
-      businessAccount.id === selectedConversation?.counterpartId;
+      (businessAccount?.id &&
+        businessAccount.id === selectedConversation?.counterpartId) ||
+      (storeIds && storeIds.includes(selectedConversation?.counterpartId));
 
     const senderType =
       isMeBusinessVendor || isMePetVendor || isMeCarVendor
@@ -503,8 +488,11 @@ export default function MobileChatPage({
         senderId = logisticsAccount.id;
         senderName = logisticsAccount.businessName || logisticsAccount.fullname;
       } else if (isMeBusinessVendor) {
-        senderId = businessAccount.id;
-        senderName = businessAccount.businessName;
+        senderId = selectedConversation?.counterpartId; // Use Store ID
+        senderName =
+          (selectedConversation as any)?.counterpartName ||
+          businessAccount?.businessName ||
+          "Business";
       } else if (businessAccount?.id) {
         senderId = businessAccount.id;
         senderName = businessAccount.businessName;
@@ -553,8 +541,6 @@ export default function MobileChatPage({
         timestamp: serverTimestamp(),
         read: false,
       };
-
-      console.log("🔍 [Mobile Chat] Sending message:", messagePayload);
 
       await addDoc(messagesRef, messagePayload);
 
@@ -765,6 +751,7 @@ export default function MobileChatPage({
                   businessAccount?.id,
                   petVendor?.id,
                   logisticsAccount?.id,
+                  ...(storeIds || []),
                 ].includes(message.senderId)}
                 counterpartName={counterpart.name}
                 counterpartImage={counterpart.avatar}

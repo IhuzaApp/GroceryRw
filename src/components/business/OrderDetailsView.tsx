@@ -53,6 +53,7 @@ interface Order {
   comment: string | null;
   created_at: string;
   store_image: string | null;
+  store_id: string;
   latitude: string;
   longitude: string;
   allProducts: Product[];
@@ -93,7 +94,10 @@ interface OrderDetailsViewProps {
     orderDisplayId: string, 
     name: string,
     itemName?: string,
-    customerAvatar?: string
+    customerAvatar?: string,
+    storeId?: string,
+    storeName?: string,
+    storeLogo?: string
   ) => void;
 }
 
@@ -462,8 +466,11 @@ export function OrderDetailsView({
                       order.id,
                       order.orderId,
                       order.orderedBy?.name || "Customer",
-                      order.items || order.allProducts[0]?.name,
-                      order.orderedBy?.profile_picture
+                      order.items,
+                      order.orderedBy?.profile_picture,
+                      order.store_id,
+                      order.store,
+                      order.store_image || undefined
                     )
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 py-3 text-xs font-bold uppercase tracking-wider text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/30"

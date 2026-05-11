@@ -581,6 +581,9 @@ interface DesktopMessagePageProps {
   ) => void;
   selectedOrderId?: string;
   selectedConversationId?: string;
+  businessAccountId?: string;
+  storeIds?: string[];
+  stores?: any[];
 }
 
 export default function DesktopMessagePage({
@@ -590,6 +593,9 @@ export default function DesktopMessagePage({
   onConversationSelect,
   selectedOrderId,
   selectedConversationId,
+  businessAccountId,
+  storeIds = [],
+  stores = [],
 }: DesktopMessagePageProps) {
   const { theme } = useTheme();
   const { data: session } = useSession();
@@ -626,9 +632,20 @@ export default function DesktopMessagePage({
       selectedConversation.type === "businessOrder" ||
       !selectedConversation.orderId) &&
     !isPetChat;
+  
+  const isMeBusinessRole = (conv: any) => {
+    return (
+      (businessAccount?.id && businessAccount.id === conv.counterpartId) ||
+      (businessAccountId && businessAccountId === conv.counterpartId) ||
+      (storeIds && storeIds.includes(conv.counterpartId))
+    );
+  };
+
   const isMeCustomerSelected =
     !!selectedConversation &&
     session?.user?.id === selectedConversation.customerId;
+  const isMeBusinessSelected =
+    !!selectedConversation && isMeBusinessRole(selectedConversation);
   const isMeShopperSelected =
     !!selectedConversation &&
     !isMeCustomerSelected &&
@@ -868,19 +885,8 @@ export default function DesktopMessagePage({
           )
         );
 
-        console.log(
-          `🔍 [Chat Hub] Received ${messagesList.length} messages:`,
-          messagesList
-        );
         if (messagesList.length > 0) {
           const last = messagesList[messagesList.length - 1];
-          console.log(`🔍 [Chat Hub] Latest message:`, {
-            text: last.text || last.message,
-            senderId: last.senderId,
-            senderType: last.senderType,
-            recipientId: last.recipientId,
-            timestamp: last.timestamp,
-          });
         }
 
         // Mark all unread messages as read
@@ -986,9 +992,7 @@ export default function DesktopMessagePage({
       const isMeCarVendor =
         logisticsAccount?.id &&
         logisticsAccount.id === selectedConversation.counterpartId;
-      const isMeBusinessVendor =
-        businessAccount?.id &&
-        businessAccount.id === selectedConversation.counterpartId;
+      const isMeBusinessVendor = isMeBusinessRole(selectedConversation);
 
       const senderType =
         isMeBusinessVendor || isMePetVendor || isMeCarVendor
@@ -1013,12 +1017,15 @@ export default function DesktopMessagePage({
           senderName =
             logisticsAccount.businessName || logisticsAccount.fullname;
         } else if (isMeBusinessVendor) {
-          senderId = businessAccount.id;
-          senderName = businessAccount.businessName;
-        } else if (businessAccount?.id) {
+          senderId = selectedConversation.counterpartId; // Use Store ID
+          senderName =
+            (selectedConversation as any).counterpartName ||
+            businessAccount?.businessName ||
+            "Business";
+        } else if (businessAccount?.id || businessAccountId) {
           // Fallback to general business account if it exists
-          senderId = businessAccount.id;
-          senderName = businessAccount.businessName;
+          senderId = businessAccount?.id || businessAccountId!;
+          senderName = businessAccount?.businessName || "Business";
         }
       }
 
@@ -1054,6 +1061,14 @@ export default function DesktopMessagePage({
         read: false,
       };
 
+      console.log("🔍 [Chat Hub] Sending message:", {
+        senderId,
+        senderName,
+        senderType,
+        recipientId,
+        payload: messagePayload
+      });
+
       if (!recipientId) {
         throw new Error("Could not determine message recipient.");
       }
@@ -1077,7 +1092,6 @@ export default function DesktopMessagePage({
       setNewMessage("");
 
       // 2. Firestore Write
-      console.log("🔍 [Chat Hub] Sending message:", messagePayload);
       await addDoc(messagesRef, messagePayload);
 
       // 3. Update Conversation
@@ -1308,7 +1322,7 @@ export default function DesktopMessagePage({
                     `Adoption: ${conversation.petName || "Pet"}`;
                 } else if (isBusinessChat) {
                   // If I am the business owner (counterpart), I want to see the customer's name
-                  if (businessAccount?.id && businessAccount.id === conversation.counterpartId) {
+                  if (isMeBusinessRole(conversation)) {
                     fullName = (conversation as any).customerName || conversation.title || "Customer";
                   } else {
                     fullName =
@@ -1340,13 +1354,14 @@ export default function DesktopMessagePage({
                     : employeeId && !isBusinessChat
                     ? `00${employeeId} ${fullName}`
                     : fullName;
+                const matchingStore = isBusinessChat ? stores.find(s => s.id === conversation.counterpartId) : null;
 
                 const contactAvatar = isPetChat
                   ? conversation.petImage || "/images/placeholder.png"
                   : isBusinessChat
-                  ? (businessAccount?.id && businessAccount.id === conversation.counterpartId 
+                  ? (isMeBusinessRole(conversation)
                       ? (conversation as any).customerAvatar 
-                      : conversation.counterpartAvatar) ||
+                      : matchingStore?.image || matchingStore?.logo || conversation.counterpartAvatar) ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       fullName
                     )}&background=10b981&color=fff`
@@ -1486,7 +1501,7 @@ export default function DesktopMessagePage({
                       ) : isBusinessChat ? (
                         <img
                           src={
-                            (businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
+                            (isMeBusinessSelected 
                               ? (selectedConversation as any).customerAvatar 
                               : selectedConversation.counterpartAvatar) ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -1545,7 +1560,7 @@ export default function DesktopMessagePage({
                         selectedConversation.title ||
                         `Adoption: ${selectedConversation.petName || "Pet"}`
                       ) : isBusinessChat ? (
-                        businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
+                        isMeBusinessSelected 
                           ? selectedConversation.title || (selectedConversation as any).customerName || "Customer"
                           : selectedConversation.title ||
                             selectedConversation.counterpartName ||
@@ -1588,7 +1603,7 @@ export default function DesktopMessagePage({
                       </span>
                       <span className="text-sm font-bold text-gray-900 dark:text-white">
                         {selectedOrder?.orderedBy?.phone ||
-                          (businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
+                          (isMeBusinessSelected 
                             ? (selectedConversation as any).customerPhone 
                             : (selectedConversation as any).counterpartPhone) ||
                           "N/A"}
@@ -1695,9 +1710,20 @@ export default function DesktopMessagePage({
                               const isCurrentUser = [
                                 session?.user?.id,
                                 businessAccount?.id,
+                                businessAccountId,
                                 petVendor?.id,
                                 logisticsAccount?.id,
+                                ...storeIds,
                               ].includes(message.senderId);
+
+                               console.log("🔍 [Chat Hub] Identity Check:", {
+                                 text: message.text || message.message,
+                                 senderId: message.senderId,
+                                 senderType: message.senderType,
+                                 isCurrentUser,
+                                 counterpartAvatar: (selectedConversation as any)?.counterpartAvatar,
+                                 storeIds
+                               });
 
                               return (
                                 <React.Fragment key={message.id}>
@@ -1715,7 +1741,8 @@ export default function DesktopMessagePage({
                                             "/images/userProfile.png";
                                           if (
                                             message.senderId === session?.user?.id &&
-                                            session?.user?.image
+                                            session?.user?.image &&
+                                            message.senderType !== "business"
                                           ) {
                                             resolvedAvatar = session.user.image;
                                           }
@@ -1729,14 +1756,10 @@ export default function DesktopMessagePage({
                                             let dbAvatar = null;
 
                                             // Fallback for current user's role image
-                                            if (message.senderType === "business" && (message.senderId === businessAccount?.id || message.senderId === session?.user?.id)) {
-                                              dbAvatar = businessAccount?.faceImage || businessAccount?.logo || businessAccount?.image || (selectedConversation as any).counterpartAvatar;
-                                              console.log("🔍 [Chat Hub] Business sender avatar selection:", {
-                                                senderId: message.senderId,
-                                                faceImage: businessAccount?.faceImage,
-                                                logo: businessAccount?.logo,
-                                                dbAvatar
-                                              });
+                                            if (message.senderType === "business" && (message.senderId === businessAccount?.id || message.senderId === session?.user?.id || storeIds.includes(message.senderId))) {
+                                              // Prioritize specific store logo from stores prop if available
+                                              const matchingStore = stores.find(s => s.id === message.senderId);
+                                              dbAvatar = matchingStore?.image || matchingStore?.logo || (selectedConversation as any).counterpartAvatar || businessAccount?.faceImage || businessAccount?.logo || businessAccount?.image;
                                             } else if (message.senderType === "shopper" && (message.senderId === shopper?.id || message.senderId === session?.user?.id)) {
                                               dbAvatar = shopper?.profile_photo || (selectedConversation as any).shopperAvatar;
                                             } else if (message.senderType === "business" && message.senderId === petVendor?.id) {
@@ -1780,6 +1803,15 @@ export default function DesktopMessagePage({
 
                                             if (dbAvatar)
                                               resolvedAvatar = dbAvatar;
+
+                                            console.log("🔍 [Chat Hub] Avatar Resolution:", {
+                                              text: message.text || message.message,
+                                              senderId: message.senderId,
+                                              senderType: message.senderType,
+                                              isCurrentUser,
+                                              dbAvatar,
+                                              resolvedAvatar
+                                            });
                                           }
 
                                           // Fallback by type if still placeholder and not Me

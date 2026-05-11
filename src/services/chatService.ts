@@ -218,7 +218,8 @@ export const getOrCreateOrderBusinessConversation = async (
   vendorUserId: string,
   itemName?: string,
   customerAvatar?: string,
-  businessLogo?: string
+  businessLogo?: string,
+  counterpartName?: string
 ): Promise<string> => {
   try {
     const title = itemName 
@@ -249,8 +250,8 @@ export const getOrCreateOrderBusinessConversation = async (
       "", // shopperId
       "businessOrder",
       {
-        businessId: businessId, // Primary business ID
-        counterpartId: businessId, // Business role
+        businessId: businessId, // This is the shop_id/store_id
+        counterpartId: businessId, // Business role (Store)
         vendorUserId: vendorUserId, // Business owner for notifications
         orderId: orderDbId,
         displayOrderId: orderDisplayId,
@@ -258,6 +259,7 @@ export const getOrCreateOrderBusinessConversation = async (
         customerName: customerName,
         customerAvatar: customerAvatar || "",
         counterpartAvatar: businessLogo || "",
+        counterpartName: counterpartName || "",
         itemName: itemName || ""
       },
       customCollection

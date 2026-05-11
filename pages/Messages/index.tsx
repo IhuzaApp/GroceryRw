@@ -79,6 +79,8 @@ function MessagesPage() {
   const [logisticsAccountId, setLogisticsAccountId] = useState<string | null>(
     null
   );
+  const [storeIds, setStoreIds] = useState<string[]>([]);
+  const [stores, setStores] = useState<any[]>([]);
   const [loadingBusinessAccount, setLoadingBusinessAccount] = useState(true);
   const loading =
     loadingOrders ||
@@ -212,6 +214,16 @@ function MessagesPage() {
               setLogisticsAccountId(data.account.id);
             }
           }
+
+          // 4. Stores
+          const storesRes = await fetch("/api/queries/business-stores");
+          if (storesRes.ok) {
+            const data = await storesRes.json();
+            if (data.stores && Array.isArray(data.stores)) {
+              setStores(data.stores);
+              setStoreIds(data.stores.map((s: any) => s.id));
+            }
+          }
         } catch (err) {
           console.error("Error fetching business accounts:", err);
         } finally {
@@ -291,6 +303,12 @@ function MessagesPage() {
       if (logisticsAccountId) {
         constraints.push(where("counterpartId", "==", logisticsAccountId));
         constraints.push(where("customerId", "==", logisticsAccountId));
+      }
+      if (storeIds.length > 0) {
+        storeIds.forEach(id => {
+          constraints.push(where("counterpartId", "==", id));
+          constraints.push(where("customerId", "==", id));
+        });
       }
 
       const q = query(
@@ -892,6 +910,9 @@ function MessagesPage() {
               }}
               selectedOrderId={selectedOrderId}
               selectedConversationId={selectedConversationId}
+              businessAccountId={businessAccountId || undefined}
+              storeIds={storeIds}
+              stores={stores}
             />
           </div>
         </RootLayout>
@@ -1018,7 +1039,7 @@ function MessagesPage() {
                   : null;
                 
                 // If acting as business owner, use business logo
-                if (businessAccountId && businessAccountId === selectedConversation.counterpartId) {
+                if (businessAccountId && (businessAccountId === selectedConversation.counterpartId || storeIds.includes(selectedConversation.counterpartId))) {
                   return (
                     (selectedConversation as any).counterpartAvatar ||
                     session?.user?.image ||
@@ -1042,6 +1063,7 @@ function MessagesPage() {
                   "/images/userProfile.png"
                 );
               })()}
+              storeIds={storeIds}
               onBack={() => {
                 // Remove chat from query to return to list
                 const newQuery = { ...router.query };

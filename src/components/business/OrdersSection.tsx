@@ -56,6 +56,7 @@ interface Order {
   comment: string | null;
   created_at: string;
   store_image: string | null;
+  store_id: string;
   latitude: string;
   longitude: string;
   allProducts: Product[];
@@ -79,7 +80,17 @@ interface Order {
 interface OrdersSectionProps {
   className?: string;
   onMessageShopper: (shopperId: string, orderId: string, name: string) => void;
-  onMessageCustomer: (customerId: string, orderDbId: string, orderDisplayId: string, name: string) => void;
+  onMessageCustomer: (
+    customerId: string, 
+    orderDbId: string, 
+    orderDisplayId: string, 
+    name: string,
+    itemName?: string,
+    customerAvatar?: string,
+    storeId?: string,
+    storeName?: string,
+    storeLogo?: string
+  ) => void;
 }
 
 export function OrdersSection({
