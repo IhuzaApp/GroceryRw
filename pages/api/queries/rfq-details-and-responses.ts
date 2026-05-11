@@ -129,12 +129,10 @@ export default async function handler(
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(rfq_id)) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Invalid RFQ ID format. If this is an order, use the order details API.",
-        });
+      return res.status(400).json({
+        error:
+          "Invalid RFQ ID format. If this is an order, use the order details API.",
+      });
     }
 
     const result = await hasuraClient.request<{

@@ -1,1 +1,1230 @@
-if(!self.define){let e,s={};const a=(a,c)=>(a=new URL(a+".js",c).href,s[a]||new Promise(s=>{if("document"in self){const e=document.createElement("script");e.src=a,e.onload=s,document.head.appendChild(e)}else e=a,importScripts(a),s()}).then(()=>{let e=s[a];if(!e)throw new Error(`Module ${a} didn’t register its module`);return e}));self.define=(c,i)=>{const n=e||("document"in self?document.currentScript.src:"")||location.href;if(s[n])return;let t={};const r=e=>a(e,n),u={module:{uri:n},exports:t,require:r};s[n]=Promise.all(c.map(e=>u[e]||r(e))).then(e=>(i(...e),t))}}define(["./workbox-1bb06f5e"],function(e){"use strict";importScripts(),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/app-build-manifest.json",revision:"434af078512000203212119bf342c673"},{url:"/_next/static/BlRG5hRc5XMRLaRJu11TQ/_buildManifest.js",revision:"ce8257512fd7f3b389c216e0f12b8f6a"},{url:"/_next/static/BlRG5hRc5XMRLaRJu11TQ/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/chunks/08548717.0596547ed527a869.js",revision:"0596547ed527a869"},{url:"/_next/static/chunks/0b7b90cd.b5852e5e503d071d.js",revision:"b5852e5e503d071d"},{url:"/_next/static/chunks/101-368a5da70d64c6f1.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/1076-1577129bf4639963.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/1296-9ae33b8c61f49848.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/1347-8513b5dd3ec14f74.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/1479-400a81dac6c889f0.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/154-db2c781fad2b2e19.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/1664-954eda6dd46b2419.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/1764-496ccb3ff947f5b6.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2169-9b40b01af6350d1b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2293-d4a8aa0e74263180.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2415-afd788c32f51ded7.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2424.28bd45c463cdb936.js",revision:"28bd45c463cdb936"},{url:"/_next/static/chunks/2434-262380eb9ac847a8.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2683-35d9de4f563f99cf.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2866-d0eeb2f52792640b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2909-c728faf0079e3dcc.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/2946-7e5b9924db040cd1.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3080-c74324ed3797a7fd.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3082-b527b62c1bbd14b6.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3136-5f2c33f062151adf.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3322-98d09679af7ef74f.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3468-2856c54825537147.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3534-d5a5806ad1a96feb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3576-4d16a2cf96e0c7e0.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3631-af99dc15f264e7ea.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/3892-b90bce887efcbcbb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4033.ac1ecd4ce7853976.js",revision:"ac1ecd4ce7853976"},{url:"/_next/static/chunks/4049-57aedc87b09c2fdb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4088-7a785f7900fb1c9e.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4177-3a5ce37043a3363c.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4194-5e67cccb95113f2e.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/450-a44d3a14f06d1d5a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4515-a01ec153653c6b98.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4576-589bf2e34623b83d.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4596.dca7c1dbd8314880.js",revision:"dca7c1dbd8314880"},{url:"/_next/static/chunks/4685-b176164538bff8e9.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/4701-c6b59021f898e9a9.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/490-8d0840a689d8d046.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/5164-7a79d0018405da6b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/5229.57141ce36c68713a.js",revision:"57141ce36c68713a"},{url:"/_next/static/chunks/555-166562b89e8b81c1.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/5608-f8e63d622cc8c6b1.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/5640-9fc23063ae14af85.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/5723-0978c6ceac485004.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/6294-d306d8056fb796aa.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/635-2d84dfeef3ef7d4b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/6477-18abb02c1b95861c.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/6710.f6b9ec23d6cc5c23.js",revision:"f6b9ec23d6cc5c23"},{url:"/_next/static/chunks/6722-29c561406c860464.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/674a26a7-70e83d0604cf15bb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/6771-cd527f5f02e9dded.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/6780-9c4526b52b1f1c28.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/6914-76437d14ff9e3dc6.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7212-775aacb658346d1b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7257-242d15cb9d3cbf0e.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7262-8e79877bf9205491.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7274-b0c72045493ff3f5.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/72a30a16.3a55d8630eb8efbc.js",revision:"3a55d8630eb8efbc"},{url:"/_next/static/chunks/7394-62074b4bff4fa13e.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7412-a47484406bb5e4c8.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7522-63836cffaffba6f8.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7576-9a738a6fcd73ce64.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7606-ebba070dda5ea390.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7619-15ef0dc325269b9d.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/7771.574a6335d7dc6d60.js",revision:"574a6335d7dc6d60"},{url:"/_next/static/chunks/7775-b87d46a6bc9235a3.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/8142-5aefb744b73b5301.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/8252-d132bd0a51dff930.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/8289-0ea69b8822dcf2bb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/8674-e743aa72aed295db.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/8728-e191b864247ed73d.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/8847-97f8d15b58190c0d.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/9279-240e1f119ae996e3.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/946-786b69c9f776c62a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/9481-4a08654d258b5c24.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/9815-16f14515e4257cdb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/ab5c09eb.120528c7507f694a.js",revision:"120528c7507f694a"},{url:"/_next/static/chunks/ad7f724d.b7be9ddcc22d5969.js",revision:"b7be9ddcc22d5969"},{url:"/_next/static/chunks/e78312c5-5702c1aa2ec9bfed.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/fd9d1056-d2fc5e3717adf4eb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/framework-cd4c884432166505.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/main-app-663d1c96165305b3.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/main-bfdf37dbfb7faf6f.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Auth/CompleteProfile-b78dc89042be9b46.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Auth/ForgotPassword-3a7b163948b30564.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Auth/Login-d1a809a103654324.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Auth/Register-be5eee07822f18b3.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Auth/ResetPassword-d15c90db1c9548d6.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Cars-e6f95aa4d893cd5a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Cars/%5Bid%5D-b809996ddbd5a5c0.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Cars/become-partner-5b58c23c59344d9a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Cars/booking/%5Bid%5D-a3dc773b35938cf2.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Cars/dashboard-b32635836a889d09.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Cart-a2187dd4716acb97.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/CurrentPendingOrders-698d4f1ee0a8dd4b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/CurrentPendingOrders/viewOrderDetails/%5BorderId%5D-0babc2f7e392266f.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/CurrentPendingOrders/viewPackageDetails/%5BpackageId%5D-f9ef2b064830c5d4.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Messages-4509fc1bf7370bd7.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Messages/%5BorderId%5D-514e470c6840f158.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/MobilePOS/AddStock-2afdec216cafaaaa.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/MobilePOS/Checkout-6083546fc759e70b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/MobilePOS/Connect-e3e93684d1bb42f8.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/MobilePOS/Dashboard-9789e25a62e95cf6.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Myprofile-89b594325f35579c.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Myprofile/become-shopper-5b623958e3b35d6a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Pets-3c5e593d7ba25e36.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Pets/%5Bid%5D-6cc5c2995e4c10e5.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Pets/become-partner-0e3c16a746309858.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Pets/dashboard-9473cd86a5d3527b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Pets/my-adoptions-fa4869fb9cb42514.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/Earnings-3e5071e943c544e5.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/Scheduler-ca3d1fa246da2f2a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/Settings-6dfdecb55f6438fc.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/ShopperProfile-c1f2aebf10e2c793.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/active-batches-1e1318b3d7bd5028.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/active-batches/batch/%5Bid%5D-6f50e40995133cdb.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/chat-80a39ca57085b9ed.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/chat/%5BorderId%5D-eb7dc5c590f46796.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/invoices-92acfb8ff2d92e3d.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/invoices/%5Bid%5D-b88f467d0c67f2b6.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Plasa/orders/%5Bid%5D-5753501ceeddf1d0.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Recipes-34f84fd98212d57b.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Recipes/%5Bid%5D-db1b956348417682.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/Reels-a33f4d9864f4ad23.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/SelfCheckout-ec2138b33fab6517.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/_app-1d5b83f1d5d62db8.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/_error-8008506205ce3edf.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/about-25619a224740354f.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/careers-5ee6af9d67711c02.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/combined-checkout-d3b286bf2f73b5a8.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/contact-e3e484016faa6916.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/contracts/%5Bid%5D-3a305e26acc78d6e.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/dev/error/%5Bid%5D-78b438486ca1a9fe.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/dev/logs-32845f494e2fecb2.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/index-edcc32b7a4e1a46a.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/life-at-plas-aee085b17fd6a17e.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/locations-912551daade95a35.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/ourTeams-83cf14ea559d3589.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/plasBusiness-d155245b28f6e875.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/plasBusiness/BusinessChats-22ede79de3caf564.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/plasBusiness/portal-66cc99d46c93bc20.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/plasBusiness/quote-details-modal-6d8505d382767e48.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/plasBusiness/store/%5BstoreId%5D-2ebe86a4e736ac0d.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/pos-67e6e5e3b459c995.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/pos/register-76c534161c824088.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/restaurant/%5Bid%5D-491dc319cc2c778c.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/shopper/batch/%5BorderId%5D/details-0be59b14d10d51db.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/shops-672314ab9fb3dc39.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/shops/%5Bid%5D-318e0a6e7a5d9864.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/stores/%5Bid%5D-52db1f4eba610fc0.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/stores/%5Bid%5D/checkout-b00d1866255b1385.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/pages/stores/%5Bid%5D/payment-pending-120d92d7e257820f.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js",revision:"837c0df77fd5009c9e46d446188ecfd0"},{url:"/_next/static/chunks/webpack-dcef6d8b98ecf1de.js",revision:"BlRG5hRc5XMRLaRJu11TQ"},{url:"/_next/static/css/507dee4d7d6963bf.css",revision:"507dee4d7d6963bf"},{url:"/_next/static/css/5742516f9157e1df.css",revision:"5742516f9157e1df"},{url:"/_next/static/css/fc1c9daac70c093b.css",revision:"fc1c9daac70c093b"},{url:"/_next/static/media/layers-2x.9859cd12.png",revision:"9859cd12"},{url:"/_next/static/media/layers.ef6db872.png",revision:"ef6db872"},{url:"/_next/static/media/marker-icon.d577052a.png",revision:"d577052a"},{url:"/africa.svg",revision:"fee85594fca5b2cb133141dde919b4c3"},{url:"/app-icon.png",revision:"e160019ffb8bbdd8cfaeba1f2ff03c7e"},{url:"/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",revision:"02e1856ffe45b7bc9f445b27e43bd90f"},{url:"/assets/icons/Butchery.png",revision:"dc8d368bf62c4f17e4a10cc784db07db"},{url:"/assets/icons/bakery.png",revision:"ec7093da4af18d9a2ea40b2ddc3e6812"},{url:"/assets/icons/drinks.png",revision:"b16adaf988964af5a4c455fa98b47489"},{url:"/assets/icons/fruits.png",revision:"987e65a832170c9f03f3169181e0809a"},{url:"/assets/icons/hygien.png",revision:"d921cbd9d7470024b190343d8a6af097"},{url:"/assets/icons/pets.png",revision:"529c9e6c552d82239a42b6e616ad257b"},{url:"/assets/icons/shop.png",revision:"62299e7f6ca1c6be1c77c849eab9a39b"},{url:"/assets/icons/shopIcon.png",revision:"dddb5700034f7bdf5f5e02c5b066e239"},{url:"/assets/icons/snacks.png",revision:"e0f15da77bef891daf54ea62c3bff116"},{url:"/assets/icons/vegitables.png",revision:"30b1ee1ffe80437d9a192e5e80c18992"},{url:"/assets/images/Bakery.webp",revision:"c4257cc36f4c7a90cc6003d910c41426"},{url:"/assets/images/Butcher.webp",revision:"943dfb33e0d0bcbffef54b2fa3905573"},{url:"/assets/images/Liquor.jpg",revision:"cb122992f5630940823e056d4090388a"},{url:"/assets/images/OrganicShop.jpg",revision:"e1e57a6715e36e21e54c6fc57b72e9e7"},{url:"/assets/images/auth/login_bg.png",revision:"316476de5c17e7912abe143b04f4368c"},{url:"/assets/images/auth/register_bg.png",revision:"7ccaf04a97622467822573600f43eb46"},{url:"/assets/images/backeryImage.jpg",revision:"b31765b2eafd30f2f7490bf30ab2014d"},{url:"/assets/images/beauty.avif",revision:"99e1d11e10f659fee559e3c21a1a41a0"},{url:"/assets/images/becomePatern.jpg",revision:"e8a29d45091f6c94054ea3c88360c99c"},{url:"/assets/images/carreer.jpg",revision:"3762205f2c860eaa7c3d27e489e30ec7"},{url:"/assets/images/chip.png",revision:"04b96cc01a3486a195b5c932e82eca12"},{url:"/assets/images/delicatessen.jpeg",revision:"54d354d3de5ceb996e24b6efc9764ef6"},{url:"/assets/images/mobileheaderbg.jpg",revision:"e3eff87ef204326894255ca6cfeca053"},{url:"/assets/images/profile.jpg",revision:"8ad924455c396fb81c6ac55fcdab41c0"},{url:"/assets/images/publicMarket.jpg",revision:"c99f0890a2abf84353b67e4e469cbad9"},{url:"/assets/images/restaurantImage.webp",revision:"7c4ab24a6071be51595af609368a4bd7"},{url:"/assets/images/shopping.jpg",revision:"bc3ce59176e588e6439608bcbb5a06e9"},{url:"/assets/images/shopsImage.jpg",revision:"cd7d8de97282a47bec0d5d2d8e125240"},{url:"/assets/images/superMarkets.jpg",revision:"8fd14e0ba308c44767dadc78dadf78e0"},{url:"/assets/images/team/african-dev-1.png",revision:"57f4f56aa286325dfe90d0985ee5da8f"},{url:"/assets/images/team/african-dev-2.png",revision:"3169ecb85cfad5c313552d03e6ad3950"},{url:"/assets/images/team/ai-dev-1.png",revision:"5aa9ae2152c717a24277b2d72bd65e4b"},{url:"/assets/images/team/ai-dev-2.png",revision:"f8204648ecbe6deffb01e7b31521b47c"},{url:"/assets/images/team/amina-casual.png",revision:"a5956f5f0d455e0a9d7800a91f8a3c0a"},{url:"/assets/images/team/comm-officer.png",revision:"9bbd1abfa86c6586a5708078216cf20b"},{url:"/assets/images/team/director-2.png",revision:"6e7dcdb579117365414cc3ff08367ba0"},{url:"/assets/images/team/legal-pro.png",revision:"533341fdf3c433ea6f33ad7d2c36ec78"},{url:"/assets/images/team/senior-dev-new.png",revision:"f0b3c6e0ed0ff5892caed7ea0be9d741"},{url:"/assets/images/team/supply-chain-new.png",revision:"07b27e6c87bf67adb4a0f1258684b48b"},{url:"/assets/images/team/support-head.png",revision:"9e4738303fd444ef21503fe470ccf97f"},{url:"/assets/images/team/tax-pro.png",revision:"0b6ffd0553e3f4abe2028b6ce9b2b20f"},{url:"/assets/logos/PlasLogoPNG.png",revision:"e6ab7ed70fb1b6d0a380071636c389ee"},{url:"/assets/logos/airtel.svg",revision:"9c548b38499237b62ed1c9e98ba8940b"},{url:"/assets/logos/mastercard.svg",revision:"36c3808b4e62d7e4c34e50d22583ac44"},{url:"/assets/logos/mtn.svg",revision:"b77bfba73294606946a88fe88bb63a5e"},{url:"/assets/logos/plasIcon.png",revision:"d2eed5d6a29d67254e0ce0180bec0415"},{url:"/assets/logos/visa.svg",revision:"c86d9b5d57c94775409dab911fa1dc82"},{url:"/assets/sounds/newMessage.mp3",revision:"93e16838ba935995b13e6bdb05ebf93e"},{url:"/assets/sounds/reel-background.mp3",revision:"24728ae5f42ceaa50cdeb8a702b5f66f"},{url:"/favicon.ico",revision:"c30c7d42707a47a3f4591831641e50dc"},{url:"/firebase-messaging-sw.js",revision:"fe91a535cc05693e6b3a4179f689d226"},{url:"/icon-128x128.png",revision:"810cf2910bbafb7dfb8b96e1ff73985a"},{url:"/icon-144x144.png",revision:"7970bce73b1f1b6a26c149df6f684467"},{url:"/icon-152x152.png",revision:"72a2fb327947435227fe720c46c96fc6"},{url:"/icon-192x192.png",revision:"be057baac45dbe078b8612ae2573d379"},{url:"/icon-384x384.png",revision:"6c656838f652fafa5c946d62040b842e"},{url:"/icon-512x512.png",revision:"43920cdd683277f0de811acee700b551"},{url:"/icon-72x72.png",revision:"1e0da8531c01e03cf2605f6a3b268c2c"},{url:"/icon-96x96.png",revision:"20154f98e9cf50b296cddc306bd30a22"},{url:"/images/ProfileImage.png",revision:"ffe613ad8991b9ce590c536ece85b592"},{url:"/images/cars/hero.png",revision:"ddf7fda7824c079d5b66bd424ac1f35a"},{url:"/images/features/feature_delivery.png",revision:"3bfac8d091d7f316a168efd9b98bc37d"},{url:"/images/features/feature_partner.png",revision:"7acf84c2f6d2355d9ef925bf39a92496"},{url:"/images/features/feature_pos.png",revision:"6c06646893d4eb93d5741932c95dddb5"},{url:"/images/features/feature_recipes.png",revision:"bb332dcc2478acc372302b731b6a1ac8"},{url:"/images/features/feature_rent_sell.png",revision:"c2867f6741b23865802065d502a5c90e"},{url:"/images/features/feature_service_bid.png",revision:"f5603a9d8c9e01eef4ffa84c328c7de9"},{url:"/images/groceryPlaceholder.png",revision:"36e3d1f5f0368395a225126f89ec975a"},{url:"/images/mainPageIcons/brand.png",revision:"38b4fdd5aace290881c0ee7d873f9805"},{url:"/images/mainPageIcons/brand_3d.png",revision:"1ed01dd046baf61c49d39c1a68d0661a"},{url:"/images/mainPageIcons/burger.png",revision:"1350558ce7e911f4e2f64f0c3c4e4860"},{url:"/images/mainPageIcons/burger_3d.png",revision:"dee9ec220ab86b1d84412acdbe2c0b61"},{url:"/images/mainPageIcons/delivery-man.png",revision:"c918d7153661797b6bfb3cacbc787244"},{url:"/images/mainPageIcons/fast-shipping.png",revision:"156ea63cfa898bfda2c74d7d4d991518"},{url:"/images/mainPageIcons/first-aid-kit.png",revision:"4d01bb2e5807b55ae517972feb7e3ca7"},{url:"/images/mainPageIcons/groceries.png",revision:"22fb56c0dc3497d7fa80dd0122d6f94e"},{url:"/images/mainPageIcons/payment-terminal.png",revision:"6b4121580613d50d61e7f22730132b22"},{url:"/images/mainPageIcons/pet-shop.png",revision:"3af69b56356a6fc0f805bcdf8879567e"},{url:"/images/mainPageIcons/pharmacy_3d.png",revision:"dbeec5310e57e986573ed1948ce24613"},{url:"/images/mainPageIcons/restaurant.png",revision:"90ec8327eb7c43d355268284df1a88b7"},{url:"/images/mainPageIcons/scooter_3d.png",revision:"32407ed5d3153ead10eac29b33c5f0db"},{url:"/images/mainPageIcons/tomato.png",revision:"db574ede31f8cd438ccb7f80ccb6f172"},{url:"/images/mainPageIcons/tomato_3d.png",revision:"18c3492ed0284a814fde23d377665223"},{url:"/images/restaurantDish.png",revision:"e96890a391bdef237d559d48b41db9f5"},{url:"/images/shop-placeholder.jpg",revision:"be733cb690aae457158b1c33a061e360"},{url:"/images/shopper/welcome_hero_v2.png",revision:"6d7ab125bd9b99540d26badcb88bbe0e"},{url:"/images/userProfile.png",revision:"1ce10035f8560c8a2cbc4e2db0ea7b1c"},{url:"/manifest.json",revision:"c30b118788a4885ad3351688fe171e21"},{url:"/notifySound.mp3",revision:"8b27319049898514ea8031ce3a3f63ac"},{url:"/placeholder.svg",revision:"243098b109a59a642ae8465d67d4b24a"},{url:"/robots.txt",revision:"f5485a305c113be5f948869568531efe"},{url:"/sitemap.xml",revision:"72879d1f1b83f21eea255612147eaa9d"},{url:"/vercel.svg",revision:"4b4f1876502eb6721764637fe5c41702"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:s,event:a,state:c})=>s&&"opaqueredirect"===s.type?new Response(s.body,{status:200,statusText:"OK",headers:s.headers}):s}]}),"GET"),e.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.gstatic\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts-static",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"static-font-assets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,new e.StaleWhileRevalidate({cacheName:"static-image-assets",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/image\?url=.+$/i,new e.StaleWhileRevalidate({cacheName:"next-image",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp3|wav|ogg)$/i,new e.CacheFirst({cacheName:"static-audio-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp4)$/i,new e.CacheFirst({cacheName:"static-video-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:js)$/i,new e.StaleWhileRevalidate({cacheName:"static-js-assets",plugins:[new e.ExpirationPlugin({maxEntries:48,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:css|less)$/i,new e.StaleWhileRevalidate({cacheName:"static-style-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-webfonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-stylesheets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\/_next\/data\/.+\/.+\.json$/i,new e.StaleWhileRevalidate({cacheName:"next-data",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:json|xml|csv)$/i,new e.NetworkFirst({cacheName:"static-data-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:js|css|mjs)$/i,new e.StaleWhileRevalidate({cacheName:"external-js-css-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET")});
+if (!self.define) {
+  let e,
+    s = {};
+  const a = (a, c) => (
+    (a = new URL(a + ".js", c).href),
+    s[a] ||
+      new Promise((s) => {
+        if ("document" in self) {
+          const e = document.createElement("script");
+          (e.src = a), (e.onload = s), document.head.appendChild(e);
+        } else (e = a), importScripts(a), s();
+      }).then(() => {
+        let e = s[a];
+        if (!e) throw new Error(`Module ${a} didn’t register its module`);
+        return e;
+      })
+  );
+  self.define = (c, i) => {
+    const n =
+      e ||
+      ("document" in self ? document.currentScript.src : "") ||
+      location.href;
+    if (s[n]) return;
+    let t = {};
+    const r = (e) => a(e, n),
+      u = { module: { uri: n }, exports: t, require: r };
+    s[n] = Promise.all(c.map((e) => u[e] || r(e))).then((e) => (i(...e), t));
+  };
+}
+define(["./workbox-1bb06f5e"], function (e) {
+  "use strict";
+  importScripts(),
+    self.skipWaiting(),
+    e.clientsClaim(),
+    e.precacheAndRoute(
+      [
+        {
+          url: "/_next/app-build-manifest.json",
+          revision: "434af078512000203212119bf342c673",
+        },
+        {
+          url: "/_next/static/BlRG5hRc5XMRLaRJu11TQ/_buildManifest.js",
+          revision: "ce8257512fd7f3b389c216e0f12b8f6a",
+        },
+        {
+          url: "/_next/static/BlRG5hRc5XMRLaRJu11TQ/_ssgManifest.js",
+          revision: "b6652df95db52feb4daf4eca35380933",
+        },
+        {
+          url: "/_next/static/chunks/08548717.0596547ed527a869.js",
+          revision: "0596547ed527a869",
+        },
+        {
+          url: "/_next/static/chunks/0b7b90cd.b5852e5e503d071d.js",
+          revision: "b5852e5e503d071d",
+        },
+        {
+          url: "/_next/static/chunks/101-368a5da70d64c6f1.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/1076-1577129bf4639963.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/1296-9ae33b8c61f49848.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/1347-8513b5dd3ec14f74.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/1479-400a81dac6c889f0.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/154-db2c781fad2b2e19.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/1664-954eda6dd46b2419.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/1764-496ccb3ff947f5b6.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2169-9b40b01af6350d1b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2293-d4a8aa0e74263180.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2415-afd788c32f51ded7.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2424.28bd45c463cdb936.js",
+          revision: "28bd45c463cdb936",
+        },
+        {
+          url: "/_next/static/chunks/2434-262380eb9ac847a8.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2683-35d9de4f563f99cf.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2866-d0eeb2f52792640b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2909-c728faf0079e3dcc.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/2946-7e5b9924db040cd1.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3080-c74324ed3797a7fd.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3082-b527b62c1bbd14b6.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3136-5f2c33f062151adf.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3322-98d09679af7ef74f.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3468-2856c54825537147.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3534-d5a5806ad1a96feb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3576-4d16a2cf96e0c7e0.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3631-af99dc15f264e7ea.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/3892-b90bce887efcbcbb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4033.ac1ecd4ce7853976.js",
+          revision: "ac1ecd4ce7853976",
+        },
+        {
+          url: "/_next/static/chunks/4049-57aedc87b09c2fdb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4088-7a785f7900fb1c9e.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4177-3a5ce37043a3363c.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4194-5e67cccb95113f2e.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/450-a44d3a14f06d1d5a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4515-a01ec153653c6b98.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4576-589bf2e34623b83d.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4596.dca7c1dbd8314880.js",
+          revision: "dca7c1dbd8314880",
+        },
+        {
+          url: "/_next/static/chunks/4685-b176164538bff8e9.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/4701-c6b59021f898e9a9.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/490-8d0840a689d8d046.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/5164-7a79d0018405da6b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/5229.57141ce36c68713a.js",
+          revision: "57141ce36c68713a",
+        },
+        {
+          url: "/_next/static/chunks/555-166562b89e8b81c1.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/5608-f8e63d622cc8c6b1.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/5640-9fc23063ae14af85.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/5723-0978c6ceac485004.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/6294-d306d8056fb796aa.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/635-2d84dfeef3ef7d4b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/6477-18abb02c1b95861c.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/6710.f6b9ec23d6cc5c23.js",
+          revision: "f6b9ec23d6cc5c23",
+        },
+        {
+          url: "/_next/static/chunks/6722-29c561406c860464.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/674a26a7-70e83d0604cf15bb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/6771-cd527f5f02e9dded.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/6780-9c4526b52b1f1c28.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/6914-76437d14ff9e3dc6.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7212-775aacb658346d1b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7257-242d15cb9d3cbf0e.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7262-8e79877bf9205491.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7274-b0c72045493ff3f5.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/72a30a16.3a55d8630eb8efbc.js",
+          revision: "3a55d8630eb8efbc",
+        },
+        {
+          url: "/_next/static/chunks/7394-62074b4bff4fa13e.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7412-a47484406bb5e4c8.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7522-63836cffaffba6f8.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7576-9a738a6fcd73ce64.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7606-ebba070dda5ea390.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7619-15ef0dc325269b9d.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/7771.574a6335d7dc6d60.js",
+          revision: "574a6335d7dc6d60",
+        },
+        {
+          url: "/_next/static/chunks/7775-b87d46a6bc9235a3.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/8142-5aefb744b73b5301.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/8252-d132bd0a51dff930.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/8289-0ea69b8822dcf2bb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/8674-e743aa72aed295db.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/8728-e191b864247ed73d.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/8847-97f8d15b58190c0d.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/9279-240e1f119ae996e3.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/946-786b69c9f776c62a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/9481-4a08654d258b5c24.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/9815-16f14515e4257cdb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/ab5c09eb.120528c7507f694a.js",
+          revision: "120528c7507f694a",
+        },
+        {
+          url: "/_next/static/chunks/ad7f724d.b7be9ddcc22d5969.js",
+          revision: "b7be9ddcc22d5969",
+        },
+        {
+          url: "/_next/static/chunks/e78312c5-5702c1aa2ec9bfed.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/fd9d1056-d2fc5e3717adf4eb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/framework-cd4c884432166505.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/main-app-663d1c96165305b3.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/main-bfdf37dbfb7faf6f.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/CompleteProfile-b78dc89042be9b46.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/ForgotPassword-3a7b163948b30564.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/Login-d1a809a103654324.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/Register-be5eee07822f18b3.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/ResetPassword-d15c90db1c9548d6.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cars-e6f95aa4d893cd5a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cars/%5Bid%5D-b809996ddbd5a5c0.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cars/become-partner-5b58c23c59344d9a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cars/booking/%5Bid%5D-a3dc773b35938cf2.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cars/dashboard-b32635836a889d09.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cart-a2187dd4716acb97.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/CurrentPendingOrders-698d4f1ee0a8dd4b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/CurrentPendingOrders/viewOrderDetails/%5BorderId%5D-0babc2f7e392266f.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/CurrentPendingOrders/viewPackageDetails/%5BpackageId%5D-f9ef2b064830c5d4.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Messages-4509fc1bf7370bd7.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Messages/%5BorderId%5D-514e470c6840f158.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/MobilePOS/AddStock-2afdec216cafaaaa.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/MobilePOS/Checkout-6083546fc759e70b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/MobilePOS/Connect-e3e93684d1bb42f8.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/MobilePOS/Dashboard-9789e25a62e95cf6.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Myprofile-89b594325f35579c.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Myprofile/become-shopper-5b623958e3b35d6a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Pets-3c5e593d7ba25e36.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Pets/%5Bid%5D-6cc5c2995e4c10e5.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Pets/become-partner-0e3c16a746309858.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Pets/dashboard-9473cd86a5d3527b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Pets/my-adoptions-fa4869fb9cb42514.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/Earnings-3e5071e943c544e5.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/Scheduler-ca3d1fa246da2f2a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/Settings-6dfdecb55f6438fc.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/ShopperProfile-c1f2aebf10e2c793.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/active-batches-1e1318b3d7bd5028.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/active-batches/batch/%5Bid%5D-6f50e40995133cdb.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/chat-80a39ca57085b9ed.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/chat/%5BorderId%5D-eb7dc5c590f46796.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/invoices-92acfb8ff2d92e3d.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/invoices/%5Bid%5D-b88f467d0c67f2b6.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/orders/%5Bid%5D-5753501ceeddf1d0.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Recipes-34f84fd98212d57b.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Recipes/%5Bid%5D-db1b956348417682.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/Reels-a33f4d9864f4ad23.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/SelfCheckout-ec2138b33fab6517.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/_app-1d5b83f1d5d62db8.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/_error-8008506205ce3edf.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/about-25619a224740354f.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/careers-5ee6af9d67711c02.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/combined-checkout-d3b286bf2f73b5a8.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/contact-e3e484016faa6916.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/contracts/%5Bid%5D-3a305e26acc78d6e.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/dev/error/%5Bid%5D-78b438486ca1a9fe.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/dev/logs-32845f494e2fecb2.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/index-edcc32b7a4e1a46a.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/life-at-plas-aee085b17fd6a17e.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/locations-912551daade95a35.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/ourTeams-83cf14ea559d3589.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness-d155245b28f6e875.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/BusinessChats-22ede79de3caf564.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/portal-66cc99d46c93bc20.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/quote-details-modal-6d8505d382767e48.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/store/%5BstoreId%5D-2ebe86a4e736ac0d.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/pos-67e6e5e3b459c995.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/pos/register-76c534161c824088.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/restaurant/%5Bid%5D-491dc319cc2c778c.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/shopper/batch/%5BorderId%5D/details-0be59b14d10d51db.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/shops-672314ab9fb3dc39.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/shops/%5Bid%5D-318e0a6e7a5d9864.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/stores/%5Bid%5D-52db1f4eba610fc0.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/stores/%5Bid%5D/checkout-b00d1866255b1385.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/pages/stores/%5Bid%5D/payment-pending-120d92d7e257820f.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js",
+          revision: "837c0df77fd5009c9e46d446188ecfd0",
+        },
+        {
+          url: "/_next/static/chunks/webpack-dcef6d8b98ecf1de.js",
+          revision: "BlRG5hRc5XMRLaRJu11TQ",
+        },
+        {
+          url: "/_next/static/css/507dee4d7d6963bf.css",
+          revision: "507dee4d7d6963bf",
+        },
+        {
+          url: "/_next/static/css/5742516f9157e1df.css",
+          revision: "5742516f9157e1df",
+        },
+        {
+          url: "/_next/static/css/fc1c9daac70c093b.css",
+          revision: "fc1c9daac70c093b",
+        },
+        {
+          url: "/_next/static/media/layers-2x.9859cd12.png",
+          revision: "9859cd12",
+        },
+        {
+          url: "/_next/static/media/layers.ef6db872.png",
+          revision: "ef6db872",
+        },
+        {
+          url: "/_next/static/media/marker-icon.d577052a.png",
+          revision: "d577052a",
+        },
+        { url: "/africa.svg", revision: "fee85594fca5b2cb133141dde919b4c3" },
+        { url: "/app-icon.png", revision: "e160019ffb8bbdd8cfaeba1f2ff03c7e" },
+        {
+          url: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
+          revision: "02e1856ffe45b7bc9f445b27e43bd90f",
+        },
+        {
+          url: "/assets/icons/Butchery.png",
+          revision: "dc8d368bf62c4f17e4a10cc784db07db",
+        },
+        {
+          url: "/assets/icons/bakery.png",
+          revision: "ec7093da4af18d9a2ea40b2ddc3e6812",
+        },
+        {
+          url: "/assets/icons/drinks.png",
+          revision: "b16adaf988964af5a4c455fa98b47489",
+        },
+        {
+          url: "/assets/icons/fruits.png",
+          revision: "987e65a832170c9f03f3169181e0809a",
+        },
+        {
+          url: "/assets/icons/hygien.png",
+          revision: "d921cbd9d7470024b190343d8a6af097",
+        },
+        {
+          url: "/assets/icons/pets.png",
+          revision: "529c9e6c552d82239a42b6e616ad257b",
+        },
+        {
+          url: "/assets/icons/shop.png",
+          revision: "62299e7f6ca1c6be1c77c849eab9a39b",
+        },
+        {
+          url: "/assets/icons/shopIcon.png",
+          revision: "dddb5700034f7bdf5f5e02c5b066e239",
+        },
+        {
+          url: "/assets/icons/snacks.png",
+          revision: "e0f15da77bef891daf54ea62c3bff116",
+        },
+        {
+          url: "/assets/icons/vegitables.png",
+          revision: "30b1ee1ffe80437d9a192e5e80c18992",
+        },
+        {
+          url: "/assets/images/Bakery.webp",
+          revision: "c4257cc36f4c7a90cc6003d910c41426",
+        },
+        {
+          url: "/assets/images/Butcher.webp",
+          revision: "943dfb33e0d0bcbffef54b2fa3905573",
+        },
+        {
+          url: "/assets/images/Liquor.jpg",
+          revision: "cb122992f5630940823e056d4090388a",
+        },
+        {
+          url: "/assets/images/OrganicShop.jpg",
+          revision: "e1e57a6715e36e21e54c6fc57b72e9e7",
+        },
+        {
+          url: "/assets/images/auth/login_bg.png",
+          revision: "316476de5c17e7912abe143b04f4368c",
+        },
+        {
+          url: "/assets/images/auth/register_bg.png",
+          revision: "7ccaf04a97622467822573600f43eb46",
+        },
+        {
+          url: "/assets/images/backeryImage.jpg",
+          revision: "b31765b2eafd30f2f7490bf30ab2014d",
+        },
+        {
+          url: "/assets/images/beauty.avif",
+          revision: "99e1d11e10f659fee559e3c21a1a41a0",
+        },
+        {
+          url: "/assets/images/becomePatern.jpg",
+          revision: "e8a29d45091f6c94054ea3c88360c99c",
+        },
+        {
+          url: "/assets/images/carreer.jpg",
+          revision: "3762205f2c860eaa7c3d27e489e30ec7",
+        },
+        {
+          url: "/assets/images/chip.png",
+          revision: "04b96cc01a3486a195b5c932e82eca12",
+        },
+        {
+          url: "/assets/images/delicatessen.jpeg",
+          revision: "54d354d3de5ceb996e24b6efc9764ef6",
+        },
+        {
+          url: "/assets/images/mobileheaderbg.jpg",
+          revision: "e3eff87ef204326894255ca6cfeca053",
+        },
+        {
+          url: "/assets/images/profile.jpg",
+          revision: "8ad924455c396fb81c6ac55fcdab41c0",
+        },
+        {
+          url: "/assets/images/publicMarket.jpg",
+          revision: "c99f0890a2abf84353b67e4e469cbad9",
+        },
+        {
+          url: "/assets/images/restaurantImage.webp",
+          revision: "7c4ab24a6071be51595af609368a4bd7",
+        },
+        {
+          url: "/assets/images/shopping.jpg",
+          revision: "bc3ce59176e588e6439608bcbb5a06e9",
+        },
+        {
+          url: "/assets/images/shopsImage.jpg",
+          revision: "cd7d8de97282a47bec0d5d2d8e125240",
+        },
+        {
+          url: "/assets/images/superMarkets.jpg",
+          revision: "8fd14e0ba308c44767dadc78dadf78e0",
+        },
+        {
+          url: "/assets/images/team/african-dev-1.png",
+          revision: "57f4f56aa286325dfe90d0985ee5da8f",
+        },
+        {
+          url: "/assets/images/team/african-dev-2.png",
+          revision: "3169ecb85cfad5c313552d03e6ad3950",
+        },
+        {
+          url: "/assets/images/team/ai-dev-1.png",
+          revision: "5aa9ae2152c717a24277b2d72bd65e4b",
+        },
+        {
+          url: "/assets/images/team/ai-dev-2.png",
+          revision: "f8204648ecbe6deffb01e7b31521b47c",
+        },
+        {
+          url: "/assets/images/team/amina-casual.png",
+          revision: "a5956f5f0d455e0a9d7800a91f8a3c0a",
+        },
+        {
+          url: "/assets/images/team/comm-officer.png",
+          revision: "9bbd1abfa86c6586a5708078216cf20b",
+        },
+        {
+          url: "/assets/images/team/director-2.png",
+          revision: "6e7dcdb579117365414cc3ff08367ba0",
+        },
+        {
+          url: "/assets/images/team/legal-pro.png",
+          revision: "533341fdf3c433ea6f33ad7d2c36ec78",
+        },
+        {
+          url: "/assets/images/team/senior-dev-new.png",
+          revision: "f0b3c6e0ed0ff5892caed7ea0be9d741",
+        },
+        {
+          url: "/assets/images/team/supply-chain-new.png",
+          revision: "07b27e6c87bf67adb4a0f1258684b48b",
+        },
+        {
+          url: "/assets/images/team/support-head.png",
+          revision: "9e4738303fd444ef21503fe470ccf97f",
+        },
+        {
+          url: "/assets/images/team/tax-pro.png",
+          revision: "0b6ffd0553e3f4abe2028b6ce9b2b20f",
+        },
+        {
+          url: "/assets/logos/PlasLogoPNG.png",
+          revision: "e6ab7ed70fb1b6d0a380071636c389ee",
+        },
+        {
+          url: "/assets/logos/airtel.svg",
+          revision: "9c548b38499237b62ed1c9e98ba8940b",
+        },
+        {
+          url: "/assets/logos/mastercard.svg",
+          revision: "36c3808b4e62d7e4c34e50d22583ac44",
+        },
+        {
+          url: "/assets/logos/mtn.svg",
+          revision: "b77bfba73294606946a88fe88bb63a5e",
+        },
+        {
+          url: "/assets/logos/plasIcon.png",
+          revision: "d2eed5d6a29d67254e0ce0180bec0415",
+        },
+        {
+          url: "/assets/logos/visa.svg",
+          revision: "c86d9b5d57c94775409dab911fa1dc82",
+        },
+        {
+          url: "/assets/sounds/newMessage.mp3",
+          revision: "93e16838ba935995b13e6bdb05ebf93e",
+        },
+        {
+          url: "/assets/sounds/reel-background.mp3",
+          revision: "24728ae5f42ceaa50cdeb8a702b5f66f",
+        },
+        { url: "/favicon.ico", revision: "c30c7d42707a47a3f4591831641e50dc" },
+        {
+          url: "/firebase-messaging-sw.js",
+          revision: "fe91a535cc05693e6b3a4179f689d226",
+        },
+        {
+          url: "/icon-128x128.png",
+          revision: "810cf2910bbafb7dfb8b96e1ff73985a",
+        },
+        {
+          url: "/icon-144x144.png",
+          revision: "7970bce73b1f1b6a26c149df6f684467",
+        },
+        {
+          url: "/icon-152x152.png",
+          revision: "72a2fb327947435227fe720c46c96fc6",
+        },
+        {
+          url: "/icon-192x192.png",
+          revision: "be057baac45dbe078b8612ae2573d379",
+        },
+        {
+          url: "/icon-384x384.png",
+          revision: "6c656838f652fafa5c946d62040b842e",
+        },
+        {
+          url: "/icon-512x512.png",
+          revision: "43920cdd683277f0de811acee700b551",
+        },
+        {
+          url: "/icon-72x72.png",
+          revision: "1e0da8531c01e03cf2605f6a3b268c2c",
+        },
+        {
+          url: "/icon-96x96.png",
+          revision: "20154f98e9cf50b296cddc306bd30a22",
+        },
+        {
+          url: "/images/ProfileImage.png",
+          revision: "ffe613ad8991b9ce590c536ece85b592",
+        },
+        {
+          url: "/images/cars/hero.png",
+          revision: "ddf7fda7824c079d5b66bd424ac1f35a",
+        },
+        {
+          url: "/images/features/feature_delivery.png",
+          revision: "3bfac8d091d7f316a168efd9b98bc37d",
+        },
+        {
+          url: "/images/features/feature_partner.png",
+          revision: "7acf84c2f6d2355d9ef925bf39a92496",
+        },
+        {
+          url: "/images/features/feature_pos.png",
+          revision: "6c06646893d4eb93d5741932c95dddb5",
+        },
+        {
+          url: "/images/features/feature_recipes.png",
+          revision: "bb332dcc2478acc372302b731b6a1ac8",
+        },
+        {
+          url: "/images/features/feature_rent_sell.png",
+          revision: "c2867f6741b23865802065d502a5c90e",
+        },
+        {
+          url: "/images/features/feature_service_bid.png",
+          revision: "f5603a9d8c9e01eef4ffa84c328c7de9",
+        },
+        {
+          url: "/images/groceryPlaceholder.png",
+          revision: "36e3d1f5f0368395a225126f89ec975a",
+        },
+        {
+          url: "/images/mainPageIcons/brand.png",
+          revision: "38b4fdd5aace290881c0ee7d873f9805",
+        },
+        {
+          url: "/images/mainPageIcons/brand_3d.png",
+          revision: "1ed01dd046baf61c49d39c1a68d0661a",
+        },
+        {
+          url: "/images/mainPageIcons/burger.png",
+          revision: "1350558ce7e911f4e2f64f0c3c4e4860",
+        },
+        {
+          url: "/images/mainPageIcons/burger_3d.png",
+          revision: "dee9ec220ab86b1d84412acdbe2c0b61",
+        },
+        {
+          url: "/images/mainPageIcons/delivery-man.png",
+          revision: "c918d7153661797b6bfb3cacbc787244",
+        },
+        {
+          url: "/images/mainPageIcons/fast-shipping.png",
+          revision: "156ea63cfa898bfda2c74d7d4d991518",
+        },
+        {
+          url: "/images/mainPageIcons/first-aid-kit.png",
+          revision: "4d01bb2e5807b55ae517972feb7e3ca7",
+        },
+        {
+          url: "/images/mainPageIcons/groceries.png",
+          revision: "22fb56c0dc3497d7fa80dd0122d6f94e",
+        },
+        {
+          url: "/images/mainPageIcons/payment-terminal.png",
+          revision: "6b4121580613d50d61e7f22730132b22",
+        },
+        {
+          url: "/images/mainPageIcons/pet-shop.png",
+          revision: "3af69b56356a6fc0f805bcdf8879567e",
+        },
+        {
+          url: "/images/mainPageIcons/pharmacy_3d.png",
+          revision: "dbeec5310e57e986573ed1948ce24613",
+        },
+        {
+          url: "/images/mainPageIcons/restaurant.png",
+          revision: "90ec8327eb7c43d355268284df1a88b7",
+        },
+        {
+          url: "/images/mainPageIcons/scooter_3d.png",
+          revision: "32407ed5d3153ead10eac29b33c5f0db",
+        },
+        {
+          url: "/images/mainPageIcons/tomato.png",
+          revision: "db574ede31f8cd438ccb7f80ccb6f172",
+        },
+        {
+          url: "/images/mainPageIcons/tomato_3d.png",
+          revision: "18c3492ed0284a814fde23d377665223",
+        },
+        {
+          url: "/images/restaurantDish.png",
+          revision: "e96890a391bdef237d559d48b41db9f5",
+        },
+        {
+          url: "/images/shop-placeholder.jpg",
+          revision: "be733cb690aae457158b1c33a061e360",
+        },
+        {
+          url: "/images/shopper/welcome_hero_v2.png",
+          revision: "6d7ab125bd9b99540d26badcb88bbe0e",
+        },
+        {
+          url: "/images/userProfile.png",
+          revision: "1ce10035f8560c8a2cbc4e2db0ea7b1c",
+        },
+        { url: "/manifest.json", revision: "c30b118788a4885ad3351688fe171e21" },
+        {
+          url: "/notifySound.mp3",
+          revision: "8b27319049898514ea8031ce3a3f63ac",
+        },
+        {
+          url: "/placeholder.svg",
+          revision: "243098b109a59a642ae8465d67d4b24a",
+        },
+        { url: "/robots.txt", revision: "f5485a305c113be5f948869568531efe" },
+        { url: "/sitemap.xml", revision: "72879d1f1b83f21eea255612147eaa9d" },
+        { url: "/vercel.svg", revision: "4b4f1876502eb6721764637fe5c41702" },
+      ],
+      { ignoreURLParametersMatching: [] }
+    ),
+    e.cleanupOutdatedCaches(),
+    e.registerRoute(
+      "/",
+      new e.NetworkFirst({
+        cacheName: "start-url",
+        plugins: [
+          {
+            cacheWillUpdate: async ({
+              request: e,
+              response: s,
+              event: a,
+              state: c,
+            }) =>
+              s && "opaqueredirect" === s.type
+                ? new Response(s.body, {
+                    status: 200,
+                    statusText: "OK",
+                    headers: s.headers,
+                  })
+                : s,
+          },
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      new e.CacheFirst({
+        cacheName: "google-fonts",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 31536e3 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/fonts\.gstatic\.com\/.*/i,
+      new e.CacheFirst({
+        cacheName: "google-fonts-static",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 31536e3 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-font-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-image-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\/_next\/image\?url=.+$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "next-image",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:mp3|wav|ogg)$/i,
+      new e.CacheFirst({
+        cacheName: "static-audio-assets",
+        plugins: [
+          new e.RangeRequestsPlugin(),
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:mp4)$/i,
+      new e.CacheFirst({
+        cacheName: "static-video-assets",
+        plugins: [
+          new e.RangeRequestsPlugin(),
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:js)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-js-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 48, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:css|less)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-style-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/.*\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "google-fonts-webfonts",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "google-fonts-stylesheets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\/_next\/data\/.+\/.+\.json$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "next-data",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:json|xml|csv)$/i,
+      new e.NetworkFirst({
+        cacheName: "static-data-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/.*\.(?:js|css|mjs)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "external-js-css-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    );
+});
