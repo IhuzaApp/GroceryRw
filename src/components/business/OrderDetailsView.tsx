@@ -89,9 +89,9 @@ interface OrderDetailsViewProps {
     shopperUserId?: string
   ) => void;
   onMessageCustomer: (
-    customerId: string, 
-    orderDbId: string, 
-    orderDisplayId: string, 
+    customerId: string,
+    orderDbId: string,
+    orderDisplayId: string,
     name: string,
     itemName?: string,
     customerAvatar?: string,
@@ -162,7 +162,7 @@ export function OrderDetailsView({
   };
 
   return (
-    <div className="min-h-screen animate-in fade-in slide-in-from-right-8 duration-500 pb-20 bg-white dark:bg-gray-950">
+    <div className="min-h-screen bg-white pb-20 duration-500 animate-in fade-in slide-in-from-right-8 dark:bg-gray-950">
       {/* Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 md:px-6">
         <div className="flex items-center gap-3">
@@ -192,10 +192,9 @@ export function OrderDetailsView({
       </div>
 
       <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
-
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main Content (Products) */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <h3 className="mb-6 text-sm font-black uppercase tracking-[0.2em] text-gray-400">
                 Products Ordered
@@ -259,7 +258,8 @@ export function OrderDetailsView({
                               {product.unit || product.measurement_type || ""}
                             </p>
                             <p className="mt-1 text-xs font-bold text-gray-400">
-                              {formatCurrencySync(product.price_per_item)} / unit
+                              {formatCurrencySync(product.price_per_item)} /
+                              unit
                             </p>
                           </div>
                           <div className="text-right">
@@ -274,7 +274,7 @@ export function OrderDetailsView({
                     </div>
                   ))
                 ) : (
-                  <p className="text-center py-8 text-sm font-bold text-gray-400">
+                  <p className="py-8 text-center text-sm font-bold text-gray-400">
                     No product details available
                   </p>
                 )}
@@ -421,9 +421,7 @@ export function OrderDetailsView({
                   </span>
                   <span className="text-xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrencySync(
-                      order.value -
-                        order.transportation_fee -
-                        order.service_fee
+                      order.value - order.transportation_fee - order.service_fee
                     )}
                   </span>
                 </div>
@@ -565,7 +563,7 @@ export function OrderDetailsView({
       {/* Expanded Image Modal */}
       {expandedImage && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 px-4 backdrop-blur-sm"
           onClick={() => setExpandedImage(null)}
         >
           <div className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-2xl bg-white dark:bg-gray-800">

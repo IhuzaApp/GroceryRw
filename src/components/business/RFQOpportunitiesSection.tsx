@@ -28,7 +28,11 @@ import { QuoteSubmissionForm } from "./QuoteSubmissionForm";
 import { SubmittedQuoteDetails } from "./SubmittedQuoteDetails";
 
 interface RFQOpportunitiesSectionProps {
-  onMessageCustomer?: (customerId: string, rfqId?: string, title?: string) => void;
+  onMessageCustomer?: (
+    customerId: string,
+    rfqId?: string,
+    title?: string
+  ) => void;
   businessAccount?: any;
   guestMode?: boolean;
   onGuestAction?: () => void;
@@ -305,7 +309,11 @@ export function RFQOpportunitiesSection({
     fetchRFQOpportunities();
   };
 
-  const handleMessageCustomer = (customerId: string, rfqId?: string, title?: string) => {
+  const handleMessageCustomer = (
+    customerId: string,
+    rfqId?: string,
+    title?: string
+  ) => {
     if (onMessageCustomer) {
       onMessageCustomer(customerId, rfqId, title);
     } else {

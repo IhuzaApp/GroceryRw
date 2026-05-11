@@ -81,9 +81,9 @@ interface OrdersSectionProps {
   className?: string;
   onMessageShopper: (shopperId: string, orderId: string, name: string) => void;
   onMessageCustomer: (
-    customerId: string, 
-    orderDbId: string, 
-    orderDisplayId: string, 
+    customerId: string,
+    orderDbId: string,
+    orderDisplayId: string,
     name: string,
     itemName?: string,
     customerAvatar?: string,
@@ -699,7 +699,6 @@ export function OrdersSection({
           )}
         </div>
       </div>
-
     </div>
   );
 }

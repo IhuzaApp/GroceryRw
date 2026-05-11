@@ -222,10 +222,10 @@ export const getOrCreateOrderBusinessConversation = async (
   counterpartName?: string
 ): Promise<string> => {
   try {
-    const title = itemName 
+    const title = itemName
       ? `Order #${orderDisplayId}: ${itemName} (${customerName})`
       : `Order #${orderDisplayId}: ${customerName}`;
-      
+
     const customCollection: ChatCollection = "business_conversations";
     const conversationsRef = collection(db!, customCollection);
 
@@ -260,7 +260,7 @@ export const getOrCreateOrderBusinessConversation = async (
         customerAvatar: customerAvatar || "",
         counterpartAvatar: businessLogo || "",
         counterpartName: counterpartName || "",
-        itemName: itemName || ""
+        itemName: itemName || "",
       },
       customCollection
     );

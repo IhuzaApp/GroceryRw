@@ -148,8 +148,8 @@ export function DesktopPortal({
     }
 
     try {
-      // Shoppers use chat_conversations for order-related chat, 
-      // but if we are in the Business Portal, we want to use business_conversations 
+      // Shoppers use chat_conversations for order-related chat,
+      // but if we are in the Business Portal, we want to use business_conversations
       // but ensure customerId is the USER's ID, not the business's ID.
       const conversationId = await getOrCreateBusinessConversation(
         user?.id || "",
@@ -192,7 +192,10 @@ export function DesktopPortal({
         user?.id || "",
         itemName,
         customerAvatar,
-        storeLogo || businessAccount.faceImage || businessAccount.logo || businessAccount.image,
+        storeLogo ||
+          businessAccount.faceImage ||
+          businessAccount.logo ||
+          businessAccount.image,
         storeName
       );
       router.push(

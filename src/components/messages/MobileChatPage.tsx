@@ -107,7 +107,6 @@ const CustomerMessage: React.FC<{
         <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gray-200 shadow-sm ring-1 ring-white/10 dark:bg-gray-800">
           {(() => {
             let avatarUrl = isCurrentUser ? customerImage : counterpartImage;
-            
 
             const fallbackLetter = isCurrentUser
               ? "M"
@@ -490,18 +489,20 @@ export default function MobileChatPage({
       }
     }
 
-    const recipientId = senderType === "customer"
-      ? selectedConversation.shopperId ||
-        (selectedConversation as any).businessId ||
-        selectedConversation.counterpartId
-      : selectedConversation.customerId || selectedConversation.counterpartId;
+    const recipientId =
+      senderType === "customer"
+        ? selectedConversation.shopperId ||
+          (selectedConversation as any).businessId ||
+          selectedConversation.counterpartId
+        : selectedConversation.customerId || selectedConversation.counterpartId;
 
-    const recipientUserId = senderType === "customer"
-      ? (selectedConversation as any).vendorUserId ||
-        (selectedConversation as any).shopperUserId ||
-        selectedConversation.shopperId ||
-        selectedConversation.counterpartId
-      : selectedConversation.customerId || selectedConversation.counterpartId;
+    const recipientUserId =
+      senderType === "customer"
+        ? (selectedConversation as any).vendorUserId ||
+          (selectedConversation as any).shopperUserId ||
+          selectedConversation.shopperId ||
+          selectedConversation.counterpartId
+        : selectedConversation.customerId || selectedConversation.counterpartId;
 
     setPendingMessages((p) => [
       ...p,

@@ -383,10 +383,12 @@ export default async function handler(
         // We found it by OrderID! Now proceed with the regular formatting.
         // We need to re-run the statistics fetch if needed, or just handle it here.
         const order = result.Orders[0];
-        
+
         // Formatting logic similar to handleRegularOrder but self-contained
-        const rawShopper = Array.isArray(order.shoppers) ? order.shoppers[0] : order.shoppers;
-        
+        const rawShopper = Array.isArray(order.shoppers)
+          ? order.shoppers[0]
+          : order.shoppers;
+
         const formattedOrder = {
           ...order,
           orderType: "order",
@@ -394,20 +396,24 @@ export default async function handler(
             dateStyle: "medium",
             timeStyle: "short",
           }),
-          assignedTo: rawShopper ? {
-            ...rawShopper,
-            name: rawShopper.full_name,
-            profile_picture: rawShopper.profile_photo,
-            email: rawShopper.User?.email,
-            userId: rawShopper.User?.id
-          } : null
+          assignedTo: rawShopper
+            ? {
+                ...rawShopper,
+                name: rawShopper.full_name,
+                profile_picture: rawShopper.profile_photo,
+                email: rawShopper.User?.email,
+                userId: rawShopper.User?.id,
+              }
+            : null,
         };
-        
+
         return res.status(200).json({ order: formattedOrder });
       }
-      
+
       // If still not found, return 400
-      return res.status(400).json({ error: "Invalid order ID format or order not found" });
+      return res
+        .status(400)
+        .json({ error: "Invalid order ID format or order not found" });
     }
 
     const handleRegularOrder = async (order: any) => {

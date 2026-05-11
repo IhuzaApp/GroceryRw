@@ -632,7 +632,7 @@ export default function DesktopMessagePage({
       selectedConversation.type === "businessOrder" ||
       !selectedConversation.orderId) &&
     !isPetChat;
-  
+
   const isMeBusinessRole = (conv: any) => {
     return (
       (businessAccount?.id && businessAccount.id === conv.counterpartId) ||
@@ -785,7 +785,8 @@ export default function DesktopMessagePage({
           // Fetch RFQ or Order details if it's a business chat
           if (
             selectedConversation.collectionPath === "business_conversations" &&
-            (selectedConversation.rfqId || (selectedConversation as any).orderId)
+            (selectedConversation.rfqId ||
+              (selectedConversation as any).orderId)
           ) {
             const rfqId = selectedConversation.rfqId;
             const orderId = (selectedConversation as any).orderId;
@@ -805,7 +806,9 @@ export default function DesktopMessagePage({
                 } else if (res.status === 400) {
                   // If RFQ fetch fails because of format, it might be an Order ID stored in rfqId field (Legacy)
                   setLoadingBusinessOrder(true);
-                  const orderRes = await fetch(`/api/queries/orderDetails?id=${rfqId}`);
+                  const orderRes = await fetch(
+                    `/api/queries/orderDetails?id=${rfqId}`
+                  );
                   if (orderRes.ok) {
                     const orderData = await orderRes.json();
                     setSelectedBusinessOrder(orderData.order);
@@ -820,7 +823,9 @@ export default function DesktopMessagePage({
             } else if (orderId) {
               setLoadingBusinessOrder(true);
               try {
-                const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+                const res = await fetch(
+                  `/api/queries/orderDetails?id=${orderId}`
+                );
                 if (res.ok) {
                   const data = await res.json();
                   setSelectedBusinessOrder(data.order);
@@ -1036,19 +1041,21 @@ export default function DesktopMessagePage({
       const orderShopperId =
         selectedOrder?.assignedTo?.shopper?.id || selectedOrder?.assignedTo?.id;
 
-      const recipientId = senderType === "customer"
-        ? (selectedConversation.shopperId &&
-          selectedConversation.shopperId !== session.user.id
-            ? selectedConversation.shopperId
-            : null) ||
-          orderShopperId ||
-          (selectedConversation as any).businessId ||
-          selectedConversation.counterpartId
-        : senderType === "shopper"
-        ? selectedConversation.customerId || selectedConversation.counterpartId
-        : selectedConversation.customerId ||
-          selectedConversation.shopperId ||
-          selectedConversation.counterpartId;
+      const recipientId =
+        senderType === "customer"
+          ? (selectedConversation.shopperId &&
+            selectedConversation.shopperId !== session.user.id
+              ? selectedConversation.shopperId
+              : null) ||
+            orderShopperId ||
+            (selectedConversation as any).businessId ||
+            selectedConversation.counterpartId
+          : senderType === "shopper"
+          ? selectedConversation.customerId ||
+            selectedConversation.counterpartId
+          : selectedConversation.customerId ||
+            selectedConversation.shopperId ||
+            selectedConversation.counterpartId;
 
       const messagePayload = {
         text: newMessage.trim(),
@@ -1060,7 +1067,6 @@ export default function DesktopMessagePage({
         timestamp: serverTimestamp(),
         read: false,
       };
-
 
       if (!recipientId) {
         throw new Error("Could not determine message recipient.");
@@ -1101,40 +1107,41 @@ export default function DesktopMessagePage({
 
       // 4. Trigger FCM Notification
       try {
-        const fcmRecipientId = senderType === "customer"
-          ? (selectedConversation as any).vendorUserId ||
-            (selectedConversation.shopperUserId &&
-            selectedConversation.shopperUserId !== session.user.id
-              ? selectedConversation.shopperUserId
-              : null) ||
-            (selectedConversation.shopperId &&
-            selectedConversation.shopperId !== session.user.id
-              ? selectedConversation.shopperId
-              : null) ||
-            selectedOrder?.assignedTo?.userId ||
-            orderShopperId ||
-            (selectedConversation as any).businessId ||
-            selectedConversation.counterpartId
-          : selectedConversation.customerId ||
-            selectedConversation.counterpartId;
+        const fcmRecipientId =
+          senderType === "customer"
+            ? (selectedConversation as any).vendorUserId ||
+              (selectedConversation.shopperUserId &&
+              selectedConversation.shopperUserId !== session.user.id
+                ? selectedConversation.shopperUserId
+                : null) ||
+              (selectedConversation.shopperId &&
+              selectedConversation.shopperId !== session.user.id
+                ? selectedConversation.shopperId
+                : null) ||
+              selectedOrder?.assignedTo?.userId ||
+              orderShopperId ||
+              (selectedConversation as any).businessId ||
+              selectedConversation.counterpartId
+            : selectedConversation.customerId ||
+              selectedConversation.counterpartId;
 
         if (fcmRecipientId && fcmRecipientId !== session.user.id) {
           await fetch("/api/fcm/send-notification", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recipientId: fcmRecipientId,
-            senderName:
-              senderType === "business" && businessAccount?.businessName
-                ? businessAccount.businessName
-                : session.user.name || "User",
-            message: messageText,
-            orderId: selectedConversation.orderId || null,
-            conversationId,
-            collectionPath: selectedConversation.collectionPath,
-          }),
-        });
-      }
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              recipientId: fcmRecipientId,
+              senderName:
+                senderType === "business" && businessAccount?.businessName
+                  ? businessAccount.businessName
+                  : session.user.name || "User",
+              message: messageText,
+              orderId: selectedConversation.orderId || null,
+              conversationId,
+              collectionPath: selectedConversation.collectionPath,
+            }),
+          });
+        }
       } catch (fcmErr) {
         console.warn("FCM send (non-blocking):", fcmErr);
       }
@@ -1316,7 +1323,10 @@ export default function DesktopMessagePage({
                 } else if (isBusinessChat) {
                   // If I am the business owner (counterpart), I want to see the customer's name
                   if (isMeBusinessRole(conversation)) {
-                    fullName = (conversation as any).customerName || conversation.title || "Customer";
+                    fullName =
+                      (conversation as any).customerName ||
+                      conversation.title ||
+                      "Customer";
                   } else {
                     fullName =
                       conversation.title ||
@@ -1347,14 +1357,18 @@ export default function DesktopMessagePage({
                     : employeeId && !isBusinessChat
                     ? `00${employeeId} ${fullName}`
                     : fullName;
-                const matchingStore = isBusinessChat ? stores.find(s => s.id === conversation.counterpartId) : null;
+                const matchingStore = isBusinessChat
+                  ? stores.find((s) => s.id === conversation.counterpartId)
+                  : null;
 
                 const contactAvatar = isPetChat
                   ? conversation.petImage || "/images/placeholder.png"
                   : isBusinessChat
                   ? (isMeBusinessRole(conversation)
-                      ? (conversation as any).customerAvatar 
-                      : matchingStore?.image || matchingStore?.logo || conversation.counterpartAvatar) ||
+                      ? (conversation as any).customerAvatar
+                      : matchingStore?.image ||
+                        matchingStore?.logo ||
+                        conversation.counterpartAvatar) ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
                       fullName
                     )}&background=10b981&color=fff`
@@ -1494,8 +1508,8 @@ export default function DesktopMessagePage({
                       ) : isBusinessChat ? (
                         <img
                           src={
-                            (isMeBusinessSelected 
-                              ? (selectedConversation as any).customerAvatar 
+                            (isMeBusinessSelected
+                              ? (selectedConversation as any).customerAvatar
                               : selectedConversation.counterpartAvatar) ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
                               selectedConversation.title ||
@@ -1553,11 +1567,15 @@ export default function DesktopMessagePage({
                         selectedConversation.title ||
                         `Adoption: ${selectedConversation.petName || "Pet"}`
                       ) : isBusinessChat ? (
-                        isMeBusinessSelected 
-                          ? selectedConversation.title || (selectedConversation as any).customerName || "Customer"
-                          : selectedConversation.title ||
-                            selectedConversation.counterpartName ||
-                            "Business Chat"
+                        isMeBusinessSelected ? (
+                          selectedConversation.title ||
+                          (selectedConversation as any).customerName ||
+                          "Customer"
+                        ) : (
+                          selectedConversation.title ||
+                          selectedConversation.counterpartName ||
+                          "Business Chat"
+                        )
                       ) : (
                         <>
                           {isMeShopperSelected
@@ -1596,8 +1614,8 @@ export default function DesktopMessagePage({
                       </span>
                       <span className="text-sm font-bold text-gray-900 dark:text-white">
                         {selectedOrder?.orderedBy?.phone ||
-                          (isMeBusinessSelected 
-                            ? (selectedConversation as any).customerPhone 
+                          (isMeBusinessSelected
+                            ? (selectedConversation as any).customerPhone
                             : (selectedConversation as any).counterpartPhone) ||
                           "N/A"}
                       </span>
@@ -1709,7 +1727,6 @@ export default function DesktopMessagePage({
                                 ...storeIds,
                               ].includes(message.senderId);
 
-
                               return (
                                 <React.Fragment key={message.id}>
                                   <div
@@ -1725,7 +1742,8 @@ export default function DesktopMessagePage({
                                           let resolvedAvatar =
                                             "/images/userProfile.png";
                                           if (
-                                            message.senderId === session?.user?.id &&
+                                            message.senderId ===
+                                              session?.user?.id &&
                                             session?.user?.image &&
                                             message.senderType !== "business"
                                           ) {
@@ -1741,16 +1759,62 @@ export default function DesktopMessagePage({
                                             let dbAvatar = null;
 
                                             // Fallback for current user's role image
-                                            if (message.senderType === "business" && (message.senderId === businessAccount?.id || message.senderId === session?.user?.id || storeIds.includes(message.senderId))) {
+                                            if (
+                                              message.senderType ===
+                                                "business" &&
+                                              (message.senderId ===
+                                                businessAccount?.id ||
+                                                message.senderId ===
+                                                  session?.user?.id ||
+                                                storeIds.includes(
+                                                  message.senderId
+                                                ))
+                                            ) {
                                               // Prioritize specific store logo from stores prop if available
-                                              const matchingStore = stores.find(s => s.id === message.senderId);
-                                              dbAvatar = matchingStore?.image || matchingStore?.logo || (selectedConversation as any).counterpartAvatar || businessAccount?.faceImage || businessAccount?.logo || businessAccount?.image;
-                                            } else if (message.senderType === "shopper" && (message.senderId === shopper?.id || message.senderId === session?.user?.id)) {
-                                              dbAvatar = shopper?.profile_photo || (selectedConversation as any).shopperAvatar;
-                                            } else if (message.senderType === "business" && message.senderId === petVendor?.id) {
-                                              dbAvatar = petVendor.organisationLogo || petVendor.profile_photo || (selectedConversation as any).counterpartAvatar;
-                                            } else if (message.senderType === "business" && message.senderId === logisticsAccount?.id) {
-                                              dbAvatar = logisticsAccount.businessLogo || logisticsAccount.profile_picture || (selectedConversation as any).counterpartAvatar;
+                                              const matchingStore = stores.find(
+                                                (s) => s.id === message.senderId
+                                              );
+                                              dbAvatar =
+                                                matchingStore?.image ||
+                                                matchingStore?.logo ||
+                                                (selectedConversation as any)
+                                                  .counterpartAvatar ||
+                                                businessAccount?.faceImage ||
+                                                businessAccount?.logo ||
+                                                businessAccount?.image;
+                                            } else if (
+                                              message.senderType ===
+                                                "shopper" &&
+                                              (message.senderId ===
+                                                shopper?.id ||
+                                                message.senderId ===
+                                                  session?.user?.id)
+                                            ) {
+                                              dbAvatar =
+                                                shopper?.profile_photo ||
+                                                (selectedConversation as any)
+                                                  .shopperAvatar;
+                                            } else if (
+                                              message.senderType ===
+                                                "business" &&
+                                              message.senderId === petVendor?.id
+                                            ) {
+                                              dbAvatar =
+                                                petVendor.organisationLogo ||
+                                                petVendor.profile_photo ||
+                                                (selectedConversation as any)
+                                                  .counterpartAvatar;
+                                            } else if (
+                                              message.senderType ===
+                                                "business" &&
+                                              message.senderId ===
+                                                logisticsAccount?.id
+                                            ) {
+                                              dbAvatar =
+                                                logisticsAccount.businessLogo ||
+                                                logisticsAccount.profile_picture ||
+                                                (selectedConversation as any)
+                                                  .counterpartAvatar;
                                             }
 
                                             if (!dbAvatar) {
@@ -1758,37 +1822,36 @@ export default function DesktopMessagePage({
                                                 message.senderId ===
                                                 selectedConversation?.customerId
                                               ) {
-                                              dbAvatar =
-                                                (selectedConversation as any)
-                                                  .customerAvatar ||
-                                                selectedOrder?.orderedBy
-                                                  ?.profile_picture;
-                                            } else if (
-                                              message.senderId ===
-                                                selectedConversation?.counterpartId ||
-                                              message.senderId ===
-                                                (selectedConversation as any)
-                                                  .vendorUserId ||
-                                              message.senderId ===
-                                                selectedConversation?.shopperId ||
-                                              message.senderId ===
-                                                (selectedConversation as any)
-                                                  .shopperUserId
-                                            ) {
-                                              dbAvatar =
-                                                (selectedConversation as any)
-                                                  .counterpartAvatar ||
-                                                selectedOrder?.shop?.image ||
-                                                selectedOrder?.assignedTo
-                                                  ?.profile_picture ||
-                                                selectedRfq?.business_account
-                                                  ?.face_image;
-                                            }
+                                                dbAvatar =
+                                                  (selectedConversation as any)
+                                                    .customerAvatar ||
+                                                  selectedOrder?.orderedBy
+                                                    ?.profile_picture;
+                                              } else if (
+                                                message.senderId ===
+                                                  selectedConversation?.counterpartId ||
+                                                message.senderId ===
+                                                  (selectedConversation as any)
+                                                    .vendorUserId ||
+                                                message.senderId ===
+                                                  selectedConversation?.shopperId ||
+                                                message.senderId ===
+                                                  (selectedConversation as any)
+                                                    .shopperUserId
+                                              ) {
+                                                dbAvatar =
+                                                  (selectedConversation as any)
+                                                    .counterpartAvatar ||
+                                                  selectedOrder?.shop?.image ||
+                                                  selectedOrder?.assignedTo
+                                                    ?.profile_picture ||
+                                                  selectedRfq?.business_account
+                                                    ?.face_image;
+                                              }
                                             }
 
                                             if (dbAvatar)
                                               resolvedAvatar = dbAvatar;
-
                                           }
 
                                           // Fallback by type if still placeholder and not Me
@@ -2540,25 +2603,33 @@ export default function DesktopMessagePage({
                         </h4>
                       </div>
                       <div className="space-y-3">
-                        {selectedBusinessOrder.Order_Items?.map((item: any, idx: number) => (
-                          <div key={idx} className="flex items-center gap-3 rounded-2xl bg-gray-50 p-3 dark:bg-gray-900/50">
-                            <div className="h-10 w-10 overflow-hidden rounded-lg">
-                              <img 
-                                src={item.product?.image || item.product?.ProductName?.image} 
-                                alt={item.product?.ProductName?.name}
-                                className="h-full w-full object-cover"
-                              />
+                        {selectedBusinessOrder.Order_Items?.map(
+                          (item: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-3 rounded-2xl bg-gray-50 p-3 dark:bg-gray-900/50"
+                            >
+                              <div className="h-10 w-10 overflow-hidden rounded-lg">
+                                <img
+                                  src={
+                                    item.product?.image ||
+                                    item.product?.ProductName?.image
+                                  }
+                                  alt={item.product?.ProductName?.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
+                                  {item.product?.ProductName?.name}
+                                </p>
+                                <p className="text-[10px] text-gray-500">
+                                  Qty: {item.quantity} × {item.price}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="truncate text-xs font-bold text-gray-900 dark:text-white">
-                                {item.product?.ProductName?.name}
-                              </p>
-                              <p className="text-[10px] text-gray-500">
-                                Qty: {item.quantity} × {item.price}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </div>
                   </div>

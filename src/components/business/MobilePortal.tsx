@@ -319,11 +319,11 @@ export function MobilePortal({
             )}
 
             {activeTab === "orders" && (
-            <OrdersSection
-              onMessageShopper={handleMessageShopper}
-              onMessageCustomer={handleMessageCustomer}
-            />
-          )}
+              <OrdersSection
+                onMessageShopper={handleMessageShopper}
+                onMessageCustomer={handleMessageCustomer}
+              />
+            )}
 
             {activeTab === "quotes" && (
               <QuotesSection

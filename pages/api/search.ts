@@ -174,12 +174,14 @@ export default async function handler(
     const bizItemsResponse = (await hasuraClient.request(bizItemsQuery, {
       searchTerm,
     })) as any;
-    const bizItems = bizItemsResponse.PlasBusinessProductsOrSerive.map((item: any) => ({
-      ...item,
-      type: item.store_id ? "business_product" : "service",
-      image_url: item.Image,
-      description: item.Description,
-    }));
+    const bizItems = bizItemsResponse.PlasBusinessProductsOrSerive.map(
+      (item: any) => ({
+        ...item,
+        type: item.store_id ? "business_product" : "service",
+        image_url: item.Image,
+        description: item.Description,
+      })
+    );
     results.push(...bizItems);
 
     // Search RFQs

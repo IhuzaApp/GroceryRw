@@ -447,10 +447,10 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
 
                   {/* Shop Details */}
                   <div className="flex-1 !text-white">
-                    <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl !text-white">
+                    <h1 className="text-2xl font-bold !text-white sm:text-3xl lg:text-4xl">
                       {shopData.name}
                     </h1>
-                    <p className="mt-2 text-sm opacity-90 sm:text-base !text-white">
+                    <p className="mt-2 text-sm !text-white opacity-90 sm:text-base">
                       {shopData?.description}
                     </p>
 
@@ -458,7 +458,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                     <div className="mt-4 flex flex-wrap gap-3">
                       {/* Rating */}
                       {shopData.rating > 0 && (
-                        <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20 !text-white">
+                        <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 !text-white ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20">
                           <svg
                             className="mr-1.5 h-4 w-4 text-yellow-300"
                             viewBox="0 0 24 24"
@@ -473,7 +473,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       )}
 
                       {/* Delivery Time */}
-                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20 !text-white">
+                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 !text-white ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20">
                         <svg
                           className="mr-1.5 h-4 w-4"
                           fill="none"
@@ -493,7 +493,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       </div>
 
                       {/* Distance */}
-                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20 !text-white">
+                      <div className="flex items-center rounded-2xl bg-white/10 px-4 py-2 !text-white ring-1 ring-white/20 backdrop-blur-md transition-colors hover:bg-white/20">
                         <svg
                           className="mr-1.5 h-4 w-4"
                           fill="none"
@@ -519,7 +519,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({
                       </div>
 
                       {/* Delivery Fee */}
-                      <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm !text-white">
+                      <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 !text-white backdrop-blur-sm">
                         <svg
                           className="mr-1.5 h-4 w-4"
                           viewBox="0 0 20 20"

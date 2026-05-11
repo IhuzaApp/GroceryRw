@@ -946,7 +946,6 @@ export default function ShopperProfileComponent() {
                         </div>
                       </div>
                     )}
-                    )}
                   </div>
                 </div>
               </div>

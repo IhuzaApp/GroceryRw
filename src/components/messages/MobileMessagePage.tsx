@@ -787,8 +787,14 @@ export default function MobileMessagePage({
                   conversation.title ||
                   `Adoption: ${conversation.petName || "Pet"}`;
               } else if (isBusinessChat) {
-                if (businessAccountId && businessAccountId === conversation.counterpartId) {
-                  fullName = (conversation as any).customerName || conversation.title || "Customer";
+                if (
+                  businessAccountId &&
+                  businessAccountId === conversation.counterpartId
+                ) {
+                  fullName =
+                    (conversation as any).customerName ||
+                    conversation.title ||
+                    "Customer";
                 } else {
                   fullName =
                     conversation.title ||
@@ -814,8 +820,9 @@ export default function MobileMessagePage({
                   (conversation as any).customerAvatar ||
                   "/images/placeholder.png"
                 : isBusinessChat
-                ? (businessAccountId && businessAccountId === conversation.counterpartId 
-                    ? (conversation as any).customerAvatar 
+                ? (businessAccountId &&
+                  businessAccountId === conversation.counterpartId
+                    ? (conversation as any).customerAvatar
                     : conversation.counterpartAvatar) ||
                   (conversation as any).customerAvatar ||
                   "https://ui-avatars.com/api/?name=Business&background=10b981&color=fff"

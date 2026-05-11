@@ -31,12 +31,12 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
   doc.setFontSize(22);
   doc.setTextColor(22, 163, 74); // green-600
   doc.text("INVOICE", margin, y);
-  
+
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
   doc.text(`Order ID: ${data.orderId}`, margin, y + 10);
   doc.text(`Date: ${data.date}`, margin, y + 15);
-  
+
   y += 30;
 
   // Store & Customer Info
@@ -45,7 +45,7 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
   doc.text("FROM:", margin, y);
   doc.setFontSize(10);
   doc.text(data.storeName, margin, y + 7);
-  
+
   const rightCol = 120;
   doc.setFontSize(12);
   doc.text("TO:", rightCol, y);
@@ -85,15 +85,15 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
   const summaryX = 130;
   doc.text("Subtotal:", summaryX, y);
   doc.text(formatCurrencySync(data.subtotal), summaryX + 30, y);
-  
+
   y += 7;
   doc.text("Transportation:", summaryX, y);
   doc.text(formatCurrencySync(data.transportation), summaryX + 30, y);
-  
+
   y += 7;
   doc.text("Service Fee:", summaryX, y);
   doc.text(formatCurrencySync(data.serviceFee), summaryX + 30, y);
-  
+
   y += 10;
   doc.setFontSize(14);
   doc.setTextColor(22, 163, 74);
@@ -114,7 +114,10 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
 
   // PAID Stamp
   const normalizedStatus = data.status.toLowerCase();
-  if (normalizedStatus.includes("delivered") || normalizedStatus === "completed") {
+  if (
+    normalizedStatus.includes("delivered") ||
+    normalizedStatus === "completed"
+  ) {
     doc.setDrawColor(220, 38, 38); // red-600
     doc.setLineWidth(1);
     doc.roundedRect(150, 30, 40, 15, 2, 2);
@@ -127,7 +130,7 @@ export const generateInvoicePDF = async (data: InvoiceData) => {
   doc.setFontSize(10);
   doc.setTextColor(150, 150, 150);
   doc.text("Powered by Plas", 105, 275, { align: "center" });
-  
+
   doc.setFontSize(8);
   doc.text("Thank you for your business!", 105, 285, { align: "center" });
 

@@ -305,7 +305,7 @@ function MessagesPage() {
         constraints.push(where("customerId", "==", logisticsAccountId));
       }
       if (storeIds.length > 0) {
-        storeIds.forEach(id => {
+        storeIds.forEach((id) => {
           constraints.push(where("counterpartId", "==", id));
           constraints.push(where("customerId", "==", id));
         });
@@ -944,14 +944,18 @@ function MessagesPage() {
                   "business_conversations"
                 ) {
                   // If I am the business owner, the counterpart is the customer
-                  const isMeBusiness = businessAccountId && selectedConversation.counterpartId === businessAccountId;
-                  
+                  const isMeBusiness =
+                    businessAccountId &&
+                    selectedConversation.counterpartId === businessAccountId;
+
                   return {
                     id: isMeBusiness
                       ? selectedConversation.customerId || ""
                       : selectedConversation.counterpartId || "",
                     name: isMeBusiness
-                      ? (selectedConversation as any).customerName || selectedConversation.title || "Customer"
+                      ? (selectedConversation as any).customerName ||
+                        selectedConversation.title ||
+                        "Customer"
                       : selectedConversation.title ||
                         selectedConversation.counterpartName ||
                         "Business",
@@ -964,12 +968,13 @@ function MessagesPage() {
                           (selectedConversation as any).customerAvatar ||
                           "/images/placeholder.png"
                         : isMeBusiness
-                        ? (selectedConversation as any).customerAvatar || "/images/ProfileImage.png"
+                        ? (selectedConversation as any).customerAvatar ||
+                          "/images/ProfileImage.png"
                         : (selectedConversation as any).counterpartAvatar ||
                           (selectedConversation as any).customerAvatar ||
                           "/images/ProfileImage.png",
                     role: isMeBusiness ? "customer" : "business",
-                    phone: isMeBusiness 
+                    phone: isMeBusiness
                       ? (selectedConversation as any).customerPhone || ""
                       : (selectedConversation as any).counterpartPhone || "",
                   };
@@ -1037,9 +1042,13 @@ function MessagesPage() {
                 const order = selectedConversation.orderId
                   ? orders[selectedConversation.orderId]
                   : null;
-                
+
                 // If acting as business owner, use business logo
-                if (businessAccountId && (businessAccountId === selectedConversation.counterpartId || storeIds.includes(selectedConversation.counterpartId))) {
+                if (
+                  businessAccountId &&
+                  (businessAccountId === selectedConversation.counterpartId ||
+                    storeIds.includes(selectedConversation.counterpartId))
+                ) {
                   return (
                     (selectedConversation as any).counterpartAvatar ||
                     session?.user?.image ||

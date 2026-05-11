@@ -261,9 +261,7 @@ export function MyRFQsSection({
                         </span>
                         <span className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-400">
                           <Clock className="h-3.5 w-3.5 flex-shrink-0 text-orange-500 sm:h-4 sm:w-4" />
-                          <span className="font-bold">
-                            Due: {rfq.deadline}
-                          </span>
+                          <span className="font-bold">Due: {rfq.deadline}</span>
                         </span>
                       </div>
                     </div>

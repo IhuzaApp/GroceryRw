@@ -211,7 +211,8 @@ export default function SearchModal({
                             {/* Type Badge */}
                             <span
                               className={`inline-flex flex-shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                                result.type === "product" || result.type === "business_product"
+                                result.type === "product" ||
+                                result.type === "business_product"
                                   ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                                   : result.type === "shop"
                                   ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
@@ -290,7 +291,8 @@ export default function SearchModal({
                       <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/5">
                         <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                           Tap to{" "}
-                          {result.type === "product" || result.type === "business_product"
+                          {result.type === "product" ||
+                          result.type === "business_product"
                             ? "view product"
                             : result.type === "shop"
                             ? "visit shop"

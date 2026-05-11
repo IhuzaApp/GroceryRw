@@ -150,7 +150,9 @@ export default function MobileUserDashboard({
     setIsSearching(true);
     try {
       // Unified search for shops, products, restaurants, pets, vehicles, reels, and business items
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(query)}`
+      );
       const data = await response.json();
 
       setSearchResults(data.results || []);

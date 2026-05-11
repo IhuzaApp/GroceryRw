@@ -55,14 +55,14 @@ export function MobilePlasBusinessExplorer({
   // Handle auto-opening specific RFQ if id is provided
   useEffect(() => {
     if (id && activeTab === "rfqs" && rfqs.length > 0) {
-      const targetRFQ = rfqs.find(r => r.id === id);
+      const targetRFQ = rfqs.find((r) => r.id === id);
       if (targetRFQ) {
         setSelectedRFQ(targetRFQ);
         setExpandedSection("rfq-opportunities");
       }
     } else if (id && activeTab === "services") {
       // For services in explorer, we might just want to trigger the modal
-      // But since we don't have the full service object here, 
+      // But since we don't have the full service object here,
       // we'll just show the modal to create an account
       setIsModalOpen(true);
     }
