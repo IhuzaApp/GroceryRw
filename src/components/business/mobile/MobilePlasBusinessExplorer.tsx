@@ -421,8 +421,13 @@ export function MobilePlasBusinessExplorer({
             setSelectedRFQ(null);
           }}
           data={{
-            rfqs: rfqs,
-            "rfq-opportunities": rfqs,
+            rfqs: [],
+            rfqOpportunities: rfqs,
+            quotes: [],
+            orders: [],
+            services: [],
+            stores: [],
+            contracts: [],
           }}
           loading={loadingRFQs}
           businessAccount={null}
