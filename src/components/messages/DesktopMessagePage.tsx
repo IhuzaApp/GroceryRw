@@ -1546,7 +1546,7 @@ export default function DesktopMessagePage({
                         `Adoption: ${selectedConversation.petName || "Pet"}`
                       ) : isBusinessChat ? (
                         businessAccount?.id && businessAccount.id === selectedConversation.counterpartId 
-                          ? (selectedConversation as any).customerName || selectedConversation.title || "Customer"
+                          ? selectedConversation.title || (selectedConversation as any).customerName || "Customer"
                           : selectedConversation.title ||
                             selectedConversation.counterpartName ||
                             "Business Chat"
@@ -1728,10 +1728,28 @@ export default function DesktopMessagePage({
                                           ) {
                                             let dbAvatar = null;
 
-                                            if (
-                                              message.senderId ===
-                                              selectedConversation?.customerId
-                                            ) {
+                                            // Fallback for current user's role image
+                                            if (message.senderType === "business" && (message.senderId === businessAccount?.id || message.senderId === session?.user?.id)) {
+                                              dbAvatar = businessAccount?.faceImage || businessAccount?.logo || businessAccount?.image || (selectedConversation as any).counterpartAvatar;
+                                              console.log("🔍 [Chat Hub] Business sender avatar selection:", {
+                                                senderId: message.senderId,
+                                                faceImage: businessAccount?.faceImage,
+                                                logo: businessAccount?.logo,
+                                                dbAvatar
+                                              });
+                                            } else if (message.senderType === "shopper" && (message.senderId === shopper?.id || message.senderId === session?.user?.id)) {
+                                              dbAvatar = shopper?.profile_photo || (selectedConversation as any).shopperAvatar;
+                                            } else if (message.senderType === "business" && message.senderId === petVendor?.id) {
+                                              dbAvatar = petVendor.organisationLogo || petVendor.profile_photo || (selectedConversation as any).counterpartAvatar;
+                                            } else if (message.senderType === "business" && message.senderId === logisticsAccount?.id) {
+                                              dbAvatar = logisticsAccount.businessLogo || logisticsAccount.profile_picture || (selectedConversation as any).counterpartAvatar;
+                                            }
+
+                                            if (!dbAvatar) {
+                                              if (
+                                                message.senderId ===
+                                                selectedConversation?.customerId
+                                              ) {
                                               dbAvatar =
                                                 (selectedConversation as any)
                                                   .customerAvatar ||
@@ -1757,6 +1775,7 @@ export default function DesktopMessagePage({
                                                   ?.profile_picture ||
                                                 selectedRfq?.business_account
                                                   ?.face_image;
+                                            }
                                             }
 
                                             if (dbAvatar)

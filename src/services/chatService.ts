@@ -215,10 +215,16 @@ export const getOrCreateOrderBusinessConversation = async (
   customerId: string,
   customerName: string,
   businessId: string,
-  vendorUserId: string
+  vendorUserId: string,
+  itemName?: string,
+  customerAvatar?: string,
+  businessLogo?: string
 ): Promise<string> => {
   try {
-    const title = `Order #${orderDisplayId}: ${customerName}`;
+    const title = itemName 
+      ? `Order #${orderDisplayId}: ${itemName} (${customerName})`
+      : `Order #${orderDisplayId}: ${customerName}`;
+      
     const customCollection: ChatCollection = "business_conversations";
     const conversationsRef = collection(db!, customCollection);
 
@@ -237,7 +243,6 @@ export const getOrCreateOrderBusinessConversation = async (
     }
 
     // Create new business conversation
-    // Business ID is stored as counterpartId so the hub recognizes the business as the sender
     return await createConversation(
       null, // orderId in createConversation signature is for chat_conversations
       customerId, // Recipient
@@ -250,6 +255,10 @@ export const getOrCreateOrderBusinessConversation = async (
         orderId: orderDbId,
         displayOrderId: orderDisplayId,
         title: title,
+        customerName: customerName,
+        customerAvatar: customerAvatar || "",
+        counterpartAvatar: businessLogo || "",
+        itemName: itemName || ""
       },
       customCollection
     );

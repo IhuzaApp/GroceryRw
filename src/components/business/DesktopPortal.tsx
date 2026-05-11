@@ -173,7 +173,9 @@ export function DesktopPortal({
     customerId: string,
     orderDbId: string,
     orderDisplayId: string,
-    name: string
+    name: string,
+    itemName?: string,
+    customerAvatar?: string
   ) => {
     if (!businessAccount?.id) {
       toast.error("Please ensure your business account is fully set up");
@@ -187,7 +189,10 @@ export function DesktopPortal({
         customerId,
         name,
         businessAccount.id,
-        user?.id || ""
+        user?.id || "",
+        itemName,
+        customerAvatar,
+        businessAccount.faceImage || businessAccount.logo || businessAccount.image
       );
       router.push(
         `/Messages?conversationId=${conversationId}&collection=business_conversations`

@@ -106,7 +106,22 @@ const CustomerMessage: React.FC<{
       <div className="relative mb-1 flex-shrink-0">
         <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gray-200 shadow-sm ring-1 ring-white/10 dark:bg-gray-800">
           {(() => {
-            const avatarUrl = isCurrentUser ? customerImage : counterpartImage;
+            let avatarUrl = isCurrentUser ? customerImage : counterpartImage;
+            
+            // In self-messaging/role-based chats, ensure we use the business logo if sending as business
+            if (isCurrentUser && message.senderType === "business") {
+              avatarUrl = counterpartImage;
+            }
+
+            console.log("🔍 [Chat Hub Mobile] Avatar selection:", {
+              text: (message as any).text || (message as any).message,
+              senderType: message.senderType,
+              isCurrentUser,
+              avatarUrl,
+              customerImage,
+              counterpartImage
+            });
+
             const fallbackLetter = isCurrentUser
               ? "M"
               : counterpartName?.charAt(0) || "C";

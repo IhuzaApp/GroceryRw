@@ -87,7 +87,14 @@ interface OrderDetailsViewProps {
     name: string,
     shopperUserId?: string
   ) => void;
-  onMessageCustomer: (customerId: string, orderDbId: string, orderDisplayId: string, name: string) => void;
+  onMessageCustomer: (
+    customerId: string, 
+    orderDbId: string, 
+    orderDisplayId: string, 
+    name: string,
+    itemName?: string,
+    customerAvatar?: string
+  ) => void;
 }
 
 export function OrderDetailsView({
@@ -454,7 +461,9 @@ export function OrderDetailsView({
                       order.orderedBy?.id || "",
                       order.id,
                       order.orderId,
-                      order.orderedBy?.name || "Customer"
+                      order.orderedBy?.name || "Customer",
+                      order.items || order.allProducts[0]?.name,
+                      order.orderedBy?.profile_picture
                     )
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 py-3 text-xs font-bold uppercase tracking-wider text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/30"
